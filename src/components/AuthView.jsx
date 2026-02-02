@@ -45,21 +45,22 @@ const AuthView = ({ onLoginSuccess }) => {
                 });
             }
 
-            console.log('Auth Response:', response.data);
+            console.log('[AUTH] Backend Response:', response.data);
 
-            // FRONTEND OVERRIDE: 
-            // The backend is currently returning a stub "DevUser". 
-            // We verify the token works, but we use the User's Input for display purposes
-            // to ensure the UI shows the correct identity ("ory1", "ory77", etc).
-            const backendUser = response.data.user || {};
+            // Backend returns: { token, userId, username, email, createdAt }
+            // NOT nested in a user object
             const finalUser = {
-                ...backendUser,
-                username: formData.username, // Force use of input username
-                email: formData.email || backendUser.email || 'user@system.local'
+                id: response.data.userId,
+                username: response.data.username || formData.username,
+                email: response.data.email || formData.email || 'user@system.local',
+                createdAt: response.data.createdAt
             };
 
+            console.log('[AUTH] Final User Object:', finalUser);
+            console.log('[AUTH] User ID to be stored:', finalUser.id);
+
             const finalAuthData = {
-                ...response.data,
+                token: response.data.token,
                 user: finalUser
             };
 

@@ -8,9 +8,12 @@ import {
   MapPin, Calendar, Users, Edit3, Library,
   ChevronDown, Camera, Video, PenTool, BookOpen,
   MessageSquare, Repeat, MoreHorizontal, RefreshCw,
-  Frown, Star, Volume2, Plus, Globe, Maximize2, Minimize2
+  Frown, Star, Volume2, Plus, Globe, Maximize2, Minimize2, LogOut
 } from 'lucide-react';
 
+
+
+import skullImg from './assets/skull_processed.png';
 import AuthView from './components/AuthView';
 import { ProfileView } from './components/Profile';
 import { IPodPlayer } from './components/IPodPlayer';
@@ -20,11 +23,11 @@ import API from './services/api';
 
 // --- BASE DE DATOS MOCK (Sincronizada en toda la app) ---
 const TRACKS = [
-  { id: 1, title: 'youtsplit', artist: 'menoboy', album: 'digital_void', duration: '2:09', cover: 'O' },
-  { id: 2, title: 'glitch_heart', artist: 'cyber_vamp', album: 'neon_night', duration: '3:15', cover: 'V' },
-  { id: 3, title: 'thorny_path', artist: 'dark_pixel', album: 'vamp_glitch', duration: '1:45', cover: 'P' },
-  { id: 4, title: 'neon_skull', artist: 'retro_void', album: 'system_error', duration: '4:20', cover: 'S' },
-  { id: 5, title: 'digital_tear', artist: 'emo_system', album: 'null_life', duration: '2:55', cover: 'E' },
+  { id: 'mock-1', title: 'youtsplit', artist: 'menoboy', album: 'digital_void', duration: '2:09', cover: 'O', artistUserId: 3, price: 0, isLocked: false, playCount: 1450 },
+  { id: 'mock-2', title: 'glitch_heart', artist: 'cyber_vamp', album: 'neon_night', duration: '3:15', cover: 'V', artistUserId: 3, price: 5, isLocked: true, playCount: 890 },
+  { id: 'mock-3', title: 'thorny_path', artist: 'dark_pixel', album: 'vamp_glitch', duration: '1:45', cover: 'P', artistUserId: 3, price: 2, isLocked: false, playCount: 3200 },
+  { id: 'mock-4', title: 'neon_skull', artist: 'retro_void', album: 'system_error', duration: '4:20', cover: 'S', artistUserId: 99, price: 10, isLocked: true, playCount: 120 },
+  { id: 'mock-5', title: 'digital_tear', artist: 'emo_system', album: 'null_life', duration: '2:55', cover: 'E', artistUserId: 1, price: 1, isLocked: false, playCount: 5500 },
 ];
 
 const RADIO_STATIONS = [
@@ -44,20 +47,50 @@ const DISCOVERY_GRID = [
 
 // --- COMPONENTE PRINCIPAL ---
 export default function App() {
-  const [view, setView] = useState('login'); // login, discovery, feed, profile, player
+  const [activeView, setView] = useState('discovery');
+  const [viewingUserId, setViewingUserId] = useState(null);
+  const [hasNewMessages, setHasNewMessages] = useState(false);
+  // login, discovery, feed, profile, player
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [user, setUser] = useState(null);
   const [tracks, setTracks] = useState([]);
 
+  // Real-time Audio State
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
   // Audio Ref for persistence
   const audioRef = useRef(null);
+
+  // Discovery Analytics State
+  const [globalStats, setGlobalStats] = useState(null);
+
 
   const BASE_API_URL = 'http://localhost:5264';
   const getMediaUrl = (path) => {
     if (!path) return '';
     if (path.startsWith('http')) return path;
     return `${BASE_API_URL}${path}`;
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+    }
+  };
+
+  const handleSeek = (newTime) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
   };
 
   useEffect(() => {
@@ -70,55 +103,144 @@ export default function App() {
     }
   }, []);
 
-  useEffect(() => {
-    const fetchTracks = async () => {
-      try {
-        const response = await API.Tracks.getAllTracks();
-        if (response.data && response.data.length > 0) {
-          const mappedTracks = response.data.map(t => ({
+  const fetchTracks = async () => {
+    try {
+      const [tracksRes, purchasesRes, likesRes] = await Promise.all([
+        API.Tracks.getAllTracks(),
+        API.Purchases.getMyPurchases().catch(() => ({ data: [] })),
+        API.Likes.getMyLikes().catch(() => ({ data: [] }))
+      ]);
+
+      const purchases = purchasesRes.data || [];
+      const likes = likesRes.data || [];
+
+      // Normalize IDs (handling potential case variations)
+      const ownedTrackIds = new Set(purchases.map(p => String(p.trackId || p.TrackId || p.id || p.Id)));
+      const likedTrackIds = new Set(likes.map(l => String(l.id || l.Id)));
+
+      const currentUserId = user?.id || user?.Id;
+
+      if (tracksRes.data && tracksRes.data.length > 0) {
+        const mappedTracks = tracksRes.data.map(t => {
+          const trackId = String(t.id || t.Id);
+
+          // Robust check for Price and IsLocked (handling camelCase vs PascalCase artifacts)
+          const rawPrice = t.price !== undefined ? t.price : (t.Price !== undefined ? t.Price : 0);
+          const rawIsLocked = t.isLocked !== undefined ? t.isLocked : (t.IsLocked !== undefined ? t.IsLocked : false);
+
+          const artistUserId = t.artistUserId || t.ArtistUserId ||
+            t.album?.artist?.userId || t.album?.artist?.UserId ||
+            t.Album?.Artist?.UserId || t.Album?.Artist?.userId;
+
+          const isMine = artistUserId !== undefined && String(artistUserId) === String(currentUserId);
+
+          return {
             ...t,
-            title: t.title || t.Title,
-            artist: t.album?.artist?.name || 'Unknown Artist',
-            album: t.album?.title || 'Unknown Album',
-            albumId: t.album?.id,
-            artistId: t.album?.artist?.id,
-            cover: getMediaUrl(t.coverImageUrl),
-            source: getMediaUrl(t.filePath)
-          }));
-          setTracks(mappedTracks);
-        } else {
-          setTracks(TRACKS);
-        }
-      } catch (error) {
-        console.error("Failed to fetch tracks", error);
+            id: trackId,
+            title: t.title || t.Title || 'Unknown Title',
+            artist: t.album?.artist?.name || t.Album?.Artist?.Name || 'Unknown Artist',
+            album: t.album?.title || t.Album?.Title || 'Unknown Album',
+            albumId: t.album?.id || t.Album?.Id,
+            artistId: t.album?.artist?.id || t.Album?.Artist?.Id || t.artistId || t.ArtistId,
+            artistUserId: artistUserId,
+            duration: t.duration || t.Duration || '3:00',
+            cover: getMediaUrl(t.coverImageUrl || t.CoverImageUrl),
+            source: getMediaUrl(t.filePath || t.FilePath),
+            price: rawPrice,
+            isLocked: rawIsLocked,
+            isOwned: ownedTrackIds.has(trackId) || isMine,
+            isLiked: likedTrackIds.has(trackId),
+            playCount: t.playCount || t.PlayCount || 0
+          };
+        });
+        setTracks(mappedTracks);
+      } else {
         setTracks(TRACKS);
       }
-    };
+    } catch (error) {
+      console.error("Failed to fetch tracks", error);
+      setTracks(TRACKS);
+    }
+  };
+
+  useEffect(() => {
     fetchTracks();
   }, [user]);
 
-  // --- AUDIO LOGIC ---
+  // Fetch Global Stats for Discovery Hub
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await API.Discovery.getStats();
+        if (res.data) setGlobalStats(res.data);
+      } catch (e) {
+        console.error("Failed to fetch global stats", e);
+      }
+    };
+
+    fetchStats();
+    // Refresh every 30 seconds if in discovery view
+    const interval = setInterval(() => {
+      if (activeView === 'discovery') fetchStats();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [activeView]);
+
+  // --- AUDIO LOGIC (Unified Manager) ---
   const currentTrack = tracks[currentTrackIndex] || TRACKS[0] || { source: '', title: 'Loading...', artist: 'System' };
 
+  // --- TRACKING LOGIC (Discovery Analytics) ---
+  const lastTrackLogged = useRef(null);
   useEffect(() => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.play().catch(e => console.error("Playback failed", e));
-      } else {
-        audioRef.current.pause();
+    if (isPlaying && currentTrack.id && lastTrackLogged.current !== currentTrack.id) {
+      const isLocked = currentTrack.isLocked && !currentTrack.isOwned;
+      if (!isLocked) {
+        console.log(`[DISCOVERY] Recording play for track: ${currentTrack.id}`);
+        API.Discovery.recordPlay(currentTrack.id).catch(e => console.error("Failed to record play", e));
+        lastTrackLogged.current = currentTrack.id;
       }
     }
-  }, [isPlaying]);
+  }, [currentTrack.id, isPlaying, currentTrack.isLocked, currentTrack.isOwned]);
 
   useEffect(() => {
-    // Auto-play when track changes if already playing
-    if (audioRef.current && isPlaying) {
-      audioRef.current.play().catch(e => console.error("Playback failed", e));
-    }
-  }, [currentTrackIndex]);
+    if (!audioRef.current) return;
+    const audio = audioRef.current;
+    const isLocked = currentTrack.isLocked && !currentTrack.isOwned;
 
-  const handleNext = () => setCurrentTrackIndex(p => (p + 1) % tracks.length);
-  const handlePrev = () => setCurrentTrackIndex(p => (p - 1 + tracks.length) % tracks.length);
+    // 1. Source Management
+    if (currentTrack.source && audio.getAttribute('data-playing-src') !== currentTrack.source) {
+      audio.pause();
+      audio.src = currentTrack.source;
+      audio.setAttribute('data-playing-src', currentTrack.source);
+      audio.load();
+      setCurrentTime(0); // Explicit reset on source change
+      // Reset tracker when source changes to allow logging the new track
+      // lastTrackLogged is handled by the useEffect above
+    }
+
+    // 2. Playback State Management
+    if (isPlaying && !isLocked && currentTrack.source) {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => { /* Handle auto-play block */ });
+      }
+    } else {
+      audio.pause();
+      if (isLocked && isPlaying) setIsPlaying(false);
+    }
+  }, [currentTrack.source, isPlaying, currentTrack.isLocked, currentTrack.isOwned]);
+
+  const handleNext = () => {
+    setCurrentTrackIndex((prev) => (prev + 1) % (tracks.length || 1));
+    setIsPlaying(true);
+  };
+
+  const handlePrev = () => {
+    setCurrentTrackIndex((prev) => (prev - 1 + tracks.length) % (tracks.length || 1));
+    setIsPlaying(true);
+  };
+
   const togglePlay = () => setIsPlaying(!isPlaying);
 
   const handlePlayPlaylist = (newTracks, startIndex = 0) => {
@@ -128,49 +250,71 @@ export default function App() {
   };
 
   // Fetch User Profile & Credits
-  // Fetch User Profile & Credits
-  // Fetch User Profile & Credits
   const fetchUserProfile = async (notify = false) => {
     try {
       const res = await API.Users.getProfile();
       console.log("Profile Refreshed:", res.data);
       if (res.data) {
-        // Map backend 'creditsBalance' to frontend 'credits'
         const userData = {
           ...res.data,
+          id: res.data.id || res.data.Id,
           credits: res.data.creditsBalance !== undefined ? res.data.creditsBalance : res.data.credits
         };
-
         setUser(prev => ({ ...prev, ...userData }));
-
-        // Success notification (optional)
         if (notify) {
-          alert(`VERIFICACIÓN SERVIDOR: \n\nSaldo sincronizado: ${userData.credits} CRD`);
+          // alert(`VERIFICACIÓN SERVIDOR: \n\nSaldo sincronizado: ${userData.credits} CRD`);
         }
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
-      if (notify) {
-        let report = `Status: ${error.response?.status || 'Active (Network Error)'}\n`;
-        report += `URL: ${error.config?.url || 'Unknown'}\n`;
-        if (error.response?.data) {
-          const d = error.response.data;
-          report += `Response Data: ${typeof d === 'object' ? JSON.stringify(d, null, 2) : d}\n`;
-        } else {
-          report += `Message: ${error.message}\n`;
-        }
-        alert(`ERROR DE VERIFICACIÓN:\n\n${report}`);
-      }
     }
   };
 
   useEffect(() => {
     if (localStorage.getItem('token')) {
       fetchUserProfile();
+
+      // Initial Heartbeat
+      API.Discovery.heartbeat().catch(e => console.error("Heartbeat failed", e));
+
+      // Periodic Heartbeat loop (every 30s) to keep online status active
+      const interval = setInterval(() => {
+        if (localStorage.getItem('token')) {
+          API.Discovery.heartbeat().catch(e => console.error("Heartbeat loop failed", e));
+        }
+      }, 30000);
+
+      return () => clearInterval(interval);
     }
   }, []);
 
+  const checkNewMessages = async () => {
+    if (activeView === 'messages') {
+      setHasNewMessages(false);
+      return;
+    }
+    try {
+      const res = await API.Messages.getConversations();
+      const hasUnread = res.data?.some(conv => conv.unreadCount > 0);
+      if (hasUnread) setHasNewMessages(true);
+    } catch (err) {
+      console.error("Failed to check notifications", err);
+    }
+  };
 
+  useEffect(() => {
+    if (user) {
+      checkNewMessages();
+      const interval = setInterval(checkNewMessages, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [user, activeView]);
+
+  useEffect(() => {
+    if (activeView === 'messages') {
+      setHasNewMessages(false);
+    }
+  }, [activeView]);
 
   // Global Keydown Listener for Spacebar
   useEffect(() => {
@@ -178,58 +322,129 @@ export default function App() {
       if (e.code === 'Space') {
         const activeTag = document.activeElement?.tagName?.toLowerCase();
         if (activeTag === 'input' || activeTag === 'textarea' || document.activeElement?.isContentEditable) return;
-
         e.preventDefault();
         setIsPlaying(prev => !prev);
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handlePurchase = async (track) => {
+  const handlePurchase = async (track, isTip = false, amount = 0) => {
     try {
-      await API.Purchases.purchaseTrack(track.id);
-      // Refresh profile to get new balance
-      await fetchUserProfile();
-      // Ideally also mark track as purchased in state
-      alert("Purchase successful! - Créditos descontados.");
+      if (isTip) {
+        const tipAmount = amount || 50;
+        if (confirm(`Send a ${tipAmount} Credit tip to ${track.artist}?`)) {
+          const res = await API.Economy.tipArtist(track.artistId || 1, tipAmount);
+          const message = res.data?.message || "Tip sent! <3";
+
+          const balance = res.data?.newBalance !== undefined ? res.data.newBalance : (res.data?.NewBalance !== undefined ? res.data.NewBalance : undefined);
+
+          if (balance !== undefined) {
+            setUser(prev => ({ ...prev, credits: balance }));
+          } else {
+            setUser(prev => ({ ...prev, credits: (prev.credits || 0) - tipAmount }));
+          }
+
+          alert(message);
+          await fetchUserProfile();
+        }
+        return;
+      }
+
+      // Standard Purchase Logic
+      const res = await API.Purchases.purchaseTrack(track.id);
+      const balance = res.data?.newBalance !== undefined ? res.data.newBalance : (res.data?.NewBalance !== undefined ? res.data.NewBalance : undefined);
+
+      if (balance !== undefined) {
+        setUser(prev => ({ ...prev, credits: balance }));
+      } else {
+        // Fallback optimistic update
+        setUser(prev => ({ ...prev, credits: (prev.credits || 0) - (track.price || 10) }));
+      }
+
+      // Update track ownership state
+      setTracks(prev => prev.map(t =>
+        t.id === track.id ? { ...t, isOwned: true, isLocked: false } : t
+      ));
+
+      await fetchUserProfile(); // Double check sync
+      alert("Purchase successful! - Download Unlocked.");
     } catch (error) {
-      console.error("Purchase failed:", error);
-      const errMsg = error.response?.data?.message || error.response?.data || error.message;
-      alert(`ERROR DE COMPRA: ${errMsg}`); // Exact error for user
+      console.error("Purchase/Tip failed:", error);
+      alert(error.response?.data?.message || "Transaction failed");
+    }
+  };
+
+
+  const handleDownload = async (track) => {
+    if (!track.isOwned) {
+      alert("ACCESS DENIED: You must own this track to download it.");
+      return;
+    }
+    if (!track.source) return;
+    try {
+      const response = await fetch(track.source);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${track.artist} - ${track.title}.mp3`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download failed, using fallback:", error);
+      const link = document.createElement('a');
+      link.href = track.source;
+      link.download = `${track.artist} - ${track.title}.mp3`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const handleLike = async (track) => {
+    const trackId = track.id || track.Id;
+    if (!trackId) {
+      console.error("Cannot like track: ID is missing", track);
+      return;
+    }
+    const isLiking = !track.isLiked;
+
+    console.log(`Attempting to ${isLiking ? 'like' : 'unlike'} track:`, trackId);
+
+    // Optimistic Update
+    setTracks(prev => prev.map(t =>
+      String(t.id) === String(trackId) ? { ...t, isLiked: isLiking } : t
+    ));
+
+    try {
+      if (isLiking) {
+        await API.Social.likeTrack(trackId);
+      } else {
+        await API.Social.unlikeTrack(trackId);
+      }
+      console.log(`Track ${trackId} ${isLiking ? 'liked' : 'unliked'} and persisted.`);
+    } catch (error) {
+      console.error("Failed to sync like status:", error);
+      // Rollback on error
+      setTracks(prev => prev.map(t =>
+        String(t.id) === String(trackId) ? { ...t, isLiked: !isLiking } : t
+      ));
     }
   };
 
   const addCreditsDebug = async () => {
     try {
       const userId = user?.id || 1;
-      const payload = { userId, amount: 100 };
-
-      // CONFIRMATION DEBUG
-      console.log("Sending payload:", payload);
       await API.Economy.add(100, userId);
-
-      // OPTIMISTIC UPDATE: Update UI immediately so user sees +100
       setUser(prev => ({ ...prev, credits: (prev?.credits || 0) + 100 }));
-
       await fetchUserProfile();
       alert("SUCCESS: +100 Créditos añadidos correctamente.");
     } catch (error) {
       console.error("Failed to add credits:", error);
-
-      let report = `Status: ${error.response?.status || 'Active (Network Error)'}\n`;
-      report += `URL: ${error.config?.url}\n`;
-
-      if (error.response?.data) {
-        const d = error.response.data;
-        report += `Response Data: ${typeof d === 'object' ? JSON.stringify(d, null, 2) : d}\n`;
-      } else {
-        report += `Message: ${error.message}\n`;
-      }
-
-      alert(`DETAILED ERROR REPORT:\n\n${report}`);
     }
   };
 
@@ -237,7 +452,6 @@ export default function App() {
     if (authData.token) localStorage.setItem('token', authData.token);
     if (authData.user) {
       localStorage.setItem('user', JSON.stringify(authData.user));
-      // Set initial user but immediately fetch full profile to sync credits
       setUser(authData.user);
     }
     fetchUserProfile();
@@ -249,26 +463,33 @@ export default function App() {
     localStorage.removeItem('user');
     setUser(null);
     setView('login');
+    setViewingUserId(null);
     setIsPlaying(false);
+  };
+
+  const navigateToProfile = (id) => {
+    setViewingUserId(id);
+    setView('profile');
   };
 
   return (
     <div className="min-h-screen bg-[#020202] text-[#ff006e] font-mono selection:bg-[#ff006e] selection:text-black overflow-hidden">
-
       {/* PERSISTENT AUDIO ELEMENT */}
       <audio
         ref={audioRef}
-        src={currentTrack.source}
         onEnded={handleNext}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
       />
 
       <AnimatePresence mode="wait">
-        {view === 'login' ? (
+        {activeView === 'login' ? (
           <AuthView onLoginSuccess={handleAuthSuccess} />
         ) : (
           <Dashboard
-            activeView={view}
+            activeView={activeView}
             setView={setView}
+            hasNewMessages={hasNewMessages}
             currentTrackIndex={currentTrackIndex}
             setCurrentTrackIndex={setCurrentTrackIndex}
             isPlaying={isPlaying}
@@ -276,21 +497,28 @@ export default function App() {
             onLogout={handleLogout}
             user={user}
             tracks={tracks}
-            // Pass controls down
+            currentTime={currentTime}
+            duration={duration}
+            onSeek={handleSeek}
+            onLike={handleLike}
             togglePlay={togglePlay}
             handleNext={handleNext}
             handlePrev={handlePrev}
             handlePlayPlaylist={handlePlayPlaylist}
             onPurchase={handlePurchase}
+            onDownload={handleDownload}
             onAddCredits={addCreditsDebug}
             onRefreshProfile={() => fetchUserProfile(true)}
+            onRefreshTracks={fetchTracks}
+            globalStats={globalStats}
+            navigateToProfile={navigateToProfile}
+            viewingUserId={viewingUserId}
           />
         )}
       </AnimatePresence>
     </div>
   );
-}
-
+};
 // --- VISTA: LOGIN (ESTILO HACKER) ---
 const LoginView = ({ onLogin }) => (
   <motion.div
@@ -311,39 +539,52 @@ const LoginView = ({ onLogin }) => (
   </motion.div>
 );
 
-// --- DASHBOARD (LAYOUT RESPONSIVO) ---
-const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onAddCredits, onRefreshProfile }) => {
+const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onDownload, onLike, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, globalStats, hasNewMessages, navigateToProfile, viewingUserId }) => {
   const currentTrack = tracks[currentTrackIndex] || TRACKS[0] || { title: 'Loading...', artist: 'System' };
-
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   return (
-    <div className="flex h-screen w-full overflow-hidden relative">
+    <div className="flex h-screen w-full overflow-hidden relative bg-black bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-[#1a1a1a] via-[#050505] to-[#000000]">
+      {/* Global Noise Texture */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-0" />
 
       {/* SIDEBAR (Escritorio) */}
-      {/* SIDEBAR (Escritorio) */}
-      <aside className="hidden lg:flex w-64 flex-col border-r border-[#ff006e]/10 bg-[#050505] p-6 space-y-8 z-30 shrink-0">
-        <div className="text-2xl font-black italic text-white flex items-center gap-2">
-          <Zap size={24} className="text-[#ff006e]" /> SYSTEM
+      <aside className={`hidden lg:flex flex-col border-r border-white/5 bg-black/20 backdrop-blur-2xl transition-all duration-300 z-30 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.4)] ${isSidebarCollapsed ? 'w-24' : 'w-64'}`}>
+        <div
+          className={`cursor-pointer flex justify-center items-center hover:opacity-80 transition-all ${isSidebarCollapsed ? 'p-4' : 'p-6'}`}
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        >
+          <img
+            src={skullImg}
+            alt="Toggle Sidebar"
+            className={`transition-all duration-300 ${isPlaying ? 'animate-beat-pulse' : 'drop-shadow-[0_0_5px_rgba(255,0,110,0.5)]'} ${isSidebarCollapsed ? 'w-20 h-20' : 'w-24 h-24'}`}
+          />
         </div>
-        <nav className="flex-1 space-y-2">
-          <SidebarLink icon={<Radio size={20} />} label="Discovery" active={activeView === 'discovery'} onClick={() => setView('discovery')} />
-          <SidebarLink icon={<Hash size={20} />} label="Feed" active={activeView === 'feed'} onClick={() => setView('feed')} />
-          <SidebarLink icon={<User size={20} />} label="Profile" active={activeView === 'profile'} onClick={() => setView('profile')} />
-          <SidebarLink icon={<Play size={20} />} label="Player" active={activeView === 'player'} onClick={() => setView('player')} />
-          <SidebarLink icon={<MessageSquare size={20} />} label="Messages" active={activeView === 'messages'} onClick={() => setView('messages')} />
+
+        <nav className="flex-1 space-y-2 p-4">
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<Radio size={20} />} label="Discovery" active={activeView === 'discovery'} onClick={() => setView('discovery')} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<Hash size={20} />} label="Feed" active={activeView === 'feed'} onClick={() => setView('feed')} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<User size={20} />} label="Profile" active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => navigateToProfile(null)} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<Play size={20} />} label="Player" active={activeView === 'player'} onClick={() => setView('player')} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<MessageSquare size={20} />} label="Messages" active={activeView === 'messages'} onClick={() => setView('messages')} hasNotification={hasNewMessages} />
         </nav>
-        <button onClick={onLogout} className="text-left text-[10px] text-[#ff006e]/30 hover:text-[#ff006e] uppercase tracking-widest font-bold">Log_Out_System</button>
+
+        <div className={`p-6 ${isSidebarCollapsed ? 'text-center' : 'text-left'}`}>
+          <button onClick={onLogout} className="text-[10px] text-[#ff006e]/30 hover:text-[#ff006e] uppercase tracking-widest font-bold">
+            {isSidebarCollapsed ? <LogOut size={20} /> : 'Log_Out_System'}
+          </button>
+        </div>
       </aside>
 
       {/* ÁREA DE CONTENIDO DINÁMICO */}
-      <main className="flex-1 flex flex-col h-full bg-[#020202] relative overflow-hidden">
+      <main className="flex-1 flex flex-col h-full bg-transparent relative overflow-hidden z-10">
         {/* TOP NAV (Móvil) */}
         <header className="lg:hidden flex items-center justify-center p-4 border-b border-[#ff006e]/10 bg-black/90 backdrop-blur-md z-40 relative">
           <div className="flex gap-4">
             <NavButton icon={<Radio size={18} />} active={activeView === 'discovery'} onClick={() => setView('discovery')} />
             <NavButton icon={<Hash size={18} />} active={activeView === 'feed'} onClick={() => setView('feed')} />
             <NavButton icon={<Play size={18} />} active={activeView === 'player'} onClick={() => setView('player')} />
-            <NavButton icon={<MessageSquare size={18} />} active={activeView === 'messages'} onClick={() => setView('messages')} />
-            <NavButton icon={<User size={18} />} active={activeView === 'profile'} onClick={() => setView('profile')} />
+            <NavButton icon={<MessageSquare size={18} />} active={activeView === 'messages'} onClick={() => setView('messages')} hasNotification={hasNewMessages} />
+            <NavButton icon={<User size={18} />} active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => navigateToProfile(null)} />
           </div>
         </header>
 
@@ -354,10 +595,14 @@ const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurren
                 key="discovery"
                 allTracks={tracks}
                 onPlayPlaylist={handlePlayPlaylist}
+                onLike={onLike}
+                stats={globalStats}
+                user={user}
+                navigateToProfile={navigateToProfile}
               />
             )}
             {activeView === 'feed' && <FeedContent key="feed" />}
-            {activeView === 'profile' && <ProfileView key="profile" user={user} onLogout={onLogout} onAddCredits={onAddCredits} onRefreshProfile={onRefreshProfile} />}
+            {activeView === 'profile' && <ProfileView key={viewingUserId || 'me'} targetUserId={viewingUserId} user={user} tracks={tracks} onLogout={onLogout} onAddCredits={onAddCredits} onRefreshProfile={onRefreshProfile} onRefreshTracks={onRefreshTracks} navigateToProfile={navigateToProfile} />}
             {activeView === 'player' && <PlayerContent
               key="player"
               setView={setView}
@@ -368,9 +613,18 @@ const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurren
               tracks={tracks}
               user={user}
               onPurchase={onPurchase}
+              onDownload={onDownload}
               onAddCredits={onAddCredits}
+              currentTime={currentTime}
+              duration={duration}
+              onSeek={onSeek}
+              onNext={handleNext}
+              onPrev={handlePrev}
+              onLike={onLike}
+              togglePlay={togglePlay}
+              navigateToProfile={navigateToProfile}
             />}
-            {activeView === 'messages' && <MessagesView key="messages" />}
+            {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} />}
           </AnimatePresence>
         </div>
       </main>
@@ -384,6 +638,7 @@ const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurren
             onTogglePlay={togglePlay}
             onNext={handleNext}
             onPrev={handlePrev}
+            onLike={onLike}
             onExpand={() => setView('player')}
             activeView={activeView}
           />
@@ -394,7 +649,7 @@ const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurren
 };
 
 // --- MINI PLAYER COMPONENT ---
-const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onExpand, activeView }) => {
+const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView }) => {
   const isMessages = activeView === 'messages';
 
   return (
@@ -438,7 +693,11 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onExpand, 
 
       {/* Extra Actions */}
       <div className={`hidden sm:flex items-center gap-3 px-2 border-l ${isMessages ? 'border-[#ff006e]/10' : 'border-[#ff006e]/10'}`}>
-        <Heart size={16} className={`cursor-pointer ${isMessages ? 'text-[#ff006e]/40 hover:text-[#ff006e]' : 'text-[#ff006e]/40 hover:text-[#ff006e]'}`} />
+        <Heart
+          size={16}
+          className={`cursor-pointer transition-colors ${track?.isLiked ? 'text-[#ff006e] fill-[#ff006e]' : 'text-[#ff006e]/40 hover:text-[#ff006e]'}`}
+          onClick={(e) => { e.stopPropagation(); onLike && onLike(track); }}
+        />
         <Volume2 size={16} className={`cursor-pointer ${isMessages ? 'text-[#ff006e]/40 hover:text-[#ff006e]' : 'text-[#ff006e]/40 hover:text-[#ff006e]'}`} />
         <button onClick={(e) => { e.stopPropagation(); onExpand(); }} className={`hover:text-white transition-colors ${isMessages ? 'text-[#ff006e]' : 'text-[#ff006e]/60'}`}>
           <Maximize2 size={18} />
@@ -499,8 +758,8 @@ const DiscoveryContent = () => (
 const FeedContent = () => (
   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col lg:flex-row h-full">
     {/* Izquierda: Acciones */}
-    <div className="hidden lg:block w-72 p-6 space-y-6 border-r border-[#ff006e]/5">
-      <div className="bg-[#0a0a0a] border border-[#ff006e]/20 rounded-2xl overflow-hidden">
+    <div className="hidden lg:block w-72 p-6 space-y-6 border-r border-[#ff006e]/5 relative z-20">
+      <div className="bg-[#0a0a0a]/50 backdrop-blur-xl border border-[#ff006e]/20 rounded-2xl overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.5)]">
         <div className="p-4 bg-[#ff006e]/5 border-b border-[#ff006e]/10 flex justify-between items-center text-[10px] font-black uppercase text-white">Quick Actions <ChevronDown size={14} /></div>
         <div className="p-4 space-y-2">
           {['New Post', 'Upload Track', 'Live Stream'].map(a => (
@@ -511,7 +770,7 @@ const FeedContent = () => (
       <div className="space-y-4 px-2">
         <h3 className="text-[10px] font-black uppercase text-[#ff006e]/30 tracking-widest px-2">People to Follow</h3>
         {[1, 2, 3].map(i => (
-          <div key={i} className="flex items-center gap-3 p-2 hover:bg-[#111] rounded-lg cursor-pointer">
+          <div key={i} className="flex items-center gap-3 p-3 hover:bg-[#ff006e]/5 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-[#ff006e]/10">
             <div className="w-8 h-8 rounded-full border border-[#ff006e]/30 flex items-center justify-center text-[10px] font-bold">V</div>
             <div className="flex-1 overflow-hidden">
               <div className="text-[10px] font-black text-white uppercase">User_Goth_{i}</div>
@@ -561,7 +820,7 @@ const FeedContent = () => (
     {/* Derecha: Radios & Recomendados */}
     <div className="hidden xl:block w-80 p-6 space-y-8 bg-black/40 border-l border-[#ff006e]/5">
       <div className="space-y-4">
-        <h3 className="text-[10px] font-black uppercase text-[#ff006e]/30 px-2 tracking-[0.3em]">Radio Stations</h3>
+        <h3 className="text-[10px] font-black uppercase text-[#ff006e]/30 px-2 tracking-[0.3em] Radio Stations">Radio Stations</h3>
         {RADIO_STATIONS.map(radio => (
           <div key={radio.id} className={`p-4 rounded-2xl border ${radio.active ? 'bg-green-950/20 border-green-500/30' : 'bg-black/60 border-[#ff006e]/10 opacity-60'}`}>
             <div className="flex items-center gap-2 mb-2">
@@ -585,7 +844,7 @@ const FeedContent = () => (
 
 
 // --- CONTENIDO: PLAYER (PANTALLA COMPLETA) ---
-const PlayerContent = ({ setView, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, tracks }) => {
+const PlayerContent = ({ setView, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, tracks, currentTime, duration, onSeek, user, onPurchase, onDownload, onAddCredits, onNext, onPrev, onLike, togglePlay, navigateToProfile }) => {
   return (
     <div className="flex items-center justify-center h-full w-full">
       <IPodPlayer
@@ -595,24 +854,51 @@ const PlayerContent = ({ setView, currentTrackIndex, setCurrentTrackIndex, isPla
         setIsPlaying={setIsPlaying}
         tracks={tracks}
         onMinimize={() => setView('discovery')}
+        currentTime={currentTime}
+        duration={duration}
+        onSeek={onSeek}
+        onNext={onNext}
+        onPrev={onPrev}
+        onLike={onLike}
+        togglePlay={togglePlay}
+        user={user}
+        onPurchase={onPurchase}
+        onDownload={onDownload}
+        onAddCredits={onAddCredits}
+        navigateToProfile={navigateToProfile}
       />
     </div>
   );
 };
 // --- COMPONENTES AUXILIARES ---
 
-const SidebarLink = ({ icon, label, active, onClick }) => (
+const SidebarLink = ({ icon, label, active, onClick, collapsed, hasNotification }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all ${active ? 'bg-[#ff006e] text-black shadow-[0_0_25px_#ff006e60] scale-105' : 'text-[#ff006e]/60 hover:bg-[#ff006e05] hover:text-[#ff006e]'}`}
+    className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all duration-300 group border relative
+      ${active
+        ? 'bg-[#ff006e]/10 text-white/90 border-[#ff006e]/50 shadow-[0_0_15px_rgba(255,0,110,0.25)]'
+        : 'text-[#ff006e]/60 border-transparent hover:bg-[#ff006e]/5 hover:text-[#ff006e] hover:border-[#ff006e]/20'
+      } ${collapsed ? 'justify-center' : ''}`}
+    title={collapsed ? label : ''}
   >
-    {icon}
-    <span className="text-[11px] font-black uppercase tracking-widest">{label}</span>
+    <div className={`transition-transform duration-300 ${active ? 'scale-105 drop-shadow-[0_0_8px_#ff006e]' : 'group-hover:scale-105'}`}>
+      {icon}
+    </div>
+    {!collapsed && <span className={`text-[11px] font-black uppercase tracking-widest transition-opacity ${active ? 'opacity-100' : 'opacity-80'}`}>{label}</span>}
+    {hasNotification && !active && (
+      <div className="absolute top-2 right-2 w-2 h-2 bg-[#ff006e] rounded-full shadow-[0_0_8px_#ff006e] animate-pulse" />
+    )}
   </button>
 );
 
-const NavButton = ({ icon, active, onClick }) => (
-  <button onClick={onClick} className={`p-2 transition-all ${active ? 'text-white scale-125' : 'text-[#ff006e]/40 hover:text-[#ff006e]'}`}>{icon}</button>
+const NavButton = ({ icon, active, onClick, hasNotification }) => (
+  <button onClick={onClick} className="relative p-2 transition-all group">
+    <div className={`${active ? 'text-white scale-125' : 'text-[#ff006e]/40 hover:text-[#ff006e]'}`}>{icon}</div>
+    {hasNotification && !active && (
+      <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-[#ff006e] rounded-full shadow-[0_0_5px_#ff006e]" />
+    )}
+  </button>
 );
 
 const QuickActionButton = ({ label, icon }) => (

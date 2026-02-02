@@ -29,4 +29,24 @@
         scrollbar-width: none;
         /* Firefox */
     }
+
+    /* Updated for faster 'beat' and dimmer glow */
+    @keyframes beat-pulse {
+
+        0%,
+        100% {
+            filter: drop-shadow(0 0 2px rgba(255, 0, 110, 0.4));
+            transform: scale(1);
+        }
+
+        50% {
+            filter: drop-shadow(0 0 8px rgba(255, 0, 110, 0.6));
+            transform: scale(1.02);
+            /* Subtle pop with the beat */
+        }
+    }
+
+    .animate-beat-pulse {
+        animation: beat-pulse 3s infinite ease-in-out;
+    }
 }

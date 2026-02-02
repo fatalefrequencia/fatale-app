@@ -31,7 +31,11 @@ const UploadTrackView = ({ onClose }) => {
         try {
             const data = new FormData();
             data.append('TrackTitle', formData.title);
-            data.append('Genre', formData.genre);
+            // Workaround: Backend [Required] attribute might still be active if server didn't restart.
+            // Sending 'Unknown' satisfies the validation.
+            data.append('Genre', formData.genre || 'Unknown');
+            data.append('Price', formData.price || 0);
+            data.append('IsLocked', formData.isLocked || false);
             data.append('AudioFile', formData.audioFile);
             if (formData.coverFile) {
                 data.append('CoverImage', formData.coverFile);
@@ -39,7 +43,10 @@ const UploadTrackView = ({ onClose }) => {
 
             await API.Tracks.uploadTrack(data);
             setStatus('success');
-            setTimeout(onClose, 2000);
+            setTimeout(() => {
+                onClose();
+                window.location.reload();
+            }, 1500);
         } catch (error) {
             console.error("DETALLE TÉCNICO:", error.response);
             setErrorDetails(error.response?.data || error.message);
@@ -96,6 +103,31 @@ const UploadTrackView = ({ onClose }) => {
                                 className="w-full bg-[#111] border border-[#333] rounded-lg p-3 text-white focus:border-[#ff006e] outline-none transition-colors"
                                 placeholder="e.g. Cyberpunk, Phonk..."
                             />
+                        </div>
+
+                        {/* Economy Settings */}
+                        <div className="flex gap-4">
+                            <div className="flex-1 space-y-2">
+                                <label className="text-[10px] font-black text-[#ff006e] uppercase tracking-widest">Price (CRD)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={formData.price || 0}
+                                    onChange={e => setFormData({ ...formData, price: parseInt(e.target.value) || 0 })}
+                                    className="w-full bg-[#111] border border-[#333] rounded-lg p-3 text-white focus:border-[#ff006e] outline-none transition-colors"
+                                />
+                            </div>
+                            <div className="flex items-end pb-3">
+                                <div
+                                    onClick={() => setFormData({ ...formData, isLocked: !formData.isLocked })}
+                                    className={`flex items-center gap-2 cursor-pointer border px-3 py-2 rounded-lg transition-colors ${formData.isLocked ? 'border-[#ff006e] bg-[#ff006e]/10' : 'border-[#333] hover:border-[#ff006e]/50'}`}
+                                >
+                                    <div className={`w-4 h-4 border ${formData.isLocked ? 'bg-[#ff006e] border-[#ff006e]' : 'border-[#666]'} flex items-center justify-center`}>
+                                        {formData.isLocked && <div className="w-2 h-2 bg-black" />}
+                                    </div>
+                                    <span className="text-[10px] font-bold text-white uppercase">Encrypt / Lock</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">

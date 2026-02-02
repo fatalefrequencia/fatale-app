@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Social API Test</title>
+</head>
+<body>
+    <h1>Testing Social API</h1>
+    <button onclick="testLike()">Test Like Track 1</button>
+    <button onclick="testUnlike()">Test Unlike Track 1</button>
+    <button onclick="testGetLikes()">Get My Likes</button>
+    <pre id="output"></pre>
+
+    <script>
+        const BASE_URL = 'http://localhost:5264/api';
+        const userId = 1; // Test user ID
+
+        async function testLike() {
+            try {
+                const response = await fetch(`${BASE_URL}/Social/like/1`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'UserId': userId
+                    }
+                });
+                const data = await response.json();
+                document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+                console.log('Like response:', data);
+            } catch (error) {
+                document.getElementById('output').textContent = 'Error: ' + error.message;
+                console.error('Like error:', error);
+            }
+        }
+
+        async function testUnlike() {
+            try {
+                const response = await fetch(`${BASE_URL}/Social/like/1`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'UserId': userId
+                    }
+                });
+                const data = await response.json();
+                document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+                console.log('Unlike response:', data);
+            } catch (error) {
+                document.getElementById('output').textContent = 'Error: ' + error.message;
+                console.error('Unlike error:', error);
+            }
+        }
+
+        async function testGetLikes() {
+            try {
+                const response = await fetch(`${BASE_URL}/Likes`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'UserId': userId
+                    }
+                });
+                const data = await response.json();
+                document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+                console.log('Get likes response:', data);
+            } catch (error) {
+                document.getElementById('output').textContent = 'Error: ' + error.message;
+                console.error('Get likes error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
