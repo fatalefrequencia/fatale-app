@@ -126,6 +126,10 @@ const API = {
         getOnlineUsers: () => api.get('/Discovery/online-users'),
         heartbeat: () => api.post('/Discovery/heartbeat'),
     },
+    Youtube: {
+        search: (query) => api.get(`/Youtube/search?query=${encodeURIComponent(query)}`),
+        stream: (videoId, userId) => api.get(`/Youtube/stream?videoId=${videoId}&userId=${userId}`),
+    },
     Messages: {
         getConversations: () => api.get('/Messages/conversations'),
         getConversation: (userId) => api.get(`/Messages/conversation/${userId}`),

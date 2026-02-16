@@ -24,6 +24,10 @@ const DiscoveryMapView = ({ onPlayPlaylist, allTracks, onLike, stats, user: curr
     const [isStatsCollapsed, setIsStatsCollapsed] = useState(true);
     const [localStats, setLocalStats] = useState({ scans: 0, tracks: 0 });
     const [onlineUsers, setOnlineUsers] = useState(0); // Will be fetched from backend
+    const [searchQuery, setSearchQuery] = useState('cyberpunk music'); // Default query
+    const [searchResults, setSearchResults] = useState([]); // Store explicit search results for overlay
+    const [showResultsOverlay, setShowResultsOverlay] = useState(false); // Toggle overlay
+    const [lastError, setLastError] = useState(null); // Capture execution errors
 
     // Dynamic Layer Opacities
     // Macro (World View): Visible at low zoom (< 0.6), fades out by 1.0
@@ -108,8 +112,18 @@ const DiscoveryMapView = ({ onPlayPlaylist, allTracks, onLike, stats, user: curr
             hash |= 0;
         }
 
-        const x = (Math.sin(hash) * 10000) % 4000;
-        const y = (Math.cos(hash) * 10000) % 3000;
+        // Feature: Search results (YouTube) should be clustered near the center/user
+        // to be immediately visible.
+        let rangeX = 4000;
+        let rangeY = 3000;
+
+        if (category === 'YouTube') {
+            rangeX = 800; // Much tighter range for search results
+            rangeY = 600;
+        }
+
+        const x = (Math.sin(hash) * 10000) % rangeX;
+        const y = (Math.cos(hash) * 10000) % rangeY;
         return { x, y };
     };
 
@@ -127,9 +141,22 @@ const DiscoveryMapView = ({ onPlayPlaylist, allTracks, onLike, stats, user: curr
 
     const fetchData = async () => {
         setLoading(true);
+        setLastError(null); // Clear previous errors
         console.log("Fetching map data...");
         try {
             // Attempt API Fetch for non-track items
+            let youtubeItems = [];
+            let youtubeError = null;
+
+            try {
+                const ytResp = await API.Youtube.search(searchQuery);
+                youtubeItems = ytResp.data || [];
+            } catch (err) {
+                console.error("Youtube Search Failed:", err);
+                youtubeError = err.response?.data?.message || err.message || "Unknown API Error";
+                setLastError(youtubeError);
+            }
+
             const [albumsResponse, artistsResponse, profileResponse] = await Promise.all([
                 API.Albums.getAll().catch(e => ({ data: [] })),
                 API.Artists.getAll().catch(e => ({ data: [] })),
@@ -139,6 +166,15 @@ const DiscoveryMapView = ({ onPlayPlaylist, allTracks, onLike, stats, user: curr
             const tracks = allTracks && allTracks.length > 0 ? allTracks : [];
             const albums = albumsResponse.data || [];
             const fetchedArtists = artistsResponse.data || [];
+            // youtubeItems is already set above
+
+            console.log("DEBUG: Youtube Items:", youtubeItems);
+            setSearchResults(youtubeItems);
+
+            if (youtubeItems.length > 0 || youtubeError) {
+                setShowResultsOverlay(true);
+            }
+
             const user = profileResponse?.data;
 
             // Stats removed as requested to focus on artistry
@@ -181,6 +217,24 @@ const DiscoveryMapView = ({ onPlayPlaylist, allTracks, onLike, stats, user: curr
                 ...realArtists.map(a => {
                     const arid = a.id || a.Id;
                     return { ...a, id: arid, category: 'Artist', displayId: `artist-${arid}`, img: getMediaUrl(a.imageUrl || a.ImageUrl) };
+                }),
+                ...youtubeItems.map(y => {
+                    const yId = y.id || y.Id || y.videoId;
+                    return {
+                        id: yId,
+                        title: y.title || y.Title,
+                        artist: y.author || y.Author || y.channelTitle,
+                        category: 'YouTube',
+                        displayId: `yt-${yId}`,
+                        img: y.thumbnailUrl || y.ThumbnailUrl || y.thumbnail,
+                        playCount: parseInt(y.viewCount || y.ViewCount) || 0,
+                        nodeSize: y.nodeSize || y.NodeSize || y.Scale,
+                        streamUrl: null,
+                        source: `youtube:${yId}`,
+                        price: 0,
+                        isLocked: false,
+                        isOwned: true
+                    };
                 })
             ].map(item => {
                 let x, y;
@@ -200,10 +254,12 @@ const DiscoveryMapView = ({ onPlayPlaylist, allTracks, onLike, stats, user: curr
                 return {
                     ...item,
                     title: item.title || item.name || "Unknown",
-                    x, y
+                    x, y,
+                    debugCategory: item.category // Trace category
                 };
             });
 
+            console.log("DEBUG: All Map Items:", allItems);
             setMapItems(allItems);
 
             // Handle Residency Spawn
@@ -224,8 +280,20 @@ const DiscoveryMapView = ({ onPlayPlaylist, allTracks, onLike, stats, user: curr
                     animate(mapY, CENTER_OFFSET_Y, { type: "spring" });
                     animate(zoom, 0.4);
                 }
+            } else if (youtubeItems.length > 0) {
+                // If we have search results, Auto-Pan to the first one!
+                console.log("Search Results Found! Auto-panning...");
+                const firstHit = youtubeItems[0];
+                const pos = getDeterministicPosition(firstHit.videoId, 'YouTube');
+
+                const targetX = CENTER_OFFSET_X - pos.x;
+                const targetY = CENTER_OFFSET_Y - pos.y;
+
+                animate(mapX, targetX, { type: "spring", stiffness: 40 });
+                animate(mapY, targetY, { type: "spring", stiffness: 40 });
+                animate(zoom, 1.0, { type: "spring" });
             } else {
-                // Default Center if no residency
+                // Default Center if no residency and no active search results
                 animate(mapX, CENTER_OFFSET_X, { type: "spring" });
                 animate(mapY, CENTER_OFFSET_Y, { type: "spring" });
                 animate(zoom, 0.4);
@@ -277,41 +345,33 @@ const DiscoveryMapView = ({ onPlayPlaylist, allTracks, onLike, stats, user: curr
         }
     };
 
-    // Calculate viewport-based stats - Real-time function
-    const calculateViewportStats = useCallback(() => {
-        if (!mapItems.length) {
-            console.log('[Viewport] No map items loaded yet');
-            return;
-        }
+    // Calculate viewport-based stats whenever map position or items change
+    const updateLocalStats = useCallback(() => {
+        if (!mapItems.length) return;
 
         const currentMapX = mapX.get();
         const currentMapY = mapY.get();
         const currentZoom = zoom.get();
 
-        console.log('[Viewport] Calculating with:', {
-            totalItems: mapItems.length,
-            mapX: currentMapX,
-            mapY: currentMapY,
-            zoom: currentZoom
-        });
-
-        // Filter tracks visible in viewport
-        const visibleTracks = mapItems.filter((item) => {
+        // With origin-center, map center (5000, 5000) is at screen center
+        // Items are positioned relative to map center
+        const visibleTracks = mapItems.filter(item => {
             if (item.category !== 'Track') return false;
 
-            // Calculate screen position correctly:
-            // Item Local + Center Offset (5000) * Zoom + Map Pan
-            const screenX = item.x * currentZoom + currentMapX + 5000;
-            const screenY = item.y * currentZoom + currentMapY + 5000;
+            // Calculate item's screen position
+            // The map container has origin-center, so we need to project correctly
+            const itemX = item.x - CENTER_OFFSET_X;
+            const itemY = item.y - CENTER_OFFSET_Y;
 
-            const buffer = 100;
-            const isVisible = screenX >= -buffer && screenX <= window.innerWidth + buffer &&
+            // Project to screen space accounting for zoom and pan
+            const screenX = currentMapX + (itemX * currentZoom);
+            const screenY = currentMapY + (itemY * currentZoom);
+
+            // Check if within viewport (with buffer)
+            const buffer = 200;
+            return screenX >= -buffer && screenX <= window.innerWidth + buffer &&
                 screenY >= -buffer && screenY <= window.innerHeight + buffer;
-
-            return isVisible;
         });
-
-        console.log('[Viewport] Visible tracks:', visibleTracks.length);
 
         const totalScans = visibleTracks.reduce((sum, track) => {
             return sum + (track.playCount || track.PlayCount || 0);
@@ -321,17 +381,17 @@ const DiscoveryMapView = ({ onPlayPlaylist, allTracks, onLike, stats, user: curr
             scans: totalScans,
             tracks: visibleTracks.length
         });
-    }, [mapItems, mapX, mapY, zoom]);
+    }, [mapItems, mapX, mapY, zoom, CENTER_OFFSET_X, CENTER_OFFSET_Y]);
 
     // Real-time viewport tracking - updates instantly during navigation
-    useMotionValueEvent(mapX, "change", calculateViewportStats);
-    useMotionValueEvent(mapY, "change", calculateViewportStats);
-    useMotionValueEvent(zoom, "change", calculateViewportStats);
+    useMotionValueEvent(mapX, "change", updateLocalStats);
+    useMotionValueEvent(mapY, "change", updateLocalStats);
+    useMotionValueEvent(zoom, "change", updateLocalStats);
 
     // Initial calculation and when items change
     useEffect(() => {
-        calculateViewportStats();
-    }, [mapItems, calculateViewportStats]);
+        updateLocalStats();
+    }, [mapItems, updateLocalStats]);
 
 
     // Update online users from backend stats
@@ -386,6 +446,21 @@ const DiscoveryMapView = ({ onPlayPlaylist, allTracks, onLike, stats, user: curr
             const artistTracks = allTracks.filter(t => t.artistId === item.id);
             if (artistTracks.length > 0) onPlayPlaylist(artistTracks, 0);
         }
+        else if (item.category === 'YouTube') {
+            // Construct a playable track object from the YouTube item
+            const ytTrack = {
+                id: item.id,
+                title: item.title,
+                artist: item.artist,
+                cover: item.img,
+                source: item.streamUrl || `https://www.youtube.com/watch?v=${item.id}`, // Fallback if no streamUrl
+                duration: 0, // Unknown duration
+                isLocked: false,
+                isOwned: true,
+                price: 0
+            };
+            onPlayPlaylist([ytTrack], 0);
+        }
     };
 
     return (
@@ -396,20 +471,92 @@ const DiscoveryMapView = ({ onPlayPlaylist, allTracks, onLike, stats, user: curr
                     <Search className="text-[#ff006e] opacity-70 group-focus-within:opacity-100 transition-opacity" size={20} />
                     <input
                         type="text"
-                        placeholder="Explorar sonidos..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && fetchData()}
+                        placeholder="Search Youtube / System..."
                         className="bg-transparent border-none outline-none text-white text-sm w-32 md:w-64 font-bold italic placeholder-white/30"
                     />
                 </div>
                 <button
                     onClick={fetchData}
                     className="bg-black/40 backdrop-blur-2xl ring-1 ring-white/10 p-4 rounded-full text-[#ff006e] hover:bg-[#ff006e] hover:text-black transition-all pointer-events-auto shadow-[0_0_20px_rgba(0,0,0,0.3)] hover:shadow-[0_0_20px_#ff006e]"
+                    title="Refresh / Search"
                 >
                     <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
                 </button>
             </div>
 
-            {/* Local Stats HUD (Top Right) - Collapsible */}
-            <div className="absolute top-6 right-6 z-[100] flex flex-col items-end gap-2 pointer-events-none">
+            {/* SEARCH RESULTS OVERLAY (Micro-Window) */}
+            <AnimatePresence>
+                {showResultsOverlay && searchResults.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                        drag
+                        dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }} // Allow slight drag but mostly fixed
+                        className="absolute top-24 left-6 z-[150] w-80 max-h-[60vh] bg-black/80 backdrop-blur-xl border border-[#ff006e]/30 rounded-2xl flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.8)] pointer-events-auto"
+                    >
+                        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+                            <h3 className="text-[#ff006e] font-black uppercase tracking-widest text-xs flex items-center gap-2">
+                                <Search size={14} /> Search Results ({searchResults.length})
+                            </h3>
+                            <button onClick={() => setShowResultsOverlay(false)} className="text-white/50 hover:text-white">
+                                <Minus size={16} />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-thin scrollbar-thumb-[#ff006e]/30 scrollbar-track-transparent">
+
+                            {lastError && (
+                                <div className="p-3 bg-red-500/20 border border-red-500/50 rounded text-red-100 text-xs font-mono">
+                                    <strong>ERROR:</strong> {lastError}
+                                </div>
+                            )}
+
+                            {searchResults.length === 0 && !lastError && (
+                                <div className="p-4 text-white/30 text-xs text-center italic">
+                                    No results found for "{searchQuery}".
+                                </div>
+                            )}
+
+                            {searchResults.map((item) => (
+                                <div key={item.videoId} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg group transition-colors border border-transparent hover:border-white/10">
+                                    <div className="relative w-12 h-12 rounded overflow-hidden shrink-0">
+                                        <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover opacity-70 group-hover:opacity-100" />
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-transparent">
+                                            <Play size={16} className="text-white opacity-0 group-hover:opacity-100 drop-shadow-md" fill="white" />
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 min-w-0" onClick={() => {
+                                        // Trigger play manually from overlay
+                                        const yId = item.id || item.Id || item.videoId;
+                                        const ytTrack = {
+                                            id: yId,
+                                            title: item.title || item.Title,
+                                            artist: item.author || item.Author || item.channelTitle,
+                                            cover: item.thumbnailUrl || item.ThumbnailUrl || item.thumbnail,
+                                            source: `youtube:${yId}`, // Flag for App.jsx
+                                            duration: 0,
+                                            isLocked: false,
+                                            isOwned: true,
+                                            price: 0
+                                        };
+                                        onPlayPlaylist([ytTrack], 0);
+                                    }}>
+                                        <div className="text-white text-xs font-bold truncate group-hover:text-[#ff006e] cursor-pointer transition-colors">{item.title}</div>
+                                        <div className="text-white/40 text-[10px] truncate">{item.channelTitle}</div>
+                                    </div>
+                                    <div className="text-[#00ffff] text-[9px] font-mono">{parseInt(item.viewCount).toLocaleString()}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Local Stats HUD (Top Right) - Premium Minimalist */}
+            <div className="absolute top-6 right-6 z-[100] flex flex-col items-end gap-3 pointer-events-none">
                 <motion.div
                     initial={false}
                     animate={{
@@ -421,6 +568,7 @@ const DiscoveryMapView = ({ onPlayPlaylist, allTracks, onLike, stats, user: curr
                 >
                     {/* Glass Shine Effect */}
                     <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+
                     {/* Header / Toggle */}
                     <div
                         onClick={() => setIsStatsCollapsed(!isStatsCollapsed)}
@@ -432,28 +580,24 @@ const DiscoveryMapView = ({ onPlayPlaylist, allTracks, onLike, stats, user: curr
                                     initial={{ opacity: 0, x: 10 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: 10 }}
-                                    className="flex flex-col items-start mr-4 flex-1 pl-4"
+                                    className="flex flex-col items-end mr-4 flex-1"
                                 >
                                     <div className="text-[8px] font-black uppercase tracking-[0.5em] text-[#ff006e] mb-0.5 opacity-80">Local Telemetry</div>
                                     <div className="flex items-baseline gap-2">
                                         <span className="text-3xl font-black text-white italic tracking-tighter tabular-nums leading-none drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
                                             {loading ? '...' : localStats.scans.toLocaleString()}
                                         </span>
-                                        <span className="text-[9px] text-white/40 font-black uppercase tracking-widest">AMPLITUDE</span>
+                                        <span className="text-[9px] text-white/40 font-black uppercase tracking-widest">Energy</span>
                                     </div>
                                 </motion.div>
                             )}
                         </AnimatePresence>
 
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 border ${isStatsCollapsed
-                            ? 'bg-white/5 border-transparent text-white/40'
-                            : 'bg-[#ff006e]/10 border-[#ff006e]/50 shadow-[0_0_15px_rgba(255,0,110,0.25)] text-[#ff006e]'
-                            }`}>
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 ${isStatsCollapsed ? 'bg-white/5' : 'bg-[#ff006e] shadow-[0_0_20px_#ff006e40]'}`}>
                             <Zap
-                                className={`transition-all duration-500 ${isStatsCollapsed ? '' : 'drop-shadow-[0_0_8px_#ff006e]'}`}
+                                className={`transition-all duration-500 ${isStatsCollapsed ? 'text-white/40' : 'text-black'}`}
                                 size={20}
-                                fill="none"
-                                strokeWidth={1.5}
+                                fill={isStatsCollapsed ? "none" : "currentColor"}
                             />
                         </div>
                     </div>
@@ -465,64 +609,43 @@ const DiscoveryMapView = ({ onPlayPlaylist, allTracks, onLike, stats, user: curr
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: "auto" }}
                                 exit={{ opacity: 0, height: 0 }}
-                                className="px-6 pb-6 pt-0 overflow-hidden"
+                                className="px-6 pb-6 pt-2 overflow-hidden bg-gradient-to-b from-transparent to-black/40"
                             >
-                                <div className="space-y-4 pt-2 border-t border-white/5">
+                                <div className="space-y-4">
                                     {/* Data Grid */}
-                                    <div className="grid grid-cols-2 gap-8">
+                                    <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-1">
-                                            <div className="text-[7px] font-bold text-white/40 uppercase tracking-[0.3em]">Visible_Tracks</div>
-                                            <div className="text-xl font-black text-white italic tabular-nums tracking-tighter">{localStats.tracks}</div>
+                                            <div className="text-[7px] font-bold text-white/30 uppercase tracking-[0.3em]">Tracks_Identified</div>
+                                            <div className="text-lg font-black text-white italic tabular-nums">{localStats.tracks}</div>
                                         </div>
                                         <div className="space-y-1 text-right">
-                                            <div className="text-[7px] font-bold text-white/40 uppercase tracking-[0.3em]">Active_Users</div>
+                                            <div className="text-[7px] font-bold text-white/30 uppercase tracking-[0.3em]">Active_Presence</div>
                                             <div className="flex items-center justify-end gap-2">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse" />
-                                                <div className="text-xl font-black text-white italic tabular-nums tracking-tighter">{onlineUsers}</div>
+                                                <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-ping" />
+                                                <div className="text-lg font-black text-white italic tabular-nums">{onlineUsers}</div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Artists Section */}
-                                    {artists.length > 0 && (
-                                        <div className="pt-4 border-t border-white/5">
-                                            <div className="text-[7px] font-bold text-white/40 uppercase tracking-[0.3em] mb-3">Artists_Online</div>
-                                            <div className="flex flex-col gap-3 max-h-40 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#ff006e]/50 scrollbar-track-transparent">
-                                                {artists.map(artist => (
-                                                    <div key={artist.id || artist.Id} className="flex items-center justify-between gap-2">
-                                                        <div className="flex-1 min-w-0 pr-4">
-                                                            <h3
-                                                                onClick={() => navigateToProfile(artist.userId || artist.UserId)}
-                                                                className="text-white font-black italic uppercase tracking-tighter text-lg leading-tight truncate cursor-pointer hover:text-[#ff006e] transition-colors"
-                                                            >
-                                                                {artist.username}
-                                                            </h3>
-                                                            <p className="text-[10px] text-[#ff006e]/60 font-black tracking-widest uppercase truncate">{artist.bio || 'SIGNAL_DETECTED'}</p>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <button
-                                                                onClick={() => handleFollow(artist.userId || artist.UserId)}
-                                                                className={`p-2.5 rounded-xl border transition-all active:scale-95 ${followingIds.has(String(artist.userId || artist.UserId))
-                                                                    ? 'bg-[#ff006e] border-[#ff006e] text-black shadow-[0_0_15px_rgba(255,0,110,0.3)]'
-                                                                    : 'bg-white/5 border-white/10 text-white hover:border-[#ff006e]/50 hover:text-[#ff006e]'
-                                                                    }`}
-                                                                title={followingIds.has(String(artist.id || artist.Id)) ? "Linked" : "Link"}
-                                                            >
-                                                                <Zap size={16} fill={followingIds.has(String(artist.id || artist.Id)) ? "currentColor" : "none"} />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => navigateToProfile(artist.id || artist.Id)}
-                                                                className="p-2.5 bg-white/5 border border-white/10 rounded-xl text-white hover:border-[#ff006e]/50 hover:text-[#ff006e] transition-all active:scale-95"
-                                                                title="View Signature"
-                                                            >
-                                                                <Target size={16} />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                    {/* Status Bar */}
+                                    <div className="pt-4 border-t border-white/5">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className="text-[7px] font-black text-[#ff006e] uppercase tracking-[0.5em]">System Status</span>
+                                            <span className="text-[7px] font-bold text-green-400 uppercase tracking-widest">Synchronized</span>
                                         </div>
-                                    )}
+                                        <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                            <motion.div
+                                                className="h-full bg-[#ff006e]"
+                                                initial={{ width: 0 }}
+                                                animate={{ width: "100%" }}
+                                                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="text-[8px] text-white/20 italic tracking-[0.1em] text-center pt-1">
+                                        Scanning local sectors for active frequencies...
+                                    </div>
                                 </div>
                             </motion.div>
                         )}
@@ -699,16 +822,26 @@ const DiscoveryMapView = ({ onPlayPlaylist, allTracks, onLike, stats, user: curr
                         glowColor = "0, 255, 238"; // Cyan for My Tracks
                     } else if (item.category === 'Track' && item.isOwned) {
                         glowColor = "0, 255, 100"; // Neon Green for Purchased
+                    } else if (item.category === 'YouTube') {
+                        glowColor = "0, 255, 255"; // Cyan for YouTube
                     }
 
                     const shadowRadius = 25 + glowIntensity;
                     const isGlowing = scans > 0 || item.isOwned || isMyTrack;
                     const glowOpacity = 0.15 + (glowIntensity / 100) + (isGlowing ? 0.4 : 0);
 
-                    // Dynamic Sizing Logic: Logarithmic scale based on plays
-                    // Base size: 240px. Range: 0.6x (144px) to 2.5x (600px)
-                    const sizeScale = Math.min(2.5, Math.max(0.6, 0.6 + (Math.log10(scans + 1) * 0.4)));
-                    const pixelSize = 240 * sizeScale;
+                    // Dynamic Sizing Logic: Refined to prevent overlap
+                    // Base size reduced from 240px to 160px.
+                    // Backend Scale (1-5) is dampened to (1.0 - 1.8) range.
+                    let sizeScale = 1;
+                    if (item.nodeSize !== undefined) {
+                        // Dampen backend scale: 1->1, 5->1.8
+                        sizeScale = 1 + ((item.nodeSize - 1) * 0.2);
+                    } else {
+                        // Logarithmic scale: Max 1.5x
+                        sizeScale = Math.min(1.5, Math.max(0.6, 0.6 + (Math.log10(scans + 1) * 0.3)));
+                    }
+                    const pixelSize = 160 * sizeScale;
 
                     return (
                         <motion.div

@@ -209,25 +209,86 @@ export default function App() {
     const isLocked = currentTrack.isLocked && !currentTrack.isOwned;
 
     // 1. Source Management
-    if (currentTrack.source && audio.getAttribute('data-playing-src') !== currentTrack.source) {
-      audio.pause();
-      audio.src = currentTrack.source;
-      audio.setAttribute('data-playing-src', currentTrack.source);
-      audio.load();
-      setCurrentTime(0); // Explicit reset on source change
-      // Reset tracker when source changes to allow logging the new track
-      // lastTrackLogged is handled by the useEffect above
+    const sourceChanged = currentTrack.source && audio.getAttribute('data-playing-src') !== currentTrack.source;
+
+    if (sourceChanged) {
+      const source = currentTrack.source;
+
+      // Handle YouTube Sources (fetch real stream URL)
+      if (source.startsWith('youtube:')) {
+        const videoId = source.split(':')[1];
+        const userId = user?.id || user?.Id;
+
+        console.log(`[AUDIO] Fetching YouTube Stream for ${videoId}...`);
+
+        // Pause while fetching
+        audio.pause();
+        // Clear src preventing ghost playback
+        audio.removeAttribute('src');
+        audio.load();
+
+        API.Youtube.stream(videoId, userId)
+          .then(res => {
+            const streamUrl = res.data.audioUrl || res.data.AudioUrl || res.data.url;
+
+            if (streamUrl) {
+              audio.src = streamUrl;
+              audio.setAttribute('data-playing-src', source);
+              audio.load();
+              setCurrentTime(0);
+
+              if (isPlaying) {
+                const playPromise = audio.play();
+                if (playPromise !== undefined) playPromise.catch(e => console.error("Play error:", e));
+              }
+            } else {
+              alert("Stream unavailable.");
+              setIsPlaying(false);
+            }
+          })
+          .catch(err => {
+            const msg = err.response?.data || "Playback failed.";
+            if (err.response?.status === 403) {
+              alert("Not enough credits to play this track!");
+            } else {
+              alert(`Playback Error: ${typeof msg === 'string' ? msg : 'Unknown error'}`);
+            }
+            setIsPlaying(false);
+          });
+
+      } else {
+        // Standard MP3/Local Source
+        audio.pause();
+        audio.src = currentTrack.source;
+        audio.setAttribute('data-playing-src', currentTrack.source);
+        audio.load();
+        setCurrentTime(0);
+
+        if (isPlaying && !isLocked) {
+          const p = audio.play();
+          if (p !== undefined) p.catch(() => { });
+        }
+      }
     }
 
     // 2. Playback State Management
-    if (isPlaying && !isLocked && currentTrack.source) {
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => { /* Handle auto-play block */ });
+    // ONLY handle play/pause toggles here if the source hasn't just changed.
+    // If source changed, the loaders above handle the initial play.
+    if (!sourceChanged) {
+      if (isPlaying && !isLocked && currentTrack.source) {
+        // Check if we have a valid src before trying to play (for YouTube loading states)
+        if (audio.src && audio.src !== window.location.href) {
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(e => {
+              console.warn("Auto-play blocked or failed", e);
+              // Optional: setIsPlaying(false) if it fails persistently
+            });
+          }
+        }
+      } else {
+        audio.pause();
       }
-    } else {
-      audio.pause();
-      if (isLocked && isPlaying) setIsPlaying(false);
     }
   }, [currentTrack.source, isPlaying, currentTrack.isLocked, currentTrack.isOwned]);
 
