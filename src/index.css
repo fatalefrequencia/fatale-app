@@ -30,23 +30,54 @@
         /* Firefox */
     }
 
-    /* Updated for faster 'beat' and dimmer glow */
+    /* Constant subtle pulse with refined glow */
     @keyframes beat-pulse {
 
         0%,
         100% {
-            filter: drop-shadow(0 0 2px rgba(255, 0, 110, 0.4));
+            filter: drop-shadow(0 0 4px #ff006e) drop-shadow(0 0 10px rgba(255, 0, 110, 0.3));
             transform: scale(1);
         }
 
         50% {
-            filter: drop-shadow(0 0 8px rgba(255, 0, 110, 0.6));
-            transform: scale(1.02);
-            /* Subtle pop with the beat */
+            filter: drop-shadow(0 0 6px #ff006e) drop-shadow(0 0 14px rgba(255, 0, 110, 0.5));
+            transform: scale(1.03);
         }
     }
 
     .animate-beat-pulse {
         animation: beat-pulse 3s infinite ease-in-out;
+    }
+
+    @keyframes scanlines {
+        0% {
+            transform: translateY(0);
+        }
+
+        100% {
+            transform: translateY(100%);
+        }
+    }
+
+    .animate-scanlines {
+        animation: scanlines 8s linear infinite;
+    }
+
+    @keyframes data-scroll {
+        0% {
+            transform: translateY(0);
+        }
+
+        100% {
+            transform: translateY(-100%);
+        }
+    }
+
+    .animate-data-scroll {
+        animation: data-scroll 20s linear infinite;
+    }
+
+    .mono {
+        font-family: 'Share Tech Mono', monospace;
     }
 }

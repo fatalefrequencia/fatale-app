@@ -1,0 +1,286 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    MoreHorizontal, PlayCircle, Library, Heart,
+    Zap, Trash2, ChevronLeft, ChevronRight,
+    Lock, Globe
+} from 'lucide-react';
+import ActionModal from './ActionModal';
+
+const TrackActionsDropdown = ({
+    track,
+    isOwner,
+    onDelete,
+    onLike,
+    playlists = [],
+    isLikedInitial = false,
+    myLikes = []
+}) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [showPlaylists, setShowPlaylists] = useState(false);
+    const [isLiked, setIsLiked] = useState(isLikedInitial);
+    const [modalConfig, setModalConfig] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        type: 'confirm',
+        onConfirm: null,
+        confirmText: 'Confirm'
+    });
+
+    // Sync if initial changes
+    useEffect(() => {
+        setIsLiked(isLikedInitial);
+    }, [isLikedInitial]);
+
+    const handleAddTrackToPlaylist = async (playlistId, playlistName) => {
+        try {
+            const API = await import('../services/api').then(mod => mod.default);
+            let targetTrackId = track.id || track.Id;
+
+            // Handle YouTube Tracks (Auto-save to DB if needed)
+            const isYoutube = track.category === 'YouTube' || track.source?.startsWith('youtube:') || String(track.id).startsWith('youtube:');
+
+            if (isYoutube) {
+                // If it's already a numeric DB ID, we might still want to verify it if it's from a 'YouTube' category
+                // but usually if it's numeric it's already in our Tracks table.
+                const isNumeric = !isNaN(parseInt(track.id)) && String(track.id).indexOf('-') === -1 && !String(track.id).startsWith('youtube:');
+
+                if (!isNumeric) {
+                    console.log("[TrackActions] Virtual or YouTube track detected. Syncing to database...");
+
+                    // Extract Video ID
+                    let videoId = track.id;
+                    if (String(videoId).includes(':')) videoId = videoId.split(':').pop();
+                    if (track.source?.includes(':')) videoId = track.source.split(':').pop();
+
+                    const trackData = {
+                        youtubeId: (videoId || "").trim(),
+                        title: track.title || "Unknown Track",
+                        channelTitle: track.artist || track.channelTitle || "Unknown Artist",
+                        thumbnailUrl: track.cover || track.img || track.thumbnail || track.coverImageUrl || "",
+                        viewCount: parseInt(track.playCount || track.viewCount || 0),
+                        duration: 0
+                    };
+
+                    const savedTrackRes = await API.Youtube.saveTrack(trackData);
+                    const sData = savedTrackRes.data;
+                    console.log("[TrackActions] Saved Track Response:", sData);
+
+                    // Normalize ID (Id vs id)
+                    targetTrackId = sData.id || sData.Id || sData.trackId;
+                } else {
+                    targetTrackId = track.id;
+                }
+            }
+
+            await API.Playlists.addTrack(playlistId, targetTrackId);
+
+            setModalConfig({
+                isOpen: true,
+                title: 'Signal_Synced',
+                message: `Track successfully routed to: ${playlistName}`,
+                type: 'alert',
+                confirmText: 'Acknowledge'
+            });
+            setIsOpen(false);
+        } catch (err) {
+            console.error(err);
+            setModalConfig({
+                isOpen: true,
+                title: 'Sync_Error',
+                message: err.response?.data?.message || err.response?.data || "Failed to add track to playlist.",
+                type: 'alert',
+                confirmText: 'Back'
+            });
+        }
+    };
+
+    const handleToggleLike = async () => {
+        try {
+            const API = await import('../services/api').then(mod => mod.default);
+            let targetTrackId = track.id || track.Id;
+            const isYoutube = track.category === 'YouTube' || track.source?.startsWith('youtube:') || String(track.id).startsWith('youtube:');
+
+            // For YouTube tracks, ensure we have the numeric DB ID
+            if (isYoutube) {
+                const isNumeric = !isNaN(parseInt(targetTrackId)) && String(targetTrackId).indexOf('-') === -1 && !String(targetTrackId).startsWith('youtube:');
+
+                if (!isNumeric) {
+                    console.log("[TrackActions] Syncing YouTube track for like...");
+                    let videoId = targetTrackId;
+                    if (String(videoId).includes(':')) videoId = videoId.split(':').pop();
+                    if (track.source?.includes(':')) videoId = track.source.split(':').pop();
+
+                    const saved = await API.Youtube.saveTrack({
+                        youtubeId: (videoId || "").trim(),
+                        title: track.title || "Unknown Track",
+                        channelTitle: track.artist || track.channelTitle || "Unknown Artist",
+                        thumbnailUrl: track.cover || track.img || track.thumbnail || track.coverImageUrl || ""
+                    });
+                    targetTrackId = saved.data.id || saved.data.Id;
+                }
+            }
+
+            if (isLiked) {
+                await API.Social.unlikeTrack(targetTrackId);
+            } else {
+                await API.Social.likeTrack(targetTrackId);
+            }
+
+            setIsLiked(!isLiked);
+            onLike?.(!isLiked);
+        } catch (err) {
+            console.error("Like toggle failed:", err);
+        }
+    };
+
+    const handlePurchase = async () => {
+        const price = track.price || track.Price || 0;
+        setModalConfig({
+            isOpen: true,
+            title: 'Authorization_Required',
+            message: `Purchase license for "${track.title}"? Cost: ${price} CRD. This signal will be permanently allocated to your collection.`,
+            type: 'confirm',
+            confirmText: 'Execute',
+            onConfirm: async () => {
+                try {
+                    const API = await import('../services/api').then(mod => mod.default);
+                    await API.Purchases.purchaseTrack(track.id || track.Id);
+                    setModalConfig({
+                        isOpen: true,
+                        title: 'Acquisition_Complete',
+                        message: "License secured. Track has been initialized in your collection.",
+                        type: 'alert',
+                        confirmText: 'Clear'
+                    });
+                    setIsOpen(false);
+                } catch (err) {
+                    console.error(err);
+                    setModalConfig({
+                        isOpen: true,
+                        title: 'Acquisition_Failed',
+                        message: err.response?.data?.message || err.response?.data || "Insufficient CRD or system connection error.",
+                        type: 'alert',
+                        confirmText: 'Back'
+                    });
+                }
+            }
+        });
+    };
+
+    const handleDelete = () => {
+        setModalConfig({
+            isOpen: true,
+            title: 'Delist_Verification',
+            message: `Are you sure you want to delist "${track.title}"? This action is permanent.`,
+            type: 'confirm',
+            confirmText: 'Delete',
+            onConfirm: () => {
+                onDelete?.();
+                setIsOpen(false);
+            }
+        });
+    };
+
+    return (
+        <div className="relative">
+            <button
+                onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); setShowPlaylists(false); }}
+                className={`p-2 rounded-xl transition-all border-2 ${isOpen ? 'border-[#ff006e] bg-[#ff006e]/10 text-[#ff006e] shadow-[0_0_20px_rgba(255,0,110,0.2)]' : 'text-[#ff006e]/60 border-[#ff006e]/10 hover:border-[#ff006e]/40 hover:text-[#ff006e] bg-white/5'}`}
+            >
+                <MoreHorizontal size={20} />
+            </button>
+
+            <AnimatePresence>
+                {isOpen && (
+                    <>
+                        <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.98, y: 10 }}
+                            className="absolute right-0 top-full mt-3 w-64 bg-[#0a0a0a]/95 backdrop-blur-2xl border border-[#ff006e]/30 rounded-2xl z-50 overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5),0_0_20px_rgba(255,0,110,0.1)] ring-1 ring-white/5"
+                        >
+                            <div className="p-2 space-y-1">
+                                {!showPlaylists ? (
+                                    <>
+                                        <button className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-xl group/item">
+                                            <PlayCircle size={16} className="text-[#ff006e]/50 group-hover/item:text-[#ff006e]" /> Add to Queue
+                                        </button>
+                                        <button
+                                            onClick={() => setShowPlaylists(true)}
+                                            className="w-full flex items-center justify-between px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-xl group/item"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <Library size={16} className="text-[#ff006e]/50 group-hover/item:text-[#ff006e]" /> Add to Playlist
+                                            </div>
+                                            <ChevronRight size={14} className="opacity-40 group-hover/item:opacity-100" />
+                                        </button>
+                                        <button
+                                            onClick={handleToggleLike}
+                                            className={`w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] transition-all rounded-xl group/item ${isLiked ? 'text-[#ff006e] bg-[#ff006e]/5' : 'text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e]'}`}
+                                        >
+                                            <Heart size={16} fill={isLiked ? "currentColor" : "none"} className={isLiked ? "text-[#ff006e]" : "text-[#ff006e]/50 group-hover/item:text-[#ff006e]"} /> {isLiked ? 'Liked' : 'Like'}
+                                        </button>
+
+                                        {/* Purchase only for local tracks usually, but we check price */}
+                                        {(track.price > 0 || track.Price > 0) && (
+                                            <button
+                                                onClick={handlePurchase}
+                                                className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-xl group/item"
+                                            >
+                                                <Zap size={16} className="text-[#ff006e]/50 group-hover/item:text-[#ff006e]" /> Purchase License
+                                            </button>
+                                        )}
+
+                                        {isOwner && (
+                                            <button onClick={handleDelete} className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-red-500/80 hover:bg-red-500/10 hover:text-red-500 transition-all rounded-xl group/item">
+                                                <Trash2 size={16} className="opacity-50 group-hover/item:opacity-100" /> Delete / Delist
+                                            </button>
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        <button
+                                            onClick={() => setShowPlaylists(false)}
+                                            className="w-full flex items-center gap-3 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#ff006e] hover:bg-[#ff006e]/5 transition-all"
+                                        >
+                                            <ChevronLeft size={14} /> Back
+                                        </button>
+                                        <div className="max-h-64 overflow-y-auto pt-1 scrollbar-hide">
+                                            {playlists.length > 0 ? playlists.map(p => (
+                                                <button
+                                                    key={p.id}
+                                                    onClick={() => handleAddTrackToPlaylist(p.id, p.name)}
+                                                    className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-white/70 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-xl"
+                                                >
+                                                    <div className={`w-1.5 h-1.5 rounded-full ${p.isPublic ? 'bg-[#ff006e]' : 'bg-white/20'}`} />
+                                                    {p.name}
+                                                </button>
+                                            )) : (
+                                                <div className="px-4 py-8 text-center text-[9px] font-black uppercase text-white/20 tracking-tighter">No Playlists Detected</div>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
+            <ActionModal
+                isOpen={modalConfig.isOpen}
+                onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+                onConfirm={modalConfig.onConfirm}
+                title={modalConfig.title}
+                message={modalConfig.message}
+                type={modalConfig.type}
+                confirmText={modalConfig.confirmText}
+            />
+        </div>
+    );
+};
+
+export default TrackActionsDropdown;

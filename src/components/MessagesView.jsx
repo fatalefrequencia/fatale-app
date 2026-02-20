@@ -310,7 +310,7 @@ export const MessagesView = ({ user, navigateToProfile }) => {
                                     <div className="italic text-[#ff006e] animate-pulse font-mono tracking-widest uppercase text-[10px] opacity-60">Synchronizing Relay...</div>
                                 </div>
                             ) : searchResults.length > 0 ? (
-                                searchResults.map(u => (
+                                searchResults.filter(u => u && (u.id || u.Id)).map(u => (
                                     <div
                                         key={u.id || u.Id}
                                         className="group p-5 bg-white/[0.01] border border-transparent hover:border-white/5 rounded-xl flex items-center gap-6 transition-all cursor-pointer relative"
@@ -401,7 +401,7 @@ export const MessagesView = ({ user, navigateToProfile }) => {
                         </button>
                     </div>
                 ) : (
-                    conversations.map((conv) => (
+                    conversations.filter(c => c && c.userId).map((conv) => (
                         <div
                             key={conv.userId}
                             onClick={() => openChat(conv)}

@@ -150,6 +150,7 @@ const AuthView = ({ onLoginSuccess }) => {
                             <AnimatePresence mode="popLayout">
                                 {error && (
                                     <motion.div
+                                        key="error-message"
                                         initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
                                         className="p-3 bg-red-900/20 border border-red-500/50 rounded-lg flex items-start gap-3 text-red-400 text-xs font-bold"
                                     >
@@ -176,6 +177,7 @@ const AuthView = ({ onLoginSuccess }) => {
                                     {/* Email Field (Only for Register) */}
                                     {activeTab === 'register' && (
                                         <motion.div
+                                            key="email-field"
                                             initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
                                             className="relative group overflow-hidden"
                                         >

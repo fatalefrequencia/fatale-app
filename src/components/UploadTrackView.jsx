@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Upload, X, Music, Image as ImageIcon, CheckCircle, AlertCircle } from 'lucide-react';
 import API from '../services/api';
 
-const UploadTrackView = ({ onClose }) => {
+const UploadTrackView = ({ onClose, onRefreshTracks }) => {
     const [formData, setFormData] = useState({
         title: '',
         genre: '',
@@ -43,10 +43,10 @@ const UploadTrackView = ({ onClose }) => {
 
             await API.Tracks.uploadTrack(data);
             setStatus('success');
+            if (onRefreshTracks) await onRefreshTracks();
             setTimeout(() => {
                 onClose();
-                window.location.reload();
-            }, 1500);
+            }, 1000);
         } catch (error) {
             console.error("DETALLE TÉCNICO:", error.response);
             setErrorDetails(error.response?.data || error.message);
