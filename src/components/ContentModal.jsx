@@ -31,17 +31,10 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
                             {type === 'JOURNAL' ? 'ARCHIVED_LOG_ENTRY' : type === 'PHOTO' ? 'VISUAL_DATA_FRAGMENT' : 'SIGNAL_FEED_RECORDING'}
                         </span>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="text-white/40 hover:text-[#ff006e] transition-colors"
-                    >
-                        <X size={20} />
-                    </button>
                 </div>
 
                 {/* Content Body */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar bg-black relative">
-
                     <div className="p-8 md:p-12 relative z-10">
                         {type === 'JOURNAL' && (
                             <div className="space-y-8">
@@ -98,6 +91,12 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
                     <div className="flex gap-4">
                         <button className="hover:text-[#ff006e] flex items-center gap-2 transition-colors">
                             <Share2 size={12} /> SHARE_LINK
+                        </button>
+                        <button
+                            onClick={onClose}
+                            className="text-[#ff006e] hover:text-white transition-colors border border-[#ff006e]/20 px-3 py-1 hover:bg-[#ff006e]/10"
+                        >
+                            [ ABORT ]
                         </button>
                     </div>
                 </div>

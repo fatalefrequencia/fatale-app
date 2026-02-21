@@ -80,10 +80,10 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [] })
                     const h = hashStr(id.toString());
                     const sec = SECTORS[h % SECTORS.length];
                     const li = Math.floor((h / SECTORS.length) | 0) % 36;
-                    // Simulate play count: real data uses playCount field, mocks get hash-derived value
+                    // Simulate play count
                     const plays = a.playCount || a.PlayCount || a.plays || ((h % 900) + 10);
-                    // Node size: 60px (low plays) → 110px (viral), log-scaled
-                    const nodeSize = Math.round(60 + Math.min(50, Math.log10(plays + 1) * 20));
+                    // Enhanced Node size: 60px (low plays) → 180px (superstar landmark)
+                    const nodeSize = Math.round(50 + Math.min(130, Math.log10(plays + 1) * 38));
                     return {
                         id,
                         name: a.name || a.Name || `ARTIST_${i}`,
@@ -97,6 +97,7 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [] })
                         isMock: !!a.isMock,
                         plays,
                         nodeSize,
+                        isResident: plays > 5000
                     };
                 }));
             } finally {
@@ -222,7 +223,23 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [] })
         ).slice(0, 10)
         : [];
 
-    const visible = artists; // Keep all nodes visible
+    const matchedArtistIdsForRendering = new Set(localArtists.map(a => a.id));
+
+    const visible = artists.filter(a => {
+        // Search takes priority
+        if (searchQuery.length > 0 && matchedArtistIdsForRendering.has(a.id)) return true;
+
+        // LOD Zoom Logic:
+        // Level 1 (Zoom < 0.3): Only Superstars (>5000 plays)
+        if (viewState.zoom < 0.25) return a.plays > 5000;
+        // Level 2 (Zoom < 0.45): Popular Artists (>1000 plays)
+        if (viewState.zoom < 0.45) return a.plays > 1000;
+        // Level 3 (Zoom < 0.65): Emerging Artists (>100 plays)
+        if (viewState.zoom < 0.65) return a.plays > 100;
+        // Level 4: All signals
+        return true;
+    });
+
     const matchedArtistIds = new Set(localArtists.map(a => a.id));
 
     return (
@@ -346,17 +363,19 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [] })
                 </svg>
 
                 {/* Nodes */}
-                {visible.map(a => (
-                    <ArtistNode
-                        key={a.id}
-                        artist={a}
-                        hovered={hoveredId === a.id}
-                        isSearchResult={searchQuery.length > 0 && matchedArtistIds.has(a.id)}
-                        dimmed={searchQuery.length > 0 && !matchedArtistIds.has(a.id)}
-                        onHover={setHoveredId}
-                        onClick={() => navigateToProfile?.(a.userId)}
-                    />
-                ))}
+                <AnimatePresence>
+                    {visible.map(a => (
+                        <ArtistNode
+                            key={a.id}
+                            artist={a}
+                            hovered={hoveredId === a.id}
+                            isSearchResult={searchQuery.length > 0 && matchedArtistIdsForRendering.has(a.id)}
+                            dimmed={searchQuery.length > 0 && !matchedArtistIdsForRendering.has(a.id)}
+                            onHover={setHoveredId}
+                            onClick={() => navigateToProfile?.(a.userId)}
+                        />
+                    ))}
+                </AnimatePresence>
             </motion.div>
 
             {/* Scan line */}
@@ -633,17 +652,24 @@ const ArtistNode = ({ artist, hovered, isSearchResult, dimmed, onHover, onClick 
     const Icon = artist.icon || Music;
     const sz = artist.nodeSize || 76; // dynamic size based on plays
     return (
-        <div
+        <motion.div
+            layout
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{
+                opacity: dimmed ? 0.2 : 1,
+                scale: 1,
+                filter: dimmed ? 'grayscale(0.5) blur(1px)' : 'none'
+            }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
             className="node absolute"
             style={{
                 left: artist.x,
                 top: artist.y,
                 width: sz,
                 height: sz,
-                opacity: dimmed ? 0.2 : 1,
-                filter: dimmed ? 'grayscale(0.5) blur(1px)' : 'none',
-                transition: 'opacity 0.5s ease, filter 0.5s ease',
-                zIndex: isSearchResult || hovered ? 10 : 1
+                zIndex: isSearchResult || hovered ? 10 : 1,
+                cursor: 'pointer'
             }}
             onMouseEnter={() => onHover(artist.id)}
             onMouseLeave={() => onHover(null)}
@@ -663,10 +689,20 @@ const ArtistNode = ({ artist, hovered, isSearchResult, dimmed, onHover, onClick 
                 )}
             </AnimatePresence>
 
+            {/* Resident Ring (Double) */}
+            {artist.isResident && (
+                <div className="absolute rounded-sm pointer-events-none" style={{
+                    inset: -16,
+                    border: `1px solid ${artist.color}30`,
+                    borderRadius: 8,
+                    animation: 'pulse-ring 6s ease-in-out infinite'
+                }} />
+            )}
+
             {/* Pulse ring */}
-            <div className="ring-pulse absolute rounded-sm pointer-events-none" style={{
+            <div className={`ring-pulse absolute rounded-sm pointer-events-none ${artist.isResident ? 'border-2' : 'border'}`} style={{
                 inset: -10,
-                border: `1px solid ${artist.color}`,
+                border: `${artist.isResident ? '2px' : '1px'} solid ${artist.color}`,
                 opacity: hovered ? 0.65 : 0.28,
                 borderRadius: 6,
                 transition: 'opacity 0.25s',
@@ -681,16 +717,18 @@ const ArtistNode = ({ artist, hovered, isSearchResult, dimmed, onHover, onClick 
             }} />
 
             {/* Card */}
-            <div
+            <motion.div
                 className="node-card relative w-full h-full overflow-hidden"
-                style={{
-                    borderRadius: 6,
-                    border: `1px solid ${hovered ? artist.color : artist.color + '55'}`,
+                animate={{
+                    scale: hovered ? 1.18 : 1,
                     boxShadow: hovered
                         ? `0 0 24px ${artist.color}55, 0 0 60px ${artist.color}18, inset 0 0 12px ${artist.color}10`
                         : `0 0 10px ${artist.color}25`,
-                    transform: hovered ? 'scale(1.18)' : 'scale(1)',
-                    cursor: 'pointer',
+                    borderColor: hovered ? artist.color : artist.color + '55'
+                }}
+                style={{
+                    borderRadius: 6,
+                    border: '1px solid',
                 }}
             >
                 {/* Corner brackets */}
@@ -715,6 +753,13 @@ const ArtistNode = ({ artist, hovered, isSearchResult, dimmed, onHover, onClick 
                     </div>
                 )}
 
+                {/* Resident Badge */}
+                {artist.isResident && (
+                    <div className="absolute top-1 right-1 bg-[#ff006e] text-black font-black text-[6px] px-1 rounded-sm tracking-tighter">
+                        RESIDENT
+                    </div>
+                )}
+
                 {/* Scanline overlay */}
                 <div className="absolute inset-0 pointer-events-none" style={{
                     background: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.07) 3px, rgba(0,0,0,0.07) 4px)',
@@ -728,7 +773,7 @@ const ArtistNode = ({ artist, hovered, isSearchResult, dimmed, onHover, onClick 
                         {artist.name.toUpperCase()}
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Tooltip */}
             <AnimatePresence>
@@ -749,13 +794,16 @@ const ArtistNode = ({ artist, hovered, isSearchResult, dimmed, onHover, onClick 
                         }}>
                             <div className="text-[#ff006e] text-[8px] mb-0.5 font-bold uppercase">{artist.sector}</div>
                             {artist.name.toUpperCase()}
+                            <div className="flex items-center gap-2 mt-1 opacity-50 text-[7px]">
+                                <Activity size={8} /> {artist.plays} SCANS
+                            </div>
                         </div>
                         <div className="absolute left-1/2 -translate-x-1/2 w-1.5 h-1.5 rotate-45"
                             style={{ bottom: -4, background: artist.color + '50', border: `1px solid ${artist.color}50` }} />
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </motion.div>
     );
 };
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import API from '../services/api';
-import { Zap } from 'lucide-react';
 import ActionModal from './ActionModal';
 
 const SubscriptionManager = ({ user, refreshProfile }) => {
@@ -65,161 +64,147 @@ const SubscriptionManager = ({ user, refreshProfile }) => {
         });
     };
 
-    if (loading) return <div className="text-white">Loading subscription details...</div>;
+    if (loading) return (
+        <div className="text-[9px] text-white/20 font-mono uppercase tracking-widest py-8">
+            &gt; SEARCHING_SUBSCRIPTION_NODES...
+        </div>
+    );
 
     return (
-        <div className="bg-black/80 p-6 md:p-8 border-l-2 border-[#10b981]/50 relative overflow-hidden group">
-            {/* Corner Accents */}
-            <div className="absolute top-0 right-0 p-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                <div className="w-16 h-1 bg-[#10b981]/20 mb-1"></div>
-                <div className="w-8 h-1 bg-[#10b981]/20 ml-auto"></div>
+        <div className="bg-black/60 border-l-2 border-cyan-500/30 p-6 md:p-8 relative overflow-hidden">
+            {/* Corner accents */}
+            <div className="absolute top-0 right-0 p-3 opacity-30">
+                <div className="w-12 h-px bg-cyan-500/40 mb-1" />
+                <div className="w-6 h-px bg-cyan-500/40 ml-auto" />
             </div>
 
             <div className="relative z-10">
-                <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                    <div className="relative flex items-center justify-center w-10 h-10">
-                        <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="w-8 h-8 text-[#10b981] drop-shadow-[0_0_10px_rgba(16,185,129,0.8)]"
-                        >
-                            <motion.path
-                                d="M12 20h.01"
-                                animate={{ opacity: [0.3, 1, 0.3] }}
-                                transition={{ duration: 1.5, repeat: Infinity, times: [0, 0.5, 1], delay: 0 }}
-                            />
-                            <motion.path
-                                d="M8.5 16.429a5 5 0 0 1 7 0"
-                                animate={{ opacity: [0.3, 1, 0.3] }}
-                                transition={{ duration: 1.5, repeat: Infinity, times: [0, 0.5, 1], delay: 0.3 }}
-                            />
-                            <motion.path
-                                d="M5 12.859a10 10 0 0 1 14 0"
-                                animate={{ opacity: [0.3, 1, 0.3] }}
-                                transition={{ duration: 1.5, repeat: Infinity, times: [0, 0.5, 1], delay: 0.6 }}
-                            />
-                            <motion.path
-                                d="M2 8.82a15 15 0 0 1 20 0"
-                                animate={{ opacity: [0.3, 1, 0.3] }}
-                                transition={{ duration: 1.5, repeat: Infinity, times: [0, 0.5, 1], delay: 0.9 }}
-                            />
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-2">
+                    {/* Animated signal icon */}
+                    <div className="relative w-6 h-6 flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-cyan-400">
+                            <motion.path d="M12 20h.01" animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0 }} />
+                            <motion.path d="M8.5 16.429a5 5 0 0 1 7 0" animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }} />
+                            <motion.path d="M5 12.859a10 10 0 0 1 14 0" animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.6 }} />
                         </svg>
                     </div>
-                    YouTube Offline Cache
+                    <div className="text-[11px] font-black text-cyan-400/60 uppercase tracking-[0.3em]">// OFFLINE_CACHE_ACCESS</div>
                     {status?.isActive && (
-                        <span className="text-[10px] bg-emerald-500 text-black px-2 py-0.5 rounded-sm font-black tracking-tighter italic ml-2">ACTIVE_NODE</span>
+                        <span className="text-[10px] bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 px-2 py-0.5 font-black tracking-widest uppercase">ACTIVE_NODE</span>
                     )}
-                </h2>
+                </div>
 
-                {/* Current Status / Info */}
+                {/* Current plan status OR info banner */}
                 {status?.isActive ? (
-                    <div className="mb-8 p-4 bg-white/5 rounded-lg border border-white/10">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div className="mb-8 border border-cyan-500/15 bg-cyan-500/5 p-5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                             <div>
-                                <div className="text-[10px] text-white/30 font-black uppercase tracking-widest mb-1">Current Plan</div>
-                                <div className="text-xl font-bold text-white italic uppercase tracking-tighter">{status.tierName}</div>
-                                <div className="text-xs text-white/40 mt-1 font-mono">NEXT_RENEWAL: {new Date(status.currentPeriodEnd).toLocaleDateString()}</div>
+                                <div className="text-[11px] text-white/30 font-black uppercase tracking-[0.25em] mb-1">CURRENT_PLAN</div>
+                                <div className="text-xl font-black text-white uppercase tracking-tighter">{status.tierName}</div>
+                                <div className="text-[10px] text-white/20 font-mono mt-1 uppercase tracking-widest">
+                                    NEXT_RENEWAL: {new Date(status.currentPeriodEnd).toLocaleDateString()}
+                                </div>
                             </div>
-
                             <div className="space-y-2">
-                                <div className="flex justify-between items-end text-sm">
-                                    <span className="text-gray-400">Cache Usage</span>
-                                    <span className="text-white">
+                                <div className="flex justify-between text-[10px] uppercase tracking-widest font-black">
+                                    <span className="text-white/30">CACHE_USAGE</span>
+                                    <span className="text-cyan-400/80">
                                         {status.cacheUsed} / {status.cacheLimit === -1 ? '∞' : status.cacheLimit}
                                     </span>
                                 </div>
-                                <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                                <div className="w-full bg-white/5 h-px overflow-hidden">
                                     <motion.div
                                         initial={{ width: 0 }}
-                                        animate={{
-                                            width: `${status.cacheLimit === -1 ?
-                                                (status.cacheUsed > 0 ? 100 : 0) :
-                                                Math.min(100, (status.cacheUsed / status.cacheLimit) * 100)}%`
-                                        }}
-                                        className="bg-[#10b981] h-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                                        animate={{ width: `${status.cacheLimit === -1 ? (status.cacheUsed > 0 ? 100 : 0) : Math.min(100, (status.cacheUsed / status.cacheLimit) * 100)}%` }}
+                                        className="bg-cyan-400 h-full shadow-[0_0_8px_rgba(34,211,238,0.5)]"
                                     />
                                 </div>
                             </div>
                         </div>
                     </div>
                 ) : (
-                    <div className="mb-8 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-200 text-sm">
-                        Subscribe to cache your favorite YouTube tracks for offline listening.
-                        Artists still get paid via credit purchases regardless of your subscription status.
+                    <div className="mb-8 px-4 py-3 border border-white/5 bg-white/[0.02] flex items-start gap-3">
+                        <span className="text-white/20 font-black text-[10px] mt-0.5">&gt;</span>
+                        <p className="text-xs text-white/30 font-mono uppercase tracking-wide leading-relaxed">
+                            Cache YouTube tracks for offline listening.{' '}
+                            <span className="text-cyan-400/60 font-black">Artists still earn</span> via credit purchases regardless of subscription status.
+                        </p>
                     </div>
                 )}
 
                 {/* Tiers */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {tiers && tiers.length > 0 ? (
                         tiers.map(tier => {
                             const isCurrent = status?.tier === tier.id;
                             return (
-                                <motion.div
+                                <div
                                     key={tier.id}
-                                    whileHover={!isCurrent ? { y: -5, scale: 1.02 } : {}}
-                                    className={`relative p-5 rounded-xl border flex flex-col ${isCurrent
-                                        ? 'bg-emerald-900/20 border-[#10b981]'
-                                        : 'bg-zinc-800/50 border-white/5 hover:border-white/20'
-                                        } transition-all duration-300`}
+                                    className={`relative flex flex-col p-5 border transition-all ${isCurrent
+                                        ? 'border-cyan-500/40 bg-cyan-500/5'
+                                        : 'border-white/5 bg-black/40 hover:border-white/10'
+                                        }`}
                                 >
+                                    {/* Recommended top accent */}
                                     {tier.id === 2 && !isCurrent && (
-                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-lg whitespace-nowrap uppercase tracking-widest">
-                                            Recommended
-                                        </div>
+                                        <>
+                                            <div className="absolute -top-px left-0 right-0 h-px bg-cyan-500/50" />
+                                            <div className="text-[10px] font-black text-cyan-400/60 uppercase tracking-widest mb-3">&#9670; RECOMMENDED</div>
+                                        </>
+                                    )}
+                                    {isCurrent && (
+                                        <div className="text-[10px] font-black text-cyan-400/80 uppercase tracking-widest mb-3">&#9670; CURRENT_PLAN</div>
+                                    )}
+                                    {tier.id !== 2 && !isCurrent && (
+                                        <div className="mb-6" />
                                     )}
 
-                                    <div className="text-lg font-bold text-white mb-1 uppercase tracking-tighter">{tier.name}</div>
-                                    <div className="text-2xl font-black text-emerald-400 mb-4 italic tracking-tighter">
-                                        ${tier.price}<span className="text-sm text-gray-500 font-normal ml-1">/mo</span>
+                                    <div className="text-base font-black text-white uppercase tracking-tighter mb-1">{tier.name}</div>
+                                    <div className="text-2xl font-black text-cyan-400 tracking-tighter mb-4">
+                                        ${tier.price}<span className="text-xs text-white/20 font-black ml-1">/MO</span>
                                     </div>
 
-                                    <ul className="text-sm text-gray-400 space-y-2 mb-6 flex-1">
-                                        <li className="flex items-center gap-2">
-                                            <span className="text-emerald-500 text-xs">✓</span>
-                                            {tier.cacheLimit === -1 ? 'Unlimited' : tier.cacheLimit} cached tracks
+                                    <ul className="space-y-2 mb-6 flex-1">
+                                        <li className="flex items-center gap-2 text-[10px] text-white/40 font-mono uppercase tracking-wide">
+                                            <span className="text-cyan-500/60 text-[8px]">&gt;</span>
+                                            {tier.cacheLimit === -1 ? 'UNLIMITED' : tier.cacheLimit} CACHED_TRACKS
                                         </li>
-                                        <li className="flex items-center gap-2">
-                                            <span className="text-emerald-500 text-xs">✓</span>
-                                            Offline playback
+                                        <li className="flex items-center gap-2 text-[10px] text-white/40 font-mono uppercase tracking-wide">
+                                            <span className="text-cyan-500/60 text-[8px]">&gt;</span>
+                                            OFFLINE_PLAYBACK
                                         </li>
-                                        <li className="flex items-center gap-2">
-                                            <span className="text-emerald-500 text-xs">✓</span>
-                                            High-quality audio
+                                        <li className="flex items-center gap-2 text-[10px] text-white/40 font-mono uppercase tracking-wide">
+                                            <span className="text-cyan-500/60 text-[8px]">&gt;</span>
+                                            HQ_AUDIO_STREAM
                                         </li>
                                     </ul>
 
                                     <button
                                         onClick={() => handleSubscribe(tier.id)}
                                         disabled={isCurrent || processing}
-                                        className={`w-full py-2 rounded-lg font-bold text-sm transition-all ${isCurrent
-                                            ? 'bg-white/10 text-gray-400 cursor-default shadow-none border-none'
-                                            : 'bg-white text-black hover:bg-gray-200 active:scale-95 shadow-lg'
-                                            } disabled:opacity-50`}
+                                        className={`w-full py-2.5 font-black text-xs uppercase tracking-widest transition-all ${isCurrent
+                                            ? 'border border-white/5 text-white/20 cursor-default'
+                                            : 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-500/60'
+                                            } disabled:opacity-30`}
                                     >
-                                        {isCurrent ? 'Current Plan' : processing ? '...' : 'Subscribe'}
+                                        {isCurrent ? 'ACTIVE' : processing ? '...' : 'INITIALIZE'}
                                     </button>
-                                </motion.div>
+                                </div>
                             );
                         })
                     ) : (
                         <div className="col-span-full py-12 text-center">
-                            <p className="text-white/20 font-mono text-xs uppercase tracking-widest">
-                                &gt; Searching for active subscription nodes... <br />
-                                <span className="text-[#10b981]/40">System ready. No tiers broadcasted.</span>
+                            <p className="text-white/20 font-mono text-[9px] uppercase tracking-widest">
+                                &gt; SEARCHING_FOR_ACTIVE_SUBSCRIPTION_NODES...<br />
+                                <span className="text-cyan-500/20">SYSTEM_READY · NO_TIERS_BROADCASTED</span>
                             </p>
                         </div>
                     )}
                 </div>
 
-                <div className="mt-6 text-center text-gray-600">
-                    <p className="text-xs">
-                        Subscriptions are billed monthly in USD. Cancel anytime.
-                    </p>
+                <div className="mt-6 text-[10px] text-center text-white/15 font-mono uppercase tracking-widest">
+                    Billed monthly in USD · Cancel anytime
                 </div>
             </div>
 

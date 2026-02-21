@@ -63,15 +63,9 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
             exit={{ opacity: 0, scale: 0.9 }}
             className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md"
         >
-            <div className="w-full max-w-md bg-[#0a0a0a] border border-[#ff006e]/30 rounded-2xl p-8 relative shadow-[0_0_50px_rgba(255,0,110,0.1)]">
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 text-[#ff006e]/50 hover:text-[#ff006e] transition-colors"
-                >
-                    <X size={24} />
-                </button>
+            <div className="w-full max-w-md bg-[#0a0a0a] border border-[#ff006e]/30 rounded-sm p-8 relative shadow-[0_0_50px_rgba(255,0,110,0.1)]">
 
-                <h2 className="text-2xl font-black italic text-white uppercase tracking-tighter mb-8 flex items-center gap-3">
+                <h2 className="text-2xl font-black italic text-white uppercase tracking-tighter mb-8 flex items-center gap-3 font-mono">
                     <Upload size={24} className="text-[#ff006e]" /> Upload Frequency
                 </h2>
 
@@ -161,13 +155,22 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                             </div>
                         )}
 
-                        <button
-                            type="submit"
-                            disabled={uploading}
-                            className={`w-full bg-[#ff006e] text-black font-black py-4 rounded-lg uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_20px_#ff006e50] ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            {uploading ? 'Transmitting...' : 'Upload to Core'}
-                        </button>
+                        <div className="flex gap-4">
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="flex-1 bg-black text-white/40 font-black py-4 rounded-lg uppercase tracking-widest border border-white/5 hover:border-white/20 transition-all"
+                            >
+                                [ ABORT ]
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={uploading}
+                                className={`flex-[2] bg-[#ff006e] text-black font-black py-4 rounded-lg uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_20px_#ff006e50] ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                {uploading ? 'Transmitting...' : 'Upload to Core'}
+                            </button>
+                        </div>
                     </form>
                 )}
             </div>

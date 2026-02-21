@@ -12,40 +12,38 @@ const Depot = ({ user, refreshProfile }) => {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-white/10 pb-6">
                 <div>
-                    <h2 className="text-4xl font-black uppercase italic tracking-tighter text-white mb-2 flex items-center gap-3">
-                        The <span className="text-[#ff006e]">Depot</span>
+                    <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.3em] font-mono mb-2">// THE_DEPOT</div>
+                    <h2 className="text-3xl font-black uppercase tracking-tighter text-white mb-2">
+                        DEPOT_<span className="text-[#ff006e]">EXCHANGE</span>
                     </h2>
-                    <p className="text-xs text-white/40 font-mono uppercase tracking-widest max-w-lg">
-                        Secure Exchange & System Upgrades. <br />
-                        <span className="text-white/20">Authorized Personnel Only. ID: {user?.id || 'GUEST'}</span>
+                    <p className="text-[11px] text-white/30 font-mono uppercase tracking-widest max-w-lg">
+                        Secure exchange &amp; system upgrades
+                        <span className="text-white/15 ml-3">::: AUTH_ID: {user?.id || 'GUEST'}</span>
                     </p>
                 </div>
 
-                {/* Switcher */}
-                <div className="bg-black border border-white/10 p-1 rounded-full flex relative w-full md:w-auto">
+                {/* Flat terminal tab switcher */}
+                <div className="flex border-b border-white/10 relative">
                     <button
                         onClick={() => setActiveSection('CREDITS')}
-                        className={`flex-1 md:w-40 py-2 px-6 rounded-full text-xs font-black uppercase tracking-widest transition-all relative z-10 flex items-center justify-center gap-2 ${activeSection === 'CREDITS' ? 'text-black' : 'text-white/40 hover:text-white'
+                        className={`flex items-center gap-2 px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all relative ${activeSection === 'CREDITS' ? 'text-[#ff006e]' : 'text-white/30 hover:text-white'
                             }`}
                     >
-                        <Skull size={14} /> Credits
+                        <Skull size={13} /> CREDITS
+                        {activeSection === 'CREDITS' && (
+                            <motion.div layoutId="depotSwitch" className="absolute bottom-0 left-0 right-0 h-px bg-[#ff006e] shadow-[0_0_8px_#ff006e]" />
+                        )}
                     </button>
                     <button
                         onClick={() => setActiveSection('ACCESS')}
-                        className={`flex-1 md:w-40 py-2 px-6 rounded-full text-xs font-black uppercase tracking-widest transition-all relative z-10 flex items-center justify-center gap-2 ${activeSection === 'ACCESS' ? 'text-black' : 'text-white/40 hover:text-white'
+                        className={`flex items-center gap-2 px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all relative ${activeSection === 'ACCESS' ? 'text-cyan-400' : 'text-white/30 hover:text-white'
                             }`}
                     >
-                        <Shield size={14} /> Root Access
+                        <Shield size={13} /> ROOT_ACCESS
+                        {activeSection === 'ACCESS' && (
+                            <motion.div layoutId="depotSwitch" className="absolute bottom-0 left-0 right-0 h-px bg-cyan-400 shadow-[0_0_8px_rgb(34,211,238)]" />
+                        )}
                     </button>
-
-                    {/* Sliding Background */}
-                    <motion.div
-                        layoutId="depotSwitch"
-                        className={`absolute top-1 bottom-1 rounded-full shadow-lg ${activeSection === 'CREDITS' ? 'bg-[#ff006e] left-1 w-[calc(50%-4px)] md:w-40' : 'bg-[#8b5cf6] left-[calc(50%+2px)] md:left-[166px] w-[calc(50%-4px)] md:w-40'
-                            }`}
-                        initial={false}
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    />
                 </div>
             </div>
 

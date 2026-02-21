@@ -19,6 +19,23 @@
         background: #ff006e;
     }
 
+    .custom-scrollbar-sharp::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .custom-scrollbar-sharp::-webkit-scrollbar-track {
+        background: #020202;
+    }
+
+    .custom-scrollbar-sharp::-webkit-scrollbar-thumb {
+        background: #222;
+        border: 1px solid #333;
+    }
+
+    .custom-scrollbar-sharp::-webkit-scrollbar-thumb:hover {
+        background: #ff006e;
+    }
+
     .no-scrollbar::-webkit-scrollbar {
         display: none;
     }
@@ -28,6 +45,7 @@
         /* IE and Edge */
         scrollbar-width: none;
         /* Firefox */
+        overflow-y: auto;
     }
 
     /* Constant subtle pulse with refined glow */
@@ -79,5 +97,38 @@
 
     .mono {
         font-family: 'Share Tech Mono', monospace;
+    }
+
+    @keyframes pulse-ring {
+        0% {
+            transform: scale(0.95);
+            opacity: 0.1;
+        }
+
+        50% {
+            transform: scale(1.05);
+            opacity: 0.3;
+        }
+
+        100% {
+            transform: scale(0.95);
+            opacity: 0.1;
+        }
+    }
+
+    @keyframes blink {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.4;
+        }
+    }
+
+    .blink {
+        animation: blink 1s infinite;
     }
 }

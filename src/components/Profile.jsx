@@ -112,7 +112,7 @@ const SideTerminal = ({ title, children, side = "left", isOpen, onClose, roomMod
     </motion.div>
 );
 
-const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, leftOpen, rightOpen, onToggleLeft, onToggleRight, bannerUrl, themeColor, textColor, backgroundColor, isGlass, previewThemeColor, previewTextColor, previewBackgroundColor, previewIsGlass, roomMode = 'monitor', setRoomMode, tracks = [], gallery = [], onUpload, journal = [], onExpandContent }) => {
+const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, leftOpen, rightOpen, onToggleLeft, onToggleRight, bannerUrl, wallpaperVideoUrl, themeColor, textColor, backgroundColor, isGlass, previewThemeColor, previewTextColor, previewBackgroundColor, previewIsGlass, roomMode = 'monitor', setRoomMode, tracks = [], gallery = [], onUpload, journal = [], onExpandContent }) => {
     // Use preview colors if available, otherwise fall back to saved user props
     const activeTheme = previewThemeColor || themeColor || '#ff006e';
     const activeText = previewTextColor || textColor || '#ffffff';
@@ -131,16 +131,29 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
             '--glass-blur': activeIsGlass ? '20px' : '0px'
         }}>
             <div className="absolute inset-0 z-0 overflow-hidden">
-                <img
-                    src={bannerUrl.startsWith('http') ? bannerUrl : `http://localhost:5264${bannerUrl}`}
-                    className={`w-full h-full object-cover transition-all duration-[1200ms] ${roomMode === 'room' ? 'opacity-100 scale-110' : 'opacity-60 scale-100'}`}
-                    style={{ transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)' }}
-                />
-                <div className={`absolute inset-0 bg-black transition-opacity duration-[1200ms] ${roomMode === 'room' ? 'opacity-20' : 'opacity-60'}`} style={{ transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)' }} /> {/* Overlay for text readability */}
+                {wallpaperVideoUrl ? (
+                    <video
+                        key={wallpaperVideoUrl}
+                        src={wallpaperVideoUrl.startsWith('http') ? wallpaperVideoUrl : `http://localhost:5264${wallpaperVideoUrl}`}
+                        className={`w-full h-full object-cover transition-all duration-[1200ms] ${roomMode === 'room' ? 'opacity-100 scale-110' : 'opacity-70 scale-100'}`}
+                        style={{ transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)' }}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                    />
+                ) : bannerUrl ? (
+                    <img
+                        src={bannerUrl.startsWith('http') ? bannerUrl : `http://localhost:5264${bannerUrl}`}
+                        className={`w-full h-full object-cover transition-all duration-[1200ms] ${roomMode === 'room' ? 'opacity-100 scale-110' : 'opacity-60 scale-100'}`}
+                        style={{ transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)' }}
+                    />
+                ) : null}
+                <div className={`absolute inset-0 bg-black transition-opacity duration-[1200ms] ${roomMode === 'room' ? 'opacity-20' : 'opacity-60'}`} style={{ transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)' }} />
             </div>
             <div className="desk-surface" />
             <CyberDust />
-            <DisplayWall tracks={tracks} gallery={gallery} themeColor={activeTheme} onExpand={onExpandContent} />
+            <DisplayWall tracks={tracks} gallery={gallery} journal={journal} themeColor={activeTheme} onExpand={onExpandContent} />
 
             <SideTerminal title="STATUS_MONITOR" side="left" isOpen={leftOpen} onClose={() => onToggleLeft(false)} roomMode={roomMode}>
                 {leftContent}
@@ -236,14 +249,14 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                         >
                             <div className="text-[10px] mono text-[#ff006e] uppercase mb-4 border-b border-[#ff006e]/20 pb-2 flex justify-between items-center">
                                 <div className="flex items-center gap-2">
-                                    <span className="opacity-40">{isExplicitlyPinned ? '[ PINNED_SIGNAL ]' : '[ LATEST_SIGNAL ]'}</span>
-                                    <span className="font-bold">{displayEntry?.Title || '// CORE_LOG'}</span>
+                                    <span className="opacity-40">{(displayEntry?.IsPinned || displayEntry?.isPinned) ? '[ PINNED_SIGNAL ]' : '[ LATEST_SIGNAL ]'}</span>
+                                    <span className="font-bold">{displayEntry?.Title || displayEntry?.title || '// CORE_LOG'}</span>
                                 </div>
-                                {isExplicitlyPinned && <Zap size={10} className="text-[#ff006e] animate-pulse" />}
+                                {(displayEntry?.IsPinned || displayEntry?.isPinned) && <Zap size={10} className="text-[#ff006e] animate-pulse" />}
                             </div>
                             <div className={`overflow-y-auto custom-scrollbar-minimal ${isDetailed ? 'flex-1' : ''}`}>
                                 <p className={`text-[9px] text-white/40 leading-relaxed italic tracking-wider ${isDetailed ? '' : 'line-clamp-4'}`}>
-                                    {displayEntry?.Content}
+                                    {displayEntry?.Content || displayEntry?.content}
                                 </p>
                             </div>
                             <div className="mt-4 flex justify-between items-center shrink-0">
@@ -274,7 +287,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
     );
 };
 
-const DisplayWall = ({ tracks, gallery, themeColor, onExpand }) => {
+const DisplayWall = ({ tracks, gallery, journal = [], themeColor, onExpand }) => {
     // 1. Collect all wall-eligible items
     const wallItems = [];
 
@@ -308,6 +321,22 @@ const DisplayWall = ({ tracks, gallery, themeColor, onExpand }) => {
                     url: c.Url,
                     slots: c.Type === 'VIDEO' ? 4 : 1,
                     original: c
+                });
+            }
+        });
+    }
+
+    // Journals (only if IsPosted - repurposed as Pin to Wall)
+    if (Array.isArray(journal)) {
+        journal.forEach(j => {
+            if (j.IsPosted || j.isPosted) {
+                wallItems.push({
+                    id: j.id || j.Id,
+                    type: 'JOURNAL',
+                    title: j.title || j.Title,
+                    url: null,
+                    slots: 1,
+                    original: j
                 });
             }
         });
@@ -349,8 +378,13 @@ const DisplayWall = ({ tracks, gallery, themeColor, onExpand }) => {
                                 alt={item.title}
                             />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-[#111] text-[#ff006e]/20">
-                                <Music size={24} />
+                            <div className="w-full h-full flex flex-col items-center justify-center bg-[#050505] text-[#ff006e]/20 p-2 text-center group">
+                                {item.type === 'JOURNAL' ? <Book size={24} className="group-hover:text-[#ff006e] transition-colors" /> : <Music size={24} />}
+                                {item.type === 'JOURNAL' && (
+                                    <div className="mt-1 text-[5px] mono opacity-20 truncate w-full uppercase">
+                                        {item.title}
+                                    </div>
+                                )}
                             </div>
                         )
                     )}
@@ -464,7 +498,7 @@ const NeuralPattern = ({ isLive, featuredTrack, isQuiet }) => {
 };
 
 // --- VISTA: PERFIL (DISEÑO SLAVA KORNILOV) ---
-export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, onAddCredits, onRefreshProfile, onRefreshTracks, targetUserId, navigateToProfile, onPlayPlaylist }) => {
+export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, onAddCredits, onRefreshProfile, onRefreshTracks, targetUserId, navigateToProfile, onPlayPlaylist, initialModal, onClearInitialModal }) => {
     const { showNotification } = useNotification();
     const [activeTab, setActiveTab] = useState('Music');
     const [studioSubTab, setStudioSubTab] = useState('All');
@@ -565,32 +599,30 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
     const isMe = !targetUserId || String(targetUserId) === String(currentUser?.id || currentUser?.Id);
     const displayUser = isMe ? currentUser : profileData;
 
-    // Fetch Playlists
+    // Fetch Playlists — always on mount/profile change so SEQ_MAPS stat is accurate
     React.useEffect(() => {
-        if (activeTab === 'Playlists') {
-            const fetchPlaylists = async () => {
-                try {
-                    const API = await import('../services/api').then(mod => mod.default);
-                    const targetId = isMe ? (currentUser?.id || currentUser?.Id) : targetUserId;
-                    if (targetId) {
-                        const res = await API.Playlists.getUserPlaylists(targetId);
-                        const normalized = (res.data || []).map(p => ({
-                            ...p,
-                            id: p.id || p.Id,
-                            name: p.name || p.Name,
-                            imageUrl: p.imageUrl || p.ImageUrl,
-                            isPublic: p.isPublic !== undefined ? p.isPublic : p.IsPublic,
-                            description: p.description || p.Description
-                        }));
-                        setPlaylists(normalized.filter(p => p.id && String(p.id).trim() !== ''));
-                    }
-                } catch (err) {
-                    console.error("Failed to fetch playlists", err);
+        const fetchPlaylists = async () => {
+            try {
+                const API = await import('../services/api').then(mod => mod.default);
+                const targetId = isMe ? (currentUser?.id || currentUser?.Id) : targetUserId;
+                if (targetId) {
+                    const res = await API.Playlists.getUserPlaylists(targetId);
+                    const normalized = (res.data || []).map(p => ({
+                        ...p,
+                        id: p.id || p.Id,
+                        name: p.name || p.Name,
+                        imageUrl: p.imageUrl || p.ImageUrl,
+                        isPublic: p.isPublic !== undefined ? p.isPublic : p.IsPublic,
+                        description: p.description || p.Description
+                    }));
+                    setPlaylists(normalized.filter(p => p.id && String(p.id).trim() !== ''));
                 }
-            };
-            fetchPlaylists();
-        }
-    }, [activeTab, targetUserId, currentUser, isMe]);
+            } catch (err) {
+                console.error("Failed to fetch playlists", err);
+            }
+        };
+        fetchPlaylists();
+    }, [targetUserId, currentUser, isMe]);
 
     const handleCreatePlaylist = async (_e) => {
         _e.preventDefault();
@@ -847,6 +879,22 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
         }
     }, [isMe, currentUser, activeTab]);
 
+    // Handle Initial Modal Triggers from Feed/Discovery
+    React.useEffect(() => {
+        if (initialModal) {
+            console.log(`[PROFILE_TRIGGER] Initializing modal: ${initialModal}`);
+            if (initialModal === 'post' || initialModal === 'studio') {
+                setActiveTab('Studio');
+                setStudioSubTab('All'); // User requested "all posts" tab within Studio
+            } else if (initialModal === 'upload') {
+                setActiveTab('Music');
+                setShowUpload(true);
+            }
+            // Clear the trigger after handling
+            if (onClearInitialModal) onClearInitialModal();
+        }
+    }, [initialModal, onClearInitialModal]);
+
     const handleFollow = async () => {
         try {
             const API = await import('../services/api').then(mod => mod.default);
@@ -878,6 +926,7 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                 }) : profileTracks}
                 journal={isMe ? profileJournal : profileJournal.filter(j => j.IsPosted)}
                 bannerUrl={displayUser?.bannerUrl || displayUser?.BannerUrl}
+                wallpaperVideoUrl={displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl}
                 themeColor={displayUser?.themeColor || displayUser?.ThemeColor}
                 textColor={displayUser?.textColor || displayUser?.TextColor}
                 backgroundColor={displayUser?.backgroundColor || displayUser?.BackgroundColor}
@@ -1448,7 +1497,7 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                                                             await API.Journal.create({
                                                                 Title: titleInput.value,
                                                                 Content: contentInput.value,
-                                                                IsPosted: false,
+                                                                IsPosted: true,
                                                                 IsPinned: false
                                                             });
                                                             titleInput.value = '';
@@ -1507,9 +1556,9 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                                                         <div className="flex flex-col gap-1">
                                                             <div className="flex items-center gap-3">
                                                                 {(entry.IsPinned || entry.isPinned) && <Star size={12} className="text-white fill-white" />}
-                                                                <h3 className="text-sm font-bold text-white uppercase tracking-wider">{entry.Title || '// UNTITLED_LOG'}</h3>
+                                                                <h3 className="text-sm font-bold text-white uppercase tracking-wider">{entry.Title || entry.title || '// UNTITLED_LOG'}</h3>
                                                             </div>
-                                                            <span className="text-[8px] text-[#ff006e] mono">{new Date(entry.CreatedAt).toLocaleString()}</span>
+                                                            <span className="text-[8px] text-[#ff006e] mono">{new Date(entry.CreatedAt || entry.createdAt).toLocaleString()}</span>
                                                         </div>
                                                         {isMe && (
                                                             <div className="flex gap-2">
@@ -1517,28 +1566,29 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                                                                     onClick={async () => {
                                                                         try {
                                                                             const API = await import('../services/api').then(mod => mod.default);
-                                                                            await API.Journal.togglePin(entry.Id || entry.id);
+                                                                            await API.Journal.togglePost(entry.Id || entry.id);
+                                                                            showNotification((entry.IsPosted || entry.isPosted) ? "REMOVED_FROM_WALL" : "PINNED_TO_WALL", `ENTRY_${(entry.IsPosted || entry.isPosted) ? 'DETACHED_FROM' : 'ATTACHED_TO'}_PROFILE_SURFACE`, "success");
                                                                             const res = await (isMe ? API.Journal.getMyJournal() : API.Journal.getUserJournal(targetUserId));
                                                                             setProfileJournal(res.data || []);
                                                                         } catch (err) { console.error(err); }
                                                                     }}
-                                                                    className={`px-3 py-1 border text-[7px] font-bold mono uppercase transition-all ${(entry.IsPinned || entry.isPinned) ? 'bg-[#ff006e] text-black border-[#ff006e]' : 'text-[#ff006e]/40 border-[#ff006e]/20 hover:text-[#ff006e]'}`}
+                                                                    className={`px-3 py-1 border text-[7px] font-bold mono uppercase transition-all ${(entry.IsPosted || entry.isPosted) ? 'bg-cyan-500/20 text-cyan-400 border-cyan-400/50 shadow-[0_0_10px_#00ffff10]' : 'text-white/40 border-white/20 hover:text-white'}`}
                                                                 >
-                                                                    {(entry.IsPinned || entry.isPinned) ? '[ POSTED ]' : '[ POST_TO_WALL ]'}
+                                                                    {(entry.IsPosted || entry.isPosted) ? '[ PINNED_TO_WALL ]' : '[ PIN_TO_WALL ]'}
                                                                 </button>
                                                                 <button
                                                                     onClick={async () => {
                                                                         try {
                                                                             const API = await import('../services/api').then(mod => mod.default);
-                                                                            await API.Journal.togglePost(entry.Id || entry.id);
+                                                                            await API.Journal.togglePin(entry.Id || entry.id);
                                                                             showNotification((entry.IsPinned || entry.isPinned) ? "LOG_UNPINNED" : "LOG_PINNED", `ENTRY_${(entry.IsPinned || entry.isPinned) ? 'REMOVED_FROM' : 'PRIORITIZED_ON'}_MONITOR`, "success");
                                                                             const res = await (isMe ? API.Journal.getMyJournal() : API.Journal.getUserJournal(targetUserId));
                                                                             setProfileJournal(res.data || []);
                                                                         } catch (err) { console.error(err); }
                                                                     }}
-                                                                    className={`px-3 py-1 border text-[7px] font-bold mono uppercase transition-all ${(entry.IsPosted || entry.isPosted) ? 'bg-white text-black border-white' : 'text-white/40 border-white/20 hover:text-white'}`}
+                                                                    className={`px-3 py-1 border text-[7px] font-bold mono uppercase transition-all ${(entry.IsPinned || entry.isPinned) ? 'bg-white text-black border-white' : 'text-white/40 border-white/20 hover:text-white'}`}
                                                                 >
-                                                                    {(entry.IsPosted || entry.isPosted) ? '[ PINNED ]' : '[ PIN_TO_MONITOR ]'}
+                                                                    {(entry.IsPinned || entry.isPinned) ? '[ PINNED_TO_MONITOR ]' : '[ PIN_TO_MONITOR ]'}
                                                                 </button>
                                                                 <button
                                                                     onClick={async () => {
@@ -1559,7 +1609,7 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                                                     </div>
                                                     <div className="relative">
                                                         <p className="text-[9px] text-white/60 leading-relaxed italic tracking-wider line-clamp-3">
-                                                            {entry.Content}
+                                                            {entry.Content || entry.content}
                                                         </p>
                                                         <button
                                                             onClick={() => setSelectedContent({ ...entry, type: 'JOURNAL' })}
@@ -1729,6 +1779,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [bannerFile, setBannerFile] = useState(null);
+    const [wallpaperVideoFile, setWallpaperVideoFile] = useState(null);
     const [themeColor, setThemeColor] = useState(user?.themeColor || user?.ThemeColor || '#ff006e');
     const [textColor, setTextColor] = useState(user?.textColor || user?.TextColor || '#ffffff');
     const [backgroundColor, setBackgroundColor] = useState(user?.backgroundColor || user?.BackgroundColor || '#000000');
@@ -1794,6 +1845,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview }) => {
 
             if (file) formData.append('ProfilePicture', file);
             if (bannerFile) formData.append('Banner', bannerFile);
+            if (wallpaperVideoFile) formData.append('WallpaperVideo', wallpaperVideoFile);
             formData.append('ThemeColor', themeColor);
             formData.append('TextColor', textColor);
             formData.append('BackgroundColor', backgroundColor);
@@ -2004,16 +2056,78 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview }) => {
             {/* INTERFACE TAB */}
             {activeTab === 'interface' && (
                 <div className="space-y-6 pt-2 animate-in fade-in slide-in-from-right-4 duration-300">
-                    {/* Banner Upload */}
+                    {/* Unified Backdrop Upload — Photo or Video */}
                     <div className="space-y-3">
-                        <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest">NEURAL_BACKDROP</label>
-                        <div className="relative group cursor-pointer border border-dashed border-[var(--text-color)]/20 hover:border-[var(--theme-color)] p-8 flex flex-col items-center justify-center transition-all bg-white/5 hover:bg-[var(--theme-color)]/5">
-                            <input type="file" onChange={e => setBannerFile(e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer z-20" />
-                            <Upload size={20} className="text-[var(--theme-color)] mb-2" />
-                            <span className="text-[9px] text-[var(--text-color)]/60 uppercase tracking-widest relative z-10">
-                                {bannerFile ? bannerFile.name : (user?.bannerUrl ? 'UPDATE_BACKDROP_SIGNAL' : 'UPLOAD_VISUAL_DATA')}
-                            </span>
+                        <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest">SIGNAL_BACKDROP</label>
+                        <div className="relative group cursor-pointer border border-dashed border-[var(--text-color)]/20 hover:border-[var(--theme-color)] transition-all bg-white/5 hover:bg-[var(--theme-color)]/5 overflow-hidden">
+                            <input
+                                type="file"
+                                accept="image/*,video/mp4,video/webm,video/*"
+                                onChange={e => {
+                                    const f = e.target.files[0];
+                                    if (!f) return;
+                                    if (f.type.startsWith('video/')) {
+                                        setWallpaperVideoFile(f);
+                                        setBannerFile(null);
+                                    } else {
+                                        setBannerFile(f);
+                                        setWallpaperVideoFile(null);
+                                    }
+                                }}
+                                className="absolute inset-0 opacity-0 cursor-pointer z-20"
+                            />
+                            {/* Upload area */}
+                            <div className="p-8 flex flex-col items-center justify-center gap-2">
+                                {bannerFile || wallpaperVideoFile ? (
+                                    <>
+                                        {wallpaperVideoFile
+                                            ? <Video size={24} className="text-cyan-400" />
+                                            : <Camera size={24} className="text-[var(--theme-color)]" />
+                                        }
+                                        <span className="text-[9px] text-[var(--text-color)]/80 uppercase tracking-widest text-center font-bold">
+                                            {(bannerFile || wallpaperVideoFile).name}
+                                        </span>
+                                        <span className="text-[7px] text-[var(--text-color)]/30 uppercase tracking-widest">
+                                            {wallpaperVideoFile ? 'VIDEO_BACKDROP_QUEUED' : 'PHOTO_BACKDROP_QUEUED'}
+                                        </span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <Camera size={18} className="text-[var(--theme-color)]/60" />
+                                            <span className="text-[var(--text-color)]/20 text-xs">/</span>
+                                            <Video size={18} className="text-cyan-400/60" />
+                                        </div>
+                                        <span className="text-[9px] text-[var(--text-color)]/60 uppercase tracking-widest text-center">
+                                            {user?.bannerUrl || user?.wallpaperVideoUrl ? 'UPDATE_BACKDROP_SIGNAL' : 'UPLOAD_PHOTO_OR_VIDEO'}
+                                        </span>
+                                        <span className="text-[7px] text-[var(--text-color)]/20 uppercase tracking-widest">JPG · PNG · MP4 · WEBM</span>
+                                    </>
+                                )}
+                            </div>
                         </div>
+                        {/* Status indicators — video takes priority over photo */}
+                        {(() => {
+                            const hasVideo = !!(user?.wallpaperVideoUrl || user?.WallpaperVideoUrl);
+                            const hasPhoto = !!(user?.bannerUrl || user?.BannerUrl);
+                            const pendingNew = bannerFile || wallpaperVideoFile;
+                            return (
+                                <div className="flex gap-2">
+                                    {hasVideo && !pendingNew && (
+                                        <div className="flex items-center gap-2 px-3 py-2 border border-cyan-400/20 bg-cyan-400/5 flex-1">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                                            <span className="text-[8px] text-cyan-400 mono uppercase tracking-widest">VIDEO_BACKDROP_ACTIVE</span>
+                                        </div>
+                                    )}
+                                    {hasPhoto && !hasVideo && !pendingNew && (
+                                        <div className="flex items-center gap-2 px-3 py-2 border border-[var(--theme-color)]/20 bg-[var(--theme-color)]/5 flex-1">
+                                            <Camera size={10} className="text-[var(--theme-color)]" />
+                                            <span className="text-[8px] text-[var(--theme-color)] mono uppercase tracking-widest">PHOTO_BACKDROP_ACTIVE</span>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })()}
                     </div>
 
                     {/* Theme Color */}

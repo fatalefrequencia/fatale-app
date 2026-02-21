@@ -23,6 +23,7 @@ import { MessagesView } from './components/MessagesView';
 import DiscoveryMapView from './components/DiscoveryMapView';
 import TrackUploadView from './components/UploadTrackView';
 import WalletView from './components/WalletView';
+import ContentModal from './components/ContentModal';
 
 import API from './services/api';
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
@@ -50,6 +51,13 @@ const DISCOVERY_GRID = [
   { id: 5, name: 'tape2', color: '#1a1a1a', type: 'Mix' },
   { id: 6, name: 'Dreamo Mix', color: '#ff006e', type: 'Vibes' },
 ];
+
+const BASE_API_URL = 'http://localhost:5264';
+const getMediaUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return `${BASE_API_URL}${path}`;
+};
 
 // --- COMPONENTE PRINCIPAL ---
 function App() {
@@ -81,14 +89,9 @@ function App() {
   const [subscription, setSubscription] = useState(null);
   const [cachedTrackIds, setCachedTrackIds] = useState(new Set());
   const [userPlaylists, setUserPlaylists] = useState([]);
+  const [profileInitialModal, setProfileInitialModal] = useState(null);
 
 
-  const BASE_API_URL = 'http://localhost:5264';
-  const getMediaUrl = (path) => {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    return `${BASE_API_URL}${path}`;
-  };
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
@@ -891,8 +894,9 @@ function App() {
     setYoutubePlayer(null);
   };
 
-  const navigateToProfile = (id) => {
+  const navigateToProfile = (id, initialModal = null) => {
     setViewingUserId(id);
+    setProfileInitialModal(initialModal);
     setView('profile');
   };
 
@@ -1026,6 +1030,8 @@ function App() {
               onRefreshPlaylists={fetchPlaylists}
               redirectTrigger={redirectTrigger} // Pass the redirect signal
               setRedirectTrigger={setRedirectTrigger} // PASS THE SETTER
+              profileInitialModal={profileInitialModal}
+              setProfileInitialModal={setProfileInitialModal}
             />
           </>
         )}
@@ -1053,7 +1059,7 @@ const LoginView = ({ onLogin }) => (
   </motion.div>
 );
 
-const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger }) => {
+const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   return (
@@ -1108,7 +1114,7 @@ const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurren
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar relative pb-24"> {/* Added pb-24 for MiniPlayer space */}
+        <div className="flex-1 overflow-y-auto no-scrollbar relative pb-24"> {/* Changed custom-scrollbar to no-scrollbar */}
           <AnimatePresence mode="wait">
             {activeView === 'discovery' && (
               <DiscoveryMapView
@@ -1127,7 +1133,7 @@ const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurren
               />
             )}
             {activeView === 'wallet' && <WalletView user={user} onRefreshProfile={onRefreshProfile} />}
-            {activeView === 'feed' && <FeedContent key="feed" />}
+            {activeView === 'feed' && <FeedContent key="feed" setView={setView} onPlayPlaylist={handlePlayPlaylist} navigateToProfile={navigateToProfile} user={user} />}
             {activeView === 'profile' && (
               <ProfileView
                 key={viewingUserId || 'me'}
@@ -1142,6 +1148,8 @@ const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurren
                 playlists={playlists}
                 onRefreshPlaylists={onRefreshPlaylists}
                 onPlayPlaylist={handlePlayPlaylist}
+                initialModal={profileInitialModal}
+                onClearInitialModal={() => setProfileInitialModal(null)}
               />
             )}
             {activeView === 'player' && <PlayerContent
@@ -1314,93 +1322,603 @@ const DiscoveryContent = () => (
 );
 
 // --- CONTENIDO: FEED (3 COLUMNAS) ---
-const FeedContent = () => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col lg:flex-row h-full">
-    {/* Izquierda: Acciones */}
-    <div className="hidden lg:block w-72 p-6 space-y-6 border-r border-[#ff006e]/5 relative z-20">
-      <div className="bg-[#0a0a0a]/50 backdrop-blur-xl border border-[#ff006e]/20 rounded-2xl overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.5)]">
-        <div className="p-4 bg-[#ff006e]/5 border-b border-[#ff006e]/10 flex justify-between items-center text-[10px] font-black uppercase text-white">Quick Actions <ChevronDown size={14} /></div>
-        <div className="p-4 space-y-2">
-          {['New Post', 'Upload Track', 'Live Stream'].map(a => (
-            <button key={a} className="w-full text-left p-2 text-[10px] font-bold text-[#ff006e]/50 hover:text-white hover:bg-[#ff006e10] rounded transition-all uppercase tracking-tighter">{a}</button>
+const FeedContent = ({ setView, onPlayPlaylist, navigateToProfile, user }) => {
+  const [feed, setFeed] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedMedia, setSelectedMedia] = useState(null);
+
+  const fetchFeed = async () => {
+    setLoading(true);
+    try {
+      const res = await API.Feed.getGlobalFeed();
+      setFeed(res.data);
+    } catch (e) {
+      console.error("Feed error", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFeed();
+  }, []);
+
+  const handleTrackPlay = (trackId) => {
+    const trackFeedItems = feed.filter(item => (item.type || item.Type) === 'track');
+    const playlist = trackFeedItems.map(item => {
+      const rawSource = item.source || item.Source;
+      const source = rawSource && rawSource.startsWith('/uploads')
+        ? `http://localhost:5264${rawSource}`
+        : rawSource;
+
+      const rawImg = item.imageUrl || item.ImageUrl;
+      const imageUrl = rawImg && rawImg.startsWith('/uploads')
+        ? `http://localhost:5264${rawImg}`
+        : rawImg;
+
+      return {
+        ...item,
+        id: item.trackId || item.TrackId,
+        title: item.title || item.Title,
+        artist: item.artist || item.Artist,
+        source: source,
+        cover: imageUrl,
+        dbId: item.trackId || item.TrackId
+      };
+    });
+
+    const startIndex = playlist.findIndex(t => String(t.dbId) === String(trackId));
+    if (startIndex !== -1 && onPlayPlaylist) {
+      onPlayPlaylist(playlist, startIndex);
+    }
+  };
+
+  const getTime = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString('en-GB', { hour12: false });
+  };
+
+  const getPrefix = (type) => {
+    switch (type) {
+      case 'track': return 'SIGNAL';
+      case 'studio': return 'PULSE';
+      case 'journal': return 'DATA';
+      case 'system': return 'CORE';
+      default: return 'INFO';
+    }
+  };
+
+  const getColor = (type) => {
+    switch (type) {
+      case 'track': return 'text-[#ff006e]';
+      case 'studio': return 'text-[#00ffff]';
+      case 'journal': return 'text-[#9b5de5]';
+      case 'system': return 'text-[#ffc300]';
+      default: return 'text-white/60';
+    }
+  };
+
+  const handleMediaExpand = (item) => {
+    setSelectedMedia(item);
+  };
+
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [commentText, setCommentText] = useState("");
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [replyingToComment, setReplyingToComment] = useState(null);
+  const commentsEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    if (comments.length > 0) {
+      scrollToBottom();
+    }
+  }, [comments]);
+
+  useEffect(() => {
+    if (replyingTo) {
+      setReplyingToComment(null); // Reset nested reply when opening modal
+      const fetchComments = async () => {
+        setLoadingComments(true);
+        try {
+          const type = replyingTo.Type || replyingTo.type;
+          const itemId = replyingTo.ItemId || replyingTo.itemId;
+          const { data } = await API.Social.getFeedComments(type, itemId);
+          setComments(data || []);
+        } catch (err) {
+          console.error("Failed to load comments", err);
+        } finally {
+          setLoadingComments(false);
+        }
+      };
+      fetchComments();
+    } else {
+      setComments([]);
+      setCommentText("");
+    }
+  }, [replyingTo]);
+
+  const handleFeedLike = async (item) => {
+    try {
+      const type = item.Type || item.type;
+      const itemId = item.ItemId || item.itemId;
+      const { data } = await API.Social.toggleLike(type, itemId);
+      // Optimistic update
+      setFeed(prev => prev.map(f =>
+        f.Id === item.Id ? {
+          ...f,
+          IsLiked: data.Liked ?? data.liked,
+          LikeCount: data.LikeCount ?? data.likeCount
+        } : f
+      ));
+    } catch (e) {
+      console.error("Like failed", e);
+    }
+  };
+
+  const handleFeedRepost = async (item) => {
+    try {
+      const type = item.Type || item.type;
+      const itemId = item.ItemId || item.itemId;
+      const { data } = await API.Social.toggleRepost(type, itemId);
+
+      // Update local count immediately
+      setFeed(prev => prev.map(f =>
+        f.Id === item.Id ? {
+          ...f,
+          IsReposted: data.Reposted ?? data.reposted,
+          RepostCount: data.RepostCount ?? data.repostCount
+        } : f
+      ));
+
+      // If it was a new repost (not an undo), refresh to show it at top
+      if (data.Reposted || data.reposted) {
+        fetchFeed();
+      }
+    } catch (e) {
+      console.error("Repost failed", e);
+    }
+  };
+
+  const submitComment = async () => {
+    if (!commentText.trim() || !replyingTo) return;
+    setIsSubmittingComment(true);
+    try {
+      const type = replyingTo.Type || replyingTo.type;
+      const itemId = replyingTo.ItemId || replyingTo.itemId;
+      const { data } = await API.Social.addFeedComment(type, itemId, commentText, replyingToComment?.Id);
+
+      // Update local feed count
+      setFeed(prev => prev.map(f =>
+        f.Id === replyingTo.Id ? {
+          ...f,
+          CommentCount: (f.CommentCount || 0) + 1
+        } : f
+      ));
+
+      // Add to local comment list
+      const newComment = {
+        Id: data.Id || Date.now(),
+        Username: user?.Username || user?.username || "YOU",
+        Content: commentText,
+        CreatedAt: new Date().toISOString(),
+        ParentId: replyingToComment?.Id,
+        IsOperator: false // Local user is unlikely to be the artist in this view
+      };
+      setComments(prev => [...prev, newComment]);
+
+      setCommentText("");
+      setReplyingToComment(null);
+    } catch (e) {
+      console.error("Comment failed", e);
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col lg:flex-row h-full font-mono relative">
+      <AnimatePresence>
+        {selectedMedia && (
+          <ContentModal
+            isOpen={!!selectedMedia}
+            onClose={() => setSelectedMedia(null)}
+            content={{
+              ...selectedMedia,
+              Url: selectedMedia.imageUrl || selectedMedia.ImageUrl,
+              Title: selectedMedia.title || selectedMedia.Title,
+              Content: selectedMedia.content || selectedMedia.Content
+            }}
+            type={selectedMedia.type || selectedMedia.Type || (selectedMedia.Type || '').toUpperCase()}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Izquierda: Acciones */}
+      <div className="hidden lg:block w-72 p-6 space-y-6 border-r border-[#ff006e]/5 relative z-20">
+        <div className="bg-[#0a0a0a]/50 backdrop-blur-xl border border-[#ff006e]/20 rounded-lg overflow-hidden">
+          <div className="p-3 bg-[#ff006e]/5 border-b border-[#ff006e]/10 flex justify-between items-center text-[10px] font-black uppercase text-white">:: TERMINAL_CMDS :: <ChevronDown size={14} /></div>
+          <div className="p-4 space-y-1">
+            <button onClick={() => navigateToProfile(user?.id, 'studio')} className="w-full text-left p-2 text-[10px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e10] transition-all uppercase tracking-widest">{`> NEW_POST`} </button>
+            <button onClick={() => navigateToProfile(user?.id, 'upload')} className="w-full text-left p-2 text-[10px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e10] transition-all uppercase tracking-widest">{`> UPLOAD_TRACK`} </button>
+            <button onClick={() => setView('discovery')} className="w-full text-left p-2 text-[10px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e10] transition-all uppercase tracking-widest">{`> LIVE_STREAM`} </button>
+          </div>
+        </div>
+
+        <div className="space-y-4 px-2">
+          <h3 className="text-[10px] font-black uppercase text-[#ff006e] px-2 tracking-widest">:: RECENT_NODES ::</h3>
+          <div className="space-y-1">
+            {feed.slice(0, 12).map(item => {
+              const id = item.id || item.Id;
+              const artist = item.artist || item.Artist;
+              const createdAt = item.createdAt || item.CreatedAt;
+              const type = item.type || item.Type;
+              return (
+                <div key={`side-${id}`} className="flex items-center gap-2 px-2 py-1 group cursor-pointer hover:bg-white/5 rounded transition-colors">
+                  <span className="text-[8px] text-white/40 whitespace-nowrap">{getTime(createdAt)}</span>
+                  <span className={`text-[9px] font-bold truncate ${getColor(type)}`}>{artist?.toUpperCase()}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Centro: Terminal Log */}
+      <div className="flex-1 flex flex-col h-full bg-[#05050a]/40 relative">
+        {loading && (
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#ff006e]/20 z-50 overflow-hidden">
+            <motion.div
+              className="h-full bg-[#ff006e] shadow-[0_0_10px_#ff006e]"
+              initial={{ x: "-100%" }}
+              animate={{ x: "100%" }}
+              transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
+            />
+          </div>
+        )}
+
+        {/* Global Loading Indicator (Deciphering) */}
+        <div className="absolute top-4 right-6 z-40 bg-black/60 backdrop-blur-sm p-1 rounded-sm border border-[#ff006e]/10">
+          <RefreshCw
+            size={16}
+            className={`text-[#ff006e]/60 hover:text-[#ff006e] cursor-pointer transition-colors ${loading ? 'animate-spin' : ''}`}
+            onClick={fetchFeed}
+          />
+        </div>
+
+        <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-1 flex flex-col justify-start pb-32">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-4 opacity-50">
+              <div className="text-[10px] text-[#ff006e] blink uppercase tracking-[0.4em]">Deciphering Signal Packets...</div>
+            </div>
+          ) : feed.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-4 opacity-40">
+              <div className="text-[10px] text-[#ff006e] uppercase tracking-[0.4em]">-- NO_SIGNALS_DETECTED --</div>
+              <div className="text-[8px] text-white/20 uppercase">Network scanning active...</div>
+            </div>
+          ) : (
+            feed.map(item => {
+              const typeRaw = item.type || item.Type || "";
+              const type = typeRaw.toLowerCase();
+              const artist = item.artist || item.Artist;
+              const title = item.title || item.Title;
+              const content = item.content || item.Content;
+              const createdAt = item.createdAt || item.CreatedAt;
+              const playCount = item.playCount || item.PlayCount;
+              const mediaType = item.mediaType || item.MediaType;
+              const isOriginal = item.isOriginalSignal ?? item.IsOriginalSignal ?? true;
+              const repostedBy = item.repostedBy || item.RepostedBy;
+              const imageUrl = getMediaUrl(item.imageUrl || item.ImageUrl);
+
+              if (type === 'system') {
+                return (
+                  <div key={item.Id || item.id} className="flex gap-4 p-2 bg-[#ffc300]/5 border-l-2 border-[#ffc300]/30 mb-2">
+                    <span className="text-[10px] text-[#ffc300] font-black">{getTime(createdAt)}</span>
+                    <span className="text-[10px] text-white/80 font-bold uppercase tracking-widest">{title}</span>
+                    <span className="text-[10px] text-white/40 uppercase">{content}</span>
+                  </div>
+                );
+              }
+
+              return (
+                <div key={item.Id || item.id} className="group transition-colors hover:bg-white/[0.05] py-2 px-3 rounded border border-transparent hover:border-white/10 relative mb-4">
+                  {!isOriginal && repostedBy && (
+                    <div className="flex items-center gap-2 mb-1 px-1">
+                      <Repeat size={10} className="text-[#ff006e] animate-pulse" />
+                      <span className="text-[8px] font-black text-[#ff006e] uppercase tracking-[0.2em] bg-[#ff006e]/5 px-2 border border-[#ff006e]/20">
+                        [ RE_SIGNAL_FROM // @{repostedBy} ]
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
+                    <span className="text-[11px] text-white/80 whitespace-nowrap select-none font-bold">[{getTime(createdAt)}]</span>
+                    <span className={`text-[11px] font-bold whitespace-nowrap ${getColor(type)}`}>[{getPrefix(type)}]</span>
+                    <button
+                      onClick={() => navigateToProfile(item.ArtistUserId || item.artistUserId)}
+                      className="text-[11px] text-white font-black uppercase tracking-tighter hover:text-[#ff006e] transition-colors"
+                    >
+                      ::{artist}::
+                    </button>
+                    <span className="text-[11px] text-white/90 flex-1 min-w-[200px] leading-relaxed">
+                      {type === 'track' && `ULINKED_SIGNAL: "${title}" [${content || 'unknown'}]`}
+                      {type === 'studio' && `NODAL_UPDATE: "${title}"`}
+                      {type === 'journal' && `DATA_LOG: ${title}`}
+                    </span>
+                  </div>
+
+                  {/* Expanded Content Area */}
+                  <div className="ml-0 sm:ml-40 mt-3 space-y-4">
+                    {type === 'track' && (
+                      <div
+                        onClick={() => handleTrackPlay(item.trackId || item.TrackId)}
+                        className="bg-black/90 border border-[#ff006e]/30 p-4 flex items-center gap-4 hover:border-[#ff006e]/60 transition-all group/track cursor-pointer max-w-md shadow-xl"
+                      >
+                        <div className="w-12 h-12 bg-black border border-[#ff006e]/20 overflow-hidden shrink-0 flex items-center justify-center">
+                          {imageUrl ? (
+                            <img src={imageUrl} className="w-full h-full object-cover opacity-80" alt="" />
+                          ) : (
+                            <Music size={20} className="text-[#ff006e]/40" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[10px] text-white font-black uppercase truncate">{title}</div>
+                          <div className="text-[8px] text-[#ff006e]/80 font-bold uppercase mt-1 tracking-widest">BIPHATE_ACTIVE // {playCount || 0} SCANS</div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full border border-[#ff006e]/40 flex items-center justify-center text-[#ff006e] group-hover/track:bg-[#ff006e] group-hover/track:text-black transition-all">
+                          <Play size={14} fill="currentColor" />
+                        </div>
+                      </div>
+                    )}
+
+                    {type === 'studio' && (
+                      <div
+                        onClick={() => handleMediaExpand(item)}
+                        className="max-w-md bg-black border border-white/5 overflow-hidden group/studio cursor-zoom-in relative active:scale-[0.98] transition-transform"
+                      >
+                        {mediaType === 'VIDEO' ? (
+                          <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
+                            <video src={imageUrl} className="w-full h-full object-cover opacity-70" muted loop onMouseEnter={e => e.target.play()} onMouseLeave={e => e.target.pause()} />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover/studio:bg-black/20 transition-all">
+                              <Video size={30} className="text-white/60" />
+                            </div>
+                          </div>
+                        ) : (
+                          <img src={imageUrl} className="w-full h-auto opacity-90 group-hover/studio:opacity-100 transition-opacity" alt="" />
+                        )}
+                        <div className="absolute top-2 right-2 p-1 bg-black/60 opacity-0 group-hover/studio:opacity-100 transition-opacity">
+                          <Maximize2 size={14} className="text-white/60" />
+                        </div>
+                      </div>
+                    )}
+
+                    {type === 'journal' && (
+                      <div className="border-l-2 border-[#9b5de5]/50 pl-4 py-1 italic text-white/90 text-[11px] leading-relaxed max-w-xl bg-white/5 rounded-r">
+                        {content && content.length > 280 ? (
+                          <>
+                            {content.substring(0, 280)}...
+                            <button
+                              onClick={() => handleMediaExpand({ ...item, type: 'JOURNAL' })}
+                              className="ml-2 text-[#9b5de5] hover:text-white font-black uppercase text-[9px] tracking-widest transition-colors not-italic"
+                            >
+                              [ READ_SIGNAL ]
+                            </button>
+                          </>
+                        ) : (
+                          content
+                        )}
+                      </div>
+                    )}
+
+                    {/* Unified Social Buttons */}
+                    <div className="flex gap-6 text-[9px] font-black text-white/60 uppercase pt-2">
+                      <button
+                        onClick={() => handleFeedLike(item)}
+                        className={`flex items-center gap-1.5 transition-all group/social ${item.IsLiked ? 'text-[#ff006e] drop-shadow-[0_0_5px_rgba(255,0,110,0.5)]' : 'hover:text-[#ff006e]'}`}
+                      >
+                        <Heart size={12} fill={item.IsLiked ? "currentColor" : "none"} className={item.IsLiked ? 'scale-110' : 'group-hover/social:scale-110 transition-transform'} />
+                        <span className="tracking-tighter">LIKE_{item.LikeCount || 0}</span>
+                      </button>
+                      <button
+                        onClick={() => setReplyingTo(item)}
+                        className="flex items-center gap-1.5 hover:text-[#ff006e] transition-all group/social"
+                      >
+                        <MessageSquare size={12} className="group-hover/social:scale-110 transition-transform" />
+                        <span className="tracking-tighter">REPLY_{item.CommentCount || 0}</span>
+                      </button>
+                      <button
+                        onClick={() => handleFeedRepost(item)}
+                        className={`flex items-center gap-1.5 transition-all group/social ${item.IsReposted ? 'text-[#ff006e] drop-shadow-[0_0_5px_rgba(255,0,110,0.5)]' : 'hover:text-[#ff006e]'}`}
+                      >
+                        <Repeat size={12} className={item.IsReposted ? 'animate-pulse' : 'group-hover/social:scale-110 transition-transform'} />
+                        <span className="tracking-tighter">RE_SYNC_{item.RepostCount || 0}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        <AnimatePresence>
+          {replyingTo && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="w-full max-w-lg bg-[#111] border border-[#ff006e]/30 rounded-sm overflow-hidden shadow-[0_0_50px_rgba(255,0,110,0.3)]"
+              >
+                <div className="px-4 py-2 border-b border-[#ff006e]/20 flex justify-between items-center bg-[#ff006e]/5 font-mono">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-black text-[#ff006e] animate-pulse">●</span>
+                    <span className="text-[9px] font-black uppercase text-white tracking-[0.2em]">SIGNAL_INTERCEPT_MODE // PORT_8080</span>
+                  </div>
+                </div>
+
+                <div className="p-6 space-y-6 relative">
+                  {/* Top ASCII Border decoration */}
+                  <div className="absolute top-0 left-6 text-[8px] text-white/10 font-mono select-none">
+                    +-------------------------------------------------------------+
+                  </div>
+
+                  <div className="bg-black/60 border border-white/5 p-3 relative overflow-hidden group/target">
+                    <div className="absolute top-0 right-0 p-1 px-2 text-[7px] text-white/20 font-black uppercase tracking-tighter bg-white/5">TARGET_NODE</div>
+                    <div className="text-[9px] text-[#ff006e] font-black uppercase mb-1 tracking-widest">{replyingTo.Artist || replyingTo.artist}</div>
+                    <div className="text-[10px] text-white/60 line-clamp-1 italic font-mono select-all">"{replyingTo.Title || replyingTo.title || replyingTo.Content || replyingTo.content}"</div>
+                  </div>
+
+                  {/* Comment Thread as Packet Stream */}
+                  <div className="max-h-64 overflow-y-auto pr-2 space-y-5 custom-scrollbar-sharp">
+                    {loadingComments ? (
+                      <div className="text-[9px] text-[#ff006e] animate-pulse py-6 font-mono flex flex-col items-center gap-2 border border-white/5 bg-white/5">
+                        <RefreshCw size={14} className="animate-spin" />
+                        <span>ESTABLISHING_ENCRYPTED_TUNNEL...</span>
+                        <span className="text-[7px] opacity-40">[ ATTEMPTING_HANDSHAKE ]</span>
+                      </div>
+                    ) : comments.length === 0 ? (
+                      <div className="text-[9px] text-white/10 font-mono text-center py-8 border border-dashed border-white/10 uppercase tracking-[0.3em]">
+                        -- NO_SIGNALS_FOUND_IN_BUFFER --
+                      </div>
+                    ) : (
+                      comments.map((c, idx) => (
+                        <div
+                          key={c.Id || idx}
+                          className={`space-y-1 group/comment relative transition-all duration-300 ${c.ParentId ? 'ml-6 opacity-80 scale-95 origin-left' : ''}`}
+                        >
+                          <div className="flex items-center gap-2 text-[7px] font-mono text-white/30 uppercase">
+                            <span className="text-[#ff006e] font-black">[PKT_{idx.toString().padStart(3, '0')}]</span>
+                            {c.IsOperator && (
+                              <span className="text-amber-400 font-bold bg-amber-400/10 px-1 border border-amber-400/20 shadow-[0_0_8px_rgba(251,191,36,0.2)] animate-pulse">
+                                [V_OPERATOR]
+                              </span>
+                            )}
+                            <span>SIG: 100%</span>
+                            <span>CRC: {(Math.random().toString(16).substr(2, 4)).toUpperCase()}</span>
+                            <span>SRC: {c.Username || c.username}</span>
+                            <button
+                              onClick={() => setReplyingToComment(c)}
+                              className="ml-auto text-[#ff006e] hover:text-white transition-colors opacity-0 group-hover/comment:opacity-100"
+                            >
+                              [ INTERCEPT ]
+                            </button>
+                          </div>
+
+                          <div className={`border bg-black/40 hover:border-[#ff006e]/40 transition-colors p-3 relative ${c.IsOperator ? 'border-amber-400/30' : 'border-white/10'}`}>
+                            <div className="absolute top-0 right-0 p-1 text-[7px] text-white/10 tabular-nums">
+                              {new Date(c.CreatedAt || c.createdAt).toLocaleTimeString('en-GB', { hour12: false })}
+                            </div>
+                            <p className={`text-[10px] leading-relaxed font-mono whitespace-pre-wrap ${c.IsOperator ? 'text-amber-100/90' : 'text-white/80'}`}>
+                              {c.Content || c.content}
+                            </p>
+                          </div>
+
+                          <div className={`absolute -left-2 top-0 bottom-0 w-[1px] transition-colors ${c.ParentId ? 'bg-white/10' : 'bg-white/5'} group-hover/comment:bg-[#ff006e]/30`} />
+                        </div>
+                      ))
+                    )}
+                    <div ref={commentsEndRef} />
+                  </div>
+
+                  <div className="relative">
+                    <div className="text-[7px] text-white/20 font-mono mb-1 flex justify-between">
+                      {replyingToComment ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-amber-400">:: RE_SIGNAL_TO //</span>
+                          <span className="text-white/60">@{replyingToComment.Username || replyingToComment.username}</span>
+                          <button onClick={() => setReplyingToComment(null)} className="text-[#ff006e] hover:text-white ml-2">[ CANCEL_RE ]</button>
+                        </div>
+                      ) : (
+                        <span>:: INPUT_BUFFER ::</span>
+                      )}
+                      <span>CHAR_COUNT: {commentText.length} / 280</span>
+                    </div>
+                    <textarea
+                      autoFocus
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value.substring(0, 280))}
+                      placeholder="Enter raw signal content..."
+                      className="w-full h-20 bg-black/90 border border-white/10 rounded-sm p-3 text-[10px] text-white focus:border-[#ff006e]/50 outline-none resize-none font-mono placeholder:text-white/10"
+                    />
+                    {isSubmittingComment && (
+                      <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center backdrop-blur-sm z-10 border border-[#ff006e]/20">
+                        <span className="text-[9px] font-black text-[#ff006e] animate-pulse tracking-[0.4em]">LOADING_DATA_PACKET...</span>
+                        <div className="w-32 h-[1px] bg-white/10 mt-2 relative overflow-hidden">
+                          <motion.div className="absolute inset-0 bg-[#ff006e]" animate={{ x: ['-100%', '100%'] }} transition={{ repeat: Infinity, duration: 1 }} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex justify-between items-end gap-3 pt-2">
+                    <div className="text-[7px] text-white/10 font-mono italic leading-tight">
+                      CAUTION: SIGNALS_ARE_PERMANENT<br />
+                      ENCRYPTION: AES-256_ACTIVE
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setReplyingTo(null)}
+                        className="px-4 py-2 text-[9px] font-black text-white/20 hover:text-white uppercase tracking-widest border border-transparent hover:border-white/5 transition-all"
+                      >
+                        [ ABORT ]
+                      </button>
+                      <button
+                        onClick={submitComment}
+                        disabled={isSubmittingComment || !commentText.trim()}
+                        className="px-6 py-2 bg-[#ff006e]/20 border border-[#ff006e]/50 text-[#ff006e] text-[9px] font-black uppercase tracking-[0.2em] hover:bg-[#ff006e] hover:text-black transition-all shadow-[0_0_15px_rgba(255,0,110,0.2)] disabled:opacity-20"
+                      >
+                        {isSubmittingComment ? 'TRANSMITTING...' : '[ BROADCAST_SIGNAL ]'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Scanline overlay for modal content */}
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.05] z-50">
+                    <div className="absolute inset-0 bg-[repeating-linear-gradient(transparent_0px,transparent_1px,rgba(255,255,255,0.05)_2px)] bg-[length:100%_3px]" />
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Scanline Overlay */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.03]">
+          <div className="absolute inset-0 bg-[repeating-linear-gradient(rgba(255,0,110,0.1)_0px,transparent_1px,rgba(255,0,110,0.1)_2px)] bg-[length:100%_3px]" />
+        </div>
+      </div>
+
+      {/* Derecha: Radios */}
+      <div className="hidden xl:block w-80 p-6 space-y-8 bg-black/40 border-l border-[#ff006e]/5 relative z-10">
+        <div className="space-y-4">
+          <h3 className="text-[10px] font-black uppercase text-[#ff006e]/60 px-2 tracking-[0.4em]">LIVE_STATIONS</h3>
+          {RADIO_STATIONS.map(radio => (
+            <div key={radio.id} className={`p-4 rounded border ${radio.active ? 'bg-[#ff006e]/5 border-[#ff006e]/20 shadow-[0_0_15px_rgba(255,0,110,0.05)]' : 'bg-black/60 border-white/5 opacity-60'} `}>
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`w-1.5 h-1.5 rounded-full ${radio.active ? 'bg-[#ff006e] blink shadow-[0_0_8px_#ff006e]' : 'bg-gray-600'} `} />
+                <span className="text-[10px] font-black text-white uppercase tracking-wider">{radio.name}</span>
+              </div>
+              <p className="text-[9px] text-white/40 mb-3 italic truncate">
+                {radio.active ? `Playing: ${radio.track}` : 'STATUS: OFFLINE'}
+              </p>
+              <div className="flex justify-between items-center">
+                <span className="text-[8px] font-bold text-[#ff006e]/40 uppercase">{radio.listeners} CONNECTED</span>
+                {radio.active && (
+                  <button className="px-2 py-0.5 border border-[#ff006e] text-[#ff006e] text-[8px] font-black rounded hover:bg-[#ff006e] hover:text-black transition-all">TUNE_IN</button>
+                )}
+              </div>
+            </div>
           ))}
         </div>
       </div>
-      <div className="space-y-4 px-2">
-        <h3 className="text-[10px] font-black uppercase text-[#ff006e]/30 tracking-widest px-2">People to Follow</h3>
-        {[1, 2, 3].map(i => (
-          <div key={i} className="flex items-center gap-3 p-3 hover:bg-[#ff006e]/5 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-[#ff006e]/10">
-            <div className="w-8 h-8 rounded-full border border-[#ff006e]/30 flex items-center justify-center text-[10px] font-bold">V</div>
-            <div className="flex-1 overflow-hidden">
-              <div className="text-[10px] font-black text-white uppercase">User_Goth_{i}</div>
-              <div className="text-[8px] text-[#ff006e]/40 truncate">@vamp_user_{i}</div>
-            </div>
-            <button className="text-[9px] font-black text-[#ff006e]">FOLLOW</button>
-          </div>
-        ))}
-      </div>
-    </div>
-
-    {/* Centro: El Muro */}
-    <div className="flex-1 p-6 space-y-6 max-w-2xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-4xl font-black italic text-white uppercase tracking-tighter">Feed</h2>
-        <RefreshCw size={24} className="opacity-40 hover:opacity-100 cursor-pointer" />
-      </div>
-      {FEED_POSTS.map(post => (
-        <div key={post.id} className="bg-[#0a0a0a] border border-[#ff006e]/10 p-6 rounded-3xl space-y-4 shadow-2xl hover:border-[#ff006e]/30 transition-all group">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full border-2 border-[#ff006e]/40 flex items-center justify-center font-black text-white group-hover:border-[#ff006e]">{post.user[0]}</div>
-            <div>
-              <h3 className="text-xs font-black text-white uppercase">{post.user}</h3>
-              <p className="text-[10px] text-[#ff006e]/40 font-bold">{post.handle} • {post.time}</p>
-            </div>
-          </div>
-          {post.type === 'text' && <p className="text-sm italic text-white/90 leading-relaxed">"{post.content}"</p>}
-          {post.type === 'track' && (
-            <div className="bg-black/80 border border-[#ff006e]/20 p-5 rounded-2xl flex items-center gap-4 group/track cursor-pointer hover:bg-[#ff006e10]">
-              <div className="w-10 h-10 bg-[#ff006e] rounded-full flex items-center justify-center shadow-[0_0_15px_#ff006e]"><Play size={18} fill="black" /></div>
-              <div>
-                <div className="text-[9px] text-[#ff006e] font-black uppercase">Shared Track</div>
-                <div className="text-sm font-bold text-white uppercase">{post.track}</div>
-              </div>
-            </div>
-          )}
-          {post.type === 'image' && <div className="rounded-2xl overflow-hidden border border-[#ff006e]/10 grayscale hover:grayscale-0 transition-all opacity-50 hover:opacity-100"><img src={post.image} className="w-full h-auto" /></div>}
-          <div className="flex gap-8 pt-4 border-t border-[#ff006e]/5 text-[10px] font-bold opacity-40 uppercase">
-            <button className="flex items-center gap-2 hover:text-white"><Heart size={14} /> {post.likes}</button>
-            <button className="flex items-center gap-2 hover:text-white"><MessageSquare size={14} /> Reply</button>
-            <button className="flex items-center gap-2 hover:text-white"><Repeat size={14} /> {post.reposts}</button>
-          </div>
-        </div>
-      ))}
-    </div>
-
-    {/* Derecha: Radios & Recomendados */}
-    <div className="hidden xl:block w-80 p-6 space-y-8 bg-black/40 border-l border-[#ff006e]/5">
-      <div className="space-y-4">
-        <h3 className="text-[10px] font-black uppercase text-[#ff006e]/30 px-2 tracking-[0.3em] Radio Stations">Radio Stations</h3>
-        {RADIO_STATIONS.map(radio => (
-          <div key={radio.id} className={`p - 4 rounded - 2xl border ${radio.active ? 'bg-green-950/20 border-green-500/30' : 'bg-black/60 border-[#ff006e]/10 opacity-60'} `}>
-            <div className="flex items-center gap-2 mb-2">
-              <div className={`w - 2 h - 2 rounded - full ${radio.active ? 'bg-green-500 animate-pulse' : 'bg-gray-600'} `} />
-              <span className="text-xs font-black text-white uppercase">{radio.name}</span>
-            </div>
-            <p className="text-[10px] text-white/50 mb-4 italic truncate">{radio.active ? `Now Playing: ${radio.track} ` : 'Currently Offline'}</p>
-            <div className="flex justify-between items-center">
-              <span className="text-[9px] font-black opacity-30 uppercase">{radio.listeners} listening</span>
-              {radio.active && <button className="px-3 py-1 bg-transparent border border-green-500 text-green-500 text-[9px] font-black rounded hover:bg-green-500 hover:text-black transition-all">Tune In</button>}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </motion.div>
-);
-
-
-
-
+    </motion.div>
+  );
+};
 
 // --- CONTENIDO: PLAYER (PANTALLA COMPLETA) ---
 const PlayerContent = ({

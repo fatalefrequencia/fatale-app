@@ -160,7 +160,11 @@ export const MessagesView = ({ user, navigateToProfile }) => {
     };
 
     const openChat = (conv) => {
-        setCurrentChat({ id: conv.userId, username: conv.username, profileImageUrl: conv.profileImageUrl });
+        setCurrentChat({
+            id: conv.userId || conv.UserId,
+            username: conv.username || conv.Username,
+            profileImageUrl: conv.profileImageUrl || conv.ProfileImageUrl
+        });
     };
 
     if (currentChat) {
@@ -171,59 +175,50 @@ export const MessagesView = ({ user, navigateToProfile }) => {
                 exit={{ x: '100%' }}
                 className="h-full flex flex-col bg-black z-50 relative"
             >
-                {/* Chat Header - Sleeker */}
-                <div className="px-8 py-10 border-b border-white/5 flex items-center gap-6 bg-gradient-to-b from-black to-transparent">
-                    <button onClick={() => setCurrentChat(null)} className="p-2 text-white/40 hover:text-[#ff006e] hover:bg-white/5 rounded-full transition-all">
-                        <ChevronLeft size={20} />
-                    </button>
-                    <div
-                        onClick={() => navigateToProfile(currentChat?.id)}
-                        className="w-10 h-10 rounded-full bg-black border border-white/10 flex items-center justify-center overflow-hidden ring-1 ring-white/5 cursor-pointer hover:border-[#ff006e]/50 transition-colors"
-                    >
-                        {currentChat.profileImageUrl ? (
-                            <img src={currentChat.profileImageUrl.startsWith('http') ? currentChat.profileImageUrl : `http://localhost:5264${currentChat.profileImageUrl}`} alt="User" className="w-full h-full object-cover" />
-                        ) : (
-                            <span className="text-[10px] text-white/20 font-mono italic uppercase">SIG</span>
-                        )}
-                    </div>
-                    <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                            <h3
-                                onClick={() => navigateToProfile(currentChat?.id)}
-                                className="text-white font-medium tracking-widest uppercase text-sm cursor-pointer hover:text-[#ff006e] transition-colors"
-                            >
-                                {currentChat.username}
-                            </h3>
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#4eda2c] animate-pulse shadow-[0_0_8px_#4eda2c]" />
+                {/* Terminal Window Header */}
+                <div className="px-6 py-4 border-b border-white/10 bg-black flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => setCurrentChat(null)} className="p-1 hover:bg-[#ff006e] hover:text-black text-[#ff006e] transition-all border border-[#ff006e]/20">
+                            <ChevronLeft size={14} />
+                        </button>
+                        <div className="text-[10px] font-mono text-white tracking-[0.2em] font-black uppercase">
+                            :: {currentChat.username} ::
                         </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-[#4eda2c] animate-pulse" />
+                        <span className="text-[9px] text-[#4eda2c]/60 font-mono font-black">STABLE_LINK</span>
                     </div>
                 </div>
 
-                {/* Chat History - Ultra-Sleek Futuristic Bubbles */}
-                <div className="flex-1 overflow-y-auto px-12 py-10 space-y-10 no-scrollbar">
+                {/* System Message Header */}
+                <div className="px-8 pt-6 pb-2 font-mono text-[10px] uppercase tracking-wider text-white/30 italic">
+                    -- beginning transmission with {currentChat.username} --
+                </div>
+
+                {/* Terminal Message Log */}
+                <div className="flex-1 overflow-y-auto px-8 py-4 space-y-1 no-scrollbar bg-black font-mono">
                     {messages.map((m, i) => {
-                        const isMe = String(m.senderId) === String(user?.id || user?.Id);
+                        const isMe = String(m.senderId || m.SenderId) === String(user?.id || user?.Id);
+                        const timestamp = m.timestamp || m.Timestamp;
+                        const content = m.content || m.Content;
+                        const otherUserInitial = (currentChat.username || "??").toUpperCase().slice(0, 2);
+
                         return (
-                            <div key={m.id || i} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[70%] px-6 py-4 rounded-t-2xl transition-all relative group ${isMe
-                                    ? 'bg-gradient-to-br from-white/[0.06] to-transparent border-t border-r border-white/5 rounded-bl-2xl shadow-2xl'
-                                    : 'bg-[#030303] border border-white/[0.02] rounded-br-2xl'
-                                    }`}>
-                                    {/* High-end holographic accent line */}
-                                    {isMe && (
-                                        <div className="absolute top-0 right-0 w-8 h-[1px] bg-gradient-to-l from-[#ff006e] to-transparent opacity-40" />
-                                    )}
-
-                                    <p className={`leading-relaxed text-[15px] font-light tracking-wide ${isMe ? 'text-white/90' : 'text-white/70'}`}>
-                                        {m.content}
-                                    </p>
-
-                                    <div className="flex items-center gap-3 mt-5">
-                                        <div className={`h-px w-4 bg-white/5 ${isMe ? 'ml-auto' : ''}`} />
-                                        <span className={`text-[8px] font-mono tracking-[0.3em] uppercase ${isMe ? 'text-[#ff006e]/60' : 'text-white/20'}`}>
-                                            {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
-                                    </div>
+                            <div key={m.id || i} className="group flex gap-3 text-[13px] leading-relaxed">
+                                <span className="text-white/20 shrink-0 select-none">
+                                    [{new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}]
+                                </span>
+                                <div className="flex-1">
+                                    <span
+                                        onClick={() => !isMe && navigateToProfile(m.senderId || m.SenderId)}
+                                        className={`font-black uppercase tracking-tight cursor-pointer mr-2 ${isMe ? 'text-[#ff006e]' : 'text-cyan-400 hover:underline'}`}
+                                    >
+                                        [{isMe ? 'YOU' : otherUserInitial}]
+                                    </span>
+                                    <span className={isMe ? 'text-white/90' : 'text-white/70'}>
+                                        {content}
+                                    </span>
                                 </div>
                             </div>
                         );
@@ -231,22 +226,23 @@ export const MessagesView = ({ user, navigateToProfile }) => {
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* Input Area - Sleeker */}
-                <form onSubmit={handleSendMessage} className="px-8 py-10 bg-gradient-to-t from-black to-transparent">
+                {/* Terminal Input Area */}
+                <form onSubmit={handleSendMessage} className="px-6 py-6 bg-black border-t border-white/5">
                     <div className="relative flex items-center">
+                        <div className="absolute left-4 text-[#ff006e] font-mono text-xs select-none">&gt;</div>
                         <input
                             type="text"
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
-                            placeholder="ENCODE_DATA_PULSE..."
-                            className="w-full bg-[#050505] border border-white/5 rounded-full py-4 px-8 text-white text-[12px] outline-none focus:border-[#ff006e]/20 pr-16 transition-all font-mono tracking-[0.1em] placeholder:text-white/5"
+                            placeholder="AWAITING_INPUT..."
+                            className="w-full bg-[#080808] border border-white/5 py-4 pl-10 pr-16 text-white text-[13px] outline-none focus:border-[#ff006e]/40 transition-all font-mono tracking-widest placeholder:text-white/5"
                         />
-                        <button type="submit" className="absolute right-4 p-2.5 text-[#ff006e] hover:text-white transition-all transform active:scale-90">
-                            <Send size={16} />
+                        <button
+                            type="submit"
+                            className="absolute right-4 px-4 py-2 bg-[#ff006e]/10 text-[#ff006e] border border-[#ff006e]/20 hover:bg-[#ff006e] hover:text-black transition-all font-mono text-[10px] font-black uppercase tracking-widest"
+                        >
+                            SEND
                         </button>
-                    </div>
-                    <div className="mt-4 flex justify-center">
-                        <span className="text-[7px] text-white/10 font-mono tracking-[0.5em] uppercase">E2E_Encryption_Active // Relay_01</span>
                     </div>
                 </form>
             </motion.div>
@@ -275,86 +271,82 @@ export const MessagesView = ({ user, navigateToProfile }) => {
                         {/* Scanline Effect Overlay */}
                         <div className="absolute inset-0 pointer-events-none opacity-[0.02] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
 
-                        <div className="flex justify-between items-center mb-12 relative">
-                            <div className="flex flex-col">
-                                <h2 className="text-3xl font-light text-white tracking-[0.3em] uppercase leading-none opacity-90 italic">Subspace Sync</h2>
-                                <div className="flex items-center gap-2 mt-3">
-                                </div>
+                        <div className="flex justify-between items-center mb-8 relative">
+                            <div>
+                                <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.3em] font-mono mb-1">// SUBSPACE_SYNC</div>
+                                <h2 className="text-2xl font-black text-white tracking-tighter uppercase">NEW_TRANSMISSION</h2>
                             </div>
-                            <button onClick={() => setIsSearching(false)} className="group p-2 bg-white/5 rounded-full hover:bg-white/10 transition-all relative">
-                                <X size={20} className="text-white opacity-40 group-hover:opacity-100 transition-opacity" />
+                            <button onClick={() => setIsSearching(false)} className="p-2 border border-white/10 hover:border-[#ff006e]/40 text-white/40 hover:text-white transition-all">
+                                <X size={16} />
                             </button>
                         </div>
 
-                        <div className="relative mb-12 group">
-                            <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
-                                <Search className="text-[#ff006e] opacity-40 group-focus-within:opacity-100 transition-opacity" size={20} />
+                        <div className="relative mb-8 group">
+                            <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
+                                <Search className="text-[#ff006e]/40 group-focus-within:text-[#ff006e] transition-colors" size={16} />
                             </div>
                             <input
                                 autoFocus
                                 type="text"
                                 value={searchQuery}
                                 onChange={handleSearch}
-                                placeholder="IDENTIFY_TARGET_SIGNATURE..."
-                                className="w-full bg-transparent border-b border-white/10 py-6 pl-14 pr-8 text-2xl text-white outline-none focus:border-[#ff006e]/40 transition-all font-light tracking-[0.1em] placeholder:text-white/5 uppercase"
+                                placeholder="IDENTIFY_TARGET..."
+                                className="w-full bg-black border border-white/10 py-4 pl-12 pr-6 text-white text-sm outline-none focus:border-[#ff006e]/40 transition-all font-mono tracking-widest uppercase placeholder:text-white/10 placeholder:tracking-widest"
                             />
-                            {/* Decorative corner accents */}
-                            <div className="absolute -left-[1px] -bottom-[1px] w-1 h-1 bg-[#ff006e]/40" />
-                            <div className="absolute -right-[1px] -bottom-[1px] w-1 h-1 bg-[#ff006e]/40" />
                         </div>
 
                         <div className="flex-1 overflow-y-auto space-y-2 no-scrollbar relative">
                             {isSearchingUsers ? (
-                                <div className="text-center py-20 flex flex-col items-center justify-center">
-                                    <div className="w-12 h-12 border border-[#ff006e]/20 border-t-[#ff006e] rounded-full animate-spin mb-4" />
-                                    <div className="italic text-[#ff006e] animate-pulse font-mono tracking-widest uppercase text-[10px] opacity-60">Synchronizing Relay...</div>
+                                <div className="text-center py-16 flex flex-col items-center justify-center">
+                                    <div className="w-6 h-6 border border-[#ff006e]/20 border-t-[#ff006e] animate-spin mb-4" />
+                                    <div className="text-[#ff006e]/40 font-mono tracking-widest uppercase text-[10px]">SYNC_RELAY...</div>
                                 </div>
                             ) : searchResults.length > 0 ? (
                                 searchResults.filter(u => u && (u.id || u.Id)).map(u => (
                                     <div
                                         key={u.id || u.Id}
-                                        className="group p-5 bg-white/[0.01] border border-transparent hover:border-white/5 rounded-xl flex items-center gap-6 transition-all cursor-pointer relative"
+                                        className="group p-4 border border-white/5 hover:border-[#ff006e]/20 flex items-center gap-4 transition-all cursor-pointer"
                                     >
                                         <div
                                             onClick={() => navigateToProfile(u.id || u.Id)}
-                                            className="w-12 h-12 rounded-full overflow-hidden border border-white/5 group-hover:border-[#ff006e]/20 transition-all ring-1 ring-black shadow-2xl cursor-pointer"
+                                            className="w-10 h-10 overflow-hidden border border-white/10 group-hover:border-[#ff006e]/30 transition-all cursor-pointer flex-shrink-0"
                                         >
                                             {u.profilePictureUrl || u.ProfilePictureUrl ? (
                                                 <img src={(u.profilePictureUrl || u.ProfilePictureUrl).startsWith('http') ? (u.profilePictureUrl || u.ProfilePictureUrl) : `http://localhost:5264${u.profilePictureUrl || u.ProfilePictureUrl}`} className="w-full h-full object-cover" />
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-[#222] bg-[#0a0a0a]"><User size={20} /></div>
+                                                <div className="w-full h-full flex items-center justify-center text-white/20 bg-black"><User size={16} /></div>
                                             )}
                                         </div>
-                                        <div onClick={() => navigateToProfile(u.id || u.Id)} className="cursor-pointer">
-                                            <div className="text-white font-medium tracking-[0.1em] uppercase text-sm group-hover:text-[#ff006e] transition-colors">{u.username || u.Username}</div>
+                                        <div onClick={() => navigateToProfile(u.id || u.Id)} className="cursor-pointer flex-1">
+                                            <div className="text-white font-black tracking-widest uppercase text-xs group-hover:text-[#ff006e] transition-colors">{u.username || u.Username}</div>
                                         </div>
-                                        <div className="ml-auto flex items-center gap-4">
+                                        <div className="flex items-center gap-3">
                                             <button
                                                 onClick={(e) => handleSearchFollow(e, u.id || u.Id, u.isFollowing)}
-                                                className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${u.isFollowing
-                                                    ? 'bg-[#ff006e] text-black shadow-[0_0_20px_rgba(255,0,110,0.3)]'
-                                                    : 'bg-white/5 text-[#ff006e] border border-[#ff006e]/20 hover:bg-[#ff006e] hover:text-black'
+                                                className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all ${u.isFollowing
+                                                    ? 'bg-[#ff006e] text-black'
+                                                    : 'border border-[#ff006e]/30 text-[#ff006e]/60 hover:bg-[#ff006e] hover:text-black'
                                                     }`}
                                             >
-                                                {u.isFollowing ? 'Linked' : 'Link'}
+                                                {u.isFollowing ? 'LINKED' : 'LINK'}
                                             </button>
                                             <button
                                                 onClick={() => startNewChat(u)}
-                                                className="p-4 bg-[#ff006e]/10 text-[#ff006e] rounded-full hover:bg-[#ff006e] hover:text-black transition-all border border-[#ff006e]/20"
+                                                className="p-2 border border-[#ff006e]/20 text-[#ff006e]/60 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all"
                                             >
-                                                <Send size={18} />
+                                                <Send size={14} />
                                             </button>
                                         </div>
                                     </div>
                                 ))
                             ) : searchQuery.length > 0 ? (
-                                <div className="text-center py-20">
-                                    <div className="text-[#333] font-mono uppercase tracking-[0.5em] text-[9px] mb-2 opacity-40">No connection established</div>
-                                    <div className="text-[#ff006e] font-mono uppercase tracking-[0.1em] text-[10px] opacity-60 italic">Signal Lost // Sector Cold</div>
+                                <div className="text-center py-16">
+                                    <div className="text-white/20 font-mono uppercase tracking-widest text-[10px] mb-1">&gt; NO_CONNECTION_ESTABLISHED</div>
+                                    <div className="text-[#ff006e]/40 font-mono uppercase tracking-widest text-[10px]">SIGNAL_LOST :: SECTOR_COLD</div>
                                 </div>
                             ) : (
-                                <div className="text-center py-20">
-                                    <div className="text-[#222] font-mono uppercase tracking-[0.6em] text-[8px] animate-pulse">Awaiting Signal Input</div>
+                                <div className="text-center py-16">
+                                    <div className="text-white/15 font-mono uppercase tracking-widest text-[10px] animate-pulse">&gt; AWAITING_SIGNAL_INPUT</div>
                                 </div>
                             )}
                         </div>
@@ -362,90 +354,99 @@ export const MessagesView = ({ user, navigateToProfile }) => {
                 )}
             </AnimatePresence>
 
-            {/* Inbox Header - Sleeker Layout */}
-            <div className="px-10 pt-12 pb-8 flex justify-between items-center z-10 relative">
-                <div className="flex items-center gap-6">
-                    <div className="flex flex-col">
-                        <h1 className="text-3xl font-light text-white tracking-[0.3em] uppercase leading-none opacity-90 italic">Comms_Hub</h1>
-                        <div className="flex items-center gap-2 mt-3">
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#4eda2c] animate-pulse shadow-[0_0_8px_#4eda2c]" />
-                            <span className="text-[9px] text-[#4eda2c] font-mono tracking-[0.4em] opacity-40 uppercase">Status: Online</span>
+            {/* Inbox Header */}
+            <div className="px-8 pt-8 pb-6 flex justify-between items-center z-10 relative border-b border-white/5">
+                <div>
+                    <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.3em] font-mono mb-1">// COMMS_HUB</div>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-2xl font-black text-white tracking-tighter uppercase">TRANSMISSIONS</h1>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 bg-[#4eda2c] animate-pulse shadow-[0_0_8px_#4eda2c]" />
+                            <span className="text-[9px] text-[#4eda2c]/50 font-mono uppercase tracking-widest">ONLINE</span>
                         </div>
                     </div>
                 </div>
 
                 <button
                     onClick={() => setIsSearching(true)}
-                    className="p-3 rounded-xl border border-white/5 hover:border-[#ff006e]/40 bg-white/[0.02] hover:bg-[#ff006e]/10 transition-all text-[#ff006e] group active:scale-95 shadow-lg shadow-[#ff006e]/5"
-                    title="Initiate Uplink"
+                    className="p-2.5 border border-white/10 hover:border-[#ff006e]/40 text-[#ff006e]/60 hover:text-[#ff006e] transition-all"
+                    title="New Transmission"
                 >
-                    <Edit size={16} className="group-hover:rotate-12 transition-all" />
+                    <Edit size={15} />
                 </button>
             </div>
 
-            {/* Conversation List - Sleeker Minimal Layout */}
-            <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-1 no-scrollbar">
+            {/* Conversation List */}
+            <div className="flex-1 overflow-y-auto pb-4 no-scrollbar">
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center h-48 py-20">
-                        <div className="w-1 h-8 bg-gradient-to-b from-[#ff006e] to-transparent animate-[loading-pulse_1s_infinite_linear]" />
-                        <div className="text-[9px] text-[#ff006e] font-mono tracking-[0.5em] mt-6 opacity-40 uppercase italic">Calibrating_Frequencies</div>
+                    <div className="flex flex-col items-center justify-center h-48">
+                        <div className="w-px h-8 bg-[#ff006e]/40 animate-pulse" />
+                        <div className="text-[10px] text-[#ff006e]/40 font-mono tracking-widest mt-4 uppercase">CALIBRATING_FREQ...</div>
                     </div>
                 ) : conversations.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-64 text-center p-12">
-                        <div className="text-[#222] font-mono uppercase tracking-[0.6em] text-[9px] border-b border-white/5 pb-4 mb-6">No data pulses found</div>
+                    <div className="flex flex-col items-center justify-center h-48 text-center px-8">
+                        <div className="text-white/15 font-mono uppercase tracking-widest text-[10px] mb-4">&gt; NO_DATA_PULSES_FOUND</div>
                         <button
                             onClick={() => setIsSearching(true)}
-                            className="text-[#ff006e] text-[9px] font-mono uppercase tracking-[0.3em] hover:text-white transition-all opacity-40 hover:opacity-100 flex items-center gap-2"
+                            className="text-[#ff006e]/50 text-[10px] font-mono uppercase tracking-widest hover:text-[#ff006e] transition-all flex items-center gap-2"
                         >
-                            <span className="h-px w-8 bg-[#ff006e]/20" /> Establish Bridge <span className="h-px w-8 bg-[#ff006e]/20" />
+                            <span className="h-px w-6 bg-[#ff006e]/20" /> ESTABLISH_BRIDGE <span className="h-px w-6 bg-[#ff006e]/20" />
                         </button>
                     </div>
                 ) : (
-                    conversations.filter(c => c && c.userId).map((conv) => (
-                        <div
-                            key={conv.userId}
-                            onClick={() => openChat(conv)}
-                            className="group p-4 rounded-xl hover:bg-white/[0.01] transition-all flex gap-6 cursor-pointer relative border border-transparent hover:border-white/5 mx-2"
-                        >
-                            <div className="w-12 h-12 rounded-full ring-1 ring-white/5 flex items-center justify-center overflow-hidden group-hover:ring-[#ff006e]/30 transition-all shadow-2xl relative bg-black">
-                                {conv.profileImageUrl ? (
-                                    <img src={conv.profileImageUrl.startsWith('http') ? conv.profileImageUrl : `http://localhost:5264${conv.profileImageUrl}`} alt="User" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
-                                ) : (
-                                    <span className="font-mono text-white/20 text-[10px] tracking-tighter">{conv.username?.[0]?.toUpperCase()}</span>
-                                )}
-                                {conv.unreadCount > 0 && <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#ff006e] rounded-full border-2 border-black animate-pulse" />}
-                            </div>
-                            <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                <div className="flex justify-between items-baseline mb-1">
-                                    <h3 className="text-sm font-medium text-white/80 group-hover:text-white tracking-[0.05em] transition-colors uppercase">{conv.username}</h3>
-                                    <span className={`text-[10px] font-mono ${conv.unreadCount > 0 ? 'text-[#ff006e] font-bold' : 'text-white/60'}`}>
-                                        {new Date(conv.timestamp || conv.Timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <p className={`text-[11px] truncate pr-8 ${conv.unreadCount > 0 ? 'text-white font-medium' : 'text-white/30'} font-light tracking-wide`}>
-                                        {conv.unreadCount > 0 && <span className="text-[#ff006e] mr-1">/</span>}
-                                        {conv.content || conv.Content}
-                                    </p>
-                                    {conv.unreadCount > 0 && (
-                                        <div className="shrink-0 text-[10px] font-mono text-[#ff006e] opacity-80">
-                                            ({conv.unreadCount})
-                                        </div>
+                    conversations.filter(c => c && (c.userId || c.UserId)).map((conv) => {
+                        const cid = conv.userId || conv.UserId;
+                        const cusername = conv.username || conv.Username;
+                        const cimg = conv.profileImageUrl || conv.ProfileImageUrl;
+                        const cunread = conv.unreadCount || conv.UnreadCount;
+                        const ctimestamp = conv.timestamp || conv.Timestamp;
+                        const ccontent = conv.content || conv.Content;
+
+                        return (
+                            <div
+                                key={cid}
+                                onClick={() => openChat(conv)}
+                                className={`group px-6 py-4 flex gap-4 cursor-pointer relative transition-all border-b border-white/[0.03] hover:bg-white/[0.02] ${cunread > 0 ? 'border-l-2 border-l-[#ff006e]/60' : 'border-l-2 border-l-transparent'
+                                    }`}
+                            >
+                                <div className="w-10 h-10 flex-shrink-0 border border-white/10 flex items-center justify-center overflow-hidden group-hover:border-[#ff006e]/30 transition-all relative bg-black">
+                                    {cimg ? (
+                                        <img src={cimg.startsWith('http') ? cimg : `http://localhost:5264${cimg}`} alt="User" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="font-mono text-white/20 text-xs font-black">{cusername?.[0]?.toUpperCase()}</span>
                                     )}
+                                    {cunread > 0 && <div className="absolute top-0 right-0 w-2 h-2 bg-[#ff006e] border border-black" />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex justify-between items-baseline mb-1">
+                                        <h3 className={`text-xs font-black tracking-widest uppercase transition-colors ${cunread > 0 ? 'text-white' : 'text-white/60 group-hover:text-white'
+                                            }`}>{cusername}</h3>
+                                        <span className={`text-[9px] font-mono ${cunread > 0 ? 'text-[#ff006e]' : 'text-white/20'}`}>
+                                            {new Date(ctimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <p className={`text-[11px] truncate pr-4 font-mono ${cunread > 0 ? 'text-white/70' : 'text-white/25'
+                                            }`}>
+                                            {cunread > 0 && <span className="text-[#ff006e] mr-1">&gt;</span>}
+                                            {ccontent}
+                                        </p>
+                                        {cunread > 0 && (
+                                            <div className="shrink-0 text-[9px] font-mono font-black text-[#ff006e] bg-[#ff006e]/10 px-1">
+                                                {cunread}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))
+                        );
+                    })
                 )}
             </div>
 
-            {/* Sub-footer hint - Minimized */}
-            <div className="px-10 py-8 text-center relative">
-                <div className="flex items-center justify-center gap-4">
-                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
-                    <p className="text-[7px] font-mono uppercase tracking-[0.8em] text-white/10">Subspace_Link_Encrypted // Sector_Prime</p>
-                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
-                </div>
+            {/* Footer */}
+            <div className="px-8 py-4 border-t border-white/5 text-center">
+                <p className="text-[9px] font-mono uppercase tracking-widest text-white/10">SUBSPACE_LINK_ENCRYPTED :: SECTOR_PRIME</p>
             </div>
         </motion.div>
     );

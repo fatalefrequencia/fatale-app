@@ -20,16 +20,13 @@ const WalletView = ({ user, onRefreshProfile }) => {
 
             {/* Header */}
             <div className="p-8 pb-0 z-10">
-                <h1
-                    className="text-4xl md:text-5xl font-extrabold uppercase italic tracking-tight text-white mb-2"
-                    style={{ transform: 'skewX(-2deg)' }}
-                >
-                    System_<span className="text-[#ff006e]">Wallet</span>
+                <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.3em] font-mono mb-2">// SYSTEM_WALLET</div>
+                <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-white mb-2">
+                    WALLET_<span className="text-[#ff006e]">VAULT</span>
                 </h1>
-                <p className="text-white/40 text-xs font-mono uppercase tracking-widest max-w-xl">
-                    Manage your credits, track transactions, and unlock premium access.
-                    <br />
-                    <span className="text-[#ff006e]">Secure Encrypted Vault v2.0</span>
+                <p className="text-white/30 text-[11px] font-mono uppercase tracking-widest max-w-xl">
+                    Manage credits · Track transactions · Unlock premium access
+                    <span className="text-[#ff006e]/50 ml-3">:: ENCRYPTED_v2.0</span>
                 </p>
             </div>
 

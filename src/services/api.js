@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:5264/api';
+const BASE_URL = 'http://localhost:5264/api/';
 
 const api = axios.create({
     baseURL: BASE_URL,
@@ -42,11 +42,14 @@ api.interceptors.request.use((config) => {
 // Response interceptor to log responses and errors
 api.interceptors.response.use(
     (response) => {
-        console.log('[API] Response:', response.status, response.config.url, response.data);
+        console.log('[API] Response:', response.status, response.config.baseURL + response.config.url, response.data);
         return response;
     },
     (error) => {
         console.error('[API] Error:', error.response?.status, error.config?.url);
+        if (error.config) {
+            console.error('[API] Full URL:', error.config.baseURL + error.config.url);
+        }
         console.error('[API] Error details:', error.response?.data);
         return Promise.reject(error);
     }
@@ -106,6 +109,12 @@ const API = {
         removeRepost: (id) => api.delete(`Social/repost/${id}`),
         addComment: (trackId, text) => api.post(`Social/comment`, { trackId, text }),
         getComments: (trackId) => api.get(`Social/comments/${trackId}`),
+
+        // Unified Feed Actions
+        toggleLike: (itemType, itemId) => api.post('SocialAction/like', { itemType, itemId }),
+        toggleRepost: (itemType, itemId) => api.post('SocialAction/repost', { itemType, itemId }),
+        addFeedComment: (itemType, itemId, content, parentId = null) => api.post('SocialAction/comment', { itemType, itemId, content, parentId }),
+        getFeedComments: (itemType, itemId) => api.get(`SocialAction/comments/${itemType}/${itemId}`),
     },
     User: {
         followUser: (id) => api.post(`User/follow/${id}`),
@@ -184,6 +193,9 @@ const API = {
         delete: (id) => api.delete(`Studio/${id}`),
         togglePin: (id) => api.post(`Studio/toggle-pin/${id}`),
         togglePost: (id) => api.post(`Studio/toggle-post/${id}`),
+    },
+    Feed: {
+        getGlobalFeed: () => api.get('Feed'),
     }
 };
 
