@@ -52,6 +52,22 @@ const DISCOVERY_GRID = [
   { id: 6, name: 'Dreamo Mix', color: '#ff006e', type: 'Vibes' },
 ];
 
+const SECTORS = [
+  { name: 'NEON SLUMS', x: 200, y: 150, color: '#ff006e', desc: 'Underground beats & raw signal' },
+  { name: 'SILICON HEIGHTS', x: 3000, y: 80, color: '#00ffff', desc: 'Synthetic highs & digital dreams' },
+  { name: 'DATA VOID', x: 180, y: 2200, color: '#9b5de5', desc: 'Deep frequency & noise art' },
+  { name: 'CENTRAL HUB', x: 2700, y: 1700, color: '#ffcc00', desc: 'Convergence point of all signals' },
+  { name: 'OUTER RIM', x: 4700, y: 500, color: '#00ff88', desc: 'Fringe transmissions & outliers' },
+];
+
+const hashStr = (s) => {
+  if (!s) return 0;
+  let h = 0;
+  const str = s.toString();
+  for (let i = 0; i < str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+  return Math.abs(h);
+};
+
 const BASE_API_URL = 'http://localhost:5264';
 const getMediaUrl = (path) => {
   if (!path) return '';
@@ -88,6 +104,16 @@ function App() {
   const [likedYoutubeIds, setLikedYoutubeIds] = useState(new Set());
   const [subscription, setSubscription] = useState(null);
   const [cachedTrackIds, setCachedTrackIds] = useState(new Set());
+  const [favoriteStations, setFavoriteStations] = useState([]);
+
+  const fetchFavoriteStations = async () => {
+    try {
+      const res = await API.Stations.getFavorites();
+      setFavoriteStations(res.data || []);
+    } catch (e) {
+      console.error("Failed to fetch favorite stations", e);
+    }
+  };
   const [userPlaylists, setUserPlaylists] = useState([]);
   const [profileInitialModal, setProfileInitialModal] = useState(null);
 
@@ -168,6 +194,8 @@ function App() {
 
   useEffect(() => {
     if (user) {
+      fetchLikes();
+      fetchFavoriteStations();
       fetchPlaylists();
     }
   }, [user]);
@@ -1032,6 +1060,7 @@ function App() {
               setRedirectTrigger={setRedirectTrigger} // PASS THE SETTER
               profileInitialModal={profileInitialModal}
               setProfileInitialModal={setProfileInitialModal}
+              favoriteStations={favoriteStations}
             />
           </>
         )}
@@ -1059,7 +1088,7 @@ const LoginView = ({ onLogin }) => (
   </motion.div>
 );
 
-const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal }) => {
+const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal, favoriteStations }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   return (
@@ -1130,10 +1159,11 @@ const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurren
                 cachedTrackIds={cachedTrackIds} // PASS IDS
                 playlists={playlists}
                 onRefreshPlaylists={onRefreshPlaylists}
+                favoriteStations={favoriteStations}
               />
             )}
             {activeView === 'wallet' && <WalletView user={user} onRefreshProfile={onRefreshProfile} />}
-            {activeView === 'feed' && <FeedContent key="feed" setView={setView} onPlayPlaylist={handlePlayPlaylist} navigateToProfile={navigateToProfile} user={user} />}
+            {activeView === 'feed' && <FeedContent key="feed" setView={setView} onPlayPlaylist={handlePlayPlaylist} navigateToProfile={navigateToProfile} user={user} favoriteStations={favoriteStations} />}
             {activeView === 'profile' && (
               <ProfileView
                 key={viewingUserId || 'me'}
@@ -1274,58 +1304,14 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
   );
 };
 
-// --- CONTENIDO: DISCOVERY (TIPO SPOTIFY) ---
-const DiscoveryContent = () => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-8 space-y-12">
-    <div className="flex gap-4">
-      {['Todo', 'Música', 'Podcasts'].map(f => (
-        <button key={f} className={`px - 5 py - 2 rounded - full text - [10px] font - black uppercase tracking - widest ${f === 'Todo' ? 'bg-[#ff006e] text-black' : 'bg-[#1a1a1a] text-white hover:bg-[#333]'} `}>{f}</button>
-      ))}
-    </div>
 
-    <section className="space-y-6">
-      <h2 className="text-3xl font-black italic text-white uppercase tracking-tighter">Acceso Rápido</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {DISCOVERY_GRID.map(item => (
-          <div key={item.id} className="bg-[#111] hover:bg-[#1a1a1a] flex items-center rounded-lg overflow-hidden group cursor-pointer border border-[#ff006e]/5 hover:border-[#ff006e]/30 transition-all">
-            <div className={`w - 20 h - 20 shrink - 0 ${item.color === '#ff006e' ? 'bg-[#ff006e]' : 'bg-[#333]'} flex items - center justify - center shadow - 2xl`}>
-              <Music size={28} className="text-black/50" />
-            </div>
-            <div className="p-4 flex-1 text-xs font-black text-white uppercase truncate">{item.name}</div>
-            <div className="px-4 opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="w-10 h-10 bg-[#ff006e] rounded-full flex items-center justify-center shadow-[0_0_15px_#ff006e]"><Play size={16} fill="black" /></div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-
-    <section className="space-y-6">
-      <div className="flex justify-between items-end">
-        <h2 className="text-2xl font-black italic text-white uppercase tracking-tighter">Lanzamientos de Viernes</h2>
-        <button className="text-[10px] font-bold text-[#ff006e] hover:underline uppercase">Ver todo</button>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="bg-[#0a0a0a] border border-[#ff006e]/10 p-4 rounded-2xl hover:bg-[#111] group transition-all cursor-pointer">
-            <div className="aspect-square bg-black border border-[#ff006e]/20 rounded-xl mb-4 flex items-center justify-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-t from-[#ff006e20] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <Music size={50} className="text-[#ff006e]/10 group-hover:text-[#ff006e]/30" />
-            </div>
-            <h3 className="text-xs font-bold text-white uppercase truncate">Friday_Sect_{i}</h3>
-            <p className="text-[9px] text-[#ff006e]/40 uppercase mt-1">Vamp_Studio_Records</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  </motion.div>
-);
 
 // --- CONTENIDO: FEED (3 COLUMNAS) ---
-const FeedContent = ({ setView, onPlayPlaylist, navigateToProfile, user }) => {
+const FeedContent = ({ setView, onPlayPlaylist, navigateToProfile, user, favoriteStations }) => {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMedia, setSelectedMedia] = useState(null);
+  const [selectedSector, setSelectedSector] = useState(null);
 
   const fetchFeed = async () => {
     setLoading(true);
@@ -1463,23 +1449,55 @@ const FeedContent = ({ setView, onPlayPlaylist, navigateToProfile, user }) => {
 
   const handleFeedRepost = async (item) => {
     try {
-      const type = item.Type || item.type;
+      const type = (item.Type || item.type || "").toLowerCase();
       const itemId = item.ItemId || item.itemId;
       const { data } = await API.Social.toggleRepost(type, itemId);
 
-      // Update local count immediately
-      setFeed(prev => prev.map(f =>
-        f.Id === item.Id ? {
-          ...f,
-          IsReposted: data.Reposted ?? data.reposted,
-          RepostCount: data.RepostCount ?? data.repostCount
-        } : f
-      ));
+      const isReposted = data.reposted ?? data.Reposted;
+      const repostCount = data.repostCount ?? data.RepostCount;
 
-      // If it was a new repost (not an undo), refresh to show it at top
-      if (data.Reposted || data.reposted) {
-        fetchFeed();
-      }
+      setFeed(prev => {
+        // 1. Update all instances of the same item with new social counts
+        const updatedFeed = prev.map(f => {
+          const isSameItem = (f.itemId === itemId || f.ItemId === itemId) &&
+            (f.type?.toLowerCase() === type || f.Type?.toLowerCase() === type);
+
+          if (isSameItem) {
+            return {
+              ...f,
+              IsReposted: isReposted,
+              RepostCount: repostCount
+            };
+          }
+          return f;
+        });
+
+        if (isReposted) {
+          // 2. Prepend a new optimistic repost item
+          const newRepost = {
+            ...item,
+            Id: `repost-temp-${Date.now()}`,
+            ItemId: itemId,
+            Type: type,
+            CreatedAt: new Date().toISOString(),
+            IsOriginalSignal: false,
+            RepostedBy: user?.username || user?.Username || "YOU",
+            IsReposted: true,
+            RepostCount: repostCount,
+            IdString: `repost-${type}-${itemId}` // Used for keying or identification
+          };
+          return [newRepost, ...updatedFeed];
+        } else {
+          // 3. Remove your own repost of this item from the feed view
+          return updatedFeed.filter(f => {
+            const isOurRepost = !f.IsOriginalSignal &&
+              (f.repostedBy === (user?.username || user?.Username) || f.RepostedBy === (user?.username || user?.Username)) &&
+              (f.itemId === itemId || f.ItemId === itemId) &&
+              (f.type?.toLowerCase() === type || f.Type?.toLowerCase() === type);
+            return !isOurRepost;
+          });
+        }
+      });
     } catch (e) {
       console.error("Repost failed", e);
     }
@@ -1534,7 +1552,7 @@ const FeedContent = ({ setView, onPlayPlaylist, navigateToProfile, user }) => {
               Title: selectedMedia.title || selectedMedia.Title,
               Content: selectedMedia.content || selectedMedia.Content
             }}
-            type={selectedMedia.type || selectedMedia.Type || (selectedMedia.Type || '').toUpperCase()}
+            type={(selectedMedia.mediaType || selectedMedia.MediaType || selectedMedia.type || selectedMedia.Type || '').toUpperCase()}
           />
         )}
       </AnimatePresence>
@@ -1551,20 +1569,62 @@ const FeedContent = ({ setView, onPlayPlaylist, navigateToProfile, user }) => {
         </div>
 
         <div className="space-y-4 px-2">
-          <h3 className="text-[10px] font-black uppercase text-[#ff006e] px-2 tracking-widest">:: RECENT_NODES ::</h3>
-          <div className="space-y-1">
-            {feed.slice(0, 12).map(item => {
-              const id = item.id || item.Id;
-              const artist = item.artist || item.Artist;
-              const createdAt = item.createdAt || item.CreatedAt;
-              const type = item.type || item.Type;
-              return (
-                <div key={`side-${id}`} className="flex items-center gap-2 px-2 py-1 group cursor-pointer hover:bg-white/5 rounded transition-colors">
-                  <span className="text-[8px] text-white/40 whitespace-nowrap">{getTime(createdAt)}</span>
-                  <span className={`text-[9px] font-bold truncate ${getColor(type)}`}>{artist?.toUpperCase()}</span>
+          <h3 className="text-[10px] font-black uppercase text-[#ff006e] px-2 tracking-widest">:: LIVE_FAVORITES ::</h3>
+          <div className="space-y-2">
+            {favoriteStations && favoriteStations.filter(s => s.isLive || s.IsLive).slice(0, 5).map(station => (
+              <button
+                key={`side-fav-${station.id || station.Id}`}
+                onClick={() => navigateToProfile(station.artistUserId || station.ArtistUserId)}
+                className="w-full flex items-center gap-3 px-3 py-2 bg-[#ff006e]/5 border border-[#ff006e]/20 rounded hover:bg-[#ff006e]/10 transition-all group"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e] blink shadow-[0_0_8px_#ff006e]" />
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="text-[9px] font-black text-white uppercase truncate">{station.name || station.Name}</div>
+                  <div className="text-[7px] text-[#ff006e]/60 uppercase truncate">LIVE // {station.currentSessionTitle || station.CurrentSessionTitle || 'Broadcasting'}</div>
                 </div>
-              );
-            })}
+              </button>
+            ))}
+            {(!favoriteStations || favoriteStations.length === 0) && (
+              <div className="px-3 py-4 border border-dashed border-white/5 rounded text-center opacity-20">
+                <div className="text-[8px] uppercase">No Signals</div>
+              </div>
+            )}
+            {favoriteStations && favoriteStations.length > 0 && favoriteStations.filter(s => s.isLive || s.IsLive).length === 0 && (
+              <div className="px-3 py-2 text-[8px] text-white/20 uppercase italic">All frequencies offline</div>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-4 px-2">
+          <div className="flex justify-between items-center px-2">
+            <h3 className="text-[10px] font-black uppercase text-[#ff006e] tracking-widest">:: SECTOR_SIGNALS ::</h3>
+            {selectedSector !== null && (
+              <button
+                onClick={() => setSelectedSector(null)}
+                className="text-[8px] text-[#ff006e]/40 hover:text-[#ff006e] uppercase tracking-tighter blink"
+              >
+                [ RESET_LINK ]
+              </button>
+            )}
+          </div>
+          <div className="space-y-1">
+            {SECTORS.map((sector, idx) => (
+              <button
+                key={sector.name}
+                onClick={() => setSelectedSector(idx)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded transition-all border ${selectedSector === idx
+                  ? 'bg-[#ff006e]/10 border-[#ff006e]/30'
+                  : 'bg-black/20 border-white/5 hover:border-[#ff006e]/20'}`}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-1 rounded-full shadow-[0_0_5px_currentColor]" style={{ backgroundColor: sector.color, color: sector.color }} />
+                  <span className={`text-[9px] font-bold uppercase tracking-widest ${selectedSector === idx ? 'text-white' : 'text-white/40'}`}>
+                    {sector.name.replace(' ', '_')}
+                  </span>
+                </div>
+                {selectedSector === idx && <Zap size={10} className="text-[#ff006e] animate-pulse" />}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -1592,17 +1652,50 @@ const FeedContent = ({ setView, onPlayPlaylist, navigateToProfile, user }) => {
         </div>
 
         <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-1 flex flex-col justify-start pb-32">
+          {selectedSector !== null && (
+            <div className="mb-6 p-4 bg-[#ff006e]/5 border border-[#ff006e]/20 rounded flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-2 h-2 rounded-full bg-[#ff006e] shadow-[0_0_10px_#ff006e] animate-pulse" />
+                <div>
+                  <div className="text-[10px] font-black text-[#ff006e] tracking-[0.3em] uppercase">FREQ // {SECTORS[selectedSector].name.replace(' ', '_')}</div>
+                  <div className="text-[8px] text-white/30 uppercase tracking-widest">{SECTORS[selectedSector].desc}</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedSector(null)}
+                className="px-3 py-1 border border-[#ff006e]/30 text-[#ff006e] text-[8px] font-black uppercase hover:bg-[#ff006e] hover:text-black transition-all"
+              >
+                DISCONNECT_LINK
+              </button>
+            </div>
+          )}
+
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4 opacity-50">
               <div className="text-[10px] text-[#ff006e] blink uppercase tracking-[0.4em]">Deciphering Signal Packets...</div>
             </div>
-          ) : feed.length === 0 ? (
+          ) : feed.filter(item => {
+            const idSource = item.artistUserId || item.ArtistUserId || item.artistId || item.ArtistId;
+            const dbSectorId = item.sectorId ?? item.SectorId;
+            const h = hashStr(idSource);
+            const itemSectorIdx = (dbSectorId !== null && dbSectorId !== undefined) ? dbSectorId : (h % SECTORS.length);
+            if (idSource) console.log(`[ DISTRICT_DEBUG ] Artist: ${item.artist || item.Artist}, ID: ${idSource}, DB_Sector: ${dbSectorId}, Hash: ${h}, Index: ${itemSectorIdx}, Selected: ${selectedSector}`);
+            return itemSectorIdx === selectedSector;
+          }).length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4 opacity-40">
-              <div className="text-[10px] text-[#ff006e] uppercase tracking-[0.4em]">-- NO_SIGNALS_DETECTED --</div>
+              <div className="text-[10px] text-[#ff006e] uppercase tracking-[0.4em]">
+                {selectedSector !== null ? `-- NO_SIGNALS_IN_SECTOR --` : `-- NO_SIGNALS_DETECTED --`}
+              </div>
               <div className="text-[8px] text-white/20 uppercase">Network scanning active...</div>
             </div>
           ) : (
-            feed.map(item => {
+            feed.filter(item => {
+              const idSource = item.artistUserId || item.ArtistUserId || item.artistId || item.ArtistId;
+              const dbSectorId = item.sectorId ?? item.SectorId;
+              const h = hashStr(idSource);
+              const itemSectorIdx = (dbSectorId !== null && dbSectorId !== undefined) ? dbSectorId : (h % SECTORS.length);
+              return itemSectorIdx === selectedSector;
+            }).map(item => {
               const typeRaw = item.type || item.Type || "";
               const type = typeRaw.toLowerCase();
               const artist = item.artist || item.Artist;
@@ -1897,23 +1990,30 @@ const FeedContent = ({ setView, onPlayPlaylist, navigateToProfile, user }) => {
       <div className="hidden xl:block w-80 p-6 space-y-8 bg-black/40 border-l border-[#ff006e]/5 relative z-10">
         <div className="space-y-4">
           <h3 className="text-[10px] font-black uppercase text-[#ff006e]/60 px-2 tracking-[0.4em]">LIVE_STATIONS</h3>
-          {RADIO_STATIONS.map(radio => (
-            <div key={radio.id} className={`p-4 rounded border ${radio.active ? 'bg-[#ff006e]/5 border-[#ff006e]/20 shadow-[0_0_15px_rgba(255,0,110,0.05)]' : 'bg-black/60 border-white/5 opacity-60'} `}>
-              <div className="flex items-center gap-2 mb-2">
-                <div className={`w-1.5 h-1.5 rounded-full ${radio.active ? 'bg-[#ff006e] blink shadow-[0_0_8px_#ff006e]' : 'bg-gray-600'} `} />
-                <span className="text-[10px] font-black text-white uppercase tracking-wider">{radio.name}</span>
+          {favoriteStations && favoriteStations.length > 0 ? (
+            favoriteStations.map(station => (
+              <div key={station.id || station.Id} className={`p-4 rounded border ${(station.isLive || station.IsLive) ? 'bg-[#ff006e]/5 border-[#ff006e]/20 shadow-[0_0_15px_rgba(255,0,110,0.05)]' : 'bg-black/60 border-white/5 opacity-60'} `}>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`w-1.5 h-1.5 rounded-full ${(station.isLive || station.IsLive) ? 'bg-[#ff006e] blink shadow-[0_0_8px_#ff006e]' : 'bg-gray-600'} `} />
+                  <span className="text-[10px] font-black text-white uppercase tracking-wider">{station.name || station.Name}</span>
+                </div>
+                <p className="text-[9px] text-white/40 mb-3 italic truncate">
+                  {(station.isLive || station.IsLive) ? `Live: ${station.currentSessionTitle || station.CurrentSessionTitle || 'Broadcasting'}` : 'STATUS: OFFLINE'}
+                </p>
+                <div className="flex justify-between items-center">
+                  <span className="text-[8px] font-bold text-[#ff006e]/40 uppercase">{station.listenerCount || station.ListenerCount || 0} CONNECTED</span>
+                  {(station.isLive || station.IsLive) && (
+                    <button className="px-2 py-0.5 border border-[#ff006e] text-[#ff006e] text-[8px] font-black rounded hover:bg-[#ff006e] hover:text-black transition-all">TUNE_IN</button>
+                  )}
+                </div>
               </div>
-              <p className="text-[9px] text-white/40 mb-3 italic truncate">
-                {radio.active ? `Playing: ${radio.track}` : 'STATUS: OFFLINE'}
-              </p>
-              <div className="flex justify-between items-center">
-                <span className="text-[8px] font-bold text-[#ff006e]/40 uppercase">{radio.listeners} CONNECTED</span>
-                {radio.active && (
-                  <button className="px-2 py-0.5 border border-[#ff006e] text-[#ff006e] text-[8px] font-black rounded hover:bg-[#ff006e] hover:text-black transition-all">TUNE_IN</button>
-                )}
-              </div>
+            ))
+          ) : (
+            <div className="p-8 border border-dashed border-white/5 text-center opacity-20">
+              <Radio size={32} className="mx-auto mb-2 opacity-50" />
+              <div className="text-[9px] uppercase tracking-widest">No Frequencies Cached</div>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </motion.div>

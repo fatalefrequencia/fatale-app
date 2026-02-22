@@ -23,14 +23,16 @@ const ICONS = [Disc, Music, Mic, Radio, Speaker, Zap];
 
 // ─── HELPERS ───────────────────────────────────────────────────────────────
 const hashStr = (s) => {
+    if (!s) return 0;
     let h = 0;
-    for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+    const str = s.toString();
+    for (let i = 0; i < str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
     return Math.abs(h);
 };
 
 // ─── MAIN ──────────────────────────────────────────────────────────────────
 // ─── MAIN ──────────────────────────────────────────────────────────────────
-const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [] }) => {
+const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], favoriteStations = [] }) => {
     const [artists, setArtists] = useState([]);
     const [loading, setLoading] = useState(true);
     const [hoveredId, setHoveredId] = useState(null);
@@ -77,8 +79,10 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [] })
                 let raw = Array.isArray(res?.data) ? res.data : [];
                 setArtists(raw.map((a, i) => {
                     const id = a.id || a.Id || `mock-${i}`;
-                    const h = hashStr(id.toString());
-                    const sec = SECTORS[h % SECTORS.length];
+                    const hashSource = (a.userId || a.UserId || id).toString();
+                    const dbSectorId = a.sectorId ?? a.SectorId;
+                    const h = hashStr(hashSource);
+                    const sec = (dbSectorId !== null && dbSectorId !== undefined) ? SECTORS[dbSectorId] : SECTORS[h % SECTORS.length];
                     const li = Math.floor((h / SECTORS.length) | 0) % 36;
                     // Simulate play count
                     const plays = a.playCount || a.PlayCount || a.plays || ((h % 900) + 10);
@@ -304,8 +308,9 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [] })
                 }}
                 transition={{
                     type: isDragging ? "tween" : "spring",
-                    stiffness: isDragging ? undefined : 260,
-                    damping: isDragging ? undefined : 20,
+                    stiffness: isDragging ? undefined : 300,
+                    damping: isDragging ? undefined : 35,
+                    mass: 0.8,
                     duration: isDragging ? 0 : undefined
                 }}
                 style={{ width: WORLD_W, height: WORLD_H }}
@@ -556,6 +561,44 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [] })
                         )}
                     </AnimatePresence>
                 </div>
+
+                {/* Favorite Frequencies Panel */}
+                <AnimatePresence>
+                    {favoriteStations && favoriteStations.filter(s => (s.isLive || s.IsLive)).length > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="mt-4 flex flex-col gap-2"
+                        >
+                            <div className="hud-panel rounded-lg p-4 w-64 border-[#ff006e]/30 shadow-[0_0_30px_rgba(255,0,110,0.1)] relative z-50">
+                                <div className="absolute top-0 right-0 p-1 px-2 text-[6px] text-[#ff006e]/40 font-black tracking-widest bg-[#ff006e]/5">FREQ_SCANNER</div>
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e] blink shadow-[0_0_8px_#ff006e]" />
+                                    <span className="mono text-[9px] tracking-[0.3em] text-white/90 uppercase font-bold">Live_Favorites</span>
+                                </div>
+                                <div className="space-y-3">
+                                    {favoriteStations.filter(s => (s.isLive || s.IsLive)).slice(0, 3).map(station => (
+                                        <button
+                                            key={`hud-fav-${station.id || station.Id}`}
+                                            onClick={(e) => { e.stopPropagation(); navigateToProfile?.(station.artistUserId || station.ArtistUserId); }}
+                                            className="w-full text-left group transition-all"
+                                        >
+                                            <div className="flex justify-between items-start mb-1">
+                                                <div className="text-[10px] font-black text-white/90 uppercase truncate group-hover:text-[#ff006e]">{station.name || station.Name}</div>
+                                                <div className="text-[7px] text-[#ff006e] mono blink">LIVE</div>
+                                            </div>
+                                            <div className="text-[8px] text-white/30 italic truncate uppercase tracking-tighter">
+                                                {station.currentSessionTitle || station.CurrentSessionTitle || 'Broadcasting'}
+                                            </div>
+                                            <div className="w-full h-[1px] bg-white/5 mt-2 group-hover:bg-[#ff006e]/20 transition-colors" />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* TOP-RIGHT: Stats */}
@@ -653,15 +696,14 @@ const ArtistNode = ({ artist, hovered, isSearchResult, dimmed, onHover, onClick 
     const sz = artist.nodeSize || 76; // dynamic size based on plays
     return (
         <motion.div
-            layout
-            initial={{ opacity: 0, scale: 0.5 }}
+            initial={{ opacity: 0 }}
             animate={{
                 opacity: dimmed ? 0.2 : 1,
                 scale: 1,
                 filter: dimmed ? 'grayscale(0.5) blur(1px)' : 'none'
             }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: "linear" }}
             className="node absolute"
             style={{
                 left: artist.x,

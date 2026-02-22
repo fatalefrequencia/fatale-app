@@ -6,7 +6,7 @@ import ContentModal from './ContentModal';
 import './SpatialProfile.css';
 import {
     Terminal, Cpu, Database, Hash, Shield, Code, ChevronRight, Play, X,
-    RefreshCw, Plus, Frown, Globe, Lock, PlayCircle, Edit3, Send, Library,
+    RefreshCw, Plus, Frown, Globe, Lock, PlayCircle, Edit3, Send, Library, Radio,
     ChevronDown, LogOut, Upload, MessageSquare, MapPin, Calendar, Activity,
     Eye, Cpu as Processor, Zap, Search, Palette, Type, Layout, Maximize2, Monitor,
     Camera, Video, Book, ChevronLeft, Star, Share2
@@ -528,6 +528,61 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
     const [selectedContent, setSelectedContent] = useState(null);
     const [expandedEntries, setExpandedEntries] = useState({});
     const [showJournalForm, setShowJournalForm] = useState(false);
+    const [stationData, setStationData] = useState(null);
+    const [isStationFavorited, setIsStationFavorited] = useState(false);
+    const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+    const [broadcastSessionTitle, setBroadcastSessionTitle] = useState('');
+    const [broadcastTrackId, setBroadcastTrackId] = useState(null);
+
+    const handleToggleStationFavorite = async () => {
+        if (!stationData) return;
+        try {
+            const API = await import('../services/api').then(mod => mod.default);
+            const res = await API.Stations.toggleFavorite(stationData.id || stationData.Id);
+            setIsStationFavorited(res.data.favorited || res.data.Favorited);
+            showNotification(res.data.favorited ? "STATION_SYNCED" : "STATION_DISCONNECTED",
+                `Frequency ${stationData.frequency || stationData.Frequency || 'LINK'} ${res.data.favorited ? 'added to' : 'removed from'} favorites.`, "success");
+        } catch (e) {
+            console.error("Failed to toggle station favorite", e);
+        }
+    };
+
+    const handleGoLive = async () => {
+        if (!broadcastTrackId) {
+            showNotification("BROADCAST_ERROR", "Neural link requires a signal source (select a track).", "error");
+            return;
+        }
+        try {
+            const API = await import('../services/api').then(mod => mod.default);
+            await API.Stations.goLive({
+                SessionTitle: broadcastSessionTitle || 'Broadcasting Live',
+                TrackId: parseInt(broadcastTrackId)
+            });
+            showNotification("BROADCAST_ACTIVE", "Signal established. Frequency is now LIVE.", "success");
+            setShowBroadcastModal(false);
+            if (onRefreshProfile) onRefreshProfile();
+            // Refresh local station data
+            const sRes = await API.Stations.getByUserId(currentUser?.id || currentUser?.Id);
+            setStationData(sRes.data);
+        } catch (e) {
+            console.error("Failed to go live", e);
+            showNotification("BROADCAST_FAILURE", "Neural interface failed to establish link.", "error");
+        }
+    };
+
+    const handleEndLive = async () => {
+        try {
+            const API = await import('../services/api').then(mod => mod.default);
+            await API.Stations.endLive();
+            showNotification("BROADCAST_TERMINATED", "Neural link closed. Station is offline.", "success");
+            if (onRefreshProfile) onRefreshProfile();
+            // Refresh local station data
+            const sRes = await API.Stations.getByUserId(currentUser?.id || currentUser?.Id);
+            setStationData(sRes.data);
+        } catch (e) {
+            console.error("Failed to end live", e);
+        }
+    };
 
     const toggleExpandEntry = (id) => {
         setExpandedEntries(prev => ({
@@ -838,14 +893,21 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                 setProfileTracks(filtered);
 
                 try {
-                    const [jRes, gRes] = await Promise.all([
+                    const [jRes, gRes, sRes, fvRes] = await Promise.all([
                         API.Journal.getUserJournal(targetUserId).catch(() => ({ data: [] })),
-                        API.Studio.getUserGallery(targetUserId).catch(() => ({ data: [] }))
+                        API.Studio.getUserGallery(targetUserId).catch(() => ({ data: [] })),
+                        API.Stations.getByUserId(targetUserId).catch(() => ({ data: null })),
+                        API.Stations.getFavorites().catch(() => ({ data: [] }))
                     ]);
                     setProfileJournal(jRes.data || []);
                     setProfileGallery(gRes.data || []);
+                    setStationData(sRes.data);
+                    if (sRes.data) {
+                        const isFav = (fvRes.data || []).some(f => (f.id || f.Id) === (sRes.data.id || sRes.data.Id));
+                        setIsStationFavorited(isFav);
+                    }
                 } catch (e) {
-                    console.error("Failed to fetch studio content", e);
+                    console.error("Failed to fetch studio or station content", e);
                 }
 
             } catch (err) {
@@ -865,12 +927,14 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
             const fetchOwnStudio = async () => {
                 try {
                     const API = await import('../services/api').then(mod => mod.default);
-                    const [jRes, gRes] = await Promise.all([
+                    const [jRes, gRes, sRes] = await Promise.all([
                         API.Journal.getMyJournal().catch(() => ({ data: [] })),
-                        API.Studio.getMyGallery().catch(() => ({ data: [] }))
+                        API.Studio.getMyGallery().catch(() => ({ data: [] })),
+                        API.Stations.getByUserId(currentUser?.id || currentUser?.Id).catch(() => ({ data: null }))
                     ]);
                     setProfileJournal(jRes.data || []);
                     setProfileGallery(gRes.data || []);
+                    setStationData(sRes.data);
                 } catch (err) {
                     console.error("Failed to fetch own studio content", err);
                 }
@@ -970,6 +1034,26 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                 }
                 rightContent={
                     <div className="space-y-8">
+                        {isMe && stationData && (
+                            <div className="space-y-4">
+                                <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// BROADCAST_PROTOCOL</div>
+                                {stationData.isLive || stationData.IsLive ? (
+                                    <button
+                                        onClick={handleEndLive}
+                                        className="w-full py-4 border border-[#ff006e] bg-[#ff006e]/20 text-[#ff006e] font-bold text-[10px] uppercase transition-all shadow-[0_0_20px_#ff006e20] hover:bg-[#ff006e] hover:text-black"
+                                    >
+                                        [ TERMINATE_BROADCAST ]
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => setShowBroadcastModal(true)}
+                                        className="w-full py-4 border border-[#ff006e] bg-black text-[#ff006e] font-bold text-[10px] uppercase transition-all hover:bg-[#ff006e] hover:text-black shadow-[0_0_15px_#ff006e10]"
+                                    >
+                                        [ INITIALIZE_BROADCAST ]
+                                    </button>
+                                )}
+                            </div>
+                        )}
                         {!isMe && (
                             <div className="space-y-4">
                                 <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// ACTION_PROTOCOL</div>
@@ -982,6 +1066,17 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                                 >
                                     {isFollowing ? '[ DISCONNECT_LINK ]' : '[ ESTABLISH_LINK ]'}
                                 </button>
+                                {stationData && (
+                                    <button
+                                        onClick={handleToggleStationFavorite}
+                                        className={`w-full py-4 border font-bold text-[10px] uppercase transition-all transform hover:-translate-y-0.5 mt-2 ${isStationFavorited
+                                            ? 'bg-[#ff006e] text-black border-[#ff006e] shadow-[0_0_20px_#ff006e40]'
+                                            : 'bg-black text-[#ff006e] border-[#ff006e]/20 hover:border-[#ff006e] hover:bg-[#ff006e]/5'
+                                            }`}
+                                    >
+                                        {isStationFavorited ? `[ DISCONNECT_FREQ_${stationData.frequency || 'LINK'} ]` : `[ FAVORITE_FREQ_${stationData.frequency || 'LINK'} ]`}
+                                    </button>
+                                )}
                             </div>
                         )}
 
@@ -993,9 +1088,16 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                         </div>
 
                         <NeuralPattern
-                            isLive={displayUser?.isLive || displayUser?.IsLive}
-                            featuredTrack={profileTracks.find(t => String(t.id || t.Id) === String(displayUser?.featuredTrackId || displayUser?.FeaturedTrackId))}
-                            isQuiet={!(displayUser?.featuredTrackId || displayUser?.FeaturedTrackId)}
+                            isLive={(isMe && stationData) ? (stationData.isLive || stationData.IsLive) : (displayUser?.isLive || displayUser?.IsLive)}
+                            featuredTrack={profileTracks.find(t => {
+                                const targetId = (isMe && stationData)
+                                    ? (stationData.currentTrack?.id || stationData.CurrentTrack?.Id)
+                                    : (displayUser?.featuredTrackId || displayUser?.FeaturedTrackId);
+                                return String(t.id || t.Id) === String(targetId);
+                            })}
+                            isQuiet={!((isMe && stationData)
+                                ? (stationData.currentTrack?.id || stationData.CurrentTrack?.Id)
+                                : (displayUser?.featuredTrackId || displayUser?.FeaturedTrackId))}
                         />
 
                         <div className="space-y-4 pt-4 border-t border-[var(--text-color)]/5">
@@ -1633,6 +1735,95 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                     )}
                 </div >
             </SpatialRoomLayout >
+
+            <AnimatePresence>
+                {showBroadcastModal && (
+                    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black/90 backdrop-blur-md"
+                            onClick={() => setShowBroadcastModal(false)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative w-full max-w-lg bg-[#050505] border border-[#ff006e]/30 p-8 shadow-[0_0_50px_rgba(255,0,110,0.1)] overflow-hidden"
+                        >
+                            {/* CRT Scanners */}
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#ff006e]/50 to-transparent animate-scan" />
+                            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#ff006e]/50 to-transparent animate-scan-reverse" />
+
+                            <div className="flex justify-between items-center mb-8">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-[#ff006e]/10 border border-[#ff006e]/30 flex items-center justify-center text-[#ff006e]">
+                                        <Radio size={20} className="animate-pulse" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-black italic text-white uppercase tracking-tighter">Initialize Broadcast</h2>
+                                        <div className="text-[9px] font-bold text-[#ff006e]/60 mono tracking-[0.2em]">FREQ_TUNING_IN_PROGRESS</div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowBroadcastModal(false)}
+                                    className="p-2 text-white/20 hover:text-white transition-colors"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-bold text-white/40 uppercase tracking-widest mono">// SESSION_IDENTIFIER</label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. Midnight Transmission #01"
+                                        value={broadcastSessionTitle}
+                                        onChange={(e) => setBroadcastSessionTitle(e.target.value)}
+                                        className="w-full bg-black border border-white/10 p-4 text-xs text-white focus:border-[#ff006e] transition-colors outline-none mono uppercase"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-bold text-white/40 uppercase tracking-widest mono">// SIGNAL_SOURCE (SELECT TRACK)</label>
+                                    <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-2 no-scrollbar">
+                                        {(isMe ? allTracks?.filter(t => String(t.artistUserId || t.ArtistUserId) === String(currentUser?.id || currentUser?.Id)) : []).map(track => (
+                                            <button
+                                                key={track.id || track.Id}
+                                                onClick={() => setBroadcastTrackId(track.id || track.Id)}
+                                                className={`flex items-center gap-4 p-3 border transition-all text-left group ${broadcastTrackId === (track.id || track.Id) ? 'bg-[#ff006e]/10 border-[#ff006e] text-[#ff006e]' : 'bg-black/40 border-white/5 text-white/40 hover:border-white/20 hover:text-white'}`}
+                                            >
+                                                <div className="w-8 h-8 border border-white/10 bg-black overflow-hidden relative grayscale group-hover:grayscale-0 transition-all">
+                                                    {track.coverImageUrl || track.CoverImageUrl ? (
+                                                        <img src={(track.coverImageUrl || track.CoverImageUrl)} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-white/10"><Music size={14} /></div>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-[10px] font-bold uppercase truncate">{track.title}</div>
+                                                    <div className="text-[8px] opacity-40 mono uppercase">{track.genre || 'CORE'} // {track.playCount || 0} READS</div>
+                                                </div>
+                                                {broadcastTrackId === (track.id || track.Id) && <div className="w-2 h-2 rounded-full bg-[#ff006e] shadow-[0_0_10px_#ff006e]" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={handleGoLive}
+                                    className="w-full py-4 mt-4 bg-gradient-to-r from-[#ff006e] to-[#ff2a80] text-black font-black text-xs uppercase tracking-[0.2em] shadow-[0_0_30px_#ff006e40] hover:shadow-[0_0_50px_#ff006e60] transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3"
+                                >
+                                    <Zap size={16} fill="black" />
+                                    [ ESTABLISH_NEURAL_LINK ]
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* Global Overlays */}
             < AnimatePresence >

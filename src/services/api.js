@@ -196,6 +196,14 @@ const API = {
     },
     Feed: {
         getGlobalFeed: () => api.get('Feed'),
+    },
+    Stations: {
+        getAll: () => api.get('Stations'),
+        getFavorites: () => api.get('Stations/favorites'),
+        toggleFavorite: (id) => api.post(`Stations/favorite/${id}`),
+        getByUserId: (userId) => api.get(`Stations/user/${userId}`),
+        goLive: (data) => api.post('Stations/go-live', data),
+        endLive: () => api.post('Stations/end-live'),
     }
 };
 
