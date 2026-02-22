@@ -84,7 +84,7 @@ const API = {
     },
     Users: {
         getProfile: () => api.get('users/profile'),
-        updateProfile: (formData) => api.put('Users/update-profile', formData), // Updated to match controller Put mapping
+        updateProfile: (formData, userId) => api.put('Users/update-profile', formData, userId ? { headers: { UserId: userId } } : {}),
         followUser: (id) => api.post(`Artists/like/${id}`), // Re-routed to Artists for social linking
         unfollowUser: (id) => api.post(`Artists/like/${id}`), // It's a toggle in backend
         getFollowers: (id) => api.get(`Users/${id}/followers`),

@@ -77,7 +77,7 @@ const getMediaUrl = (path) => {
 
 // --- COMPONENTE PRINCIPAL ---
 function App() {
-  const [activeView, setView] = useState('discovery');
+  const [activeView, setView] = useState('login');
   const [viewingUserId, setViewingUserId] = useState(null);
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const { showNotification } = useNotification();
@@ -596,9 +596,14 @@ function App() {
       const res = await API.Users.getProfile();
       console.log("Profile Refreshed:", res.data);
       if (res.data) {
+        const uid = res.data.id || res.data.Id || res.data.userId || res.data.UserId;
+        if (!uid) {
+          console.warn("[App] No user ID found in profile response!", res.data);
+        }
+
         const userData = {
           ...res.data,
-          id: res.data.id || res.data.Id || res.data.userId || res.data.UserId,
+          id: uid,
           credits: res.data.creditsBalance !== undefined ? res.data.creditsBalance : (res.data.CreditsBalance !== undefined ? res.data.CreditsBalance : (res.data.credits || 0)),
           biography: res.data.biography || res.data.Biography || res.data.bio || res.data.Bio,
           profileImageUrl: res.data.profileImageUrl || res.data.ProfilePictureUrl || res.data.imageUrl || res.data.ImageUrl,
@@ -606,13 +611,16 @@ function App() {
           isLive: res.data.isLive || res.data.IsLive || false,
           featuredTrackId: res.data.featuredTrackId || res.data.FeaturedTrackId,
           bannerUrl: res.data.bannerUrl || res.data.BannerUrl,
+          wallpaperVideoUrl: res.data.wallpaperVideoUrl || res.data.WallpaperVideoUrl,
           themeColor: res.data.themeColor || res.data.ThemeColor || '#ff006e',
           textColor: res.data.textColor || res.data.TextColor || '#ffffff',
           backgroundColor: res.data.backgroundColor || res.data.BackgroundColor || '#000000',
           isGlass: res.data.isGlass || res.data.IsGlass || false
         };
         setUser(prev => {
-          const updated = { ...prev, ...userData };
+          // If uid is missing, try to keep the old ID as a desperate measure
+          const finalId = userData.id || prev?.id || prev?.Id || prev?.userId || prev?.UserId;
+          const updated = { ...prev, ...userData, id: finalId };
           localStorage.setItem('user', JSON.stringify(updated));
           return updated;
         });
@@ -622,6 +630,10 @@ function App() {
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
+      if (error.response?.status === 401) {
+        console.warn("[App] Session expired or invalid. Logging out...");
+        handleLogout();
+      }
     }
   };
 
@@ -1116,7 +1128,7 @@ const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurren
           <SidebarLink collapsed={isSidebarCollapsed} icon={<Radio size={20} />} label="Discovery" active={activeView === 'discovery'} onClick={() => setView('discovery')} />
           <SidebarLink collapsed={isSidebarCollapsed} icon={<Hash size={20} />} label="Feed" active={activeView === 'feed'} onClick={() => setView('feed')} />
           <SidebarLink collapsed={isSidebarCollapsed} icon={<User size={20} />} label="Profile" active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => navigateToProfile(null)} />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<Play size={20} />} label="Player" active={activeView === 'player'} onClick={() => setView('player')} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={activeView === 'player' ? <img src={skullImg} className="w-5 h-5 object-contain" /> : <Play size={20} />} label="Player" active={activeView === 'player'} onClick={() => setView('player')} />
           <SidebarLink collapsed={isSidebarCollapsed} icon={<MessageSquare size={20} />} label="Messages" active={activeView === 'messages'} onClick={() => setView('messages')} hasNotification={hasNewMessages} />
 
           <div className="my-4 border-t border-white/10" />
@@ -1135,11 +1147,11 @@ const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurren
         {/* TOP NAV (Móvil) */}
         <header className="lg:hidden flex items-center justify-center p-4 border-b border-[#ff006e]/10 bg-black/90 backdrop-blur-md z-40 relative">
           <div className="flex gap-4">
-            <NavButton icon={<Radio size={18} />} active={activeView === 'discovery'} onClick={() => setView('discovery')} />
-            <NavButton icon={<Hash size={18} />} active={activeView === 'feed'} onClick={() => setView('feed')} />
-            <NavButton icon={<Play size={18} />} active={activeView === 'player'} onClick={() => setView('player')} />
-            <NavButton icon={<MessageSquare size={18} />} active={activeView === 'messages'} onClick={() => setView('messages')} hasNotification={hasNewMessages} />
-            <NavButton icon={<User size={18} />} active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => navigateToProfile(null)} />
+            <NavButton icon={<Radio size={20} />} active={activeView === 'discovery'} onClick={() => setView('discovery')} />
+            <NavButton icon={<Hash size={20} />} active={activeView === 'feed'} onClick={() => setView('feed')} />
+            <NavButton icon={activeView === 'player' ? <img src={skullImg} className="w-[20px] h-[20px] object-contain" /> : <Play size={20} />} active={activeView === 'player'} onClick={() => setView('player')} />
+            <NavButton icon={<MessageSquare size={20} />} active={activeView === 'messages'} onClick={() => setView('messages')} hasNotification={hasNewMessages} />
+            <NavButton icon={<User size={20} />} active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => navigateToProfile(null)} />
           </div>
         </header>
 
@@ -1180,6 +1192,7 @@ const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurren
                 onPlayPlaylist={handlePlayPlaylist}
                 initialModal={profileInitialModal}
                 onClearInitialModal={() => setProfileInitialModal(null)}
+                isPlaying={isPlaying}
               />
             )}
             {activeView === 'player' && <PlayerContent
@@ -1260,45 +1273,49 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
         } `}
     >
       {/* Track Info (Click to expand) */}
-      <div className="flex items-center gap-4 flex-1 cursor-pointer group" onClick={onExpand}>
-        <div className={`w-12 h-12 rounded-lg border flex items-center justify-center relative overflow-hidden shrink-0 ${isMessages ? 'bg-[#111] border-[#333]' : 'bg-[#111] border-[#ff006e]/10'} `}>
+      <div className="flex items-center gap-3 lg:gap-4 flex-1 cursor-pointer group min-w-0" onClick={onExpand}>
+        <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-lg border flex items-center justify-center relative overflow-hidden shrink-0 ${isMessages ? 'bg-[#111] border-[#333]' : 'bg-[#111] border-[#ff006e]/10'}`}>
           {track?.cover || track?.thumbnail ? (
             <img src={track.cover || track.thumbnail} alt="Cover" className="w-full h-full object-cover" />
           ) : (
-            <Music size={20} className={`transition - colors ${isMessages ? 'text-[#ff006e]' : 'text-[#ff006e]/40 group-hover:text-[#ff006e]'} `} />
+            <Music size={18} className={`transition-colors ${isMessages ? 'text-[#ff006e]' : 'text-[#ff006e]/40 group-hover:text-[#ff006e]'}`} />
           )}
-          {isPlaying && (!track?.cover && !track?.thumbnail) && <div className={`absolute inset - 0 animate - pulse ${isMessages ? 'bg-[#ff006e]/10' : 'bg-[#ff006e]/10'} `} />}
+          {isPlaying && (!track?.cover && !track?.thumbnail) && <div className={`absolute inset-0 animate-pulse ${isMessages ? 'bg-[#ff006e]/10' : 'bg-[#ff006e]/10'}`} />}
         </div>
-        <div className="overflow-hidden">
-          <h4 className={`text - xs font - black uppercase truncate transition - colors ${isMessages ? 'text-white' : 'text-white group-hover:text-[#ff006e]'} `}>{track?.title || 'No Track'}</h4>
-          <p className={`text - [10px] font - bold uppercase truncate ${isMessages ? 'text-[#ff006e]' : 'text-[#ff006e]/50'} `}>{track?.artist || 'Unknown'}</p>
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <h4 className={`text-[10px] lg:text-xs font-black uppercase truncate transition-colors ${isMessages ? 'text-white' : 'text-white group-hover:text-[#ff006e]'}`}>{track?.title || 'No Track'}</h4>
+          <p className={`text-[8px] lg:text-[10px] font-bold uppercase truncate ${isMessages ? 'text-[#ff006e]' : 'text-[#ff006e]/50'}`}>{track?.artist || 'Unknown'}</p>
         </div>
       </div>
 
       {/* Controls */}
-      <div className="flex items-center gap-6 px-4">
-        <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className={`transition - colors ${isMessages ? 'text-[#ff006e]/60 hover:text-[#ff006e]' : 'text-[#ff006e]/60 hover:text-white'} `}>
-          <SkipBack size={20} fill="currentColor" />
+      <div className="flex items-center gap-3 lg:gap-6 px-1 lg:px-4 shrink-0">
+        <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className={`transition-colors ${isMessages ? 'text-[#ff006e]/60 hover:text-[#ff006e]' : 'text-[#ff006e]/60 hover:text-white'}`}>
+          <SkipBack size={18} fill="currentColor" />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
-          className={`w-10 h-10 flex items-center justify-center transition-transform hover:scale-105 ${isMessages ? 'text-[#ff006e]' : 'text-[#ff006e]'} `}
+          className={`w-8 h-8 lg:w-10 lg:h-10 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 ${isMessages ? 'text-[#ff006e]' : 'text-[#ff006e]'}`}
         >
-          {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" />}
+          {isPlaying ? (
+            <Pause size={24} fill="currentColor" />
+          ) : (
+            <img src={skullImg} className="w-6 h-6 lg:w-8 lg:h-8 object-contain drop-shadow-[0_0_8px_#ff006e]" />
+          )}
         </button>
-        <button onClick={(e) => { e.stopPropagation(); onNext(); }} className={`transition - colors ${isMessages ? 'text-[#ff006e]/60 hover:text-[#ff006e]' : 'text-[#ff006e]/60 hover:text-white'} `}>
-          <SkipForward size={20} fill="currentColor" />
+        <button onClick={(e) => { e.stopPropagation(); onNext(); }} className={`transition-colors ${isMessages ? 'text-[#ff006e]/60 hover:text-[#ff006e]' : 'text-[#ff006e]/60 hover:text-white'}`}>
+          <SkipForward size={18} fill="currentColor" />
         </button>
       </div>
 
       {/* Extra Actions */}
-      <div className={`hidden sm:flex items-center gap-6 px-2 border-l pl-6 ${isMessages ? 'border-[#ff006e]/10' : 'border-[#ff006e]/10'} `}>
+      <div className={`hidden sm:flex items-center gap-4 lg:gap-6 px-2 border-l pl-4 lg:pl-6 ${isMessages ? 'border-[#ff006e]/10' : 'border-[#ff006e]/10'}`}>
         <Heart
-          size={20}
-          className={`cursor-pointer transition-colors ${track?.isLiked ? 'text-[#ff006e] fill-[#ff006e]' : 'text-[#ff006e]/40 hover:text-[#ff006e]'} `}
+          size={18}
+          className={`cursor-pointer transition-colors ${track?.isLiked ? 'text-[#ff006e] fill-[#ff006e]' : 'text-[#ff006e]/40 hover:text-[#ff006e]'}`}
           onClick={(e) => { e.stopPropagation(); onLike && onLike(track); }}
         />
-        <Volume2 size={20} className={`cursor-pointer ${isMessages ? 'text-[#ff006e]/40 hover:text-[#ff006e]' : 'text-[#ff006e]/40 hover:text-[#ff006e]'} `} />
+        <Volume2 size={18} className={`cursor-pointer ${isMessages ? 'text-[#ff006e]/40 hover:text-[#ff006e]' : 'text-[#ff006e]/40 hover:text-[#ff006e]'}`} />
       </div>
     </motion.div>
   );

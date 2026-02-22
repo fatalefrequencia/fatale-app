@@ -4,12 +4,14 @@ import { useNotification } from '../contexts/NotificationContext';
 import {
     Play, Pause, SkipBack, SkipForward, Music,
     ChevronRight, Zap, Minimize2, Download as DownloadIcon, Heart,
-    Wifi, Disc, User, List, DollarSign, Search
+    Wifi, Disc, User, List, DollarSign, Search, Video
 } from 'lucide-react';
+import skullImg from '../assets/skull_neon_fuscia.png';
 
 const MENU_ITEMS = [
     { id: 'NOW_PLAYING', label: 'Now Playing' },
     { id: 'SONGS', label: 'Music' },
+    { id: 'SONGS_LIKED', label: 'Favoritos' },
     { id: 'PLAYLISTS', label: 'Playlists' },
     { id: 'ARTISTS', label: 'Artists' },
     { id: 'SETTINGS', label: 'Settings' }
@@ -49,6 +51,18 @@ export const IPodPlayer = ({
     const [activePlaylistName, setActivePlaylistName] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearchingYoutube, setIsSearchingYoutube] = useState(false);
+    const [favorites, setFavorites] = useState(() => {
+        try {
+            const saved = localStorage.getItem('pod_favorites');
+            return saved ? JSON.parse(saved) : [];
+        } catch (e) { return []; }
+    });
+
+    useEffect(() => {
+        localStorage.setItem('pod_favorites', JSON.stringify(favorites));
+    }, [favorites]);
 
     // Debug logging
     console.log("[IPodPlayer] Render. Screen:", screen, "Force:", forceNowPlaying, "Initial:", initialScreen);
@@ -75,6 +89,54 @@ export const IPodPlayer = ({
             window.removeEventListener('offline', handleOffline);
         };
     }, []);
+
+    // YouTube Search Effect
+    useEffect(() => {
+        if (!isSearching || !searchQuery || searchQuery.length < 3) {
+            setSearchResults([]);
+            return;
+        }
+
+        const delayDebounceFn = setTimeout(async () => {
+            setIsSearchingYoutube(true);
+            try {
+                const API = await import('../services/api').then(m => m.default);
+                const res = await API.Youtube.search(searchQuery);
+                const results = (res.data || []).map((item, idx) => {
+                    const videoId = item.id || item.Id || item.videoId || `yt-fb-${idx}`;
+                    const title = item.title || item.Title || 'Unknown Signal';
+                    const author = item.author || item.Author || item.channelTitle || 'External Broadcast';
+                    const thumb = item.thumbnailUrl || item.ThumbnailUrl || item.cover;
+
+                    return {
+                        id: `yt-${videoId}`,
+                        label: title,
+                        videoId: videoId,
+                        artist: author,
+                        cover: thumb,
+                        type: 'YOUTUBE_SIGNAL',
+                        originalTrack: {
+                            id: `youtube:${videoId}`,
+                            title: title,
+                            artist: author,
+                            source: `youtube:${videoId}`,
+                            cover: thumb,
+                            isLocked: false,
+                            isOwned: true,
+                            category: 'YouTube'
+                        }
+                    };
+                });
+                setSearchResults(results);
+            } catch (e) {
+                console.error("YouTube Search Error:", e);
+            } finally {
+                setIsSearchingYoutube(false);
+            }
+        }, 800);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchQuery, isSearching]);
 
     // Fetch Playlists
     useEffect(() => {
@@ -140,10 +202,12 @@ export const IPodPlayer = ({
             const lowerQ = searchQuery.toLowerCase();
             const results = tracks.map((t, i) => ({ ...t, originalIndex: i }))
                 .filter(t => (t.title || t.Title || '').toLowerCase().includes(lowerQ) ||
-                    (t.artist || t.ArtistName || '').toLowerCase().includes(lowerQ));
+                    (t.artist || t.ArtistName || '').toLowerCase().includes(lowerQ))
+                .map(t => ({ id: t.originalIndex, label: t.title || t.Title || 'Untitled Track', originalTrack: t }));
 
-            if (results.length === 0) return [{ id: 'INFO', label: 'No results' }];
-            return results.map(t => ({ id: t.originalIndex, label: t.title || t.Title || 'Untitled Track', originalTrack: t }));
+            const combined = [...results, ...searchResults];
+            if (combined.length === 0) return [{ id: 'INFO', label: isSearchingYoutube ? 'Searching Youtube...' : 'No results' }];
+            return combined.map(item => ({ ...item, isFromSearch: true, searchContext: combined }));
         }
 
         if (screen === 'MAIN') return MENU_ITEMS;
@@ -157,7 +221,11 @@ export const IPodPlayer = ({
 
         if (screen === 'SONGS_LIKED' || screen === 'SONGS_PURCHASED' || screen === 'SONGS_ALL') {
             const getFiltered = () => {
-                if (screen === 'SONGS_LIKED') return tracks.map((t, i) => ({ ...t, originalIndex: i })).filter(t => t.isLiked);
+                if (screen === 'SONGS_LIKED') {
+                    const sysLiked = tracks.map((t, i) => ({ ...t, originalIndex: i })).filter(t => t.isLiked);
+                    const favs = favorites.map(f => ({ ...f, type: 'YOUTUBE_SIGNAL', isFromLocal: true }));
+                    return [...sysLiked, ...favs];
+                }
                 if (screen === 'SONGS_PURCHASED') return tracks.map((t, i) => ({ ...t, originalIndex: i })).filter(t => t.isCached);
                 return tracks.map((t, i) => ({ ...t, originalIndex: i }));
             };
@@ -313,13 +381,32 @@ export const IPodPlayer = ({
         if (isSearching) {
             // If it's a track result
             if (item.originalTrack) {
-                const mainIndex = tracks.findIndex(t => t.id === item.originalTrack.id);
-                if (mainIndex !== -1) {
-                    setCurrentTrackIndex(mainIndex);
-                    setIsPlaying(true);
+                // Determine the context (what list are we playing?)
+                const contextList = (item.isFromSearch && item.searchContext)
+                    ? item.searchContext.map(i => i.originalTrack)
+                    : [item.originalTrack];
+
+                if (item.type === 'YOUTUBE_SIGNAL') {
+                    const ctxIdx = contextList.findIndex(t => t.id === item.originalTrack.id);
+                    onPlayPlaylist && onPlayPlaylist(contextList, ctxIdx !== -1 ? ctxIdx : 0);
                     setScreen('NOW_PLAYING');
-                    setIsSearching(false); // Close search on play
+                    setIsSearching(false);
                     setSearchQuery('');
+                } else {
+                    const mainIndex = tracks.findIndex(t => (t.id || t.Id) === (item.originalTrack.id || item.originalTrack.Id));
+                    if (mainIndex !== -1) {
+                        // If playing from search, treat like a playlist of search results for sequential play
+                        if (item.isFromSearch && item.searchContext) {
+                            const ctxIdx = contextList.findIndex(t => (t.id || t.Id) === (item.originalTrack.id || item.originalTrack.Id));
+                            onPlayPlaylist && onPlayPlaylist(contextList, ctxIdx !== -1 ? ctxIdx : 0);
+                        } else {
+                            setCurrentTrackIndex(mainIndex);
+                            setIsPlaying(true);
+                        }
+                        setScreen('NOW_PLAYING');
+                        setIsSearching(false);
+                        setSearchQuery('');
+                    }
                 }
             }
             return;
@@ -692,10 +779,14 @@ export const IPodPlayer = ({
                 {/* SCREEN CONTAINER */}
                 <div className="w-full h-[320px] bg-black rounded-2xl border-4 border-[#f00060]/20 overflow-hidden relative shadow-[inset_0_0_50px_rgba(255,0,110,0.1)] flex flex-col">
 
-                    {/* STATUS BAR */}
-                    <div className="h-7 bg-[#111] border-b border-[#f00060]/20 flex justify-between items-center px-4 z-20">
+                    {/* STATUS BAR - REDESIGNED */}
+                    <div className="h-7 bg-gradient-to-b from-[#1a1a1a] to-black/40 backdrop-blur-md border-b border-[#f00060]/30 flex justify-between items-center px-4 z-20">
                         <div className="flex items-center gap-2">
-                            {isPlaying ? <Play size={10} className="text-[#f00060] fill-[#f00060]" /> : <Pause size={10} className="text-[#f00060] fill-[#f00060]" />}
+                            {isPlaying ? (
+                                <img src={skullImg} className="w-3 h-3 object-contain brightness-125" />
+                            ) : (
+                                <Pause size={10} className="text-[#f00060] fill-[#f00060]" />
+                            )}
                             <span className="text-[10px] font-black text-white font-mono tracking-widest uppercase">CYBER_POD</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -748,10 +839,26 @@ export const IPodPlayer = ({
                                     {/* ACTION BUTTONS (LIKE/DOWNLOAD) - BELOW TITLE */}
                                     <div className="flex justify-center gap-6 py-1">
                                         <button
-                                            onClick={(e) => { e.stopPropagation(); onLike && onLike(currentTrack); }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (currentTrack.source?.startsWith('youtube:')) {
+                                                    const isFav = favorites.some(f => f.id === currentTrack.id);
+                                                    if (isFav) {
+                                                        setFavorites(prev => prev.filter(f => f.id !== currentTrack.id));
+                                                    } else {
+                                                        setFavorites(prev => [...prev, currentTrack]);
+                                                    }
+                                                } else {
+                                                    onLike && onLike(currentTrack);
+                                                }
+                                            }}
                                             className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1"
                                         >
-                                            <Heart size={18} fill={currentTrack.isLiked ? "#f00060" : "transparent"} strokeWidth={3} />
+                                            <Heart
+                                                size={18}
+                                                fill={(currentTrack.isLiked || favorites.some(f => f.id === currentTrack.id)) ? "#f00060" : "transparent"}
+                                                strokeWidth={3}
+                                            />
                                         </button>
                                         <button
                                             onClick={(e) => {
@@ -766,12 +873,22 @@ export const IPodPlayer = ({
                                     </div>
 
                                     {/* PROGRESS BAR - AT THE BOTTOM OF AREA */}
-                                    <div className="mt-auto space-y-1 pb-1">
+                                    <div
+                                        className="mt-auto space-y-1 pb-1 cursor-pointer group/progress"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            const rect = e.currentTarget.getBoundingClientRect();
+                                            const x = e.clientX - rect.left;
+                                            const pct = x / rect.width;
+                                            const targetTime = pct * trackDurationSec;
+                                            onSeek && onSeek(targetTime);
+                                        }}
+                                    >
                                         <div className="h-2 bg-[#1a1a1a] rounded-full overflow-hidden border border-[#f00060]/20 relative">
                                             <motion.div
                                                 className="h-full bg-gradient-to-r from-[#f00060] to-[#c70055] shadow-[0_0_15px_#f00060]"
                                                 animate={{ width: `${(visualTime / trackDurationSec) * 100}%` }}
-                                                transition={{ type: "spring", bounce: 0, duration: 0.05 }}
+                                                transition={{ type: "spring", bounce: 0, duration: 0.1 }}
                                             />
                                         </div>
                                         <div className="flex justify-between text-[9px] font-mono text-[#f00060]/60 font-black tracking-widest">
@@ -783,8 +900,9 @@ export const IPodPlayer = ({
                             </div>
                         ) : (
                             // --- MENU SYSTEM ---
-                            <div className="flex flex-col h-full bg-[#050505]">
-                                <div className="p-3 border-b border-[#f00060]/20 bg-[#111] flex items-center justify-between h-[42px]">
+                            <div className="flex flex-col h-full bg-[#050505] scrollbar-hide">
+                                <div className="p-3 border-b border-[#f00060]/30 bg-gradient-to-r from-black/80 via-[#1a1a1a] to-black/80 backdrop-blur-sm flex items-center justify-between h-[42px] relative overflow-hidden">
+                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5 pointer-events-none" />
                                     {
                                         isSearching ? (
                                             <div className="flex items-center w-full gap-2" >
@@ -810,7 +928,7 @@ export const IPodPlayer = ({
                                             </div>
                                         ) : (
                                             <h2 className={`text-[11px] font-black text-[#f00060] tracking-[0.3em] font-mono ${screen === 'PLAYLIST_DETAILS' ? '' : 'uppercase'} truncate max-w-[180px]`}>
-                                                {screen === 'MAIN' ? 'SYSTEM' :
+                                                {screen === 'MAIN' ? 'BUSCA ALGO' :
                                                     screen === 'ACTION_MENU' ? 'OPTIONS' :
                                                         screen === 'TIP_MENU' ? 'SELECT TIP' :
                                                             screen === 'SONGS' ? 'MUSIC' :
@@ -848,10 +966,10 @@ export const IPodPlayer = ({
                                                 key={item.id + idx}
                                                 className={`flex items-center justify-between px-5 py-3 rounded-lg mb-1.5 transition-all cursor-pointer 
                                                     ${idx === selectedIndex
-                                                        ? 'bg-[#f00060] text-black shadow-[0_0_20px_rgba(255,0,110,0.6)] font-black'
+                                                        ? 'bg-gradient-to-r from-[#f00060] to-[#c70055] text-black shadow-[0_0_25px_rgba(240,0,96,0.8)] font-black scale-[1.02]'
                                                         : isDisabled
                                                             ? 'text-[#666] opacity-50 cursor-not-allowed'
-                                                            : isAction ? 'text-red-500 font-black' : 'text-[#f00060]/90 hover:text-[#f00060]'
+                                                            : isAction ? 'text-[#f00060] font-black' : 'text-[#f00060]/90 hover:text-[#f00060]'
                                                     }`}
                                                 onClick={(e) => {
                                                     if (isDisabled) return;
@@ -860,7 +978,10 @@ export const IPodPlayer = ({
                                                     handleCenterClick(e, item);
                                                 }}
                                             >
-                                                <span className="text-[11px] tracking-widest truncate font-bold">{item.label}</span>
+                                                <span className="text-[11px] tracking-widest truncate font-bold">
+                                                    {item.type === 'YOUTUBE_SIGNAL' && <span className="text-white/20 mr-2">[SIGNAL]</span>}
+                                                    {item.label}
+                                                </span>
                                                 <ChevronRight size={14} className={idx === selectedIndex ? 'text-black' : isDisabled ? 'text-transparent' : 'text-[#f00060]/60'} />
                                             </div>
                                         );
@@ -883,11 +1004,11 @@ export const IPodPlayer = ({
                         onTouchStart={onStart}
                         className="w-64 h-64 rounded-full bg-[#111] border-2 border-[#333] shadow-[0_15px_60px_rgba(0,0,0,1),inset_0_2px_10px_rgba(255,255,255,0.05)] relative flex items-center justify-center cursor-pointer active:scale-[0.99] transition-transform group"
                     >
-                        {/* WHEEL BUTTONS */}
-                        <button onClick={handleMenuClick} className="absolute top-6 text-xs font-black text-[#666] hover:text-[#f00060] tracking-widest transition-colors font-mono uppercase z-50">MENU</button>
-                        <button onClick={(e) => { e.stopPropagation(); onMinimize(); }} className="absolute bottom-6 text-[#666] hover:text-white transition-colors z-50"><Minimize2 size={24} /></button>
-                        <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="absolute left-6 text-[#666] hover:text-white transition-colors active:text-[#f00060] z-50"><SkipBack size={28} fill="currentColor" /></button>
-                        <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="absolute right-6 text-[#666] hover:text-white transition-colors active:text-[#f00060] z-50"><SkipForward size={28} fill="currentColor" /></button>
+                        {/* WHEEL BUTTONS - POLISHED */}
+                        <button onClick={handleMenuClick} className="absolute top-6 text-xs font-black text-[#f00060]/40 hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] tracking-widest transition-all font-mono uppercase z-50">MENU</button>
+                        <button onClick={(e) => { e.stopPropagation(); onMinimize(); }} className="absolute bottom-6 text-[#666] hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] transition-all z-50"><Minimize2 size={24} /></button>
+                        <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="absolute left-6 text-[#666] hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] transition-all active:scale-95 z-50"><SkipBack size={28} fill="currentColor" /></button>
+                        <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="absolute right-6 text-[#666] hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] transition-all active:scale-95 z-50"><SkipForward size={28} fill="currentColor" /></button>
 
                         {/* CENTER "SELECT" BUTTON */}
                         <button
@@ -912,7 +1033,7 @@ export const IPodPlayer = ({
                                         {isPlaying ? (
                                             <Pause size={32} fill="#f00060" className="text-[#f00060] group-active/select:fill-black group-active/select:text-black transition-colors" />
                                         ) : (
-                                            <Play size={32} fill="#f00060" className="text-[#f00060] ml-1 group-active/select:fill-black group-active/select:text-black transition-colors" />
+                                            <img src={skullImg} className="w-10 h-10 object-contain drop-shadow-[0_0_10px_#f00060]" />
                                         )}
                                     </motion.div>
                                 )}

@@ -84,7 +84,7 @@ const AuthView = ({ onLoginSuccess }) => {
                 } else if (data?.title) {
                     msg = data.title; // Problem Details pattern
                 } else if (data?.error) {
-                    msg = data.error;
+                    msg = data.inner ? `${data.error} (Details: ${data.inner})` : data.error;
                 } else {
                     msg = `Server Error (${err.response.status})`;
                 }

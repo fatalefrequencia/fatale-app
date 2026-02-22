@@ -91,7 +91,7 @@ const SideTerminal = ({ title, children, side = "left", isOpen, onClose, roomMod
             filter: "blur(0px)",
             pointerEvents: "auto"
         }}
-        transition={{ duration: 1.2, ease: [0.23, 1, 0.32, 1] }}
+        transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
     >
         <div className="terminal-header flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -112,13 +112,13 @@ const SideTerminal = ({ title, children, side = "left", isOpen, onClose, roomMod
     </motion.div>
 );
 
-const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, leftOpen, rightOpen, onToggleLeft, onToggleRight, bannerUrl, wallpaperVideoUrl, themeColor, textColor, backgroundColor, isGlass, previewThemeColor, previewTextColor, previewBackgroundColor, previewIsGlass, roomMode = 'monitor', setRoomMode, tracks = [], gallery = [], onUpload, journal = [], onExpandContent }) => {
+const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, leftOpen, rightOpen, onToggleLeft, onToggleRight, bannerUrl, wallpaperVideoUrl, profileImageUrl, biography, themeColor, textColor, backgroundColor, isGlass, previewThemeColor, previewTextColor, previewBackgroundColor, previewIsGlass, onUpload, roomMode, setRoomMode, isPlaying, onExpandContent, journal, gallery, tracks, playlists = [], onPlayTrack, onPlayPlaylist }) => {
     // Use preview colors if available, otherwise fall back to saved user props
     const activeTheme = previewThemeColor || themeColor || '#ff006e';
     const activeText = previewTextColor || textColor || '#ffffff';
     const activeBackground = previewBackgroundColor || backgroundColor || '#000000';
-
     const activeIsGlass = (previewIsGlass !== undefined && previewIsGlass !== null) ? previewIsGlass : (isGlass !== undefined ? isGlass : false);
+    const [scrolled, setScrolled] = useState(false);
 
     return (
         <div className={`spatial-container ${roomMode === 'room' ? 'room-mode-active' : ''}`} style={{
@@ -135,7 +135,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                     <video
                         key={wallpaperVideoUrl}
                         src={wallpaperVideoUrl.startsWith('http') ? wallpaperVideoUrl : `http://localhost:5264${wallpaperVideoUrl}`}
-                        className={`w-full h-full object-cover transition-all duration-[1200ms] ${roomMode === 'room' ? 'opacity-100 scale-110' : 'opacity-70 scale-100'}`}
+                        className={`w-full h-full object-cover transition-all duration-[400ms] ${roomMode === 'room' ? 'opacity-100 scale-110' : 'opacity-70 scale-100'}`}
                         style={{ transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)' }}
                         autoPlay
                         loop
@@ -145,22 +145,45 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                 ) : bannerUrl ? (
                     <img
                         src={bannerUrl.startsWith('http') ? bannerUrl : `http://localhost:5264${bannerUrl}`}
-                        className={`w-full h-full object-cover transition-all duration-[1200ms] ${roomMode === 'room' ? 'opacity-100 scale-110' : 'opacity-60 scale-100'}`}
+                        className={`w-full h-full object-cover transition-all duration-[400ms] ${roomMode === 'room' ? 'opacity-100 scale-110' : 'opacity-60 scale-100'}`}
                         style={{ transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)' }}
                     />
                 ) : null}
-                <div className={`absolute inset-0 bg-black transition-opacity duration-[1200ms] ${roomMode === 'room' ? 'opacity-20' : 'opacity-60'}`} style={{ transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)' }} />
+                <div className={`absolute inset-0 bg-black transition-opacity duration-[400ms] ${roomMode === 'room' ? 'opacity-20' : 'opacity-60'}`} style={{ transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)' }} />
             </div>
             <div className="desk-surface" />
             <CyberDust />
-            <DisplayWall tracks={tracks} gallery={gallery} journal={journal} themeColor={activeTheme} onExpand={onExpandContent} />
 
-            <SideTerminal title="STATUS_MONITOR" side="left" isOpen={leftOpen} onClose={() => onToggleLeft(false)} roomMode={roomMode}>
-                {leftContent}
-            </SideTerminal>
+            {/* Minimalist Identity Overlay */}
+            <div className="profile-identity-overlay">
+                <div className="identity-container">
+                    <div className="identity-pic">
+                        {profileImageUrl ? (
+                            <img src={profileImageUrl.startsWith('http') ? profileImageUrl : `http://localhost:5264${profileImageUrl}`} alt={monitorTitle} />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[#ff006e]/20"><Cpu size={24} /></div>
+                        )}
+                    </div>
+                    <div className="identity-text">
+                        <div className="identity-username">{monitorTitle}</div>
+                        <div className="identity-bio">{biography || '> NO_BIOMETRIC_DATA'}</div>
+                    </div>
+                </div>
+            </div>
+
+            <DisplayWall
+                tracks={tracks}
+                gallery={gallery}
+                journal={journal}
+                playlists={playlists}
+                themeColor={activeTheme}
+                onExpand={onExpandContent}
+                onPlayTrack={onPlayTrack}
+                onPlayPlaylist={onPlayPlaylist}
+            />
 
             <motion.div
-                className="monitor-frame"
+                className="monitor-frame frameless"
                 initial={{ rotateX: 5, y: 30, opacity: 0, scale: 0.95, translateZ: -100 }}
                 animate={roomMode === 'room' ? {
                     rotateX: 25,
@@ -179,52 +202,13 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                 }}
                 transition={{ duration: 1.2, ease: [0.23, 1, 0.32, 1] }}
             >
-                <div className="bg-[#111] border-b border-[#ff006e]/20 px-4 py-2 flex justify-between items-center shrink-0">
-                    <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_8px_#ff006e]" />
-                        <span className="mono text-[9px] font-bold text-white/60 tracking-[0.2em] uppercase">SYSTEM_CORE // {monitorTitle}</span>
-                    </div>
-
-                    {/* Mobile Toggles */}
-                    <div className="flex lg:hidden gap-2">
-                        <button
-                            onClick={() => onToggleLeft(!leftOpen)}
-                            className={`px-2 py-1 border border-[#ff006e]/20 text-[8px] mono uppercase tracking-widest ${leftOpen ? 'bg-[#ff006e] text-black' : 'text-[#ff006e]'}`}
-                        >
-                            [ STATS ]
-                        </button>
-                        <button
-                            onClick={() => onToggleRight(!rightOpen)}
-                            className={`px-2 py-1 border border-[#ff006e]/20 text-[8px] mono uppercase tracking-widest ${rightOpen ? 'bg-[#ff006e] text-black' : 'text-[#ff006e]'}`}
-                        >
-                            [ META ]
-                        </button>
-                    </div>
-
-                    <div className="hidden lg:flex gap-2">
-                        <div className="w-8 h-1 bg-white/5" />
-                        <div className="w-4 h-1 bg-[#ff006e]/20" />
-                    </div>
-                </div>
                 <div className="monitor-screen custom-scrollbar relative">
                     <DataStream />
                     <div className="relative z-10 h-full overflow-y-auto custom-scrollbar">
                         {children}
                     </div>
                 </div>
-
-                {/* Mobile Backdrop */}
-                {(leftOpen || rightOpen) && (
-                    <div
-                        className="lg:hidden fixed inset-0 bg-black/60 z-[190]"
-                        onClick={() => { onToggleLeft(false); onToggleRight(false); }}
-                    />
-                )}
             </motion.div>
-
-            <SideTerminal title="ENTITY_METADATA" side="right" isOpen={rightOpen} onClose={() => onToggleRight(false)} roomMode={roomMode}>
-                {rightContent}
-            </SideTerminal>
 
             <PeripheralDock roomMode={roomMode} setRoomMode={setRoomMode} themeColor={activeTheme} onUpload={onUpload} isMe={true} />
 
@@ -287,24 +271,48 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
     );
 };
 
-const DisplayWall = ({ tracks, gallery, journal = [], themeColor, onExpand }) => {
+const DisplayWall = ({ tracks, gallery, journal = [], playlists = [], themeColor, onExpand, onPlayTrack, onPlayPlaylist }) => {
     // 1. Collect all wall-eligible items
     const wallItems = [];
 
-    // Tracks (limit check later)
+    // Tracks (Always show latest 10, plus any explicitly posted)
     if (Array.isArray(tracks)) {
-        tracks.forEach(t => {
-            // Use t.cover (from App mappings) or fallbacks
-            const cover = t.cover || t.coverImage || t.CoverImage || t.imageUrl || t.ImageUrl || t.coverImageUrl || t.CoverImageUrl;
+        const sortedTracks = [...tracks].sort((a, b) => {
+            const dateA = new Date(a.CreatedAt || a.createdAt || 0).getTime();
+            const dateB = new Date(b.CreatedAt || b.createdAt || 0).getTime();
+            return dateB - dateA;
+        });
 
-            if ((t.IsPosted || t.isPosted)) {
+        const latestIds = new Set(sortedTracks.slice(0, 10).map(t => t.id || t.Id));
+
+        tracks.forEach(t => {
+            const cover = t.cover || t.coverImage || t.CoverImage || t.imageUrl || t.ImageUrl || t.coverImageUrl || t.CoverImageUrl;
+            const isLatest = latestIds.has(t.id || t.Id);
+
+            if (t.IsPosted || t.isPosted || isLatest) {
                 wallItems.push({
                     id: t.id || t.Id,
                     type: 'TRACK',
                     title: t.title || t.Title,
-                    url: cover, // Can be null/empty, rendering handles it
+                    url: cover,
                     slots: 1,
                     original: t
+                });
+            }
+        });
+    }
+
+    // Playlists (All public playlists)
+    if (Array.isArray(playlists)) {
+        playlists.forEach(p => {
+            if (p.isPublic || p.IsPublic) {
+                wallItems.push({
+                    id: p.id || p.Id,
+                    type: 'PLAYLIST',
+                    title: p.name || p.Name,
+                    url: p.imageUrl || p.ImageUrl,
+                    slots: 1,
+                    original: p
                 });
             }
         });
@@ -342,18 +350,8 @@ const DisplayWall = ({ tracks, gallery, journal = [], themeColor, onExpand }) =>
         });
     }
 
-    // Sort by type then date (optional, for aesthetics)
-    // For now just keep them as they come or shuffle
-
-    // 2. Enforce 20-slot limit
-    let totalSlots = 0;
-    const itemsToShow = [];
-    for (const item of wallItems) {
-        if (totalSlots + item.slots <= 20) {
-            itemsToShow.push(item);
-            totalSlots += item.slots;
-        }
-    }
+    // 2. Limit items to keep the space clean
+    const itemsToShow = wallItems.slice(0, 30);
 
     return (
         <div className="display-wall">
@@ -372,24 +370,42 @@ const DisplayWall = ({ tracks, gallery, journal = [], themeColor, onExpand }) =>
                             </div>
                         </div>
                     ) : (
-                        item.url ? (
+                        (item.url || item.type === 'PLAYLIST') ? (
                             <img
-                                src={item.url.startsWith('http') ? item.url : `http://localhost:5264${item.url}`}
+                                src={(item.url || '').startsWith('http') ? item.url : `http://localhost:5264${item.url || ''}`}
                                 alt={item.title}
+                                className={item.type === 'PLAYLIST' ? 'grayscale opacity-60' : ''}
                             />
                         ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center bg-[#050505] text-[#ff006e]/20 p-2 text-center group">
-                                {item.type === 'JOURNAL' ? <Book size={24} className="group-hover:text-[#ff006e] transition-colors" /> : <Music size={24} />}
-                                {item.type === 'JOURNAL' && (
-                                    <div className="mt-1 text-[5px] mono opacity-20 truncate w-full uppercase">
+                                {item.type === 'JOURNAL' ? <Book size={20} className="group-hover:text-[#ff006e] transition-colors" /> :
+                                    item.type === 'PLAYLIST' ? <Database size={20} className="group-hover:text-[#ff006e] transition-colors" /> :
+                                        <Music size={20} />}
+                                {(item.type === 'JOURNAL' || item.type === 'PLAYLIST') && (
+                                    <div className="mt-1 text-[5px] mono opacity-20 truncate w-full uppercase px-2">
                                         {item.title}
                                     </div>
                                 )}
                             </div>
                         )
                     )}
+
+                    {/* Quick Play Hover Trigger */}
+                    {(item.type === 'TRACK' || item.type === 'PLAYLIST') && (
+                        <button
+                            className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (item.type === 'TRACK') onPlayTrack(item.original);
+                                else if (item.type === 'PLAYLIST') onPlayPlaylist(item.original.tracks || [], 0);
+                            }}
+                        >
+                            <Play size={24} fill="currentColor" className="text-[#ff006e] drop-shadow-[0_0_10px_#ff006e]" />
+                        </button>
+                    )}
+
                     <div className="wall-label">
-                        DATA_{item.type}_{String(item.title || 'UNTITLED').toUpperCase().replace(/\s+/g, '_')}
+                        {item.type}_{String(item.title || 'UNTITLED').toUpperCase().replace(/\s+/g, '_')}
                     </div>
                 </div>
             ))}
@@ -498,7 +514,14 @@ const NeuralPattern = ({ isLive, featuredTrack, isQuiet }) => {
 };
 
 // --- VISTA: PERFIL (DISEÑO SLAVA KORNILOV) ---
-export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, onAddCredits, onRefreshProfile, onRefreshTracks, targetUserId, navigateToProfile, onPlayPlaylist, initialModal, onClearInitialModal }) => {
+export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, onAddCredits, onRefreshProfile, onRefreshTracks,
+    targetUserId,
+    navigateToProfile,
+    onPlayPlaylist,
+    initialModal,
+    onClearInitialModal,
+    isPlaying
+}) => {
     const { showNotification } = useNotification();
     const [activeTab, setActiveTab] = useState('Music');
     const [studioSubTab, setStudioSubTab] = useState('All');
@@ -523,6 +546,14 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
     const [leftOpen, setLeftOpen] = useState(false);
     const [rightOpen, setRightOpen] = useState(false);
     const [roomMode, setRoomMode] = useState('monitor');
+
+    // Auto-Room Mode for Mobile
+    useEffect(() => {
+        const isMobile = window.innerWidth < 1024;
+        if (isMobile) {
+            setRoomMode('room');
+        }
+    }, []);
 
     const [showIngestMenu, setShowIngestMenu] = useState(false);
     const [selectedContent, setSelectedContent] = useState(null);
@@ -812,11 +843,15 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
     const handleUpdateProfile = async (formData) => {
         try {
             const API = await import('../services/api').then(mod => mod.default);
-            await API.Users.updateProfile(formData);
+            const uid = currentUser?.id || currentUser?.Id || currentUser?.userId || currentUser?.UserId;
+            await API.Users.updateProfile(formData, uid);
+            showNotification("PROFILE_SYNCED", "Identity modifications committed to core.", "success");
             setShowEditProfile(false);
-            if (onRefreshProfile) onRefreshProfile();
-        } catch (err) {
-            console.error("Update failed", err);
+            onRefreshProfile?.();
+        } catch (error) {
+            console.error("Profile Sync Error:", error);
+            showNotification("SYNC_FAILED", "Failed to commit modifications to core.", "error");
+            throw error;
         }
     };
 
@@ -980,6 +1015,7 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                 onToggleRight={setRightOpen}
                 roomMode={roomMode}
                 setRoomMode={setRoomMode}
+                isPlaying={isPlaying}
                 onUpload={() => setShowUpload(true)}
                 onExpandContent={setSelectedContent}
                 gallery={profileGallery}
@@ -991,6 +1027,8 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                 journal={isMe ? profileJournal : profileJournal.filter(j => j.IsPosted)}
                 bannerUrl={displayUser?.bannerUrl || displayUser?.BannerUrl}
                 wallpaperVideoUrl={displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl}
+                profileImageUrl={displayUser?.profileImageUrl || displayUser?.ProfileImageUrl}
+                biography={displayUser?.biography || displayUser?.Biography || displayUser?.bio}
                 themeColor={displayUser?.themeColor || displayUser?.ThemeColor}
                 textColor={displayUser?.textColor || displayUser?.TextColor}
                 backgroundColor={displayUser?.backgroundColor || displayUser?.BackgroundColor}
@@ -1000,6 +1038,9 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                 previewTextColor={isMe && showEditProfile ? profileData?.previewTextColor : null}
                 previewBackgroundColor={isMe && showEditProfile ? profileData?.previewBackgroundColor : null}
                 previewIsGlass={isMe && showEditProfile ? profileData?.previewIsGlass : null}
+                playlists={playlists}
+                onPlayTrack={(track) => onPlayPlaylist([track], 0)}
+                onPlayPlaylist={(tracks, index) => onPlayPlaylist(tracks, index)}
                 leftContent={
                     <div className="space-y-8">
                         <div className="space-y-4">
@@ -1101,36 +1142,42 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                         />
 
                         <div className="space-y-4 pt-4 border-t border-[var(--text-color)]/5">
-                            <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// NEURAL_LOCATION</div>
-                            <div className="space-y-3">
-                                <span className="flex items-center gap-3 text-[9px] uppercase font-bold tracking-widest text-[#ff006e]">
-                                    <MapPin size={12} />
-                                    SECTOR: {['NEON SLUMS', 'SILICON HEIGHTS', 'DATA VOID', 'CENTRAL HUB', 'OUTER RIM'][displayUser?.residentSectorId] || '0X00_DRIFT'}
-                                </span>
-                                <span className="flex items-center gap-3 text-[9px] uppercase font-bold tracking-widest text-[var(--text-color)]/40">
-                                    <Calendar size={12} />
-                                    INITIALIZED: 2024.Q1
-                                </span>
+                            <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// LATEST_TRANSMISSIONS</div>
+                            <div className="space-y-4">
+                                {[...profileTracks, ...profileGallery.filter(g => g.IsPosted || g.isPosted)]
+                                    .sort((a, b) => new Date(b.createdAt || b.CreatedAt || b.UploadDate || 0) - new Date(a.createdAt || a.CreatedAt || a.UploadDate || 0))
+                                    .slice(0, 3)
+                                    .map((item, i) => (
+                                        <div key={i} className="flex gap-3 items-center group cursor-pointer" onClick={() => setSelectedContent?.({ ...item, type: item.Type || 'TRACK' })}>
+                                            <div className="w-10 h-10 border border-[#ff006e]/20 flex-shrink-0 overflow-hidden bg-black/40">
+                                                {(item.cover || item.Url) ? (
+                                                    <img
+                                                        src={(item.cover || item.Url).startsWith('http') ? (item.cover || item.Url) : `http://localhost:5264${item.cover || item.Url}`}
+                                                        className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-[#ff006e]/40">
+                                                        {item.Type === 'VIDEO' ? <Video size={14} /> : <Music size={14} />}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-[7px] mono text-[#ff006e] tracking-widest uppercase truncate">{item.Type || 'AUDIO_SIGNAL'}</div>
+                                                <div className="text-[9px] mono text-white/60 truncate uppercase">{item.title || item.Title}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                {profileTracks.length === 0 && profileGallery.length === 0 && (
+                                    <div className="text-[8px] mono text-white/20 uppercase italic">
+                                        &gt; NO_RECENT_TRANSMISSIONS
+                                    </div>
+                                )}
                             </div>
-                        </div>
-
-                        <div className="space-y-4 pt-6 border-t border-[var(--text-color)]/5">
-                            <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// RECENT_LOGS</div>
-                            {[
-                                { time: '14:02', msg: 'Movement detected' },
-                                { time: '14:23', msg: 'Signal interference' },
-                                { time: '15:11', msg: 'Data sync complete' }
-                            ].map((log, i) => (
-                                <div key={i} className="flex gap-3 text-[8px] mono uppercase opacity-40 hover:opacity-100 transition-opacity">
-                                    <span className="text-[var(--text-color)]">{log.time}</span>
-                                    <span className="text-[#ff006e]">{log.msg}</span>
-                                </div>
-                            ))}
                         </div>
                     </div>
                 }
             >
-                <div className="p-8">
+                <div>
                     {/* Minimal Header Inside Monitor */}
                     <div className="flex justify-between items-center mb-10 pb-6 border-b border-[#ff006e]/10">
                         <div className="flex gap-4">
@@ -1138,7 +1185,7 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                                 [ MUSIC ]
                             </button>
                             <button onClick={() => setActiveTab('Playlists')} className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Playlists' ? 'text-[#ff006e]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}>
-                                [ SEQUENCES ]
+                                [ PLAYLISTS ]
                             </button>
                             <button onClick={() => setActiveTab('Studio')} className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Studio' ? 'text-[#ff006e]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}>
                                 [ CORE_LOGS ]
@@ -1146,11 +1193,17 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                         </div>
                         <div className="flex gap-2">
                             {isMe && (
-                                <button onClick={() => setShowEditProfile(true)} className="px-3 py-1 border border-[#ff006e]/30 text-[#ff006e]/40 hover:text-[#ff006e] transition-all mono text-[9px] uppercase">
-                                    MODIFY_ID
-                                </button>
+                                <>
+                                    <button onClick={() => setShowEditProfile(true)} className="px-4 py-2 border-2 border-[#ff006e] text-[#ff006e] hover:bg-[#ff006e] hover:text-black transition-all mono text-[10px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(255,0,110,0.3)] hover:shadow-[0_0_25px_rgba(255,0,110,0.6)]">
+                                        MODIFY_ID
+                                    </button>
+                                    <button onClick={onLogout} className="px-4 py-2 border-2 border-[#ff006e]/40 text-[#ff006e]/60 hover:border-[#ff006e] hover:text-[#ff006e] transition-all mono text-[10px] uppercase flex items-center gap-2 group/logout font-bold tracking-widest">
+                                        <LogOut size={12} className="group-hover/logout:animate-pulse" />
+                                        LOGOUT
+                                    </button>
+                                </>
                             )}
-                            <button onClick={() => navigateToProfile(null)} className="px-3 py-1 border border-[var(--text-color)]/10 text-[var(--text-color)]/20 hover:text-[var(--text-color)] transition-all mono text-[9px] uppercase">
+                            <button onClick={() => navigateToProfile(null)} className="px-4 py-2 border-2 border-white/10 text-white/20 hover:text-white hover:border-white/40 transition-all mono text-[10px] uppercase font-bold tracking-widest">
                                 EXIT_CORE
                             </button>
                         </div>
@@ -1170,7 +1223,7 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                                     return dateB - dateA;
                                 })
                                 .map((track, idx) => (
-                                    <div key={track.id || `track-${idx}`} className="flex items-center justify-between p-4 bg-black border border-[var(--text-color)]/5 hover:border-[#ff006e]/30 transition-all group">
+                                    <div key={track.id || `track-${idx}`} className="flex items-center justify-between p-4 bg-transparent border-b border-white/5 hover:border-[#ff006e]/30 transition-all group backdrop-blur-[2px]">
                                         <div className="flex items-center gap-6">
                                             <div className="w-10">
                                                 <span className="text-[10px] text-[#ff006e]/20 font-bold mono">[{String(idx + 1).padStart(2, '0')}]</span>
@@ -1239,10 +1292,10 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                             {isMe && (
                                 <button
                                     onClick={() => setShowCreatePlaylist(true)}
-                                    className="border border-dashed border-[#ff006e]/30 p-4 hover:border-[#ff006e] transition-all cursor-pointer group bg-black/40 flex flex-col items-center justify-center gap-4 text-[#ff006e]/40 hover:text-[#ff006e]"
+                                    className="border border-[#ff006e]/10 p-4 hover:border-[#ff006e]/40 transition-all cursor-pointer group bg-black/20 flex flex-col items-center justify-center gap-4 text-[#ff006e]/20 hover:text-[#ff006e]"
                                 >
                                     <Plus size={32} />
-                                    <span className="text-[10px] font-bold uppercase tracking-widest">INIT_NEW_SEQUENCE</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest">INIT_NEW_PLAYLIST</span>
                                 </button>
                             )}
                             {playlists.map(p => (
@@ -1286,6 +1339,29 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                                         );
                                     })}
                                 </div>
+
+                                {/* Log Terminal */}
+                                {studioSubTab === 'Journal' && isMe && (
+                                    <div className="flex-1 max-w-md ml-8 relative group">
+                                        <textarea
+                                            placeholder="> ENTER_LOG_DATA_HERE..."
+                                            className="w-full bg-black/40 border border-[#ff006e]/20 p-3 text-[9px] mono text-[#ff006e] outline-none focus:border-[#ff006e] min-h-[40px] h-[40px] focus:h-[100px] transition-all scrollbar-hide uppercase"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' && e.ctrlKey) {
+                                                    const text = e.target.value;
+                                                    if (!text) return;
+                                                    const blob = new Blob([text], { type: 'text/plain' });
+                                                    const file = new File([blob], `log_${Date.now()}.txt`, { type: 'text/plain' });
+                                                    handleIngestFile({ target: { files: [file] } }, 'CORE_LOG');
+                                                    e.target.value = '';
+                                                }
+                                            }}
+                                        />
+                                        <div className="absolute bottom-1 right-2 text-[6px] mono text-[#ff006e]/20 pointer-events-none group-focus-within:opacity-100 opacity-0 transition-opacity">
+                                            [ CTRL + ENTER TO SYNC ]
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Universal Ingest Menu */}
                                 {isMe && (
@@ -1865,6 +1941,7 @@ export const ProfileView = ({ user: currentUser, tracks: allTracks, onLogout, on
                                         user={displayUser}
                                         tracks={isMe ? allTracks.filter(t => t.isOwned || t.isLiked || String(t.artistUserId || t.ArtistUserId) === String(currentUser?.id || currentUser?.Id)) : profileTracks}
                                         onSubmit={handleUpdateProfile}
+                                        onLogout={onLogout}
                                         onColorPreview={(colors) => {
                                             // Update local state to trigger re-render of SpatialRoomLayout with new colors
                                             setProfileData(prev => ({
@@ -1959,7 +2036,7 @@ const Accordion = ({ title, isOpen, onToggle, children }) => (
 
 
 
-const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview }) => {
+const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout }) => {
     const [activeTab, setActiveTab] = useState('identity');
     const [name, setName] = useState(user?.username || user?.Username || '');
     const [bio, setBio] = useState(user?.biography || user?.Biography || user?.bio || user?.Bio || '');
@@ -2403,9 +2480,16 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview }) => {
                 </div>
             )}
 
-            <div className="mt-auto pt-10">
+            <div className="mt-auto pt-10 flex flex-col gap-4">
                 <button type="submit" className="w-full py-6 bg-black border border-[var(--theme-color)] text-[var(--theme-color)] font-bold uppercase tracking-[0.5em] hover:bg-[var(--theme-color)] hover:text-black transition-all shadow-[0_0_30px_rgba(var(--theme-color-rgb),0.15)]">
                     SYNC_IDENTITY_TO_CORE
+                </button>
+                <button
+                    type="button"
+                    onClick={onLogout}
+                    className="w-full py-3 text-[10px] text-[#ff006e]/40 hover:text-[#ff006e] font-black uppercase tracking-[0.3em] border border-[#ff006e]/10 hover:border-[#ff006e]/40 transition-all"
+                >
+                    [ TERMINATE_CURRENT_SESSION_LINK ]
                 </button>
             </div>
         </form>
@@ -2443,12 +2527,13 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
         return (
             <div className="flex-1 flex flex-col p-8 pt-16 gap-10 animate-in fade-in zoom-in-95 duration-300 overflow-y-auto custom-scrollbar">
                 <div className="border-b border-[#ff006e]/20 pb-4">
-                    <h3 className="text-2xl font-bold text-white uppercase tracking-tighter">// MODIFY_SEQUENCE_METADATA</h3>
+                    <h3 className="text-2xl font-bold text-white uppercase tracking-tighter">// MODIFY_PLAYLIST_METADATA
+                    </h3>
                 </div>
 
                 <div className="space-y-10 max-w-lg mx-auto w-full pb-10">
                     <div className="space-y-3">
-                        <label className="text-[10px] font-bold text-[#ff006e] uppercase tracking-[0.4em]">_SEQUENCE_NAME</label>
+                        <label className="text-[10px] font-bold text-[#ff006e] uppercase tracking-[0.4em]">_PLAYLIST_NAME</label>
                         <div className="relative">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ff006e] mono">{'>'}</span>
                             <input value={name} onChange={e => setName(e.target.value)} className="w-full bg-black border border-white/10 p-4 pl-10 text-white font-bold outline-none focus:border-[#ff006e] uppercase tracking-widest transition-all" />
@@ -2480,7 +2565,7 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
                     </div>
 
                     <button onClick={() => onDelete(playlist.id)} className="w-full py-4 border border-red-900/20 text-red-500/40 hover:text-red-500 hover:bg-red-500/5 font-bold uppercase tracking-widest transition-all text-[9px] mt-4">
-                        // DELETE_LOCAL_SEQUENCE_PERMANENTLY
+                        // DELETE_LOCAL_PLAYLIST_PERMANENTLY
                     </button>
                 </div>
             </div>
@@ -2501,7 +2586,7 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
                             </div>
                         )}
                         <div className="absolute top-2 left-2 px-2 py-0.5 bg-black border border-[#ff006e]/30 text-[9px] font-bold text-[#ff006e] z-10 mono uppercase">
-                            SEQ_{String(playlist.id).padStart(4, '0')}
+                            PL_{String(playlist.id).padStart(4, '0')}
                         </div>
                     </div>
                 </div>
@@ -2523,7 +2608,7 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
                     <div className="mt-auto pt-8 border-t border-[#ff006e]/10 space-y-4">
                         {tracks.length > 0 && (
                             <button onClick={() => onPlayAll?.(tracks)} className="w-full py-5 bg-[#ff006e]/10 border border-[#ff006e]/40 text-[#ff006e] font-bold uppercase tracking-[0.4em] text-[10px] transition-all hover:bg-[#ff006e] hover:text-black flex items-center justify-center gap-2 mb-4 shadow-[0_0_20px_#ff006e05] hover:shadow-[0_0_30px_#ff006e20]">
-                                <Play size={14} fill="currentColor" /> INITIALISE_SEQ
+                                <Play size={14} fill="currentColor" /> INITIALISE_PLAYLIST
                             </button>
                         )}
                         <button onClick={() => setIsEditing(true)} className="w-full py-3 bg-black border border-white/10 hover:border-[#ff006e] text-white/60 hover:text-[#ff006e] font-bold uppercase tracking-widest text-[9px] transition-all flex items-center justify-center gap-2">
