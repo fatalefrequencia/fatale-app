@@ -30,6 +30,23 @@ const hashStr = (s) => {
     return Math.abs(h);
 };
 
+const MapClock = React.memo(() => {
+    const [utcTime, setUtcTime] = useState('');
+
+    useEffect(() => {
+        const tick = () => {
+            const n = new Date();
+            const pad = v => String(v).padStart(2, '0');
+            setUtcTime(`${n.getUTCFullYear()}.${pad(n.getUTCMonth() + 1)}.${pad(n.getUTCDate())} ${pad(n.getUTCHours())}:${pad(n.getUTCMinutes())}:${pad(n.getUTCSeconds())} UTC`);
+        };
+        tick();
+        const id = setInterval(tick, 1000);
+        return () => clearInterval(id);
+    }, []);
+
+    return <span className="mono text-[10px] text-[#ff006e] ml-3 tabular-nums font-bold drop-shadow-[0_0_4px_rgba(255,0,110,0.3)]">{utcTime}</span>;
+});
+
 // ─── MAIN ──────────────────────────────────────────────────────────────────
 // ─── MAIN ──────────────────────────────────────────────────────────────────
 const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], favoriteStations = [] }) => {
@@ -45,7 +62,6 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
     const [youtubeResults, setYoutubeResults] = useState([]);
     const [searchingYoutube, setSearchingYoutube] = useState(false);
     const [activeSector, setActiveSector] = useState(null);
-    const [utcTime, setUtcTime] = useState('');
     const containerRef = useRef(null);
 
     // Stats
@@ -57,18 +73,6 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
     // Derived for rendering
     const pan = { x: viewState.x, y: viewState.y };
     const zoom = viewState.zoom;
-
-    // ── UTC CLOCK ──
-    useEffect(() => {
-        const tick = () => {
-            const n = new Date();
-            const pad = v => String(v).padStart(2, '0');
-            setUtcTime(`${n.getUTCFullYear()}.${pad(n.getUTCMonth() + 1)}.${pad(n.getUTCDate())} ${pad(n.getUTCHours())}:${pad(n.getUTCMinutes())}:${pad(n.getUTCSeconds())} UTC`);
-        };
-        tick();
-        const id = setInterval(tick, 1000);
-        return () => clearInterval(id);
-    }, []);
 
     // ── DATA ──
     useEffect(() => {
@@ -418,7 +422,7 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                 <div className="hud-panel rounded-lg px-[18px] py-[10px] flex items-center gap-3">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e] blink shadow-[0_0_8px_#ff006e]" />
                     <span className="mono text-[10px] tracking-[0.4em] text-white/95 uppercase font-bold">Discovery // Node Map</span>
-                    <span className="mono text-[10px] text-[#ff006e] ml-3 tabular-nums font-bold drop-shadow-[0_0_4px_rgba(255,0,110,0.3)]">{utcTime}</span>
+                    <MapClock />
                 </div>
 
                 {/* Search */}
@@ -982,4 +986,4 @@ const RadarMinimap = ({ artists, pan, zoom, sectors, containerRef, onNavigate, o
     );
 };
 
-export default DiscoveryMapView;
+export default React.memo(DiscoveryMapView);

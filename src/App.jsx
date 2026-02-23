@@ -30,11 +30,11 @@ import { NotificationProvider, useNotification } from './contexts/NotificationCo
 
 // --- BASE DE DATOS MOCK (Sincronizada en toda la app) ---
 const TRACKS = [
-  { id: 'mock-1', title: 'youtsplit', artist: 'menoboy', album: 'digital_void', duration: '2:09', cover: 'O', artistUserId: 3, price: 0, isLocked: false, playCount: 1450 },
-  { id: 'mock-2', title: 'glitch_heart', artist: 'cyber_vamp', album: 'neon_night', duration: '3:15', cover: 'V', artistUserId: 3, price: 5, isLocked: true, playCount: 890 },
-  { id: 'mock-3', title: 'thorny_path', artist: 'dark_pixel', album: 'vamp_glitch', duration: '1:45', cover: 'P', artistUserId: 3, price: 2, isLocked: false, playCount: 3200 },
-  { id: 'mock-4', title: 'neon_skull', artist: 'retro_void', album: 'system_error', duration: '4:20', cover: 'S', artistUserId: 99, price: 10, isLocked: true, playCount: 120 },
-  { id: 'mock-5', title: 'digital_tear', artist: 'emo_system', album: 'null_life', duration: '2:55', cover: 'E', artistUserId: 1, price: 1, isLocked: false, playCount: 5500 },
+  { id: 'mock-1', title: 'youtsplit', artist: 'menoboy', album: 'digital_void', duration: '2:09', cover: 'O', artistUserId: 3, price: 0, isLocked: false, playCount: 1450, source: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
+  { id: 'mock-2', title: 'glitch_heart', artist: 'cyber_vamp', album: 'neon_night', duration: '3:15', cover: 'V', artistUserId: 3, price: 5, isLocked: true, playCount: 890, source: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
+  { id: 'mock-3', title: 'thorny_path', artist: 'dark_pixel', album: 'vamp_glitch', duration: '1:45', cover: 'P', artistUserId: 3, price: 2, isLocked: false, playCount: 3200, source: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' },
+  { id: 'mock-4', title: 'neon_skull', artist: 'retro_void', album: 'system_error', duration: '4:20', cover: 'S', artistUserId: 99, price: 10, isLocked: true, playCount: 120, source: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3' },
+  { id: 'mock-5', title: 'digital_tear', artist: 'emo_system', album: 'null_life', duration: '2:55', cover: 'E', artistUserId: 1, price: 1, isLocked: false, playCount: 5500, source: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3' },
 ];
 
 const RADIO_STATIONS = [
@@ -286,7 +286,7 @@ function App() {
 
             const isMine = artistUserId !== undefined && artistUserId !== null && String(artistUserId) === String(currentUserId);
 
-            const trackSource = t.source || t.Source;
+            const trackSource = t.source || t.Source || t.filePath || t.FilePath;
             const isYT = trackSource?.startsWith('youtube:');
 
             const mappedTrack = {
@@ -300,7 +300,7 @@ function App() {
               artistUserId: artistUserId,
               duration: t.duration || t.Duration || '3:00',
               cover: getMediaUrl(t.coverImageUrl || t.CoverImageUrl),
-              source: isYT ? trackSource : getMediaUrl(t.filePath || t.FilePath),
+              source: isYT ? trackSource : getMediaUrl(t.filePath || t.FilePath || t.source || t.Source),
               price: rawPrice,
               isLocked: rawIsLocked,
               isOwned: ownedTrackIds.has(trackId) || isMine,
@@ -517,7 +517,8 @@ function App() {
       if (isYT) {
         try {
           if (youtubePlayer && typeof youtubePlayer.getPlayerState === 'function' && typeof youtubePlayer.playVideo === 'function') {
-            if (youtubePlayer.getPlayerState() !== 1) {
+            const state = youtubePlayer.getPlayerState();
+            if (state !== 1 && state !== 3) { // 1=Playing, 3=Buffering
               youtubePlayer.playVideo();
             }
           }
@@ -527,7 +528,9 @@ function App() {
       } else {
         // Local
         if (audio.paused && audio.src) {
-          audio.play().catch(e => console.warn("Auto-play blocked", e));
+          audio.play().catch(e => {
+            if (e.name !== 'AbortError') console.warn("Auto-play blocked", e);
+          });
         }
       }
     } else {
@@ -547,7 +550,7 @@ function App() {
       }
     }
 
-  }, [currentTrackIndex, tracks, isPlaying, isYoutubeMode, youtubePlayer]); // removed extensive dependencies for cleaner logic
+  }, [currentTrackIndex, tracks, isPlaying, isYoutubeMode, youtubePlayer]);
 
   const handleNext = () => {
     setCurrentTrackIndex((prev) => (prev + 1) % (tracks.length || 1));
@@ -995,39 +998,38 @@ function App() {
         onEnded={handleNext}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
+        preload="auto"
       />
 
       {/* PERSISTENT YOUTUBE PLAYER */}
-      {isYoutubeMode && (
-        <div className="absolute top-0 left-0 w-1 h-1 overflow-hidden opacity-0 pointer-events-none">
-          <YouTube
-            videoId={currentTrack?.source?.startsWith('youtube:') ? currentTrack.source.split(':')[1].trim() : ''}
-            onReady={(e) => {
-              console.log("[YOUTUBE] Player Ready");
-              setYoutubePlayer(e.target);
-            }}
-            onStateChange={(e) => {
-              console.log("[YOUTUBE] State Change:", e.data);
-              // 0 = Ended, 1 = Playing, 2 = Paused
-              if (e.data === 0) handleNext();
-              if (e.data === 1 && !isPlaying) setIsPlaying(true);
-              if (e.data === 2 && isPlaying) setIsPlaying(false);
-            }}
-            opts={{
-              height: '0',
-              width: '0',
-              playerVars: {
-                autoplay: isPlaying ? 1 : 0,
-                controls: 0,
-                disablekb: 1,
-                fs: 0,
-                iv_load_policy: 3,
-                modestbranding: 1,
-              },
-            }}
-          />
-        </div>
-      )}
+      <div className={`absolute top-0 left-0 w-1 h-1 overflow-hidden opacity-0 pointer-events-none ${!isYoutubeMode ? 'hidden' : ''}`}>
+        <YouTube
+          videoId={currentTrack?.source?.startsWith('youtube:') ? currentTrack.source.split(':')[1].trim() : ''}
+          onReady={(e) => {
+            console.log("[YOUTUBE] Player Ready");
+            setYoutubePlayer(e.target);
+          }}
+          onStateChange={(e) => {
+            console.log("[YOUTUBE] State Change:", e.data);
+            // 0 = Ended, 1 = Playing, 2 = Paused
+            if (e.data === 0) handleNext();
+            if (e.data === 1 && !isPlaying) setIsPlaying(true);
+            if (e.data === 2 && isPlaying) setIsPlaying(false);
+          }}
+          opts={{
+            height: '0',
+            width: '0',
+            playerVars: {
+              autoplay: isPlaying ? 1 : 0,
+              controls: 0,
+              disablekb: 1,
+              fs: 0,
+              iv_load_policy: 3,
+              modestbranding: 1,
+            },
+          }}
+        />
+      </div>
 
       <AnimatePresence mode="wait">
         {activeView === 'login' ? (
@@ -1100,7 +1102,7 @@ const LoginView = ({ onLogin }) => (
   </motion.div>
 );
 
-const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal, favoriteStations }) => {
+const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal, favoriteStations }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   return (
@@ -1255,7 +1257,7 @@ const Dashboard = ({ activeView, setView, onLogout, currentTrackIndex, setCurren
       </AnimatePresence>
     </div>
   );
-};
+});
 
 // --- MINI PLAYER COMPONENT ---
 const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView }) => {
@@ -1324,7 +1326,7 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
 
 
 // --- CONTENIDO: FEED (3 COLUMNAS) ---
-const FeedContent = ({ setView, onPlayPlaylist, navigateToProfile, user, favoriteStations }) => {
+const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, user, favoriteStations }) => {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -2035,7 +2037,7 @@ const FeedContent = ({ setView, onPlayPlaylist, navigateToProfile, user, favorit
       </div>
     </motion.div>
   );
-};
+});
 
 // --- CONTENIDO: PLAYER (PANTALLA COMPLETA) ---
 const PlayerContent = ({
@@ -2089,7 +2091,7 @@ const PlayerContent = ({
 };
 // --- COMPONENTES AUXILIARES ---
 
-const SidebarLink = ({ icon, label, active, onClick, collapsed, hasNotification }) => (
+const SidebarLink = React.memo(({ icon, label, active, onClick, collapsed, hasNotification }) => (
   <button
     onClick={onClick}
     className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all duration-300 group border relative
@@ -2107,20 +2109,20 @@ const SidebarLink = ({ icon, label, active, onClick, collapsed, hasNotification 
       <div className="absolute top-2 right-2 w-2 h-2 bg-[#ff006e] rounded-full shadow-[0_0_8px_#ff006e] animate-pulse" />
     )}
   </button>
-);
+));
 
-const NavButton = ({ icon, active, onClick, hasNotification }) => (
+const NavButton = React.memo(({ icon, active, onClick, hasNotification }) => (
   <button onClick={onClick} className="relative p-2 transition-all group">
     <div className={`${active ? 'text-white scale-125' : 'text-[#ff006e]/40 hover:text-[#ff006e]'} `}>{icon}</div>
     {hasNotification && !active && (
       <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-[#ff006e] rounded-full shadow-[0_0_5px_#ff006e]" />
     )}
   </button>
-);
+));
 
-const QuickActionButton = ({ label, icon }) => (
+const QuickActionButton = React.memo(({ label, icon }) => (
   <button className="w-full flex items-center justify-between p-3 rounded-lg border border-[#ff006e]/10 text-[10px] font-bold text-[#ff006e]/60 hover:bg-[#ff006e10] hover:text-white transition-all uppercase">{label} {icon}</button>
-);
+));
 
 // --- DATOS DEL FEED (ACTUALIZADOS) ---
 const FEED_POSTS = [

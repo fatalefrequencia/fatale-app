@@ -53,6 +53,9 @@ export const IPodPlayer = ({
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isSearchingYoutube, setIsSearchingYoutube] = useState(false);
+    const [isDeletingPlaylist, setIsDeletingPlaylist] = useState(false);
+    const [activePlaylistId, setActivePlaylistId] = useState(null);
+    const fileInputRef = useRef(null);
     const [favorites, setFavorites] = useState(() => {
         try {
             const saved = localStorage.getItem('pod_favorites');
@@ -254,6 +257,8 @@ export const IPodPlayer = ({
                 { id: 'BACK_PL', label: '.. Back' },
                 { id: 'PLAY_PLAYLIST', label: 'Play', action: true },
                 { id: 'SHUFFLE_PLAYLIST', label: 'Shuffle', action: true },
+                { id: 'UPDATE_PLAYLIST_IMAGE', label: 'Update Image', action: true },
+                { id: 'DELETE_PLAYLIST', label: 'Delete Playlist', action: true, isDanger: true },
                 ...playlistTracks.map((t, i) => ({ id: i, label: t.title || t.Title || 'Untitled Track', originalTrack: t }))
             ];
         }
@@ -502,6 +507,7 @@ export const IPodPlayer = ({
 
                         setPlaylistTracks(normalizedTracks.map(t => ({ ...t, isOwned: true })));
                         setActivePlaylistName(name);
+                        setActivePlaylistId(plData.id || plData.Id);
                     } catch (e) { console.error(e); }
                 };
                 loadPlaylist();
@@ -515,6 +521,29 @@ export const IPodPlayer = ({
             if (item.id === 'BACK_PL') {
                 setScreen('PLAYLISTS');
                 setSelectedIndex(0);
+                return;
+            }
+            if (item.id === 'DELETE_PLAYLIST') {
+                const executeDelete = async () => {
+                    try {
+                        const API = await import('../services/api').then(m => m.default);
+                        await API.Playlists.delete(activePlaylistId);
+                        showNotification("PLAYLIST_TERMINATED", "Signal link purged from database.", "success");
+                        // Refresh playlists
+                        const res = await API.Playlists.getUserPlaylists(user?.id || user?.Id);
+                        setPlaylists(res.data || []);
+                        setScreen('PLAYLISTS');
+                        setSelectedIndex(0);
+                    } catch (e) {
+                        console.error(e);
+                        showNotification("PERMISSION_DENIED", "Unable to terminate signal link.", "error");
+                    }
+                };
+                executeDelete();
+                return;
+            }
+            if (item.id === 'UPDATE_PLAYLIST_IMAGE') {
+                fileInputRef.current?.click();
                 return;
             }
             if (item.id === 'PLAY_PLAYLIST') {
@@ -766,8 +795,43 @@ export const IPodPlayer = ({
         };
     }, [isDragging]);
 
+    const handleImageUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            const API = await import('../services/api').then(m => m.default);
+            const formData = new FormData();
+            formData.append('File', file);
+
+            // We use a temporary upload to get a URL, or the API might support direct update
+            // Assuming we need to upload first then update playlist
+            const uploadRes = await API.Studio.upload(formData);
+            const imageUrl = uploadRes.data.imageUrl || uploadRes.data.ImageUrl;
+
+            await API.Playlists.update(activePlaylistId, { imageUrl });
+            showNotification("VISUAL_SYNC", "Playlist pattern updated successfully.", "success");
+
+            // Refresh
+            const res = await API.Playlists.getUserPlaylists(user?.id || user?.Id);
+            setPlaylists(res.data || []);
+            setScreen('PLAYLISTS');
+            setSelectedIndex(0);
+        } catch (err) {
+            console.error(err);
+            showNotification("SYNC_ERROR", "Failed to update visual pattern.", "error");
+        }
+    };
+
     return (
         <div className="w-full h-full flex items-center justify-center p-4">
+            <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleImageUpload}
+            />
 
             {/* We will render it conditionally below via a helper or direct import if defined at top */}
 

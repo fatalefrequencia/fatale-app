@@ -9,6 +9,11 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    transition: align-items 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.spatial-container:not(.room-mode-active) {
+    align-items: flex-start;
 }
 
 .desk-surface {
@@ -93,17 +98,23 @@
 
 /* Mobile Adaptability */
 @media (max-width: 1024px) {
+    .spatial-container {
+        align-items: flex-start;
+        padding-top: env(safe-area-inset-top, 20px);
+    }
+
     .monitor-frame {
-        width: 95%;
-        height: 60vh;
-        max-width: 95vw;
-        max-height: 60vh;
-        margin-top: 140px;
-        border: 1px solid var(--theme-color, #ff006e)20;
+        width: 100%;
+        height: auto;
+        min-height: 100vh;
+        max-width: 100vw;
+        max-height: none;
+        margin-top: 0 !important;
+        border: none;
         transform: none !important;
-        background: rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(15px) saturate(150%);
-        border-radius: 8px;
+        background: transparent;
+        backdrop-filter: none;
+        border-radius: 0;
     }
 
     .room-mode-active .monitor-frame {
@@ -163,21 +174,36 @@
 }
 
 .identity-pic {
-    width: 80px;
-    height: 80px;
-    border: 2px solid var(--theme-color);
-    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    border: 1px solid var(--theme-color);
+    border-radius: 4px;
+    /* Square/Angular Hardware Look */
     overflow: hidden;
-    box-shadow: 0 0 20px rgba(var(--theme-color-rgb), 0.3);
+    box-shadow:
+        0 0 30px rgba(var(--theme-color-rgb), 0.2),
+        inset 0 0 10px rgba(var(--theme-color-rgb), 0.1);
     background: #000;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
     pointer-events: all;
     cursor: pointer;
+    position: relative;
+}
+
+.identity-pic::after {
+    content: 'BIO_SCN';
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    font-size: 6px;
+    color: var(--theme-color);
+    font-family: 'Share Tech Mono', monospace;
+    opacity: 0.5;
 }
 
 .identity-pic:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 30px rgba(var(--theme-color-rgb), 0.5);
+    transform: scale(1.05) translateZ(20px);
+    box-shadow: 0 0 40px rgba(var(--theme-color-rgb), 0.4);
     border-color: #fff;
 }
 
@@ -243,13 +269,125 @@
     max-width: 900px;
     height: auto;
     max-height: 70vh;
-    margin-top: 280px;
-    /* Increased to avoid identity overlap */
+    margin-top: 60px;
+    /* Reduced margin to utilize top space in monitor mode */
 }
 
 .monitor-frame.frameless .monitor-screen {
     background: transparent;
-    padding-bottom: 120px;
+    padding-bottom: 40px;
+    /* Reduced from 120px to better fit the grid */
+}
+
+/* SOCIAL MONITOR GRID (RETRO-SOCIAL / FOTOLOG STYLE) */
+.social-monitor-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 30px;
+    height: 100%;
+    margin-top: 60px;
+    /* Clear global header */
+}
+
+.social-sidebar {
+    background: rgba(0, 0, 0, 0.4);
+    border-right: 1px solid rgba(var(--theme-color-rgb), 0.1);
+    padding: 30px;
+    height: 100%;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.social-sidebar::-webkit-scrollbar {
+    display: none;
+}
+
+.social-main-pane {
+    padding: 30px 40px 30px 10px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.social-pic-frame {
+    width: 100%;
+    aspect-ratio: 1;
+    border: 1px solid var(--theme-color);
+    background: #000;
+    padding: 2px;
+    box-shadow: 0 0 20px rgba(var(--theme-color-rgb), 0.1);
+}
+
+.social-pic-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.social-name {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 20px;
+    font-weight: 900;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.social-bio-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.5;
+    border-left: 2px solid var(--theme-color);
+    padding-left: 12px;
+}
+
+/* Mobile adjustments for the grid */
+@media (max-width: 1024px) {
+    .social-monitor-grid {
+        grid-template-columns: 1fr;
+        display: block;
+        margin-top: 0 !important;
+    }
+
+    .social-sidebar {
+        border-right: none;
+        border-bottom: 1px solid rgba(var(--theme-color-rgb), 0.1);
+        height: auto;
+        padding: 10px;
+    }
+
+    .social-profile-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 15px;
+        background: rgba(var(--theme-color-rgb), 0.05);
+        border: 1px solid rgba(var(--theme-color-rgb), 0.1);
+        border-radius: 8px;
+    }
+
+    .social-pic-frame {
+        width: 80px;
+        height: 80px;
+    }
+
+    .social-tabs-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 15px !important;
+        margin-bottom: 20px !important;
+        padding-bottom: 15px !important;
+    }
+
+    .social-tabs-header>.flex {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .social-main-pane {
+        padding: 20px 15px !important;
+    }
 }
 
 @media (max-width: 1024px) {
@@ -266,36 +404,55 @@
         font-size: 18px;
     }
 
+    .identity-container {
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(12px) saturate(160%);
+        padding: 15px 10px;
+        border-radius: 12px;
+        border: 1px solid rgba(var(--theme-color-rgb), 0.2);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
     .monitor-frame.frameless {
-        margin-top: 240px;
-        /* Reduced slightly for mobile */
+        margin-top: 0 !important;
         width: 100%;
         max-width: 100%;
         height: auto;
-        padding: 0 15px;
+        padding: 0;
     }
 
     /* Sticky Mobile Dock Navigation */
     .peripheral-dock {
-        position: fixed !important;
-        bottom: 110px !important;
-        /* Adjusted to be above MiniPlayer but visible */
+        position: relative !important;
+        /* Move with content scroll */
+        bottom: 0 !important;
         left: 0 !important;
-        right: 0 !important;
         transform: none !important;
         width: 100% !important;
-        margin: 0 !important;
-        z-index: 1000 !important;
-        background: rgba(0, 0, 0, 0.6) !important;
-        backdrop-filter: blur(20px) saturate(180%) !important;
-        border-top: 1px solid rgba(var(--theme-color-rgb), 0.3) !important;
-        border-left: none !important;
-        border-right: none !important;
-        border-radius: 0 !important;
-        padding: 10px 0 !important;
+        margin: 30px auto !important;
+        z-index: 10 !important;
+        background: rgba(var(--panel-bg-rgb), 0.3) !important;
+        backdrop-filter: blur(25px) saturate(200%) !important;
+        border: 1px solid rgba(var(--theme-color-rgb), 0.3) !important;
+        border-radius: 12px !important;
+        padding: 10px !important;
         display: flex !important;
         justify-content: space-around !important;
-        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4) !important;
+        box-shadow: none !important;
+    }
+
+    .peripheral-dock .dock-item svg {
+        width: 14px !important;
+        height: 14px !important;
+    }
+
+    /* Ensure track actions are visible on mobile (no hover) */
+    .social-main-pane .opacity-0 {
+        opacity: 0.6 !important;
+    }
+
+    .social-main-pane .group-hover\:opacity-100 {
+        opacity: 1 !important;
     }
 
     .peripheral-dock button span {
@@ -454,30 +611,72 @@
     position: absolute;
     inset: 0;
     z-index: 1;
-    padding: 300px 140px 120px 140px;
-    /* Increased top padding */
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    grid-auto-rows: 130px;
-    grid-auto-flow: dense;
-    gap: 15px;
+    padding: 480px 80px 150px 80px;
+    /* Safe padding for identity and dock */
     opacity: 0;
     pointer-events: none;
     transform: translateZ(-600px) scale(0.85);
     filter: blur(20px);
     transition:
-        transform 0.5s cubic-bezier(0.23, 1, 0.32, 1),
-        opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1),
-        filter 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        transform 0.6s cubic-bezier(0.23, 1, 0.32, 1),
+        opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1),
+        filter 0.6s cubic-bezier(0.23, 1, 0.32, 1);
     overflow-y: auto;
     overflow-x: hidden;
+    scroll-behavior: smooth;
 }
 
 .room-mode-active .display-wall {
     opacity: 1;
     pointer-events: all;
-    transform: translateZ(-350px) scale(1);
+    transform: translateZ(-300px) scale(1);
     filter: blur(0);
+}
+
+/* SECTOR ORGANIZATION */
+.wall-sector {
+    margin-bottom: 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.sector-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed rgba(var(--theme-color-rgb), 0.2);
+    margin-bottom: 10px;
+}
+
+.sector-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 8px;
+    color: var(--theme-color);
+    background: rgba(var(--theme-color-rgb), 0.1);
+    padding: 2px 6px;
+    border: 1px solid rgba(var(--theme-color-rgb), 0.2);
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.sector-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 4px;
+    text-shadow: 0 0 10px rgba(var(--theme-color-rgb), 0.3);
+    text-transform: uppercase;
+}
+
+.sector-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    grid-auto-rows: 140px;
+    grid-auto-flow: dense;
+    gap: 20px;
 }
 
 .wall-item {
@@ -648,10 +847,10 @@
 
     .display-wall {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        padding: 100px 20px 140px;
-        gap: 15px;
-        grid-auto-rows: 140px;
+        grid-template-columns: 1fr;
+        padding: 280px 20px 140px;
+        gap: 30px;
+        grid-auto-rows: auto;
         opacity: 0;
         transform: translateY(30px);
     }
