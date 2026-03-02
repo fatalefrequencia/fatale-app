@@ -97,6 +97,7 @@ function App() {
   const [redirectTrigger, setRedirectTrigger] = useState(null); // Refactored to fix RefError
   const [user, setUser] = useState(null);
   const [tracks, setTracks] = useState([]);
+  const [libraryTracks, setLibraryTracks] = useState([]);
 
   // Real-time Audio State
   const [currentTime, setCurrentTime] = useState(0);
@@ -300,36 +301,55 @@ function App() {
             const trackSource = t.source || t.Source || t.filePath || t.FilePath;
             const isYT = trackSource?.startsWith('youtube:');
 
+            // ── Skip tracks with no playable audio source (e.g. Archive placeholder entries)
+            const resolvedSource = isYT ? trackSource : getMediaUrl(t.filePath || t.FilePath || t.source || t.Source);
+            if (!resolvedSource || resolvedSource === BASE_API_URL || resolvedSource === `${BASE_API_URL}/`) return;
+
+            // ── Is this track from The Archive (system aggregator, UserId = null or artistName = 'The Archive')?
+            const artistName = t.album?.artist?.name || t.Album?.Artist?.Name || '';
+            const isArchiveTrack = artistUserId === null || artistUserId === undefined || artistName === 'The Archive';
+
             const mappedTrack = {
               ...t,
               id: trackId,
               title: t.title || t.Title || 'Unknown Title',
-              artist: t.album?.artist?.name || t.Album?.Artist?.Name || 'Unknown Artist',
+              artist: artistName || 'Unknown Artist',
               album: t.album?.title || t.Album?.Title || 'Unknown Album',
               albumId: t.album?.id || t.Album?.Id,
               artistId: t.album?.artist?.id || t.Album?.Artist?.Id || t.artistId,
               artistUserId: artistUserId,
               duration: t.duration || t.Duration || '3:00',
               cover: getMediaUrl(t.coverImageUrl || t.CoverImageUrl),
-              source: isYT ? trackSource : getMediaUrl(t.filePath || t.FilePath || t.source || t.Source),
+              source: resolvedSource,
               price: rawPrice,
               isLocked: rawIsLocked,
               isOwned: ownedTrackIds.has(trackId) || isMine,
               isLiked: likedTrackIds.has(trackId),
               playCount: t.playCount || t.PlayCount || 0,
-              isCached: cachedIds.has(Number(trackId)) || cachedIds.has(trackId)
+              isCached: cachedIds.has(Number(trackId)) || cachedIds.has(trackId),
+              isArchive: isArchiveTrack,
             };
 
             const key = getUniqueKey(mappedTrack);
             const metaKey = getMetaKey(mappedTrack);
 
             if (!uniqueTracksMap.has(key)) {
-              // If checking meta key, ensure we don't accidentally squash different versions if desired?
-              // For now, assume strict dedupe by name is preferred for cleaner library.
               if (metaKey && titleArtistMap.has(metaKey)) {
-                // We already have this song (by name), maybe from a previous loop? 
-                // Local loop runs 1st, so this is just handling duplicate locals if any.
-                console.log(`[DUPE] Skipping duplicate local: ${metaKey}`);
+                const existingKey = titleArtistMap.get(metaKey);
+                const existing = uniqueTracksMap.get(existingKey);
+                // Prefer real user uploads over Archive versions
+                if (isArchiveTrack && existing && !existing.isArchive) {
+                  // Archive duplicate of a real user track — skip it
+                  console.log(`[DUPE] Dropping Archive duplicate of user track: ${metaKey}`);
+                } else if (!isArchiveTrack && existing?.isArchive) {
+                  // Real user track replaces the Archive version
+                  console.log(`[DUPE REPLACE] Replacing Archive track with user upload: ${metaKey}`);
+                  uniqueTracksMap.delete(existingKey);
+                  uniqueTracksMap.set(key, mappedTrack);
+                  titleArtistMap.set(metaKey, key);
+                } else {
+                  console.log(`[DUPE] Skipping duplicate local: ${metaKey}`);
+                }
               } else {
                 uniqueTracksMap.set(key, mappedTrack);
                 if (metaKey) titleArtistMap.set(metaKey, key);
@@ -399,16 +419,19 @@ function App() {
         }
 
         const allTracks = Array.from(uniqueTracksMap.values());
-
-        setTracks(allTracks.length > 0 ? allTracks : TRACKS);
+        setLibraryTracks(allTracks.length > 0 ? allTracks : TRACKS);
+        // Initial load: fill queue with all tracks if queue is currently empty
+        setTracks(prev => prev.length === 0 ? (allTracks.length > 0 ? allTracks : TRACKS) : prev);
 
       } else {
-        // Fallback for non-logged in (shouldn't happen often in this view)
-        setTracks(TRACKS);
+        const fall = TRACKS;
+        setLibraryTracks(fall);
+        setTracks(prev => prev.length === 0 ? fall : prev);
       }
     } catch (error) {
       console.error("Failed to fetch tracks", error);
-      setTracks(TRACKS);
+      setLibraryTracks(TRACKS);
+      setTracks(prev => prev.length === 0 ? TRACKS : prev);
     }
   };
 
@@ -947,6 +970,7 @@ function App() {
     // 4. Update UI state
     setUser(null);
     setTracks([]); // Clear tracks to prevent stale keys
+    setLibraryTracks([]); // Clear library tracks
     setGlobalStats(null); // Clear stats
     setView('login');
     setViewingUserId(null);
@@ -1096,6 +1120,7 @@ function App() {
               onExitProfile={() => setViewOriginal(previousView)}
               activeMessageUser={activeMessageUser}
               setActiveMessageUser={setActiveMessageUser}
+              libraryTracks={libraryTracks}
             />
           </>
         )}
@@ -1123,7 +1148,7 @@ const LoginView = ({ onLogin }) => (
   </motion.div>
 );
 
-const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal, favoriteStations, onExitProfile, activeMessageUser, setActiveMessageUser }) => {
+const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, libraryTracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal, favoriteStations, onExitProfile, activeMessageUser, setActiveMessageUser }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   return (
@@ -1183,7 +1208,7 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
             {activeView === 'discovery' && (
               <DiscoveryMapView
                 key="discovery"
-                allTracks={tracks}
+                allTracks={libraryTracks}
                 onPlayPlaylist={handlePlayPlaylist}
                 onLike={onLike}
                 onCache={onCache} // PASS CACHE
