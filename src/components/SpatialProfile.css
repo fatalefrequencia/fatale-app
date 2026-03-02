@@ -54,7 +54,6 @@
     display: flex;
     flex-direction: column;
     border-radius: 4px;
-    transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .monitor-screen {
@@ -262,21 +261,24 @@
 
 /* Frameless Monitor Optimization */
 .monitor-frame.frameless {
-    background: transparent;
-    border: none;
-    box-shadow: none;
+    background: rgba(0, 0, 0, 0.88);
+    border: 1px solid rgba(var(--theme-color-rgb), 0.25);
+    box-shadow:
+        0 0 60px rgba(0, 0, 0, 0.8),
+        0 0 30px rgba(var(--theme-color-rgb), 0.08),
+        inset 0 0 40px rgba(0, 0, 0, 0.6);
     width: 100%;
     max-width: 900px;
     height: auto;
-    max-height: 70vh;
+    max-height: 75vh;
     margin-top: 60px;
-    /* Reduced margin to utilize top space in monitor mode */
+    backdrop-filter: blur(2px);
+    border-radius: 2px;
 }
 
 .monitor-frame.frameless .monitor-screen {
-    background: transparent;
+    background: rgba(0, 0, 0, 0.5);
     padding-bottom: 40px;
-    /* Reduced from 120px to better fit the grid */
 }
 
 /* SOCIAL MONITOR GRID (RETRO-SOCIAL / FOTOLOG STYLE) */
@@ -624,6 +626,15 @@
     overflow-y: auto;
     overflow-x: hidden;
     scroll-behavior: smooth;
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.display-wall::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
 }
 
 .room-mode-active .display-wall {

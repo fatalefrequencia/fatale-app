@@ -2,21 +2,28 @@
 
 @layer utilities {
     .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
+        width: 4px;
         height: 6px;
     }
 
+    @supports (-moz-appearance:none) {
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 0, 110, 0.5) transparent;
+        }
+    }
+
     .custom-scrollbar::-webkit-scrollbar-track {
-        background: #020202;
+        background: transparent;
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #333;
-        border-radius: 3px;
+        background: rgba(255, 0, 110, 0.3);
+        border-radius: 4px;
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: #ff006e;
+        background: rgba(255, 0, 110, 0.8);
     }
 
     .custom-scrollbar-sharp::-webkit-scrollbar {

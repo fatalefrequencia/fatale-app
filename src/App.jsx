@@ -77,10 +77,20 @@ const getMediaUrl = (path) => {
 
 // --- COMPONENTE PRINCIPAL ---
 function App() {
-  const [activeView, setView] = useState('login');
+  const [activeView, setViewOriginal] = useState('login');
+  const [previousView, setPreviousView] = useState('discovery');
   const [viewingUserId, setViewingUserId] = useState(null);
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const { showNotification } = useNotification();
+
+  // Navigation Wrapper
+  const setView = (newView) => {
+    if (activeView !== newView && activeView !== 'login') {
+      setPreviousView(activeView);
+    }
+    setViewOriginal(newView);
+  };
+
   // login, discovery, feed, profile, player
   const [currentTrackIndex, setCurrentTrackIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -116,6 +126,7 @@ function App() {
   };
   const [userPlaylists, setUserPlaylists] = useState([]);
   const [profileInitialModal, setProfileInitialModal] = useState(null);
+  const [activeMessageUser, setActiveMessageUser] = useState(null);
 
 
 
@@ -504,11 +515,16 @@ function App() {
       }
 
       // Handle Local Audio Source Change
-      if (track.source && audio.getAttribute('data-playing-src') !== track.source) {
+      const currentSrc = audio.getAttribute('data-playing-src');
+      if (track.source && (currentSrc !== track.source)) {
+        console.log(`[PLAYER] Loading new source: ${track.source}`);
         audio.src = track.source;
         audio.setAttribute('data-playing-src', track.source);
         audio.load();
         setCurrentTime(0);
+      } else if (track.source && currentSrc === track.source && isPlaying && audio.paused) {
+        // If same source but we are paused and want to play, just play
+        // This handles cases where we might have stopped/paused at the end
       }
     }
 
@@ -940,7 +956,10 @@ function App() {
   const navigateToProfile = (id, initialModal = null) => {
     setViewingUserId(id);
     setProfileInitialModal(initialModal);
-    setView('profile');
+    if (activeView !== 'profile' && activeView !== 'login') {
+      setPreviousView(activeView);
+    }
+    setViewOriginal('profile');
   };
 
   const handleCache = async (track) => {
@@ -1072,9 +1091,11 @@ function App() {
               onRefreshPlaylists={fetchPlaylists}
               redirectTrigger={redirectTrigger} // Pass the redirect signal
               setRedirectTrigger={setRedirectTrigger} // PASS THE SETTER
-              profileInitialModal={profileInitialModal}
               setProfileInitialModal={setProfileInitialModal}
               favoriteStations={favoriteStations}
+              onExitProfile={() => setViewOriginal(previousView)}
+              activeMessageUser={activeMessageUser}
+              setActiveMessageUser={setActiveMessageUser}
             />
           </>
         )}
@@ -1102,7 +1123,7 @@ const LoginView = ({ onLogin }) => (
   </motion.div>
 );
 
-const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal, favoriteStations }) => {
+const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal, favoriteStations, onExitProfile, activeMessageUser, setActiveMessageUser }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   return (
@@ -1195,6 +1216,8 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
                 initialModal={profileInitialModal}
                 onClearInitialModal={() => setProfileInitialModal(null)}
                 isPlaying={isPlaying}
+                onExitProfile={onExitProfile}
+                onMessageUser={(u) => { setActiveMessageUser(u); setView('messages'); }}
               />
             )}
             {activeView === 'player' && <PlayerContent
@@ -1222,7 +1245,7 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
               navigateToProfile={navigateToProfile}
               onPlayPlaylist={handlePlayPlaylist}
             />}
-            {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} />}
+            {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} initialChatUser={activeMessageUser} />}
             {activeView === 'settings' && (
               <div key="settings" className="flex items-center justify-center h-full text-white/50 uppercase tracking-widest text-xs">
                 Settings Module Offline

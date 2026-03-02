@@ -5,11 +5,11 @@ import UploadTrackView from './UploadTrackView';
 import ContentModal from './ContentModal';
 import './SpatialProfile.css';
 import {
-    Terminal, Cpu, Database, Hash, Shield, Code, ChevronRight, Play, X,
+    Terminal, Cpu, Database, Hash, Shield, Code, ChevronRight, Play, X, Music,
     RefreshCw, Plus, Frown, Globe, Lock, PlayCircle, Edit3, Send, Library, Radio,
     ChevronDown, LogOut, Upload, MessageSquare, MapPin, Calendar, Activity,
     Eye, Cpu as Processor, Zap, Search, Palette, Type, Layout, Maximize2, Monitor,
-    Camera, Video, Book, ChevronLeft, Star, Share2
+    Camera, Video, Book, ChevronLeft, Star, Share2, Link
 } from 'lucide-react';
 import { useNotification } from '../contexts/NotificationContext';
 
@@ -78,6 +78,7 @@ const CyberDust = ({ count = 30 }) => (
 const SideTerminal = ({ title, children, side = "left", isOpen, onClose, roomMode }) => (
     <motion.div
         className={`side-terminal ${side} ${isOpen ? 'open' : ''} custom-scrollbar`}
+        initial={roomMode === 'room' ? false : { opacity: 0, x: side === 'left' ? -100 : 100, scale: 0.9, filter: "blur(10px)" }}
         animate={roomMode === 'room' ? {
             opacity: 0,
             x: side === 'left' ? -100 : 100,
@@ -91,7 +92,7 @@ const SideTerminal = ({ title, children, side = "left", isOpen, onClose, roomMod
             filter: "blur(0px)",
             pointerEvents: "auto"
         }}
-        transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+        transition={{ type: "tween", duration: 0.6, ease: "easeInOut" }}
     >
         <div className="terminal-header flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -112,13 +113,14 @@ const SideTerminal = ({ title, children, side = "left", isOpen, onClose, roomMod
     </motion.div>
 );
 
-const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, leftOpen, rightOpen, onToggleLeft, onToggleRight, bannerUrl, wallpaperVideoUrl, profileImageUrl, biography, themeColor, textColor, backgroundColor, isGlass, previewThemeColor, previewTextColor, previewBackgroundColor, previewIsGlass, onUpload, roomMode, setRoomMode, isPlaying, onExpandContent, journal, gallery, tracks, playlists = [], onPlayTrack, onPlayPlaylist, isMe }) => {
+const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, leftOpen, rightOpen, onToggleLeft, onToggleRight, bannerUrl, wallpaperVideoUrl, profileImageUrl, biography, themeColor, textColor, backgroundColor, isGlass, previewThemeColor, previewTextColor, previewBackgroundColor, previewIsGlass, onUpload, onModifyId, onLogout, roomMode, setRoomMode, isPlaying, onExpandContent, journal, gallery, tracks, uid, playlists = [], onPlayTrack, onPlayPlaylist, isMe, onExitProfile, onMessageClick }) => {
     // Use preview colors if available, otherwise fall back to saved user props
     const activeTheme = previewThemeColor || themeColor || '#ff006e';
     const activeText = previewTextColor || textColor || '#ffffff';
     const activeBackground = previewBackgroundColor || backgroundColor || '#000000';
     const activeIsGlass = (previewIsGlass !== undefined && previewIsGlass !== null) ? previewIsGlass : (isGlass !== undefined ? isGlass : false);
     const [scrolled, setScrolled] = useState(false);
+    const [isJournalDetailed, setIsJournalDetailed] = useState(false);
 
     return (
         <div className={`spatial-container ${roomMode === 'room' ? 'room-mode-active' : ''}`} style={{
@@ -154,7 +156,43 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
             <div className="desk-surface" />
             <CyberDust />
 
-            {/* Minimalist Identity Overlay */}
+            {/* Profile Return Navigation (Room View Only) */}
+            {roomMode === 'room' && (
+                <>
+                    <div className="absolute top-6 left-6 z-[200] flex items-center gap-4">
+                        {onExitProfile && (
+                            <button
+                                onClick={onExitProfile}
+                                className="p-2 bg-black/40 backdrop-blur-md border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition-all rounded-full"
+                                title="Return to Previous Location"
+                            >
+                                <ChevronLeft size={24} />
+                            </button>
+                        )}
+                        {!isMe && onMessageClick && (
+                            <button
+                                onClick={onMessageClick}
+                                className="hidden lg:block p-2 bg-[#ff006e]/20 backdrop-blur-md border border-[#ff006e]/40 text-[#ff006e] hover:bg-[#ff006e] hover:text-black transition-all rounded-full shadow-[0_0_15px_rgba(255,0,110,0.3)]"
+                                title="Send Message"
+                            >
+                                <MessageSquare size={20} />
+                            </button>
+                        )}
+                    </div>
+                    {!isMe && onMessageClick && (
+                        <div className="absolute top-6 right-6 z-[200] lg:hidden">
+                            <button
+                                onClick={onMessageClick}
+                                className="p-2 bg-[#ff006e]/20 backdrop-blur-md border border-[#ff006e]/40 text-[#ff006e] hover:bg-[#ff006e] hover:text-black transition-all rounded-full shadow-[0_0_15px_rgba(255,0,110,0.3)]"
+                                title="Send Message"
+                            >
+                                <MessageSquare size={20} />
+                            </button>
+                        </div>
+                    )}
+                </>
+            )}
+
             {/* Identity Overlay - Only show in Room mode to avoid redundancy with Social Sidebar */}
             {roomMode === 'room' && (
                 <div className="profile-identity-overlay">
@@ -206,10 +244,12 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                         </div>
                     </div>
                 </div>
-            )}
+            )
+            }
 
             <DisplayWall
                 tracks={tracks}
+                uid={uid}
                 gallery={gallery}
                 journal={journal}
                 playlists={playlists}
@@ -219,9 +259,22 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                 onPlayPlaylist={onPlayPlaylist}
             />
 
+            {/* LEFT SIDE TERMINAL — Desktop only */}
+            <div className="hidden xl:flex">
+                <SideTerminal
+                    title="STATUS_MONITOR"
+                    side="left"
+                    isOpen={leftOpen}
+                    onClose={() => onToggleLeft(false)}
+                    roomMode={roomMode}
+                >
+                    {leftContent}
+                </SideTerminal>
+            </div>
+
             <motion.div
                 className="monitor-frame frameless"
-                initial={{ rotateX: 5, y: 30, opacity: 0, scale: 0.95, translateZ: -100 }}
+                initial={roomMode === 'room' ? false : { rotateX: 5, y: 30, opacity: 0, scale: 0.95, translateZ: -100 }}
                 animate={roomMode === 'room' ? {
                     rotateX: 25,
                     y: -300,
@@ -237,12 +290,40 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                     translateZ: 0,
                     filter: "blur(0px) brightness(1)"
                 }}
-                transition={{ duration: 1.2, ease: [0.23, 1, 0.32, 1] }}
+                transition={{ type: "tween", duration: 0.8, ease: "easeInOut" }}
             >
                 <div className="monitor-screen custom-scrollbar relative">
                     <DataStream />
-                    <div className="relative z-10 h-full overflow-y-auto custom-scrollbar">
+                    <div className="relative z-10 h-full overflow-y-auto custom-scrollbar pb-12">
+                        <div className="absolute top-4 left-4 z-[100] flex gap-2">
+                            {isMe && onLogout && (
+                                <button
+                                    onClick={onLogout}
+                                    className="px-3 py-1.5 bg-black/40 backdrop-blur-md border border-[#ff006e]/20 text-[#ff006e]/60 hover:text-[#ff006e] hover:border-[#ff006e] transition-all rounded flex items-center gap-2 mono text-[9px] font-bold group/logout"
+                                >
+                                    <LogOut size={12} className="group-hover/logout:animate-pulse" />
+                                    LOGOUT
+                                </button>
+                            )}
+                            {isMe && onModifyId && (
+                                <button
+                                    onClick={onModifyId}
+                                    className="px-3 py-1.5 bg-[#ff006e]/10 backdrop-blur-md border border-[#ff006e]/30 text-[#ff006e] hover:bg-[#ff006e] hover:text-black transition-all rounded mono text-[9px] font-black uppercase tracking-widest shadow-[0_0_10px_rgba(255,0,110,0.2)]"
+                                >
+                                    MODIFY_ID
+                                </button>
+                            )}
+                        </div>
                         <div className="absolute top-4 right-4 z-[100] flex gap-2">
+                            {onExitProfile && (
+                                <button
+                                    onClick={onExitProfile}
+                                    className="p-2 bg-black/40 backdrop-blur-md border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition-all rounded flex items-center gap-2 mono text-[9px] font-bold"
+                                    title="Exit to Previous Location"
+                                >
+                                    <LogOut size={14} /> EXIT_CORE
+                                </button>
+                            )}
                             {isMe && onUpload && (
                                 <button
                                     onClick={onUpload}
@@ -253,7 +334,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                                 </button>
                             )}
                             <button
-                                onClick={() => setRoomMode('room')}
+                                onClick={() => { setRoomMode('room'); document.dispatchEvent(new CustomEvent('exitmonitor')); }}
                                 className="p-2 bg-[#ff006e]/20 backdrop-blur-md border border-[#ff006e]/30 text-[#ff006e] hover:bg-[#ff006e]/40 transition-all rounded flex items-center gap-2 mono text-[9px] font-bold"
                             >
                                 <Maximize2 size={14} /> EXIT_MONITOR
@@ -264,68 +345,93 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                 </div>
             </motion.div>
 
+            {/* RIGHT SIDE TERMINAL — Desktop only */}
+            <div className="hidden xl:flex">
+                <SideTerminal
+                    title="ENTITY_METADATA"
+                    side="right"
+                    isOpen={rightOpen}
+                    onClose={() => onToggleRight(false)}
+                    roomMode={roomMode}
+                >
+                    {rightContent}
+                </SideTerminal>
+            </div>
+        </div >
+    );
+};
 
-
-            {/* Dynamic Journal Display replacing static Note Buffer */}
-            {journal && journal.length > 0 && (
-                (() => {
-                    const pinned = journal.find(j => j.IsPinned || j.isPinned);
-                    // Fallback to latest POSTED journal if nothing is pinned
-                    const displayEntry = pinned || journal.find(j => j.IsPosted || j.isPosted);
-                    const [isDetailed, setIsDetailed] = useState(false);
-                    const isExplicitlyPinned = !!pinned;
-
-                    if (!displayEntry) return null; // Hide if nothing pinned and nothing posted
-
-                    return (
-                        <motion.div
-                            initial={{ opacity: 0, x: 50 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.5 }}
-                            className={`prop-tablet hidden xl:flex flex-col transition-all duration-500 cursor-pointer ${isDetailed ? 'max-w-md w-96 max-h-[70vh] z-50' : 'w-64 max-h-48'}`}
-                            onClick={() => setIsDetailed(!isDetailed)}
-                        >
-                            <div className="text-[10px] mono text-[#ff006e] uppercase mb-4 border-b border-[#ff006e]/20 pb-2 flex justify-between items-center">
-                                <div className="flex items-center gap-2">
-                                    <span className="opacity-40">{(displayEntry?.IsPinned || displayEntry?.isPinned) ? '[ PINNED_SIGNAL ]' : '[ LATEST_SIGNAL ]'}</span>
-                                    <span className="font-bold">{displayEntry?.Title || displayEntry?.title || '// CORE_LOG'}</span>
+const Sector = ({ id, label, items, onExpand, onPlayTrack, onPlayPlaylist }) => {
+    if (!items || items.length === 0) return null;
+    return (
+        <div className="wall-sector">
+            <div className="sector-header">
+                <div className="sector-tag">SEC_{id}</div>
+                <div className="sector-label">{label}</div>
+            </div>
+            <div className="sector-grid">
+                {items.map((item, i) => (
+                    <div
+                        key={`${item.type}_${item.id}_${i}`}
+                        className={`wall-item ${item.type === 'VIDEO' ? 'video-panel' : 'media-print'} group`}
+                        style={{ transitionDelay: `${i * 0.05}s` }}
+                        onClick={() => onExpand({ ...item.original, type: item.type })}
+                    >
+                        {item.type === 'VIDEO' ? (
+                            <div className="video-panel-content">
+                                <Video size={48} strokeWidth={1} />
+                                <div className="mt-2 text-[8px] mono text-cyan-400 opacity-40 uppercase tracking-widest">
+                                    SIGNAL_ACTIVE
                                 </div>
-                                {(displayEntry?.IsPinned || displayEntry?.isPinned) && <Zap size={10} className="text-[#ff006e] animate-pulse" />}
                             </div>
-                            <div className={`overflow-y-auto custom-scrollbar-minimal ${isDetailed ? 'flex-1' : ''}`}>
-                                <p className={`text-[9px] text-white/40 leading-relaxed italic tracking-wider ${isDetailed ? '' : 'line-clamp-4'}`}>
-                                    {displayEntry?.Content || displayEntry?.content}
-                                </p>
-                            </div>
-                            <div className="mt-4 flex justify-between items-center shrink-0">
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setIsDetailed(!isDetailed);
-                                    }}
-                                    className="text-[7px] mono uppercase font-bold text-[#ff006e] hover:underline z-10"
-                                >
-                                    {isDetailed ? '[ MINIMIZE_LOG ]' : '[ READ_FULL_LOG ]'}
-                                </button>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (onExpandContent) onExpandContent({ ...displayEntry, type: 'JOURNAL' });
-                                    }}
-                                    className="text-[7px] mono uppercase font-bold text-white/40 hover:text-[#ff006e] z-10 hover:underline"
-                                >
-                                    [ EXPAND_VIEW ]
-                                </button>
-                            </div>
-                        </motion.div>
-                    );
-                })()
-            )}
+                        ) : (
+                            (item.url || item.type === 'PLAYLIST') ? (
+                                <img
+                                    src={(item.url || '').startsWith('http') ? item.url : `http://localhost:5264${item.url || ''}`}
+                                    alt={item.title}
+                                    className={item.type === 'PLAYLIST' ? 'grayscale opacity-60' : ''}
+                                />
+                            ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center bg-[#050505] text-[#ff006e]/20 p-2 text-center group">
+                                    {item.type === 'JOURNAL' ? <Book size={20} className="group-hover:text-[#ff006e] transition-colors" /> :
+                                        item.type === 'PLAYLIST' ? <Database size={20} className="group-hover:text-[#ff006e] transition-colors" /> :
+                                            <Music size={20} />}
+                                    {(item.type === 'JOURNAL' || item.type === 'PLAYLIST') && (
+                                        <div className="mt-1 text-[5px] mono opacity-20 truncate w-full uppercase px-2">
+                                            {item.title}
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        )}
+
+                        {/* Quick Play Hover Trigger */}
+                        {(item.type === 'TRACK' || item.type === 'PLAYLIST') && (
+                            <button
+                                className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (item.type === 'TRACK') onPlayTrack(item.original);
+                                    else if (item.type === 'PLAYLIST') onPlayPlaylist(item.original.tracks || [], 0);
+                                }}
+                            >
+                                <Play size={24} fill="currentColor" className="text-[#ff006e] drop-shadow-[0_0_10px_#ff006e]" />
+                            </button>
+                        )}
+
+                        <div className="wall-label">
+                            {item.type}_{String(item.title || 'UNTITLED').toUpperCase().replace(/\s+/g, '_')}
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 };
 
-const DisplayWall = ({ tracks, gallery, journal = [], playlists = [], themeColor, onExpand, onPlayTrack, onPlayPlaylist }) => {
+const isTruthy = (val) => val === true || val === 1 || val === "true" || val === "1";
+
+const DisplayWall = ({ tracks: originalTracks, uid, gallery, journal = [], playlists = [], themeColor, onExpand, onPlayTrack, onPlayPlaylist }) => {
     // 1. Group items by logical sectors
     const sectors = {
         AUDIO: [],
@@ -333,19 +439,18 @@ const DisplayWall = ({ tracks, gallery, journal = [], playlists = [], themeColor
         LOGS: []
     };
 
-    // Tracks & Playlists (AUDIO)
-    if (Array.isArray(tracks)) {
-        const sortedTracks = [...tracks].sort((a, b) => {
-            const dateA = new Date(a.CreatedAt || a.createdAt || 0).getTime();
-            const dateB = new Date(b.CreatedAt || b.createdAt || 0).getTime();
-            return dateB - dateA;
-        });
-        const latestIds = new Set(sortedTracks.slice(0, 10).map(t => t.id || t.Id));
+    // Tracks & Playlists (AUDIO) - Filtered by owner
+    const targetUserId = originalTracks?.[0]?.artistUserId || originalTracks?.[0]?.ArtistUserId; // Helper just for this block
 
-        tracks.forEach(t => {
+    if (Array.isArray(originalTracks)) {
+        originalTracks.filter(t => {
+            const tUserId = t.artistUserId || t.ArtistUserId ||
+                t.album?.artist?.userId || t.Album?.Artist?.UserId ||
+                t.album?.Artist?.UserId || t.Album?.artist?.userId;
+            return String(tUserId) === String(uid);
+        }).forEach(t => {
             const cover = t.cover || t.coverImage || t.CoverImage || t.imageUrl || t.ImageUrl || t.coverImageUrl || t.CoverImageUrl;
-            const isLatest = latestIds.has(t.id || t.Id);
-            if (t.IsPosted || t.isPosted || isLatest) {
+            if (isTruthy(t.IsPosted || t.isPosted)) {
                 sectors.AUDIO.push({ id: t.id || t.Id, type: 'TRACK', title: t.title || t.Title, url: cover, original: t });
             }
         });
@@ -353,103 +458,37 @@ const DisplayWall = ({ tracks, gallery, journal = [], playlists = [], themeColor
 
     if (Array.isArray(playlists)) {
         playlists.forEach(p => {
-            if (p.isPublic || p.IsPublic) {
+            if (isTruthy(p.IsPosted || p.isPosted)) {
                 sectors.AUDIO.push({ id: p.id || p.Id, type: 'PLAYLIST', title: p.name || p.Name, url: p.imageUrl || p.ImageUrl, original: p });
             }
         });
     }
 
-    // Gallery (VISUAL)
+    // Gallery (VISUAL) - Filtered by owner
     if (Array.isArray(gallery)) {
-        gallery.forEach(c => {
-            if (c.IsPosted || c.isPosted) {
-                sectors.VISUAL.push({ id: c.id || c.Id, type: c.Type, title: c.Title, url: c.Url, original: c });
-            }
-        });
+        gallery.filter(c => String(c.UserId || c.userId) === String(uid))
+            .forEach(c => {
+                if (isTruthy(c.IsPosted || c.isPosted)) {
+                    sectors.VISUAL.push({ id: c.id || c.Id, type: c.Type, title: c.Title, url: c.Url, original: c });
+                }
+            });
     }
 
-    // Journal (LOGS)
+    // Journal (LOGS) - Filtered by owner
     if (Array.isArray(journal)) {
-        journal.forEach(j => {
-            if (j.IsPosted || j.isPosted) {
-                sectors.LOGS.push({ id: j.id || j.Id, type: 'JOURNAL', title: j.title || j.Title, url: null, original: j });
-            }
-        });
+        journal.filter(j => String(j.UserId || j.userId) === String(uid))
+            .forEach(j => {
+                if (isTruthy(j.IsPosted || j.isPosted)) {
+                    sectors.LOGS.push({ id: j.id || j.Id, type: 'JOURNAL', title: j.title || j.Title, url: null, original: j });
+                }
+            });
     }
-
-    const Sector = ({ id, label, items }) => {
-        if (!items || items.length === 0) return null;
-        return (
-            <div className="wall-sector">
-                <div className="sector-header">
-                    <div className="sector-tag">SEC_{id}</div>
-                    <div className="sector-label">{label}</div>
-                </div>
-                <div className="sector-grid">
-                    {items.map((item, i) => (
-                        <div
-                            key={`${item.type}_${item.id}_${i}`}
-                            className={`wall-item ${item.type === 'VIDEO' ? 'video-panel' : 'media-print'} group`}
-                            style={{ transitionDelay: `${i * 0.05}s` }}
-                            onClick={() => onExpand({ ...item.original, type: item.type })}
-                        >
-                            {item.type === 'VIDEO' ? (
-                                <div className="video-panel-content">
-                                    <Video size={48} strokeWidth={1} />
-                                    <div className="mt-2 text-[8px] mono text-cyan-400 opacity-40 uppercase tracking-widest">
-                                        SIGNAL_ACTIVE
-                                    </div>
-                                </div>
-                            ) : (
-                                (item.url || item.type === 'PLAYLIST') ? (
-                                    <img
-                                        src={(item.url || '').startsWith('http') ? item.url : `http://localhost:5264${item.url || ''}`}
-                                        alt={item.title}
-                                        className={item.type === 'PLAYLIST' ? 'grayscale opacity-60' : ''}
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center bg-[#050505] text-[#ff006e]/20 p-2 text-center group">
-                                        {item.type === 'JOURNAL' ? <Book size={20} className="group-hover:text-[#ff006e] transition-colors" /> :
-                                            item.type === 'PLAYLIST' ? <Database size={20} className="group-hover:text-[#ff006e] transition-colors" /> :
-                                                <Music size={20} />}
-                                        {(item.type === 'JOURNAL' || item.type === 'PLAYLIST') && (
-                                            <div className="mt-1 text-[5px] mono opacity-20 truncate w-full uppercase px-2">
-                                                {item.title}
-                                            </div>
-                                        )}
-                                    </div>
-                                )
-                            )}
-
-                            {/* Quick Play Hover Trigger */}
-                            {(item.type === 'TRACK' || item.type === 'PLAYLIST') && (
-                                <button
-                                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (item.type === 'TRACK') onPlayTrack(item.original);
-                                        else if (item.type === 'PLAYLIST') onPlayPlaylist(item.original.tracks || [], 0);
-                                    }}
-                                >
-                                    <Play size={24} fill="currentColor" className="text-[#ff006e] drop-shadow-[0_0_10px_#ff006e]" />
-                                </button>
-                            )}
-
-                            <div className="wall-label">
-                                {item.type}_{String(item.title || 'UNTITLED').toUpperCase().replace(/\s+/g, '_')}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
-    };
 
     return (
-        <div className="display-wall custom-scrollbar">
-            <Sector id="01" label="Audio_Signals" items={sectors.AUDIO} />
-            <Sector id="02" label="Visual_Archive" items={sectors.VISUAL} />
-            <Sector id="03" label="Core_Memories" items={sectors.LOGS} />
+        <div className="display-wall no-scrollbar">
+            <Sector id="01" label="AUDIO_SIGNALS" items={sectors.AUDIO} onExpand={onExpand} onPlayTrack={onPlayTrack} onPlayPlaylist={onPlayPlaylist} />
+            <Sector id="02" label="VISUAL_ARCHIVE" items={sectors.VISUAL} onExpand={onExpand} onPlayTrack={onPlayTrack} onPlayPlaylist={onPlayPlaylist} />
+            <Sector id="03" label="CORE_MEMORIES" items={sectors.LOGS} onExpand={onExpand} onPlayTrack={onPlayTrack} onPlayPlaylist={onPlayPlaylist} />
         </div>
     );
 };
@@ -488,9 +527,13 @@ export const ProfileView = React.memo(({
     targetUserId,
     navigateToProfile,
     onPlayPlaylist,
+    onPlayTrack,
+    playlists: currentUserPlaylists = [], // Prop from App (current user's playlists)
     initialModal,
     onClearInitialModal,
-    isPlaying
+    isPlaying,
+    onExitProfile,
+    onMessageUser
 }) => {
     const { showNotification } = useNotification();
     const [activeTab, setActiveTab] = useState('Music');
@@ -515,13 +558,14 @@ export const ProfileView = React.memo(({
 
     const [leftOpen, setLeftOpen] = useState(false);
     const [rightOpen, setRightOpen] = useState(false);
-    const [roomMode, setRoomMode] = useState('monitor');
+    const [roomMode, setRoomMode] = useState('room');
+
 
     // Auto-Room Mode for Mobile
     useEffect(() => {
         const isMobile = window.innerWidth < 1024;
         if (isMobile) {
-            setRoomMode('room');
+            // setRoomMode('room'); // User wants to preserve monitor space on mobile
         }
     }, []);
 
@@ -642,8 +686,8 @@ export const ProfileView = React.memo(({
         }
     };
 
-    // Playlist State
-    const [playlists, setPlaylists] = useState([]);
+    // Playlist State (Renamed to profilePlaylists to avoid shadowed prop)
+    const [profilePlaylists, setProfilePlaylists] = useState([]);
     const [newPlaylistName, setNewPlaylistName] = useState('');
     const [isPlaylistPublic, setIsPlaylistPublic] = useState(true);
 
@@ -652,33 +696,37 @@ export const ProfileView = React.memo(({
     const [playlistDetails, setPlaylistDetails] = useState(null); // { Playlist, Tracks }
     const [isLoadingPlaylist, setIsLoadingPlaylist] = useState(false);
 
+    const effectiveId = targetUserId || currentUser?.id || currentUser?.Id;
     const isMe = !targetUserId || String(targetUserId) === String(currentUser?.id || currentUser?.Id);
     const displayUser = isMe ? currentUser : profileData;
 
     // Fetch Playlists — always on mount/profile change so SEQ_MAPS stat is accurate
-    React.useEffect(() => {
-        const fetchPlaylists = async () => {
-            try {
-                const API = await import('../services/api').then(mod => mod.default);
-                const targetId = isMe ? (currentUser?.id || currentUser?.Id) : targetUserId;
-                if (targetId) {
-                    const res = await API.Playlists.getUserPlaylists(targetId);
-                    const normalized = (res.data || []).map(p => ({
-                        ...p,
-                        id: p.id || p.Id,
-                        name: p.name || p.Name,
-                        imageUrl: p.imageUrl || p.ImageUrl,
-                        isPublic: p.isPublic !== undefined ? p.isPublic : p.IsPublic,
-                        description: p.description || p.Description
-                    }));
-                    setPlaylists(normalized.filter(p => p.id && String(p.id).trim() !== ''));
-                }
-            } catch (err) {
-                console.error("Failed to fetch playlists", err);
+    const fetchPlaylists = React.useCallback(async () => {
+        try {
+            const API = await import('../services/api').then(mod => mod.default);
+            const targetId = isMe ? (currentUser?.id || currentUser?.Id) : targetUserId;
+            if (targetId) {
+                const res = await API.Playlists.getUserPlaylists(targetId);
+                const normalized = (res.data || []).map(p => ({
+                    ...p,
+                    id: p.id || p.Id,
+                    name: p.name || p.Name,
+                    imageUrl: p.imageUrl || p.ImageUrl,
+                    isPublic: (p.isPublic !== undefined ? p.isPublic : p.IsPublic) ? true : false,
+                    description: p.description || p.Description,
+                    isPinned: (p.isPinned !== undefined ? p.isPinned : p.IsPinned) ? true : false,
+                    isPosted: (p.isPosted !== undefined ? p.isPosted : p.IsPosted) ? true : false
+                }));
+                setProfilePlaylists(normalized.filter(p => p.id && String(p.id).trim() !== ''));
             }
-        };
+        } catch (err) {
+            console.error("Failed to fetch playlists", err);
+        }
+    }, [isMe, currentUser, targetUserId]);
+
+    React.useEffect(() => {
         fetchPlaylists();
-    }, [targetUserId, currentUser, isMe]);
+    }, [fetchPlaylists]);
 
     const handleCreatePlaylist = async (_e) => {
         _e.preventDefault();
@@ -702,7 +750,7 @@ export const ProfileView = React.memo(({
                 isPublic: p.isPublic !== undefined ? p.isPublic : p.IsPublic,
                 description: p.description || p.Description
             }));
-            setPlaylists(normalized.filter(p => p.id && String(p.id).trim() !== ''));
+            setProfilePlaylists(normalized.filter(p => p.id && String(p.id).trim() !== ''));
         } catch (err) {
             console.error("Failed to create playlist", err);
         }
@@ -761,7 +809,7 @@ export const ProfileView = React.memo(({
                 isPublic: p.isPublic !== undefined ? p.isPublic : p.IsPublic,
                 description: p.description || p.Description
             }));
-            setPlaylists(normalized.filter(p => p.id && String(p.id).trim() !== ''));
+            setProfilePlaylists(normalized.filter(p => p.id && String(p.id).trim() !== ''));
 
             // Refresh details if open
             if (selectedPlaylistId === id) {
@@ -792,7 +840,7 @@ export const ProfileView = React.memo(({
                 isPublic: p.isPublic !== undefined ? p.isPublic : p.IsPublic,
                 description: p.description || p.Description
             }));
-            setPlaylists(normalized.filter(p => p.id && String(p.id).trim() !== ''));
+            setProfilePlaylists(normalized.filter(p => p.id && String(p.id).trim() !== ''));
         } catch (err) {
             console.error("Failed to delete playlist", err);
         }
@@ -837,19 +885,16 @@ export const ProfileView = React.memo(({
     };
 
     // Fetch Target Profile
-    React.useEffect(() => {
-        const fetchTargetProfile = async () => {
-            if (isMe) {
-                setProfileData(null);
-                return;
-            }
-
+    useEffect(() => {
+        const fetchTargetProfileInternal = async () => {
             setIsLoadingProfile(true);
             try {
                 const API = await import('../services/api').then(mod => mod.default);
+                const effectiveId = targetUserId || currentUser?.id || currentUser?.Id;
+                if (!effectiveId) return;
 
                 // Fetch basic user data first
-                const userRes = await API.Users.getUserById(targetUserId).catch(() => ({ data: null }));
+                const userRes = await API.Users.getUserById(effectiveId).catch(() => ({ data: null }));
                 if (userRes.data) {
                     setProfileData(userRes.data);
                 }
@@ -863,7 +908,7 @@ export const ProfileView = React.memo(({
                 }
 
                 // Try to resolve ArtistId if this user is an artist
-                const artistRes = await API.Artists.getByUserId(targetUserId).catch(() => ({ data: null }));
+                const artistRes = await API.Artists.getByUserId(effectiveId).catch(() => ({ data: null }));
                 if (artistRes.data) {
                     setProfileData(prev => ({
                         ...prev,
@@ -880,7 +925,7 @@ export const ProfileView = React.memo(({
 
                 // Check following status (Compare User IDs since GetFollowing returns Users)
                 const following = followingRes.data || [];
-                setIsFollowing(following.some(a => String(a.id || a.Id) === String(targetUserId)));
+                setIsFollowing(following.some(a => String(a.id || a.Id) === String(effectiveId)));
 
                 const tracks = tracksRes.data || [];
 
@@ -889,19 +934,25 @@ export const ProfileView = React.memo(({
                         t.album?.artist?.userId || t.Album?.Artist?.UserId ||
                         t.album?.Artist?.UserId || t.Album?.artist?.userId; // Combinations
 
-                    return String(tUserId) === String(targetUserId);
+                    return String(tUserId) === String(effectiveId);
                 }).map(t => ({
                     ...t,
                     id: t.id || t.Id,
+                    title: t.title || t.Title || 'UNKNOWN_SIGNAL',
+                    artist: t.artist || t.ArtistName || t.Artist || t.album?.artist?.name || t.Album?.Artist?.Name || 'UNKNOWN_SOURCE',
+                    source: t.source || t.Source || t.filePath || t.FilePath ? (t.source || t.Source || t.filePath || t.FilePath).startsWith('http') ? (t.source || t.Source || t.filePath || t.FilePath) : `http://localhost:5264${t.source || t.Source || t.filePath || t.FilePath}` : null,
+                    isPinned: (t.isPinned !== undefined ? t.isPinned : t.IsPinned) ? true : false,
+                    isPosted: (t.isPosted !== undefined ? t.isPosted : t.IsPosted) ? true : false,
                     cover: t.coverImageUrl || t.CoverImageUrl ? (t.coverImageUrl || t.CoverImageUrl).startsWith('http') ? (t.coverImageUrl || t.CoverImageUrl) : `http://localhost:5264${t.coverImageUrl || t.CoverImageUrl}` : null
                 })).filter(t => t.id && String(t.id).trim() !== ''); // STRICT FILTER: No empty IDs
                 setProfileTracks(filtered);
 
                 try {
+                    const isOwnProfile = String(effectiveId) === String(currentUser?.id || currentUser?.Id);
                     const [jRes, gRes, sRes, fvRes] = await Promise.all([
-                        API.Journal.getUserJournal(targetUserId).catch(() => ({ data: [] })),
-                        API.Studio.getUserGallery(targetUserId).catch(() => ({ data: [] })),
-                        API.Stations.getByUserId(targetUserId).catch(() => ({ data: null })),
+                        isOwnProfile ? API.Journal.getMyJournal().catch(() => ({ data: [] })) : API.Journal.getUserJournal(effectiveId).catch(() => ({ data: [] })),
+                        isOwnProfile ? API.Studio.getMyGallery().catch(() => ({ data: [] })) : API.Studio.getUserGallery(effectiveId).catch(() => ({ data: [] })),
+                        API.Stations.getByUserId(effectiveId).catch(() => ({ data: null })),
                         API.Stations.getFavorites().catch(() => ({ data: [] }))
                     ]);
                     setProfileJournal(jRes.data || []);
@@ -922,31 +973,9 @@ export const ProfileView = React.memo(({
             }
         };
 
-        fetchTargetProfile();
+        fetchTargetProfileInternal();
     }, [targetUserId, isMe, currentUser]);
 
-
-    // Fetch Self Journal if isMe
-    React.useEffect(() => {
-        if (isMe && currentUser) {
-            const fetchOwnStudio = async () => {
-                try {
-                    const API = await import('../services/api').then(mod => mod.default);
-                    const [jRes, gRes, sRes] = await Promise.all([
-                        API.Journal.getMyJournal().catch(() => ({ data: [] })),
-                        API.Studio.getMyGallery().catch(() => ({ data: [] })),
-                        API.Stations.getByUserId(currentUser?.id || currentUser?.Id).catch(() => ({ data: null }))
-                    ]);
-                    setProfileJournal(jRes.data || []);
-                    setProfileGallery(gRes.data || []);
-                    setStationData(sRes.data);
-                } catch (err) {
-                    console.error("Failed to fetch own studio content", err);
-                }
-            };
-            fetchOwnStudio();
-        }
-    }, [isMe, currentUser]); // Removed activeTab to prevent redundant fetching
 
     // Handle Initial Modal Triggers from Feed/Discovery
     React.useEffect(() => {
@@ -987,13 +1016,11 @@ export const ProfileView = React.memo(({
                 setRoomMode={setRoomMode}
                 isPlaying={isPlaying}
                 onUpload={() => setShowUpload(true)}
+                onModifyId={() => setShowEditProfile(true)}
+                onLogout={onLogout}
                 onExpandContent={setSelectedContent}
                 gallery={profileGallery}
-                tracks={isMe ? allTracks?.filter(t => {
-                    const tUid = t.artistUserId || t.ArtistUserId;
-                    const cUid = currentUser?.id || currentUser?.Id || currentUser?.userId || currentUser?.UserId;
-                    return tUid !== undefined && tUid !== null && String(tUid) === String(cUid);
-                }) : profileTracks}
+                tracks={profileTracks}
                 journal={isMe ? profileJournal : profileJournal.filter(j => j.IsPosted)}
                 bannerUrl={displayUser?.bannerUrl || displayUser?.BannerUrl}
                 wallpaperVideoUrl={displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl}
@@ -1008,10 +1035,13 @@ export const ProfileView = React.memo(({
                 previewTextColor={isMe && showEditProfile ? profileData?.previewTextColor : null}
                 previewBackgroundColor={isMe && showEditProfile ? profileData?.previewBackgroundColor : null}
                 previewIsGlass={isMe && showEditProfile ? profileData?.previewIsGlass : null}
-                playlists={playlists}
-                onPlayTrack={(track) => onPlayPlaylist([track], 0)}
-                onPlayPlaylist={(tracks, index) => onPlayPlaylist(tracks, index)}
+                playlists={profilePlaylists}
+                uid={effectiveId}
+                onPlayTrack={onPlayTrack}
+                onPlayPlaylist={onPlayPlaylist}
                 isMe={isMe}
+                onExitProfile={onExitProfile}
+                onMessageClick={() => onMessageUser && onMessageUser(displayUser)}
                 leftContent={
                     <div className="space-y-8">
                         <div className="space-y-4">
@@ -1029,7 +1059,7 @@ export const ProfileView = React.memo(({
                         <div className="space-y-4 pt-4 border-t border-[var(--text-color)]/5">
                             <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// SYSTEM_STATS</div>
                             <StatItem label="DAT_SIGNALS" value={isMe ? (allTracks?.filter(t => String(t.artistUserId || t.ArtistUserId) === String(currentUser?.id || currentUser?.Id)).length || 0) : profileTracks.length} />
-                            <StatItem label="SEQ_MAPS" value={playlists.length} />
+                            <StatItem label="SEQ_MAPS" value={profilePlaylists.length} />
                             <StatItem label="TOTAL_SCANS" value={(isMe ? allTracks?.filter(t => String(t.artistUserId || t.ArtistUserId) === String(currentUser?.id || currentUser?.Id)) : profileTracks).reduce((acc, t) => acc + (t.playCount || 0), 0).toLocaleString()} />
                         </div>
 
@@ -1101,13 +1131,52 @@ export const ProfileView = React.memo(({
 
 
                         <div className="space-y-4 pt-4 border-t border-[var(--text-color)]/5">
-                            <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// LATEST_TRANSMISSIONS</div>
+                            <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// PINNED_SIGNALS</div>
                             <div className="space-y-4">
-                                {[...profileTracks, ...profileGallery.filter(g => g.IsPosted || g.isPosted)]
-                                    .sort((a, b) => new Date(b.createdAt || b.CreatedAt || b.UploadDate || 0) - new Date(a.createdAt || a.CreatedAt || a.UploadDate || 0))
+                                {[...profileTracks, ...profileGallery, ...profilePlaylists].filter(item => isTruthy(item.isPinned || item.IsPinned))
                                     .slice(0, 3)
                                     .map((item, i) => (
-                                        <div key={i} className="flex gap-3 items-center group cursor-pointer" onClick={() => setSelectedContent?.({ ...item, type: item.Type || 'TRACK' })}>
+                                        <div key={`pinned_${i}`} className="flex gap-3 items-center group cursor-pointer" onClick={() => {
+                                            const type = item.Type || (item.name ? 'PLAYLIST' : 'TRACK');
+                                            if (type === 'TRACK') onPlayTrack?.(item);
+                                            else if (type === 'PLAYLIST') onPlayPlaylist?.(item.tracks || [], 0);
+                                            else setSelectedContent?.({ ...item, type });
+                                        }}>
+                                            <div className="w-10 h-10 border border-white text-black bg-white flex-shrink-0 overflow-hidden shadow-[0_0_10px_#fff]">
+                                                {(item.cover || item.Url || item.imageUrl || item.ImageUrl) ? (
+                                                    <img
+                                                        src={(item.cover || item.Url || item.imageUrl || item.ImageUrl).startsWith('http') ? (item.cover || item.Url || item.imageUrl || item.ImageUrl) : `http://localhost:5264${item.cover || item.Url || item.imageUrl || item.ImageUrl}`}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center">
+                                                        {item.Type === 'VIDEO' ? <Video size={14} /> : item.name ? <Database size={14} /> : <Music size={14} />}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-[7px] mono text-white tracking-widest uppercase truncate">{item.Type || (item.name ? 'PLAYLIST' : 'AUDIO_SIGNAL')}</div>
+                                                <div className="text-[9px] mono text-white truncate uppercase">{item.title || item.Title || item.name || item.Name}</div>
+                                            </div>
+                                            <Star size={10} className="text-white fill-white" />
+                                        </div>
+                                    ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-4 pt-4 border-t border-[var(--text-color)]/5">
+                            <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// LATEST_TRANSMISSIONS</div>
+                            <div className="space-y-4">
+                                {[...profileTracks, ...profileGallery, ...profilePlaylists].filter(item => isTruthy(item.isPosted || item.IsPosted))
+                                    .sort((a, b) => new Date(b.createdAt || b.CreatedAt || b.UploadDate || 0) - new Date(a.createdAt || a.CreatedAt || a.UploadDate || 0))
+                                    .slice(0, 5)
+                                    .map((item, i) => (
+                                        <div key={i} className="flex gap-3 items-center group cursor-pointer" onClick={() => {
+                                            const type = item.Type || (item.name ? 'PLAYLIST' : 'TRACK');
+                                            if (type === 'TRACK') onPlayTrack?.(item);
+                                            else if (type === 'PLAYLIST') onPlayPlaylist?.(item.tracks || [], 0);
+                                            else setSelectedContent?.({ ...item, type });
+                                        }}>
                                             <div className="w-10 h-10 border border-[#ff006e]/20 flex-shrink-0 overflow-hidden bg-black/40">
                                                 {(item.cover || item.Url) ? (
                                                     <img
@@ -1140,7 +1209,16 @@ export const ProfileView = React.memo(({
                 <div className="social-monitor-grid">
                     {/* Left Side: Profile Sidebar (Fotolog Style) */}
                     <aside className="social-sidebar">
-                        <div className="social-profile-card">
+                        <div className="social-profile-card relative">
+                            {!isMe && onMessageUser && (
+                                <button
+                                    onClick={() => onMessageUser(displayUser)}
+                                    className="absolute top-4 left-4 p-1.5 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] hover:bg-[#ff006e] hover:text-black transition-all rounded lg:hidden z-[100]"
+                                    title="Send Message"
+                                >
+                                    <MessageSquare size={16} />
+                                </button>
+                            )}
                             <div className="social-pic-frame">
                                 {(displayUser?.profileImageUrl || displayUser?.ProfileImageUrl) ? (
                                     <img src={(displayUser?.profileImageUrl || displayUser?.ProfileImageUrl).startsWith('http') ? (displayUser?.profileImageUrl || displayUser?.ProfileImageUrl) : `http://localhost:5264${(displayUser?.profileImageUrl || displayUser?.ProfileImageUrl)}`} alt={displayUser?.username} />
@@ -1175,7 +1253,6 @@ export const ProfileView = React.memo(({
 
                     {/* Right Side: Content Area */}
                     <div className="social-main-pane">
-                        {/* Minimal Header Inside Monitor */}
                         <div className="social-tabs-header flex justify-between items-center mb-10 pb-6 border-b border-[#ff006e]/10">
                             <div className="flex gap-4">
                                 <button onClick={() => setActiveTab('Music')} className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Music' ? 'text-[#ff006e]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}>
@@ -1188,32 +1265,25 @@ export const ProfileView = React.memo(({
                                     [ JOURNAL ]
                                 </button>
                             </div>
-                            <div className="flex gap-2">
-                                {isMe && (
-                                    <>
-                                        <button onClick={() => setShowEditProfile(true)} className="px-4 py-2 border-2 border-[#ff006e] text-[#ff006e] hover:bg-[#ff006e] hover:text-black transition-all mono text-[10px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(255,0,110,0.3)] hover:shadow-[0_0_25px_rgba(255,0,110,0.6)]">
-                                            MODIFY_ID
-                                        </button>
-                                        <button onClick={onLogout} className="px-4 py-2 border-2 border-[#ff006e]/40 text-[#ff006e]/60 hover:border-[#ff006e] hover:text-[#ff006e] transition-all mono text-[10px] uppercase flex items-center gap-2 group/logout font-bold tracking-widest">
-                                            <LogOut size={12} className="group-hover/logout:animate-pulse" />
-                                            LOGOUT
-                                        </button>
-                                    </>
-                                )}
-                                <button onClick={() => navigateToProfile(null)} className="px-4 py-2 border-2 border-white/10 text-white/20 hover:text-white hover:border-white/40 transition-all mono text-[10px] uppercase font-bold tracking-widest">
-                                    EXIT_CORE
+                            {!isMe && onMessageUser && (
+                                <button
+                                    onClick={() => onMessageUser(displayUser)}
+                                    className="p-1.5 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] hover:bg-[#ff006e] hover:text-black transition-all rounded hidden lg:block"
+                                    title="Send Message"
+                                >
+                                    <MessageSquare size={16} />
                                 </button>
-                            </div>
+                            )}
                         </div>
 
                         {/* Tab Content */}
                         {activeTab === 'Music' && (
-                            <div className="space-y-2">
-                                {(isMe ? allTracks?.filter(t => String(t.artistUserId || t.ArtistUserId) === String(currentUser?.id || currentUser?.Id)) : profileTracks)
+                            <div className="space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                                {profileTracks
                                     .sort((a, b) => {
-                                        const aPinned = a.IsPinned || a.isPinned ? 1 : 0;
-                                        const bPinned = b.IsPinned || b.isPinned ? 1 : 0;
-                                        if (bPinned !== aPinned) return bPinned - aPinned;
+                                        const aPosted = isTruthy(a.IsPosted || a.isPosted) ? 1 : 0;
+                                        const bPosted = isTruthy(b.IsPosted || b.isPosted) ? 1 : 0;
+                                        if (bPosted !== aPosted) return bPosted - aPosted;
 
                                         const dateA = new Date(a.CreatedAt || a.createdAt || 0).getTime();
                                         const dateB = new Date(b.CreatedAt || b.createdAt || 0).getTime();
@@ -1223,7 +1293,7 @@ export const ProfileView = React.memo(({
                                         <div
                                             key={track.id || `track-${idx}`}
                                             className="flex items-center justify-between p-4 bg-transparent border-b border-white/5 hover:border-[#ff006e]/30 transition-all group backdrop-blur-[2px] cursor-pointer"
-                                            onClick={() => onPlayPlaylist([track], 0)}
+                                            onClick={() => onPlayTrack(track)}
                                         >
                                             <div className="flex items-center gap-6">
                                                 <div className="w-10">
@@ -1249,39 +1319,33 @@ export const ProfileView = React.memo(({
                                                                 e.stopPropagation();
                                                                 try {
                                                                     const API = await import('../services/api').then(mod => mod.default);
-                                                                    await API.Tracks.togglePin(track.id || track.Id);
-                                                                    const isPinnedNow = !(track.IsPinned || track.isPinned);
-                                                                    showNotification(isPinnedNow ? "SIGNAL_PINNED" : "SIGNAL_UNPINNED", `TRACK_${isPinnedNow ? 'PRIORITIZED_ON' : 'REMOVED_FROM'}_MONITOR`, "success");
-                                                                    onRefreshTracks?.();
-                                                                    onRefreshProfile?.();
+                                                                    await API.Tracks.togglePost(track.id || track.Id);
+                                                                    const isPostedNow = !isTruthy(track.isPosted || track.IsPosted);
+                                                                    // Optimistic Update
+                                                                    setProfileTracks(prev => prev.map(t => (String(t.id) === String(track.id)) ? { ...t, isPosted: isPostedNow, IsPosted: isPostedNow } : t));
+                                                                    showNotification(isPostedNow ? "SIGNAL_BROADCAST" : "SIGNAL_REDACTED", `TRACK_${isPostedNow ? 'ADDED_TO' : 'REMOVED_FROM'}_WALL`, "success");
                                                                 } catch (err) { console.error(err); }
                                                             }}
-                                                            className={`p-2 border transition-all ${track.isPinned || track.IsPinned ? 'bg-white text-black border-white' : 'border-white/10 text-white/40 hover:text-white hover:border-white/30'}`}
-                                                            title="Pin to Monitor"
+                                                            className={`p-2 border transition-all ${isTruthy(track.isPosted || track.IsPosted) ? 'bg-white text-black border-white shadow-[0_0_15px_#fff]' : 'border-white/10 text-white/40 hover:text-white hover:border-white/30'}`}
+                                                            title="Pin to Wall"
                                                         >
-                                                            <Star size={12} fill={track.isPinned || track.IsPinned ? "currentColor" : "none"} />
+                                                            <Star size={12} fill={isTruthy(track.isPosted || track.IsPosted) ? "currentColor" : "none"} />
                                                         </button>
                                                         <button
-                                                            onClick={async (e) => {
+                                                            onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                try {
-                                                                    const API = await import('../services/api').then(mod => mod.default);
-                                                                    await API.Tracks.togglePost(track.id || track.Id);
-                                                                    const isPostedNow = !(track.IsPosted || track.isPosted);
-                                                                    showNotification(isPostedNow ? "SIGNAL_BROADCAST" : "SIGNAL_REDACTED", `TRACK_${isPostedNow ? 'ADDED_TO' : 'REMOVED_FROM'}_WALL`, "success");
-                                                                    // Optimistic update or refresh
-                                                                    if (onRefreshTracks) onRefreshTracks();
-                                                                    if (onRefreshProfile) onRefreshProfile();
-                                                                } catch (err) { console.error(err); }
+                                                                const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?track=${track.id || track.Id}`;
+                                                                navigator.clipboard.writeText(link);
+                                                                showNotification("LINK_COPIED", "SIGNAL_ADDRESS_SECURED_TO_CLIPBOARD", "success");
                                                             }}
-                                                            className={`p-2 border transition-all ${track.isPosted || track.IsPosted ? 'bg-[#ff006e] text-black border-[#ff006e]' : 'border-[#ff006e]/20 text-[#ff006e]/40 hover:text-[#ff006e] hover:border-[#ff006e]/40'}`}
-                                                            title="Pin to Wall"
+                                                            className="p-2 border border-white/10 text-white/40 hover:text-white hover:border-white/30 transition-all"
+                                                            title="Copy Signal Link"
                                                         >
                                                             <Share2 size={12} />
                                                         </button>
                                                     </div>
                                                 )}
-                                                <TrackActionsDropdown track={track} isOwner={isMe} playlists={playlists} myLikes={myLikes} isLikedInitial={myLikes.some(l => (l.trackId || l.TrackId) === (track.id || track.Id))} onDelete={() => handleDeleteTrack(track)} />
+                                                <TrackActionsDropdown track={track} isOwner={isMe} playlists={currentUserPlaylists} myLikes={myLikes} isLikedInitial={myLikes.some(l => (l.trackId || l.TrackId) === (track.id || track.Id))} onDelete={() => handleDeleteTrack(track)} />
                                             </div>
                                         </div>
                                     ))}
@@ -1289,7 +1353,7 @@ export const ProfileView = React.memo(({
                         )}
 
                         {activeTab === 'Playlists' && (
-                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 max-h-[400px] overflow-y-auto custom-scrollbar pr-2 pb-8">
                                 {isMe && (
                                     <button
                                         onClick={() => setShowCreatePlaylist(true)}
@@ -1299,19 +1363,79 @@ export const ProfileView = React.memo(({
                                         <span className="text-[10px] font-bold uppercase tracking-widest">INIT_NEW_PLAYLIST</span>
                                     </button>
                                 )}
-                                {playlists.map(p => (
-                                    <div key={p.id} onClick={() => handleOpenPlaylist(p.id)} className="border border-[var(--text-color)]/5 p-4 hover:border-[#ff006e]/40 transition-all cursor-pointer group bg-black/40">
-                                        <div className="aspect-square bg-black overflow-hidden relative mb-4">
-                                            {(p.imageUrl || p.ImageUrl) ? (
-                                                <img src={(p.imageUrl || p.ImageUrl).startsWith('http') ? (p.imageUrl || p.ImageUrl) : `http://localhost:5264${(p.imageUrl || p.ImageUrl)}`} className="w-full h-full object-cover grayscale opacity-40 group-hover:opacity-100 transition-all" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-[#ff006e]/10"><Database size={32} /></div>
-                                            )}
-                                            <div className="absolute top-0 left-0 bg-[#ff006e] text-black text-[8px] font-bold px-1.5 py-0.5 mono">#{String(p.id).padStart(3, '0')}</div>
+                                {profilePlaylists
+                                    .sort((a, b) => {
+                                        const aPinned = isTruthy(a.isPinned || a.IsPinned) ? 1 : 0;
+                                        const bPinned = isTruthy(b.isPinned || b.IsPinned) ? 1 : 0;
+                                        if (bPinned !== aPinned) return bPinned - aPinned;
+
+                                        const aPosted = isTruthy(a.isPosted || a.IsPosted) ? 1 : 0;
+                                        const bPosted = isTruthy(b.isPosted || b.IsPosted) ? 1 : 0;
+                                        if (bPosted !== aPosted) return bPosted - aPosted;
+                                        return 0;
+                                    })
+                                    .map(p => (
+                                        <div key={p.id} onClick={() => handleOpenPlaylist(p.id)} className="border border-[var(--text-color)]/5 p-4 hover:border-[#ff006e]/40 transition-all cursor-pointer group bg-black/40">
+                                            <div className="aspect-square bg-black overflow-hidden relative mb-4">
+                                                {(p.imageUrl || p.ImageUrl) ? (
+                                                    <img src={(p.imageUrl || p.ImageUrl).startsWith('http') ? (p.imageUrl || p.ImageUrl) : `http://localhost:5264${(p.imageUrl || p.ImageUrl)}`} className="w-full h-full object-cover grayscale opacity-40 group-hover:opacity-100 transition-all" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-[#ff006e]/10"><Database size={32} /></div>
+                                                )}
+                                                <div className="absolute top-0 left-0 bg-[#ff006e] text-black text-[8px] font-bold px-1.5 py-0.5 mono">#{String(p.id).padStart(3, '0')}</div>
+                                                {isMe && (
+                                                    <div className="absolute top-2 right-2 z-30 flex gap-2">
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                try {
+                                                                    const API = await import('../services/api').then(mod => mod.default);
+                                                                    await API.Playlists.togglePin(p.id || p.Id);
+                                                                    const isPinnedNow = !isTruthy(p.isPinned || p.IsPinned);
+                                                                    setProfilePlaylists(prev => prev.map(pl => (String(pl.id) === String(p.id)) ? { ...pl, isPinned: isPinnedNow, IsPinned: isPinnedNow } : pl));
+                                                                    showNotification(isPinnedNow ? "SIGNAL_LOCKED" : "SIGNAL_RELEASED", `PLAYLIST_${isPinnedNow ? 'PINNED_TO' : 'REMOVED_FROM'}_MONITOR`, "success");
+                                                                } catch (err) { console.error(err); }
+                                                            }}
+                                                            className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(p.isPinned || p.IsPinned) ? 'bg-white text-black border-white shadow-[0_0_15px_#fff]' : 'bg-black/60 border-white/20 text-white/40 hover:text-white hover:border-white/40'}`}
+                                                            title="Pin to Monitor"
+                                                        >
+                                                            <Star size={10} fill={isTruthy(p.isPinned || p.IsPinned) ? "currentColor" : "none"} />
+                                                        </button>
+
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                try {
+                                                                    const API = await import('../services/api').then(mod => mod.default);
+                                                                    await API.Playlists.togglePost(p.id || p.Id);
+                                                                    const isPostedNow = !isTruthy(p.isPosted || p.IsPosted);
+                                                                    setProfilePlaylists(prev => prev.map(pl => (String(pl.id) === String(p.id)) ? { ...pl, isPosted: isPostedNow, IsPosted: isPostedNow } : pl));
+                                                                    showNotification(isPostedNow ? "SIGNAL_POSTED" : "SIGNAL_RECALLED", `PLAYLIST_${isPostedNow ? 'ATTACHED_TO' : 'RECALLED_FROM'}_WALL`, "success");
+                                                                } catch (err) { console.error(err); }
+                                                            }}
+                                                            className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(p.isPosted || p.IsPosted) ? 'bg-[#ff006e] text-black border-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.5)]' : 'bg-black/60 border-[#ff006e]/20 text-[#ff006e]/40 hover:text-[#ff006e] hover:border-[#ff006e]/40'}`}
+                                                            title="Pin to Wall"
+                                                        >
+                                                            <Share2 size={10} />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?playlist=${p.id || p.Id}`;
+                                                                navigator.clipboard.writeText(link);
+                                                                showNotification("LINK_COPIED", "MAP_ADDRESS_SECURED_TO_CLIPBOARD", "success");
+                                                            }}
+                                                            className="p-1.5 border bg-black/60 border-[#ff006e]/20 text-[#ff006e]/40 hover:text-[#ff006e] hover:border-[#ff006e]/40 backdrop-blur-md transition-all"
+                                                            title="Copy Sequence Link"
+                                                        >
+                                                            <Link size={10} />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <h4 className="text-[10px] font-bold text-[var(--text-color)] uppercase truncate tracking-widest">{p.name}</h4>
                                         </div>
-                                        <h4 className="text-[10px] font-bold text-[var(--text-color)] uppercase truncate tracking-widest">{p.name}</h4>
-                                    </div>
-                                ))}
+                                    ))}
                             </div>
                         )}
 
@@ -1342,27 +1466,7 @@ export const ProfileView = React.memo(({
                                     </div>
 
                                     {/* Log Terminal */}
-                                    {studioSubTab === 'Journal' && isMe && (
-                                        <div className="flex-1 max-w-md ml-8 relative group">
-                                            <textarea
-                                                placeholder="> ENCODE_JOURNAL_SIGNAL..."
-                                                className="w-full bg-black/40 border border-[#ff006e]/20 p-3 text-[9px] mono text-[#ff006e] outline-none focus:border-[#ff006e] min-h-[40px] h-[40px] focus:h-[100px] transition-all scrollbar-hide uppercase"
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter' && e.ctrlKey) {
-                                                        const text = e.target.value;
-                                                        if (!text) return;
-                                                        const blob = new Blob([text], { type: 'text/plain' });
-                                                        const file = new File([blob], `log_${Date.now()}.txt`, { type: 'text/plain' });
-                                                        handleIngestFile({ target: { files: [file] } }, 'JOURNAL');
-                                                        e.target.value = '';
-                                                    }
-                                                }}
-                                            />
-                                            <div className="absolute bottom-1 right-2 text-[6px] mono text-[#ff006e]/20 pointer-events-none group-focus-within:opacity-100 opacity-0 transition-opacity">
-                                                [ CTRL + ENTER TO SYNC ]
-                                            </div>
-                                        </div>
-                                    )}
+
 
                                     {/* Universal Ingest Menu */}
                                     {isMe && (
@@ -1441,211 +1545,153 @@ export const ProfileView = React.memo(({
                                     )}
                                 </div>
 
-                                {/* Studio Content Header / Carousel for 'All' Tab */}
-                                {studioSubTab === 'All' && (
+                                {/* Studio Content Header / Carousel for Media Tabs */}
+                                {['All', 'Photos', 'Video'].includes(studioSubTab) && (
                                     <div className="mb-8 space-y-4">
                                         <div className="flex justify-between items-center">
-                                            <h3 className="mono text-[10px] font-black text-[#ff006e]/60 uppercase tracking-[0.3em]">SIGNAL_GALLERY</h3>
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => {
-                                                        const el = document.getElementById('media-carousel');
-                                                        if (el) el.scrollBy({ left: -300, behavior: 'smooth' });
-                                                    }}
-                                                    className="p-1 border border-[#ff006e]/20 text-[#ff006e]/40 hover:text-[#ff006e] transition-all"
-                                                >
-                                                    <ChevronLeft size={14} />
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        const el = document.getElementById('media-carousel');
-                                                        if (el) el.scrollBy({ left: 300, behavior: 'smooth' });
-                                                    }}
-                                                    className="p-1 border border-[#ff006e]/20 text-[#ff006e]/40 hover:text-[#ff006e] transition-all"
-                                                >
-                                                    <ChevronRight size={14} />
-                                                </button>
-                                            </div>
+                                            <h3 className="mono text-[10px] font-black text-[#ff006e]/60 uppercase tracking-[0.3em]">
+                                                {studioSubTab === 'All' ? 'SIGNAL_GALLERY' : studioSubTab === 'Photos' ? 'VISUAL_ARCHIVE' : 'VIDEO_FEED'}
+                                            </h3>
                                         </div>
-                                        <div
-                                            id="media-carousel"
-                                            className="flex gap-4 overflow-x-auto pb-4 no-scrollbar scroll-smooth"
-                                        >
-                                            {profileGallery
-                                                .sort((a, b) => {
-                                                    const aPinned = a.IsPinned || a.isPinned ? 1 : 0;
-                                                    const bPinned = b.IsPinned || b.isPinned ? 1 : 0;
-                                                    if (bPinned !== aPinned) return bPinned - aPinned;
-                                                    return new Date(b.CreatedAt || b.createdAt) - new Date(a.CreatedAt || a.createdAt);
-                                                })
-                                                .map((content) => (
-                                                    <motion.div
-                                                        key={content.Id || content.id}
-                                                        initial={{ opacity: 0, scale: 0.9 }}
-                                                        animate={{ opacity: 1, scale: 1 }}
-                                                        whileHover={{ scale: 1.02 }}
-                                                        className="group relative flex-shrink-0 w-64 aspect-square bg-black border border-white/5 overflow-hidden cursor-pointer"
+                                        <div className="relative group px-6 mb-4">
+                                            {profileGallery.length > 0 && (
+                                                <>
+                                                    <button
+                                                        onClick={() => {
+                                                            const el = document.getElementById('media-carousel');
+                                                            if (el) el.scrollBy({ left: -300, behavior: 'smooth' });
+                                                        }}
+                                                        className="absolute left-0 top-1/2 -translate-y-1/2 z-40 text-[#ff006e]/60 hover:text-[#ff006e] hover:scale-110 transition-all opacity-100"
                                                     >
-                                                        {/* Hover Controls */}
-                                                        {isMe && (
-                                                            <div className="absolute top-2 left-2 z-30 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                                                <button
-                                                                    onClick={async (e) => {
-                                                                        e.stopPropagation();
-                                                                        try {
-                                                                            const API = await import('../services/api').then(mod => mod.default);
-                                                                            await API.Studio.togglePin(content.Id || content.id);
-                                                                            showNotification((content.IsPinned || content.isPinned) ? "SIGNAL_UNPINNED" : "SIGNAL_PINNED", `CONTENT_${(content.IsPinned || content.isPinned) ? 'REMOVED_FROM' : 'PRIORITIZED_ON'}_MONITOR`, "success");
-                                                                            const resArr = await API.Studio.getMyGallery();
-                                                                            setProfileGallery(resArr.data || []);
-                                                                        } catch (err) { console.error(err); }
-                                                                    }}
-                                                                    className={`p-1.5 border backdrop-blur-md transition-all ${(content.IsPinned || content.isPinned) ? 'bg-white text-black border-white' : 'bg-black/60 text-white/40 border-white/10 hover:text-white'}`}
-                                                                    title="Pin to Monitor"
-                                                                >
-                                                                    <Star size={10} fill={(content.IsPinned || content.isPinned) ? "currentColor" : "none"} />
-                                                                </button>
-                                                                <button
-                                                                    onClick={async (e) => {
-                                                                        e.stopPropagation();
-                                                                        try {
-                                                                            const API = await import('../services/api').then(mod => mod.default);
-                                                                            await API.Studio.togglePost(content.Id || content.id);
-                                                                            const isPostedNow = !(content.IsPosted || content.isPosted);
-                                                                            showNotification(isPostedNow ? "SIGNAL_BROADCAST" : "SIGNAL_REDACTED", `CONTENT_${isPostedNow ? 'ADDED_TO' : 'REMOVED_FROM'}_WALL`, "success");
-                                                                            const resArr = await API.Studio.getMyGallery();
-                                                                            setProfileGallery(resArr.data || []);
-                                                                        } catch (err) { console.error(err); }
-                                                                    }}
-                                                                    className={`p-1.5 border backdrop-blur-md transition-all ${(content.IsPosted || content.isPosted) ? 'bg-[#ff006e] text-black border-[#ff006e]' : 'bg-black/60 text-[#ff006e]/40 border-[#ff006e]/10 hover:text-[#ff006e]'}`}
-                                                                    title="Pin to Wall"
-                                                                >
-                                                                    <Share2 size={10} />
-                                                                </button>
-                                                            </div>
-                                                        )}
+                                                        <ChevronLeft size={20} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            const el = document.getElementById('media-carousel');
+                                                            if (el) el.scrollBy({ left: 300, behavior: 'smooth' });
+                                                        }}
+                                                        className="absolute right-0 top-1/2 -translate-y-1/2 z-40 text-[#ff006e]/60 hover:text-[#ff006e] hover:scale-110 transition-all opacity-100"
+                                                    >
+                                                        <ChevronRight size={20} />
+                                                    </button>
+                                                </>
+                                            )}
+                                            <div
+                                                id="media-carousel"
+                                                className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar scroll-smooth"
+                                            >
+                                                {profileGallery
+                                                    .filter(c => studioSubTab === 'All' || (studioSubTab === 'Photos' && c.Type === 'PHOTO') || (studioSubTab === 'Video' && c.Type === 'VIDEO'))
+                                                    .sort((a, b) => {
+                                                        const aPinned = isTruthy(a.IsPinned || a.isPinned) ? 1 : 0;
+                                                        const bPinned = isTruthy(b.IsPinned || b.isPinned) ? 1 : 0;
+                                                        if (bPinned !== aPinned) return bPinned - aPinned;
 
-                                                        <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end"
-                                                            onClick={() => setSelectedContent({ ...content, type: content.Type || 'PHOTO' })}>
-                                                            <div className="text-[7px] mono font-bold text-[#ff006e] tracking-widest uppercase mb-1">
-                                                                {content.Type === 'PHOTO' ? '// VISUAL_DATA' : '// SIGNAL_FEED'}
-                                                            </div>
-                                                            <div className="text-[8px] mono text-white truncate uppercase">{content.Title}</div>
-                                                        </div>
-                                                        {content.Type === 'VIDEO' ? (
-                                                            <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 space-y-2"
+                                                        const aPosted = isTruthy(a.IsPosted || a.isPosted) ? 1 : 0;
+                                                        const bPosted = isTruthy(b.IsPosted || b.isPosted) ? 1 : 0;
+                                                        if (bPosted !== aPosted) return bPosted - aPosted;
+
+                                                        return new Date(b.CreatedAt || b.createdAt) - new Date(a.CreatedAt || a.createdAt);
+                                                    })
+                                                    .map((content) => (
+                                                        <motion.div
+                                                            key={content.Id || content.id}
+                                                            initial={{ opacity: 0, scale: 0.9 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            whileHover={{ scale: 1.02 }}
+                                                            className="group relative flex-shrink-0 w-64 aspect-square bg-black border border-white/5 overflow-hidden cursor-pointer"
+                                                        >
+                                                            {/* Hover Controls */}
+                                                            {isMe && (
+                                                                <div className="absolute top-2 left-2 z-30 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                                                    <button
+                                                                        onClick={async (e) => {
+                                                                            e.stopPropagation();
+                                                                            try {
+                                                                                const API = await import('../services/api').then(mod => mod.default);
+                                                                                await API.Studio.togglePin(content.Id || content.id);
+                                                                                const isPinnedNow = !isTruthy(content.IsPinned || content.isPinned);
+                                                                                setProfileGallery(prev => prev.map(c => (String(c.Id || c.id) === String(content.Id || content.id)) ? { ...c, isPinned: isPinnedNow, IsPinned: isPinnedNow } : c));
+                                                                                showNotification(isPinnedNow ? "SIGNAL_LOCKED" : "SIGNAL_RELEASED", `CONTENT_${isPinnedNow ? 'PINNED_TO' : 'RECALLED_FROM'}_MONITOR`, "success");
+                                                                            } catch (err) { console.error(err); }
+                                                                        }}
+                                                                        className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(content.IsPinned || content.isPinned) ? 'bg-white text-black border-white shadow-[0_0_15px_#fff]' : 'bg-black/60 text-white/40 border-white/10 hover:text-white hover:border-white/40'}`}
+                                                                        title="Pin to Monitor"
+                                                                    >
+                                                                        <Star size={10} fill={isTruthy(content.IsPinned || content.isPinned) ? "currentColor" : "none"} />
+                                                                    </button>
+
+                                                                    <button
+                                                                        onClick={async (e) => {
+                                                                            e.stopPropagation();
+                                                                            try {
+                                                                                const API = await import('../services/api').then(mod => mod.default);
+                                                                                await API.Studio.togglePost(content.Id || content.id);
+                                                                                const isPostedNow = !isTruthy(content.IsPosted || content.isPosted);
+                                                                                setProfileGallery(prev => prev.map(c => (String(c.Id || c.id) === String(content.Id || content.id)) ? { ...c, isPosted: isPostedNow, IsPosted: isPostedNow } : c));
+                                                                                showNotification(isPostedNow ? "SIGNAL_BROADCAST" : "SIGNAL_REDACTED", `CONTENT_${isPostedNow ? 'ADDED_TO' : 'REMOVED_FROM'}_WALL`, "success");
+                                                                            } catch (err) { console.error(err); }
+                                                                        }}
+                                                                        className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(content.IsPosted || content.isPosted) ? 'bg-[#ff006e] text-black border-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.5)]' : 'bg-black/60 text-[#ff006e]/40 border-[#ff006e]/20 hover:text-[#ff006e] hover:border-[#ff006e]/40'}`}
+                                                                        title="Pin to Wall"
+                                                                    >
+                                                                        <Share2 size={10} />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?content=${content.Id || content.id}`;
+                                                                            navigator.clipboard.writeText(link);
+                                                                            showNotification("LINK_COPIED", "SIGNAL_ADDRESS_SECURED", "success");
+                                                                        }}
+                                                                        className="p-1.5 border bg-black/60 border-white/10 text-white/40 hover:text-white backdrop-blur-md transition-all"
+                                                                        title="Copy Link"
+                                                                    >
+                                                                        <Share2 size={10} />
+                                                                    </button>
+                                                                </div>
+                                                            )}
+
+                                                            <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end"
                                                                 onClick={() => setSelectedContent({ ...content, type: content.Type || 'PHOTO' })}>
-                                                                <Video size={16} className="text-[#ff006e]/40" />
-                                                                <div className="text-[6px] mono text-white/20 uppercase">DECODING_SIGNAL...</div>
+                                                                <div className="text-[7px] mono font-bold text-[#ff006e] tracking-widest uppercase mb-1">
+                                                                    {content.Type === 'PHOTO' ? '// VISUAL_DATA' : '// SIGNAL_FEED'}
+                                                                </div>
+                                                                <div className="text-[8px] mono text-white truncate uppercase">{content.Title}</div>
                                                             </div>
-                                                        ) : (
-                                                            <img
-                                                                src={content.Url?.startsWith('http') ? content.Url : `http://localhost:5264${content.Url}`}
-                                                                alt={content.Title}
-                                                                className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-500"
-                                                                onClick={() => setSelectedContent({ ...content, type: content.Type || 'PHOTO' })}
-                                                            />
-                                                        )}
-                                                    </motion.div>
-                                                ))}
+                                                            {content.Type === 'VIDEO' ? (
+                                                                <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 space-y-2"
+                                                                    onClick={() => setSelectedContent({ ...content, type: content.Type || 'PHOTO' })}>
+                                                                    <Video size={16} className="text-[#ff006e]/40" />
+                                                                    <div className="text-[6px] mono text-white/20 uppercase">DECODING_SIGNAL...</div>
+                                                                </div>
+                                                            ) : (
+                                                                <img
+                                                                    src={content.Url?.startsWith('http') ? content.Url : `http://localhost:5264${content.Url}`}
+                                                                    alt={content.Title}
+                                                                    className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-500"
+                                                                    onClick={() => setSelectedContent({ ...content, type: content.Type || 'PHOTO' })}
+                                                                />
+                                                            )}
+                                                        </motion.div>
+                                                    ))}
+                                            </div>
                                         </div>
                                     </div>
                                 )}
 
-                                {/* Studio Content Grid for Photo/Video Tabs */}
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                    {profileGallery
-                                        .filter(c => (studioSubTab === 'Photos' && c.Type === 'PHOTO') || (studioSubTab === 'Video' && c.Type === 'VIDEO'))
-                                        .sort((a, b) => {
-                                            const aPinned = (a.IsPinned || a.isPinned) ? 1 : 0;
-                                            const bPinned = (b.IsPinned || b.isPinned) ? 1 : 0;
-                                            if (bPinned !== aPinned) return bPinned - aPinned;
-                                            return new Date(b.CreatedAt || b.createdAt) - new Date(a.CreatedAt || a.createdAt);
-                                        })
-                                        .map((content) => (
-                                            <motion.div
-                                                key={content.Id || content.id}
-                                                initial={{ opacity: 0, scale: 0.9 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                whileHover={{ scale: 1.02 }}
-                                                className="group relative aspect-square bg-black border border-white/5 overflow-hidden cursor-pointer"
-                                                onClick={() => setSelectedContent({ ...content, type: content.Type || 'PHOTO' })}
-                                            >
-                                                <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end">
-                                                    <div className="text-[7px] mono font-bold text-[#ff006e] tracking-widest uppercase mb-1">
-                                                        {content.Type === 'PHOTO' ? '// VISUAL_DATA' : '// SIGNAL_FEED'}
-                                                    </div>
-                                                    <div className="text-[8px] mono text-white truncate uppercase">{content.Title}</div>
-                                                </div>
-                                                {content.Type === 'VIDEO' ? (
-                                                    <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 space-y-2">
-                                                        <Video size={16} className="text-[#ff006e]/40" />
-                                                        <div className="text-[6px] mono text-white/20 uppercase">DECODING_SIGNAL...</div>
-                                                    </div>
-                                                ) : (
-                                                    <img
-                                                        src={content.Url?.startsWith('http') ? content.Url : `http://localhost:5264${content.Url}`}
-                                                        alt={content.Title}
-                                                        className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-500"
-                                                    />
-                                                )}
-                                                {isMe && (
-                                                    <div className="absolute top-2 left-2 z-30 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                                        <button
-                                                            onClick={async (e) => {
-                                                                e.stopPropagation();
-                                                                try {
-                                                                    const API = await import('../services/api').then(mod => mod.default);
-                                                                    await API.Studio.togglePin(content.Id || content.id);
-                                                                    const isPinnedNow = !(content.IsPinned || content.isPinned);
-                                                                    showNotification(isPinnedNow ? "SIGNAL_PINNED" : "SIGNAL_UNPINNED", `CONTENT_${isPinnedNow ? 'PRIORITIZED_ON' : 'REMOVED_FROM'}_MONITOR`, "success");
-                                                                    const resArr = await API.Studio.getMyGallery();
-                                                                    setProfileGallery(resArr.data || []);
-                                                                } catch (err) { console.error(err); }
-                                                            }}
-                                                            className={`p-1.5 border backdrop-blur-md transition-all ${(content.IsPinned || content.isPinned) ? 'bg-white text-black border-white' : 'bg-black/60 text-white/40 border-white/10 hover:text-white'}`}
-                                                            title="Pin to Monitor"
-                                                        >
-                                                            <Star size={10} fill={(content.IsPinned || content.isPinned) ? "currentColor" : "none"} />
-                                                        </button>
-                                                        <button
-                                                            onClick={async (e) => {
-                                                                e.stopPropagation();
-                                                                try {
-                                                                    const API = await import('../services/api').then(mod => mod.default);
-                                                                    await API.Studio.togglePost(content.Id || content.id);
-                                                                    const isPostedNow = !(content.IsPosted || content.isPosted);
-                                                                    showNotification(isPostedNow ? "SIGNAL_BROADCAST" : "SIGNAL_REDACTED", `CONTENT_${isPostedNow ? 'ADDED_TO' : 'REMOVED_FROM'}_WALL`, "success");
-                                                                    const resArr = await API.Studio.getMyGallery();
-                                                                    setProfileGallery(resArr.data || []);
-                                                                } catch (err) { console.error(err); }
-                                                            }}
-                                                            className={`p-1.5 border backdrop-blur-md transition-all ${(content.IsPosted || content.isPosted) ? 'bg-[#ff006e] text-black border-[#ff006e]' : 'bg-black/60 text-[#ff006e]/40 border-[#ff006e]/10 hover:text-[#ff006e]'}`}
-                                                            title="Pin to Wall"
-                                                        >
-                                                            <Share2 size={10} />
-                                                        </button>
-                                                    </div>
-                                                )}
-                                                <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-all">
-                                                    {content.Type === 'PHOTO' ? <Camera size={10} className="text-white/40" /> : <Video size={10} className="text-white/40" />}
-                                                </div>
-                                            </motion.div>
-                                        ))}
-
-                                    {studioSubTab === 'Photos' && profileGallery.filter(c => c.Type === 'PHOTO').length === 0 && (
-                                        <div className="col-span-full py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
-                                            <Camera size={24} className="mb-4 text-[#ff006e]" />
-                                            <span className="mono text-[8px] uppercase tracking-[0.2em]">GALLERY_ENCRYPTED_OR_EMPTY</span>
-                                        </div>
-                                    )}
-                                    {studioSubTab === 'Video' && profileGallery.filter(c => c.Type === 'VIDEO').length === 0 && (
-                                        <div className="col-span-full py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
-                                            <Video size={24} className="mb-4 text-[#ff006e]" />
-                                            <span className="mono text-[8px] uppercase tracking-[0.2em]">VISUAL_FEED_OFFLINE</span>
-                                        </div>
-                                    )}
-                                </div>
+                                {studioSubTab === 'Photos' && profileGallery.filter(c => c.Type === 'PHOTO').length === 0 && (
+                                    <div className="col-span-full py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
+                                        <Camera size={24} className="mb-4 text-[#ff006e]" />
+                                        <span className="mono text-[8px] uppercase tracking-[0.2em]">GALLERY_ENCRYPTED_OR_EMPTY</span>
+                                    </div>
+                                )}
+                                {studioSubTab === 'Video' && profileGallery.filter(c => c.Type === 'VIDEO').length === 0 && (
+                                    <div className="col-span-full py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
+                                        <Video size={24} className="mb-4 text-[#ff006e]" />
+                                        <span className="mono text-[8px] uppercase tracking-[0.2em]">VISUAL_FEED_OFFLINE</span>
+                                    </div>
+                                )}
                                 {(studioSubTab === 'Journal' || studioSubTab === 'All') && (
                                     <div className="col-span-full space-y-6">
                                         {isMe && showJournalForm && (
@@ -1722,89 +1768,142 @@ export const ProfileView = React.memo(({
                                             </div>
                                         )}
 
-                                        <div className="grid grid-cols-1 gap-4">
-                                            {profileJournal.length > 0 ? (
-                                                profileJournal.sort((a, b) => {
-                                                    const aPinned = (a.IsPinned || a.isPinned) ? 1 : 0;
-                                                    const bPinned = (b.IsPinned || b.isPinned) ? 1 : 0;
-                                                    if (bPinned !== aPinned) return bPinned - aPinned;
-                                                    return new Date(b.CreatedAt || b.createdAt) - new Date(a.CreatedAt || a.createdAt);
-                                                }).map((entry, idx) => (
-                                                    <div key={entry.Id || idx} className={`p-6 border transition-all ${(entry.IsPosted || entry.isPosted) ? 'border-[#ff006e]/40 bg-[#ff006e]/5 shadow-[0_0_20px_#ff006e05]' : 'border-white/5 bg-black'}`}>
-                                                        <div className="flex justify-between items-start mb-4">
-                                                            <div className="flex flex-col gap-1">
-                                                                <div className="flex items-center gap-3">
-                                                                    {(entry.IsPinned || entry.isPinned) && <Star size={12} className="text-white fill-white" />}
-                                                                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">{entry.Title || entry.title || '// UNTITLED_LOG'}</h3>
+                                        <div>
+                                            {/* Journal Carousel Header */}
+                                            <div className="flex justify-between items-center mb-4">
+                                                <h3 className="mono text-[10px] font-black text-[#ff006e]/60 uppercase tracking-[0.3em]">
+                                                    JOURNAL_ARCHIVE
+                                                </h3>
+                                            </div>
+
+                                            <div className="relative group px-6 mb-4">
+                                                {profileJournal.length > 0 && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => {
+                                                                const el = document.getElementById('journal-carousel');
+                                                                if (el) el.scrollBy({ left: -400, behavior: 'smooth' });
+                                                            }}
+                                                            className="absolute left-0 top-1/2 -translate-y-1/2 z-40 text-[#ff006e]/60 hover:text-[#ff006e] hover:scale-110 transition-all opacity-100"
+                                                        >
+                                                            <ChevronLeft size={20} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                const el = document.getElementById('journal-carousel');
+                                                                if (el) el.scrollBy({ left: 400, behavior: 'smooth' });
+                                                            }}
+                                                            className="absolute right-0 top-1/2 -translate-y-1/2 z-40 text-[#ff006e]/60 hover:text-[#ff006e] hover:scale-110 transition-all opacity-100"
+                                                        >
+                                                            <ChevronRight size={20} />
+                                                        </button>
+                                                    </>
+                                                )}
+
+                                                <div id="journal-carousel" className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar scroll-smooth snap-x snap-mandatory">
+                                                    {profileJournal.length > 0 ? (
+                                                        profileJournal.sort((a, b) => {
+                                                            const aPinned = isTruthy(a.IsPinned || a.isPinned) ? 1 : 0;
+                                                            const bPinned = isTruthy(b.IsPinned || b.isPinned) ? 1 : 0;
+                                                            if (bPinned !== aPinned) return bPinned - aPinned;
+
+                                                            const aPosted = isTruthy(a.IsPosted || a.isPosted) ? 1 : 0;
+                                                            const bPosted = isTruthy(b.IsPosted || b.isPosted) ? 1 : 0;
+                                                            if (bPosted !== aPosted) return bPosted - aPosted;
+
+                                                            return new Date(b.CreatedAt || b.createdAt) - new Date(a.CreatedAt || a.createdAt);
+                                                        })
+                                                            .map((entry, idx) => (
+                                                                <div key={entry.Id || idx} className={`snap-center shrink-0 w-[400px] p-6 border flex flex-col transition-all ${(entry.IsPosted || entry.isPosted) ? 'border-[#ff006e]/40 bg-[#ff006e]/5 shadow-[0_0_20px_#ff006e05]' : 'border-white/5 bg-black'}`}>
+                                                                    <div className="flex justify-between items-start mb-4 shrink-0">
+                                                                        <div className="flex flex-col gap-1">
+                                                                            <div className="flex items-center gap-3">
+                                                                                {(entry.IsPinned || entry.isPinned) && <Star size={12} className="text-white fill-white" />}
+                                                                                <h3 className="text-sm font-bold text-white uppercase tracking-wider">{entry.Title || entry.title || '// UNTITLED_LOG'}</h3>
+                                                                            </div>
+                                                                            <span className="text-[8px] text-[#ff006e] mono">{new Date(entry.CreatedAt || entry.createdAt).toLocaleString()}</span>
+                                                                        </div>
+                                                                        {isMe && (
+                                                                            <div className="flex gap-2">
+                                                                                <button
+                                                                                    onClick={async () => {
+                                                                                        try {
+                                                                                            const API = await import('../services/api').then(mod => mod.default);
+                                                                                            await API.Journal.togglePin(entry.Id || entry.id);
+                                                                                            const isPinnedNow = !isTruthy(entry.IsPinned || entry.isPinned);
+                                                                                            setProfileJournal(prev => prev.map(j => (String(j.Id || j.id) === String(entry.Id || entry.id)) ? { ...j, isPinned: isPinnedNow, IsPinned: isPinnedNow } : j));
+                                                                                            showNotification(isPinnedNow ? "LOG_LOCKED" : "LOG_RELEASED", `ENTRY_${isPinnedNow ? 'PINNED_TO' : 'RECALLED_FROM'}_MONITOR`, "success");
+                                                                                        } catch (err) { console.error(err); }
+                                                                                    }}
+                                                                                    className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(entry.IsPinned || entry.isPinned) ? 'bg-white text-black border-white shadow-[0_0_15px_#fff]' : 'bg-black/60 border-white/20 text-white/40 hover:text-white hover:border-white/40'}`}
+                                                                                    title="Pin to Monitor"
+                                                                                >
+                                                                                    <Star size={10} fill={isTruthy(entry.IsPinned || entry.isPinned) ? "currentColor" : "none"} />
+                                                                                </button>
+
+                                                                                <button
+                                                                                    onClick={async () => {
+                                                                                        try {
+                                                                                            const API = await import('../services/api').then(mod => mod.default);
+                                                                                            await API.Journal.togglePost(entry.Id || entry.id);
+                                                                                            const isPostedNow = !isTruthy(entry.IsPosted || entry.isPosted);
+                                                                                            setProfileJournal(prev => prev.map(j => (String(j.Id || j.id) === String(entry.Id || entry.id)) ? { ...j, isPosted: isPostedNow, IsPosted: isPostedNow } : j));
+                                                                                            showNotification(isPostedNow ? "PINNED_TO_WALL" : "REMOVED_FROM_WALL", `ENTRY_${isPostedNow ? 'ATTACHED_TO' : 'DETACHED_FROM'}_PROFILE_SURFACE`, "success");
+                                                                                        } catch (err) { console.error(err); }
+                                                                                    }}
+                                                                                    className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(entry.IsPosted || entry.isPosted) ? 'bg-[#ff006e] text-black border-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.5)]' : 'bg-black/60 border-[#ff006e]/20 text-[#ff006e]/40 hover:text-[#ff006e] hover:border-[#ff006e]/40'}`}
+                                                                                    title="Pin to Wall"
+                                                                                >
+                                                                                    <Share2 size={10} />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?journal=${entry.Id || entry.id}`;
+                                                                                        navigator.clipboard.writeText(link);
+                                                                                        showNotification("LINK_COPIED", "ARCHIVE_SIGNAL_SECURED", "success");
+                                                                                    }}
+                                                                                    className="px-3 py-1 border border-white/20 text-white/40 hover:text-white transition-all text-[7px] mono uppercase font-bold"
+                                                                                >
+                                                                                    [ SHARE_LOG ]
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={async () => {
+                                                                                        if (!window.confirm("DELETE_LOG_PERMANENTLY?")) return;
+                                                                                        try {
+                                                                                            const API = await import('../services/api').then(mod => mod.default);
+                                                                                            await API.Journal.delete(entry.Id);
+                                                                                            const res = await API.Journal.getMyJournal();
+                                                                                            setProfileJournal(res.data || []);
+                                                                                        } catch (err) { console.error(err); }
+                                                                                    }}
+                                                                                    className="px-3 py-1 border border-white/5 text-white/20 hover:text-red-500 hover:border-red-500/30 transition-all text-[7px] mono"
+                                                                                >
+                                                                                    [ DELETE ]
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="relative">
+                                                                        <p className="text-[9px] text-white/60 leading-relaxed italic tracking-wider line-clamp-3">
+                                                                            {entry.Content || entry.content}
+                                                                        </p>
+                                                                        <button
+                                                                            onClick={() => setSelectedContent({ ...entry, type: 'JOURNAL' })}
+                                                                            className="mt-2 text-[7px] font-bold text-[#ff006e] uppercase tracking-widest hover:underline"
+                                                                        >
+                                                                            [ EXPAND_SIGNAL_DATA ]
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
-                                                                <span className="text-[8px] text-[#ff006e] mono">{new Date(entry.CreatedAt || entry.createdAt).toLocaleString()}</span>
-                                                            </div>
-                                                            {isMe && (
-                                                                <div className="flex gap-2">
-                                                                    <button
-                                                                        onClick={async () => {
-                                                                            try {
-                                                                                const API = await import('../services/api').then(mod => mod.default);
-                                                                                await API.Journal.togglePost(entry.Id || entry.id);
-                                                                                showNotification((entry.IsPosted || entry.isPosted) ? "REMOVED_FROM_WALL" : "PINNED_TO_WALL", `ENTRY_${(entry.IsPosted || entry.isPosted) ? 'DETACHED_FROM' : 'ATTACHED_TO'}_PROFILE_SURFACE`, "success");
-                                                                                const res = await (isMe ? API.Journal.getMyJournal() : API.Journal.getUserJournal(targetUserId));
-                                                                                setProfileJournal(res.data || []);
-                                                                            } catch (err) { console.error(err); }
-                                                                        }}
-                                                                        className={`px-3 py-1 border text-[7px] font-bold mono uppercase transition-all ${(entry.IsPosted || entry.isPosted) ? 'bg-cyan-500/20 text-cyan-400 border-cyan-400/50 shadow-[0_0_10px_#00ffff10]' : 'text-white/40 border-white/20 hover:text-white'}`}
-                                                                    >
-                                                                        {(entry.IsPosted || entry.isPosted) ? '[ PINNED_TO_WALL ]' : '[ PIN_TO_WALL ]'}
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={async () => {
-                                                                            try {
-                                                                                const API = await import('../services/api').then(mod => mod.default);
-                                                                                await API.Journal.togglePin(entry.Id || entry.id);
-                                                                                showNotification((entry.IsPinned || entry.isPinned) ? "LOG_UNPINNED" : "LOG_PINNED", `ENTRY_${(entry.IsPinned || entry.isPinned) ? 'REMOVED_FROM' : 'PRIORITIZED_ON'}_MONITOR`, "success");
-                                                                                const res = await (isMe ? API.Journal.getMyJournal() : API.Journal.getUserJournal(targetUserId));
-                                                                                setProfileJournal(res.data || []);
-                                                                            } catch (err) { console.error(err); }
-                                                                        }}
-                                                                        className={`px-3 py-1 border text-[7px] font-bold mono uppercase transition-all ${(entry.IsPinned || entry.isPinned) ? 'bg-white text-black border-white' : 'text-white/40 border-white/20 hover:text-white'}`}
-                                                                    >
-                                                                        {(entry.IsPinned || entry.isPinned) ? '[ PINNED_TO_MONITOR ]' : '[ PIN_TO_MONITOR ]'}
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={async () => {
-                                                                            if (!window.confirm("DELETE_LOG_PERMANENTLY?")) return;
-                                                                            try {
-                                                                                const API = await import('../services/api').then(mod => mod.default);
-                                                                                await API.Journal.delete(entry.Id);
-                                                                                const res = await API.Journal.getMyJournal();
-                                                                                setProfileJournal(res.data || []);
-                                                                            } catch (err) { console.error(err); }
-                                                                        }}
-                                                                        className="px-3 py-1 border border-white/5 text-white/20 hover:text-red-500 hover:border-red-500/30 transition-all text-[7px] mono"
-                                                                    >
-                                                                        [ DELETE ]
-                                                                    </button>
-                                                                </div>
-                                                            )}
+                                                            ))
+                                                    ) : (
+                                                        <div className="col-span-full py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
+                                                            <Book size={32} className="mb-4 text-[#ff006e]" />
+                                                            <span className="mono text-[10px] uppercase tracking-[0.2em]">NO_ARCHIVED_LOGS_FOUND</span>
                                                         </div>
-                                                        <div className="relative">
-                                                            <p className="text-[9px] text-white/60 leading-relaxed italic tracking-wider line-clamp-3">
-                                                                {entry.Content || entry.content}
-                                                            </p>
-                                                            <button
-                                                                onClick={() => setSelectedContent({ ...entry, type: 'JOURNAL' })}
-                                                                className="mt-2 text-[7px] font-bold text-[#ff006e] uppercase tracking-widest hover:underline"
-                                                            >
-                                                                [ EXPAND_SIGNAL_DATA ]
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div className="col-span-full py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
-                                                    <Book size={32} className="mb-4" />
-                                                    <span className="mono text-[10px] uppercase">NO_ARCHIVED_LOGS_FOUND</span>
+                                                    )}
                                                 </div>
-                                            )}
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -1904,7 +2003,7 @@ export const ProfileView = React.memo(({
             </AnimatePresence>
 
             {/* Global Overlays */}
-            < AnimatePresence >
+            <AnimatePresence>
                 {showCreatePlaylist && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
                         <div className="bg-black border border-[#ff006e]/30 p-10 max-w-md w-full relative">
@@ -1976,7 +2075,7 @@ export const ProfileView = React.memo(({
                                         onDelete={handleDeletePlaylist}
                                         onRemoveTrack={handleRemoveTrackFromPlaylist}
                                         onPlayAll={(tracks) => onPlayPlaylist?.(tracks)}
-                                        playlists={playlists}
+                                        playlists={currentUserPlaylists}
                                         myLikes={myLikes}
                                     />
                                 )}
@@ -1993,7 +2092,7 @@ export const ProfileView = React.memo(({
                         />
                     )
                 }
-            </AnimatePresence >
+            </AnimatePresence>
             <CRTOverlay />
         </>
     );

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Search, Edit, MoreHorizontal, Phone, Volume2, Send, ChevronLeft, User, X, Heart } from 'lucide-react';
 import API from '../services/api';
 
-export const MessagesView = ({ user, navigateToProfile }) => {
+export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
     const [conversations, setConversations] = useState([]);
     const [currentChat, setCurrentChat] = useState(null); // The user object we are chatting with
     const [messages, setMessages] = useState([]);
@@ -131,6 +131,16 @@ export const MessagesView = ({ user, navigateToProfile }) => {
     }, []);
 
     useEffect(() => {
+        if (initialChatUser) {
+            setCurrentChat({
+                id: initialChatUser.id || initialChatUser.Id,
+                username: initialChatUser.username || initialChatUser.Username,
+                profileImageUrl: initialChatUser.profilePictureUrl || initialChatUser.ProfilePictureUrl || initialChatUser.profileImageUrl || initialChatUser.ProfileImageUrl
+            });
+        }
+    }, [initialChatUser]);
+
+    useEffect(() => {
         if (currentChat) {
             fetchChatHistory(currentChat.id);
             const interval = setInterval(() => fetchChatHistory(currentChat.id), 3000);
@@ -170,9 +180,10 @@ export const MessagesView = ({ user, navigateToProfile }) => {
     if (currentChat) {
         return (
             <motion.div
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '100%' }}
+                initial={{ x: '100%', opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: '100%', opacity: 0 }}
+                transition={{ duration: 0.3 }}
                 className="h-full flex flex-col bg-black z-50 relative"
             >
                 {/* Terminal Window Header */}

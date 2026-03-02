@@ -12,11 +12,11 @@ const COL_GAP = 300;
 const ROW_GAP = 240;
 
 const SECTORS = [
-    { name: 'NEON SLUMS', x: 200, y: 150, color: '#ff006e', desc: 'Underground beats & raw signal' },
-    { name: 'SILICON HEIGHTS', x: 3000, y: 80, color: '#00ffff', desc: 'Synthetic highs & digital dreams' },
-    { name: 'DATA VOID', x: 180, y: 2200, color: '#9b5de5', desc: 'Deep frequency & noise art' },
-    { name: 'CENTRAL HUB', x: 2700, y: 1700, color: '#ffcc00', desc: 'Convergence point of all signals' },
-    { name: 'OUTER RIM', x: 4700, y: 500, color: '#00ff88', desc: 'Fringe transmissions & outliers' },
+    { name: 'ELECTRONIC', x: 200, y: 150, color: '#ff006e', desc: 'House, Techno, Trance, Drum & Bass', subgenres: ['House', 'Techno', 'Ambient', 'Trance', 'Drum & Bass'] },
+    { name: 'HIP HOP / R&B', x: 3000, y: 80, color: '#00ffff', desc: 'Trap, Boom Bap, Neo-soul, Drill', subgenres: ['Trap', 'Boom Bap', 'Neo-Soul', 'Drill'] },
+    { name: 'POP / DANCE', x: 180, y: 2200, color: '#9b5de5', desc: 'Synthpop, Hyperpop, K-Pop, Disco', subgenres: ['Synthpop', 'Hyperpop', 'K-Pop', 'Disco'] },
+    { name: 'ROCK / METAL', x: 2700, y: 1700, color: '#ffcc00', desc: 'Indie, Post-Punk, Shoegaze, Alt', subgenres: ['Indie Rock', 'Post-Punk', 'Black Metal', 'Shoegaze'] },
+    { name: 'EXPERIMENTAL / JAZZ', x: 4700, y: 500, color: '#00ff88', desc: 'Free Jazz, Noise, IDM, Avant-Garde', subgenres: ['Free Jazz', 'Noise', 'IDM', 'Avant-Garde'] },
 ];
 
 const ICONS = [Disc, Music, Mic, Radio, Speaker, Zap];
@@ -74,19 +74,46 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
     const pan = { x: viewState.x, y: viewState.y };
     const zoom = viewState.zoom;
 
+    // Communities
+    const [communities, setCommunities] = useState([]);
+
     // ── DATA ──
     useEffect(() => {
         (async () => {
             setLoading(true);
             try {
-                const res = await API.Artists.getAll().catch(() => ({ data: [] }));
+                const [res, commRes] = await Promise.all([
+                    API.Artists.getAll().catch(() => ({ data: [] })),
+                    API.Communities.getAll().catch(() => ({ data: [] }))
+                ]);
                 let raw = Array.isArray(res?.data) ? res.data : [];
+                let comms = Array.isArray(commRes?.data) ? commRes.data : [];
+
+                // Assign sectors & positions to communities
+                const processedComms = comms.map((c, i) => {
+                    const hComm = hashStr(c.name || 'comm' + i);
+                    const sec = SECTORS[c.sectorId] || SECTORS[0];
+                    return {
+                        ...c,
+                        x: sec.x + (hComm % 700) - 100,
+                        y: sec.y + ((hComm >> 4) % 400),
+                        color: sec.color,
+                        sector: sec.name
+                    };
+                });
+                setCommunities(processedComms);
+
                 setArtists(raw.map((a, i) => {
                     const id = a.id || a.Id || `mock-${i}`;
                     const hashSource = (a.userId || a.UserId || id).toString();
+
+                    // User's specific community
+                    const commId = a.communityId || a.CommunityId;
+                    let targetComm = commId ? processedComms.find(c => c.id === commId) : null;
+
                     const dbSectorId = a.sectorId ?? a.SectorId;
                     const h = hashStr(hashSource);
-                    const sec = (dbSectorId !== null && dbSectorId !== undefined) ? SECTORS[dbSectorId] : SECTORS[h % SECTORS.length];
+                    const sec = targetComm ? (SECTORS[targetComm.sectorId] || SECTORS[0]) : ((dbSectorId !== null && dbSectorId !== undefined) ? SECTORS[dbSectorId] : SECTORS[h % SECTORS.length]);
                     const li = Math.floor((h / SECTORS.length) | 0) % 36;
                     // Simulate play count
                     const plays = a.playCount || a.PlayCount || a.plays || ((h % 900) + 10);
@@ -100,8 +127,9 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                         icon: ICONS[h % ICONS.length],
                         profileImage: a.profileImageUrl || a.ProfileImageUrl || null,
                         sector: sec.name,
-                        x: sec.x + (li % 6) * COL_GAP + ((h % 80) - 40),
-                        y: sec.y + Math.floor(li / 6) * ROW_GAP + (((h >> 5) % 60) - 30),
+                        targetCommId: targetComm?.id,
+                        x: targetComm ? targetComm.x + (((h % 40) - 20) * 8) : sec.x + (li % 6) * COL_GAP + ((h % 80) - 40),
+                        y: targetComm ? targetComm.y + ((((h >> 2) % 40) - 20) * 8) : sec.y + Math.floor(li / 6) * ROW_GAP + (((h >> 5) % 60) - 30),
                         isMock: !!a.isMock,
                         plays,
                         nodeSize,
@@ -233,20 +261,58 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
 
     const matchedArtistIdsForRendering = new Set(localArtists.map(a => a.id));
 
-    const visible = artists.filter(a => {
+    const visibleRaw = artists.filter(a => {
         // Search takes priority
         if (searchQuery.length > 0 && matchedArtistIdsForRendering.has(a.id)) return true;
 
         // LOD Zoom Logic:
-        // Level 1 (Zoom < 0.3): Only Superstars (>5000 plays)
         if (viewState.zoom < 0.25) return a.plays > 5000;
-        // Level 2 (Zoom < 0.45): Popular Artists (>1000 plays)
         if (viewState.zoom < 0.45) return a.plays > 1000;
-        // Level 3 (Zoom < 0.65): Emerging Artists (>100 plays)
         if (viewState.zoom < 0.65) return a.plays > 100;
-        // Level 4: All signals
         return true;
     });
+
+    const clusteredNodes = React.useMemo(() => {
+        // If searching, just render all visible without clusters
+        if (searchQuery.length > 0 || viewState.zoom > 0.6) return visibleRaw.map(a => ({ ...a, isCluster: false }));
+
+        const clusters = [];
+        const THRESHOLD = 120 / viewState.zoom; // Clustering distance shrinks rapidly as we zoom
+
+        visibleRaw.forEach(a => {
+            if (a.targetCommId) {
+                // Keep community nodes unclustered for easy viewing, or group them directly to the community hub
+                clusters.push({ ...a, isCluster: false });
+                return;
+            }
+            let found = null;
+            for (let c of clusters) {
+                if (!c.isCluster && c.members) continue; // Skip single non-cluster points? Wait, handle all clusters.
+                const dx = c.x - a.x;
+                const dy = c.y - a.y;
+                if (dx * dx + dy * dy < THRESHOLD * THRESHOLD) {
+                    found = c;
+                    break;
+                }
+            }
+            if (found) {
+                found.count++;
+                found.members.push(a);
+                // Move cluster center slightly toward new node
+                found.x = (found.x * (found.count - 1) + a.x) / found.count;
+                found.y = (found.y * (found.count - 1) + a.y) / found.count;
+            } else {
+                clusters.push({ ...a, isCluster: true, count: 1, members: [a] });
+            }
+        });
+
+        return clusters.map(c => {
+            if (c.count === 1) return { ...c.members[0], isCluster: false };
+            return c;
+        });
+    }, [visibleRaw, viewState.zoom, searchQuery]);
+
+    const visible = clusteredNodes; // Map loop expects 'visible'
 
     const matchedArtistIds = new Set(localArtists.map(a => a.id));
 
@@ -277,6 +343,7 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                 @keyframes pulse-ring { 0%,100%{opacity:.12;transform:scale(1)} 50%{opacity:.4;transform:scale(1.18)} }
                 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
                 @keyframes drift { 0%{stroke-dashoffset:0} 100%{stroke-dashoffset:-40} }
+                @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
                 
                 .ring-pulse { animation: pulse-ring 4s ease-in-out infinite; }
                 .blink { animation: blink 1.6s ease-in-out infinite; }
@@ -371,19 +438,58 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                     })}
                 </svg>
 
+                {/* Subgenre Labels */}
+                {viewState.zoom >= 0.45 && SECTORS.map(s => {
+                    if (!s.subgenres) return null;
+                    return s.subgenres.map((sg, i) => {
+                        const sx = s.x + 400 + (Math.sin(i * Math.PI / 2) * 500);
+                        const sy = s.y + 300 + (Math.cos(i * Math.PI / 2) * 400);
+                        return (
+                            <motion.div key={`sg-${s.name}-${sg}`}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 0.15 + (viewState.zoom - 0.45) * 0.3 }}
+                                className="absolute pointer-events-none mono"
+                                style={{
+                                    left: sx, top: sy,
+                                    fontSize: 48, fontWeight: 700, letterSpacing: '0.15em',
+                                    color: s.color, whiteSpace: 'nowrap', userSelect: 'none',
+                                    transform: 'translate(-50%, -50%)',
+                                    zIndex: 0
+                                }}>
+                                {sg}
+                            </motion.div>
+                        );
+                    });
+                })}
+
+                {/* Communities */}
+                {communities.map(c => (
+                    <CommunityNode key={`comm-${c.id}`} community={c} />
+                ))}
+
                 {/* Nodes */}
                 <AnimatePresence>
-                    {visible.map(a => (
-                        <ArtistNode
-                            key={a.id}
-                            artist={a}
-                            hovered={hoveredId === a.id}
-                            isSearchResult={searchQuery.length > 0 && matchedArtistIdsForRendering.has(a.id)}
-                            dimmed={searchQuery.length > 0 && !matchedArtistIdsForRendering.has(a.id)}
-                            onHover={setHoveredId}
-                            onClick={() => navigateToProfile?.(a.userId)}
-                        />
-                    ))}
+                    {visible.map(a =>
+                        a.isCluster ? (
+                            <ClusterNode
+                                key={`cluster-${a.id}`}
+                                cluster={a}
+                                onClick={() => flyTo(a.x, a.y, Math.min(viewState.zoom + 0.3, 1.5))}
+                                dimmed={searchQuery.length > 0 && !a.members.some(m => matchedArtistIdsForRendering.has(m.id))}
+                                isSearchResult={searchQuery.length > 0 && a.members.some(m => matchedArtistIdsForRendering.has(m.id))}
+                            />
+                        ) : (
+                            <ArtistNode
+                                key={a.id}
+                                artist={a}
+                                hovered={hoveredId === a.id}
+                                isSearchResult={searchQuery.length > 0 && matchedArtistIdsForRendering.has(a.id)}
+                                dimmed={searchQuery.length > 0 && !matchedArtistIdsForRendering.has(a.id)}
+                                onHover={setHoveredId}
+                                onClick={() => navigateToProfile?.(a.userId)}
+                            />
+                        )
+                    )}
                 </AnimatePresence>
             </motion.div>
 
@@ -432,7 +538,12 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                         style={{ width: searchOpen ? 320 : 38, height: 36 }}
                     >
                         <button
-                            onClick={() => { setSearchOpen(s => !s); if (searchOpen) setSearchQuery(''); }}
+                            onClick={() => {
+                                setSearchOpen(s => !s);
+                                if (searchOpen) {
+                                    setSearchQuery('');
+                                }
+                            }}
                             className="flex-shrink-0 text-white/50 hover:text-[#ff006e] transition-colors"
                         >
                             {searchOpen ? <X size={13} /> : <Search size={13} />}
@@ -458,37 +569,18 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                                 exit={{ opacity: 0, y: -10 }}
                                 className="hud-panel rounded-lg w-[320px] max-h-[400px] overflow-y-auto custom-scrollbar p-2 flex flex-col gap-1 border border-white/5 shadow-2xl mt-1"
                             >
-                                {/* Local Artists */}
-                                {localArtists.length > 0 && (
-                                    <div className="flex flex-col gap-1">
-                                        <div className="mono text-[8px] text-white/30 px-2 py-1 tracking-widest uppercase">Artists on Map</div>
-                                        {localArtists.slice(0, 5).map(a => (
-                                            <button
-                                                key={`local-art-${a.id}`}
-                                                onClick={() => { flyTo(a.x, a.y, 0.8); setSearchOpen(false); }}
-                                                className="w-full text-left p-2 rounded hover:bg-white/5 flex items-center gap-3 group transition-colors"
-                                            >
-                                                <div className="w-6 h-6 rounded bg-white/5 flex items-center justify-center">
-                                                    <MapPin size={12} className="text-[#ff006e]/50 group-hover:text-[#ff006e]" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-[10px] text-white font-bold truncate tracking-wider">{a.name}</div>
-                                                    <div className="text-[8px] text-white/60 mono uppercase">{a.sector}</div>
-                                                </div>
-                                                <ChevronRight size={12} className="text-white/30 group-hover:text-white/60" />
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-
                                 {/* Local Tracks */}
                                 {localTracks.length > 0 && (
-                                    <div className="flex flex-col gap-1 mt-2 border-t border-white/5 pt-2">
-                                        <div className="mono text-[8px] text-white/30 px-2 py-1 tracking-widest uppercase">Local Tracks</div>
+                                    <div className="flex flex-col gap-1">
+                                        <div className="mono text-[8px] text-white/30 px-2 py-1 tracking-widest uppercase">Fatale Songs</div>
                                         {localTracks.map(t => (
                                             <button
                                                 key={`local-trk-${t.id}`}
-                                                onClick={() => { onPlayPlaylist?.([t], 0); setSearchOpen(false); }}
+                                                onClick={() => {
+                                                    onPlayPlaylist?.([t], 0);
+                                                    setSearchQuery('');
+                                                    setSearchOpen(false);
+                                                }}
                                                 className="w-full text-left p-2 rounded hover:bg-white/5 flex items-center gap-3 group transition-colors"
                                             >
                                                 <div className="w-6 h-6 rounded bg-white/5 flex items-center justify-center">
@@ -499,6 +591,33 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                                                     <div className="text-[8px] text-white/60 mono uppercase truncate">{t.artist}</div>
                                                 </div>
                                                 <Play size={10} className="text-white/30 group-hover:text-[#ff006e]" />
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Local Artists */}
+                                {localArtists.length > 0 && (
+                                    <div className="flex flex-col gap-1 mt-2 border-t border-white/5 pt-2">
+                                        <div className="mono text-[8px] text-white/30 px-2 py-1 tracking-widest uppercase">Fatale Profiles</div>
+                                        {localArtists.slice(0, 5).map(a => (
+                                            <button
+                                                key={`local-art-${a.id}`}
+                                                onClick={() => {
+                                                    flyTo(a.x, a.y, 0.8);
+                                                    setSearchQuery('');
+                                                    setSearchOpen(false);
+                                                }}
+                                                className="w-full text-left p-2 rounded hover:bg-white/5 flex items-center gap-3 group transition-colors"
+                                            >
+                                                <div className="w-6 h-6 rounded bg-white/5 flex items-center justify-center">
+                                                    <MapPin size={12} className="text-[#ff006e]/50 group-hover:text-[#ff006e]" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-[10px] text-white font-bold truncate tracking-wider">{a.name}</div>
+                                                    <div className="text-[8px] text-white/60 mono uppercase">{a.sector}</div>
+                                                </div>
+                                                <ChevronRight size={12} className="text-white/30 group-hover:text-white/60" />
                                             </button>
                                         ))}
                                     </div>
@@ -529,6 +648,7 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                                                             isYT: true
                                                         };
                                                         onPlayPlaylist?.([track], 0);
+                                                        setSearchQuery('');
                                                         setSearchOpen(false);
                                                     }}
                                                     className="w-full text-left p-2 rounded hover:bg-white/5 flex items-center gap-3 group transition-colors"
@@ -691,6 +811,85 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                 )}
             </AnimatePresence>
         </div >
+    );
+};
+
+// ─── COMMUNITY NODE ──────────────────────────────────────────────────────
+const CommunityNode = ({ community }) => {
+    return (
+        <div
+            className="node absolute flex items-center justify-center"
+            style={{
+                left: community.x - 100,
+                top: community.y - 100,
+                width: 200,
+                height: 200,
+                zIndex: 2,
+            }}
+        >
+            {/* Glowing Base */}
+            <div className="absolute w-[300px] h-[300px] pointer-events-none" style={{
+                background: `radial-gradient(circle, ${community.color}25 0%, transparent 60%)`,
+                animation: 'pulse-ring 8s ease-in-out infinite'
+            }} />
+
+            {/* Core */}
+            <div className="absolute w-[80px] h-[80px] rounded-full flex items-center justify-center border-4" style={{
+                borderColor: community.color,
+                boxShadow: `0 0 30px ${community.color}, inset 0 0 20px ${community.color}`,
+                background: 'rgba(0,0,0,0.8)'
+            }}>
+                <div className="text-center">
+                    <div className="mono text-[8px] text-white/80 font-bold tracking-widest leading-none mt-1">{community.name}</div>
+                    <div className="text-[6px] text-white/40 tracking-[0.2em] uppercase mt-1">Founding Node</div>
+                </div>
+            </div>
+
+            {/* Orbiting Ring */}
+            <div className="absolute w-[160px] h-[160px] rounded-full pointer-events-none border border-dashed" style={{
+                borderColor: `${community.color}55`,
+                animation: 'spin 30s linear infinite'
+            }} />
+        </div>
+    );
+};
+
+// ─── CLUSTER NODE ────────────────────────────────────────────────────────
+const ClusterNode = ({ cluster, onClick, dimmed, isSearchResult }) => {
+    return (
+        <motion.div
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: dimmed ? 0.3 : 1, scale: 1, filter: dimmed ? 'grayscale(0.8)' : 'none' }}
+            exit={{ opacity: 0, scale: 0 }}
+            transition={{ duration: 0.2 }}
+            className="node absolute flex justify-center items-center cursor-pointer group"
+            style={{
+                left: cluster.x,
+                top: cluster.y,
+                width: 70,
+                height: 70,
+                zIndex: isSearchResult ? 10 : 5
+            }}
+            onClick={onClick}
+        >
+            {/* Outline */}
+            <div className="absolute w-full h-full rounded-full border border-white/20 group-hover:border-white/60 transition-colors" style={{
+                background: 'rgba(4,4,10,0.8)',
+                backdropFilter: 'blur(8px)',
+                boxShadow: isSearchResult ? `0 0 20px ${cluster.color}` : 'none'
+            }} />
+
+            {/* Pulse */}
+            <div className="absolute w-full h-full rounded-full pointer-events-none" style={{
+                border: `2px solid ${cluster.color}`,
+                opacity: 0.5,
+                animation: 'pulse-ring 3s infinite'
+            }} />
+
+            <div className="relative text-white font-bold text-[14px] mono">
+                +{cluster.count}
+            </div>
+        </motion.div>
     );
 };
 

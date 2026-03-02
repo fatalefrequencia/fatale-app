@@ -169,7 +169,9 @@ const API = {
         addTrack: (id, trackId) => api.post(`Playlists/${id}/tracks`, { trackId }),
         removeTrack: (id, trackId) => api.delete(`Playlists/${id}/tracks/${trackId}`),
         update: (id, data) => api.put(`Playlists/${id}`, data),
-        delete: (id) => api.delete(`Playlists/${id}`)
+        delete: (id) => api.delete(`Playlists/${id}`),
+        togglePin: (id) => api.post(`Playlists/${id}/toggle-pin`),
+        togglePost: (id) => api.post(`Playlists/${id}/toggle-post`)
     },
     Wallet: {
         getTransactions: (type, limit = 20, offset = 0) => api.get(`Wallet/transactions?type=${type || ''}&limit=${limit}&offset=${offset}`),
@@ -204,6 +206,12 @@ const API = {
         getByUserId: (userId) => api.get(`Stations/user/${userId}`),
         goLive: (data) => api.post('Stations/go-live', data),
         endLive: () => api.post('Stations/end-live'),
+    },
+    Communities: {
+        getAll: () => api.get('Communities'),
+        create: (data) => api.post('Communities', data),
+        join: (id) => api.post(`Communities/${id}/join`),
+        leave: () => api.post('Communities/leave')
     }
 };
 

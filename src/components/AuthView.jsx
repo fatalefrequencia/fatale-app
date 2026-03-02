@@ -28,16 +28,11 @@ const AuthView = ({ onLoginSuccess }) => {
         try {
             let response;
             if (activeTab === 'login') {
-                // Login Logic
-                // Backend expects { email/username, password } usually, but let's send what we have based on the form
-                // If login endpoint allows username OR email, we might need to adjust. 
-                // Assuming API.Auth.login(credentials)
                 response = await API.Auth.login({
-                    username: formData.username, // Using username field for login identifier
+                    username: formData.username,
                     password: formData.password
                 });
             } else {
-                // Register Logic
                 response = await API.Auth.register({
                     username: formData.username,
                     email: formData.email,
@@ -47,8 +42,6 @@ const AuthView = ({ onLoginSuccess }) => {
 
             console.log('[AUTH] Backend Response:', response.data);
 
-            // Backend returns: { token, userId, username, email, createdAt }
-            // NOT nested in a user object
             const finalUser = {
                 id: response.data.userId,
                 username: response.data.username || formData.username,
@@ -57,14 +50,12 @@ const AuthView = ({ onLoginSuccess }) => {
             };
 
             console.log('[AUTH] Final User Object:', finalUser);
-            console.log('[AUTH] User ID to be stored:', finalUser.id);
 
             const finalAuthData = {
                 token: response.data.token,
                 user: finalUser
             };
 
-            // Pass the corrected data to parent
             if (onLoginSuccess) {
                 onLoginSuccess(finalAuthData);
             }
@@ -76,13 +67,12 @@ const AuthView = ({ onLoginSuccess }) => {
 
             if (err.response) {
                 const data = err.response.data;
-                // Try to extract the most meaningful error message
                 if (typeof data === 'string') {
-                    msg = data; // Raw string response (common in .NET 500s)
+                    msg = data;
                 } else if (data?.message) {
                     msg = data.message;
                 } else if (data?.title) {
-                    msg = data.title; // Problem Details pattern
+                    msg = data.title;
                 } else if (data?.error) {
                     msg = data.inner ? `${data.error} (Details: ${data.inner})` : data.error;
                 } else {
@@ -129,58 +119,64 @@ const AuthView = ({ onLoginSuccess }) => {
                     {/* Tabs */}
                     <div className="flex border-b border-[#ff006e]/20">
                         <button
-                            onClick={() => setActiveTab('login')}
-                            className={`flex-1 py-4 text-xs font-black uppercase tracking-widest transition-all relative ${activeTab === 'login' ? 'text-black bg-[#ff006e]' : 'text-[#ff006e]/50 hover:text-[#ff006e] hover:bg-[#ff006e]/5'
-                                }`}
+                            onClick={() => { setActiveTab('login'); setError(''); }}
+                            className={`flex-1 py-4 text-xs font-black uppercase tracking-widest transition-all relative ${activeTab === 'login' ? 'text-black bg-[#ff006e]' : 'text-[#ff006e]/50 hover:text-[#ff006e] hover:bg-[#ff006e]/5'}`}
                         >
                             Login
                         </button>
                         <button
-                            onClick={() => setActiveTab('register')}
-                            className={`flex-1 py-4 text-xs font-black uppercase tracking-widest transition-all relative ${activeTab === 'register' ? 'text-black bg-[#ff006e]' : 'text-[#ff006e]/50 hover:text-[#ff006e] hover:bg-[#ff006e]/5'
-                                }`}
+                            onClick={() => { setActiveTab('register'); setError(''); }}
+                            className={`flex-1 py-4 text-xs font-black uppercase tracking-widest transition-all relative ${activeTab === 'register' ? 'text-black bg-[#ff006e]' : 'text-[#ff006e]/50 hover:text-[#ff006e] hover:bg-[#ff006e]/5'}`}
                         >
-                            Registro
+                            Register
                         </button>
                     </div>
 
                     {/* Form Area */}
-                    <div className="p-8 space-y-6">
+                    <div className="p-8">
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            <AnimatePresence mode="popLayout">
+
+                            {/* Error Message */}
+                            <AnimatePresence mode="wait">
                                 {error && (
                                     <motion.div
                                         key="error-message"
-                                        initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                                        initial={{ opacity: 0, y: -8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -8 }}
                                         className="p-3 bg-red-900/20 border border-red-500/50 rounded-lg flex items-start gap-3 text-red-400 text-xs font-bold"
                                     >
                                         <AlertCircle size={16} className="mt-0.5 shrink-0" />
                                         <span>{error}</span>
                                     </motion.div>
                                 )}
+                            </AnimatePresence>
 
-                                <div className="space-y-4">
-                                    {/* Username Field */}
-                                    <div className="relative group">
-                                        <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ff006e]/50 group-focus-within:text-[#ff006e] transition-colors" />
-                                        <input
-                                            type="text"
-                                            name="username"
-                                            placeholder="Username"
-                                            value={formData.username}
-                                            onChange={handleChange}
-                                            required
-                                            className="w-full bg-[#050505] border border-[#ff006e]/20 rounded-xl py-3 pl-12 pr-4 text-white text-sm font-bold focus:outline-none focus:border-[#ff006e] focus:shadow-[0_0_15px_rgba(255,0,110,0.2)] transition-all placeholder:text-[#ff006e]/20"
-                                        />
-                                    </div>
+                            {/* Username Field */}
+                            <div className="relative group">
+                                <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ff006e]/50 group-focus-within:text-[#ff006e] transition-colors" />
+                                <input
+                                    type="text"
+                                    name="username"
+                                    placeholder="Username"
+                                    value={formData.username}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full bg-[#050505] border border-[#ff006e]/20 rounded-xl py-3 pl-12 pr-4 text-white text-sm font-bold focus:outline-none focus:border-[#ff006e] focus:shadow-[0_0_15px_rgba(255,0,110,0.2)] transition-all placeholder:text-[#ff006e]/20"
+                                />
+                            </div>
 
-                                    {/* Email Field (Only for Register) */}
-                                    {activeTab === 'register' && (
-                                        <motion.div
-                                            key="email-field"
-                                            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                                            className="relative group overflow-hidden"
-                                        >
+                            {/* Email Field (Only for Register) */}
+                            <AnimatePresence mode="wait">
+                                {activeTab === 'register' && (
+                                    <motion.div
+                                        key="email-field"
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="relative group">
                                             <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ff006e]/50 group-focus-within:text-[#ff006e] transition-colors" />
                                             <input
                                                 type="email"
@@ -191,47 +187,48 @@ const AuthView = ({ onLoginSuccess }) => {
                                                 required
                                                 className="w-full bg-[#050505] border border-[#ff006e]/20 rounded-xl py-3 pl-12 pr-4 text-white text-sm font-bold focus:outline-none focus:border-[#ff006e] focus:shadow-[0_0_15px_rgba(255,0,110,0.2)] transition-all placeholder:text-[#ff006e]/20"
                                             />
-                                        </motion.div>
-                                    )}
-
-                                    {/* Password Field */}
-                                    <div className="relative group">
-                                        <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ff006e]/50 group-focus-within:text-[#ff006e] transition-colors" />
-                                        <input
-                                            type="password"
-                                            name="password"
-                                            placeholder="Password"
-                                            value={formData.password}
-                                            onChange={handleChange}
-                                            required
-                                            className="w-full bg-[#050505] border border-[#ff006e]/20 rounded-xl py-3 pl-12 pr-4 text-white text-sm font-bold focus:outline-none focus:border-[#ff006e] focus:shadow-[0_0_15px_rgba(255,0,110,0.2)] transition-all placeholder:text-[#ff006e]/20"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="pt-4">
-                                    <button
-                                        type="submit"
-                                        disabled={loading}
-                                        className="w-full bg-[#ff006e] text-black font-black py-4 rounded-xl hover:bg-white hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wide shadow-[0_0_20px_rgba(255,0,110,0.4)] disabled:opacity-50 disabled:cursor-not-allowed group"
-                                    >
-                                        {loading ? <Loader2 size={20} className="animate-spin" /> : (
-                                            <>
-                                                {activeTab === 'login' ? 'Initialise Link' : 'Create Identity'}
-                                                <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-
-                                {activeTab === 'login' && (
-                                    <div className="text-center">
-                                        <button type="button" className="text-[10px] uppercase font-bold text-[#ff006e]/50 hover:text-[#ff006e] transition-colors">
-                                            Forgot Access Codes?
-                                        </button>
-                                    </div>
+                                        </div>
+                                    </motion.div>
                                 )}
                             </AnimatePresence>
+
+                            {/* Password Field */}
+                            <div className="relative group">
+                                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ff006e]/50 group-focus-within:text-[#ff006e] transition-colors" />
+                                <input
+                                    type="password"
+                                    name="password"
+                                    placeholder="Password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full bg-[#050505] border border-[#ff006e]/20 rounded-xl py-3 pl-12 pr-4 text-white text-sm font-bold focus:outline-none focus:border-[#ff006e] focus:shadow-[0_0_15px_rgba(255,0,110,0.2)] transition-all placeholder:text-[#ff006e]/20"
+                                />
+                            </div>
+
+                            {/* Submit Button */}
+                            <div className="pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full bg-[#ff006e] text-black font-black py-4 rounded-xl hover:bg-white hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-wide shadow-[0_0_20px_rgba(255,0,110,0.4)] disabled:opacity-50 disabled:cursor-not-allowed group"
+                                >
+                                    {loading ? <Loader2 size={20} className="animate-spin" /> : (
+                                        <>
+                                            {activeTab === 'login' ? 'Initialise Link' : 'Create Identity'}
+                                            <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+
+                            {activeTab === 'login' && (
+                                <div className="text-center">
+                                    <button type="button" className="text-[10px] uppercase font-bold text-[#ff006e]/50 hover:text-[#ff006e] transition-colors">
+                                        Forgot Access Codes?
+                                    </button>
+                                </div>
+                            )}
                         </form>
                     </div>
 
