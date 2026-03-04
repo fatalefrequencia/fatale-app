@@ -2,21 +2,23 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Plus, Minus, Activity, Music, Disc, Mic, Radio, Speaker, Zap, X, ChevronRight, MapPin, Play } from 'lucide-react';
 import API from '../services/api';
+import { CommunityDetailsModal, CreateCommunityModal } from './CommunityModals';
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
 const WORLD_W = 6000;
 const WORLD_H = 3800;
 const NODE_W = 76;
 const NODE_H = 76;
-const COL_GAP = 300;
-const ROW_GAP = 240;
+const COL_GAP = 320;
+const ROW_GAP = 280;
 
-const SECTORS = [
-    { name: 'ELECTRONIC', x: 200, y: 150, color: '#ff006e', desc: 'House, Techno, Trance, Drum & Bass', subgenres: ['House', 'Techno', 'Ambient', 'Trance', 'Drum & Bass'] },
-    { name: 'HIP HOP / R&B', x: 3000, y: 80, color: '#00ffff', desc: 'Trap, Boom Bap, Neo-soul, Drill', subgenres: ['Trap', 'Boom Bap', 'Neo-Soul', 'Drill'] },
-    { name: 'POP / DANCE', x: 180, y: 2200, color: '#9b5de5', desc: 'Synthpop, Hyperpop, K-Pop, Disco', subgenres: ['Synthpop', 'Hyperpop', 'K-Pop', 'Disco'] },
-    { name: 'ROCK / METAL', x: 2700, y: 1700, color: '#ffcc00', desc: 'Indie, Post-Punk, Shoegaze, Alt', subgenres: ['Indie Rock', 'Post-Punk', 'Black Metal', 'Shoegaze'] },
-    { name: 'EXPERIMENTAL / JAZZ', x: 4700, y: 500, color: '#00ff88', desc: 'Free Jazz, Noise, IDM, Avant-Garde', subgenres: ['Free Jazz', 'Noise', 'IDM', 'Avant-Garde'] },
+export const SECTORS = [
+    { name: 'ELECTRONIC', x: 1400, y: 1100, color: '#ff006e', desc: 'House, Techno, Trance, Drum & Bass', subgenres: ['House', 'Techno', 'Ambient', 'Trance', 'Drum & Bass'] },
+    { name: 'HIP HOP / R&B', x: 3000, y: 600, color: '#00ffff', desc: 'Trap, Boom Bap, Neo-soul, Drill', subgenres: ['Trap', 'Boom Bap', 'Neo-Soul', 'Drill'] },
+    { name: 'POP / DANCE', x: 1400, y: 2700, color: '#9b5de5', desc: 'Synthpop, Hyperpop, K-Pop, Disco', subgenres: ['Synthpop', 'Hyperpop', 'K-Pop', 'Disco'] },
+    { name: 'ROCK / METAL', x: 3000, y: 3200, color: '#ffcc00', desc: 'Indie, Post-Punk, Shoegaze, Alt', subgenres: ['Indie Rock', 'Post-Punk', 'Black Metal', 'Shoegaze'] },
+    { name: 'EXPERIMENTAL / JAZZ', x: 4600, y: 1100, color: '#00ff88', desc: 'Free Jazz, Noise, IDM, Avant-Garde', subgenres: ['Free Jazz', 'Noise', 'IDM', 'Avant-Garde'] },
+    { name: 'SOUL / GOSPEL', x: 4600, y: 2700, color: '#ff9900', desc: 'Neo-Soul, Gospel, Blues, Funk', subgenres: ['Neo-Soul', 'Gospel', 'Blues', 'Funk'] },
 ];
 
 const ICONS = [Disc, Music, Mic, Radio, Speaker, Zap];
@@ -48,8 +50,7 @@ const MapClock = React.memo(() => {
 });
 
 // ─── MAIN ──────────────────────────────────────────────────────────────────
-// ─── MAIN ──────────────────────────────────────────────────────────────────
-const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], favoriteStations = [] }) => {
+const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], favoriteStations = [], user, onCommunityUpdate }) => {
     const [artists, setArtists] = useState([]);
     const [loading, setLoading] = useState(true);
     const [hoveredId, setHoveredId] = useState(null);
@@ -61,14 +62,20 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
     const [searchOpen, setSearchOpen] = useState(false);
     const [youtubeResults, setYoutubeResults] = useState([]);
     const [searchingYoutube, setSearchingYoutube] = useState(false);
+    const [isScanning, setIsScanning] = useState(false);
     const [activeSector, setActiveSector] = useState(null);
+    const [placedYoutubeSignals, setPlacedYoutubeSignals] = useState([]);
     const containerRef = useRef(null);
+
+    // Debounced view for "Search this area" logic
+    const [lastStableCenter, setLastStableCenter] = useState({ x: 4200, y: 1900 });
+    const [debouncedZoom, setDebouncedZoom] = useState(0.35);
 
     // Stats
     const [stats, setStats] = useState({ online: 0, tracks: 0 });
 
-    // Smooth camera state
-    const [viewState, setViewState] = useState({ x: -300, y: -100, zoom: 0.38 });
+    // Smooth camera state - start fully zoomed out to see the circular layout
+    const [viewState, setViewState] = useState({ x: 0, y: 0, zoom: 0.12 });
 
     // Derived for rendering
     const pan = { x: viewState.x, y: viewState.y };
@@ -76,70 +83,136 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
 
     // Communities
     const [communities, setCommunities] = useState([]);
+    const [selectedCommunity, setSelectedCommunity] = useState(null);
+    const [isCreatingCommunity, setIsCreatingCommunity] = useState(false);
+    const [communityActionLoading, setCommunityActionLoading] = useState(false);
 
     // ── DATA ──
+    const fetchMapData = async () => {
+        setLoading(true);
+        try {
+            const [res, commRes] = await Promise.all([
+                API.Artists.getAll().catch(() => ({ data: [] })),
+                API.Communities.getAll().catch(() => ({ data: [] }))
+            ]);
+            let raw = Array.isArray(res?.data) ? res.data : [];
+            let comms = Array.isArray(commRes?.data) ? commRes.data : [];
+
+            // Assign sectors & positions to communities
+            const processedComms = comms.map((c, i) => {
+                const hComm = hashStr(c.name || 'comm' + i);
+                const sec = SECTORS[c.sectorId] || SECTORS[0];
+                return {
+                    ...c,
+                    x: sec.x + (hComm % 700) - 100,
+                    y: sec.y + ((hComm >> 4) % 400),
+                    color: sec.color,
+                    sector: sec.name
+                };
+            });
+            setCommunities(processedComms);
+
+            setArtists(raw.map((a, i) => {
+                const id = a.id || a.Id || `mock-${i}`;
+                const hashSource = (a.userId || a.UserId || id).toString();
+
+                // User's specific community
+                const commId = a.communityId || a.CommunityId;
+                let targetComm = commId ? processedComms.find(c => c.id === commId) : null;
+
+                const dbSectorId = a.sectorId ?? a.SectorId;
+                const h = hashStr(hashSource);
+                const sec = targetComm ? (SECTORS[targetComm.sectorId] || SECTORS[0]) : ((dbSectorId !== null && dbSectorId !== undefined) ? SECTORS[dbSectorId] : SECTORS[h % SECTORS.length]);
+                const li = Math.floor((h / SECTORS.length) | 0) % 36;
+                // Simulate play count
+                const plays = a.playCount || a.PlayCount || a.plays || ((h % 900) + 10);
+                // Enhanced Node size: 60px (low plays) → 180px (superstar landmark)
+                const nodeSize = Math.round(50 + Math.min(130, Math.log10(plays + 1) * 38));
+                return {
+                    id,
+                    name: a.name || a.Name || `ARTIST_${i}`,
+                    userId: a.userId || a.UserId,
+                    color: sec.color,
+                    icon: ICONS[h % ICONS.length],
+                    profileImage: a.profileImageUrl || a.ProfileImageUrl || null,
+                    sector: sec.name,
+                    targetCommId: targetComm?.id,
+                    x: targetComm ? targetComm.x + (((h % 40) - 20) * 8) : sec.x + (li % 6) * COL_GAP + ((h % 250) - 125),
+                    y: targetComm ? targetComm.y + ((((h >> 2) % 40) - 20) * 8) : sec.y + Math.floor(li / 6) * ROW_GAP + (((h >> 5) % 200) - 100),
+                    isMock: !!a.isMock,
+                    plays,
+                    nodeSize,
+                    isResident: plays > 5000
+                };
+            }));
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        (async () => {
-            setLoading(true);
-            try {
-                const [res, commRes] = await Promise.all([
-                    API.Artists.getAll().catch(() => ({ data: [] })),
-                    API.Communities.getAll().catch(() => ({ data: [] }))
-                ]);
-                let raw = Array.isArray(res?.data) ? res.data : [];
-                let comms = Array.isArray(commRes?.data) ? commRes.data : [];
+        fetchMapData();
+    }, []);
 
-                // Assign sectors & positions to communities
-                const processedComms = comms.map((c, i) => {
-                    const hComm = hashStr(c.name || 'comm' + i);
-                    const sec = SECTORS[c.sectorId] || SECTORS[0];
-                    return {
-                        ...c,
-                        x: sec.x + (hComm % 700) - 100,
-                        y: sec.y + ((hComm >> 4) % 400),
-                        color: sec.color,
-                        sector: sec.name
-                    };
-                });
-                setCommunities(processedComms);
+    // Community Handlers
+    const handleJoinCommunity = async (communityId) => {
+        setCommunityActionLoading(true);
+        try {
+            await API.Communities.join(communityId);
+            showNotification('ACCESS GRANTED', 'You have successfully joined the node community.', 'success');
+            if (onCommunityUpdate) await onCommunityUpdate();
+            await fetchMapData(); // Refresh map
+            setSelectedCommunity(null);
+        } catch (error) {
+            console.error("Failed to join community", error);
+            showNotification('JOIN_FAILURE', error.response?.data?.message || 'Could not establish connection to the community node.', 'error');
+        } finally {
+            setCommunityActionLoading(false);
+        }
+    };
 
-                setArtists(raw.map((a, i) => {
-                    const id = a.id || a.Id || `mock-${i}`;
-                    const hashSource = (a.userId || a.UserId || id).toString();
+    const handleLeaveCommunity = async (communityId) => {
+        setCommunityActionLoading(true);
+        try {
+            await API.Communities.leave();
+            showNotification('CONNECTION SEVERED', 'You have left the community frequency.', 'info');
+            if (onCommunityUpdate) await onCommunityUpdate();
+            await fetchMapData(); // Refresh map
+            setSelectedCommunity(null);
+        } catch (error) {
+            console.error("Failed to leave community", error);
+            showNotification('DEPARTURE_ERROR', 'The system encountered an error while purging community data from your profile.', 'error');
+        } finally {
+            setCommunityActionLoading(false);
+        }
+    };
 
-                    // User's specific community
-                    const commId = a.communityId || a.CommunityId;
-                    let targetComm = commId ? processedComms.find(c => c.id === commId) : null;
+    const handleFoundCommunity = async (data) => {
+        setCommunityActionLoading(true);
+        try {
+            await API.Communities.create(data);
+            showNotification('COMMUNITY ESTABLISHED', `${data.name.toUpperCase()} has been initialized on the frequency map.`, 'success');
+            if (onCommunityUpdate) await onCommunityUpdate();
+            await fetchMapData(); // Refresh map
+            setIsCreatingCommunity(false);
+        } catch (error) {
+            console.error("Failed to found community", error);
+            const msg = error.response?.data?.message || error.response?.data || 'Failed to initialize the new community node.';
+            showNotification('INITIALIZATION_FAILED', msg, 'error');
+            // We'll also handle the error locally in the modal if preferred, but global notification is a good start
+            throw error; // Rethrow to let the modal component handle its own error state
+        } finally {
+            setCommunityActionLoading(false);
+        }
+    };
 
-                    const dbSectorId = a.sectorId ?? a.SectorId;
-                    const h = hashStr(hashSource);
-                    const sec = targetComm ? (SECTORS[targetComm.sectorId] || SECTORS[0]) : ((dbSectorId !== null && dbSectorId !== undefined) ? SECTORS[dbSectorId] : SECTORS[h % SECTORS.length]);
-                    const li = Math.floor((h / SECTORS.length) | 0) % 36;
-                    // Simulate play count
-                    const plays = a.playCount || a.PlayCount || a.plays || ((h % 900) + 10);
-                    // Enhanced Node size: 60px (low plays) → 180px (superstar landmark)
-                    const nodeSize = Math.round(50 + Math.min(130, Math.log10(plays + 1) * 38));
-                    return {
-                        id,
-                        name: a.name || a.Name || `ARTIST_${i}`,
-                        userId: a.userId || a.UserId,
-                        color: sec.color,
-                        icon: ICONS[h % ICONS.length],
-                        profileImage: a.profileImageUrl || a.ProfileImageUrl || null,
-                        sector: sec.name,
-                        targetCommId: targetComm?.id,
-                        x: targetComm ? targetComm.x + (((h % 40) - 20) * 8) : sec.x + (li % 6) * COL_GAP + ((h % 80) - 40),
-                        y: targetComm ? targetComm.y + ((((h >> 2) % 40) - 20) * 8) : sec.y + Math.floor(li / 6) * ROW_GAP + (((h >> 5) % 60) - 30),
-                        isMock: !!a.isMock,
-                        plays,
-                        nodeSize,
-                        isResident: plays > 5000
-                    };
-                }));
-            } finally {
-                setLoading(false);
-            }
-        })();
+    // Intro zoom effect
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            // Nudging even further right as requested (4200 instead of 3600)
+            flyTo(4200, 1900, 0.35);
+        }, 800);
+        return () => clearTimeout(timer);
     }, []);
 
     // ── STATS ──
@@ -168,6 +241,7 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
     useEffect(() => {
         if (!searchQuery || searchQuery.length < 3) {
             setYoutubeResults([]);
+            setPlacedYoutubeSignals([]);
             return;
         }
         const timer = setTimeout(async () => {
@@ -175,7 +249,9 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
             try {
                 const res = await API.Youtube.search(searchQuery);
                 console.log('[DiscoveryMap] Search Response:', res.status, res.data);
-                setYoutubeResults(Array.isArray(res.data) ? res.data : []);
+                const results = Array.isArray(res.data) ? res.data : [];
+                setYoutubeResults(results);
+                setPlacedYoutubeSignals([]); // Clear old nodes on new search results
             } catch (err) {
                 console.warn('YouTube search failed', err);
             } finally {
@@ -210,6 +286,94 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
         el.addEventListener('wheel', handleWheel, { passive: false });
         return () => el.removeEventListener('wheel', handleWheel);
     }, [handleWheel]);
+
+    // Calculate viewport bounds and update lastStableCenter
+    useEffect(() => {
+        setIsScanning(true);
+        const timer = setTimeout(() => {
+            const vw = containerRef.current?.clientWidth || 900;
+            const vh = containerRef.current?.clientHeight || 600;
+            const wx = (vw / 2 - viewState.x) / viewState.zoom;
+            const wy = (vh / 2 - viewState.y) / viewState.zoom;
+            setLastStableCenter({ x: wx, y: wy });
+            setDebouncedZoom(viewState.zoom);
+            setIsScanning(false);
+        }, 600);
+        return () => clearTimeout(timer);
+    }, [viewState.x, viewState.y, viewState.zoom]);
+
+    // Handle persistent YouTube Signal placement
+    useEffect(() => {
+        if (!searchQuery || searchQuery.length < 3 || youtubeResults.length === 0) return;
+
+        setPlacedYoutubeSignals(prev => {
+            const updated = [...prev];
+            const vw = containerRef.current?.clientWidth || 900;
+            const vh = containerRef.current?.clientHeight || 600;
+            const buffer = 1500 / debouncedZoom; // How far out of view we keep nodes before recycling them
+
+            const halfW = (vw / 2) / debouncedZoom;
+            const halfH = (vh / 2) / debouncedZoom;
+            const b = {
+                l: lastStableCenter.x - halfW,
+                r: lastStableCenter.x + halfW,
+                t: lastStableCenter.y - halfH,
+                b: lastStableCenter.y + halfH
+            };
+
+            const visibleSectors = SECTORS.filter(s =>
+                s.x > b.l - 400 && s.x < b.r + 400 &&
+                s.y > b.t - 400 && s.y < b.b + 400
+            );
+
+            // Check top 20 results
+            youtubeResults.slice(0, 20).forEach((yt, i) => {
+                const videoId = yt.id || yt.Id || `yt-${i}`;
+                const existingIdx = updated.findIndex(u => u.videoId === videoId);
+
+                // If node exists and is within a reasonable distance, keep it there!
+                if (existingIdx !== -1) {
+                    const node = updated[existingIdx];
+                    const dist = Math.sqrt(Math.pow(node.x - lastStableCenter.x, 2) + Math.pow(node.y - lastStableCenter.y, 2));
+                    if (dist < buffer) return; // Still in or near scope, don't move it
+                }
+
+                // Node is either new or too far away — re-calculate its world position
+                const title = yt.title || yt.Title || 'Unknown';
+                const author = yt.author || yt.channelTitle || '';
+                const thumb = yt.thumbnailUrl || yt.ThumbnailUrl;
+                // Add center to hash or randomness for re-distribution
+                const h = hashStr(videoId + title + lastStableCenter.x + i);
+
+                let anchorX, anchorY, scatterX, scatterY;
+                if (visibleSectors.length > 0) {
+                    const sec = visibleSectors[h % visibleSectors.length];
+                    anchorX = sec.x;
+                    anchorY = sec.y;
+                    scatterX = 1400; scatterY = 1000;
+                } else {
+                    anchorX = lastStableCenter.x;
+                    anchorY = lastStableCenter.y;
+                    scatterX = halfW * 1.5; scatterY = halfH * 1.5;
+                }
+
+                const newNode = {
+                    id: `yt-map-${videoId}-${h}`,
+                    videoId, title, author, thumb,
+                    x: anchorX + (h % scatterX) - (scatterX / 2),
+                    y: anchorY + ((h >> 3) % scatterY) - (scatterY / 2)
+                };
+
+                if (existingIdx !== -1) {
+                    updated[existingIdx] = newNode;
+                } else {
+                    updated.push(newNode);
+                }
+            });
+
+            return updated;
+        });
+    }, [lastStableCenter, debouncedZoom, youtubeResults, searchQuery]);
 
     const onPointerDown = (e) => {
         // Don't start drag if clicking on any interactive HUD element
@@ -259,9 +423,13 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
         ).slice(0, 10)
         : [];
 
-    const matchedArtistIdsForRendering = new Set(localArtists.map(a => a.id));
+    const youtubeMapNodes = searchQuery.length >= 3 ? placedYoutubeSignals : [];
 
-    const visibleRaw = artists.filter(a => {
+    const matchedArtistIdsForRendering = React.useMemo(() =>
+        new Set(localArtists.map(a => a.id)),
+        [localArtists]);
+
+    const visibleRaw = React.useMemo(() => artists.filter(a => {
         // Search takes priority
         if (searchQuery.length > 0 && matchedArtistIdsForRendering.has(a.id)) return true;
 
@@ -270,7 +438,7 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
         if (viewState.zoom < 0.45) return a.plays > 1000;
         if (viewState.zoom < 0.65) return a.plays > 100;
         return true;
-    });
+    }), [artists, searchQuery, matchedArtistIdsForRendering, viewState.zoom]);
 
     const clusteredNodes = React.useMemo(() => {
         // If searching, just render all visible without clusters
@@ -332,6 +500,7 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                     -webkit-font-smoothing: antialiased;
                     -moz-osx-font-smoothing: grayscale;
                     text-rendering: optimizeLegibility;
+                    backface-visibility: hidden;
                 }
 
                 .mono { 
@@ -379,12 +548,12 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                 }}
                 transition={{
                     type: isDragging ? "tween" : "spring",
-                    stiffness: isDragging ? undefined : 300,
-                    damping: isDragging ? undefined : 35,
-                    mass: 0.8,
+                    stiffness: isDragging ? undefined : 450,
+                    damping: isDragging ? undefined : 42,
+                    mass: 0.5,
                     duration: isDragging ? 0 : undefined
                 }}
-                style={{ width: WORLD_W, height: WORLD_H }}
+                style={{ width: WORLD_W, height: WORLD_H, willChange: 'transform' }}
             >
                 {/* Hex grid SVG */}
                 <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.055 }}>
@@ -392,7 +561,7 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                         <pattern id="hex" x="0" y="0" width="80" height="92" patternUnits="userSpaceOnUse">
                             <polygon points="40,2 78,22 78,70 40,90 2,70 2,22" fill="none" stroke="#ff006e" strokeWidth="0.6" />
                         </pattern>
-                        <radialGradient id="worldFade" cx="50%" cy="50%" r="55%">
+                        <radialGradient id="worldFade" cx="50%" cy="50%" r="95%">
                             <stop offset="0%" stopColor="white" stopOpacity="1" />
                             <stop offset="100%" stopColor="white" stopOpacity="0" />
                         </radialGradient>
@@ -403,18 +572,38 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                     <rect width="100%" height="100%" fill="url(#hex)" mask="url(#worldMask)" />
                 </svg>
 
-                {/* Sector atmosphere — keep the haze, just slightly lighter */}
+                {/* Sector atmosphere */}
                 {SECTORS.map(s => (
                     <div key={s.name} className="absolute pointer-events-none" style={{
-                        left: s.x - 200, top: s.y - 150, width: 900, height: 600,
-                        background: `radial-gradient(ellipse at 35% 40%, ${s.color}09 0%, transparent 60%)`,
+                        left: s.x - 600, top: s.y - 400, width: 3600, height: 2200,
+                        background: `radial-gradient(ellipse at 50% 50%, ${s.color}15 0%, transparent 60%)`, // slightly more opaque (from 09 to 15)
                     }} />
                 ))}
+
+                <AnimatePresence>
+                    {isScanning && searchQuery.length > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            className="absolute bottom-24 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full hud-panel border-[#a855f7]/30 flex items-center gap-3 z-50 overflow-hidden"
+                        >
+                            <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                            >
+                                <Zap size={14} className="text-[#a855f7]" />
+                            </motion.div>
+                            <span className="mono text-[10px] tracking-[0.3em] font-black text-white/80">SIGNAL SCANNING AREA...</span>
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#a855f715] to-transparent scan-light" />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Sector labels — large ghost text */}
                 {SECTORS.map(s => (
                     <div key={`lbl-${s.name}`} className="absolute pointer-events-none mono" style={{
-                        left: s.x - 10, top: s.y - 50,
+                        left: s.x + 800, top: s.y - 180,
                         fontSize: 64, fontWeight: 900, letterSpacing: '0.25em',
                         color: s.color, opacity: 0.04, whiteSpace: 'nowrap', userSelect: 'none',
                     }}>
@@ -464,7 +653,7 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
 
                 {/* Communities */}
                 {communities.map(c => (
-                    <CommunityNode key={`comm-${c.id}`} community={c} />
+                    <CommunityNode key={`comm-${c.id}`} community={c} onClick={() => setSelectedCommunity(c)} />
                 ))}
 
                 {/* Nodes */}
@@ -490,6 +679,27 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                             />
                         )
                     )}
+                </AnimatePresence>
+
+                {/* YouTube Signal Nodes — appear on canvas during search */}
+                <AnimatePresence>
+                    {youtubeMapNodes.map(node => (
+                        <YoutubeSignalNode
+                            key={node.id}
+                            node={node}
+                            onPlay={() => onPlayPlaylist?.([
+                                {
+                                    id: node.videoId,
+                                    title: node.title,
+                                    artist: node.author,
+                                    source: `youtube:${node.videoId}`,
+                                    cover: node.thumb,
+                                    isYoutube: true,
+                                    duration: '0:00',
+                                }
+                            ], 0)}
+                        />
+                    ))}
                 </AnimatePresence>
             </motion.div>
 
@@ -521,6 +731,56 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
             {/* ══════════════════════════════════════════
                 HUD ELEMENTS
             ══════════════════════════════════════════ */}
+
+            {/* TOP RIGHT: HUD controls and stats */}
+            <div data-hud className="absolute top-4 right-4 z-50 flex flex-col items-end gap-3">
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => setIsCreatingCommunity(true)}
+                        className="hud-panel rounded-lg px-3 py-2 flex items-center gap-2 hover:bg-[#00ffff]/10 transition-colors border-transparent hover:border-[#00ffff]/30 group"
+                    >
+                        <Plus size={12} className="text-[#00ffff]/70 group-hover:text-[#00ffff]" />
+                        <span className="mono text-[9px] tracking-[0.2em] text-[#00ffff]/70 group-hover:text-[#00ffff] uppercase font-bold">
+                            Found Community
+                        </span>
+                    </button>
+
+                    <button
+                        onClick={() => flyTo(4200, 1900, 0.35)}
+                        className="hud-panel rounded-lg w-8 h-8 flex items-center justify-center hover:text-white transition-colors"
+                        title="Reset View"
+                    >
+                        <Activity size={12} />
+                    </button>
+                    {user && (
+                        <button
+                            onClick={() => {
+                                const me = artists.find(a => a.userId === user.id || a.userId === user.Id);
+                                if (me) flyTo(me.x, me.y, 1.2);
+                            }}
+                            className="hud-panel rounded-lg w-8 h-8 flex items-center justify-center hover:text-[#ff006e] transition-colors"
+                            title="Find Me"
+                        >
+                            <MapPin size={12} />
+                        </button>
+                    )}
+                </div>
+
+                <div className="hud-panel rounded-lg px-4 py-2 flex gap-8">
+                    <div className="flex flex-col items-end">
+                        <div className="mono text-[8px] tracking-[0.2em] text-[#ff006e]/50 uppercase mb-0.5">Scanning Nodes</div>
+                        <div className="mono text-[14px] font-bold text-white tracking-widest leading-none" style={{ textShadow: '0 0 10px rgba(0,255,255,0.3)' }}>
+                            {stats.tracks.toLocaleString()}
+                        </div>
+                    </div>
+                    <div className="flex flex-col items-end border-l border-white/5 pl-8">
+                        <div className="mono text-[8px] tracking-[0.2em] text-[#00ffff]/50 uppercase mb-0.5">Users Online</div>
+                        <div className="mono text-[14px] font-bold text-white tracking-widest leading-none" style={{ textShadow: '0 0 10px rgba(0,255,255,0.3)' }}>
+                            {stats.online.toLocaleString()}
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {/* TOP-LEFT: Search + title */}
             <div data-hud className="absolute top-4 left-4 z-50 flex flex-col gap-2">
@@ -725,24 +985,6 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                 </AnimatePresence>
             </div>
 
-            {/* TOP-RIGHT: Stats */}
-            <div data-hud className="absolute top-4 right-4 z-50 flex flex-col items-end gap-2">
-                <div className="hud-panel rounded-lg px-[18px] py-[10px] flex items-center gap-3">
-                    <Activity size={12} className="text-[#ff006e] drop-shadow-[0_0_4px_#ff006e]" />
-                    <span className="mono text-[10px] tracking-widest text-white/95 font-bold">
-                        <span className="text-white/60">ONLINE:</span> {stats.online}
-                    </span>
-                    <span className="mono text-[10px] text-white/50 font-bold">·</span>
-                    <span className="mono text-[10px] tracking-widest text-white/95 font-bold">
-                        {visible.length} <span className="text-white/60">NODES</span>
-                    </span>
-                    <span className="mono text-[10px] text-white/50 font-bold">·</span>
-                    <span className="mono text-[10px] tracking-widest text-white/95 font-bold">
-                        {stats.tracks} <span className="text-white/60">TRACKS</span>
-                    </span>
-                </div>
-            </div>
-
             {/* BOTTOM-LEFT: Zoom controls */}
             <div data-hud className="absolute bottom-8 left-4 z-50 flex flex-col gap-1">
                 {[
@@ -764,7 +1006,7 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                 {SECTORS.map(s => (
                     <button
                         key={s.name}
-                        onClick={() => { flyTo(s.x + 600, s.y + 300); setActiveSector(s.name); }}
+                        onClick={() => { flyTo(s.x + 800, s.y + 600); setActiveSector(s.name); }}
                         className="rounded-md px-3 py-2 flex items-center gap-2 transition-all duration-200 shadow-lg"
                         style={{
                             background: activeSector === s.name ? `${s.color}25` : 'rgba(4,4,10,0.85)',
@@ -810,15 +1052,38 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Community Modals */}
+            <AnimatePresence>
+                {selectedCommunity && (
+                    <CommunityDetailsModal
+                        community={selectedCommunity}
+                        user={user}
+                        onClose={() => setSelectedCommunity(null)}
+                        onJoin={handleJoinCommunity}
+                        onLeave={handleLeaveCommunity}
+                        loading={communityActionLoading}
+                    />
+                )}
+                {isCreatingCommunity && (
+                    <CreateCommunityModal
+                        onClose={() => setIsCreatingCommunity(false)}
+                        onSubmit={handleFoundCommunity}
+                        loading={communityActionLoading}
+                        user_credits={user?.credits}
+                        sectors={SECTORS}
+                    />
+                )}
+            </AnimatePresence>
         </div >
     );
 };
 
 // ─── COMMUNITY NODE ──────────────────────────────────────────────────────
-const CommunityNode = ({ community }) => {
+const CommunityNode = React.memo(({ community, onClick }) => {
     return (
         <div
-            className="node absolute flex items-center justify-center"
+            className="node absolute flex justify-center items-center cursor-pointer group"
             style={{
                 left: community.x - 100,
                 top: community.y - 100,
@@ -826,6 +1091,7 @@ const CommunityNode = ({ community }) => {
                 height: 200,
                 zIndex: 2,
             }}
+            onClick={onClick}
         >
             {/* Glowing Base */}
             <div className="absolute w-[300px] h-[300px] pointer-events-none" style={{
@@ -852,10 +1118,52 @@ const CommunityNode = ({ community }) => {
             }} />
         </div>
     );
-};
+});
+
+// ─── YOUTUBE SIGNAL NODE ─────────────────────────────────────────────────
+const YoutubeSignalNode = React.memo(({ node, onPlay }) => (
+    <motion.div
+        className="node absolute cursor-pointer group"
+        style={{ left: node.x, top: node.y, width: 64, height: 64, zIndex: 8 }}
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0 }}
+        transition={{ duration: 0.3 }}
+        onClick={onPlay}
+    >
+        {/* Pulse ring */}
+        <div className="ring-pulse absolute rounded-sm pointer-events-none" style={{
+            inset: -10, border: '1px solid #a855f7', opacity: 0.45, borderRadius: 6
+        }} />
+        {/* Glow halo */}
+        <div className="absolute pointer-events-none" style={{
+            inset: -6,
+            background: 'radial-gradient(circle, #a855f740 0%, transparent 70%)',
+            opacity: 0.7,
+            transition: 'opacity 0.25s'
+        }} />
+        {/* Card */}
+        <motion.div
+            className="relative w-full h-full overflow-hidden"
+            style={{ borderRadius: 6, border: '1px solid #a855f755', boxShadow: '0 0 12px #a855f730' }}
+            whileHover={{ scale: 1.15, boxShadow: '0 0 28px #a855f760' }}
+        >
+            {node.thumb
+                ? <img src={node.thumb} alt="" className="w-full h-full object-cover opacity-55 group-hover:opacity-100 transition-opacity" />
+                : <div className="w-full h-full bg-[#a855f7]/10 flex items-center justify-center"><Music size={20} className="text-[#a855f7]/40" /></div>
+            }
+            {/* YT Badge */}
+            <div className="absolute top-1 right-1 text-[6px] font-black bg-[#a855f7] text-white px-1 rounded-sm mono leading-tight">YT</div>
+        </motion.div>
+        {/* Label below node */}
+        <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap text-[8px] text-[#a855f7]/70 mono font-bold tracking-wider max-w-[120px] truncate text-center group-hover:text-[#a855f7] pointer-events-none" style={{ textShadow: '0 0 8px #a855f7' }}>
+            {node.title}
+        </div>
+    </motion.div>
+));
 
 // ─── CLUSTER NODE ────────────────────────────────────────────────────────
-const ClusterNode = ({ cluster, onClick, dimmed, isSearchResult }) => {
+const ClusterNode = React.memo(({ cluster, onClick, dimmed, isSearchResult }) => {
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0 }}
@@ -891,10 +1199,10 @@ const ClusterNode = ({ cluster, onClick, dimmed, isSearchResult }) => {
             </div>
         </motion.div>
     );
-};
+});
 
 // ─── ARTIST NODE ─────────────────────────────────────────────────────────
-const ArtistNode = ({ artist, hovered, isSearchResult, dimmed, onHover, onClick }) => {
+const ArtistNode = React.memo(({ artist, hovered, isSearchResult, dimmed, onHover, onClick }) => {
     const Icon = artist.icon || Music;
     const sz = artist.nodeSize || 76; // dynamic size based on plays
     return (
@@ -1050,17 +1358,17 @@ const ArtistNode = ({ artist, hovered, isSearchResult, dimmed, onHover, onClick 
             </AnimatePresence>
         </motion.div>
     );
-};
+});
 
 // ─── RADAR MINIMAP ─────────────────────────────────────────────────────────
 const RW = 200, RH = 130;
 
-const RadarMinimap = ({ artists, pan, zoom, sectors, containerRef, onNavigate, onPan }) => {
+const RadarMinimap = React.memo(({ artists, pan, zoom, sectors, containerRef, onNavigate, onPan }) => {
     const sx = RW / WORLD_W;
     const sy = RH / WORLD_H;
     const el = containerRef?.current;
 
-    // Viewport box in radar-pixel space — clamp to max 50% of radar dims
+    // Viewport box in radar-pixel space
     const screenW = el ? el.clientWidth : 900;
     const screenH = el ? el.clientHeight : 600;
     const vpWWorld = screenW / zoom;
@@ -1098,24 +1406,12 @@ const RadarMinimap = ({ artists, pan, zoom, sectors, containerRef, onNavigate, o
         const rect = e.currentTarget.getBoundingClientRect();
         const rx = e.clientX - rect.left;
         const ry = e.clientY - rect.top;
-        // Convert radar coords to world coords
         onNavigate(rx / sx, ry / sy);
     };
 
-    return (
-        <div
-            data-hud
-            className="absolute bottom-8 right-4 z-50 rounded-xl overflow-hidden"
-            style={{
-                width: RW, height: RH,
-                background: 'rgba(4,4,10,0.9)',
-                border: '1px solid rgba(255,0,110,0.22)',
-                backdropFilter: 'blur(16px)',
-                boxShadow: '0 0 40px rgba(255,0,110,0.08)',
-                cursor: 'crosshair',
-            }}
-            onClick={handleClick}
-        >
+    // Memoize the background (grid, sectors, dots) since it only changes when 'artists' data changes
+    const RadarStaticBackground = React.useMemo(() => (
+        <>
             {/* Hex grid on radar */}
             <svg className="absolute inset-0 w-full h-full" style={{ opacity: 0.08 }}>
                 <defs>
@@ -1136,18 +1432,35 @@ const RadarMinimap = ({ artists, pan, zoom, sectors, containerRef, onNavigate, o
             ))}
 
             {/* Artist dots */}
-            {artists.map(a => (
-                <div key={a.id} className="absolute rounded-full" style={{
+            {artists.map((a, i) => (
+                <div key={a.id || i} className="absolute rounded-full pointer-events-none" style={{
                     left: a.x * sx, top: a.y * sy,
                     width: 2.5, height: 2.5,
                     background: a.color, opacity: 0.85,
                     boxShadow: `0 0 3px ${a.color}`,
                 }} />
             ))}
+        </>
+    ), [artists, sectors, sx, sy]);
 
-            {/* Viewport rect — Properly draggable */}
+    return (
+        <div
+            data-hud
+            className="absolute bottom-8 right-4 z-50 rounded-xl overflow-hidden shadow-2xl"
+            style={{
+                width: RW, height: RH,
+                background: 'rgba(4,4,10,0.92)',
+                border: '1px solid rgba(255,0,110,0.22)',
+                backdropFilter: 'blur(16px)',
+                cursor: 'crosshair',
+            }}
+            onClick={handleClick}
+        >
+            {RadarStaticBackground}
+
+            {/* Viewport rect */}
             <div
-                className="absolute"
+                className="absolute transition-colors duration-200"
                 onPointerDown={handleBoxDown}
                 onPointerMove={handleBoxMove}
                 onPointerUp={handleBoxUp}
@@ -1157,8 +1470,8 @@ const RadarMinimap = ({ artists, pan, zoom, sectors, containerRef, onNavigate, o
                     left: boxX, top: boxY,
                     width: boxW, height: boxH,
                     border: '1px solid rgba(255,0,110,0.8)',
-                    background: 'rgba(255,0,110,0.15)',
-                    boxShadow: '0 0 8px rgba(255,0,110,0.2)',
+                    background: 'rgba(255,0,110,0.12)',
+                    boxShadow: '0 0 12px rgba(255,0,110,0.25)',
                     cursor: 'grab',
                     zIndex: 20
                 }}
@@ -1166,23 +1479,19 @@ const RadarMinimap = ({ artists, pan, zoom, sectors, containerRef, onNavigate, o
 
             {/* Sweep */}
             <div className="absolute inset-0 pointer-events-none" style={{
-                background: 'linear-gradient(to bottom, transparent 0%, rgba(255,0,110,0.06) 50%, transparent 100%)',
+                background: 'linear-gradient(to bottom, transparent 0%, rgba(255,0,110,0.1) 50%, transparent 100%)',
                 animation: 'scanY 4s linear infinite',
             }} />
 
             {/* Labels */}
-            <div className="absolute bottom-1.5 left-2 mono text-[7px] tracking-[0.3em] uppercase" style={{ color: 'rgba(255,0,110,0.5)' }}>
+            <div className="absolute bottom-1.5 left-2 mono text-[7px] tracking-[0.3em] uppercase opacity-60" style={{ color: '#ff006e' }}>
                 RADAR // LIVE
             </div>
-            <div className="absolute top-1.5 right-2 mono text-[7px]" style={{ color: 'rgba(255,0,110,0.4)' }}>
+            <div className="absolute top-1.5 right-2 mono text-[7px] opacity-40 text-[#ff006e]">
                 {artists.length.toString().padStart(3, '0')}
-            </div>
-            {/* Click hint */}
-            <div className="absolute bottom-1.5 right-2 mono text-[6px]" style={{ color: 'rgba(255,255,255,0.2)' }}>
-                CLICK TO NAV
             </div>
         </div>
     );
-};
+});
 
 export default React.memo(DiscoveryMapView);

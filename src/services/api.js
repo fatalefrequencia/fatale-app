@@ -65,6 +65,10 @@ const API = {
         getAll: () => api.get('Albums'),
         getById: (id) => api.get(`Albums/${id}`),
         create: (data) => api.post('Albums', data),
+        uploadAlbum: (formData) => api.post('Albums/upload-full', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 120000 // 2 min for multi-track uploads
+        }),
     },
     Artists: {
         getAll: () => api.get('Artists'),
@@ -84,7 +88,10 @@ const API = {
     },
     Users: {
         getProfile: () => api.get('users/profile'),
-        updateProfile: (formData, userId) => api.put('Users/update-profile', formData, userId ? { headers: { UserId: userId } } : {}),
+        updateProfile: (formData, userId) => api.put('Users/update-profile', formData, {
+            headers: { 'Content-Type': 'multipart/form-data', UserId: userId },
+            timeout: 120000 // 2 min for media updates
+        }),
         followUser: (id) => api.post(`Artists/like/${id}`), // Re-routed to Artists for social linking
         unfollowUser: (id) => api.post(`Artists/like/${id}`), // It's a toggle in backend
         getFollowers: (id) => api.get(`Users/${id}/followers`),

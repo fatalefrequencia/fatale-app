@@ -287,7 +287,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                                 <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.3em] font-mono mb-1">// SUBSPACE_SYNC</div>
                                 <h2 className="text-2xl font-black text-white tracking-tighter uppercase">NEW_TRANSMISSION</h2>
                             </div>
-                            <button onClick={() => setIsSearching(false)} className="p-2 border border-white/10 hover:border-[#ff006e]/40 text-white/40 hover:text-white transition-all">
+                            <button onClick={() => { setIsSearching(false); setSearchQuery(''); setSearchResults([]); }} className="p-2 border border-white/10 hover:border-[#ff006e]/40 text-white/40 hover:text-white transition-all">
                                 <X size={16} />
                             </button>
                         </div>

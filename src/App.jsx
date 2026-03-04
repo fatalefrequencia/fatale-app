@@ -9,7 +9,7 @@ import {
   MapPin, Calendar, Users, Edit3, Library,
   ChevronDown, Camera, Video, PenTool, BookOpen,
   MessageSquare, Repeat, MoreHorizontal, RefreshCw,
-  Frown, Star, Volume2, Plus, Globe, Maximize2, Minimize2, LogOut, Wallet,
+  Frown, Star, Volume2, VolumeX, Plus, Globe, Maximize2, Minimize2, LogOut, Wallet,
 } from 'lucide-react';
 import YouTube from 'react-youtube';
 
@@ -102,6 +102,26 @@ function App() {
   // Real-time Audio State
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(1); // 0 to 1
+
+  // --- AUDIO LOGIC (Unified Manager) ---
+  const currentTrack = React.useMemo(() => {
+    const raw = (currentTrackIndex >= 0 && tracks[currentTrackIndex])
+      ? tracks[currentTrackIndex]
+      : (TRACKS[0] || { source: '', title: 'Loading...', artist: 'System' });
+
+    return {
+      ...raw,
+      id: raw.id || raw.Id,
+      title: raw.title || raw.Title,
+      artist: raw.artist || raw.ArtistName || raw.Artist || 'Unknown Artist',
+      source: raw.source || raw.Source,
+      cover: raw.cover || raw.coverImageUrl || raw.CoverImageUrl,
+      isLocked: raw.isLocked ?? (raw.IsLocked ?? false),
+      isOwned: raw.isOwned ?? (raw.IsOwned ?? true)
+    };
+  }, [currentTrackIndex, tracks]);
 
   // Audio Ref for persistence
   const audioRef = useRef(null);
@@ -117,6 +137,27 @@ function App() {
   const [cachedTrackIds, setCachedTrackIds] = useState(new Set());
   const [favoriteStations, setFavoriteStations] = useState([]);
 
+  // Sync Audio Volume & Mute
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.muted = isMuted;
+      audioRef.current.volume = volume;
+    }
+    if (youtubePlayer && typeof youtubePlayer.mute === 'function') {
+      try {
+        if (youtubePlayer.getIframe?.()) {
+          if (isMuted) youtubePlayer.mute();
+          else {
+            youtubePlayer.unMute();
+            youtubePlayer.setVolume(volume * 100);
+          }
+        }
+      } catch (e) {
+        console.warn("YouTube Volume Sync Error (Suppressed):", e);
+      }
+    }
+  }, [isMuted, volume, youtubePlayer]);
+
   const fetchFavoriteStations = async () => {
     try {
       const res = await API.Stations.getFavorites();
@@ -128,6 +169,8 @@ function App() {
   const [userPlaylists, setUserPlaylists] = useState([]);
   const [profileInitialModal, setProfileInitialModal] = useState(null);
   const [activeMessageUser, setActiveMessageUser] = useState(null);
+
+
 
 
 
@@ -146,8 +189,10 @@ function App() {
   const handleSeek = (newTime) => {
     try {
       if (isYoutubeMode && youtubePlayer && typeof youtubePlayer.seekTo === 'function') {
-        youtubePlayer.seekTo(newTime, true);
-        setCurrentTime(newTime);
+        if (youtubePlayer.getIframe?.()) {
+          youtubePlayer.seekTo(newTime, true);
+          setCurrentTime(newTime);
+        }
       } else if (audioRef.current) {
         audioRef.current.currentTime = newTime;
         setCurrentTime(newTime);
@@ -161,25 +206,38 @@ function App() {
   useEffect(() => {
     let interval;
     if (isYoutubeMode && isPlaying && youtubePlayer) {
+      // ── Ensure it's actually playing if the state suggests it
+      try {
+        if (typeof youtubePlayer.getPlayerState === 'function') {
+          // Safeguard to prevent "this.g is null"
+          if (youtubePlayer.getIframe && youtubePlayer.getIframe()) {
+            const state = youtubePlayer.getPlayerState();
+            if (state !== 1 && state !== 3) { // 1=playing, 3=buffering
+              youtubePlayer.playVideo();
+            }
+          }
+        }
+      } catch (e) { console.warn("YouTube PlayVideo Error:", e); }
+
       interval = setInterval(() => {
         try {
-          // Extra safety: check if player and its internal API are still valid
           if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
-            const time = youtubePlayer.getCurrentTime();
-            const dur = youtubePlayer.getDuration();
-            if (dur && dur > 0 && dur !== duration) setDuration(dur);
-            setCurrentTime(time);
+            if (youtubePlayer.getIframe && youtubePlayer.getIframe()) {
+              const time = youtubePlayer.getCurrentTime();
+              const dur = youtubePlayer.getDuration();
+              if (dur && dur > 0 && dur !== duration) setDuration(dur);
+              setCurrentTime(time);
+            }
           }
         } catch (e) {
-          console.warn("YouTube Polling Error (Suppressed during unmount):", e);
+          console.warn("YouTube Polling Error:", e);
         }
       }, 1000);
     }
     return () => {
       if (interval) clearInterval(interval);
-      // Don't null the player ref here, let the component handle its own lifecycle
     };
-  }, [isYoutubeMode, isPlaying, youtubePlayer]);
+  }, [isYoutubeMode, isPlaying, youtubePlayer, currentTrack?.id]);
 
   useEffect(() => {
     // Check for existing session
@@ -309,6 +367,9 @@ function App() {
             const artistName = t.album?.artist?.name || t.Album?.Artist?.Name || '';
             const isArchiveTrack = artistUserId === null || artistUserId === undefined || artistName === 'The Archive';
 
+            // Skip Archive metadata stubs so only real user 'Fatale' songs are displayed
+            if (isArchiveTrack) return;
+
             const mappedTrack = {
               ...t,
               id: trackId,
@@ -419,14 +480,18 @@ function App() {
         }
 
         const allTracks = Array.from(uniqueTracksMap.values());
-        setLibraryTracks(allTracks.length > 0 ? allTracks : TRACKS);
-        // Initial load: fill queue with all tracks if queue is currently empty
-        setTracks(prev => prev.length === 0 ? (allTracks.length > 0 ? allTracks : TRACKS) : prev);
+        const finalTracks = allTracks.length > 0 ? allTracks : TRACKS;
+        setLibraryTracks(finalTracks);
 
+        // Update current queue ONLY if it was empty or contains generic mock data
+        setTracks(prev => {
+          const isMock = prev.length > 0 && String(prev[0].id).startsWith('mock-');
+          if (prev.length === 0 || isMock) return finalTracks;
+          return prev;
+        });
       } else {
-        const fall = TRACKS;
-        setLibraryTracks(fall);
-        setTracks(prev => prev.length === 0 ? fall : prev);
+        setLibraryTracks(TRACKS);
+        setTracks(prev => prev.length === 0 ? TRACKS : prev);
       }
     } catch (error) {
       console.error("Failed to fetch tracks", error);
@@ -467,19 +532,7 @@ function App() {
     return () => clearInterval(interval);
   }, [activeView]);
 
-  // --- AUDIO LOGIC (Unified Manager) ---
-  // --- AUDIO LOGIC (Unified Manager) ---
-  const rawTrack = (currentTrackIndex >= 0 && tracks[currentTrackIndex]) ? tracks[currentTrackIndex] : (TRACKS[0] || { source: '', title: 'Loading...', artist: 'System' });
-  const currentTrack = {
-    ...rawTrack,
-    id: rawTrack.id || rawTrack.Id,
-    title: rawTrack.title || rawTrack.Title,
-    artist: rawTrack.artist || rawTrack.ArtistName || rawTrack.Artist || 'Unknown Artist',
-    source: rawTrack.source || rawTrack.Source,
-    cover: rawTrack.cover || rawTrack.coverImageUrl || rawTrack.CoverImageUrl,
-    isLocked: rawTrack.isLocked !== undefined ? rawTrack.isLocked : (rawTrack.IsLocked !== undefined ? rawTrack.IsLocked : false),
-    isOwned: rawTrack.isOwned !== undefined ? rawTrack.isOwned : (rawTrack.IsOwned !== undefined ? rawTrack.IsOwned : true)
-  };
+
 
   // --- TRACKING LOGIC (Discovery Analytics) ---
   const lastTrackLogged = useRef(null);
@@ -505,67 +558,42 @@ function App() {
     const track = tracks[currentTrackIndex];
     if (!track) return;
 
-    // Normalizing properties for potential PascalCase from server or mixed types
     const trackSource = track.source || track.Source;
-    const trackIsLocked = track.isLocked !== undefined ? track.isLocked : (track.IsLocked !== undefined ? track.IsLocked : false);
-    const trackIsOwned = track.isOwned !== undefined ? track.isOwned : (track.IsOwned !== undefined ? track.IsOwned : true);
-
-    const isLocked = trackIsLocked && !trackIsOwned;
+    const isLocked = (track.isLocked ?? false) && !(track.isOwned ?? true);
     const isYT = trackSource && trackSource.startsWith('youtube:');
 
-    console.log(`[PLAYER] Sync: Track=${track.title || track.Title}, Index=${currentTrackIndex}, isYT=${isYT}, isYoutubeMode=${isYoutubeMode}, isPlaying=${isPlaying}`);
-    console.log(`[PLAYER] Source: ${trackSource}`);
-
-    // 1. Mode Switching & Source Setting
+    // 1. Mode Switching
     if (isYT) {
-      if (!isYoutubeMode) {
-        setIsYoutubeMode(true);
+      if (!isYoutubeMode) setIsYoutubeMode(true);
+      if (!audio.paused) {
         audio.pause();
-        audio.removeAttribute('src'); // Stop local audio
+        audio.removeAttribute('src');
         audio.setAttribute('data-playing-src', '');
       }
-      // YouTube component handles videoId change via props
     } else {
-      if (isYoutubeMode) {
-        setIsYoutubeMode(false);
-        try {
-          if (youtubePlayer && typeof youtubePlayer.pauseVideo === 'function') {
-            youtubePlayer.pauseVideo();
-          }
-        } catch (e) {
-          console.warn("YouTube Pause Error (Suppressed):", e);
-        }
-      }
+      if (isYoutubeMode) setIsYoutubeMode(false);
 
       // Handle Local Audio Source Change
       const currentSrc = audio.getAttribute('data-playing-src');
-      if (track.source && (currentSrc !== track.source)) {
-        console.log(`[PLAYER] Loading new source: ${track.source}`);
-        audio.src = track.source;
-        audio.setAttribute('data-playing-src', track.source);
+      if (trackSource && (currentSrc !== trackSource)) {
+        console.log(`[PLAYER] Loading new local source: ${trackSource}`);
+        audio.src = trackSource;
+        audio.setAttribute('data-playing-src', trackSource);
         audio.load();
         setCurrentTime(0);
-      } else if (track.source && currentSrc === track.source && isPlaying && audio.paused) {
-        // If same source but we are paused and want to play, just play
-        // This handles cases where we might have stopped/paused at the end
       }
     }
 
     // 2. Playback State Sync
     if (isPlaying && !isLocked) {
       if (isYT) {
-        try {
-          if (youtubePlayer && typeof youtubePlayer.getPlayerState === 'function' && typeof youtubePlayer.playVideo === 'function') {
+        if (youtubePlayer && typeof youtubePlayer.playVideo === 'function') {
+          try {
             const state = youtubePlayer.getPlayerState();
-            if (state !== 1 && state !== 3) { // 1=Playing, 3=Buffering
-              youtubePlayer.playVideo();
-            }
-          }
-        } catch (e) {
-          console.warn("YouTube Play Error (Suppressed):", e);
+            if (state !== 1 && state !== 3) youtubePlayer.playVideo();
+          } catch (e) { }
         }
       } else {
-        // Local
         if (audio.paused && audio.src) {
           audio.play().catch(e => {
             if (e.name !== 'AbortError') console.warn("Auto-play blocked", e);
@@ -575,20 +603,15 @@ function App() {
     } else {
       // Paused
       if (isYT) {
-        try {
-          if (youtubePlayer && typeof youtubePlayer.getPlayerState === 'function' && typeof youtubePlayer.pauseVideo === 'function') {
-            if (youtubePlayer.getPlayerState() === 1) {
-              youtubePlayer.pauseVideo();
-            }
-          }
-        } catch (e) {
-          console.warn("YouTube Pause Error (Suppressed):", e);
+        if (youtubePlayer && typeof youtubePlayer.pauseVideo === 'function') {
+          try {
+            if (youtubePlayer.getPlayerState() === 1) youtubePlayer.pauseVideo();
+          } catch (e) { }
         }
       } else {
         if (!audio.paused) audio.pause();
       }
     }
-
   }, [currentTrackIndex, tracks, isPlaying, isYoutubeMode, youtubePlayer]);
 
   const handleNext = () => {
@@ -1045,33 +1068,64 @@ function App() {
       />
 
       {/* PERSISTENT YOUTUBE PLAYER */}
-      <div className={`absolute top-0 left-0 w-1 h-1 overflow-hidden opacity-0 pointer-events-none ${!isYoutubeMode ? 'hidden' : ''}`}>
-        <YouTube
-          videoId={currentTrack?.source?.startsWith('youtube:') ? currentTrack.source.split(':')[1].trim() : ''}
-          onReady={(e) => {
-            console.log("[YOUTUBE] Player Ready");
-            setYoutubePlayer(e.target);
-          }}
-          onStateChange={(e) => {
-            console.log("[YOUTUBE] State Change:", e.data);
-            // 0 = Ended, 1 = Playing, 2 = Paused
-            if (e.data === 0) handleNext();
-            if (e.data === 1 && !isPlaying) setIsPlaying(true);
-            if (e.data === 2 && isPlaying) setIsPlaying(false);
-          }}
-          opts={{
-            height: '0',
-            width: '0',
-            playerVars: {
-              autoplay: isPlaying ? 1 : 0,
-              controls: 0,
-              disablekb: 1,
-              fs: 0,
-              iv_load_policy: 3,
-              modestbranding: 1,
-            },
-          }}
-        />
+      {/* We only render the player if we have a valid videoId to prevent internal iframe API crashes (this.g is null) */}
+      <div
+        style={{
+          position: 'absolute',
+          top: -100,
+          left: -100,
+          width: 1,
+          height: 1,
+          overflow: 'hidden',
+          opacity: 0,
+          pointerEvents: 'none',
+          visibility: isYoutubeMode ? 'visible' : 'hidden'
+        }}
+      >
+        {(() => {
+          const ytId = currentTrack?.source?.startsWith('youtube:') ? currentTrack.source.split(':')[1]?.trim() : null;
+          if (!ytId) return null;
+
+          return (
+            <YouTube
+              key={ytId} // Force fresh instance for new videos to avoid internal state corruption
+              videoId={ytId}
+              onReady={(e) => {
+                console.log("[YOUTUBE] Player Ready");
+                setYoutubePlayer(e.target);
+                if (isPlaying && isYoutubeMode) {
+                  try {
+                    e.target.playVideo();
+                  } catch (err) { console.warn("YT Play onReady failure:", err); }
+                }
+              }}
+              onStateChange={(e) => {
+                console.log("[YOUTUBE] State Change:", e.data);
+                if (e.data === 0) handleNext();
+                if (e.data === 1 && !isPlaying) setIsPlaying(true);
+                if (e.data === 2 && isPlaying) setIsPlaying(false);
+              }}
+              onError={(e) => {
+                console.error("[YOUTUBE] Error detected:", e.data);
+                // Handle private/deleted videos by skipping
+                if (isPlaying) handleNext();
+              }}
+              opts={{
+                height: '1',
+                width: '1',
+                playerVars: {
+                  autoplay: isPlaying ? 1 : 0,
+                  controls: 0,
+                  disablekb: 1,
+                  fs: 0,
+                  iv_load_policy: 3,
+                  modestbranding: 1,
+                  origin: typeof window !== 'undefined' ? window.location.origin : ''
+                },
+              }}
+            />
+          );
+        })()}
       </div>
 
       <AnimatePresence mode="wait">
@@ -1121,6 +1175,8 @@ function App() {
               activeMessageUser={activeMessageUser}
               setActiveMessageUser={setActiveMessageUser}
               libraryTracks={libraryTracks}
+              isMuted={isMuted}
+              onToggleMute={() => setIsMuted(!isMuted)}
             />
           </>
         )}
@@ -1148,7 +1204,7 @@ const LoginView = ({ onLogin }) => (
   </motion.div>
 );
 
-const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, libraryTracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal, favoriteStations, onExitProfile, activeMessageUser, setActiveMessageUser }) => {
+const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, libraryTracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal, favoriteStations, onExitProfile, activeMessageUser, setActiveMessageUser, isMuted, onToggleMute }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   return (
@@ -1176,7 +1232,7 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
           <SidebarLink collapsed={isSidebarCollapsed} icon={<Radio size={20} />} label="Discovery" active={activeView === 'discovery'} onClick={() => setView('discovery')} />
           <SidebarLink collapsed={isSidebarCollapsed} icon={<Hash size={20} />} label="Feed" active={activeView === 'feed'} onClick={() => setView('feed')} />
           <SidebarLink collapsed={isSidebarCollapsed} icon={<User size={20} />} label="Profile" active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => navigateToProfile(null)} />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={activeView === 'player' ? <img src={skullImg} className="w-5 h-5 object-contain" /> : <Play size={20} />} label="Player" active={activeView === 'player'} onClick={() => setView('player')} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<Play size={20} />} label="Player" active={activeView === 'player'} onClick={() => setView('player')} />
           <SidebarLink collapsed={isSidebarCollapsed} icon={<MessageSquare size={20} />} label="Messages" active={activeView === 'messages'} onClick={() => setView('messages')} hasNotification={hasNewMessages} />
 
           <div className="my-4 border-t border-white/10" />
@@ -1197,7 +1253,7 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
           <div className="flex gap-4">
             <NavButton icon={<Radio size={20} />} active={activeView === 'discovery'} onClick={() => setView('discovery')} />
             <NavButton icon={<Hash size={20} />} active={activeView === 'feed'} onClick={() => setView('feed')} />
-            <NavButton icon={activeView === 'player' ? <img src={skullImg} className="w-[20px] h-[20px] object-contain" /> : <Play size={20} />} active={activeView === 'player'} onClick={() => setView('player')} />
+            <NavButton icon={<Play size={20} />} active={activeView === 'player'} onClick={() => setView('player')} />
             <NavButton icon={<MessageSquare size={20} />} active={activeView === 'messages'} onClick={() => setView('messages')} hasNotification={hasNewMessages} />
             <NavButton icon={<User size={20} />} active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => navigateToProfile(null)} />
           </div>
@@ -1220,6 +1276,7 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
                 playlists={playlists}
                 onRefreshPlaylists={onRefreshPlaylists}
                 favoriteStations={favoriteStations}
+                onCommunityUpdate={onRefreshProfile} // ADDED TO REFRESH USER/MAP WHEN JOINING COMM
               />
             )}
             {activeView === 'wallet' && <WalletView user={user} onRefreshProfile={onRefreshProfile} />}
@@ -1269,6 +1326,7 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
               togglePlay={togglePlay}
               navigateToProfile={navigateToProfile}
               onPlayPlaylist={handlePlayPlaylist}
+              libraryTracks={libraryTracks}
             />}
             {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} initialChatUser={activeMessageUser} />}
             {activeView === 'settings' && (
@@ -1300,6 +1358,8 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
               }
             }}
             activeView={activeView}
+            isMuted={isMuted}
+            onToggleMute={onToggleMute}
           />
         )}
       </AnimatePresence>
@@ -1308,7 +1368,7 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
 });
 
 // --- MINI PLAYER COMPONENT ---
-const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView }) => {
+const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView, isMuted, onToggleMute }) => {
   const isMessages = activeView === 'messages';
 
   return (
@@ -1345,12 +1405,12 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
-          className={`w-8 h-8 lg:w-10 lg:h-10 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 ${isMessages ? 'text-[#ff006e]' : 'text-[#ff006e]'}`}
+          className={`w-8 h-8 lg:w-10 lg:h-10 flex items-center justify-center transition-all active:scale-90 ${isMessages ? 'text-[#ff006e]/60 hover:text-[#ff006e]' : 'text-[#ff006e]/60 hover:text-white'}`}
         >
           {isPlaying ? (
             <Pause size={24} fill="currentColor" />
           ) : (
-            <img src={skullImg} className="w-6 h-6 lg:w-8 lg:h-8 object-contain drop-shadow-[0_0_8px_#ff006e]" />
+            <Play size={24} fill="currentColor" className="ml-0.5" />
           )}
         </button>
         <button onClick={(e) => { e.stopPropagation(); onNext(); }} className={`transition-colors ${isMessages ? 'text-[#ff006e]/60 hover:text-[#ff006e]' : 'text-[#ff006e]/60 hover:text-white'}`}>
@@ -1365,7 +1425,13 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
           className={`cursor-pointer transition-colors ${track?.isLiked ? 'text-[#ff006e] fill-[#ff006e]' : 'text-[#ff006e]/40 hover:text-[#ff006e]'}`}
           onClick={(e) => { e.stopPropagation(); onLike && onLike(track); }}
         />
-        <Volume2 size={18} className={`cursor-pointer ${isMessages ? 'text-[#ff006e]/40 hover:text-[#ff006e]' : 'text-[#ff006e]/40 hover:text-[#ff006e]'}`} />
+        <div onClick={(e) => { e.stopPropagation(); onToggleMute && onToggleMute(); }} className="cursor-pointer">
+          {isMuted ? (
+            <VolumeX size={18} className={isMessages ? 'text-[#ff006e]' : 'text-[#ff006e]'} />
+          ) : (
+            <Volume2 size={18} className={`transition-colors ${isMessages ? 'text-[#ff006e]/40 hover:text-[#ff006e]' : 'text-[#ff006e]/40 hover:text-[#ff006e]'}`} />
+          )}
+        </div>
       </div>
     </motion.div>
   );
@@ -2095,6 +2161,7 @@ const PlayerContent = ({
   isPlaying,
   setIsPlaying,
   tracks,
+  libraryTracks,
   currentTime,
   duration,
   onSeek,
@@ -2119,6 +2186,7 @@ const PlayerContent = ({
         isPlaying={isPlaying}
         setIsPlaying={setIsPlaying}
         tracks={tracks}
+        libraryTracks={libraryTracks}
         onMinimize={() => setView('discovery')}
         currentTime={currentTime}
         duration={duration}

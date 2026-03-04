@@ -19,6 +19,7 @@ const MENU_ITEMS = [
 
 export const IPodPlayer = ({
     tracks,
+    libraryTracks = [], // New prop for full library
     currentTrackIndex,
     setCurrentTrackIndex,
     isPlaying,
@@ -169,13 +170,12 @@ export const IPodPlayer = ({
     const lastAngle = useRef(null);
     const accumulatedRotation = useRef(0);
 
-    const rawTrack = (currentTrackIndex >= 0 && tracks[currentTrackIndex]) ? tracks[currentTrackIndex] : {
-        title: 'NO TRACK', artist: 'SELECT MUSIC', duration: '0:00', cover: null, price: 0, isLocked: true, isOwned: false
-    };
+    const rawTrack = (currentTrackIndex >= 0 && tracks[currentTrackIndex])
+        ? tracks[currentTrackIndex]
+        : (tracks[0] || libraryTracks[0] || { title: 'Loading...', artist: 'System' });
 
     const currentTrack = {
         ...rawTrack,
-        // Ensure we prioritize the raw object's properties if they exist
         id: rawTrack.user_id || rawTrack.id || rawTrack.Id,
         title: rawTrack.title || rawTrack.Title || 'Untitled',
         artist: rawTrack.artist || rawTrack.ArtistName || 'Unknown Artist',
@@ -224,13 +224,14 @@ export const IPodPlayer = ({
 
         if (screen === 'SONGS_LIKED' || screen === 'SONGS_PURCHASED' || screen === 'SONGS_ALL') {
             const getFiltered = () => {
+                const sourceList = libraryTracks.length > 0 ? libraryTracks : tracks;
                 if (screen === 'SONGS_LIKED') {
-                    const sysLiked = tracks.map((t, i) => ({ ...t, originalIndex: i })).filter(t => t.isLiked);
+                    const sysLiked = sourceList.map((t, i) => ({ ...t, originalIndex: i })).filter(t => t.isLiked);
                     const favs = favorites.map(f => ({ ...f, type: 'YOUTUBE_SIGNAL', isFromLocal: true }));
                     return [...sysLiked, ...favs];
                 }
-                if (screen === 'SONGS_PURCHASED') return tracks.map((t, i) => ({ ...t, originalIndex: i })).filter(t => t.isCached);
-                return tracks.map((t, i) => ({ ...t, originalIndex: i }));
+                if (screen === 'SONGS_PURCHASED') return sourceList.map((t, i) => ({ ...t, originalIndex: i })).filter(t => t.isCached);
+                return sourceList.map((t, i) => ({ ...t, originalIndex: i }));
             };
             const filtered = getFiltered();
 
@@ -238,7 +239,11 @@ export const IPodPlayer = ({
                 { id: 'BACK_SM', label: '.. Back' },
                 { id: 'PLAY_ALL_FILTERED', label: 'Play All', tracks: filtered, action: true },
                 { id: 'SHUFFLE_ALL_FILTERED', label: 'Shuffle All', tracks: filtered, action: true },
-                ...filtered.map(t => ({ id: t.originalIndex, label: t.title || t.Title }))
+                ...filtered.map(t => ({
+                    id: t.originalIndex,
+                    label: t.title || t.Title || 'Untitled Track',
+                    originalTrack: t
+                }))
             ];
         }
 
@@ -386,6 +391,9 @@ export const IPodPlayer = ({
         if (isSearching) {
             // If it's a track result
             if (item.originalTrack) {
+                // Determine source for finding index (prefer tracks queue, fallback to libraryTracks)
+                const sourceList = libraryTracks.length > 0 ? libraryTracks : tracks;
+
                 // Determine the context (what list are we playing?)
                 const contextList = (item.isFromSearch && item.searchContext)
                     ? item.searchContext.map(i => i.originalTrack)
@@ -398,15 +406,15 @@ export const IPodPlayer = ({
                     setIsSearching(false);
                     setSearchQuery('');
                 } else {
-                    const mainIndex = tracks.findIndex(t => (t.id || t.Id) === (item.originalTrack.id || item.originalTrack.Id));
+                    const mainIndex = sourceList.findIndex(t => (t.id || t.Id) === (item.originalTrack.id || item.originalTrack.Id));
                     if (mainIndex !== -1) {
                         // If playing from search, treat like a playlist of search results for sequential play
                         if (item.isFromSearch && item.searchContext) {
                             const ctxIdx = contextList.findIndex(t => (t.id || t.Id) === (item.originalTrack.id || item.originalTrack.Id));
                             onPlayPlaylist && onPlayPlaylist(contextList, ctxIdx !== -1 ? ctxIdx : 0);
                         } else {
-                            setCurrentTrackIndex(mainIndex);
-                            setIsPlaying(true);
+                            // If it's a direct browse play, we want to play from the source list (All Tracks / Liked etc)
+                            onPlayPlaylist && onPlayPlaylist(sourceList, mainIndex);
                         }
                         setScreen('NOW_PLAYING');
                         setIsSearching(false);
@@ -846,11 +854,7 @@ export const IPodPlayer = ({
                     {/* STATUS BAR - REDESIGNED */}
                     <div className="h-7 bg-gradient-to-b from-[#1a1a1a] to-black/40 backdrop-blur-md border-b border-[#f00060]/30 flex justify-between items-center px-4 z-20">
                         <div className="flex items-center gap-2">
-                            {isPlaying ? (
-                                <img src={skullImg} className="w-3 h-3 object-contain brightness-125" />
-                            ) : (
-                                <Pause size={10} className="text-[#f00060] fill-[#f00060]" />
-                            )}
+                            {isPlaying ? <Pause size={12} fill="#ff006e" /> : <Play size={12} fill="#ff006e" />}
                             <span className="text-[10px] font-black text-white font-mono tracking-widest uppercase">CYBER_POD</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -1095,9 +1099,9 @@ export const IPodPlayer = ({
                                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                                     >
                                         {isPlaying ? (
-                                            <Pause size={32} fill="#f00060" className="text-[#f00060] group-active/select:fill-black group-active/select:text-black transition-colors" />
+                                            <Pause size={32} fill="#f00060" className="drop-shadow-[0_0_8px_#f00060]" />
                                         ) : (
-                                            <img src={skullImg} className="w-10 h-10 object-contain drop-shadow-[0_0_10px_#f00060]" />
+                                            <Play size={32} fill="#f00060" className="drop-shadow-[0_0_8px_#f00060] ml-1" />
                                         )}
                                     </motion.div>
                                 )}
