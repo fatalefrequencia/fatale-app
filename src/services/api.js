@@ -79,7 +79,7 @@ const API = {
         getByUserId: (userId) => api.get(`Artists/user/${userId}`),
     },
     Tracks: {
-        getAllTracks: () => api.get('Tracks'),
+        getAllTracks: (params) => api.get('Tracks', { params }),
         getTrackById: (id) => api.get(`Tracks/${id}`),
         uploadTrack: (formData) => api.post('Tracks/upload-full', formData),
         togglePin: (id) => api.post(`Tracks/${id}/toggle-pin`),
@@ -152,6 +152,7 @@ const API = {
         stream: (videoId, userId) => api.get(`Youtube/stream?videoId=${videoId}&userId=${userId}`),
         saveTrack: (trackData) => api.post('YoutubeTracks/save', trackData),
         getTrack: (videoId) => api.get(`YoutubeTracks/by-youtube-id/${videoId}`),
+        getDiscoveryNodes: (query) => api.get(`Youtube/discovery-nodes?query=${encodeURIComponent(query || '')}`),
     },
     Messages: {
         getConversations: () => api.get('Messages/conversations'),
@@ -219,6 +220,16 @@ const API = {
         create: (data) => api.post('Communities', data),
         join: (id) => api.post(`Communities/${id}/join`),
         leave: () => api.post('Communities/leave')
+    },
+    Organic: {
+        logEvent: (eventData) => api.post('listening-events', eventData),
+        updateEventDuration: (eventId, durationSeconds) => api.put(`listening-events/${eventId}/duration`, { durationSeconds }),
+        getNextRecommendation: (lastVideoId, lastTrackType = 'youtube', count = 3) =>
+            api.get(`recommendations/next?lastVideoId=${lastVideoId}&lastTrackType=${lastTrackType}&count=${count}`)
+    },
+    Pulse: {
+        getNeuroGraph: () => api.get('pulse/neuro-graph'),
+        getResonantStations: (topTag) => api.get(`pulse/resonant-stations?topTag=${encodeURIComponent(topTag)}`)
     }
 };
 

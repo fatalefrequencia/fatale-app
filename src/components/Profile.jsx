@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TrackActionsDropdown from './TrackActionsDropdown';
 import UploadTrackView from './UploadTrackView';
+import NeuroGraph from './NeuroGraph';
 import ContentModal from './ContentModal';
 import './SpatialProfile.css';
 import {
@@ -1118,6 +1119,10 @@ export const ProfileView = React.memo(({
                                 )}
                             </div>
                         )}
+
+                        <div className="space-y-4">
+                            <NeuroGraph userId={effectiveId} />
+                        </div>
 
                         <div className="space-y-4">
                             <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// IDENTITY_BIO</div>

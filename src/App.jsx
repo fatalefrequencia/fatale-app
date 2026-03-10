@@ -126,6 +126,9 @@ function App() {
   // Audio Ref for persistence
   const audioRef = useRef(null);
 
+  // Organic Intelligence Event Tracker
+  const listenEventRef = useRef({ id: null, startTime: null });
+
   // YouTube Player State
   const [youtubePlayer, setYoutubePlayer] = useState(null);
   const [isYoutubeMode, setIsYoutubeMode] = useState(false);
@@ -614,10 +617,109 @@ function App() {
     }
   }, [currentTrackIndex, tracks, isPlaying, isYoutubeMode, youtubePlayer]);
 
-  const handleNext = () => {
-    setCurrentTrackIndex((prev) => (prev + 1) % (tracks.length || 1));
-    setIsPlaying(true);
+  const finalizeListenEvent = () => {
+    if (listenEventRef.current.id && listenEventRef.current.startTime) {
+      const duration = Math.floor((Date.now() - listenEventRef.current.startTime) / 1000);
+      if (duration > 0) {
+        API.Organic.updateEventDuration(listenEventRef.current.id, duration).catch(e => {
+          console.warn("[ORGANIC] Failed to finalize duration", e);
+        });
+        console.log(`[ORGANIC] Finalized duration for event ${listenEventRef.current.id}: ${duration}s`);
+      }
+      listenEventRef.current = { id: null, startTime: null };
+    }
   };
+
+  const logListeningEvent = async (track, source = 'queue') => {
+    finalizeListenEvent(); // Cap the previous track if it was skipped/ended
+
+    if (!track || !user) return;
+    try {
+      const isYT = (track.source || track.Source)?.startsWith('youtube:');
+      const trackId = isYT ? (track.source || track.Source).split(':')[1] : (track.id || track.Id);
+
+      const res = await API.Organic.logEvent({
+        trackType: isYT ? 'youtube' : 'local',
+        trackId: String(trackId),
+        trackTitle: track.title || track.Title,
+        tags: track.tags || track.Tags || 'general',
+        durationSeconds: 0,
+        source: source
+      });
+      listenEventRef.current = { id: res.data.eventId, startTime: Date.now() };
+      console.log("[ORGANIC] Listening event started for:", track.title);
+    } catch (e) {
+      console.warn("[ORGANIC] Failed to start listening event:", e);
+    }
+  };
+
+  const handleNext = async () => {
+    if (tracks.length === 0) return;
+
+    const nextIndex = currentTrackIndex + 1;
+
+    if (nextIndex < tracks.length) {
+      setCurrentTrackIndex(nextIndex);
+      setIsPlaying(true);
+    } else {
+      console.log("[ORGANIC] Queue exhausted. Fetching recommendations...");
+      try {
+        const lastTrack = tracks[currentTrackIndex];
+        const isYT = (lastTrack?.source || lastTrack?.Source)?.startsWith('youtube:');
+        const lastVideoId = isYT ? (lastTrack.source || lastTrack.Source).split(':')[1] : null;
+
+        const res = await API.Organic.getNextRecommendation(
+          lastVideoId || 'COLD_START',
+          isYT ? 'youtube' : 'local',
+          3
+        );
+
+        if (res.data && res.data.length > 0) {
+          const rec = res.data[0];
+          const mappedRec = {
+            id: rec.trackId,
+            title: rec.title,
+            artist: rec.author || rec.artist || 'Recommended',
+            source: rec.trackType === 'youtube' ? `youtube:${rec.trackId}` : rec.trackId,
+            cover: rec.thumbnailUrl,
+            tags: rec.tags,
+            isOwned: true,
+            isLocked: false
+          };
+
+          // Update tracks first, then index
+          const currentCount = tracks.length;
+          setTracks(prev => [...prev, mappedRec]);
+          setCurrentTrackIndex(currentCount);
+          setIsPlaying(true);
+          showNotification("SIGNAL_EVOLVED", `Organic Intelligence: "${mappedRec.title}"`, "success");
+        } else {
+          setCurrentTrackIndex(0);
+          setIsPlaying(true);
+        }
+      } catch (err) {
+        console.error("[ORGANIC] Error fetching recommendations:", err);
+        setCurrentTrackIndex(0);
+      }
+    }
+  };
+
+  // --- ORGANIC LOGGING EFFECT ---
+  useEffect(() => {
+    if (isPlaying && currentTrackIndex >= 0 && currentTrack) {
+      // Small delay or logic to ensure it's a "real" play
+      const timer = setTimeout(() => {
+        logListeningEvent(currentTrack, tracks.length > 1 ? 'queue' : 'single');
+      }, 2000);
+      return () => {
+        clearTimeout(timer);
+        finalizeListenEvent();
+      };
+    } else {
+      // Finalize if playback stops/pauses
+      finalizeListenEvent();
+    }
+  }, [currentTrack?.id, isPlaying]);
 
   const handlePrev = () => {
     setCurrentTrackIndex((prev) => (prev - 1 + tracks.length) % (tracks.length || 1));
@@ -628,31 +730,48 @@ function App() {
 
   // Modified to use main library tracks for correct Like status
   const handlePlayPlaylist = (playlistTracksRaw, startIndex = 0) => {
-    // 1. Create a lookup map of all known tracks (with correct isLiked status)
-    // Key: ID or Source
+    // 1. Create a lookup map of all known tracks
     const libraryMap = new Map();
-    tracks.forEach(t => {
+    libraryTracks.forEach(t => {
       libraryMap.set(String(t.id || t.Id), t);
       if (t.source) libraryMap.set(t.source, t);
     });
 
-    // 2. Map the playlist tracks to the library versions if possible
+    // 2. Map the playlist tracks to the library versions but PRESERVE critical discovery data
     const enrichedQueue = playlistTracksRaw.map(pTrack => {
       const pId = String(pTrack.id || pTrack.Id);
       const pSource = pTrack.source || pTrack.Source;
 
-      // Try to find in library by Source (best) or ID
       let found = libraryMap.get(pSource);
       if (!found) found = libraryMap.get(pId);
 
-      // Return library version if found, else original (fallback)
-      return found || pTrack;
+      if (found) {
+        // PRIORITY: If pTrack (from Discovery) has an absolute URL (http...) or YT protocol, use it.
+        // Otherwise fallback to library version (found).
+        const isDiscoveryAbsolute = (pTrack.source || pTrack.Source || "").startsWith('http') || (pTrack.source || pTrack.Source || "").startsWith('youtube:');
+
+        return {
+          ...found,
+          id: pId || found.id || found.Id,
+          source: isDiscoveryAbsolute ? (pTrack.source || pTrack.Source) : (found.source || found.Source || pTrack.source || pTrack.Source),
+          cover: isDiscoveryAbsolute ? (pTrack.cover || pTrack.CoverImageUrl || pTrack.Cover) : (found.cover || found.CoverImageUrl || found.Cover || pTrack.cover || pTrack.CoverImageUrl || pTrack.Cover),
+          isOwned: true,
+          isLocked: false
+        };
+      }
+      return pTrack;
     });
 
     console.log("[App] Playing Playlist via Enriched Queue. Count:", enrichedQueue.length);
+
+    // 3. Set states
+    const firstTrack = enrichedQueue[startIndex];
+    const isYT = (firstTrack?.source || firstTrack?.Source)?.startsWith('youtube:');
+
     setTracks(enrichedQueue);
     setCurrentTrackIndex(startIndex);
     setIsPlaying(true);
+    if (isYT) setIsYoutubeMode(true);
   };
 
   // Fetch User Profile & Credits

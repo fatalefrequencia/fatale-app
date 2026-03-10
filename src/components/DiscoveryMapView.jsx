@@ -87,6 +87,10 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
     const [isCreatingCommunity, setIsCreatingCommunity] = useState(false);
     const [communityActionLoading, setCommunityActionLoading] = useState(false);
 
+    // Vitality Layer (Top Tracks & Connections)
+    const [vitalitySignals, setVitalitySignals] = useState([]);
+    const [vitalityLines, setVitalityLines] = useState([]);
+
     // ── DATA ──
     const fetchMapData = async () => {
         setLoading(true);
@@ -214,6 +218,139 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
         }, 800);
         return () => clearTimeout(timer);
     }, []);
+
+    // ── VITALITY GENERATION (REAL DATA) ──
+    useEffect(() => {
+        let active = true;
+        const generateVitality = async () => {
+            try {
+                // 1. Fetch real Fatale trending tracks once
+                const fataleRes = await API.Tracks.getAllTracks({ sort: 'trending' });
+                let trendingFatale = fataleRes.data || [];
+                if (trendingFatale.length === 0 && allTracks && allTracks.length > 0) {
+                    trendingFatale = allTracks;
+                }
+
+                // 2. Sequential Fetch for each sector to prevent YouTube API rate limiting
+                const allSignals = [];
+                const allLines = [];
+
+                for (const sec of SECTORS) {
+                    if (!active) break;
+
+                    const secSignals = [];
+                    const secLines = [];
+
+                    // A. Fatale signals for this sector
+                    let sectorFatale = trendingFatale.filter(t => {
+                        const tags = (t.Tags || t.tags || "").toLowerCase();
+                        return tags.includes(sec.name.toLowerCase()) ||
+                            sec.subgenres.some(sg => tags.includes(sg.toLowerCase()));
+                    }).slice(0, 3);
+
+                    if (sectorFatale.length === 0 && trendingFatale.length > 0) {
+                        const start = Math.abs(hashStr(sec.name)) % trendingFatale.length;
+                        sectorFatale = trendingFatale.slice(start, start + 2);
+                    }
+
+                    sectorFatale.forEach((t, i) => {
+                        const tId = t.Id || t.id;
+                        const h = hashStr(tId + sec.name);
+                        const pPath = t.FilePath || t.filePath || "";
+                        const source = pPath.startsWith('http') ? pPath : `http://localhost:5264${pPath}`;
+                        const cover = t.CoverImageUrl || t.coverImageUrl || t.ImageUrl || t.imageUrl || "";
+                        const normalizedCover = cover.startsWith('http') ? cover : `http://localhost:5264${cover}`;
+
+                        secSignals.push({
+                            id: `v-fatale-${tId}-${sec.name}`,
+                            trackId: tId,
+                            title: t.Title || t.title || "UNTITLED_NODE",
+                            artist: t.Artist?.Name || t.artist || "ARCHIVE_SIGNAL",
+                            color: '#ff0000',
+                            isYoutube: false,
+                            track: {
+                                ...t,
+                                id: tId,
+                                dbId: tId,
+                                source: source,
+                                cover: normalizedCover,
+                                isOwned: true,
+                                isLocked: false
+                            },
+                            x: sec.x + (i % 2 === 0 ? 350 : -350) + (h % 300),
+                            y: sec.y + (i < 2 ? 350 : -350) + ((h >> 2) % 300),
+                        });
+                    });
+
+                    // B. YouTube discovery for this sector
+                    try {
+                        const searchQuery = `${sec.name} ${sec.subgenres?.[0] || ""}`;
+                        const ytRes = await API.Youtube.getDiscoveryNodes(searchQuery);
+                        const ytNodes = (ytRes.data || []).slice(0, 2);
+
+                        console.log(`[VITALITY] YT Results for ${sec.name}: ${ytNodes.length}`);
+
+                        ytNodes.forEach((node, i) => {
+                            const nId = node.Id || node.id;
+                            const h = hashStr(nId + sec.name);
+                            const nTitle = node.Title || node.title || "YT_SIGNAL";
+                            const nAuthor = node.Author || node.author || node.Album?.Artist?.Name || node.album?.artist?.name || "STREAM_SOURCE";
+
+                            const sig = {
+                                id: `v-yt-${nId}-${sec.name}`,
+                                videoId: nId,
+                                title: nTitle,
+                                artist: nAuthor,
+                                color: '#00ffff',
+                                isYoutube: true,
+                                track: {
+                                    id: nId,
+                                    dbId: nId,
+                                    title: nTitle,
+                                    artist: nAuthor,
+                                    source: `youtube:${nId}`,
+                                    cover: node.ThumbnailUrl || node.thumbnailUrl || node.CoverImageUrl || node.coverImageUrl,
+                                    isYoutube: true,
+                                    isOwned: true,
+                                    isLocked: false,
+                                    duration: node.Duration || '0:00'
+                                },
+                                x: sec.x + (i % 2 === 0 ? 600 : -600) + (h % 400),
+                                y: sec.y + (i < 2 ? -500 : 500) + ((h >> 3) % 400),
+                            };
+                            secSignals.push(sig);
+
+                            // Partner line
+                            const partner = secSignals.find(s => !s.isYoutube);
+                            if (partner) {
+                                secLines.push({
+                                    id: `line-${sig.id}-${partner.id}`,
+                                    from: sig,
+                                    to: partner,
+                                    color: sec.color
+                                });
+                            }
+                        });
+                    } catch (e) {
+                        console.warn(`[VITALITY] YT fetch partial fail for ${sec.name}`);
+                    }
+
+                    allSignals.push(...secSignals);
+                    allLines.push(...secLines);
+                }
+
+                if (!active) return;
+                setVitalitySignals(allSignals);
+                setVitalityLines(allLines);
+                console.log(`[VITALITY] Sync Complete: ${allSignals.length} signals`);
+            } catch (err) {
+                console.error("[VITALITY] Generation error:", err);
+            }
+        };
+
+        generateVitality();
+        return () => { active = false; };
+    }, [allTracks]);
 
     // ── STATS ──
     useEffect(() => {
@@ -572,11 +709,39 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                     <rect width="100%" height="100%" fill="url(#hex)" mask="url(#worldMask)" />
                 </svg>
 
-                {/* Sector atmosphere */}
+                {/* Vitality Connections (Functional Lines) */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
+                    {vitalityLines.map(line => (
+                        <ResonanceLine
+                            key={line.id}
+                            line={line}
+                            onResonanceClick={() => {
+                                // Start a "Resonance Session" (mini-mix of connected tracks)
+                                if (onPlayPlaylist) {
+                                    const tracks = [line.from.track || line.from, line.to.track || line.to].filter(Boolean);
+                                    onPlayPlaylist(tracks, 0);
+                                }
+                            }}
+                        />
+                    ))}
+                </svg>
+
+                {/* Vitality Signals */}
+                {vitalitySignals.map(sig => (
+                    <TopTrackSignal
+                        key={sig.id}
+                        signal={sig}
+                        onClick={() => {
+                            if (onPlayPlaylist && sig.track) onPlayPlaylist([sig.track], 0);
+                        }}
+                    />
+                ))}
+
+                {/* Sector atmosphere - subtle high-fidelity color nebulae */}
                 {SECTORS.map(s => (
                     <div key={s.name} className="absolute pointer-events-none" style={{
-                        left: s.x - 600, top: s.y - 400, width: 3600, height: 2200,
-                        background: `radial-gradient(ellipse at 50% 50%, ${s.color}15 0%, transparent 60%)`, // slightly more opaque (from 09 to 15)
+                        left: s.x - 1200, top: s.y - 800, width: 4800, height: 3200,
+                        background: `radial-gradient(ellipse at 50% 50%, ${s.color}08 0%, transparent 70%)`,
                     }} />
                 ))}
 
@@ -586,16 +751,21 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 10 }}
-                            className="absolute bottom-24 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full hud-panel border-[#a855f7]/30 flex items-center gap-3 z-50 overflow-hidden"
+                            className="absolute bottom-24 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-[#fbbf24]/10 border border-[#fbbf24]/40 flex items-center gap-3 z-50 overflow-hidden"
+                            style={{ boxShadow: '0 0 20px rgba(251,191,36,0.1)' }}
                         >
+                            {/* Brackets */}
+                            <div className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-[#fbbf24]" />
+                            <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-[#fbbf24]" />
+
                             <motion.div
                                 animate={{ rotate: 360 }}
                                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                             >
-                                <Zap size={14} className="text-[#a855f7]" />
+                                <Zap size={14} className="text-[#fbbf24]" />
                             </motion.div>
-                            <span className="mono text-[10px] tracking-[0.3em] font-black text-white/80">SIGNAL SCANNING AREA...</span>
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#a855f715] to-transparent scan-light" />
+                            <span className="mono text-[10px] tracking-[0.3em] font-black text-[#fbbf24]">SIGNAL_SCANNING_RANGE...</span>
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#fbbf2415] to-transparent scan-light" />
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -604,10 +774,31 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                 {SECTORS.map(s => (
                     <div key={`lbl-${s.name}`} className="absolute pointer-events-none mono" style={{
                         left: s.x + 800, top: s.y - 180,
-                        fontSize: 64, fontWeight: 900, letterSpacing: '0.25em',
-                        color: s.color, opacity: 0.04, whiteSpace: 'nowrap', userSelect: 'none',
+                        zIndex: 1
                     }}>
-                        {s.name}
+
+
+                        {/* Cyberpunk HUD Overlay Label */}
+                        <div className="mt-[-20px] ml-4 flex items-start gap-4">
+                            <div className="bg-[#fbbf24] text-black px-2 py-0.5 text-[10px] font-black italic tracking-tighter">
+                                SECTOR_0{SECTORS.indexOf(s) + 1}
+                            </div>
+                            <div className="hud-panel border-l-2 border-[#fbbf24] bg-black/60 p-2 min-w-[120px] relative overflow-hidden">
+                                {/* Brackets */}
+                                <div className="absolute top-0 right-0 w-1.5 h-1.5 border-t border-r border-[#fbbf24]/40" />
+                                <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-[#fbbf24]/40" />
+
+                                <div className="text-[8px] font-black text-[#fbbf24] uppercase tracking-widest">{s.name.replace('_', ' ')}</div>
+
+                                {/* Status Meter */}
+                                <div className="flex gap-0.5 mt-1.5 leading-none">
+                                    {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                                        <div key={i} className={`h-1 w-1.5 ${i < 6 ? 'bg-[#fbbf24]' : 'bg-[#fbbf24]/10'}`} />
+                                    ))}
+                                    <span className="text-[6px] text-[#fbbf24] ml-2 font-bold opacity-80">LOAD: 72%</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 ))}
 
@@ -701,6 +892,29 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                         />
                     ))}
                 </AnimatePresence>
+
+                {/* Vitality Layer (Pulsing Signals & Resonance Lines) */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 12 }}>
+                    {vitalityLines.map(line => (
+                        <ResonanceLine
+                            key={line.id}
+                            line={line}
+                            onResonanceClick={() => {
+                                // Find partner signal for context or just play the 'to' signal
+                                if (line.to?.track) onPlayPlaylist?.([line.to.track], 0);
+                            }}
+                        />
+                    ))}
+                </svg>
+
+                {/* Pulsing Vitality Tracks */}
+                {vitalitySignals.map(sig => (
+                    <TopTrackSignal
+                        key={sig.id}
+                        signal={sig}
+                        onClick={() => onPlayPlaylist?.([sig.track], 0)}
+                    />
+                ))}
             </motion.div>
 
             {/* Scan line */}
@@ -717,14 +931,14 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                 background: 'radial-gradient(ellipse 85% 85% at 50% 50%, transparent 45%, #04040a 100%)',
             }} />
 
-            {/* Atmospheric fog — mostly purple with faint sector hints */}
+            {/* Atmospheric fog — cinematic gray anchored layer to prevent color bleed */}
             <div className="absolute inset-0 pointer-events-none" style={{
                 background: [
-                    'radial-gradient(ellipse 70% 55% at 20% 25%, rgba(155,93,229,0.13) 0%, transparent 65%)',
-                    'radial-gradient(ellipse 60% 50% at 75% 70%, rgba(155,93,229,0.10) 0%, transparent 60%)',
-                    'radial-gradient(ellipse 50% 40% at 50% 50%, rgba(155,93,229,0.06) 0%, transparent 55%)',
-                    'radial-gradient(ellipse 35% 30% at 85% 20%, rgba(0,255,255,0.03) 0%, transparent 50%)',
-                    'radial-gradient(ellipse 30% 25% at 10% 80%, rgba(155,93,229,0.08) 0%, transparent 50%)',
+                    'radial-gradient(ellipse 70% 55% at 20% 25%, rgba(100,100,110,0.12) 0%, transparent 65%)',
+                    'radial-gradient(ellipse 60% 50% at 75% 70%, rgba(90,90,100,0.1) 0%, transparent 60%)',
+                    'radial-gradient(ellipse 50% 40% at 50% 50%, rgba(110,110,120,0.08) 0%, transparent 55%)',
+                    'radial-gradient(ellipse 35% 30% at 85% 20%, rgba(255,255,255,0.02) 0%, transparent 50%)',
+                    'radial-gradient(ellipse 30% 25% at 10% 80%, rgba(80,80,90,0.07) 0%, transparent 50%)',
                 ].join(', '),
             }} />
 
@@ -737,17 +951,17 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                 <div className="flex gap-2">
                     <button
                         onClick={() => setIsCreatingCommunity(true)}
-                        className="hud-panel rounded-lg px-3 py-2 flex items-center gap-2 hover:bg-[#00ffff]/10 transition-colors border-transparent hover:border-[#00ffff]/30 group"
+                        className="hud-panel rounded-lg px-3 py-2 flex items-center gap-2 bg-[#ff006e]/5 hover:bg-[#ff006e]/10 transition-colors border-[#ff006e]/20 hover:border-[#ff006e]/50 group"
                     >
-                        <Plus size={12} className="text-[#00ffff]/70 group-hover:text-[#00ffff]" />
-                        <span className="mono text-[9px] tracking-[0.2em] text-[#00ffff]/70 group-hover:text-[#00ffff] uppercase font-bold">
-                            Found Community
+                        <Plus size={12} className="text-[#ff006e]/70 group-hover:text-[#ff006e]" />
+                        <span className="mono text-[9px] tracking-[0.2em] text-[#ff006e]/70 group-hover:text-[#ff006e] uppercase font-black italic">
+                            FOUND_COMMUNITY
                         </span>
                     </button>
 
                     <button
                         onClick={() => flyTo(4200, 1900, 0.35)}
-                        className="hud-panel rounded-lg w-8 h-8 flex items-center justify-center hover:text-white transition-colors"
+                        className="hud-panel rounded-lg w-8 h-8 flex items-center justify-center text-[#ff006e]/50 hover:text-[#ff006e] transition-colors"
                         title="Reset View"
                     >
                         <Activity size={12} />
@@ -758,7 +972,7 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                                 const me = artists.find(a => a.userId === user.id || a.userId === user.Id);
                                 if (me) flyTo(me.x, me.y, 1.2);
                             }}
-                            className="hud-panel rounded-lg w-8 h-8 flex items-center justify-center hover:text-[#ff006e] transition-colors"
+                            className="hud-panel rounded-lg w-8 h-8 flex items-center justify-center text-[#ff006e]/50 hover:text-[#ff006e] transition-colors"
                             title="Find Me"
                         >
                             <MapPin size={12} />
@@ -766,16 +980,16 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                     )}
                 </div>
 
-                <div className="hud-panel rounded-lg px-4 py-2 flex gap-8">
+                <div className="hud-panel rounded-lg px-4 py-2 flex gap-8 border-[#ff006e]/20">
                     <div className="flex flex-col items-end">
-                        <div className="mono text-[8px] tracking-[0.2em] text-[#ff006e]/50 uppercase mb-0.5">Scanning Nodes</div>
-                        <div className="mono text-[14px] font-bold text-white tracking-widest leading-none" style={{ textShadow: '0 0 10px rgba(0,255,255,0.3)' }}>
+                        <div className="mono text-[8px] tracking-[0.2em] text-[#ff006e]/40 uppercase mb-0.5 font-bold italic">NODES_SCANNED</div>
+                        <div className="mono text-[14px] font-bold text-[#ff006e] tracking-widest leading-none" style={{ textShadow: '0 0 10px rgba(255,0,110,0.3)' }}>
                             {stats.tracks.toLocaleString()}
                         </div>
                     </div>
                     <div className="flex flex-col items-end border-l border-white/5 pl-8">
-                        <div className="mono text-[8px] tracking-[0.2em] text-[#00ffff]/50 uppercase mb-0.5">Users Online</div>
-                        <div className="mono text-[14px] font-bold text-white tracking-widest leading-none" style={{ textShadow: '0 0 10px rgba(0,255,255,0.3)' }}>
+                        <div className="mono text-[8px] tracking-[0.2em] text-[#00ffff]/40 uppercase mb-0.5 font-bold italic">USERS_SYNCED</div>
+                        <div className="mono text-[14px] font-bold text-[#00ffff] tracking-widest leading-none" style={{ textShadow: '0 0 10px rgba(0,255,255,0.3)' }}>
                             {stats.online.toLocaleString()}
                         </div>
                     </div>
@@ -785,16 +999,16 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
             {/* TOP-LEFT: Search + title */}
             <div data-hud className="absolute top-4 left-4 z-50 flex flex-col gap-2">
                 {/* Title bar */}
-                <div className="hud-panel rounded-lg px-[18px] py-[10px] flex items-center gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e] blink shadow-[0_0_8px_#ff006e]" />
-                    <span className="mono text-[10px] tracking-[0.4em] text-white/95 uppercase font-bold">Discovery // Node Map</span>
+                <div className="hud-panel border-l-4 border-[#ff0000] bg-black/80 rounded-lg px-[18px] py-[10px] flex items-center gap-3 shadow-[0_0_20px_rgba(255,0,0,0.15)]">
+                    <div className="w-1.5 h-1.5 rounded-sm bg-[#ff0000] animate-pulse shadow-[0_0_10px_#ff0000]" />
+                    <span className="mono text-[10px] tracking-[0.4em] text-[#ff0000] uppercase font-black italic">fatale // Discovery_05</span>
                     <MapClock />
                 </div>
 
                 {/* Search */}
                 <div className="flex flex-col gap-1">
                     <div
-                        className="hud-panel rounded-lg flex items-center gap-2 px-3 overflow-hidden transition-all duration-300 relative z-[60]"
+                        className="hud-panel rounded-lg flex items-center gap-2 px-3 overflow-hidden transition-all duration-300 relative z-[60] border-[#ff0000]/20"
                         style={{ width: searchOpen ? 320 : 38, height: 36 }}
                     >
                         <button
@@ -804,7 +1018,7 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                                     setSearchQuery('');
                                 }
                             }}
-                            className="flex-shrink-0 text-white/50 hover:text-[#ff006e] transition-colors"
+                            className="flex-shrink-0 text-[#ff0000]/60 hover:text-[#ff0000] transition-colors"
                         >
                             {searchOpen ? <X size={13} /> : <Search size={13} />}
                         </button>
@@ -817,7 +1031,7 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                                 className="flex-1 bg-transparent text-white/80 text-[11px] outline-none placeholder:text-white/30 mono"
                             />
                         )}
-                        {searchingYoutube && <div className="w-3 h-3 border-2 border-[#ff006e] border-t-transparent rounded-full animate-spin mr-1" />}
+                        {searchingYoutube && <div className="w-3 h-3 border-2 border-[#ff0000] border-t-transparent rounded-full animate-spin mr-1" />}
                     </div>
 
                     {/* Search Results Dropdown */}
@@ -886,7 +1100,7 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                                 {/* YouTube Results */}
                                 {youtubeResults.length > 0 && (
                                     <div className="flex flex-col gap-1 mt-2 border-t border-white/5 pt-2">
-                                        <div className="mono text-[8px] text-white/30 px-2 py-1 tracking-widest uppercase font-bold text-[#ff006e]/80">Global Frequency (YouTube)</div>
+                                        <div className="mono text-[8px] text-[#fbbf24]/60 px-2 py-1 tracking-widest uppercase font-black italic">GLOBAL_STREAM_CARRIER</div>
                                         {youtubeResults.slice(0, 8).map((yt, idx) => {
                                             const id = yt.id || yt.Id || `yt-fallback-${idx}`;
                                             const title = yt.title || yt.Title || 'Unknown Title';
@@ -905,23 +1119,25 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                                                             cover: thumb,
                                                             source: `youtube:${id}`,
                                                             isYoutube: true,
-                                                            isYT: true
+                                                            isYT: true,
+                                                            isOwned: true,
+                                                            isLocked: false
                                                         };
                                                         onPlayPlaylist?.([track], 0);
                                                         setSearchQuery('');
                                                         setSearchOpen(false);
                                                     }}
-                                                    className="w-full text-left p-2 rounded hover:bg-white/5 flex items-center gap-3 group transition-colors"
+                                                    className="w-full text-left p-2 border-b border-[#fbbf24]/5 hover:bg-[#fbbf24]/5 flex items-center gap-3 group transition-colors"
                                                 >
-                                                    <div className="w-10 h-6 rounded bg-black/40 overflow-hidden relative flex-shrink-0">
+                                                    <div className="w-10 h-6 bg-black/40 overflow-hidden relative flex-shrink-0 border border-[#fbbf24]/20 group-hover:border-[#fbbf24]/60">
                                                         <img src={thumb} alt="" className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
-                                                        <div className="absolute inset-0 bg-[#ff006e]/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                        <div className="absolute inset-0 bg-[#fbbf24]/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="text-[9px] text-white font-medium truncate leading-tight" dangerouslySetInnerHTML={{ __html: title }} />
-                                                        <div className="text-[7px] text-white/60 mono uppercase truncate">{author}</div>
+                                                        <div className="text-[9px] text-white/90 font-bold truncate leading-tight group-hover:text-[#fbbf24]" dangerouslySetInnerHTML={{ __html: title }} />
+                                                        <div className="text-[7px] text-[#fbbf24]/50 mono uppercase truncate">AUTH // {author}</div>
                                                     </div>
-                                                    <Play size={10} className="text-[#ff006e]/40 group-hover:text-[#ff006e] flex-shrink-0" />
+                                                    <Play size={10} className="text-[#fbbf24]/30 group-hover:text-[#fbbf24] flex-shrink-0" />
                                                 </button>
                                             );
                                         })}
@@ -930,15 +1146,15 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
 
                                 {searchingYoutube && youtubeResults.length === 0 && (
                                     <div className="p-6 flex flex-col items-center gap-2">
-                                        <div className="w-4 h-4 border-2 border-[#ff006e] border-t-transparent rounded-full animate-spin" />
-                                        <div className="mono text-[8px] text-white/30 tracking-[0.2em]">Scanning Frequencies...</div>
+                                        <div className="w-4 h-4 border-2 border-[#fbbf24] border-t-transparent rounded-full animate-spin" />
+                                        <div className="mono text-[8px] text-[#fbbf24]/40 tracking-[0.2em]">CONNECTING_TO_GLOBAL_GRID...</div>
                                     </div>
                                 )}
 
                                 {localArtists.length === 0 && localTracks.length === 0 && youtubeResults.length === 0 && !searchingYoutube && (
                                     <div className="p-8 text-center flex flex-col items-center gap-2">
-                                        <Search size={20} className="text-white/5 mb-2" />
-                                        <div className="mono text-[9px] text-white/20 tracking-widest">SIGNAL LOST: NO MATCHES FOUND</div>
+                                        <Search size={20} className="text-[#fbbf24]/10 mb-2" />
+                                        <div className="mono text-[9px] text-[#fbbf24]/20 tracking-widest italic font-bold">SIGNAL LOST: ZERO_MATCHES_DETECTED</div>
                                     </div>
                                 )}
                             </motion.div>
@@ -955,11 +1171,11 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                             exit={{ opacity: 0, x: -20 }}
                             className="mt-4 flex flex-col gap-2"
                         >
-                            <div className="hud-panel rounded-lg p-4 w-64 border-[#ff006e]/30 shadow-[0_0_30px_rgba(255,0,110,0.1)] relative z-50">
-                                <div className="absolute top-0 right-0 p-1 px-2 text-[6px] text-[#ff006e]/40 font-black tracking-widest bg-[#ff006e]/5">FREQ_SCANNER</div>
+                            <div className="hud-panel border-l-2 border-[#fbbf24] bg-black/80 rounded-lg p-4 w-64 shadow-[0_0_30px_rgba(251,191,36,0.1)] relative z-50">
+                                <div className="absolute top-0 right-0 p-1 px-2 text-[6px] text-[#fbbf24]/50 font-black tracking-widest bg-[#fbbf24]/5 uppercase italic">FREQUENCY_SCANNER</div>
                                 <div className="flex items-center gap-2 mb-4">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e] blink shadow-[0_0_8px_#ff006e]" />
-                                    <span className="mono text-[9px] tracking-[0.3em] text-white/90 uppercase font-bold">Live_Favorites</span>
+                                    <div className="w-1.5 h-1.5 rounded-sm bg-[#fbbf24] animate-pulse shadow-[0_0_8px_#fbbf24]" />
+                                    <span className="mono text-[9px] tracking-[0.3em] text-[#fbbf24] uppercase font-black italic">Live_Favorites</span>
                                 </div>
                                 <div className="space-y-3">
                                     {favoriteStations.filter(s => (s.isLive || s.IsLive)).slice(0, 3).map(station => (
@@ -969,13 +1185,13 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                                             className="w-full text-left group transition-all"
                                         >
                                             <div className="flex justify-between items-start mb-1">
-                                                <div className="text-[10px] font-black text-white/90 uppercase truncate group-hover:text-[#ff006e]">{station.name || station.Name}</div>
-                                                <div className="text-[7px] text-[#ff006e] mono blink">LIVE</div>
+                                                <div className="text-[10px] font-black text-[#fbbf24]/90 uppercase truncate group-hover:text-[#fbbf24]">{station.name || station.Name}</div>
+                                                <div className="text-[7px] text-[#fbbf24] mono animate-pulse">LIVE</div>
                                             </div>
-                                            <div className="text-[8px] text-white/30 italic truncate uppercase tracking-tighter">
+                                            <div className="text-[8px] text-[#fbbf24]/30 italic truncate uppercase tracking-tighter">
                                                 {station.currentSessionTitle || station.CurrentSessionTitle || 'Broadcasting'}
                                             </div>
-                                            <div className="w-full h-[1px] bg-white/5 mt-2 group-hover:bg-[#ff006e]/20 transition-colors" />
+                                            <div className="w-full h-[1px] bg-[#fbbf24]/10 mt-2 group-hover:bg-[#fbbf24]/30 transition-colors" />
                                         </button>
                                     ))}
                                 </div>
@@ -1155,12 +1371,122 @@ const YoutubeSignalNode = React.memo(({ node, onPlay }) => (
             {/* YT Badge */}
             <div className="absolute top-1 right-1 text-[6px] font-black bg-[#a855f7] text-white px-1 rounded-sm mono leading-tight">YT</div>
         </motion.div>
-        {/* Label below node */}
-        <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap text-[8px] text-[#a855f7]/70 mono font-bold tracking-wider max-w-[120px] truncate text-center group-hover:text-[#a855f7] pointer-events-none" style={{ textShadow: '0 0 8px #a855f7' }}>
-            {node.title}
-        </div>
     </motion.div>
 ));
+
+// ─── VITALITY COMPONENTS ──────────────────────────────────────────────────
+const TopTrackSignal = React.memo(({ signal, onClick }) => {
+    return (
+        <motion.div
+            className="node absolute z-30 cursor-pointer group flex items-center justify-center translate-x-[-20px] translate-y-[-20px]"
+            style={{
+                left: signal.x,
+                top: signal.y,
+                width: 40,
+                height: 40,
+                pointerEvents: 'auto'
+            }}
+            onClick={(e) => {
+                e.stopPropagation();
+                console.log("[FATALE_MAP] Signal Intercepted:", signal.title);
+                onClick();
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+        >
+            {/* Pulsing Dot */}
+            <div className="relative w-4 h-4 flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ background: signal.color }} />
+                <div className="w-2 h-2 rounded-full shadow-[0_0_10px_currentColor]" style={{ background: signal.color, color: signal.color }} />
+            </div>
+
+            {/* Cyberpunk HUD Metadata - Amber Style */}
+            <div className="absolute top-10 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 whitespace-nowrap z-50">
+                <div className="h-4 w-[1px] opacity-50" style={{ background: signal.color }} />
+                <div className="relative bg-[#0a0a0c]/95 border-l-2 p-2 pr-6 shadow-[0_0_30px_rgba(255,0,0,0.15)] min-w-[140px]" style={{ borderColor: signal.color }}>
+                    {/* Corner Brackets */}
+                    <div className="absolute top-0 right-0 w-2 h-2 border-t border-r opacity-60" style={{ borderColor: signal.color }} />
+                    <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r opacity-60" style={{ borderColor: signal.color }} />
+
+                    {/* Scanline Overlay */}
+                    <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[repeating-linear-gradient(transparent_0px,transparent_1px,rgba(255,0,0,0.5)_2px)] bg-[length:100%_3px]" />
+
+                    <div className="flex items-center gap-2 mb-1">
+                        <div className="w-1 h-3 animate-pulse" style={{ background: signal.color }} />
+                        <span className="text-[7px] font-black tracking-[0.2em] uppercase mono italic" style={{ color: signal.color }}>
+                            {signal.isYoutube ? 'CONNECTED_STREAM' : 'FATALE_CARRIER'}
+                        </span>
+                    </div>
+
+                    <div className="text-[10px] font-black mono uppercase tracking-tight truncate max-w-[180px]" style={{ color: signal.color }}>
+                        {signal.title}
+                    </div>
+                    <div className="text-[7px] mono uppercase tracking-widest mt-0.5" style={{ color: `${signal.color}99` }}>
+                        SRC // {signal.artist}
+                    </div>
+
+                    {/* Bitrate/Signal Bar */}
+                    <div className="flex gap-0.5 mt-2 opacity-60">
+                        {[1, 2, 3, 4, 5, 6].map(i => (
+                            <div key={i} className="h-1 w-2" style={{ background: i < 5 ? signal.color : `${signal.color}33` }} />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </motion.div>
+    );
+});
+
+const ResonanceLine = React.memo(({ line, onResonanceClick }) => {
+    const dx = line.to.x - line.from.x;
+    const dy = line.to.y - line.from.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    return (
+        <g
+            className="cursor-pointer pointer-events-auto group/line"
+            onClick={(e) => { e.stopPropagation(); onResonanceClick(); }}
+        >
+            {/* Transparent Hit Area - Much larger for easier interaction */}
+            <line
+                x1={line.from.x + 8} y1={line.from.y + 8}
+                x2={line.to.x + 8} y2={line.to.y + 8}
+                stroke="transparent" strokeWidth="24"
+            />
+
+            {/* The Actual Visible Line */}
+            <line
+                x1={line.from.x + 6} y1={line.from.y + 6}
+                x2={line.to.x + 6} y2={line.to.y + 6}
+                stroke={line.from.color} strokeWidth="0.5"
+                strokeDasharray="4 8"
+                opacity="0.15"
+                className="group-hover/line:opacity-60 transition-opacity"
+            />
+
+            {/* Moving Data Packet */}
+            <circle r="1" fill={line.to.color} className="group-hover/line:opacity-100 opacity-0 transition-opacity">
+                <animateMotion
+                    dur="3s"
+                    repeatCount="indefinite"
+                    path={`M ${line.from.x + 6} ${line.from.y + 6} L ${line.to.x + 6} ${line.to.y + 6}`}
+                />
+            </circle>
+
+            {/* Hover Tooltip Label */}
+            <foreignObject
+                x={(line.from.x + line.to.x) / 2}
+                y={(line.from.y + line.to.y) / 2 - 10}
+                width="80" height="20"
+                className="opacity-0 group-hover/line:opacity-100 transition-opacity pointer-events-none"
+            >
+                <div className="text-[6px] font-black text-white/40 mono bg-black/60 px-1 py-0.5 rounded border border-white/5 inline-block">
+                    RESONANCE_BRIDGE
+                </div>
+            </foreignObject>
+        </g>
+    );
+});
 
 // ─── CLUSTER NODE ────────────────────────────────────────────────────────
 const ClusterNode = React.memo(({ cluster, onClick, dimmed, isSearchResult }) => {
@@ -1339,20 +1665,24 @@ const ArtistNode = React.memo(({ artist, hovered, isSearchResult, dimmed, onHove
                         className="absolute left-1/2 -translate-x-1/2 pointer-events-none z-50"
                         style={{ bottom: sz + 12, whiteSpace: 'nowrap' }}
                     >
-                        <div className="px-3 py-2 rounded-md mono text-[10px] tracking-widest" style={{
+                        <div className="px-3 py-2 rounded-sm mono text-[10px] tracking-widest relative overflow-hidden" style={{
                             background: 'rgba(4,4,10,0.98)',
-                            border: `1px solid ${artist.color}80`,
-                            color: '#ffffff',
-                            boxShadow: `0 8px 32px rgba(0,0,0,0.9), 0 0 16px ${artist.color}30`,
+                            border: `1px solid #fbbf24`,
+                            color: '#fbbf24',
+                            boxShadow: `0 8px 32px rgba(0,0,0,0.9), 0 0 16px rgba(251,191,36,0.15)`,
                         }}>
-                            <div className="text-[#ff006e] text-[8px] mb-0.5 font-bold uppercase">{artist.sector}</div>
-                            {artist.name.toUpperCase()}
-                            <div className="flex items-center gap-2 mt-1 opacity-50 text-[7px]">
-                                <Activity size={8} /> {artist.plays} SCANS
+                            {/* Brackets */}
+                            <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#fbbf24]/60" />
+                            <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#fbbf24]/60" />
+
+                            <div className="text-black bg-[#fbbf24] text-[8px] mb-1 px-1 font-black uppercase inline-block">{artist.sector}</div>
+                            <div className="font-bold">{artist.name.toUpperCase()}</div>
+                            <div className="flex items-center gap-2 mt-1 opacity-60 text-[7px]">
+                                <Activity size={8} /> {artist.plays} SCANS_DETECTED
                             </div>
                         </div>
                         <div className="absolute left-1/2 -translate-x-1/2 w-1.5 h-1.5 rotate-45"
-                            style={{ bottom: -4, background: artist.color + '50', border: `1px solid ${artist.color}50` }} />
+                            style={{ bottom: -4, background: '#fbbf24', border: `1px solid #fbbf24` }} />
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -1446,49 +1776,51 @@ const RadarMinimap = React.memo(({ artists, pan, zoom, sectors, containerRef, on
     return (
         <div
             data-hud
-            className="absolute bottom-8 right-4 z-50 rounded-xl overflow-hidden shadow-2xl"
+            className="absolute bottom-8 right-4 z-50 rounded-xl overflow-hidden shadow-2xl group/radar"
             style={{
                 width: RW, height: RH,
                 background: 'rgba(4,4,10,0.92)',
-                border: '1px solid rgba(255,0,110,0.22)',
+                border: '1px solid rgba(255,0,110,0.3)',
                 backdropFilter: 'blur(16px)',
                 cursor: 'crosshair',
             }}
             onClick={handleClick}
         >
-            {RadarStaticBackground}
+            <div className="h-full relative">
+                {RadarStaticBackground}
 
-            {/* Viewport rect */}
-            <div
-                className="absolute transition-colors duration-200"
-                onPointerDown={handleBoxDown}
-                onPointerMove={handleBoxMove}
-                onPointerUp={handleBoxUp}
-                onPointerCancel={handleBoxUp}
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                    left: boxX, top: boxY,
-                    width: boxW, height: boxH,
-                    border: '1px solid rgba(255,0,110,0.8)',
-                    background: 'rgba(255,0,110,0.12)',
-                    boxShadow: '0 0 12px rgba(255,0,110,0.25)',
-                    cursor: 'grab',
-                    zIndex: 20
-                }}
-            />
+                {/* Viewport rect */}
+                <div
+                    className="absolute transition-colors duration-200"
+                    onPointerDown={handleBoxDown}
+                    onPointerMove={handleBoxMove}
+                    onPointerUp={handleBoxUp}
+                    onPointerCancel={handleBoxUp}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                        left: boxX, top: boxY,
+                        width: boxW, height: boxH,
+                        border: '1px solid rgba(255,0,110,0.8)',
+                        background: 'rgba(255,0,110,0.12)',
+                        boxShadow: '0 0 12px rgba(255,0,110,0.25)',
+                        cursor: 'grab',
+                        zIndex: 20
+                    }}
+                />
 
-            {/* Sweep */}
-            <div className="absolute inset-0 pointer-events-none" style={{
-                background: 'linear-gradient(to bottom, transparent 0%, rgba(255,0,110,0.1) 50%, transparent 100%)',
-                animation: 'scanY 4s linear infinite',
-            }} />
+                {/* Sweep */}
+                <div className="absolute inset-0 pointer-events-none" style={{
+                    background: 'linear-gradient(to bottom, transparent 0%, rgba(255,0,110,0.1) 50%, transparent 100%)',
+                    animation: 'scanY 4s linear infinite',
+                }} />
 
-            {/* Labels */}
-            <div className="absolute bottom-1.5 left-2 mono text-[7px] tracking-[0.3em] uppercase opacity-60" style={{ color: '#ff006e' }}>
-                RADAR // LIVE
-            </div>
-            <div className="absolute top-1.5 right-2 mono text-[7px] opacity-40 text-[#ff006e]">
-                {artists.length.toString().padStart(3, '0')}
+                {/* Labels */}
+                <div className="absolute bottom-1.5 left-2 mono text-[7px] tracking-[0.3em] uppercase opacity-80" style={{ color: '#ff006e' }}>
+                    RADAR // SCAN
+                </div>
+                <div className="absolute bottom-1.5 right-2 mono text-[7px] opacity-60 text-[#ff006e]">
+                    {artists.length.toString().padStart(3, '0')} SIGS
+                </div>
             </div>
         </div>
     );

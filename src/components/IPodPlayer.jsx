@@ -4,7 +4,7 @@ import { useNotification } from '../contexts/NotificationContext';
 import {
     Play, Pause, SkipBack, SkipForward, Music,
     ChevronRight, Zap, Minimize2, Download as DownloadIcon, Heart,
-    Wifi, Disc, User, List, DollarSign, Search, Video
+    Wifi, Disc, User, List, DollarSign, Search, Video, Radio as AntennaIcon, RefreshCw
 } from 'lucide-react';
 import skullImg from '../assets/skull_neon_fuscia.png';
 
@@ -56,6 +56,10 @@ export const IPodPlayer = ({
     const [isSearchingYoutube, setIsSearchingYoutube] = useState(false);
     const [isDeletingPlaylist, setIsDeletingPlaylist] = useState(false);
     const [activePlaylistId, setActivePlaylistId] = useState(null);
+    const [showResonantStations, setShowResonantStations] = useState(false);
+    const [resonantStations, setResonantStations] = useState([]);
+    const [resonantTag, setResonantTag] = useState('');
+    const [loadingStations, setLoadingStations] = useState(false);
     const fileInputRef = useRef(null);
     const [favorites, setFavorites] = useState(() => {
         try {
@@ -868,7 +872,27 @@ export const IPodPlayer = ({
                     <div className="flex-1 bg-[#050505] relative overflow-hidden">
                         {screen === 'NOW_PLAYING' ? (
                             // --- NOW PLAYING (THE SLEEK LOOK) ---
-                            <div className="flex flex-col h-full bg-[#050505] text-white p-3 pt-1">
+                            <div className="flex flex-col h-full bg-[#050505] text-white p-3 pt-1 relative">
+                                {/* MINIMALIST EVOLVE BUTTON */}
+                                {/* CYBERPUNK EVOLVE BUTTON */}
+                                <motion.button
+                                    onClick={(e) => { e.stopPropagation(); onNext && onNext(); }}
+                                    className="absolute top-1.5 right-2 z-50 bg-white/[0.03] border border-white/10 px-2 h-4 rounded-sm hover:border-[#f00060]/60 active:scale-95 transition-colors group overflow-hidden"
+                                    whileHover={{ boxShadow: "0 0 15px rgba(240,0,96,0.2)" }}
+                                    title="Evolve Signal"
+                                >
+                                    {/* Glitch Scanline */}
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#f00060]/20 to-transparent w-full h-full -translate-x-full group-hover:animate-[scan_1.5s_infinite] pointer-events-none" />
+
+                                    <motion.span
+                                        className="text-[7px] font-black text-white/40 tracking-[0.2em] font-mono group-hover:text-white transition-colors relative z-10 block leading-none"
+                                        whileHover={{ x: [0, -1, 1, -1, 0] }}
+                                        transition={{ repeat: Infinity, duration: 0.2 }}
+                                    >
+                                        EVOLVE
+                                    </motion.span>
+                                </motion.button>
+
                                 {/* COVER ART - CENTERED */}
                                 <div className="flex items-center justify-center py-1 flex-shrink-0">
                                     <div className="w-36 h-36 bg-black border-2 border-[#f00060]/30 shadow-[0_0_40px_rgba(255,0,110,0.15)] flex items-center justify-center relative overflow-hidden rounded-xl group/cover">
@@ -904,7 +928,7 @@ export const IPodPlayer = ({
                                         </p>
                                     </div>
 
-                                    {/* ACTION BUTTONS (LIKE/DOWNLOAD) - BELOW TITLE */}
+                                    {/* ACTION BUTTONS (LIKE/DOWNLOAD/ANTENNA) - BELOW TITLE */}
                                     <div className="flex justify-center gap-6 py-1">
                                         <button
                                             onClick={(e) => {
@@ -938,7 +962,76 @@ export const IPodPlayer = ({
                                         >
                                             <DownloadIcon size={18} strokeWidth={3} />
                                         </button>
+                                        {/* ANTENNA: Resonant Stations */}
+                                        <button
+                                            onClick={async (e) => {
+                                                e.stopPropagation();
+                                                setShowResonantStations(true);
+                                                setLoadingStations(true);
+                                                try {
+                                                    const API = await import('../services/api').then(m => m.default);
+                                                    // Derive topTag from track tags or title keywords
+                                                    const trackTags = (currentTrack.tags || currentTrack.Tags || '').toLowerCase();
+                                                    const tagGuess = trackTags.split(/[,\s]+/).find(t => t.length > 2) || 'music';
+                                                    setResonantTag(tagGuess);
+                                                    const res = await API.Pulse.getResonantStations(tagGuess);
+                                                    setResonantStations(res.data?.stations || []);
+                                                } catch (err) {
+                                                    console.warn('[PULSE] Failed to fetch resonant stations', err);
+                                                    setResonantStations([]);
+                                                } finally {
+                                                    setLoadingStations(false);
+                                                }
+                                            }}
+                                            className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1 relative"
+                                            title="Resonant Stations"
+                                        >
+                                            <AntennaIcon size={18} strokeWidth={3} />
+                                        </button>
                                     </div>
+
+                                    {/* RESONANT STATIONS SLIDE-UP PANEL */}
+                                    {showResonantStations && (
+                                        <div
+                                            className="absolute inset-0 bg-black/95 z-50 flex flex-col p-3 rounded-xl"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <div className="flex justify-between items-center mb-2 border-b border-[#f00060]/20 pb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <AntennaIcon size={14} className="text-[#f00060] animate-pulse" />
+                                                    <span className="text-[10px] font-black text-[#f00060] tracking-widest font-mono uppercase">RESONANT SIGNAL</span>
+                                                </div>
+                                                <button onClick={() => setShowResonantStations(false)} className="text-white/40 hover:text-white text-xs font-mono">✕</button>
+                                            </div>
+                                            <p className="text-white/30 text-[9px] font-mono mb-3 tracking-wider uppercase">Stations tuned to: <span className="text-[#f00060]">{resonantTag}</span></p>
+                                            {loadingStations ? (
+                                                <div className="flex-1 flex items-center justify-center">
+                                                    <RefreshCw size={20} className="text-[#f00060] animate-spin" />
+                                                </div>
+                                            ) : resonantStations.length === 0 ? (
+                                                <div className="flex-1 flex flex-col items-center justify-center gap-2">
+                                                    <AntennaIcon size={32} className="text-white/10" />
+                                                    <p className="text-white/30 text-[10px] font-mono text-center">NO LIVE SIGNAL DETECTED<br />Check back when stations are broadcasting</p>
+                                                </div>
+                                            ) : (
+                                                <div className="flex-1 overflow-y-auto space-y-2.5">
+                                                    {resonantStations.map(station => (
+                                                        <div key={station.stationId} className="flex items-center justify-between bg-white/5 border border-[#f00060]/20 rounded-lg px-3 py-2">
+                                                            <div className="min-w-0">
+                                                                <p className="text-white text-[11px] font-bold truncate">{station.name}</p>
+                                                                <p className="text-[#f00060]/70 text-[9px] font-mono truncate">{station.djName} · {station.genre}</p>
+                                                                {station.sessionTitle && <p className="text-white/30 text-[9px] truncate italic">"{station.sessionTitle}"</p>}
+                                                            </div>
+                                                            <div className="flex flex-col items-end gap-1 shrink-0 pl-2">
+                                                                <span className="text-[8px] font-black text-green-400 font-mono tracking-wider">● LIVE</span>
+                                                                <span className="text-[8px] text-white/30 font-mono">{station.listenerCount} listeners</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
 
                                     {/* PROGRESS BAR - AT THE BOTTOM OF AREA */}
                                     <div
@@ -1066,6 +1159,8 @@ export const IPodPlayer = ({
 
                 {/* CLICK WHEEL SECTION */}
                 <div className="flex-1 w-full flex items-center justify-center relative pt-10 pb-6">
+                    {/* EVOLVE BUTTON — bottom-right of circle */}
+
                     <div
                         ref={wheelRef}
                         onMouseDown={onStart}
@@ -1077,6 +1172,7 @@ export const IPodPlayer = ({
                         <button onClick={(e) => { e.stopPropagation(); onMinimize(); }} className="absolute bottom-6 text-[#666] hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] transition-all z-50"><Minimize2 size={24} /></button>
                         <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="absolute left-6 text-[#666] hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] transition-all active:scale-95 z-50"><SkipBack size={28} fill="currentColor" /></button>
                         <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="absolute right-6 text-[#666] hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] transition-all active:scale-95 z-50"><SkipForward size={28} fill="currentColor" /></button>
+
 
                         {/* CENTER "SELECT" BUTTON */}
                         <button
@@ -1109,6 +1205,8 @@ export const IPodPlayer = ({
                         </button>
                     </div>
                 </div>
+
+
             </div>
         </div>
     );

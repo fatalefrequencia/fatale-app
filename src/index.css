@@ -142,7 +142,17 @@
         }
     }
 
-    .blink {
-        animation: blink 1s infinite;
+    @keyframes scan {
+        0% {
+            transform: translateX(-100%);
+        }
+
+        100% {
+            transform: translateX(100%);
+        }
+    }
+
+    .animate-scan {
+        animation: scan 1.5s linear infinite;
     }
 }
