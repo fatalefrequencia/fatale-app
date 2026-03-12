@@ -114,7 +114,7 @@ const SideTerminal = ({ title, children, side = "left", isOpen, onClose, roomMod
     </motion.div>
 );
 
-const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, leftOpen, rightOpen, onToggleLeft, onToggleRight, bannerUrl, wallpaperVideoUrl, profileImageUrl, biography, themeColor, textColor, backgroundColor, isGlass, previewThemeColor, previewTextColor, previewBackgroundColor, previewIsGlass, onUpload, onGoLive, onModifyId, onLogout, roomMode, setRoomMode, isPlaying, onExpandContent, journal, gallery, tracks, uid, playlists = [], onPlayTrack, onPlayPlaylist, isMe, onExitProfile, onMessageClick }) => {
+const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, leftOpen, rightOpen, onToggleLeft, onToggleRight, bannerUrl, wallpaperVideoUrl, profileImageUrl, biography, themeColor, textColor, backgroundColor, isGlass, previewThemeColor, previewTextColor, previewBackgroundColor, previewIsGlass, onUpload, onGoLive, onModifyId, onLogout, roomMode, setRoomMode, isPlaying, onExpandContent, journal, gallery, tracks, uid, playlists = [], onPlayTrack, onPlayPlaylist, isMe, onExitProfile, onMessageClick, communityId, communityName, communityColor }) => {
     // Use preview colors if available, otherwise fall back to saved user props
     const activeTheme = previewThemeColor || themeColor || 'var(--text-color)';
     const activeText = previewTextColor || textColor || '#ffffff';
@@ -220,6 +220,25 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                                 <div className="identity-username">{monitorTitle || 'GUEST_USER'}</div>
                                 <span className="text-[8px] mono text-[var(--text-color)] opacity-30">[ SYNC_OK ]</span>
                             </div>
+
+                            {communityName && (
+                                <div className="flex items-center justify-center mb-3">
+                                    <div 
+                                        className="px-2 py-0.5 border flex items-center gap-1.5"
+                                        style={{ 
+                                            borderColor: `${communityColor}40`, 
+                                            backgroundColor: `${communityColor}10`,
+                                            boxShadow: `0 0 10px ${communityColor}20`
+                                        }}
+                                    >
+                                        <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: communityColor }} />
+                                        <span className="mono text-[8px] font-black tracking-[0.2em]" style={{ color: communityColor }}>
+                                            [ COLLECTIVE: {communityName.toUpperCase()} ]
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="text-[10px] mono text-white/50 mb-2">{biography || 'hola demonios'}</div>
                             <div className="flex justify-center gap-4 text-[7px] mono text-[var(--text-color)]/40 uppercase tracking-widest">
                                 <span>Lat: 34.0522</span>
@@ -1040,6 +1059,9 @@ export const ProfileView = React.memo(({
                 isMe={isMe}
                 onExitProfile={onExitProfile}
                 onMessageClick={() => onMessageUser && onMessageUser(displayUser)}
+                communityId={displayUser?.communityId || displayUser?.CommunityId}
+                communityName={displayUser?.communityName || displayUser?.CommunityName}
+                communityColor={displayUser?.communityColor || displayUser?.CommunityColor}
                 leftContent={
                     <div className="space-y-8">
                         <div className="space-y-4">
@@ -1230,6 +1252,23 @@ export const ProfileView = React.memo(({
                             </div>
                             <div className="social-info mt-6">
                                 <h1 className="social-name">{displayUser?.username || 'GUEST_USER'}</h1>
+                                {(displayUser?.communityName || displayUser?.CommunityName) && (
+                                    <div className="mt-2 flex">
+                                        <div 
+                                            className="px-2 py-0.5 border flex items-center gap-1.5"
+                                            style={{ 
+                                                borderColor: `${displayUser?.communityColor || displayUser?.CommunityColor || '#ff006e'}40`, 
+                                                backgroundColor: `${displayUser?.communityColor || displayUser?.CommunityColor || '#ff006e'}10`,
+                                                boxShadow: `0 0 10px ${displayUser?.communityColor || displayUser?.CommunityColor || '#ff006e'}10`
+                                            }}
+                                        >
+                                            <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: displayUser?.communityColor || displayUser?.CommunityColor || '#ff006e' }} />
+                                            <span className="mono text-[8px] font-black tracking-[0.2em]" style={{ color: displayUser?.communityColor || displayUser?.CommunityColor || '#ff006e' }}>
+                                                [ {String(displayUser?.communityName || displayUser?.CommunityName).toUpperCase()} ]
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="social-bio-text mt-4">
                                     {displayUser?.biography || displayUser?.bio || '> SYSTEM_ID_ACTIVE'}
                                 </div>
@@ -1257,25 +1296,34 @@ export const ProfileView = React.memo(({
                     <div className="social-main-pane">
                         <div className="social-tabs-header flex justify-between items-center mb-10 pb-6 border-b border-[var(--text-color)]/10">
                             <div className="flex gap-4">
-                                <button onClick={() => setActiveTab('Music')} className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Music' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}>
+                                <button
+                                    onClick={() => setActiveTab('Music')}
+                                    className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Music' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
+                                >
                                     [ MUSIC ]
                                 </button>
-                                <button onClick={() => setActiveTab('Playlists')} className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Playlists' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}>
+                                <button
+                                    onClick={() => setActiveTab('Playlists')}
+                                    className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Playlists' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
+                                >
                                     [ PLAYLISTS ]
                                 </button>
-                                <button onClick={() => setActiveTab('Studio')} className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Studio' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}>
+                                <button
+                                    onClick={() => setActiveTab('Studio')}
+                                    className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Studio' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
+                                >
                                     [ JOURNAL ]
                                 </button>
                             </div>
                             <div className="flex gap-4 items-center">
                                 {isMe && activeTab === 'Music' && (
-                                    <button
-                                        onClick={() => setShowUpload(true)}
-                                        className="px-4 py-1.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/30 text-[var(--text-color)] text-[9px] font-bold uppercase tracking-[0.2em] hover:bg-[var(--text-color)] hover:text-black transition-all flex items-center gap-2 rounded-sm mr-2"
-                                        title="Upload Signal"
-                                    >
-                                        <Plus size={12} /> UPLOAD_SIGNAL
-                                    </button>
+                                        <button
+                                            onClick={() => setShowUpload(true)}
+                                            className="px-4 py-1.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/30 text-[var(--text-color)] text-[9px] font-bold uppercase tracking-[0.2em] hover:bg-[var(--text-color)] hover:text-black transition-all flex items-center gap-2 rounded-sm mr-2"
+                                            title="Upload Signal"
+                                        >
+                                            <Plus size={12} /> UPLOAD_SIGNAL
+                                        </button>
                                 )}
                                 {!isMe && onMessageUser && (
                                     <button
@@ -1948,31 +1996,32 @@ export const ProfileView = React.memo(({
                         />
 
                         <motion.div
-                            initial={{ opacity: 0, scaleY: 0, scaleX: 0.4, filter: "brightness(3) blur(10px)" }}
-                            animate={{ opacity: 1, scaleY: 1, scaleX: 1, filter: "brightness(1) blur(0px)" }}
-                            exit={{ opacity: 0, scaleY: 0, scaleX: 0.4, filter: "brightness(3) blur(10px)" }}
-                            transition={{
-                                duration: 0.6,
-                                ease: [0.16, 1, 0.3, 1],
-                                opacity: { duration: 0.2 }
+                            initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.98, y: 10 }}
+                            className="relative w-full max-w-lg rounded-sm overflow-visible"
+                            style={{
+                                background: 'rgba(5, 5, 5, 0.92)',
+                                backdropFilter: 'blur(30px)',
+                                border: '1px solid rgba(var(--text-color-rgb), 0.2)',
+                                boxShadow: '0 0 50px -10px rgba(0,0,0,0.5)',
                             }}
-                            style={{ originY: 0.5 }}
-                            className="relative w-full max-w-lg bg-[#050b18]/85 border-l border-l-[var(--text-color)]/10 border-r border-r-[var(--text-color)]/10 p-8 shadow-[0_30px_60px_rgba(0,0,0,0.6),-6px_0_15px_rgba(var(--text-color-rgb),0.05),6px_0_15px_rgba(var(--text-color-rgb),0.05)] backdrop-blur-2xl rounded-sm"
+                            onClick={(e) => e.stopPropagation()}
                         >
-                            {/* Physical Scroll Rods - Theme Neon */}
-                            <div className="absolute top-[-1px] left-0 right-0 h-[2px] bg-[var(--text-color)] shadow-[0_2px_8px_rgba(0,0,0,0.9),0_0_12px_rgba(var(--text-color-rgb),0.4)] z-[60]" />
-                            <div className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-[var(--text-color)] shadow-[0_-2px_8px_rgba(0,0,0,0.9),0_0_12px_rgba(var(--text-color-rgb),0.4)] z-[60]" />
+                            {/* 4-Corner Brackets */}
+                            <div className="hud-bracket-tl text-[var(--text-color)]" />
+                            <div className="hud-bracket-tr text-[var(--text-color)]" />
+                            <div className="hud-bracket-bl text-[var(--text-color)]" />
+                            <div className="hud-bracket-br text-[var(--text-color)]" />
 
-                            {/* Holographic red light leaks (Aligned with Upload view) */}
-                            <div className="absolute -top-48 -left-48 w-96 h-96 bg-[#ff0000]/10 rounded-full blur-[120px] pointer-events-none" />
-                            <div className="absolute -top-48 -right-48 w-96 h-96 bg-[#ff0000]/13 rounded-full blur-[120px] pointer-events-none" />
-                            <div className="absolute -bottom-48 -left-48 w-96 h-96 bg-[#ff0000]/05 rounded-full blur-[120px] pointer-events-none" />
-                            <div className="absolute -bottom-48 -right-48 w-96 h-96 bg-[#ff0000]/05 rounded-full blur-[140px] pointer-events-none" />
+                            {/* Animated Scan Line */}
+                            <motion.div
+                                className="absolute inset-x-0 h-[1px] bg-[var(--text-color)]/20 blur-[1px] z-10 pointer-events-none"
+                                animate={{ top: ['0%', '100%'] }}
+                                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                            />
 
-                            {/* Scanline */}
-                            <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,110,0.03),rgba(80,0,255,0.01),rgba(255,0,110,0.03))] z-0 pointer-events-none bg-[length:100%_2px,3px_100%]" />
-
-                            <div className="relative z-10">
+                            <div className="p-8 relative z-10">
                                 {/* Header */}
                                 <div className="flex justify-between items-start mb-6">
                                     <div className="space-y-1">
@@ -1994,26 +2043,29 @@ export const ProfileView = React.memo(({
 
                                 <div className="space-y-5">
                                     {/* Session title */}
-                                    <div className="space-y-2">
-                                        <label className="text-[9px] font-black text-[var(--text-color)]/50 uppercase tracking-[0.3em] ml-1">session_id</label>
-                                        <input
-                                            type="text"
-                                            value={goLiveFormData.sessionTitle}
-                                            onChange={e => setGoLiveFormData(p => ({ ...p, sessionTitle: e.target.value }))}
-                                            className="w-full bg-black/40 border border-white/10 p-4 text-white font-black outline-none focus:border-[var(--text-color)] tracking-widest transition-all text-sm"
-                                            placeholder="enter_session_title"
-                                        />
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-[var(--text-color)] opacity-40 uppercase tracking-[0.4em] ml-1">signal_metadata // title</label>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={goLiveFormData.sessionTitle}
+                                                onChange={e => setGoLiveFormData(p => ({ ...p, sessionTitle: e.target.value }))}
+                                                className="w-full bg-white/[0.03] border border-white/10 p-4 text-white font-black outline-none focus:border-[var(--text-color)] tracking-[0.2em] transition-all text-sm rounded-sm"
+                                                placeholder="establish_session_id..."
+                                            />
+                                            <div className="absolute top-0 right-0 p-4 text-[var(--text-color)]/20 mono text-[10px] uppercase">req_id: 104.2</div>
+                                        </div>
                                     </div>
 
                                     {/* Description */}
-                                    <div className="space-y-2">
-                                        <label className="text-[9px] font-black text-[var(--text-color)]/50 uppercase tracking-[0.3em] ml-1">broadcast_description</label>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-[var(--text-color)] opacity-40 uppercase tracking-[0.4em] ml-1">transmission_log // desc</label>
                                         <textarea
                                             value={goLiveFormData.description}
                                             onChange={e => setGoLiveFormData(p => ({ ...p, description: e.target.value }))}
                                             rows={3}
-                                            className="w-full bg-black/40 border border-white/10 p-4 text-white/70 outline-none focus:border-[var(--text-color)]/40 tracking-wide transition-all text-[10px] resize-none"
-                                            placeholder="broadcast_details_"
+                                            className="w-full bg-white/[0.03] border border-white/10 p-4 text-white/70 outline-none focus:border-[var(--text-color)]/50 tracking-wide transition-all text-[11px] resize-none custom-scrollbar rounded-sm"
+                                            placeholder="describe_signal_feed..."
                                         />
                                     </div>
 
@@ -2021,15 +2073,19 @@ export const ProfileView = React.memo(({
                                     <div className="flex gap-4 pt-4">
                                         <button
                                             onClick={() => setShowGoLiveModal(false)}
-                                            className="flex-1 px-8 py-4 bg-black border border-white/10 text-white/40 font-black uppercase text-[10px] tracking-[0.2em] hover:text-white hover:border-white/30 transition-all"
+                                            className="flex-1 px-8 py-4 hud-panel border-white/10 text-white/30 font-black uppercase text-[10px] tracking-[0.3em] hover:text-[var(--text-color)] hover:border-[var(--text-color)]/30 transition-all outline-none rounded-sm"
                                         >
-                                            Abort
+                                            ABORT_INIT
                                         </button>
                                         <button
                                             onClick={() => handleGoLive(goLiveFormData.sessionTitle, goLiveFormData.description)}
                                             disabled={!goLiveFormData.sessionTitle.trim()}
-                                            className={`flex-[2] py-4 border border-[var(--theme-color)] bg-[var(--theme-color)]/20 text-[var(--text-color)] font-black uppercase text-[10px] tracking-[0.2em] relative overflow-hidden group active:scale-95 transition-all shadow-[0_0_30px_rgba(var(--theme-color-rgb),0.1)] ${!goLiveFormData.sessionTitle.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[var(--theme-color)] hover:text-black hover:shadow-[0_0_50px_rgba(var(--theme-color-rgb),0.4)]'}`}
+                                            className={`flex-[2] py-4 border font-black uppercase text-[10px] tracking-[0.3em] relative overflow-hidden group transition-all outline-none rounded-sm ${!goLiveFormData.sessionTitle.trim()
+                                                ? 'bg-white/5 border-white/10 text-white/20 opacity-50'
+                                                : 'bg-[var(--theme-color)]/10 border-[var(--theme-color)] text-[var(--text-color)] hover:bg-[var(--theme-color)] hover:text-black hover:shadow-[0_0_50px_rgba(var(--theme-color-rgb),0.4)]'}`}
                                         >
+                                            <div className="hud-bracket-tl opacity-60 group-hover:opacity-100" />
+                                            <div className="hud-bracket-br opacity-60 group-hover:opacity-100" />
                                             INIT_BROADCAST
                                             {goLiveFormData.sessionTitle.trim() && <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />}
                                         </button>
@@ -2054,7 +2110,7 @@ export const ProfileView = React.memo(({
                             <form onSubmit={handleCreatePlaylist} className="space-y-6">
                                 <div className="space-y-2">
                                     <label className="text-[9px] font-bold text-[var(--text-color)] uppercase tracking-[0.4em]">_SEQUENCE_NAME</label>
-                                    <input type="text" value={newPlaylistName} onChange={e => setNewPlaylistName(e.target.value)} className="w-full bg-black border border-white/10 p-4 text-white font-bold outline-none focus:border-[var(--text-color)] uppercase tracking-widest transition-all" placeholder="SEQUENCE_ID_0" />
+                                    <input type="text" value={newPlaylistName} onChange={e => setNewPlaylistName(e.target.value)} className="w-full bg-black border border-white/10 p-4 text-white font-bold outline-none focus:border-[var(--text-color)] tracking-widest transition-all" placeholder="sequence_id_0" />
                                 </div>
                                 <div className="flex items-center justify-between p-4 border border-white/5 cursor-pointer group" onClick={() => setIsPlaylistPublic(!isPlaylistPublic)}>
                                     <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest">_ACCESS_PROTOCOL</span>
@@ -2084,21 +2140,15 @@ export const ProfileView = React.memo(({
                 {
                     showEditProfile && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] bg-black/40 backdrop-blur-md flex items-center justify-center p-6">
-                            <div className="bg-black/60 backdrop-blur-xl border border-[var(--text-color)]/30 p-10 max-w-xl w-full relative flex flex-col shadow-[0_0_50px_rgba(255,0,110,0.1)]">
-                                {/* Corner Accents */}
-                                <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[var(--text-color)] opacity-40" />
-                                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[var(--text-color)] opacity-40" />
-                                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[var(--text-color)] opacity-40" />
-                                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[var(--text-color)] opacity-40" />
-                                <button onClick={() => setShowEditProfile(false)} className="absolute top-6 right-6 text-white/40 hover:text-white transition-all hover:rotate-90"><X size={20} /></button>
-                                <div className="flex-1 overflow-y-auto px-10 pb-10 custom-scrollbar">
+                            <div className="bg-black border border-[var(--text-color)]/30 p-10 max-w-xl w-full relative shadow-[0_0_50px_rgba(var(--text-color-rgb),0.1)] rounded-2xl overflow-hidden">
+                                <button onClick={() => setShowEditProfile(false)} className="absolute top-4 right-4 text-[var(--text-color)]/40 hover:text-[var(--text-color)] transition-all"><X size={20} /></button>
+                                <div className="max-h-[70vh] overflow-y-auto no-scrollbar pr-1">
                                     <EditProfileForm
                                         user={displayUser}
                                         tracks={isMe ? allTracks.filter(t => t.isOwned || t.isLiked || String(t.artistUserId || t.ArtistUserId) === String(currentUser?.id || currentUser?.Id)) : profileTracks}
                                         onSubmit={handleUpdateProfile}
                                         onLogout={onLogout}
                                         onColorPreview={(colors) => {
-                                            // Update local state to trigger re-render of SpatialRoomLayout with new colors
                                             setProfileData(prev => ({
                                                 ...prev,
                                                 previewThemeColor: colors.themeColor,
@@ -2314,79 +2364,68 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             {/* IDENTITY TAB */}
             {activeTab === 'identity' && (
                 <div className="space-y-10 animate-in fade-in slide-in-from-left-4 duration-300">
-                    <div className="flex items-center gap-10">
-                        <div className="w-28 h-28 bg-black border border-[var(--theme-color)]/30 flex items-center justify-center overflow-hidden relative group shadow-[0_0_40px_rgba(var(--theme-color-rgb),0.05)]">
+                    <div className="flex items-center gap-8">
+                        <div className="w-32 h-32 bg-black border border-[var(--text-color)]/20 rounded-full flex items-center justify-center overflow-hidden relative group">
                             {file ? (
                                 <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" />
                             ) : user?.profileImageUrl ? (
                                 <img src={user.profileImageUrl.startsWith('http') ? user.profileImageUrl : `http://localhost:5264${user.profileImageUrl}`} className="w-full h-full object-cover" />
                             ) : (
-                                <div className="text-[var(--theme-color)]/20 drop-shadow-[0_0_10px_var(--text-color)30]"><Cpu size={40} /></div>
+                                <div className="text-[var(--text-color)]/20"><Cpu size={48} /></div>
                             )}
                             <input
                                 type="file"
                                 onChange={e => setFile(e.target.files[0])}
                                 className="absolute inset-0 opacity-0 cursor-pointer z-10"
                             />
-                            <div className="absolute inset-0 bg-[var(--theme-color)]/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Terminal size={24} className="text-[var(--text-color)]" />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Camera size={24} className="text-white" />
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <div className="text-[10px] font-bold text-[var(--text-color)] uppercase tracking-[0.5em]">BIOMETRIC_ID</div>
-                            <div className="text-[9px] text-[var(--text-color)]/40 uppercase tracking-[0.3em] max-w-[250px] leading-relaxed">
-                                UPLOAD NEW VISUAL IDENTIFIER. PNG/JPG ENCODING ONLY.
-                            </div>
-                        </div>
-                    </div>
-
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-[0.4em]">_DESIGNATION</label>
-                            <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--theme-color)] mono">{'>'}</span>
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                    className="w-full bg-black border border-[var(--text-color)]/10 p-4 pl-10 text-[var(--text-color)] font-bold outline-none focus:border-[var(--theme-color)] transition-all uppercase tracking-widest"
-                                    placeholder="DESIGNATION_ID"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-[0.4em]">_RESIDENCY_V2</label>
-                            <div className="relative group">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--theme-color)] mono">{'>'}</span>
-                                <select
-                                    value={sectorId}
-                                    onChange={(e) => setSectorId(parseInt(e.target.value))}
-                                    className="w-full bg-black border border-[var(--text-color)]/10 p-4 pl-10 text-[var(--text-color)] font-bold outline-none focus:border-[var(--theme-color)] appearance-none uppercase transition-all tracking-widest"
-                                >
-                                    {SECTORS.map(s => (
-                                        <option key={s.id} value={s.id}>{s.name}</option>
-                                    ))}
-                                </select>
-                                <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-color)]/20 group-hover:text-[var(--theme-color)] pointer-events-none transition-colors" />
-                            </div>
+                        <div className="space-y-1">
+                            <div className="text-xs font-bold text-[var(--text-color)] uppercase tracking-widest">Profile Picture</div>
+                            <div className="text-[10px] text-white/40 uppercase">Recommended: 400x400 PNG/JPG</div>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-3">
-                            <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-[0.2em] truncate block overflow-hidden">_FEATURED_NEURAL_PATTERN</label>
+                            <label className="text-xs font-bold text-[var(--text-color)]/60 uppercase tracking-widest ml-1">Username</label>
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={e => setName(e.target.value)}
+                                className="w-full bg-black/40 border border-white/10 p-4 text-white font-bold outline-none focus:border-[var(--text-color)] transition-all"
+                                placeholder="Enter Username..."
+                            />
+                        </div>
+
+                        <div className="space-y-3">
+                            <label className="text-xs font-bold text-[var(--text-color)]/60 uppercase tracking-widest ml-1">Sector Residency</label>
+                            <select
+                                value={sectorId}
+                                onChange={(e) => setSectorId(parseInt(e.target.value))}
+                                className="w-full bg-black/40 border border-white/10 p-4 text-white font-bold outline-none focus:border-[var(--text-color)] appearance-none"
+                            >
+                                {SECTORS.map(s => (
+                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-3">
+                            <label className="text-xs font-bold text-[var(--text-color)]/60 uppercase tracking-widest ml-1">Featured Track</label>
                             <div className="relative">
                                 <div
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    className={`w-full bg-black border p-4 pl-10 flex items-center justify-between cursor-pointer transition-all ${isDropdownOpen ? 'border-[var(--theme-color)] shadow-[0_0_15px_var(--text-color)30]' : 'border-[var(--text-color)]/10 hover:border-[var(--theme-color)]/40'}`}
+                                    className={`w-full bg-black/40 border p-4 flex items-center justify-between cursor-pointer transition-all ${isDropdownOpen ? 'border-[var(--theme-color)]' : 'border-white/10 hover:border-white/30'}`}
                                 >
-                                    <span className="absolute left-4 text-[var(--theme-color)] mono">{'>'}</span>
-                                    <span className={`text-xs font-bold uppercase tracking-widest truncate ${featuredTrackId == -1 ? 'text-[var(--theme-color)]/60 font-black' : 'text-[var(--text-color)]'}`}>
-                                        {featuredTrackId == -1 ? '[ QUIET_MODE ]' : (selectedTrack?.title || 'UNKNOWN_PATTERN').toUpperCase()}
+                                    <span className={`text-xs font-bold uppercase tracking-widest truncate ${featuredTrackId == -1 ? 'text-white/20' : 'text-white'}`}>
+                                        {featuredTrackId == -1 ? 'None Selected' : (selectedTrack?.title || 'Unknown Track').toUpperCase()}
                                     </span>
-                                    <ChevronDown size={14} className={`transition-transform duration-300 ${isDropdownOpen ? 'rotate-180 text-[var(--theme-color)]' : 'text-[var(--text-color)]/20'}`} />
+                                    <ChevronDown size={14} className={`transition-transform duration-300 ${isDropdownOpen ? 'rotate-180 text-[var(--theme-color)]' : 'text-white/20'}`} />
                                 </div>
 
                                 <AnimatePresence>
@@ -2395,18 +2434,18 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                             initial={{ opacity: 0, y: 10, scale: 0.98 }}
                                             animate={{ opacity: 1, y: 0, scale: 1 }}
                                             exit={{ opacity: 0, y: 5 }}
-                                            className="absolute left-0 right-0 top-full mt-2 bg-[#050505] border border-[var(--theme-color)]/40 z-[100] shadow-[0_10px_40px_rgba(0,0,0,0.8)] flex flex-col max-h-80 overflow-hidden backdrop-blur-xl"
+                                            className="absolute left-0 right-0 top-full mt-2 bg-[#0a0a0a] border border-white/10 z-[100] shadow-2xl flex flex-col max-h-64 overflow-hidden"
                                         >
-                                            <div className="p-3 border-b border-[var(--theme-color)]/10 bg-black/40">
+                                            <div className="p-3 border-b border-white/5 bg-black/20">
                                                 <div className="relative flex items-center">
-                                                    <Search size={12} className="absolute left-3 text-[var(--theme-color)]/40" />
+                                                    <Search size={14} className="absolute left-3 text-white/20" />
                                                     <input
                                                         autoFocus
                                                         type="text"
                                                         value={searchTerm}
                                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                                        placeholder="FILTER_SIGNALS..."
-                                                        className="w-full bg-black/80 border border-[var(--theme-color)]/20 p-2 pl-8 text-[9px] text-[var(--text-color)] outline-none focus:border-[var(--theme-color)] transition-all uppercase tracking-[0.3em] font-black"
+                                                        placeholder="Search Signals..."
+                                                        className="w-full bg-black border border-white/10 p-2 pl-10 text-xs text-white outline-none focus:border-[var(--theme-color)] transition-all"
                                                         onClick={(e) => e.stopPropagation()}
                                                     />
                                                 </div>
@@ -2711,11 +2750,11 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
                     </div>
 
                     <div className="grid grid-cols-2 gap-6">
-                        <button onClick={() => setIsEditing(false)} className="w-full py-4 border border-white/10 text-white/40 font-bold uppercase tracking-widest hover:bg-white/5 transition-all text-[10px]">
-                            [ ABORT ]
+                        <button onClick={() => setIsEditing(false)} className="w-full py-4 hud-panel border-white/10 text-white/30 font-black uppercase tracking-[0.3em] hover:text-[#ff006e] hover:border-[#ff006e]/30 transition-all text-[10px] rounded-sm">
+                            ABORT_INIT
                         </button>
-                        <button onClick={handleSave} className="w-full py-4 bg-black border border-[var(--text-color)] text-[var(--text-color)] font-bold uppercase tracking-widest hover:bg-[var(--text-color)] hover:text-black transition-all text-[10px] shadow-[0_0_20px_rgba(var(--text-color-rgb),0.1)]">
-                            [ SYNC_CHANGES ]
+                        <button onClick={handleSave} className="w-full py-4 bg-[#ff006e]/10 border border-[#ff006e] text-[#ff006e] font-black uppercase tracking-[0.3em] hover:bg-[#ff006e] hover:text-black transition-all text-[10px] shadow-[0_0_30px_rgba(255,0,110,0.1)] rounded-sm">
+                            SYNC_SIGNALS
                         </button>
                     </div>
 

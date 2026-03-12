@@ -12,10 +12,7 @@ const Depot = ({ user, refreshProfile }) => {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-white/10 pb-6">
                 <div>
-                    <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.3em] font-mono mb-2">// THE_DEPOT</div>
-                    <h2 className="text-3xl font-black uppercase tracking-tighter text-white mb-2">
-                        DEPOT_<span className="text-[#ff006e]">EXCHANGE</span>
-                    </h2>
+                    <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.3em] font-mono mb-4">// THE_DEPOT</div>
                     <p className="text-[11px] text-white/30 font-mono uppercase tracking-widest max-w-lg">
                         Secure exchange &amp; system upgrades
                         <span className="text-white/15 ml-3">::: AUTH_ID: {user?.id || 'GUEST'}</span>

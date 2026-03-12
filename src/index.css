@@ -155,4 +155,18 @@
     .animate-scan {
         animation: scan 1.5s linear infinite;
     }
+
+    /* HUD SYSTEM STYLES */
+    .hud-panel {
+        background: rgba(0,0,0,0.45);
+        border: 1px solid rgba(255,255,255,0.03);
+        backdrop-filter: blur(40px) saturate(180%);
+        -webkit-backdrop-filter: blur(40px) saturate(180%);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+        isolation: isolate;
+    }
+    .hud-bracket-tl { position: absolute; top: 0; left: 0; width: 6px; height: 6px; border-top: 1px solid currentColor; border-left: 1px solid currentColor; opacity: 0.4; }
+    .hud-bracket-tr { position: absolute; top: 0; right: 0; width: 6px; height: 6px; border-top: 1px solid currentColor; border-right: 1px solid currentColor; opacity: 0.4; }
+    .hud-bracket-bl { position: absolute; bottom: 0; left: 0; width: 6px; height: 6px; border-bottom: 1px solid currentColor; border-left: 1px solid currentColor; opacity: 0.4; }
+    .hud-bracket-br { position: absolute; bottom: 0; right: 0; width: 6px; height: 6px; border-bottom: 1px solid currentColor; border-right: 1px solid currentColor; opacity: 0.4; }
 }

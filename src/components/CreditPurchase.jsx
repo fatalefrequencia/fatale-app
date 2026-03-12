@@ -66,7 +66,7 @@ const CreditPurchase = ({ user, refreshProfile }) => {
     );
 
     return (
-        <div className="bg-black/60 border-l-2 border-[#ff006e]/50 p-6 md:p-8 relative overflow-hidden">
+        <div className="bg-black/60 p-6 md:p-8 relative overflow-hidden border border-white/5">
             {/* Corner accents */}
             <div className="absolute top-0 right-0 p-3 opacity-30">
                 <div className="w-12 h-px bg-[#ff006e]/40 mb-1" />
@@ -148,12 +148,14 @@ const CreditPurchase = ({ user, refreshProfile }) => {
                         <button
                             onClick={() => handlePurchase(bundle.id)}
                             disabled={processing}
-                            className={`w-full py-2.5 font-black text-xs uppercase tracking-widest transition-all mt-4 ${bundle.bestValue
-                                ? 'bg-[#ff006e] text-black hover:bg-white'
-                                : 'border border-white/10 text-white/60 hover:border-[#ff006e]/40 hover:text-white'
-                                } disabled:opacity-30 disabled:cursor-not-allowed`}
+                            className={`w-full py-2.5 font-black text-xs uppercase tracking-widest transition-all mt-4 relative overflow-hidden group active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${bundle.bestValue
+                                ? 'bg-[#ff006e]/20 border border-[#ff006e]/50 text-white hover:bg-[#ff006e]/40 hover:border-[#ff006e] shadow-[0_0_20px_rgba(255,0,110,0.2)]'
+                                : 'bg-white/5 border border-white/10 text-white/60 hover:border-[#ff006e]/40 hover:text-white'
+                                }`}
                         >
-                            {processing ? '...' : 'ACQUIRE'}
+                            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-400" />
+                            <span className="relative z-10">{processing ? '...' : 'ACQUIRE'}</span>
                         </button>
                     </div>
                 ))}

@@ -48,11 +48,11 @@ const EarningsDashboard = ({ user, onBack }) => {
             <div>
                 <div className="flex items-center gap-4 mb-2">
                     {onBack && (
-                        <button onClick={onBack} className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors group">
-                            <ArrowDownLeft size={24} className="rotate-45 text-white/40 group-hover:text-white" />
+                        <button onClick={onBack} className="p-2 -ml-2 hover:bg-[#ff006e]/10 rounded-full transition-colors group">
+                            <ArrowDownLeft size={24} className="rotate-45 text-[#ff006e]/60 group-hover:text-[#ff006e]" />
                         </button>
                     )}
-                    <h2 className="text-3xl font-black uppercase italic text-white tracking-widest">My Earnings</h2>
+                    <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.25em] font-mono">// MY_EARNINGS</div>
                 </div>
                 <p className="text-xs text-white/40 uppercase tracking-widest pl-1">
                     {hasEarnings ? 'Track your revenue from sales and tips.' : 'Start uploading music to earn credits.'}

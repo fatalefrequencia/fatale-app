@@ -1,160 +1,458 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Users, Globe, Plus, LogOut, Loader2, Info, AlertCircle } from 'lucide-react';
+import { X, Users, Globe, LogOut, Loader2, Send, Shield, Zap, ChevronRight, Minimize2 } from 'lucide-react';
 import API from '../services/api';
-import { SECTORS } from './DiscoveryMapView'; // We'll need to export this from DiscoveryMapView or move it to a shared constants file
+import { SECTORS } from './DiscoveryMapView';
 
-// ─── COMMUNITY DETAILS MODAL ─────────────────────────────────────────────
-export const CommunityDetailsModal = ({ community, onClose, onJoin, onLeave, currentUser, loadingAction }) => {
+// ─── NEURAL STATION — Community Hub Modal ──────────────────────────────────
+export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, onLeave, currentUser, loadingAction, navigateToProfile }) => {
+    const [members, setMembers] = useState([]);
+    const [loadingMembers, setLoadingMembers] = useState(false);
+    const [messages, setMessages] = useState([]);
+    const [newMessage, setNewMessage] = useState('');
+    const [sendingMsg, setSendingMsg] = useState(false);
+    const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'nodes'
+    const chatEndRef = useRef(null);
+    const pollRef = useRef(null);
+    const lastTickRef = useRef(null);
+
+    const color = community?.color || '#ff006e';
+    const userCommunityId = currentUser?.communityId ?? currentUser?.CommunityId;
+    const userId = currentUser?.id ?? currentUser?.Id;
+    const isMember = userCommunityId != null && String(userCommunityId) === String(community?.id);
+    const isFounder = userId != null && String(userId) === String(community?.founderId);
+
+    // ── Members ──
+    const fetchMembers = useCallback(async () => {
+        if (!community?.id) return;
+        setLoadingMembers(true);
+        try {
+            const res = await API.Communities.getMembers(community.id);
+            setMembers(Array.isArray(res.data) ? res.data : []);
+        } catch (e) {
+            console.error('Failed to load members', e);
+        } finally {
+            setLoadingMembers(false);
+        }
+    }, [community?.id]);
+
+    const fetchMessages = useCallback(async (afterId = null) => {
+        if (!community?.id) return;
+        try {
+            const res = await API.CommunityChat.getMessages(community.id, afterId);
+            const newMsgs = Array.isArray(res.data) ? res.data : [];
+            
+            if (newMsgs.length > 0) {
+                // ALWAYS advance the cursor to the latest message ID to stop loop
+                const maxId = Math.max(...newMsgs.map(m => m.id));
+                if (afterId === null || maxId > lastTickRef.current) {
+                    lastTickRef.current = maxId;
+                }
+
+                setMessages(prev => {
+                    const existingIds = new Set(prev.map(m => m.id));
+                    const fresh = newMsgs.filter(m => !existingIds.has(m.id));
+                    if (fresh.length === 0) return prev;
+                    return [...prev, ...fresh];
+                });
+            }
+        } catch (e) {
+            console.error('Chat fetch error', e);
+        }
+    }, [community?.id]);
+
+    useEffect(() => {
+        fetchMembers();
+        fetchMessages();
+    }, [fetchMembers, fetchMessages]);
+
+    // Poll every 3 seconds for new messages
+    useEffect(() => {
+        pollRef.current = setInterval(() => {
+            fetchMessages(lastTickRef.current);
+        }, 3000);
+        return () => clearInterval(pollRef.current);
+    }, [fetchMessages]);
+
+    // Scroll to bottom when messages arrive
+    useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+
+    // ── Send ──
+    const handleSend = async (e) => {
+        e.preventDefault();
+        if (!newMessage.trim() || sendingMsg) return;
+        setSendingMsg(true);
+        const text = newMessage.trim();
+        setNewMessage('');
+        try {
+            const res = await API.CommunityChat.sendMessage(community.id, text);
+            setMessages(prev => {
+                const existingIds = new Set(prev.map(m => m.id));
+                if (existingIds.has(res.data.id)) return prev;
+                return [...prev, res.data];
+            });
+            lastTickRef.current = res.data.id;
+        } catch (e) {
+            console.error('Failed to send', e);
+            setNewMessage(text);
+        } finally {
+            setSendingMsg(false);
+        }
+    };
+
+    const formatTime = (dateStr) => {
+        const d = new Date(dateStr);
+        return `${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`;
+    };
+
     if (!community) return null;
-
-    const isMember = currentUser?.communityId === community.id;
-    const isFounder = currentUser?.id === community.founderId;
 
     return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-            onClick={onClose}
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-3 md:p-6"
         >
+            {/* Backdrop with sector-tinted blur */}
             <motion.div
-                initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                className="relative w-full max-w-md rounded-lg overflow-visible"
-                style={{
-                    background: 'rgba(15, 5, 30, 0.35)',
-                    backdropFilter: 'blur(12px)',
-                    border: `1px solid ${community.color || '#ff006e'}50`,
-                    boxShadow: `0 0 40px -10px ${community.color || '#ff006e'}40, inset 0 0 25px ${community.color || '#ff006e'}20`,
-                    backgroundImage: 'linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.15) 50%), linear-gradient(90deg, rgba(255,0,0,0.03), rgba(0,255,0,0.01), rgba(0,0,255,0.03))',
-                    backgroundSize: '100% 2px, 3px 100%',
-                }}
-                onClick={(e) => e.stopPropagation()}
-            >
-                {/* Holographic Corners */}
-                <div className="absolute -top-[1px] -left-[1px] w-4 h-4 border-t-2 border-l-2" style={{ borderColor: community.color || '#ff006e' }} />
-                <div className="absolute -top-[1px] -right-[1px] w-4 h-4 border-t-2 border-r-2" style={{ borderColor: community.color || '#ff006e' }} />
-                <div className="absolute -bottom-[1px] -left-[1px] w-4 h-4 border-b-2 border-l-2" style={{ borderColor: community.color || '#ff006e' }} />
-                <div className="absolute -bottom-[1px] -right-[1px] w-4 h-4 border-b-2 border-r-2" style={{ borderColor: community.color || '#ff006e' }} />
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 backdrop-blur-[16px]"
+                style={{ background: `radial-gradient(ellipse at center, ${color}12 0%, rgba(0,0,0,0.88) 70%)` }}
+                onClick={onClose}
+            />
 
-                {/* Animated Scan Line */}
+            {/* Station Panel */}
+            <motion.div
+                initial={{ opacity: 0, y: 40, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 40, scale: 0.96 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+                className="relative w-full max-w-4xl h-[85vh] max-h-[700px] flex flex-col rounded-sm overflow-hidden"
+                style={{
+                    background: 'rgba(4,4,4,0.97)',
+                    border: `1px solid ${color}40`,
+                    boxShadow: `0 0 80px -20px ${color}50, 0 0 200px -60px ${color}30`,
+                }}
+                onClick={e => e.stopPropagation()}
+            >
+                {/* Ambient light leak */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    <div className="absolute -top-32 -left-32 w-64 h-64 rounded-full blur-[100px] opacity-20" style={{ background: color }} />
+                    <div className="absolute -bottom-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10" style={{ background: color }} />
+                </div>
+
+                {/* Scanline */}
                 <motion.div
-                    className="absolute inset-x-0 h-[1px] bg-white/20 blur-[1px] z-10 pointer-events-none"
+                    className="absolute inset-x-0 h-[1px] blur-[1px] z-10 pointer-events-none opacity-30"
+                    style={{ background: color }}
                     animate={{ top: ['0%', '100%'] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                    transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
                 />
 
-                <div className="p-7 relative z-20">
-                    {/* Top row */}
-                    <div className="flex justify-between items-start mb-6">
-                        <div>
-                            <div className="flex items-center gap-2 mb-1">
-                                <Globe size={14} style={{ color: community.color || '#ff006e' }} className="animate-pulse" />
-                                <span className="mono text-[10px] tracking-[0.3em] uppercase font-black" style={{ color: community.color || '#ff006e', textShadow: `0 0 8px ${community.color || '#ff006e'}` }}>
-                                    NODE_CONNECTED // SECTOR_{community.sectorId}
-                                </span>
-                            </div>
-                            <h2 className="text-3xl font-black text-white tracking-tighter uppercase italic">{community.name}</h2>
-                        </div>
-                        <button onClick={onClose} className="p-2 -mr-2 text-white/40 hover:text-white transition-colors group">
-                            <X size={20} className="group-hover:rotate-90 transition-transform duration-300" />
-                        </button>
-                    </div>
+                {/* Corner brackets */}
+                <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 z-20" style={{ borderColor: color }} />
+                <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 z-20" style={{ borderColor: color }} />
+                <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 z-20" style={{ borderColor: color }} />
+                <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 z-20" style={{ borderColor: color }} />
 
-                    {/* Stats & Info */}
-                    <div className="grid grid-cols-2 gap-4 mb-8">
-                        <div className="bg-white/5 backdrop-blur-md rounded border border-white/10 p-4 relative group overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <div className="flex items-center gap-2 text-white/40 mb-2">
-                                <Users size={12} />
-                                <span className="mono text-[8px] uppercase tracking-[0.2em] font-bold">Pop_Density</span>
-                            </div>
-                            <div className="text-2xl font-black text-white mono tracking-tighter" style={{ textShadow: `0 0 10px ${community.color || '#ff006e'}aa` }}>
-                                {community.memberCount || 0}
-                            </div>
+                {/* ─── HEADER ─────────────────────────────────── */}
+                <div className="relative z-10 px-6 pt-5 pb-4 border-b flex items-start justify-between gap-4 shrink-0"
+                    style={{ borderColor: `${color}25` }}>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-1">
+                            <div className="w-2 h-2 rounded-full animate-pulse shadow-lg" style={{ background: color, boxShadow: `0 0 8px ${color}` }} />
+                            <span className="text-[9px] font-black tracking-[0.4em] uppercase mono" style={{ color }}>
+                                NEURAL_STATION // SECTOR_{community.sectorId}
+                            </span>
                         </div>
-                        <div className="bg-white/5 backdrop-blur-md rounded border border-white/10 p-4 relative group overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <div className="flex items-center gap-2 text-white/40 mb-2">
-                                <Info size={12} />
-                                <span className="mono text-[8px] uppercase tracking-[0.2em] font-bold">Origin_Key</span>
-                            </div>
-                            <div className="text-sm font-black text-white truncate uppercase mono">{community.founderName || 'System'}</div>
-                        </div>
-                    </div>
-
-                    {/* Description */}
-                    <div className="mb-10 relative">
-                        <div className="mono text-[9px] text-white/30 tracking-[0.4em] uppercase mb-3 border-b border-white/10 pb-1">Data_Stream</div>
-                        <p className="text-white/90 text-sm leading-relaxed font-mono uppercase tracking-tight">
-                            {community.description || 'No descriptive data found in this node.'}
+                        <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight leading-none truncate">
+                            {community.name}
+                        </h1>
+                        <p className="text-white/40 text-xs mt-1 mono leading-relaxed max-w-xl line-clamp-2">
+                            {community.description || 'No manifesto data found for this node.'}
                         </p>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex flex-col gap-3">
-                        {isMember ? (
-                            <button
-                                onClick={() => onLeave(community.id)}
-                                disabled={loadingAction}
-                                className="w-full py-4 rounded-sm border border-red-500/50 text-red-400 font-black tracking-[0.3em] hover:bg-red-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 uppercase text-xs shadow-[0_0_15px_rgba(239,68,68,0.1)]"
-                            >
-                                {loadingAction ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} />}
-                                DISCONNECT_NODE
-                            </button>
-                        ) : (
-                            <button
-                                onClick={() => onJoin(community.id)}
-                                disabled={loadingAction || currentUser?.communityId}
-                                className="w-full py-4 rounded-sm font-black tracking-[0.3em] transition-all flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed group relative overflow-hidden uppercase text-xs shadow-[0_0_20px_rgba(255,255,255,0.05)]"
-                                style={{
-                                    background: `linear-gradient(135deg, ${community.color || '#ff006e'}40, transparent)`,
-                                    border: `1px solid ${community.color || '#ff006e'}80`,
-                                    color: 'white',
-                                }}
-                            >
-                                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                {loadingAction ? <Loader2 size={16} className="animate-spin" /> : <Globe size={16} />}
-                                {currentUser?.communityId ? 'LIMIT_REACHED' : 'ESTABLISH_LINK'}
+                    <div className="flex items-center gap-3 shrink-0">
+                        {/* Stats pill */}
+                        <div className="hidden sm:flex items-center gap-3 px-3 py-2 rounded-sm border text-xs mono"
+                            style={{ borderColor: `${color}30`, background: `${color}10` }}>
+                            <span className="text-white/50">Members</span>
+                            <span className="font-black text-white">{community.memberCount || 0}</span>
+                        </div>
+                        {/* Founder badge */}
+                        {isFounder && (
+                            <div className="hidden sm:flex items-center gap-1.5 px-2 py-1.5 rounded-sm border text-[9px] font-black mono uppercase"
+                                style={{ borderColor: `${color}40`, color, background: `${color}15` }}>
+                                <Shield size={10} />
+                                FOUNDER
+                            </div>
+                        )}
+                        {/* Minimize — collapses to floating widget */}
+                        {onMinimize && (
+                            <button onClick={onMinimize} className="p-1.5 text-white/30 hover:text-white transition-colors" title="Minimize to chat widget">
+                                <Minimize2 size={18} />
                             </button>
                         )}
+                        <button onClick={onClose} className="p-1.5 text-white/30 hover:text-white transition-colors">
+                            <X size={20} />
+                        </button>
                     </div>
+                </div>
+
+                {/* ─── BODY — SPLIT LAYOUT ────────────────────── */}
+                <div className="flex flex-1 min-h-0 relative z-10">
+
+                    {/* LEFT — Node Members (collapsible on mobile) */}
+                    <div className="hidden md:flex flex-col w-64 shrink-0 border-r overflow-hidden"
+                        style={{ borderColor: `${color}20` }}>
+                        <div className="px-4 py-3 border-b flex items-center gap-2" style={{ borderColor: `${color}15` }}>
+                            <Users size={12} style={{ color }} />
+                            <span className="text-[9px] font-black tracking-[0.3em] uppercase mono text-white/40">Active_Nodes</span>
+                            <span className="ml-auto text-[9px] font-black mono" style={{ color }}>{members.length}</span>
+                        </div>
+                        <div className="flex-1 overflow-y-auto py-2 px-2 space-y-1 min-h-0"
+                            style={{ scrollbarWidth: 'thin', scrollbarColor: `${color}50 transparent` }}>
+                            {loadingMembers ? (
+                                <div className="flex justify-center py-8">
+                                    <Loader2 size={16} className="animate-spin text-white/20" />
+                                </div>
+                            ) : members.length === 0 ? (
+                                <div className="text-center py-8 text-[8px] mono text-white/20 uppercase tracking-widest">
+                                    NO_SIGNALS_FOUND
+                                </div>
+                            ) : members.map(m => (
+                                <button
+                                    key={m.id}
+                                    onClick={() => { if (navigateToProfile) { onClose(); navigateToProfile(m.id); } }}
+                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-sm hover:bg-white/5 transition-all group text-left"
+                                >
+                                    <div className="relative w-7 h-7 rounded-sm overflow-hidden border shrink-0"
+                                        style={{ borderColor: `${m.themeColor || color}40` }}>
+                                        {m.profilePictureUrl ? (
+                                            <img src={m.profilePictureUrl.startsWith('http') ? m.profilePictureUrl : `http://localhost:5264${m.profilePictureUrl}`}
+                                                alt={m.username} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-[8px] font-black"
+                                                style={{ color: m.themeColor || color }}>
+                                                {m.username?.substring(0, 2).toUpperCase()}
+                                            </div>
+                                        )}
+                                        <div className="absolute inset-0 border opacity-0 group-hover:opacity-100 transition-opacity"
+                                            style={{ borderColor: `${m.themeColor || color}80` }} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-[10px] font-black text-white truncate">{m.username}</div>
+                                        <div className="text-[8px] mono text-white/30 truncate">{m.biography || 'no bio data'}</div>
+                                    </div>
+                                    <ChevronRight size={10} className="text-white/20 group-hover:text-white/60 transition-colors shrink-0" />
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Join/Leave */}
+                        <div className="p-3 border-t" style={{ borderColor: `${color}20` }}>
+                            {isMember ? (
+                                <button
+                                    onClick={() => onLeave(community.id)}
+                                    disabled={loadingAction}
+                                    className="w-full py-2.5 flex items-center justify-center gap-2 border text-xs font-black mono uppercase tracking-widest text-red-400 border-red-500/30 hover:bg-red-500/10 transition-all disabled:opacity-40 rounded-sm"
+                                >
+                                    {loadingAction ? <Loader2 size={12} className="animate-spin" /> : <LogOut size={12} />}
+                                    Disconnect
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => onJoin(community.id)}
+                                    disabled={loadingAction || !!currentUser?.communityId}
+                                    className="w-full py-2.5 flex items-center justify-center gap-2 text-xs font-black mono uppercase tracking-widest text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed rounded-sm"
+                                    style={{
+                                        background: `linear-gradient(135deg, ${color}30, ${color}15)`,
+                                        border: `1px solid ${color}60`,
+                                    }}
+                                >
+                                    {loadingAction ? <Loader2 size={12} className="animate-spin" /> : <Globe size={12} />}
+                                    {currentUser?.communityId ? 'Limit Reached' : 'Establish Link'}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* RIGHT — Chat */}
+                    <div className="flex-1 flex flex-col min-w-0 min-h-0">
+                        {/* Chat header */}
+                        <div className="px-5 py-3 border-b flex items-center gap-2 shrink-0" style={{ borderColor: `${color}15` }}>
+                            <Zap size={11} style={{ color }} className="animate-pulse" />
+                            <span className="text-[9px] font-black tracking-[0.3em] uppercase mono text-white/40">
+                                Freq_Chat // {community.name}
+                            </span>
+                            <div className="ml-auto flex items-center gap-1.5">
+                                <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: color }} />
+                                <span className="text-[8px] mono text-white/30 uppercase tracking-widest">live</span>
+                            </div>
+                        </div>
+
+                        {/* Messages */}
+                        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 min-h-0"
+                            style={{ scrollbarWidth: 'thin', scrollbarColor: `${color}50 transparent` }}>
+                            {messages.length === 0 && (
+                                <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
+                                    <div className="w-12 h-12 rounded-sm border flex items-center justify-center opacity-20"
+                                        style={{ borderColor: color }}>
+                                        <Zap size={20} style={{ color }} />
+                                    </div>
+                                    <div className="text-[9px] mono text-white/20 uppercase tracking-widest">
+                                        No transmissions yet.<br />Be the first to broadcast.
+                                    </div>
+                                </div>
+                            )}
+                            {messages.map((msg, i) => {
+                                const isMe = msg.userId === (currentUser?.id || currentUser?.Id);
+                                return (
+                                    <motion.div
+                                        key={msg.id || i}
+                                        initial={{ opacity: 0, y: 8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        className={`flex gap-3 ${isMe ? 'flex-row-reverse' : ''}`}
+                                    >
+                                        {/* Avatar */}
+                                        <div className="w-6 h-6 rounded-sm shrink-0 overflow-hidden border flex items-center justify-center text-[7px] font-black"
+                                            style={{
+                                                borderColor: `${msg.themeColor || '#ff006e'}50`,
+                                                color: msg.themeColor || '#ff006e',
+                                                background: `${msg.themeColor || '#ff006e'}15`
+                                            }}>
+                                            {msg.profilePictureUrl ? (
+                                                <img src={msg.profilePictureUrl.startsWith('http') ? msg.profilePictureUrl : `http://localhost:5264${msg.profilePictureUrl}`}
+                                                    alt={msg.username} className="w-full h-full object-cover" />
+                                            ) : (
+                                                msg.username?.substring(0, 2).toUpperCase()
+                                            )}
+                                        </div>
+                                        {/* Bubble */}
+                                        <div className={`max-w-[75%] ${isMe ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
+                                            <div className={`flex items-center gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
+                                                <span className="text-[9px] font-black mono" style={{ color: msg.themeColor || '#ff006e' }}>
+                                                    {msg.username}
+                                                </span>
+                                                <span className="text-[8px] mono text-white/20">
+                                                    {formatTime(msg.sentAt)}
+                                                </span>
+                                            </div>
+                                            <div className="px-3 py-2 rounded-sm text-[11px] text-white/90 leading-relaxed"
+                                                style={{
+                                                    background: isMe ? `${msg.themeColor || color}18` : 'rgba(255,255,255,0.04)',
+                                                    border: `1px solid ${isMe ? `${msg.themeColor || color}35` : 'rgba(255,255,255,0.07)'}`,
+                                                }}>
+                                                {msg.content}
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                            <div ref={chatEndRef} />
+                        </div>
+
+                        {/* Input */}
+                        <form onSubmit={handleSend} className="px-4 py-3 border-t flex items-center gap-3 shrink-0"
+                            style={{ borderColor: `${color}20` }}>
+                            {isMember || userId ? (
+                                <>
+                                    <input
+                                        type="text"
+                                        value={newMessage}
+                                        onChange={e => setNewMessage(e.target.value.slice(0, 280))}
+                                        placeholder="Transmit signal..."
+                                        className="flex-1 bg-white/[0.03] border px-4 py-2.5 text-sm text-white placeholder-white/20 outline-none transition-all mono rounded-sm"
+                                        style={{ borderColor: `${color}30` }}
+                                        onFocus={e => e.target.style.borderColor = `${color}70`}
+                                        onBlur={e => e.target.style.borderColor = `${color}30`}
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={!newMessage.trim() || sendingMsg}
+                                        className="w-10 h-10 flex items-center justify-center rounded-sm border transition-all disabled:opacity-30"
+                                        style={{
+                                            borderColor: `${color}50`,
+                                            background: `${color}20`,
+                                            color
+                                        }}
+                                    >
+                                        {sendingMsg ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                                    </button>
+                                </>
+                            ) : (
+                                <div className="flex-1 text-center text-[9px] mono text-white/20 uppercase tracking-widest py-2">
+                                    Join this node to transmit
+                                </div>
+                            )}
+                        </form>
+                    </div>
+                </div>
+
+                {/* Mobile join/leave strip */}
+                <div className="md:hidden border-t px-4 py-3 shrink-0 flex gap-3" style={{ borderColor: `${color}20` }}>
+                    {isMember ? (
+                        <button onClick={() => onLeave(community.id)} disabled={loadingAction}
+                            className="flex-1 py-2 flex items-center justify-center gap-2 border text-xs font-black mono uppercase text-red-400 border-red-500/30 hover:bg-red-500/10 rounded-sm disabled:opacity-40">
+                            {loadingAction ? <Loader2 size={12} className="animate-spin" /> : <LogOut size={12} />} Disconnect
+                        </button>
+                    ) : (
+                        <button onClick={() => onJoin(community.id)} disabled={loadingAction || !!currentUser?.communityId}
+                            className="flex-1 py-2 flex items-center justify-center gap-2 text-xs font-black mono uppercase text-white rounded-sm disabled:opacity-30"
+                            style={{ background: `${color}30`, border: `1px solid ${color}60` }}>
+                            {loadingAction ? <Loader2 size={12} className="animate-spin" /> : <Globe size={12} />}
+                            {currentUser?.communityId ? 'Limit Reached' : 'Establish Link'}
+                        </button>
+                    )}
                 </div>
             </motion.div>
         </motion.div>
     );
 };
 
-// ─── CREATE COMMUNITY MODAL ──────────────────────────────────────────────
+// ─── CREATE COMMUNITY MODAL ───────────────────────────────────────────────
 export const CreateCommunityModal = ({ onClose, onSubmit, loading, user_credits = 0 }) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [sectorId, setSectorId] = useState(0);
     const [localError, setLocalError] = useState(null);
-    const CREATION_COST = 500;
-
+    const CREATION_COST = 0;
     const canAfford = (user_credits || 0) >= CREATION_COST;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLocalError(null);
-        if (!name.trim() || !description.trim()) return;
-
-        if (!canAfford) {
-            setLocalError("INSUFFICIENT CREDITS: Access to founding protocols denied.");
+        if (!name.trim() || !description.trim()) {
+            setLocalError('A community identifier and manifesto are required.');
             return;
         }
-
+        if (!canAfford) {
+            setLocalError('Insufficient credits: Access to founding protocols denied.');
+            return;
+        }
         try {
-            await onSubmit({ name, description, sectorId });
+            await onSubmit({ name: name.trim(), description: description.trim(), sectorId });
         } catch (err) {
-            const msg = err.response?.data?.message || err.response?.data || "CRITICAL: Node initialization failed.";
-            setLocalError(msg.toUpperCase());
+            const msg = err.response?.data?.message || err.response?.data || 'Node initialization failed.';
+            setLocalError(msg);
         }
     };
+
+    const sectors = [
+        { id: 0, name: 'Club / Bass / Techno', color: '#ff006e' },
+        { id: 1, name: 'Pop / Hyperpop / R&B', color: '#00ffff' },
+        { id: 2, name: 'Ambient / Experimental', color: '#a855f7' },
+        { id: 3, name: 'Rap / Drill / Trap', color: '#ffaa00' },
+        { id: 4, name: 'Rock / Metal / Punk', color: '#ff3333' },
+    ];
+    const activeSector = sectors.find(s => s.id === sectorId) || sectors[0];
 
     return (
         <motion.div
@@ -163,165 +461,138 @@ export const CreateCommunityModal = ({ onClose, onSubmit, loading, user_credits 
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-6"
         >
-            {/* Backdrop */}
             <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/40 backdrop-blur-[12px]"
+                className="absolute inset-0 backdrop-blur-[12px]"
+                style={{ background: `radial-gradient(ellipse at 40% 40%, ${activeSector.color}10 0%, rgba(0,0,0,0.88) 70%)` }}
                 onClick={() => !loading && onClose()}
             />
-
             <motion.div
-                initial={{ opacity: 0, scaleY: 0, scaleX: 0.4, filter: "brightness(3) blur(10px)" }}
-                animate={{ opacity: 1, scaleY: 1, scaleX: 1, filter: "brightness(1) blur(0px)" }}
-                exit={{ opacity: 0, scaleY: 0, scaleX: 0.4, filter: "brightness(3) blur(10px)" }}
-                transition={{
-                    duration: 0.6,
-                    ease: [0.16, 1, 0.3, 1],
-                    opacity: { duration: 0.2 }
+                initial={{ opacity: 0, scale: 0.93, y: 30 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.93, y: 30 }}
+                transition={{ type: 'spring', stiffness: 280, damping: 30 }}
+                className="relative w-full max-w-lg rounded-sm overflow-hidden"
+                style={{
+                    background: 'rgba(5,5,5,0.95)',
+                    border: `1px solid ${activeSector.color}35`,
+                    boxShadow: `0 0 60px -15px ${activeSector.color}40`,
                 }}
-                style={{ originY: 0.5 }} // Expand from center outwards like a scroll
-                className="relative w-full max-w-lg bg-[#050b18]/85 border-l border-l-[#00ffff]/10 border-r border-r-[#00ffff]/10 p-8 shadow-[0_30px_60px_rgba(0,0,0,0.6),-6px_0_15px_rgba(0,230,255,0.05),6px_0_15px_rgba(0,230,255,0.05)] backdrop-blur-2xl rounded-sm"
+                onClick={e => e.stopPropagation()}
             >
-                {/* Physical Scroll Rods - Sit "on top" for 3D effect */}
-                <div className="absolute top-[-1px] left-0 right-0 h-[2px] bg-[#00ffff] shadow-[0_2px_8px_rgba(0,0,0,0.9),0_0_12px_rgba(0,255,255,0.4)] z-[60]" />
-                <div className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-[#00ffff] shadow-[0_-2px_8px_rgba(0,0,0,0.9),0_0_12px_rgba(0,255,255,0.4)] z-[60]" />
-
-                {/* Holographic light leaks - Intensified blue */}
-                <div className="absolute -top-48 -left-48 w-96 h-96 bg-[#00ffff]/15 rounded-full blur-[120px] pointer-events-none" />
-                <div className="absolute -top-48 -right-48 w-96 h-96 bg-[#0088ff]/10 rounded-full blur-[120px] pointer-events-none" />
-                <div className="absolute -bottom-48 -left-48 w-96 h-96 bg-[#ff006e]/05 rounded-full blur-[120px] pointer-events-none" />
-                <div className="absolute -bottom-48 -right-48 w-96 h-96 bg-[#00ffff]/08 rounded-full blur-[140px] pointer-events-none" />
-
+                {/* Corner brackets */}
+                {['top-0 left-0 border-t-2 border-l-2', 'top-0 right-0 border-t-2 border-r-2',
+                  'bottom-0 left-0 border-b-2 border-l-2', 'bottom-0 right-0 border-b-2 border-r-2'].map((cls, i) => (
+                    <div key={i} className={`absolute w-4 h-4 ${cls} z-20`} style={{ borderColor: activeSector.color }} />
+                ))}
                 {/* Scanline */}
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(0,255,255,0.04),rgba(0,100,255,0.02),rgba(255,0,110,0.03))] z-0 pointer-events-none bg-[length:100%_2px,3px_100%]" />
+                <motion.div className="absolute inset-x-0 h-[1px] z-10 pointer-events-none opacity-20"
+                    style={{ background: activeSector.color }}
+                    animate={{ top: ['0%','100%'] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: 'linear' }} />
 
-                <div className="relative z-10">
+                <div className="p-7 relative z-10">
                     {/* Header */}
-                    <div className="flex justify-between items-start mb-6 mt-1 ml-1">
-                        <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-[#00ffff]/10 border border-[#00ffff]/20 rounded-sm">
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#00ffff] animate-pulse shadow-[0_0_8px_#00ffff]" />
-                            <span className="text-[8px] mono font-black text-[#00ffff] tracking-[0.3em] uppercase">
-                                + NEW_GENESIS
-                            </span>
+                    <div className="flex items-start justify-between mb-8">
+                        <div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: activeSector.color }} />
+                                <span className="text-[8px] font-black mono tracking-[0.4em] uppercase" style={{ color: activeSector.color }}>
+                                    genesis_protocol // node_initialization
+                                </span>
+                            </div>
+                            <h1 className="text-2xl font-black text-white tracking-tight">found a community....</h1>
                         </div>
-                        <button onClick={onClose} className="p-2 -mr-2 text-white/40 hover:text-white transition-colors group">
-                            <X size={22} className="group-hover:rotate-90 transition-transform duration-300" />
+                        <button onClick={onClose} className="p-1.5 text-white/30 hover:text-white transition-colors">
+                            <X size={20} />
                         </button>
-                    </div>
-
-                    <div className="mb-6">
-                        <h2 className="text-3xl font-black text-white tracking-widest uppercase">Found Community</h2>
-                        <div className="text-[9px] mono text-white/30 uppercase tracking-widest mt-1 ml-1">
-                            Initialize a new nodal collective on the grid
-                        </div>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <AnimatePresence>
                             {localError && (
-                                <motion.div
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: 20 }}
-                                    className="bg-red-500/10 border border-red-500/30 p-4 mb-2 flex flex-col gap-2 backdrop-blur-md"
-                                >
-                                    <div className="flex items-center gap-2 text-red-500 text-[10px] font-black uppercase tracking-widest">
-                                        <AlertCircle size={14} /> [ ACCESS_DENIED ]
-                                    </div>
-                                    <div className="mono text-[8px] text-red-400 font-black uppercase tracking-wider">
-                                        {localError}
-                                    </div>
+                                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}
+                                    className="bg-red-500/8 border border-red-500/25 px-4 py-3 text-[10px] text-red-400 mono rounded-sm">
+                                    ⚠ {localError}
                                 </motion.div>
                             )}
                         </AnimatePresence>
 
-                        <div className="space-y-2">
-                            <label className="text-[9px] font-black text-[#00ffff]/60 uppercase tracking-[0.3em] ml-1">Community_Identifier</label>
+                        <div className="space-y-1.5">
+                            <label className="text-[9px] font-black mono tracking-[0.3em] uppercase text-white/40 ml-1">
+                                Community Identifier
+                            </label>
                             <input
                                 type="text"
                                 value={name}
-                                onChange={(e) => { setName(e.target.value); if (localError) setLocalError(null); }}
+                                onChange={e => { setName(e.target.value); if (localError) setLocalError(null); }}
                                 maxLength={100}
                                 required
-                                className="w-full bg-black/40 border border-white/10 p-4 text-white font-black outline-none focus:border-[#00ffff] tracking-widest transition-all text-sm mono"
-                                placeholder="identifier_required..."
+                                className="w-full bg-black/40 border px-4 py-3 text-white font-semibold outline-none transition-all text-sm mono rounded-sm"
+                                style={{ borderColor: `${activeSector.color}30` }}
+                                onFocus={e => e.target.style.borderColor = `${activeSector.color}70`}
+                                onBlur={e => e.target.style.borderColor = `${activeSector.color}30`}
+                                placeholder="enter a name..."
+                            />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-[9px] font-black mono tracking-[0.3em] uppercase text-white/40 ml-1">
+                                Manifesto
+                            </label>
+                            <textarea
+                                value={description}
+                                onChange={e => { setDescription(e.target.value); if (localError) setLocalError(null); }}
+                                maxLength={500}
+                                required
+                                rows={3}
+                                className="w-full bg-black/40 border px-4 py-3 text-white/80 outline-none transition-all text-sm resize-none mono rounded-sm"
+                                style={{ borderColor: `${activeSector.color}30` }}
+                                onFocus={e => e.target.style.borderColor = `${activeSector.color}70`}
+                                onBlur={e => e.target.style.borderColor = `${activeSector.color}30`}
+                                placeholder="describe your community's frequency..."
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[9px] font-black text-[#00ffff]/60 uppercase tracking-[0.3em] ml-1">Data_Manifesto</label>
-                            <textarea
-                                value={description}
-                                onChange={(e) => { setDescription(e.target.value); if (localError) setLocalError(null); }}
-                                maxLength={500}
-                                required
-                                rows={3}
-                                className="w-full bg-black/40 border border-white/10 p-4 text-white/70 outline-none focus:border-[#00ffff]/40 tracking-wide transition-all text-[10px] resize-none mono"
-                                placeholder="purpose_string..."
-                            />
-                        </div>
-
-                        <div className="space-y-3">
-                            <label className="text-[9px] font-black text-[#00ffff]/60 uppercase tracking-[0.3em] ml-1 text-center block w-full">Geometric_Sector</label>
+                            <label className="text-[9px] font-black mono tracking-[0.3em] uppercase text-white/40 ml-1 block text-center">
+                                Sector Alignment
+                            </label>
                             <div className="flex flex-wrap justify-center gap-2">
-                                {[
-                                    { id: 0, name: 'CLUB/BASS/TECHNO', color: '#ff006e' },
-                                    { id: 1, name: 'POP/HYPERPOP/R&B', color: '#00ffff' },
-                                    { id: 2, name: 'AMBIENT/EXPERIMENTAL', color: '#a855f7' },
-                                    { id: 3, name: 'RAP/DRILL/TRAP', color: '#ffaa00' },
-                                    { id: 4, name: 'ROCK/METAL/PUNK', color: '#ff3333' },
-                                ].map((sector, idx, arr) => (
+                                {sectors.map(s => (
                                     <button
-                                        key={sector.id}
+                                        key={s.id}
                                         type="button"
-                                        onClick={() => setSectorId(sector.id)}
-                                        className={`w-[calc(50%-4px)] p-3 border flex items-center gap-3 transition-all relative group overflow-hidden ${sectorId === sector.id
-                                            ? 'bg-white/10 border-white/40'
-                                            : 'border-white/5 bg-black/20 opacity-60 hover:opacity-100 hover:border-white/20'
-                                            }`}
+                                        onClick={() => setSectorId(s.id)}
+                                        className="px-3 py-1.5 rounded-sm text-[10px] mono font-black uppercase tracking-wide transition-all border"
                                         style={{
-                                            borderColor: sectorId === sector.id ? sector.color : '',
-                                            boxShadow: sectorId === sector.id ? `0 0 15px ${sector.color}30` : ''
-                                        }}
-                                    >
-                                        <div className="w-2 h-2 rounded-sm rotate-45 shrink-0" style={{ backgroundColor: sector.color, boxShadow: `0 0 10px ${sector.color}` }} />
-                                        <div className="text-[10px] mono font-bold text-white uppercase tracking-tight truncate">{sector.name}</div>
+                                            borderColor: sectorId === s.id ? s.color : 'rgba(255,255,255,0.08)',
+                                            background: sectorId === s.id ? `${s.color}20` : 'rgba(255,255,255,0.02)',
+                                            color: sectorId === s.id ? s.color : 'rgba(255,255,255,0.4)',
+                                            boxShadow: sectorId === s.id ? `0 0 12px ${s.color}30` : 'none',
+                                        }}>
+                                        {s.name}
                                     </button>
                                 ))}
                             </div>
                         </div>
 
-                        {/* Cost & Submit */}
-                        <div className="pt-4 border-t border-white/5 mt-2">
-                            <div className="flex items-center justify-between mb-4 px-1">
-                                <span className="text-white/30 mono text-[9px] uppercase tracking-[0.3em] font-black">Creation_Price</span>
-                                <div className="flex items-center gap-2">
-                                    <div className={`w-1.5 h-1.5 rotate-45 ${canAfford ? 'bg-[#00ffff] shadow-[0_0_8px_#00ffff]' : 'bg-red-500 shadow-[0_0_8px_#ef4444]'}`} />
-                                    <span className={`text-base font-black mono tracking-tighter ${canAfford ? 'text-white' : 'text-red-500'}`}>
-                                        {CREATION_COST} CR
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-4">
-                                <button
-                                    type="button"
-                                    onClick={onClose}
-                                    className="flex-1 px-8 py-4 bg-black border border-white/10 text-white/40 font-black uppercase text-[10px] tracking-[0.2em] hover:text-white hover:border-white/30 transition-all"
-                                >
-                                    Abort
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={loading || !name.trim() || !description.trim() || !canAfford}
-                                    className={`flex-[2] py-4 border border-[#00ffff] bg-[#00ffff]/20 text-[#00ffff] font-black uppercase text-[10px] tracking-[0.2em] relative overflow-hidden group active:scale-95 transition-all shadow-[0_0_30px_#00ffff10] ${loading || !canAfford ? 'opacity-50' : 'hover:bg-[#00ffff] hover:text-black hover:shadow-[0_0_50px_#00ffff40]'}`}
-                                >
-                                    {loading ? 'INITIALIZING...' : 'INIT_COLLECTIVE'}
-                                    <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                                </button>
-                            </div>
+                        <div className="pt-3 flex gap-3">
+                            <button type="button" onClick={onClose}
+                                className="flex-1 py-3 text-xs font-black mono uppercase tracking-widest text-white/30 hover:text-white border border-white/10 hover:border-white/20 transition-all rounded-sm">
+                                Abort
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={loading || !canAfford}
+                                className="flex-1 py-3 text-xs font-black mono uppercase tracking-widest text-white transition-all disabled:opacity-30 rounded-sm flex items-center justify-center gap-2"
+                                style={{
+                                    background: `linear-gradient(135deg, ${activeSector.color}50, ${activeSector.color}25)`,
+                                    border: `1px solid ${activeSector.color}60`,
+                                    boxShadow: loading ? 'none' : `0 0 20px ${activeSector.color}20`,
+                                }}>
+                                {loading ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
+                                {loading ? 'Initializing...' : `Found — ${CREATION_COST} CR`}
+                            </button>
                         </div>
                     </form>
                 </div>

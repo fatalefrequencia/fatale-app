@@ -219,7 +219,8 @@ const API = {
         getAll: () => api.get('Communities'),
         create: (data) => api.post('Communities', data),
         join: (id) => api.post(`Communities/${id}/join`),
-        leave: () => api.post('Communities/leave')
+        leave: () => api.post('Communities/leave'),
+        getMembers: (id) => api.get(`Communities/${id}/members`)
     },
     Organic: {
         logEvent: (eventData) => api.post('listening-events', eventData),
@@ -230,6 +231,12 @@ const API = {
     Pulse: {
         getNeuroGraph: () => api.get('pulse/neuro-graph'),
         getResonantStations: (topTag) => api.get(`pulse/resonant-stations?topTag=${encodeURIComponent(topTag)}`)
+    },
+    CommunityChat: {
+        getMessages: (communityId, afterId = null) =>
+            api.get(`community-chat/${communityId}${afterId != null ? `?afterId=${afterId}` : ''}`),
+        sendMessage: (communityId, content) =>
+            api.post(`community-chat/${communityId}`, { content })
     }
 };
 

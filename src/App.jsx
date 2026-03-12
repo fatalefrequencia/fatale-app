@@ -1332,30 +1332,28 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-0" />
 
       {/* SIDEBAR (Escritorio) */}
-      <aside className={`hidden lg:flex flex-col border-r border-white/5 bg-black/20 backdrop-blur-2xl transition-all duration-300 z-30 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.4)] ${isSidebarCollapsed ? 'w-24' : 'w-64'}`}>
+      <aside className={`hidden lg:flex flex-col border-r border-white/5 bg-black/20 backdrop-blur-2xl transition-all duration-300 z-30 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.4)] ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}>
         <div
-          className={`cursor-pointer flex justify-center items-center hover:opacity-80 transition-all ${isSidebarCollapsed ? 'p-4' : 'p-6'}`}
+          className={`cursor-pointer flex flex-col justify-center items-center transition-all group ${isSidebarCollapsed ? 'p-4' : 'p-6'}`}
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         >
           <img
             src={skullImg}
-            alt="Toggle Sidebar"
-            className={`transition-all duration-300 pointer-events-none select-none animate-beat-pulse ${isSidebarCollapsed ? 'w-20 h-20' : 'w-24 h-24'}`}
-            style={{
-              mixBlendMode: 'screen'
-            }}
+            alt="System Kernel"
+            className={`transition-all duration-300 pointer-events-none select-none animate-beat-pulse ${isSidebarCollapsed ? 'w-11 h-11' : 'w-20 h-20'}`}
+            style={{ mixBlendMode: 'screen', filter: `drop-shadow(0 0 ${isSidebarCollapsed ? '8px' : '12px'} #ff006e)` }}
           />
         </div>
 
-        <nav className="flex-1 space-y-2 p-4">
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<Radio size={20} />} label="Discovery" active={activeView === 'discovery'} onClick={() => setView('discovery')} />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<Hash size={20} />} label="Feed" active={activeView === 'feed'} onClick={() => setView('feed')} />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<User size={20} />} label="Profile" active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => navigateToProfile(null)} />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<Play size={20} />} label="Player" active={activeView === 'player'} onClick={() => setView('player')} />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<MessageSquare size={20} />} label="Messages" active={activeView === 'messages'} onClick={() => setView('messages')} hasNotification={hasNewMessages} />
+        <nav className="flex-1 space-y-3 p-4">
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<Radio size={isSidebarCollapsed ? 18 : 22} />} label="DSC_SCAN" active={activeView === 'discovery'} onClick={() => setView('discovery')} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<Hash size={isSidebarCollapsed ? 18 : 22} />} label="FEED_LNK" active={activeView === 'feed'} onClick={() => setView('feed')} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<User size={isSidebarCollapsed ? 18 : 22} />} label="USR_LINK" active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => navigateToProfile(null)} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<Play size={isSidebarCollapsed ? 18 : 22} />} label="PLY_CORE" active={activeView === 'player'} onClick={() => setView('player')} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<MessageSquare size={isSidebarCollapsed ? 18 : 22} />} label="MSG_SYNC" active={activeView === 'messages'} onClick={() => setView('messages')} hasNotification={hasNewMessages} />
 
-          <div className="my-4 border-t border-white/10" />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<Wallet size={20} />} label="Wallet" active={activeView === 'wallet'} onClick={() => setView('wallet')} />
+          <div className="my-6 border-t border-white/5 opacity-50" />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<Wallet size={isSidebarCollapsed ? 18 : 22} />} label="WAL_BASE" active={activeView === 'wallet'} onClick={() => setView('wallet')} />
         </nav>
 
         <div className={`p-6 ${isSidebarCollapsed ? 'text-center' : 'text-left'}`}>
@@ -1369,7 +1367,7 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
       <main className="flex-1 flex flex-col h-full bg-transparent relative overflow-hidden z-10">
         {/* TOP NAV (Móvil) */}
         <header className="lg:hidden flex items-center justify-center p-4 border-b border-[#ff006e]/10 bg-black/90 backdrop-blur-md z-40 relative">
-          <div className="flex gap-4">
+          <div className="flex gap-2">
             <NavButton icon={<Radio size={20} />} active={activeView === 'discovery'} onClick={() => setView('discovery')} />
             <NavButton icon={<Hash size={20} />} active={activeView === 'feed'} onClick={() => setView('feed')} />
             <NavButton icon={<Play size={20} />} active={activeView === 'player'} onClick={() => setView('player')} />
@@ -2329,28 +2327,53 @@ const PlayerContent = ({
 const SidebarLink = React.memo(({ icon, label, active, onClick, collapsed, hasNotification }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all duration-300 group border relative
-      ${active
-        ? 'bg-[#ff006e]/10 text-white/90 border-[#ff006e]/50 shadow-[0_0_15px_rgba(255,0,110,0.25)]'
-        : 'text-[#ff006e]/60 border-transparent hover:bg-[#ff006e]/5 hover:text-[#ff006e] hover:border-[#ff006e]/20'
-      } ${collapsed ? 'justify-center' : ''}`}
+    className={`w-full flex items-center gap-4 ${collapsed ? 'p-2.5' : 'p-3.5'} rounded-sm group relative overflow-hidden outline-none
+      ${active ? 'text-white' : 'text-white/30 hover:text-[#ff006e]'} 
+      ${collapsed ? 'justify-center' : ''}`}
     title={collapsed ? label : ''}
   >
-    <div className={`transition-transform duration-300 ${active ? 'scale-105 drop-shadow-[0_0_8px_#ff006e]' : 'group-hover:scale-105'}`}>
+    {/* Active Background Layer */}
+    <div className={`absolute inset-0 hud-panel transition-opacity duration-300 pointer-events-none ${active ? 'opacity-100' : 'opacity-0'}`} />
+    
+    {active && (
+      <div className="absolute inset-0 pointer-events-none animate-in fade-in duration-500">
+        <div className="hud-bracket-tl text-[#ff006e] opacity-80" />
+        <div className="hud-bracket-tr text-[#ff006e] opacity-80" />
+        <div className="hud-bracket-bl text-[#ff006e] opacity-80" />
+        <div className="hud-bracket-br text-[#ff006e] opacity-80" />
+      </div>
+    )}
+    
+    <div className={`relative transition-all duration-300 ${active ? 'scale-110 text-[#ff006e]' : 'opacity-60 group-hover:opacity-100 group-hover:scale-110'}`}>
       {icon}
     </div>
-    {!collapsed && <span className={`text-[11px] font-black uppercase tracking-widest transition-opacity ${active ? 'opacity-100' : 'opacity-80'}`}>{label}</span>}
+    {!collapsed && (
+      <span className={`relative mono text-[10px] font-black uppercase tracking-[0.2em] transition-opacity duration-300 ${active ? 'opacity-100' : 'opacity-40 group-hover:opacity-80'}`}>
+        {label}
+      </span>
+    )}
     {hasNotification && !active && (
-      <div className="absolute top-2 right-2 w-2 h-2 bg-[#ff006e] rounded-full shadow-[0_0_8px_#ff006e] animate-pulse" />
+      <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#ff006e] rounded-full shadow-[0_0_8px_#ff006e] animate-pulse" />
     )}
   </button>
 ));
 
 const NavButton = React.memo(({ icon, active, onClick, hasNotification }) => (
-  <button onClick={onClick} className="relative p-2 transition-all group">
-    <div className={`${active ? 'text-white scale-125' : 'text-[#ff006e]/40 hover:text-[#ff006e]'} `}>{icon}</div>
+  <button onClick={onClick} className={`relative p-3.5 outline-none group rounded-sm ${active ? 'text-[#ff006e]' : 'text-white/20 hover:text-[#ff006e]'}`}>
+    {/* Active Background Layer */}
+    <div className={`absolute inset-0 hud-panel transition-opacity duration-300 pointer-events-none ${active ? 'opacity-100' : 'opacity-0'}`} />
+    
+    {active && (
+      <div className="absolute inset-0 pointer-events-none animate-in fade-in duration-500">
+        <div className="hud-bracket-tl text-[#ff006e] opacity-80" />
+        <div className="hud-bracket-tr text-[#ff006e] opacity-80" />
+        <div className="hud-bracket-bl text-[#ff006e] opacity-80" />
+        <div className="hud-bracket-br text-[#ff006e] opacity-80" />
+      </div>
+    )}
+    <div className={`relative transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-110'} `}>{icon}</div>
     {hasNotification && !active && (
-      <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-[#ff006e] rounded-full shadow-[0_0_5px_#ff006e]" />
+      <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-[#ff006e] rounded-full shadow-[0_0_5px_#ff006e]" />
     )}
   </button>
 ));
