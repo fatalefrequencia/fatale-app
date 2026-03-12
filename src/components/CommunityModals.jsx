@@ -500,7 +500,7 @@ export const CreateCommunityModal = ({ onClose, onSubmit, loading, user_credits 
                                     genesis_protocol // node_initialization
                                 </span>
                             </div>
-                            <h1 className="text-2xl font-black text-white tracking-tight">found a community....</h1>
+                            <h1 className="text-2xl font-black text-white tracking-tight">(found a community....)</h1>
                         </div>
                         <button onClick={onClose} className="p-1.5 text-white/30 hover:text-white transition-colors">
                             <X size={20} />
