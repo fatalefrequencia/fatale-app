@@ -2033,12 +2033,6 @@ export const ProfileView = React.memo(({
                                             Station goes on-air — no track required
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => setShowGoLiveModal(false)}
-                                        className="p-2 -mr-2 text-white/40 hover:text-white transition-colors group"
-                                    >
-                                        <X size={22} className="group-hover:rotate-90 transition-transform duration-300" />
-                                    </button>
                                 </div>
 
                                 <div className="space-y-5">

@@ -286,9 +286,6 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                 + UPLOAD_SIGNAL
                             </span>
                         </div>
-                        <button onClick={onClose} className="p-2 -mr-2 text-white/40 hover:text-white transition-colors group">
-                            <X size={22} className="group-hover:rotate-90 transition-transform duration-300" />
-                        </button>
                     </div>
 
                     {/* Mode tabs */}

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Users, Globe, LogOut, Loader2, Send, Shield, Zap, ChevronRight, Minimize2 } from 'lucide-react';
+import { X, Users, Globe, LogOut, Loader2, Send, Shield, Zap, ChevronRight, Minimize2, Heart } from 'lucide-react';
 import API from '../services/api';
-import { SECTORS } from './DiscoveryMapView';
+import { SECTORS } from '../constants';
 
 // ─── NEURAL STATION — Community Hub Modal ──────────────────────────────────
-export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, onLeave, currentUser, loadingAction, navigateToProfile }) => {
+export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, onLeave, onFollow, onUnfollow, isFollowed, currentUser, loadingAction, navigateToProfile }) => {
     const [members, setMembers] = useState([]);
     const [loadingMembers, setLoadingMembers] = useState(false);
     const [messages, setMessages] = useState([]);
@@ -199,6 +199,15 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                                 <Minimize2 size={18} />
                             </button>
                         )}
+                        {/* Follow Button */}
+                        <button 
+                            onClick={() => isFollowed ? onUnfollow(community.id) : onFollow(community.id)} 
+                            className="p-1.5 transition-all hover:scale-110 active:scale-95"
+                            title={isFollowed ? "Unfollow frequency" : "Follow frequency"}
+                            style={{ color: isFollowed ? color : 'rgba(255,255,255,0.3)' }}
+                        >
+                            <Heart size={18} fill={isFollowed ? color : 'transparent'} className={isFollowed ? 'drop-shadow-[0_0_8px_currentColor]' : ''} />
+                        </button>
                         <button onClick={onClose} className="p-1.5 text-white/30 hover:text-white transition-colors">
                             <X size={20} />
                         </button>
@@ -445,14 +454,7 @@ export const CreateCommunityModal = ({ onClose, onSubmit, loading, user_credits 
         }
     };
 
-    const sectors = [
-        { id: 0, name: 'Club / Bass / Techno', color: '#ff006e' },
-        { id: 1, name: 'Pop / Hyperpop / R&B', color: '#00ffff' },
-        { id: 2, name: 'Ambient / Experimental', color: '#a855f7' },
-        { id: 3, name: 'Rap / Drill / Trap', color: '#ffaa00' },
-        { id: 4, name: 'Rock / Metal / Punk', color: '#ff3333' },
-    ];
-    const activeSector = sectors.find(s => s.id === sectorId) || sectors[0];
+    const activeSector = SECTORS.find(s => s.id === sectorId) || SECTORS[0];
 
     return (
         <motion.div
@@ -500,11 +502,12 @@ export const CreateCommunityModal = ({ onClose, onSubmit, loading, user_credits 
                                     genesis_protocol // node_initialization
                                 </span>
                             </div>
-                            <h1 className="text-2xl font-bold text-white tracking-tight">(found a community....)</h1>
+                            <h1 className="text-lg mono tracking-[0.1em] flex items-center gap-3 ml-1">
+                                <span className="text-white/20">[</span>
+                                <span className="text-white/20 font-light">found_community</span>
+                                <span className="text-white/20">]</span>
+                            </h1>
                         </div>
-                        <button onClick={onClose} className="p-1.5 text-white/30 hover:text-white transition-colors">
-                            <X size={20} />
-                        </button>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
@@ -558,7 +561,7 @@ export const CreateCommunityModal = ({ onClose, onSubmit, loading, user_credits 
                                 Sector Alignment
                             </label>
                             <div className="flex flex-wrap justify-center gap-2">
-                                {sectors.map(s => (
+                                {SECTORS.map(s => (
                                     <button
                                         key={s.id}
                                         type="button"

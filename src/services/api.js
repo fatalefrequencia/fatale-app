@@ -220,7 +220,22 @@ const API = {
         create: (data) => api.post('Communities', data),
         join: (id) => api.post(`Communities/${id}/join`),
         leave: () => api.post('Communities/leave'),
-        getMembers: (id) => api.get(`Communities/${id}/members`)
+        getMembers: (id) => api.get(`Communities/${id}/members`),
+        follow: (id) => {
+            const followed = JSON.parse(localStorage.getItem('followed_communities') || '[]');
+            if (!followed.includes(id)) {
+                followed.push(id);
+                localStorage.setItem('followed_communities', JSON.stringify(followed));
+            }
+            return Promise.resolve({ data: { success: true } });
+        },
+        unfollow: (id) => {
+            let followed = JSON.parse(localStorage.getItem('followed_communities') || '[]');
+            followed = followed.filter(cid => cid !== id);
+            localStorage.setItem('followed_communities', JSON.stringify(followed));
+            return Promise.resolve({ data: { success: true } });
+        },
+        getFollowed: () => JSON.parse(localStorage.getItem('followed_communities') || '[]')
     },
     Organic: {
         logEvent: (eventData) => api.post('listening-events', eventData),

@@ -26,6 +26,7 @@ import WalletView from './components/WalletView';
 import ContentModal from './components/ContentModal';
 
 import API from './services/api';
+import { SECTORS } from './constants';
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
 
 // --- BASE DE DATOS MOCK (Sincronizada en toda la app) ---
@@ -52,13 +53,6 @@ const DISCOVERY_GRID = [
   { id: 6, name: 'Dreamo Mix', color: '#ff006e', type: 'Vibes' },
 ];
 
-const SECTORS = [
-  { name: 'NEON SLUMS', x: 200, y: 150, color: '#ff006e', desc: 'Underground beats & raw signal' },
-  { name: 'SILICON HEIGHTS', x: 3000, y: 80, color: '#00ffff', desc: 'Synthetic highs & digital dreams' },
-  { name: 'DATA VOID', x: 180, y: 2200, color: '#9b5de5', desc: 'Deep frequency & noise art' },
-  { name: 'CENTRAL HUB', x: 2700, y: 1700, color: '#ffcc00', desc: 'Convergence point of all signals' },
-  { name: 'OUTER RIM', x: 4700, y: 500, color: '#00ff88', desc: 'Fringe transmissions & outliers' },
-];
 
 const hashStr = (s) => {
   if (!s) return 0;
@@ -139,6 +133,9 @@ function App() {
   const [subscription, setSubscription] = useState(null);
   const [cachedTrackIds, setCachedTrackIds] = useState(new Set());
   const [favoriteStations, setFavoriteStations] = useState([]);
+  const [followedCommunities, setFollowedCommunities] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('followed_communities') || '[]'); } catch { return []; }
+  });
 
   // Sync Audio Volume & Mute
   useEffect(() => {
@@ -1296,6 +1293,11 @@ function App() {
               libraryTracks={libraryTracks}
               isMuted={isMuted}
               onToggleMute={() => setIsMuted(!isMuted)}
+              followedCommunities={followedCommunities}
+              onFollowUpdate={() => {
+                const updated = API.Communities.getFollowed();
+                setFollowedCommunities(updated);
+              }}
             />
           </>
         )}
@@ -1323,7 +1325,7 @@ const LoginView = ({ onLogin }) => (
   </motion.div>
 );
 
-const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, libraryTracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal, favoriteStations, onExitProfile, activeMessageUser, setActiveMessageUser, isMuted, onToggleMute }) => {
+const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, libraryTracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal, favoriteStations, onExitProfile, activeMessageUser, setActiveMessageUser, isMuted, onToggleMute, followedCommunities, onFollowUpdate }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   return (
@@ -1393,11 +1395,13 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
                 playlists={playlists}
                 onRefreshPlaylists={onRefreshPlaylists}
                 favoriteStations={favoriteStations}
+                followedCommunities={followedCommunities}
+                onFollowUpdate={onFollowUpdate}
                 onCommunityUpdate={onRefreshProfile} // ADDED TO REFRESH USER/MAP WHEN JOINING COMM
               />
             )}
             {activeView === 'wallet' && <WalletView user={user} onRefreshProfile={onRefreshProfile} />}
-            {activeView === 'feed' && <FeedContent key="feed" setView={setView} onPlayPlaylist={handlePlayPlaylist} navigateToProfile={navigateToProfile} user={user} favoriteStations={favoriteStations} />}
+            {activeView === 'feed' && <FeedContent key="feed" setView={setView} onPlayPlaylist={handlePlayPlaylist} navigateToProfile={navigateToProfile} user={user} favoriteStations={favoriteStations} followedCommunities={followedCommunities} />}
             {activeView === 'profile' && (
               <ProfileView
                 key={viewingUserId || 'me'}
@@ -1557,11 +1561,17 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
 
 
 // --- CONTENIDO: FEED (3 COLUMNAS) ---
-const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, user, favoriteStations }) => {
+const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, user, favoriteStations, followedCommunities }) => {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [selectedSector, setSelectedSector] = useState(null);
+  const [selectedCommunityId, setSelectedCommunityId] = useState(null);
+  const [allCommunities, setAllCommunities] = useState([]);
+
+  useEffect(() => {
+    API.Communities.getAll().then(res => setAllCommunities(res.data || [])).catch(() => {});
+  }, []);
 
   const fetchFeed = async () => {
     setLoading(true);
@@ -1863,8 +1873,12 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                 key={sector.name}
                 onClick={() => setSelectedSector(idx)}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded transition-all border ${selectedSector === idx
-                  ? 'bg-[#ff006e]/10 border-[#ff006e]/30'
-                  : 'bg-black/20 border-white/5 hover:border-[#ff006e]/20'}`}
+                  ? 'border-opacity-30'
+                  : 'bg-black/20 border-white/5 hover:border-white/20'}`}
+                style={selectedSector === idx ? { 
+                    backgroundColor: `${sector.color}20`, 
+                    borderColor: `${sector.color}50` 
+                } : {}}
               >
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-1 rounded-full shadow-[0_0_5px_currentColor]" style={{ backgroundColor: sector.color, color: sector.color }} />
@@ -1872,9 +1886,56 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                     {sector.name.replace(' ', '_')}
                   </span>
                 </div>
-                {selectedSector === idx && <Zap size={10} className="text-[#ff006e] animate-pulse" />}
+                {selectedSector === idx && <Zap size={10} className="animate-pulse" style={{ color: sector.color }} />}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Community Signals */}
+        <div className="space-y-4 px-2">
+          <div className="flex justify-between items-center px-2">
+            <h3 className="text-[10px] font-black uppercase text-[#00ffff] tracking-widest">:: COMMUNITY_LINKS ::</h3>
+            {selectedCommunityId !== null && (
+              <button
+                onClick={() => setSelectedCommunityId(null)}
+                className="text-[8px] text-[#00ffff]/40 hover:text-[#00ffff] uppercase tracking-tighter blink"
+              >
+                [ RESET_LINK ]
+              </button>
+            )}
+          </div>
+          <div className="space-y-1">
+            {followedCommunities.map((cid) => {
+              const comm = allCommunities.find(c => String(c.id) === String(cid));
+              if (!comm) return null;
+              const sectorColor = SECTORS[comm.sectorId]?.color || '#ffffff';
+              return (
+                <button
+                  key={`comm-link-${cid}`}
+                  onClick={() => {
+                      setSelectedCommunityId(cid);
+                      setSelectedSector(null);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded transition-all border ${String(selectedCommunityId) === String(cid)
+                    ? 'bg-[#00ffff]/10 border-[#00ffff]/30'
+                    : 'bg-black/20 border-white/5 hover:border-[#00ffff]/20'}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-1 h-1 rounded-full shadow-[0_0_5px_currentColor]" style={{ backgroundColor: sectorColor, color: sectorColor }} />
+                    <span className={`text-[9px] font-bold uppercase tracking-widest ${String(selectedCommunityId) === String(cid) ? 'text-white' : 'text-white/40'}`}>
+                      {comm.name.replace(' ', '_')}
+                    </span>
+                  </div>
+                  {String(selectedCommunityId) === String(cid) && <Zap size={10} className="text-[#00ffff] animate-pulse" />}
+                </button>
+              );
+            })}
+            {followedCommunities.length === 0 && (
+              <div className="px-3 py-4 border border-dashed border-white/5 rounded text-center opacity-20">
+                <div className="text-[8px] uppercase">No Links Established</div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1924,167 +1985,204 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
             <div className="flex flex-col items-center justify-center py-20 gap-4 opacity-50">
               <div className="text-[10px] text-[#ff006e] blink uppercase tracking-[0.4em]">Deciphering Signal Packets...</div>
             </div>
-          ) : feed.filter(item => {
-            const idSource = item.artistUserId || item.ArtistUserId || item.artistId || item.ArtistId;
-            const dbSectorId = item.sectorId ?? item.SectorId;
-            const h = hashStr(idSource);
-            const itemSectorIdx = (dbSectorId !== null && dbSectorId !== undefined) ? dbSectorId : (h % SECTORS.length);
-            if (idSource) console.log(`[ DISTRICT_DEBUG ] Artist: ${item.artist || item.Artist}, ID: ${idSource}, DB_Sector: ${dbSectorId}, Hash: ${h}, Index: ${itemSectorIdx}, Selected: ${selectedSector}`);
-            return itemSectorIdx === selectedSector;
-          }).length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-4 opacity-40">
-              <div className="text-[10px] text-[#ff006e] uppercase tracking-[0.4em]">
-                {selectedSector !== null ? `-- NO_SIGNALS_IN_SECTOR --` : `-- NO_SIGNALS_DETECTED --`}
-              </div>
-              <div className="text-[8px] text-white/20 uppercase">Network scanning active...</div>
-            </div>
           ) : (
-            feed.filter(item => {
-              const idSource = item.artistUserId || item.ArtistUserId || item.artistId || item.ArtistId;
-              const dbSectorId = item.sectorId ?? item.SectorId;
-              const h = hashStr(idSource);
-              const itemSectorIdx = (dbSectorId !== null && dbSectorId !== undefined) ? dbSectorId : (h % SECTORS.length);
-              return itemSectorIdx === selectedSector;
-            }).map(item => {
-              const typeRaw = item.type || item.Type || "";
-              const type = typeRaw.toLowerCase();
-              const artist = item.artist || item.Artist;
-              const title = item.title || item.Title;
-              const content = item.content || item.Content;
-              const createdAt = item.createdAt || item.CreatedAt;
-              const playCount = item.playCount || item.PlayCount;
-              const mediaType = item.mediaType || item.MediaType;
-              const isOriginal = item.isOriginalSignal ?? item.IsOriginalSignal ?? true;
-              const repostedBy = item.repostedBy || item.RepostedBy;
-              const imageUrl = getMediaUrl(item.imageUrl || item.ImageUrl);
-
-              if (type === 'system') {
-                return (
-                  <div key={item.Id || item.id} className="flex gap-4 p-2 bg-[#ffc300]/5 border-l-2 border-[#ffc300]/30 mb-2">
-                    <span className="text-[10px] text-[#ffc300] font-black">{getTime(createdAt)}</span>
-                    <span className="text-[10px] text-white/80 font-bold uppercase tracking-widest">{title}</span>
-                    <span className="text-[10px] text-white/40 uppercase">{content}</span>
+            <>
+              {feed.filter(item => {
+                if (selectedCommunityId !== null) {
+                  const itemCommId = item.communityId || item.CommunityId;
+                  return String(itemCommId) === String(selectedCommunityId);
+                }
+                if (selectedSector !== null) {
+                  const idSource = item.artistUserId || item.ArtistUserId || item.artistId || item.ArtistId;
+                  const dbSectorId = item.sectorId ?? item.SectorId;
+                  const h = hashStr(idSource);
+                  const itemSectorIdx = (dbSectorId !== null && dbSectorId !== undefined) ? dbSectorId : (h % SECTORS.length);
+                  return itemSectorIdx === selectedSector;
+                }
+                return true;
+              }).length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-4 opacity-40">
+                  <div className="text-[10px] text-[#ff006e] uppercase tracking-[0.4em]">
+                    {selectedSector !== null ? `-- NO_SIGNALS_IN_SECTOR --` : (selectedCommunityId !== null ? `-- NO_COMMUNITY_SIGNALS --` : `-- NO_SIGNALS_DETECTED --`)}
                   </div>
-                );
-              }
-
-              return (
-                <div key={item.Id || item.id} className="group transition-colors hover:bg-white/[0.05] py-2 px-3 rounded border border-transparent hover:border-white/10 relative mb-4">
-                  {!isOriginal && repostedBy && (
-                    <div className="flex items-center gap-2 mb-1 px-1">
-                      <Repeat size={10} className="text-[#ff006e] animate-pulse" />
-                      <span className="text-[8px] font-black text-[#ff006e] uppercase tracking-[0.2em] bg-[#ff006e]/5 px-2 border border-[#ff006e]/20">
-                        [ RE_SIGNAL_FROM // @{repostedBy} ]
-                      </span>
+                  <div className="text-[8px] text-white/20 uppercase">Network scanning active...</div>
+                </div>
+              ) : (
+                <>
+                  {selectedCommunityId !== null && (
+                    <div className="mb-6 p-4 bg-[#00ffff]/5 border border-[#00ffff]/20 rounded flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-500">
+                      <div className="flex items-center gap-4">
+                        <div className="w-2 h-2 rounded-full bg-[#00ffff] shadow-[0_0_10px_#00ffff] animate-pulse" />
+                        <div>
+                          <div className="text-[10px] font-black text-[#00ffff] tracking-[0.3em] uppercase">LINK // {allCommunities.find(c => String(c.id) === String(selectedCommunityId))?.name.toUpperCase().replace(' ', '_')}</div>
+                          <div className="text-[8px] text-white/30 uppercase tracking-widest">Community signal link established.</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setSelectedCommunityId(null)}
+                        className="px-3 py-1 border border-[#00ffff]/30 text-[#00ffff] text-[8px] font-black uppercase hover:bg-[#00ffff] hover:text-black transition-all"
+                      >
+                        DISCONNECT_LINK
+                      </button>
                     </div>
                   )}
-                  <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
-                    <span className="text-[11px] text-white/80 whitespace-nowrap select-none font-bold">[{getTime(createdAt)}]</span>
-                    <span className={`text-[11px] font-bold whitespace-nowrap ${getColor(type)}`}>[{getPrefix(type)}]</span>
-                    <button
-                      onClick={() => navigateToProfile(item.ArtistUserId || item.artistUserId)}
-                      className="text-[11px] text-white font-black uppercase tracking-tighter hover:text-[#ff006e] transition-colors"
-                    >
-                      ::{artist}::
-                    </button>
-                    <span className="text-[11px] text-white/90 flex-1 min-w-[200px] leading-relaxed">
-                      {type === 'track' && `ULINKED_SIGNAL: "${title}" [${content || 'unknown'}]`}
-                      {type === 'studio' && `NODAL_UPDATE: "${title}"`}
-                      {type === 'journal' && `DATA_LOG: ${title}`}
-                    </span>
-                  </div>
 
-                  {/* Expanded Content Area */}
-                  <div className="ml-0 sm:ml-40 mt-3 space-y-4">
-                    {type === 'track' && (
-                      <div
-                        onClick={() => handleTrackPlay(item.trackId || item.TrackId)}
-                        className="bg-black/90 border border-[#ff006e]/30 p-4 flex items-center gap-4 hover:border-[#ff006e]/60 transition-all group/track cursor-pointer max-w-md shadow-xl"
-                      >
-                        <div className="w-12 h-12 bg-black border border-[#ff006e]/20 overflow-hidden shrink-0 flex items-center justify-center">
-                          {imageUrl ? (
-                            <img src={imageUrl} className="w-full h-full object-cover opacity-80" alt="" />
-                          ) : (
-                            <Music size={20} className="text-[#ff006e]/40" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[10px] text-white font-black uppercase truncate">{title}</div>
-                          <div className="text-[8px] text-[#ff006e]/80 font-bold uppercase mt-1 tracking-widest">BIPHATE_ACTIVE // {playCount || 0} SCANS</div>
-                        </div>
-                        <div className="w-8 h-8 rounded-full border border-[#ff006e]/40 flex items-center justify-center text-[#ff006e] group-hover/track:bg-[#ff006e] group-hover/track:text-black transition-all">
-                          <Play size={14} fill="currentColor" />
-                        </div>
-                      </div>
-                    )}
+                  {feed.filter(item => {
+                    if (selectedCommunityId !== null) {
+                      const itemCommId = item.communityId || item.CommunityId;
+                      return String(itemCommId) === String(selectedCommunityId);
+                    }
+                    if (selectedSector !== null) {
+                      const idSource = item.artistUserId || item.ArtistUserId || item.artistId || item.ArtistId;
+                      const dbSectorId = item.sectorId ?? item.SectorId;
+                      const h = hashStr(idSource);
+                      const itemSectorIdx = (dbSectorId !== null && dbSectorId !== undefined) ? dbSectorId : (h % SECTORS.length);
+                      return itemSectorIdx === selectedSector;
+                    }
+                    return true;
+                  }).map(item => {
+                    const typeRaw = item.type || item.Type || "";
+                    const type = typeRaw.toLowerCase();
+                    const artist = item.artist || item.Artist;
+                    const title = item.title || item.Title;
+                    const content = item.content || item.Content;
+                    const createdAt = item.createdAt || item.CreatedAt;
+                    const playCount = item.playCount || item.PlayCount;
+                    const mediaType = item.mediaType || item.MediaType;
+                    const isOriginal = item.isOriginalSignal ?? item.IsOriginalSignal ?? true;
+                    const repostedBy = item.repostedBy || item.RepostedBy;
+                    const imageUrl = getMediaUrl(item.imageUrl || item.ImageUrl);
 
-                    {type === 'studio' && (
-                      <div
-                        onClick={() => handleMediaExpand(item)}
-                        className="max-w-md bg-black border border-white/5 overflow-hidden group/studio cursor-zoom-in relative active:scale-[0.98] transition-transform"
-                      >
-                        {mediaType === 'VIDEO' ? (
-                          <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
-                            <video src={imageUrl} className="w-full h-full object-cover opacity-70" muted loop onMouseEnter={e => e.target.play()} onMouseLeave={e => e.target.pause()} />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover/studio:bg-black/20 transition-all">
-                              <Video size={30} className="text-white/60" />
-                            </div>
+                    if (type === 'system') {
+                      return (
+                        <div key={item.Id || item.id} className="flex gap-4 p-2 bg-[#ffc300]/5 border-l-2 border-[#ffc300]/30 mb-2">
+                          <span className="text-[10px] text-[#ffc300] font-black">{getTime(createdAt)}</span>
+                          <span className="text-[10px] text-white/80 font-bold uppercase tracking-widest">{title}</span>
+                          <span className="text-[10px] text-white/40 uppercase">{content}</span>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div key={item.Id || item.id} className="group transition-colors hover:bg-white/[0.05] py-2 px-3 rounded border border-transparent hover:border-white/10 relative mb-4">
+                        {!isOriginal && repostedBy && (
+                          <div className="flex items-center gap-2 mb-1 px-1">
+                            <Repeat size={10} className="text-[#ff006e] animate-pulse" />
+                            <span className="text-[8px] font-black text-[#ff006e] uppercase tracking-[0.2em] bg-[#ff006e]/5 px-2 border border-[#ff006e]/20">
+                              [ RE_SIGNAL_FROM // @{repostedBy} ]
+                            </span>
                           </div>
-                        ) : (
-                          <img src={imageUrl} className="w-full h-auto opacity-90 group-hover/studio:opacity-100 transition-opacity" alt="" />
                         )}
-                        <div className="absolute top-2 right-2 p-1 bg-black/60 opacity-0 group-hover/studio:opacity-100 transition-opacity">
-                          <Maximize2 size={14} className="text-white/60" />
+                        <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
+                          <span className="text-[11px] text-white/80 whitespace-nowrap select-none font-bold">[{getTime(createdAt)}]</span>
+                          <span className={`text-[11px] font-bold whitespace-nowrap ${getColor(type)}`}>[{getPrefix(type)}]</span>
+                          <button
+                            onClick={() => navigateToProfile(item.ArtistUserId || item.artistUserId)}
+                            className="text-[11px] text-white font-black uppercase tracking-tighter hover:text-[#ff006e] transition-colors"
+                          >
+                            ::{artist}::
+                          </button>
+                          <span className="text-[11px] text-white/90 flex-1 min-w-[200px] leading-relaxed">
+                            {type === 'track' && `ULINKED_SIGNAL: "${title}" [${content || 'unknown'}]`}
+                            {type === 'studio' && `NODAL_UPDATE: "${title}"`}
+                            {type === 'journal' && `DATA_LOG: ${title}`}
+                          </span>
+                        </div>
+
+                        {/* Expanded Content Area */}
+                        <div className="ml-0 sm:ml-40 mt-3 space-y-4">
+                          {type === 'track' && (
+                            <div
+                              onClick={() => handleTrackPlay(item.trackId || item.TrackId)}
+                              className="bg-black/90 border border-[#ff006e]/30 p-4 flex items-center gap-4 hover:border-[#ff006e]/60 transition-all group/track cursor-pointer max-w-md shadow-xl"
+                            >
+                              <div className="w-12 h-12 bg-black border border-[#ff006e]/20 overflow-hidden shrink-0 flex items-center justify-center">
+                                {imageUrl ? (
+                                  <img src={imageUrl} className="w-full h-full object-cover opacity-80" alt="" />
+                                ) : (
+                                  <Music size={20} className="text-[#ff006e]/40" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-[10px] text-white font-black uppercase truncate">{title}</div>
+                                <div className="text-[8px] text-[#ff006e]/80 font-bold uppercase mt-1 tracking-widest">BIPHATE_ACTIVE // {playCount || 0} SCANS</div>
+                              </div>
+                              <div className="w-8 h-8 rounded-full border border-[#ff006e]/40 flex items-center justify-center text-[#ff006e] group-hover/track:bg-[#ff006e] group-hover/track:text-black transition-all">
+                                <Play size={14} fill="currentColor" />
+                              </div>
+                            </div>
+                          )}
+
+                          {type === 'studio' && (
+                            <div
+                              onClick={() => handleMediaExpand(item)}
+                              className="max-w-md bg-black border border-white/5 overflow-hidden group/studio cursor-zoom-in relative active:scale-[0.98] transition-transform"
+                            >
+                              {mediaType === 'VIDEO' ? (
+                                <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
+                                  <video src={imageUrl} className="w-full h-full object-cover opacity-70" muted loop onMouseEnter={e => e.target.play()} onMouseLeave={e => e.target.pause()} />
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover/studio:bg-black/20 transition-all">
+                                    <Video size={30} className="text-white/60" />
+                                  </div>
+                                </div>
+                              ) : (
+                                <img src={imageUrl} className="w-full h-auto opacity-90 group-hover/studio:opacity-100 transition-opacity" alt="" />
+                              )}
+                              <div className="absolute top-2 right-2 p-1 bg-black/60 opacity-0 group-hover/studio:opacity-100 transition-opacity">
+                                <Maximize2 size={14} className="text-white/60" />
+                              </div>
+                            </div>
+                          )}
+
+                          {type === 'journal' && (
+                            <div className="border-l-2 border-[#9b5de5]/50 pl-4 py-1 italic text-white/90 text-[11px] leading-relaxed max-w-xl bg-white/5 rounded-r">
+                              {content && content.length > 280 ? (
+                                <>
+                                  {content.substring(0, 280)}...
+                                  <button
+                                    onClick={() => handleMediaExpand({ ...item, type: 'JOURNAL' })}
+                                    className="ml-2 text-[#9b5de5] hover:text-white font-black uppercase text-[9px] tracking-widest transition-colors not-italic"
+                                  >
+                                    [ READ_SIGNAL ]
+                                  </button>
+                                </>
+                              ) : (
+                                content
+                              )}
+                            </div>
+                          )}
+
+                          {/* Unified Social Buttons */}
+                          <div className="flex gap-6 text-[9px] font-black text-white/60 uppercase pt-2">
+                            <button
+                              onClick={() => handleFeedLike(item)}
+                              className={`flex items-center gap-1.5 transition-all group/social ${item.IsLiked ? 'text-[#ff006e] drop-shadow-[0_0_5px_rgba(255,0,110,0.5)]' : 'hover:text-[#ff006e]'}`}
+                            >
+                              <Heart size={12} fill={item.IsLiked ? "currentColor" : "none"} className={item.IsLiked ? 'scale-110' : 'group-hover/social:scale-110 transition-transform'} />
+                              <span className="tracking-tighter">LIKE_{item.LikeCount || 0}</span>
+                            </button>
+                            <button
+                              onClick={() => setReplyingTo(item)}
+                              className="flex items-center gap-1.5 hover:text-[#ff006e] transition-all group/social"
+                            >
+                              <MessageSquare size={12} className="group-hover/social:scale-110 transition-transform" />
+                              <span className="tracking-tighter">REPLY_{item.CommentCount || 0}</span>
+                            </button>
+                            <button
+                              onClick={() => handleFeedRepost(item)}
+                              className={`flex items-center gap-1.5 transition-all group/social ${item.IsReposted ? 'text-[#ff006e] drop-shadow-[0_0_5px_rgba(255,0,110,0.5)]' : 'hover:text-[#ff006e]'}`}
+                            >
+                              <Repeat size={12} className={item.IsReposted ? 'animate-pulse' : 'group-hover/social:scale-110 transition-transform'} />
+                              <span className="tracking-tighter">RE_SYNC_{item.RepostCount || 0}</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    )}
-
-                    {type === 'journal' && (
-                      <div className="border-l-2 border-[#9b5de5]/50 pl-4 py-1 italic text-white/90 text-[11px] leading-relaxed max-w-xl bg-white/5 rounded-r">
-                        {content && content.length > 280 ? (
-                          <>
-                            {content.substring(0, 280)}...
-                            <button
-                              onClick={() => handleMediaExpand({ ...item, type: 'JOURNAL' })}
-                              className="ml-2 text-[#9b5de5] hover:text-white font-black uppercase text-[9px] tracking-widest transition-colors not-italic"
-                            >
-                              [ READ_SIGNAL ]
-                            </button>
-                          </>
-                        ) : (
-                          content
-                        )}
-                      </div>
-                    )}
-
-                    {/* Unified Social Buttons */}
-                    <div className="flex gap-6 text-[9px] font-black text-white/60 uppercase pt-2">
-                      <button
-                        onClick={() => handleFeedLike(item)}
-                        className={`flex items-center gap-1.5 transition-all group/social ${item.IsLiked ? 'text-[#ff006e] drop-shadow-[0_0_5px_rgba(255,0,110,0.5)]' : 'hover:text-[#ff006e]'}`}
-                      >
-                        <Heart size={12} fill={item.IsLiked ? "currentColor" : "none"} className={item.IsLiked ? 'scale-110' : 'group-hover/social:scale-110 transition-transform'} />
-                        <span className="tracking-tighter">LIKE_{item.LikeCount || 0}</span>
-                      </button>
-                      <button
-                        onClick={() => setReplyingTo(item)}
-                        className="flex items-center gap-1.5 hover:text-[#ff006e] transition-all group/social"
-                      >
-                        <MessageSquare size={12} className="group-hover/social:scale-110 transition-transform" />
-                        <span className="tracking-tighter">REPLY_{item.CommentCount || 0}</span>
-                      </button>
-                      <button
-                        onClick={() => handleFeedRepost(item)}
-                        className={`flex items-center gap-1.5 transition-all group/social ${item.IsReposted ? 'text-[#ff006e] drop-shadow-[0_0_5px_rgba(255,0,110,0.5)]' : 'hover:text-[#ff006e]'}`}
-                      >
-                        <Repeat size={12} className={item.IsReposted ? 'animate-pulse' : 'group-hover/social:scale-110 transition-transform'} />
-                        <span className="tracking-tighter">RE_SYNC_{item.RepostCount || 0}</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
+                    );
+                  })}
+                </>
+              )}
+            </>
           )}
         </div>
 

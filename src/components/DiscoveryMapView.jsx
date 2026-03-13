@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Plus, Minus, Activity, Music, Disc, Mic, Radio, Speaker, Zap, X, ChevronRight, MapPin, Play, Send, Star, MessageSquare, Minimize2 } from 'lucide-react';
 import API from '../services/api';
+import { SECTORS } from '../constants';
 import { CommunityDetailsModal, CreateCommunityModal } from './CommunityModals';
 import { useNotification } from '../contexts/NotificationContext';
 
@@ -13,14 +14,6 @@ const NODE_H = 76;
 const COL_GAP = 320;
 const ROW_GAP = 280;
 
-export const SECTORS = [
-    { name: 'ELECTRONIC', x: 1400, y: 1100, color: '#ff006e', desc: 'House, Techno, Trance, Drum & Bass', subgenres: ['House', 'Techno', 'Ambient', 'Trance', 'Drum & Bass'] },
-    { name: 'HIP HOP / R&B', x: 3000, y: 600, color: '#00ffff', desc: 'Trap, Boom Bap, Neo-soul, Drill', subgenres: ['Trap', 'Boom Bap', 'Neo-Soul', 'Drill'] },
-    { name: 'POP / DANCE', x: 1400, y: 2700, color: '#9b5de5', desc: 'Synthpop, Hyperpop, K-Pop, Disco', subgenres: ['Synthpop', 'Hyperpop', 'K-Pop', 'Disco'] },
-    { name: 'ROCK / METAL', x: 3000, y: 3200, color: '#ffcc00', desc: 'Indie, Post-Punk, Shoegaze, Alt', subgenres: ['Indie Rock', 'Post-Punk', 'Black Metal', 'Shoegaze'] },
-    { name: 'EXPERIMENTAL / JAZZ', x: 4600, y: 1100, color: '#00ff88', desc: 'Free Jazz, Noise, IDM, Avant-Garde', subgenres: ['Free Jazz', 'Noise', 'IDM', 'Avant-Garde'] },
-    { name: 'SOUL / GOSPEL', x: 4600, y: 2700, color: '#ff9900', desc: 'Neo-Soul, Gospel, Blues, Funk', subgenres: ['Neo-Soul', 'Gospel', 'Blues', 'Funk'] },
-];
 
 const ICONS = [Disc, Music, Mic, Radio, Speaker, Zap];
 
@@ -51,7 +44,7 @@ const MapClock = React.memo(() => {
 });
 
 // ─── MAIN ──────────────────────────────────────────────────────────────────
-const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], favoriteStations = [], user, onCommunityUpdate }) => {
+const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], favoriteStations = [], user, onCommunityUpdate, followedCommunities = [], onFollowUpdate }) => {
     const { showNotification } = useNotification();
     const [artists, setArtists] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -88,6 +81,7 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
     const [selectedCommunity, setSelectedCommunity] = useState(null);
     const [isCreatingCommunity, setIsCreatingCommunity] = useState(false);
     const [communityActionLoading, setCommunityActionLoading] = useState(false);
+    // followedCommunities is now handled via prop from App.jsx
 
     // Floating Chat Widget (persisted via localStorage)
     const [chatOpen, setChatOpen] = useState(() =>
@@ -398,6 +392,24 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
             throw error; // Rethrow to let the modal component handle its own error state
         } finally {
             setCommunityActionLoading(false);
+        }
+    };
+
+    const handleFollowCommunity = async (id) => {
+        try {
+            await API.Communities.follow(id);
+            if (onFollowUpdate) onFollowUpdate();
+        } catch (err) {
+            console.error('Follow failed:', err);
+        }
+    };
+
+    const handleUnfollowCommunity = async (id) => {
+        try {
+            await API.Communities.unfollow(id);
+            if (onFollowUpdate) onFollowUpdate();
+        } catch (err) {
+            console.error('Unfollow failed:', err);
         }
     };
 
@@ -1611,6 +1623,9 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                         onMinimize={userCommunity ? () => { setSelectedCommunity(null); setChatOpen(true); } : undefined}
                         onJoin={handleJoinCommunity}
                         onLeave={handleLeaveCommunity}
+                        onFollow={handleFollowCommunity}
+                        onUnfollow={handleUnfollowCommunity}
+                        isFollowed={followedCommunities.includes(selectedCommunity?.id)}
                         loadingAction={communityActionLoading}
                         navigateToProfile={navigateToProfile}
                     />
