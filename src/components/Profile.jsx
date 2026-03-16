@@ -20,6 +20,8 @@ const hexToRgb = (hex) => {
     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 0, 110';
 };
 
+const isTruthy = (val) => val === true || val === 'true' || val === 1 || val === '1' || val === 'True';
+
 const TerminalFrame = ({ title, children, className = "" }) => (
     <div className={`border border-[var(--text-color)]/30 bg-black/80 relative ${className}`}>
         <div className="absolute -top-3 left-4 px-2 bg-black text-[var(--text-color)] mono text-[10px] font-bold tracking-[0.2em] z-10">
@@ -442,7 +444,7 @@ const Sector = ({ id, label, items, onExpand, onPlayTrack, onPlayPlaylist }) => 
     );
 };
 
-const isTruthy = (val) => val === true || val === 1 || val === "true" || val === "1";
+
 
 const DisplayWall = ({ tracks: originalTracks, uid, gallery, journal = [], playlists = [], themeColor, onExpand, onPlayTrack, onPlayPlaylist }) => {
     // 1. Group items by logical sectors
@@ -544,10 +546,17 @@ export const ProfileView = React.memo(({
     playlists: currentUserPlaylists = [], // Prop from App (current user's playlists)
     initialModal,
     onClearInitialModal,
+    activeStation,
+    stationChat,
+    stationQueue,
     isPlaying,
     onExitProfile,
-    onMessageUser
+    onMessageUser,
+    setActiveStation
 }) => {
+    const effectiveId = targetUserId || currentUser?.id || currentUser?.Id;
+    const isMe = String(effectiveId) === String(currentUser?.id || currentUser?.Id);
+
     const { showNotification } = useNotification();
     const [activeTab, setActiveTab] = useState('Music');
     const [studioSubTab, setStudioSubTab] = useState('All');
@@ -591,6 +600,16 @@ export const ProfileView = React.memo(({
     const [stationData, setStationData] = useState(null);
     const [isStationFavorited, setIsStationFavorited] = useState(false);
 
+    const displayUser = isMe ? currentUser : profileData;
+
+    // Auto-switch to Broadcast tab if live
+    useEffect(() => {
+        if (isMe && stationData && (stationData.isLive || stationData.IsLive) && activeTab === 'Music') {
+            setActiveTab('Broadcast');
+            setRoomMode('monitor');
+        }
+    }, [stationData, isMe]);
+
 
     const handleToggleStationFavorite = async () => {
         if (!stationData) return;
@@ -625,6 +644,9 @@ export const ProfileView = React.memo(({
             // Refresh local station data
             const sRes = await API.Stations.getByUserId(currentUser?.id || currentUser?.Id);
             setStationData(sRes.data);
+            if (setActiveStation) setActiveStation(sRes.data);
+            setActiveTab('Broadcast');
+            if (setRoomMode) setRoomMode('monitor');
         } catch (e) {
             console.error("Failed to go live", e);
             showNotification("BROADCAST_FAILURE", "Neural interface failed to establish link.", "error");
@@ -640,6 +662,8 @@ export const ProfileView = React.memo(({
             // Refresh local station data
             const sRes = await API.Stations.getByUserId(currentUser?.id || currentUser?.Id);
             setStationData(sRes.data);
+            if (setActiveStation) setActiveStation(null);
+            setActiveTab('Music');
         } catch (e) {
             console.error("Failed to end live", e);
         }
@@ -712,9 +736,7 @@ export const ProfileView = React.memo(({
     const [playlistDetails, setPlaylistDetails] = useState(null); // { Playlist, Tracks }
     const [isLoadingPlaylist, setIsLoadingPlaylist] = useState(false);
 
-    const effectiveId = targetUserId || currentUser?.id || currentUser?.Id;
-    const isMe = !targetUserId || String(targetUserId) === String(currentUser?.id || currentUser?.Id);
-    const displayUser = isMe ? currentUser : profileData;
+
 
     // Fetch Playlists — always on mount/profile change so SEQ_MAPS stat is accurate
     const fetchPlaylists = React.useCallback(async () => {
@@ -906,7 +928,6 @@ export const ProfileView = React.memo(({
             setIsLoadingProfile(true);
             try {
                 const API = await import('../services/api').then(mod => mod.default);
-                const effectiveId = targetUserId || currentUser?.id || currentUser?.Id;
                 if (!effectiveId) return;
 
                 // Fetch basic user data first
@@ -964,10 +985,9 @@ export const ProfileView = React.memo(({
                 setProfileTracks(filtered);
 
                 try {
-                    const isOwnProfile = String(effectiveId) === String(currentUser?.id || currentUser?.Id);
                     const [jRes, gRes, sRes, fvRes] = await Promise.all([
-                        isOwnProfile ? API.Journal.getMyJournal().catch(() => ({ data: [] })) : API.Journal.getUserJournal(effectiveId).catch(() => ({ data: [] })),
-                        isOwnProfile ? API.Studio.getMyGallery().catch(() => ({ data: [] })) : API.Studio.getUserGallery(effectiveId).catch(() => ({ data: [] })),
+                        isMe ? API.Journal.getMyJournal().catch(() => ({ data: [] })) : API.Journal.getUserJournal(effectiveId).catch(() => ({ data: [] })),
+                        isMe ? API.Studio.getMyGallery().catch(() => ({ data: [] })) : API.Studio.getUserGallery(effectiveId).catch(() => ({ data: [] })),
                         API.Stations.getByUserId(effectiveId).catch(() => ({ data: null })),
                         API.Stations.getFavorites().catch(() => ({ data: [] }))
                     ]);
@@ -977,6 +997,11 @@ export const ProfileView = React.memo(({
                     if (sRes.data) {
                         const isFav = (fvRes.data || []).some(f => (f.id || f.Id) === (sRes.data.id || sRes.data.Id));
                         setIsStationFavorited(isFav);
+
+                        // Auto-sync global activeStation if this is my live station
+                        if (isMe && (sRes.data.isLive || sRes.data.IsLive) && setActiveStation && !activeStation) {
+                            setActiveStation(sRes.data);
+                        }
                     }
                 } catch (e) {
                     console.error("Failed to fetch studio or station content", e);
@@ -1220,7 +1245,7 @@ export const ProfileView = React.memo(({
                                             </div>
                                         </div>
                                     ))}
-                                {profileTracks.length === 0 && profileGallery.length === 0 && (
+                                  {profileTracks.length === 0 && profileGallery.length === 0 && (
                                     <div className="text-[8px] mono text-white/20 uppercase italic">
                                         &gt; NO_RECENT_TRANSMISSIONS
                                     </div>
@@ -1294,51 +1319,137 @@ export const ProfileView = React.memo(({
 
                     {/* Right Side: Content Area */}
                     <div className="social-main-pane">
-                        <div className="social-tabs-header flex justify-between items-center mb-10 pb-6 border-b border-[var(--text-color)]/10">
-                            <div className="flex gap-4">
-                                <button
-                                    onClick={() => setActiveTab('Music')}
-                                    className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Music' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
-                                >
-                                    [ MUSIC ]
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('Playlists')}
-                                    className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Playlists' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
-                                >
-                                    [ PLAYLISTS ]
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('Studio')}
-                                    className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Studio' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
-                                >
-                                    [ JOURNAL ]
-                                </button>
-                            </div>
-                            <div className="flex gap-4 items-center">
-                                {isMe && activeTab === 'Music' && (
-                                        <button
-                                            onClick={() => setShowUpload(true)}
-                                            className="px-4 py-1.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/30 text-[var(--text-color)] text-[9px] font-bold uppercase tracking-[0.2em] hover:bg-[var(--text-color)] hover:text-black transition-all flex items-center gap-2 rounded-sm mr-2"
-                                            title="Upload Signal"
-                                        >
-                                            <Plus size={12} /> UPLOAD_SIGNAL
-                                        </button>
-                                )}
-                                {!isMe && onMessageUser && (
+                        {activeTab === 'Broadcast' ? (
+                            // --- BROADCASTER DASHBOARD ---
+                            <div className="flex flex-col h-full animate-in fade-in duration-500">
+                                <div className="flex justify-between items-center mb-6 pb-4 border-b border-[var(--text-color)]/20">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-3 h-3 rounded-full bg-[var(--text-color)] animate-pulse shadow-[0_0_10px_var(--text-color)]" />
+                                        <div>
+                                            <h2 className="text-[14px] font-black uppercase text-[var(--text-color)] tracking-widest">BROADCASTER DASHBOARD</h2>
+                                            <p className="text-[10px] text-[var(--text-color)]/60 font-mono uppercase mt-1">
+                                                FREQ: {(activeStation || stationData)?.frequency || (activeStation || stationData)?.Frequency} // {(activeStation || stationData)?.listenerCount || (activeStation || stationData)?.ListenerCount || 0} LISTENERS
+                                            </p>
+                                        </div>
+                                    </div>
                                     <button
-                                        onClick={() => onMessageUser(displayUser)}
-                                        className="p-1.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/30 text-[var(--text-color)] hover:bg-[var(--text-color)] hover:text-black transition-all rounded hidden lg:block"
-                                        title="Send Message"
+                                        onClick={handleEndLive}
+                                        className="px-4 py-2 bg-[var(--text-color)]/20 border border-[var(--text-color)]/60 text-[var(--text-color)] text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[var(--text-color)] hover:text-black transition-all shadow-[0_0_15px_var(--text-color)]"
                                     >
-                                        <MessageSquare size={16} />
+                                        END BROADCAST
                                     </button>
-                                )}
+                                </div>
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1 min-h-0">
+                                    {/* Request Queue Column */}
+                                    <div className="flex flex-col bg-black/40 border border-[var(--text-color)]/10 rounded-sm overflow-hidden">
+                                        <div className="p-3 bg-[var(--text-color)]/10 border-b border-[var(--text-color)]/20 text-[10px] font-black uppercase text-[var(--text-color)] tracking-widest flex justify-between items-center">
+                                            <span>REQUEST_QUEUE</span>
+                                            <span className="text-[var(--text-color)]/60">[{stationQueue?.length || 0}]</span>
+                                        </div>
+                                        <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                                            {stationQueue && stationQueue.length > 0 ? stationQueue.map((req, idx) => (
+                                                <div key={idx} className="p-3 border border-[var(--text-color)]/20 bg-black hover:border-[var(--text-color)]/60 transition-colors flex justify-between items-center group">
+                                                    <div>
+                                                        <div className="text-[11px] font-bold text-white tracking-wider">{req.trackTitle}</div>
+                                                        <div className="text-[9px] text-[var(--text-color)] font-mono mt-1">REQ_BY: {req.username}</div>
+                                                    </div>
+                                                    {allTracks && (
+                                                        <button 
+                                                            onClick={async () => {
+                                                                const matchIdx = allTracks.findIndex(t => t.id === req.trackId || t.Id === req.trackId);
+                                                                if (matchIdx !== -1 && onPlayPlaylist) {
+                                                                    onPlayPlaylist(allTracks, matchIdx);
+                                                                }
+                                                            }}
+                                                            className="w-8 h-8 rounded-full border border-[var(--text-color)]/40 flex items-center justify-center text-[var(--text-color)] group-hover:bg-[var(--text-color)] group-hover:text-black transition-all"
+                                                        >
+                                                            <Play size={14} fill="currentColor" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )) : (
+                                                <div className="h-full flex flex-col items-center justify-center opacity-30 text-[10px] font-mono uppercase text-[var(--text-color)] text-center p-8">
+                                                    <Radio size={24} className="mb-4 opacity-50 block mx-auto" />
+                                                    WAITING FOR INCOMING REQUESTS...
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Comm Link Chat Column */}
+                                    <div className="flex flex-col bg-black/40 border border-[var(--text-color)]/10 rounded-sm overflow-hidden">
+                                        <div className="p-3 bg-[var(--text-color)]/10 border-b border-[var(--text-color)]/20 text-[10px] font-black uppercase text-[var(--text-color)] tracking-widest">
+                                            LIVE_COMM_LINK
+                                        </div>
+                                        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                                            {stationChat && stationChat.length > 0 ? stationChat.map((msg, idx) => (
+                                                <div key={idx} className="font-mono text-[10px]">
+                                                    <span className="text-[var(--text-color)] font-bold">[{msg.username}]</span> <span className="text-white/80">{msg.message}</span>
+                                                </div>
+                                            )) : (
+                                                <div className="h-full flex items-center justify-center opacity-30 text-[10px] font-mono uppercase text-[var(--text-color)]">
+                                                    COMM LINK IDLE...
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-
-                        {/* Tab Content */}
-                        {activeTab === 'Music' && (
+                        ) : (
+                            <div className="flex-1 min-h-0 flex flex-col">
+                                <div className="social-tabs-header flex justify-between items-center mb-10 pb-6 border-b border-[var(--text-color)]/10">
+                                    <div className="flex gap-4">
+                                        <button
+                                            onClick={() => setActiveTab('Music')}
+                                            className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Music' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
+                                        >
+                                            [ MUSIC ]
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab('Playlists')}
+                                            className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Playlists' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
+                                        >
+                                            [ PLAYLISTS ]
+                                        </button>
+                                        {isMe && stationData && (stationData.isLive || stationData.IsLive) && (
+                                            <button
+                                                onClick={() => setActiveTab('Broadcast')}
+                                                className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Broadcast' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
+                                            >
+                                                [ BROADCAST ]
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => setActiveTab('Studio')}
+                                            className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Studio' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
+                                        >
+                                            [ JOURNAL ]
+                                        </button>
+                                    </div>
+                                    <div className="flex gap-4 items-center">
+                                        {isMe && activeTab === 'Music' && (
+                                                <button
+                                                    onClick={() => setShowUpload(true)}
+                                                    className="px-4 py-1.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/30 text-[var(--text-color)] text-[9px] font-bold uppercase tracking-[0.2em] hover:bg-[var(--text-color)] hover:text-black transition-all flex items-center gap-2 rounded-sm mr-2"
+                                                    title="Upload Signal"
+                                                >
+                                                    <Plus size={12} /> UPLOAD_SIGNAL
+                                                </button>
+                                        )}
+                                        {!isMe && onMessageUser && (
+                                            <button
+                                                onClick={() => onMessageUser(displayUser)}
+                                                className="p-1.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/30 text-[var(--text-color)] hover:bg-[var(--text-color)] hover:text-black transition-all rounded hidden lg:block"
+                                                title="Send Message"
+                                            >
+                                                <MessageSquare size={16} />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                                
+                                {/* Tab Content */}
+                                {activeTab === 'Music' && (
                             <div className="space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
                                 {profileTracks
                                     .sort((a, b) => {
@@ -1860,9 +1971,11 @@ export const ProfileView = React.memo(({
                                                         </button>
                                                     </>
                                                 )}
+                                            </div>
+                                        </div>
 
-                                                <div id="journal-carousel" className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar scroll-smooth snap-x snap-mandatory">
-                                                    {profileJournal.length > 0 ? (
+                                        <div id="journal-carousel" className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar scroll-smooth snap-x snap-mandatory">
+                                            {profileJournal.length > 0 ? (
                                                         profileJournal.sort((a, b) => {
                                                             const aPinned = isTruthy(a.IsPinned || a.isPinned) ? 1 : 0;
                                                             const bPinned = isTruthy(b.IsPinned || b.isPinned) ? 1 : 0;
@@ -1965,7 +2078,7 @@ export const ProfileView = React.memo(({
                                                     )}
                                                 </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -1973,8 +2086,6 @@ export const ProfileView = React.memo(({
                     </div>
                 </div>
             </SpatialRoomLayout>
-
-
 
             {/* Global Overlays */}
             <AnimatePresence>

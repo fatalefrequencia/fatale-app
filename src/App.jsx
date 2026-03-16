@@ -28,6 +28,7 @@ import ContentModal from './components/ContentModal';
 import API from './services/api';
 import { SECTORS } from './constants';
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
+import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack } from './services/signalr';
 
 // --- BASE DE DATOS MOCK (Sincronizada en toda la app) ---
 const TRACKS = [
@@ -99,6 +100,14 @@ function App() {
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(1); // 0 to 1
 
+  // Live Radio State
+  const [followingMap, setFollowingMap] = useState({});
+  const [favoriteStations, setFavoriteStations] = useState([]);
+  const [liveStations, setLiveStations] = useState(RADIO_STATIONS);
+  const [activeStation, setActiveStation] = useState(null);
+  const [stationChat, setStationChat] = useState([]);
+  const [stationQueue, setStationQueue] = useState([]);
+
   // --- AUDIO LOGIC (Unified Manager) ---
   const currentTrack = React.useMemo(() => {
     const raw = (currentTrackIndex >= 0 && tracks[currentTrackIndex])
@@ -132,7 +141,6 @@ function App() {
   const [likedYoutubeIds, setLikedYoutubeIds] = useState(new Set());
   const [subscription, setSubscription] = useState(null);
   const [cachedTrackIds, setCachedTrackIds] = useState(new Set());
-  const [favoriteStations, setFavoriteStations] = useState([]);
   const [followedCommunities, setFollowedCommunities] = useState(() => {
     try { return JSON.parse(localStorage.getItem('followed_communities') || '[]'); } catch { return []; }
   });
@@ -164,6 +172,27 @@ function App() {
       setFavoriteStations(res.data || []);
     } catch (e) {
       console.error("Failed to fetch favorite stations", e);
+    }
+  };
+
+  const fetchLiveStations = async () => {
+    try {
+      const res = await API.Stations.getAll();
+      if (res.data && res.data.length > 0) {
+        setLiveStations(res.data);
+        
+        // Auto-sync host's activeStation
+        if (user && !activeStation) {
+           const myStation = res.data.find(s => 
+             String(s.artistUserId || s.ArtistUserId) === String(user.id || user.Id)
+           );
+           if (myStation && (myStation.isLive || myStation.IsLive)) {
+             setActiveStation(myStation);
+           }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch live stations", e);
     }
   };
   const [userPlaylists, setUserPlaylists] = useState([]);
@@ -240,14 +269,95 @@ function App() {
   }, [isYoutubeMode, isPlaying, youtubePlayer, currentTrack?.id]);
 
   useEffect(() => {
+    const handleTuneIn = (e) => {
+        const station = e.detail;
+        setActiveStation(station);
+        joinStation(station.id || station.Id);
+        // Note: we can use the notification context if we wrap this in a component that has it,
+        // but App.jsx uses it. We might need to ensure showNotification is accessible or just let it be silent.
+    };
+    window.addEventListener('tuneIn', handleTuneIn);
+    return () => window.removeEventListener('tuneIn', handleTuneIn);
+  }, []);
+
+  useEffect(() => {
     // Check for existing session
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
     if (token && savedUser) {
       setUser(JSON.parse(savedUser));
       setView('player'); // Or discovery/feed based on preference
+      
+      // Initialize SignalR listener
+      const conn = initSignalR(token);
+
+      conn.on("TrackSynced", (trackData, syncTime, hostIsPlaying) => {
+        setTracks(prev => {
+           const currentTrack = prev[0]; // If listening, queue is handled sequentially
+           if (!currentTrack || (currentTrack.id !== trackData.id && currentTrack.Id !== trackData.Id)) {
+               const mapped = { ...trackData, isLocked: false, isOwned: true };
+               return [mapped];
+           }
+           return prev;
+        });
+        setCurrentTrackIndex(0);
+        setIsPlaying(hostIsPlaying);
+        
+        // Use timeout to allow React to render the new track element before playing
+        setTimeout(() => {
+            if (hostIsPlaying) {
+                const isYtLocal = trackData.source?.startsWith('youtube:');
+                if (isYtLocal) {
+                    // Try to seek youtube player if it exists. Note: youtube player state is hard to access here from effect without deps 
+                    // This relies on the useEffect `[isYoutubeMode, isPlaying, youtubePlayer]` picking up the seek and track change later.
+                    // But we can trigger handleSeek if accessible
+                } else if (audioRef.current) {
+                    audioRef.current.currentTime = syncTime;
+                }
+            }
+        }, 100);
+      });
+
+      conn.on("ReceiveMessage", (msg) => {
+          setStationChat(prev => [...prev, msg].slice(-50));
+      });
+
+      conn.on("TrackRequested", (req) => {
+          setStationQueue(prev => [...prev, req].slice(-20));
+      });
+
+      conn.on("StationEnded", (data) => {
+          setActiveStation(prev => {
+              if (prev && (prev.id === data.stationId || prev.Id === data.stationId)) {
+                  showNotification("BROADCAST_ENDED", "The live radio station has disconnected.", "info");
+                  leaveStation(data.stationId);
+                  return null;
+              }
+              return prev;
+          });
+          fetchLiveStations();
+      });
+
+      conn.on("StationWentLive", (data) => {
+          fetchLiveStations();
+      });
     }
   }, []);
+
+  // --- HOST BROADCASTING LOGIC ---
+  useEffect(() => {
+     if (user && user.isLive && isPlaying && currentTrack && currentTrackIndex >= 0) {
+         // Throttle broadcasting sync events
+         const targetStationId = user.residentSectorId || 1; // Assuming we use their sector, or their actual station ID.
+         // Wait, the API Station has its own Id. We need to fetch the artist's stationId or rely on them pulling it.
+         // Let's assume Profile.jsx handles the host GoLive logic and we just broadcast the state.
+         API.Stations.getByUserId(user.id || user.Id).then(res => {
+             if (res.data) {
+                 syncTrack(res.data.id || res.data.Id, currentTrack, currentTime, isPlaying);
+             }
+         });
+     }
+  }, [currentTrack?.id, isPlaying]); // Intentionally omitting currentTime to only trigger on track change or play/pause
 
   const fetchPlaylists = async () => {
     try {
@@ -266,6 +376,7 @@ function App() {
     if (user) {
       fetchLikes();
       fetchFavoriteStations();
+      fetchLiveStations();
       fetchPlaylists();
     }
   }, [user]);
@@ -1287,6 +1398,13 @@ function App() {
               setRedirectTrigger={setRedirectTrigger} // PASS THE SETTER
               setProfileInitialModal={setProfileInitialModal}
               favoriteStations={favoriteStations}
+              liveStations={liveStations}
+              activeStation={activeStation}
+              stationChat={stationChat}
+              stationQueue={stationQueue}
+              setActiveStation={setActiveStation}
+              sendMessage={sendMessage}
+              requestTrack={requestTrack}
               onExitProfile={() => setViewOriginal(previousView)}
               activeMessageUser={activeMessageUser}
               setActiveMessageUser={setActiveMessageUser}
@@ -1325,7 +1443,7 @@ const LoginView = ({ onLogin }) => (
   </motion.div>
 );
 
-const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, libraryTracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal, favoriteStations, onExitProfile, activeMessageUser, setActiveMessageUser, isMuted, onToggleMute, followedCommunities, onFollowUpdate }) => {
+const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, libraryTracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal, favoriteStations, liveStations, activeStation, stationChat, stationQueue, onExitProfile, activeMessageUser, setActiveMessageUser, isMuted, onToggleMute, followedCommunities, onFollowUpdate, setActiveStation, sendMessage, requestTrack }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   return (
@@ -1401,7 +1519,7 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
               />
             )}
             {activeView === 'wallet' && <WalletView user={user} onRefreshProfile={onRefreshProfile} />}
-            {activeView === 'feed' && <FeedContent key="feed" setView={setView} onPlayPlaylist={handlePlayPlaylist} navigateToProfile={navigateToProfile} user={user} favoriteStations={favoriteStations} followedCommunities={followedCommunities} />}
+            {activeView === 'feed' && <FeedContent key="feed" setView={setView} onPlayPlaylist={handlePlayPlaylist} navigateToProfile={navigateToProfile} user={user} favoriteStations={favoriteStations} liveStations={liveStations} setActiveStation={setActiveStation} activeStation={activeStation} stationChat={stationChat} stationQueue={stationQueue} followedCommunities={followedCommunities} />}
             {activeView === 'profile' && (
               <ProfileView
                 key={viewingUserId || 'me'}
@@ -1418,9 +1536,13 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
                 onPlayPlaylist={handlePlayPlaylist}
                 initialModal={profileInitialModal}
                 onClearInitialModal={() => setProfileInitialModal(null)}
+                activeStation={activeStation}
+                stationChat={stationChat}
+                stationQueue={stationQueue}
                 isPlaying={isPlaying}
                 onExitProfile={onExitProfile}
                 onMessageUser={(u) => { setActiveMessageUser(u); setView('messages'); }}
+                setActiveStation={setActiveStation}
               />
             )}
             {activeView === 'player' && <PlayerContent
@@ -1448,6 +1570,11 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
               navigateToProfile={navigateToProfile}
               onPlayPlaylist={handlePlayPlaylist}
               libraryTracks={libraryTracks}
+              activeStation={activeStation}
+              stationChat={stationChat}
+              stationQueue={stationQueue}
+              sendMessage={sendMessage}
+              requestTrack={requestTrack}
             />}
             {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} initialChatUser={activeMessageUser} />}
             {activeView === 'settings' && (
@@ -1561,7 +1688,7 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
 
 
 // --- CONTENIDO: FEED (3 COLUMNAS) ---
-const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, user, favoriteStations, followedCommunities }) => {
+const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, user, favoriteStations, liveStations, setActiveStation, activeStation, stationChat, stationQueue, followedCommunities }) => {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -2334,12 +2461,75 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
         </div>
       </div>
 
-      {/* Derecha: Radios */}
-      <div className="hidden xl:block w-80 p-6 space-y-8 bg-black/40 border-l border-[#ff006e]/5 relative z-10">
+      {/* Derecha: Radios & Broadcaster Panel */}
+      <div className="hidden xl:block w-80 p-6 space-y-8 bg-black/40 border-l border-[#ff006e]/5 relative z-10 overflow-y-auto no-scrollbar">
+        {activeStation && (String(activeStation.artistUserId || activeStation.ArtistUserId) === String(user?.id || user?.Id)) && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="flex items-center gap-3 pb-3 border-b border-[#ff006e]/20">
+              <div className="w-2 h-2 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_10px_#ff006e]" />
+              <h3 className="text-[10px] font-black uppercase text-[#ff006e] tracking-[0.3em]">BROADCASTING_PANEL</h3>
+            </div>
+
+            {/* Mini Chat */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center text-[8px] font-bold text-white/40 uppercase tracking-widest">
+                <span>COMM_LINK</span>
+                <span className="text-[#ff006e]/40">ENCRYPTED</span>
+              </div>
+              <div className="h-48 bg-black/40 border border-[#ff006e]/10 rounded-sm p-3 font-mono text-[9px] overflow-y-auto custom-scrollbar space-y-2">
+                {stationChat && stationChat.length > 0 ? stationChat.map((msg, idx) => (
+                  <div key={idx} className="break-words">
+                    <span className="text-[#ff006e] font-bold">[{msg.username}]</span> <span className="text-white/80">{msg.message}</span>
+                  </div>
+                )) : (
+                  <div className="h-full flex items-center justify-center opacity-20 italic">LINK_IDLE...</div>
+                )}
+              </div>
+            </div>
+
+            {/* Mini Queue */}
+            <div className="space-y-3">
+              <div className="text-[8px] font-bold text-white/40 uppercase tracking-widest flex justify-between">
+                 <span>REQUEST_QUEUE</span>
+                 <span>[{stationQueue?.length || 0}]</span>
+              </div>
+              <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-2">
+                {stationQueue && stationQueue.length > 0 ? stationQueue.map((req, idx) => (
+                  <div key={idx} className="p-2 border border-[#ff006e]/10 bg-black/60 flex justify-between items-center group hover:border-[#ff006e]/40 transition-all">
+                    <div className="min-w-0">
+                      <div className="text-[9px] font-bold text-white truncate">{req.trackTitle}</div>
+                      <div className="text-[7px] text-[#ff006e]/60 font-mono">FROM: {req.username}</div>
+                    </div>
+                    <button 
+                      onClick={() => onPlayPlaylist && onPlayPlaylist([{ id: req.trackId, title: req.trackTitle, artist: 'REQUEST' }], 0)}
+                      className="w-6 h-6 rounded-full border border-[#ff006e]/20 flex items-center justify-center text-[#ff006e] hover:bg-[#ff006e] hover:text-black transition-all"
+                    >
+                      <Play size={10} fill="currentColor" />
+                    </button>
+                  </div>
+                )) : (
+                  <div className="p-4 border border-dashed border-white/5 text-center opacity-20 text-[8px] uppercase tracking-widest">
+                    Queue Clear
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-[#ff006e]/10">
+               <button 
+                onClick={() => setView('player')}
+                className="w-full py-2 bg-[#ff006e]/10 border border-[#ff006e]/40 text-[#ff006e] text-[9px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all"
+               >
+                 [ OPEN_FULL_DASHBOARD ]
+               </button>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-4">
           <h3 className="text-[10px] font-black uppercase text-[#ff006e]/60 px-2 tracking-[0.4em]">LIVE_STATIONS</h3>
-          {favoriteStations && favoriteStations.length > 0 ? (
-            favoriteStations.map(station => (
+          {liveStations && liveStations.length > 0 ? (
+            liveStations.map(station => (
               <div key={station.id || station.Id} className={`p-4 rounded border ${(station.isLive || station.IsLive) ? 'bg-[#ff006e]/5 border-[#ff006e]/20 shadow-[0_0_15px_rgba(255,0,110,0.05)]' : 'bg-black/60 border-white/5 opacity-60'} `}>
                 <div className="flex items-center gap-2 mb-2">
                   <div className={`w-1.5 h-1.5 rounded-full ${(station.isLive || station.IsLive) ? 'bg-[#ff006e] blink shadow-[0_0_8px_#ff006e]' : 'bg-gray-600'} `} />
@@ -2349,9 +2539,22 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                   {(station.isLive || station.IsLive) ? `Live: ${station.currentSessionTitle || station.CurrentSessionTitle || 'Broadcasting'}` : 'STATUS: OFFLINE'}
                 </p>
                 <div className="flex justify-between items-center">
-                  <span className="text-[8px] font-bold text-[#ff006e]/40 uppercase">{station.listenerCount || station.ListenerCount || 0} CONNECTED</span>
+                  <span className="text-[8px] font-bold text-[#ff006e]/40 uppercase">{(station.listenerCount || station.ListenerCount || 0)} CONNECTED</span>
                   {(station.isLive || station.IsLive) && (
-                    <button className="px-2 py-0.5 border border-[#ff006e] text-[#ff006e] text-[8px] font-black rounded hover:bg-[#ff006e] hover:text-black transition-all">TUNE_IN</button>
+                    <button 
+                      onClick={() => {
+                        setActiveStation(station);
+                        import('./services/signalr').then(m => m.joinStation(station.id || station.Id));
+                        if (String(station.artistUserId || station.ArtistUserId) === String(user?.id || user?.Id)) {
+                           navigateToProfile(user?.id || user?.Id);
+                        } else {
+                           setView('player');
+                        }
+                      }}
+                      className="px-2 py-0.5 border border-[#ff006e] text-[#ff006e] text-[8px] font-black rounded hover:bg-[#ff006e] hover:text-black transition-all"
+                    >
+                      TUNE_IN
+                    </button>
                   )}
                 </div>
               </div>
@@ -2390,7 +2593,12 @@ const PlayerContent = ({
   togglePlay,
   navigateToProfile,
   onPlayPlaylist,
-  forceNowPlaying
+  forceNowPlaying,
+  activeStation,
+  stationChat,
+  stationQueue,
+  sendMessage,
+  requestTrack
 }) => {
   return (
     <div className="flex items-center justify-center h-full w-full">
@@ -2416,6 +2624,11 @@ const PlayerContent = ({
         onAddCredits={onAddCredits}
         navigateToProfile={navigateToProfile}
         onPlayPlaylist={onPlayPlaylist}
+        activeStation={activeStation}
+        stationChat={stationChat}
+        stationQueue={stationQueue}
+        sendMessage={sendMessage}
+        requestTrack={requestTrack}
       />
     </div>
   );

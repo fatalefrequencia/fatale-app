@@ -40,7 +40,12 @@ export const IPodPlayer = ({
     onCache,
     onPlayPlaylist,
     initialScreen = 'MAIN',
-    forceNowPlaying // Receiving the timestamp prop
+    forceNowPlaying, // Receiving the timestamp prop
+    activeStation,
+    stationChat = [],
+    stationQueue = [],
+    sendMessage,
+    requestTrack
 }) => {
     const { showNotification } = useNotification();
     const [screen, setScreen] = useState(forceNowPlaying ? 'NOW_PLAYING' : (initialScreen || 'MAIN'));
@@ -285,6 +290,10 @@ export const IPodPlayer = ({
         if (screen === 'ACTION_MENU') {
             return [
                 { id: 'BACK_NP', label: '.. Back to Track' },
+                ...(activeStation ? [
+                    { id: 'STATION_CHAT', label: 'Live Chat (Comm Link)' },
+                    { id: 'STATION_QUEUE', label: 'Request Queue' }
+                ] : []),
                 { id: 'GOTO_ADD_PLAYLIST', label: 'Add to Playlist' },
                 { id: 'GOTO_TIP', label: 'Tip Artist' },
                 ...(currentTrack.source && currentTrack.source.startsWith('youtube:')
@@ -320,6 +329,26 @@ export const IPodPlayer = ({
             return [
                 { id: 'CONFIRM_PURCHASE', label: 'YES' },
                 { id: 'BACK_AM', label: 'NO' }
+            ];
+        }
+        if (screen === 'STATION_CHAT') {
+            return [
+                { id: 'BACK_AM', label: '.. Back to Options' },
+                { id: 'SEND_MESSAGE', label: 'Send Message...' },
+                ...stationChat.slice(-10).reverse().map((msg, i) => ({
+                    id: `MSG_${i}`,
+                    label: `${msg.username}: ${msg.message}`
+                }))
+            ];
+        }
+        if (screen === 'STATION_QUEUE') {
+            return [
+                { id: 'BACK_AM', label: '.. Back to Options' },
+                { id: 'REQUEST_TRACK', label: 'Request Current Track' },
+                ...stationQueue.map((req, i) => ({
+                    id: `REQ_${i}`,
+                    label: `${req.trackTitle} (${req.username})`
+                }))
             ];
         }
         return [
@@ -623,6 +652,14 @@ export const IPodPlayer = ({
         // --- ACTION MENU ---
         if (screen === 'ACTION_MENU') {
             if (item.id === 'BACK_NP') setScreen('NOW_PLAYING');
+            if (item.id === 'STATION_CHAT') {
+                setScreen('STATION_CHAT');
+                setSelectedIndex(0);
+            }
+            if (item.id === 'STATION_QUEUE') {
+                setScreen('STATION_QUEUE');
+                setSelectedIndex(0);
+            }
             if (item.id === 'GOTO_ADD_PLAYLIST') {
                 setScreen('SELECT_PLAYLIST');
                 setSelectedIndex(0);
@@ -735,6 +772,63 @@ export const IPodPlayer = ({
             }
             return;
         }
+
+        if (screen === 'STATION_CHAT') {
+            if (item.id === 'BACK_AM') {
+                setScreen('ACTION_MENU');
+                setSelectedIndex(0);
+                return;
+            }
+            if (item.id === 'SEND_MESSAGE') {
+                const text = window.prompt("Enter message for live chat:");
+                if (text && text.trim() && sendMessage && activeStation) {
+                    sendMessage(activeStation.id || activeStation.Id, text, user?.username || user?.Username || "Listeners");
+                    showNotification("SIGNAL_SENT", "Message broadcasted to comm link.", "success");
+                }
+            }
+            return;
+        }
+
+        if (screen === 'STATION_QUEUE') {
+            if (item.id === 'BACK_AM') {
+                setScreen('ACTION_MENU');
+                setSelectedIndex(0);
+                return;
+            }
+            if (item.id === 'REQUEST_TRACK') {
+                if (requestTrack && activeStation) {
+                    requestTrack(activeStation.id || activeStation.Id, currentTrack, user?.username || user?.Username || "Listeners");
+                    showNotification("REQ_SUBMITTED", "Track requested in queue.", "success");
+                }
+            }
+            if (item.id.startsWith('REQ_')) {
+                // Determine if user is the DJ
+                const isHost = activeStation && (activeStation.artistUserId === user?.id || activeStation.ArtistUserId === user?.Id);
+                if (isHost) {
+                    const reqIdx = parseInt(item.id.split('_')[1]);
+                    const req = stationQueue[reqIdx];
+                    if (req && req.trackId) {
+                        const targetSource = libraryTracks.length > 0 ? libraryTracks : tracks;
+                        const matchIdx = targetSource.findIndex(t => t.id === req.trackId || t.Id === req.trackId);
+                        if (matchIdx !== -1) {
+                            if (onPlayPlaylist) {
+                                onPlayPlaylist(targetSource, matchIdx);
+                                setScreen('NOW_PLAYING');
+                            } else {
+                                setCurrentTrackIndex(matchIdx);
+                                setIsPlaying(true);
+                                setScreen('NOW_PLAYING');
+                            }
+                        } else {
+                            showNotification("TRACK_UNAVAILABLE", "Track not found in current library.", "error");
+                        }
+                    }
+                } else {
+                    showNotification("ACCESS_DENIED", "Only the host can accept requests.", "error");
+                }
+            }
+            return;
+        }
     };
 
     const handleMenuClick = (e) => {
@@ -747,7 +841,7 @@ export const IPodPlayer = ({
         } else if (screen === 'ACTION_MENU' || screen === 'SELECT_PLAYLIST') {
             setScreen('NOW_PLAYING');
             setSelectedIndex(0);
-        } else if (screen === 'TIP_MENU' || screen === 'PURCHASE_CONFIRM') {
+        } else if (screen === 'TIP_MENU' || screen === 'PURCHASE_CONFIRM' || screen === 'STATION_CHAT' || screen === 'STATION_QUEUE') {
             setScreen('ACTION_MENU');
             setSelectedIndex(0);
         } else if (screen === 'PLAYLIST_DETAILS') {
@@ -1097,8 +1191,10 @@ export const IPodPlayer = ({
                                                                     screen === 'SONGS_PURCHASED' ? 'PURCHASED' :
                                                                         screen === 'SONGS_ALL' ? 'ALL TRACKS' :
                                                                             screen === 'PURCHASE_CONFIRM' ? 'PURCHASE?' :
-                                                                                screen === 'PLAYLIST_DETAILS' ? activePlaylistName :
-                                                                                    screen}
+                                                                                screen === 'STATION_CHAT' ? 'LIVE COMM' :
+                                                                                    screen === 'STATION_QUEUE' ? 'REQ. QUEUE' :
+                                                                                        screen === 'PLAYLIST_DETAILS' ? activePlaylistName :
+                                                                                            screen}
                                             </h2>
                                         )}
                                     <button
