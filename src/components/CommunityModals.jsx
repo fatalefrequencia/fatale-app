@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Users, Globe, LogOut, Loader2, Send, Shield, Zap, ChevronRight, Minimize2, Heart } from 'lucide-react';
 import API from '../services/api';
-import { SECTORS } from '../constants';
+import { SECTORS, API_BASE_URL } from '../constants';
 
 // ─── NEURAL STATION — Community Hub Modal ──────────────────────────────────
 export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, onLeave, onFollow, onUnfollow, isFollowed, currentUser, loadingAction, navigateToProfile }) => {
@@ -244,7 +244,7 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                                     <div className="relative w-7 h-7 rounded-sm overflow-hidden border shrink-0"
                                         style={{ borderColor: `${m.themeColor || color}40` }}>
                                         {m.profilePictureUrl ? (
-                                            <img src={m.profilePictureUrl.startsWith('http') ? m.profilePictureUrl : `http://localhost:5264${m.profilePictureUrl}`}
+                                            <img src={m.profilePictureUrl.startsWith('http') ? m.profilePictureUrl : `${API_BASE_URL}${m.profilePictureUrl}`}
                                                 alt={m.username} className="w-full h-full object-cover" />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-[8px] font-black"
@@ -338,7 +338,7 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                                                 background: `${msg.themeColor || '#ff006e'}15`
                                             }}>
                                             {msg.profilePictureUrl ? (
-                                                <img src={msg.profilePictureUrl.startsWith('http') ? msg.profilePictureUrl : `http://localhost:5264${msg.profilePictureUrl}`}
+                                                <img src={msg.profilePictureUrl.startsWith('http') ? msg.profilePictureUrl : `${API_BASE_URL}${msg.profilePictureUrl}`}
                                                     alt={msg.username} className="w-full h-full object-cover" />
                                             ) : (
                                                 msg.username?.substring(0, 2).toUpperCase()

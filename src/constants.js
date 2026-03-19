@@ -1,3 +1,7 @@
+export const API_BASE_URL = import.meta.env.PROD 
+  ? import.meta.env.VITE_SIGNALR_URL 
+  : 'http://localhost:5264';
+
 export const SECTORS = [
   { 
     id: 0, 

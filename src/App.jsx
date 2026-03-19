@@ -26,7 +26,7 @@ import WalletView from './components/WalletView';
 import ContentModal from './components/ContentModal';
 
 import API from './services/api';
-import { SECTORS } from './constants';
+import { SECTORS, API_BASE_URL } from './constants';
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
 import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack } from './services/signalr';
 
@@ -63,11 +63,10 @@ const hashStr = (s) => {
   return Math.abs(h);
 };
 
-const BASE_API_URL = 'http://localhost:5264';
 const getMediaUrl = (path) => {
   if (!path) return '';
   if (path.startsWith('http')) return path;
-  return `${BASE_API_URL}${path}`;
+  return `${API_BASE_URL}${path}`;
 };
 
 // --- COMPONENTE PRINCIPAL ---
@@ -1721,12 +1720,12 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
     const playlist = trackFeedItems.map(item => {
       const rawSource = item.source || item.Source;
       const source = rawSource && rawSource.startsWith('/uploads')
-        ? `http://localhost:5264${rawSource}`
+        ? `${API_BASE_URL}${rawSource}`
         : rawSource;
 
       const rawImg = item.imageUrl || item.ImageUrl;
       const imageUrl = rawImg && rawImg.startsWith('/uploads')
-        ? `http://localhost:5264${rawImg}`
+        ? `${API_BASE_URL}${rawImg}`
         : rawImg;
 
       return {

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Search, Edit, MoreHorizontal, Phone, Volume2, Send, ChevronLeft, User, X, Heart } from 'lucide-react';
 import API from '../services/api';
+import { API_BASE_URL } from '../constants';
 
 export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
     const [conversations, setConversations] = useState([]);
@@ -323,7 +324,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                                             className="w-10 h-10 overflow-hidden border border-white/10 group-hover:border-[#ff006e]/30 transition-all cursor-pointer flex-shrink-0"
                                         >
                                             {u.profilePictureUrl || u.ProfilePictureUrl ? (
-                                                <img src={(u.profilePictureUrl || u.ProfilePictureUrl).startsWith('http') ? (u.profilePictureUrl || u.ProfilePictureUrl) : `http://localhost:5264${u.profilePictureUrl || u.ProfilePictureUrl}`} className="w-full h-full object-cover" />
+                                                <img src={(u.profilePictureUrl || u.ProfilePictureUrl).startsWith('http') ? (u.profilePictureUrl || u.ProfilePictureUrl) : `${API_BASE_URL}${u.profilePictureUrl || u.ProfilePictureUrl}`} className="w-full h-full object-cover" />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-white/20 bg-black"><User size={16} /></div>
                                             )}
@@ -422,7 +423,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                             >
                                 <div className="w-10 h-10 flex-shrink-0 border border-white/10 flex items-center justify-center overflow-hidden group-hover:border-[#ff006e]/30 transition-all relative bg-black">
                                     {cimg ? (
-                                        <img src={cimg.startsWith('http') ? cimg : `http://localhost:5264${cimg}`} alt="User" className="w-full h-full object-cover" />
+                                        <img src={cimg.startsWith('http') ? cimg : `${API_BASE_URL}${cimg}`} alt="User" className="w-full h-full object-cover" />
                                     ) : (
                                         <span className="font-mono text-white/20 text-xs font-black">{cusername?.[0]?.toUpperCase()}</span>
                                     )}

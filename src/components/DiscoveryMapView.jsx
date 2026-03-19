@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Plus, Minus, Activity, Music, Disc, Mic, Radio, Speaker, Zap, X, ChevronRight, MapPin, Play, Send, Star, MessageSquare, Minimize2 } from 'lucide-react';
 import API from '../services/api';
-import { SECTORS } from '../constants';
+import { SECTORS, API_BASE_URL } from '../constants';
 import { CommunityDetailsModal, CreateCommunityModal } from './CommunityModals';
 import { useNotification } from '../contexts/NotificationContext';
 
@@ -485,9 +485,9 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                         const tId = t.Id || t.id;
                         const h = hashStr(tId + sec.name);
                         const pPath = t.FilePath || t.filePath || "";
-                        const source = pPath.startsWith('http') ? pPath : `http://localhost:5264${pPath}`;
+                        const source = pPath.startsWith('http') ? pPath : `${API_BASE_URL}${pPath}`;
                         const cover = t.CoverImageUrl || t.coverImageUrl || t.ImageUrl || t.imageUrl || "";
-                        const normalizedCover = cover.startsWith('http') ? cover : `http://localhost:5264${cover}`;
+                        const normalizedCover = cover.startsWith('http') ? cover : `${API_BASE_URL}${cover}`;
 
                         // Insert at offset 1-3 to fit tightly alongside sector core blocks
                         const pos = getOrbitalPos(i + 1, 10, sec.x, sec.y);
@@ -1946,7 +1946,7 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                                                     background: `${msg.themeColor || '#ff006e'}10`
                                                 }}>
                                                 {msg.profilePictureUrl
-                                                    ? <img src={msg.profilePictureUrl.startsWith('http') ? msg.profilePictureUrl : `http://localhost:5264${msg.profilePictureUrl}`} className="w-full h-full object-cover" alt="" />
+                                                    ? <img src={msg.profilePictureUrl.startsWith('http') ? msg.profilePictureUrl : `${API_BASE_URL}${msg.profilePictureUrl}`} className="w-full h-full object-cover" alt="" />
                                                     : msg.username?.substring(0, 2).toUpperCase()}
                                             </div>
                                             <div className={`max-w-[85%] flex flex-col gap-1 ${isMe ? 'items-end' : 'items-start'}`}>
@@ -2144,7 +2144,7 @@ const TopTrackSignal = React.memo(({ signal, onClick }) => {
                 {coverImage && (
                     <div className="absolute inset-0">
                         <img
-                            src={coverImage.startsWith('http') ? coverImage : `http://localhost:5264${coverImage}`}
+                            src={coverImage.startsWith('http') ? coverImage : `${API_BASE_URL}${coverImage}`}
                             alt={signal.title}
                             className="w-full h-full object-cover opacity-80 mix-blend-luminosity"
                         />
@@ -2277,7 +2277,7 @@ const ArtistNode = React.memo(({ artist, zoom, hovered, isSearchResult, dimmed, 
     const getImageUrl = (url) => {
         if (!url) return null;
         if (url.startsWith('http') || url.startsWith('data:')) return url;
-        return `http://localhost:5264${url}`;
+        return `${API_BASE_URL}${url}`;
     };
 
     const h = artist.nodeSizeHeight || (NODE_H * 1.2);

@@ -5,8 +5,8 @@ let connection = null;
 export const initSignalR = (token) => {
     if (connection) return connection;
 
-    const url = process.env.NODE_ENV === 'production' 
-        ? '/hubs/radio'
+    const url = import.meta.env.PROD 
+        ? `${import.meta.env.VITE_SIGNALR_URL}/hubs/radio`
         : 'http://localhost:5264/hubs/radio';
 
     connection = new signalR.HubConnectionBuilder()
