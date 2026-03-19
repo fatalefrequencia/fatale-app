@@ -318,7 +318,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
             >
                 <div className="monitor-screen custom-scrollbar relative">
                     <DataStream />
-                    <div className="relative z-10 h-full overflow-y-auto custom-scrollbar pt-16 lg:pt-0 pb-12">
+                    <div className="relative z-10 h-full overflow-y-auto custom-scrollbar pt-16 lg:pt-0 pb-40 lg:pb-12">
                         {/* Consolidated Monitor Navigation - Responsive for Mobile */}
                         <div className="absolute top-4 left-4 right-4 z-[100] flex flex-wrap justify-between gap-2 items-start pointer-events-none">
                             <div className="flex gap-1.5 flex-wrap pointer-events-auto">
