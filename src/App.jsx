@@ -1595,26 +1595,29 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
       {/* MINI PLAYER (Todas las vistas excepto Player, y solo si hay track) */}
       <AnimatePresence>
         {activeView !== 'player' && currentTrackIndex >= 0 && (
-          <MiniPlayer
-            track={tracks[currentTrackIndex]}
-            isPlaying={isPlaying}
-            onTogglePlay={togglePlay}
-            onNext={handleNext}
-            onPrev={handlePrev}
-            onLike={onLike}
-            onExpand={() => {
-              console.log("[App] MiniPlayer expanded. Triggering redirect...", typeof setRedirectTrigger);
-              if (typeof setRedirectTrigger === 'function') {
-                setRedirectTrigger(Date.now());
-                setView('player');
-              } else {
-                console.error("setRedirectTrigger is NOT a function!", setRedirectTrigger);
-              }
-            }}
-            activeView={activeView}
-            isMuted={isMuted}
-            onToggleMute={onToggleMute}
-          />
+          // Hide mini player on mobile if viewing profile to avoid crowding
+          !(window.innerWidth < 1024 && activeView === 'profile') && (
+            <MiniPlayer
+              track={tracks[currentTrackIndex]}
+              isPlaying={isPlaying}
+              onTogglePlay={togglePlay}
+              onNext={handleNext}
+              onPrev={handlePrev}
+              onLike={onLike}
+              onExpand={() => {
+                console.log("[App] MiniPlayer expanded. Triggering redirect...", typeof setRedirectTrigger);
+                if (typeof setRedirectTrigger === 'function') {
+                  setRedirectTrigger(Date.now());
+                  setView('player');
+                } else {
+                  console.error("setRedirectTrigger is NOT a function!", setRedirectTrigger);
+                }
+              }}
+              activeView={activeView}
+              isMuted={isMuted}
+              onToggleMute={onToggleMute}
+            />
+          )
         )}
       </AnimatePresence>
     </div>

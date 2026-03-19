@@ -473,6 +473,33 @@
     .peripheral-dock .dock-item.active {
         color: var(--theme-color) !important;
     }
+
+    /* Reduce overcrowding on mobile profile */
+    .display-wall {
+        padding: 180px 15px 100px 15px !important;
+    }
+
+    .social-main-pane {
+        padding: 15px 10px !important;
+    }
+
+    .social-tabs-header {
+        margin-bottom: 30px !important;
+        padding-bottom: 10px !important;
+    }
+
+    /* Carousel arrow improvements for mobile */
+    .relative.group.px-6.mb-4 button {
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(4px);
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 1px solid rgba(var(--theme-color-rgb), 0.2);
+    }
 }
 
 .terminal-header {
