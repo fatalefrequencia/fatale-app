@@ -319,42 +319,45 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                 <div className="monitor-screen custom-scrollbar relative">
                     <DataStream />
                     <div className="relative z-10 h-full overflow-y-auto custom-scrollbar pb-12">
-                        <div className="absolute top-4 left-4 z-[100] flex gap-2">
-                            {isMe && onLogout && (
-                                <button
-                                    onClick={onLogout}
-                                    className="px-3 py-1.5 bg-black/40 backdrop-blur-md border border-[var(--text-color)]/20 text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:border-[var(--text-color)] transition-all rounded flex items-center gap-2 mono text-[9px] font-bold group/logout"
-                                >
-                                    <LogOut size={12} className="group-hover/logout:animate-pulse" />
-                                    LOGOUT
-                                </button>
-                            )}
-                            {isMe && onModifyId && (
-                                <button
-                                    onClick={onModifyId}
-                                    className="px-3 py-1.5 bg-[var(--text-color)]/10 backdrop-blur-md border border-[var(--text-color)]/30 text-[var(--text-color)] hover:bg-[var(--text-color)] hover:text-black transition-all rounded mono text-[9px] font-black uppercase tracking-widest shadow-[0_0_10px_rgba(255,0,110,0.2)]"
-                                >
-                                    MODIFY_ID
-                                </button>
-                            )}
-                        </div>
-                        <div className="absolute top-4 right-4 z-[100] flex gap-2">
-                            {onExitProfile && (
-                                <button
-                                    onClick={onExitProfile}
-                                    className="p-2 bg-black/40 backdrop-blur-md border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition-all rounded flex items-center gap-2 mono text-[9px] font-bold"
-                                    title="Exit to Previous Location"
-                                >
-                                    <LogOut size={14} /> EXIT_CORE
-                                </button>
-                            )}
+                        {/* Consolidated Monitor Navigation - Responsive for Mobile */}
+                        <div className="absolute top-4 left-4 right-4 z-[100] flex flex-wrap justify-between gap-2 items-start pointer-events-none">
+                            <div className="flex gap-1.5 flex-wrap pointer-events-auto">
+                                {isMe && onLogout && (
+                                    <button
+                                        onClick={onLogout}
+                                        className="px-2 lg:px-3 py-1 bg-black/40 backdrop-blur-md border border-[var(--text-color)]/20 text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:border-[var(--text-color)] transition-all rounded flex items-center gap-1.5 mono text-[8px] lg:text-[9px] font-bold group/logout"
+                                    >
+                                        <LogOut size={10} className="lg:w-3 lg:h-3 group-hover/logout:animate-pulse" />
+                                        LOGOUT
+                                    </button>
+                                )}
+                                {isMe && onModifyId && (
+                                    <button
+                                        onClick={onModifyId}
+                                        className="px-2 lg:px-3 py-1 bg-[var(--text-color)]/10 backdrop-blur-md border border-[var(--text-color)]/30 text-[var(--text-color)] hover:bg-[var(--text-color)] hover:text-black transition-all rounded mono text-[8px] lg:text-[9px] font-black uppercase tracking-widest shadow-[0_0_10px_rgba(var(--theme-color-rgb),0.2)]"
+                                    >
+                                        MODIFY_ID
+                                    </button>
+                                )}
+                            </div>
+                            <div className="flex gap-1.5 flex-wrap pointer-events-auto">
+                                {onExitProfile && (
+                                    <button
+                                        onClick={onExitProfile}
+                                        className="px-2 lg:px-3 py-1 bg-black/40 backdrop-blur-md border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition-all rounded flex items-center gap-1.5 mono text-[8px] lg:text-[9px] font-bold"
+                                        title="Exit to Previous Location"
+                                    >
+                                        <LogOut size={12} className="lg:w-3.5 lg:h-3.5" /> EXIT_CORE
+                                    </button>
+                                )}
 
-                            <button
-                                onClick={() => { setRoomMode('room'); document.dispatchEvent(new CustomEvent('exitmonitor')); }}
-                                className="p-2 bg-[var(--text-color)]/20 backdrop-blur-md border border-[var(--text-color)]/30 text-[var(--text-color)] hover:bg-[var(--text-color)]/40 transition-all rounded flex items-center gap-2 mono text-[9px] font-bold"
-                            >
-                                <Maximize2 size={14} /> EXIT_MONITOR
-                            </button>
+                                <button
+                                    onClick={() => { setRoomMode('room'); document.dispatchEvent(new CustomEvent('exitmonitor')); }}
+                                    className="px-2 lg:px-3 py-1 bg-[var(--text-color)]/20 backdrop-blur-md border border-[var(--text-color)]/30 text-[var(--text-color)] hover:bg-[var(--text-color)]/40 transition-all rounded flex items-center gap-1.5 mono text-[8px] lg:text-[9px] font-bold"
+                                >
+                                    <Maximize2 size={12} className="lg:w-3.5 lg:h-3.5" /> EXIT_MONITOR
+                                </button>
+                            </div>
                         </div>
                         {children}
                     </div>
@@ -1398,31 +1401,31 @@ export const ProfileView = React.memo(({
                             </div>
                         ) : (
                             <div className="flex-1 min-h-0 flex flex-col">
-                                <div className="social-tabs-header flex justify-between items-center mb-10 pb-6 border-b border-[var(--text-color)]/10">
-                                    <div className="flex gap-4">
+                                <div className="social-tabs-header flex flex-col md:flex-row justify-between items-center mb-4 lg:mb-10 pb-2 lg:pb-6 border-b border-[var(--text-color)]/10 gap-4">
+                                    <div className="flex gap-2 lg:gap-4 flex-wrap justify-center">
                                         <button
                                             onClick={() => setActiveTab('Music')}
-                                            className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Music' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
+                                            className={`text-[9px] lg:text-[10px] font-bold tracking-[0.2em] lg:tracking-[0.4em] uppercase transition-all ${activeTab === 'Music' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
                                         >
                                             [ MUSIC ]
                                         </button>
                                         <button
                                             onClick={() => setActiveTab('Playlists')}
-                                            className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Playlists' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
+                                            className={`text-[9px] lg:text-[10px] font-bold tracking-[0.2em] lg:tracking-[0.4em] uppercase transition-all ${activeTab === 'Playlists' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
                                         >
                                             [ PLAYLISTS ]
                                         </button>
                                         {isMe && stationData && (stationData.isLive || stationData.IsLive) && (
                                             <button
                                                 onClick={() => setActiveTab('Broadcast')}
-                                                className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Broadcast' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
+                                                className={`text-[9px] lg:text-[10px] font-bold tracking-[0.2em] lg:tracking-[0.4em] uppercase transition-all ${activeTab === 'Broadcast' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
                                             >
                                                 [ BROADCAST ]
                                             </button>
                                         )}
                                         <button
                                             onClick={() => setActiveTab('Studio')}
-                                            className={`text-[10px] font-bold tracking-[0.4em] uppercase transition-all ${activeTab === 'Studio' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
+                                            className={`text-[9px] lg:text-[10px] font-bold tracking-[0.2em] lg:tracking-[0.4em] uppercase transition-all ${activeTab === 'Studio' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
                                         >
                                             [ JOURNAL ]
                                         </button>

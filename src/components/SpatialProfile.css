@@ -403,7 +403,7 @@
     }
 
     .identity-username {
-        font-size: 18px;
+        font-size: 16px;
     }
 
     .identity-container {
@@ -484,22 +484,34 @@
     }
 
     .social-tabs-header {
-        margin-bottom: 30px !important;
-        padding-bottom: 10px !important;
+        margin-bottom: 15px !important;
+        padding-bottom: 8px !important;
     }
 
     /* Carousel arrow improvements for mobile */
     .relative.group.px-6.mb-4 button {
-        background: rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(4px);
-        width: 32px;
-        height: 32px;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        width: 28px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        border: 1px solid rgba(var(--theme-color-rgb), 0.2);
+    /* Consolidated Nav Buttons mobile tweaks */
+    .monitor-screen .absolute.top-4.left-4.right-4 button {
+        font-size: 7px !important;
+        padding: 4px 6px !important;
+        letter-spacing: 1px !important;
     }
+
+    /* Identity Action Buttons compacting */
+    .identity-text .flex.items-center.justify-center.gap-3.mt-4 button {
+        padding: 4px 8px !important;
+        font-size: 7px !important;
+        letter-spacing: 1px !important;
+    }
+}
 }
 
 .terminal-header {
