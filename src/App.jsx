@@ -590,7 +590,9 @@ function App() {
         }
 
         const allTracks = Array.from(uniqueTracksMap.values());
-        const finalTracks = allTracks.length > 0 ? allTracks : TRACKS;
+        // FALLBACK LOGIC: Only use generic TRACKS if we are NOT logged in and server returns nothing.
+        // If logged in, we want to see OUR real (empty) library.
+        const finalTracks = (allTracks.length > 0) ? allTracks : (user ? [] : TRACKS);
         setLibraryTracks(finalTracks);
 
         // Update current queue ONLY if it was empty or contains generic mock data
@@ -893,8 +895,10 @@ function App() {
         }
 
         const userData = {
-          ...res.data,
+          // Explicitly map all fields to camelCase for consistent frontend state
           id: uid,
+          username: res.data.username || res.data.Username || user?.username,
+          email: res.data.email || res.data.Email || user?.email,
           credits: res.data.creditsBalance !== undefined ? res.data.creditsBalance : (res.data.CreditsBalance !== undefined ? res.data.CreditsBalance : (res.data.credits || 0)),
           biography: res.data.biography || res.data.Biography || res.data.bio || res.data.Bio,
           profileImageUrl: res.data.profileImageUrl || res.data.ProfilePictureUrl || res.data.imageUrl || res.data.ImageUrl,
@@ -906,12 +910,15 @@ function App() {
           themeColor: res.data.themeColor || res.data.ThemeColor || '#ff006e',
           textColor: res.data.textColor || res.data.TextColor || '#ffffff',
           backgroundColor: res.data.backgroundColor || res.data.BackgroundColor || '#000000',
-          isGlass: res.data.isGlass || res.data.IsGlass || false
+          isGlass: res.data.isGlass || res.data.IsGlass || false,
+          communityId: res.data.communityId || res.data.CommunityId,
+          communityName: res.data.communityName || res.data.CommunityName,
+          communityColor: res.data.communityColor || res.data.CommunityColor
         };
+
         setUser(prev => {
-          // If uid is missing, try to keep the old ID as a desperate measure
-          const finalId = userData.id || prev?.id || prev?.Id || prev?.userId || prev?.UserId;
-          const updated = { ...prev, ...userData, id: finalId };
+          // We no longer spread res.data to avoid duplicate PascalCase properties
+          const updated = { ...userData };
           localStorage.setItem('user', JSON.stringify(updated));
           return updated;
         });

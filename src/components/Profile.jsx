@@ -242,7 +242,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                                 </div>
                             )}
 
-                            <div className="text-[10px] mono text-white/50 mb-2">{biography || 'hola demonios'}</div>
+                            <div className="text-[10px] mono text-white/50 mb-2">{biography || ''}</div>
                             <div className="flex justify-center gap-4 text-[7px] mono text-[var(--text-color)]/40 uppercase tracking-widest">
                                 <span>Lat: 34.0522</span>
                                 <span>Lng: -118.2437</span>
@@ -1106,7 +1106,7 @@ export const ProfileView = React.memo(({
                             <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// SYSTEM_STATS</div>
                             <StatItem label="DAT_SIGNALS" value={isMe ? (allTracks?.filter(t => String(t.artistUserId || t.ArtistUserId) === String(currentUser?.id || currentUser?.Id)).length || 0) : profileTracks.length} />
                             <StatItem label="SEQ_MAPS" value={profilePlaylists.length} />
-                            <StatItem label="TOTAL_SCANS" value={(isMe ? allTracks?.filter(t => String(t.artistUserId || t.ArtistUserId) === String(currentUser?.id || currentUser?.Id)) : profileTracks).reduce((acc, t) => acc + (t.playCount || 0), 0).toLocaleString()} />
+                            <StatItem label="TOTAL_SCANS" value={(isMe ? (allTracks || []).filter(t => !String(t.id).startsWith('mock-') && String(t.artistUserId || t.ArtistUserId) === String(currentUser?.id || currentUser?.Id)) : profileTracks).reduce((acc, t) => acc + (t.playCount || 0), 0).toLocaleString()} />
                         </div>
 
                         <div className="space-y-2 pt-6 border-t border-[var(--text-color)]/5">
@@ -1296,7 +1296,7 @@ export const ProfileView = React.memo(({
                                     </div>
                                 )}
                                 <div className="social-bio-text mt-4">
-                                    {displayUser?.biography || displayUser?.bio || '> SYSTEM_ID_ACTIVE'}
+                                    {displayUser?.biography || displayUser?.bio || ''}
                                 </div>
 
                                 <div className="social-stats mt-8 space-y-2">
@@ -2414,7 +2414,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             const formData = new FormData();
             formData.append('Username', name);
             formData.append('Biography', bio);
-            // Ensure ID is sent as valid integer string
+            // Re-added Sector Residency
             formData.append('ResidentSectorId', parseInt(sectorId) || 0);
             formData.append('IsLive', isLive);
 
@@ -2513,9 +2513,11 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                 onChange={(e) => setSectorId(parseInt(e.target.value))}
                                 className="w-full bg-black/40 border border-white/10 p-4 text-white font-bold outline-none focus:border-[var(--text-color)] appearance-none"
                             >
-                                {SECTORS.map(s => (
-                                    <option key={s.id} value={s.id}>{s.name}</option>
-                                ))}
+                                <option value={0}>NEON SLUMS</option>
+                                <option value={1}>SILICON HEIGHTS</option>
+                                <option value={2}>DATA VOID</option>
+                                <option value={3}>CENTRAL HUB</option>
+                                <option value={4}>OUTER RIM</option>
                             </select>
                         </div>
                     </div>

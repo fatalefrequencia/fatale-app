@@ -5,9 +5,13 @@ let connection = null;
 export const initSignalR = (token) => {
     if (connection) return connection;
 
-    const url = import.meta.env.PROD 
-        ? `${import.meta.env.VITE_SIGNALR_URL}/hubs/radio`
-        : 'http://localhost:5264/hubs/radio';
+    let baseUrl = import.meta.env.VITE_SIGNALR_URL;
+    if (!baseUrl && import.meta.env.PROD) {
+        baseUrl = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api/', '') : 'https://fatale-core.up.railway.app';
+    } else if (!baseUrl) {
+        baseUrl = 'http://localhost:5264';
+    }
+    const url = `${baseUrl}/hubs/radio`;
 
     connection = new signalR.HubConnectionBuilder()
         .withUrl(url, { accessTokenFactory: () => token })
