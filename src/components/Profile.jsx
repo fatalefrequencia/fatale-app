@@ -318,7 +318,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
             >
                 <div className="monitor-screen custom-scrollbar relative">
                     <DataStream />
-                    <div className="relative z-10 h-full overflow-y-auto custom-scrollbar pb-12">
+                    <div className="relative z-10 h-full overflow-y-auto custom-scrollbar pt-16 lg:pt-0 pb-12">
                         {/* Consolidated Monitor Navigation - Responsive for Mobile */}
                         <div className="absolute top-4 left-4 right-4 z-[100] flex flex-wrap justify-between gap-2 items-start pointer-events-none">
                             <div className="flex gap-1.5 flex-wrap pointer-events-auto">
@@ -1618,7 +1618,7 @@ export const ProfileView = React.memo(({
                         {activeTab === 'Studio' && (
                             <div className="space-y-6">
                                 {/* Studio Sub-tabs + Universal Ingest */}
-                                <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/5">
+                                <div className="flex flex-col lg:flex-row justify-between items-center mb-6 pb-4 border-b border-white/5 gap-4">
                                     <div className="flex gap-4">
                                         {['All', 'Photos', 'Video', 'Journal'].map(tab => {
                                             const count = tab === 'All' ? profileGallery.length + profileJournal.length :
@@ -1649,7 +1649,7 @@ export const ProfileView = React.memo(({
                                         <div className="relative">
                                             <button
                                                 onClick={() => setShowIngestMenu(!showIngestMenu)}
-                                                className="px-4 py-1.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/40 text-[var(--text-color)] text-[9px] font-bold uppercase tracking-[0.2em] hover:bg-[var(--text-color)] hover:text-black transition-all flex items-center gap-2"
+                                                className="px-3 lg:px-4 py-1.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/40 text-[var(--text-color)] text-[8px] lg:text-[9px] font-bold uppercase tracking-[0.1em] lg:tracking-[0.2em] hover:bg-[var(--text-color)] hover:text-black transition-all flex items-center gap-2"
                                             >
                                                 <Upload size={12} /> [ INGEST_DATA ]
                                             </button>
