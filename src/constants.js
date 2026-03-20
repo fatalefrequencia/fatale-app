@@ -1,7 +1,21 @@
-export const API_BASE_URL = import.meta.env.VITE_SIGNALR_URL || 
+export const API_BASE_URL = (import.meta.env.VITE_SIGNALR_URL || 
   (import.meta.env.PROD 
     ? (import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api/', '') : 'https://fatale-core.up.railway.app')
-    : 'http://localhost:5264');
+    : 'http://localhost:5264')).replace(/\/+$/, '') + '/'; // Ensure exactly ONE trailing slash
+
+export const getMediaUrl = (path) => {
+  if (!path || path.startsWith('http') || path.startsWith('blob:') || path.startsWith('data:')) return path;
+  const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+  return `${API_BASE_URL}${cleanPath}`; // API_BASE_URL now has the slash
+};
+
+export const getUserId = (u) => {
+  if (!u) return null;
+  const raw = u.id || u.Id || u.userId || u.UserId;
+  if (!raw || raw === 'undefined' || raw === 'null') return null;
+  const parsed = parseInt(raw, 10);
+  return isNaN(parsed) ? null : parsed;
+};
 
 export const SECTORS = [
   { 

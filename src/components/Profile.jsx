@@ -13,7 +13,7 @@ import {
     Camera, Video, Book, ChevronLeft, Star, Share2, Link
 } from 'lucide-react';
 import { useNotification } from '../contexts/NotificationContext';
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL, getMediaUrl } from '../constants';
 
 // --- TERMINAL STYLING UTILITIES ---
 const hexToRgb = (hex) => {
@@ -141,7 +141,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                 {wallpaperVideoUrl ? (
                     <video
                         key={wallpaperVideoUrl}
-                        src={wallpaperVideoUrl.startsWith('http') ? wallpaperVideoUrl : `${API_BASE_URL}${wallpaperVideoUrl}`}
+                        src={getMediaUrl(wallpaperVideoUrl)}
                         className={`w-full h-full object-cover transition-all duration-[400ms] ${roomMode === 'room' ? 'opacity-100 scale-110' : 'opacity-70 scale-100'}`}
                         style={{ transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)' }}
                         autoPlay
@@ -151,7 +151,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                     />
                 ) : bannerUrl ? (
                     <img
-                        src={bannerUrl.startsWith('http') ? bannerUrl : `${API_BASE_URL}${bannerUrl}`}
+                        src={getMediaUrl(bannerUrl)}
                         className={`w-full h-full object-cover transition-all duration-[400ms] ${roomMode === 'room' ? 'opacity-100 scale-110' : 'opacity-60 scale-100'}`}
                         style={{ transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)' }}
                     />
@@ -207,9 +207,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                             <div className="identity-pic">
                                 {profileImageUrl ? (
                                     <img
-                                        src={profileImageUrl.startsWith('http')
-                                            ? profileImageUrl
-                                            : `${API_BASE_URL}${profileImageUrl}`}
+                                        src={getMediaUrl(profileImageUrl)}
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
@@ -406,7 +404,7 @@ const Sector = ({ id, label, items, onExpand, onPlayTrack, onPlayPlaylist }) => 
                         ) : (
                             (item.url || item.type === 'PLAYLIST') ? (
                                 <img
-                                    src={(item.url || '').startsWith('http') ? item.url : `${API_BASE_URL}${item.url || ''}`}
+                                    src={getMediaUrl(item.url)}
                                     alt={item.title}
                                     className={item.type === 'PLAYLIST' ? 'grayscale opacity-60' : ''}
                                 />
@@ -524,7 +522,7 @@ const AlbumWall = ({ tracks, themeColor }) => {
                 <div key={track.id || track.Id || i} className="album-file" style={{ transitionDelay: `${i * 0.1}s` }}>
                     <div className="album-cover-frame">
                         <img
-                            src={(track.coverImageUrl || track.CoverImageUrl).startsWith('http') ? (track.coverImageUrl || track.CoverImageUrl) : `${API_BASE_URL}${(track.coverImageUrl || track.CoverImageUrl)}`}
+                            src={getMediaUrl(track.coverImageUrl || track.CoverImageUrl)}
                             alt={track.title}
                         />
                     </div>
@@ -589,6 +587,13 @@ export const ProfileView = React.memo(({
     const [rightOpen, setRightOpen] = useState(false);
     const [roomMode, setRoomMode] = useState('room');
 
+
+    // Sync profileData with currentUser for "Me" view to ensure instant updates
+    useEffect(() => {
+        if (isMe && currentUser) {
+            setProfileData(currentUser);
+        }
+    }, [currentUser, isMe]);
 
     // Auto-Room Mode for Mobile
     useEffect(() => {
@@ -937,10 +942,14 @@ export const ProfileView = React.memo(({
                 const API = await import('../services/api').then(mod => mod.default);
                 if (!effectiveId) return;
 
-                // Fetch basic user data first
-                const userRes = await API.Users.getUserById(effectiveId).catch(() => ({ data: null }));
-                if (userRes.data) {
-                    setProfileData(userRes.data);
+                // Fetch basic user data first (Skip if it's already in Props for "Me")
+                if (isMe && currentUser) {
+                    setProfileData(currentUser);
+                } else {
+                    const userRes = await API.Users.getUserById(effectiveId).catch(() => ({ data: null }));
+                    if (userRes.data) {
+                        setProfileData(userRes.data);
+                    }
                 }
 
                 // Fetch My Likes to sync state
@@ -961,34 +970,43 @@ export const ProfileView = React.memo(({
                     }));
                 }
                 const artistId = artistRes.data?.id || artistRes.data?.Id;
+                // Tracks & Following logic
+                let filtered = [];
+                if (isMe && allTracks?.length > 0) {
+                    // Use tracks already in memory for Current User
+                    filtered = allTracks.filter(t => {
+                        const tUserId = t.artistUserId || t.ArtistUserId || t.userId || t.UserId;
+                        return String(tUserId) === String(effectiveId);
+                    }).map(t => ({
+                        ...t,
+                        id: t.id || t.Id,
+                        title: t.title || t.Title || 'UNKNOWN_SIGNAL',
+                        artist: t.artist || t.ArtistName || t.Artist || 'UNKNOWN_SOURCE',
+                        source: getMediaUrl(t.source || t.Source || t.filePath || t.FilePath),
+                        cover: getMediaUrl(t.coverImageUrl || t.CoverImageUrl)
+                    }));
+                } else {
+                    const [tracksRes, followingRes] = await Promise.all([
+                        API.Tracks.getAllTracks(),
+                        API.Users.getFollowing(currentUser?.id || currentUser?.Id).catch(() => ({ data: [] }))
+                    ]);
 
-                const [tracksRes, followingRes] = await Promise.all([
-                    API.Tracks.getAllTracks(),
-                    API.Users.getFollowing(currentUser?.id || currentUser?.Id).catch(() => ({ data: [] }))
-                ]);
+                    const following = followingRes.data || [];
+                    setIsFollowing(following.some(a => String(a.id || a.Id) === String(effectiveId)));
 
-                // Check following status (Compare User IDs since GetFollowing returns Users)
-                const following = followingRes.data || [];
-                setIsFollowing(following.some(a => String(a.id || a.Id) === String(effectiveId)));
-
-                const tracks = tracksRes.data || [];
-
-                const filtered = tracks.filter(t => {
-                    const tUserId = t.artistUserId || t.ArtistUserId ||
-                        t.album?.artist?.userId || t.Album?.Artist?.UserId ||
-                        t.album?.Artist?.UserId || t.Album?.artist?.userId; // Combinations
-
-                    return String(tUserId) === String(effectiveId);
-                }).map(t => ({
-                    ...t,
-                    id: t.id || t.Id,
-                    title: t.title || t.Title || 'UNKNOWN_SIGNAL',
-                    artist: t.artist || t.ArtistName || t.Artist || t.album?.artist?.name || t.Album?.Artist?.Name || 'UNKNOWN_SOURCE',
-                    source: t.source || t.Source || t.filePath || t.FilePath ? (t.source || t.Source || t.filePath || t.FilePath).startsWith('http') ? (t.source || t.Source || t.filePath || t.FilePath) : `${API_BASE_URL}${t.source || t.Source || t.filePath || t.FilePath}` : null,
-                    isPinned: (t.isPinned !== undefined ? t.isPinned : t.IsPinned) ? true : false,
-                    isPosted: (t.isPosted !== undefined ? t.isPosted : t.IsPosted) ? true : false,
-                    cover: t.coverImageUrl || t.CoverImageUrl ? (t.coverImageUrl || t.CoverImageUrl).startsWith('http') ? (t.coverImageUrl || t.CoverImageUrl) : `${API_BASE_URL}${t.coverImageUrl || t.CoverImageUrl}` : null
-                })).filter(t => t.id && String(t.id).trim() !== ''); // STRICT FILTER: No empty IDs
+                    const tracks = tracksRes.data || [];
+                    filtered = tracks.filter(t => {
+                        const tUserId = t.artistUserId || t.ArtistUserId || t.userId || t.UserId;
+                        return String(tUserId) === String(effectiveId);
+                    }).map(t => ({
+                        ...t,
+                        id: t.id || t.Id,
+                        title: t.title || t.Title || 'UNKNOWN_SIGNAL',
+                        artist: t.artist || t.ArtistName || t.Artist || 'UNKNOWN_SOURCE',
+                        source: getMediaUrl(t.source || t.Source || t.filePath || t.FilePath),
+                        cover: getMediaUrl(t.coverImageUrl || t.CoverImageUrl)
+                    }));
+                }
                 setProfileTracks(filtered);
 
                 try {
@@ -1102,7 +1120,7 @@ export const ProfileView = React.memo(({
                                 {(() => {
                                     const pfp = displayUser?.profilePictureUrl || displayUser?.ProfilePictureUrl || displayUser?.profileImageUrl || displayUser?.ProfileImageUrl;
                                     if (pfp) {
-                                        return <img src={pfp.startsWith('http') ? pfp : `${API_BASE_URL}${pfp}`} className="w-full h-full object-cover" />;
+                                        return <img src={getMediaUrl(pfp)} className="w-full h-full object-cover" />;
                                     }
                                     return <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/20"><Cpu size={40} /></div>;
                                 })()}
@@ -1203,7 +1221,7 @@ export const ProfileView = React.memo(({
                                             <div className="w-10 h-10 border border-white text-black bg-white flex-shrink-0 overflow-hidden shadow-[0_0_10px_#fff]">
                                                 {(item.cover || item.Url || item.imageUrl || item.ImageUrl) ? (
                                                     <img
-                                                        src={(item.cover || item.Url || item.imageUrl || item.ImageUrl).startsWith('http') ? (item.cover || item.Url || item.imageUrl || item.ImageUrl) : `${API_BASE_URL}${item.cover || item.Url || item.imageUrl || item.ImageUrl}`}
+                                                        src={getMediaUrl(item.cover || item.Url || item.imageUrl || item.ImageUrl)}
                                                         className="w-full h-full object-cover"
                                                     />
                                                 ) : (
@@ -1281,7 +1299,7 @@ export const ProfileView = React.memo(({
                                 {(() => {
                                     const pfp = displayUser?.profilePictureUrl || displayUser?.ProfilePictureUrl || displayUser?.profileImageUrl || displayUser?.ProfileImageUrl;
                                     if (pfp) {
-                                        return <img src={pfp.startsWith('http') ? pfp : `${API_BASE_URL}${pfp}`} alt={displayUser?.username} />;
+                                        return <img src={getMediaUrl(pfp)} alt={displayUser?.username} />;
                                     }
                                     return <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/20"><Cpu size={32} /></div>;
                                 })()}
@@ -1579,7 +1597,7 @@ export const ProfileView = React.memo(({
                                         <div key={p.id} onClick={() => handleOpenPlaylist(p.id)} className="border border-[var(--text-color)]/5 p-4 hover:border-[var(--text-color)]/40 transition-all cursor-pointer group bg-black/40">
                                             <div className="aspect-square bg-black overflow-hidden relative mb-4">
                                                 {(p.imageUrl || p.ImageUrl) ? (
-                                                    <img src={(p.imageUrl || p.ImageUrl).startsWith('http') ? (p.imageUrl || p.ImageUrl) : `${API_BASE_URL}${(p.imageUrl || p.ImageUrl)}`} className="w-full h-full object-cover grayscale opacity-40 group-hover:opacity-100 transition-all" />
+                                                    <img src={getMediaUrl(p.imageUrl || p.ImageUrl)} className="w-full h-full object-cover grayscale opacity-40 group-hover:opacity-100 transition-all" />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/10"><Database size={32} /></div>
                                                 )}
@@ -1868,7 +1886,7 @@ export const ProfileView = React.memo(({
                                                                 </div>
                                                             ) : (
                                                                 <img
-                                                                    src={content.Url?.startsWith('http') ? content.Url : `${API_BASE_URL}${content.Url}`}
+                                                                    src={getMediaUrl(content.Url)}
                                                                     alt={content.Title}
                                                                     className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-500"
                                                                     onClick={() => setSelectedContent({ ...content, type: content.Type || 'PHOTO' })}
@@ -2528,7 +2546,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                             {file ? (
                                 <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" />
                             ) : user?.profileImageUrl ? (
-                                <img src={user.profileImageUrl.startsWith('http') ? user.profileImageUrl : `${API_BASE_URL}${user.profileImageUrl}`} className="w-full h-full object-cover" />
+                                <img src={getMediaUrl(user.profileImageUrl)} className="w-full h-full object-cover" />
                             ) : (
                                 <div className="text-[var(--text-color)]/20"><Cpu size={48} /></div>
                             )}
@@ -2934,7 +2952,7 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
                 <div className="aspect-square border border-[var(--text-color)]/30 p-1 relative group shadow-[0_0_40px_rgba(0,0,0,0.5)]">
                     <div className="w-full h-full relative overflow-hidden">
                         {playlist.imageUrl ? (
-                            <img src={playlist.imageUrl.startsWith('http') ? playlist.imageUrl : `${API_BASE_URL}${playlist.imageUrl}`} className="w-full h-full object-cover grayscale mix-blend-screen opacity-60 group-hover:opacity-100 transition-opacity" />
+                            <img src={getMediaUrl(playlist.imageUrl)} className="w-full h-full object-cover grayscale mix-blend-screen opacity-60 group-hover:opacity-100 transition-opacity" />
                         ) : (
                             <div className="w-full h-full bg-[var(--text-color)]/5 flex items-center justify-center">
                                 <Database size={64} className="text-[var(--text-color)]/10" />
@@ -2990,7 +3008,7 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
                                 <span className="text-[var(--text-color)]/30 group-hover:text-[var(--text-color)] font-bold mono text-[10px] w-8">[{String(idx + 1).padStart(2, '0')}]</span>
                                 <div className="w-10 h-10 border border-white/10 bg-black overflow-hidden relative shrink-0">
                                     {t.coverImageUrl ? (
-                                        <img src={t.coverImageUrl.startsWith('http') ? t.coverImageUrl : `${API_BASE_URL}${t.coverImageUrl}`} className="w-full h-full object-cover grayscale opacity-50 group-hover:opacity-100 transition-opacity mix-blend-screen" />
+                                        <img src={getMediaUrl(t.coverImageUrl)} className="w-full h-full object-cover grayscale opacity-50 group-hover:opacity-100 transition-opacity mix-blend-screen" />
                                     ) : (
                                         <div className="w-full h-full bg-[#050505] flex items-center justify-center text-[var(--text-color)]/10"><Code size={20} /></div>
                                     )}

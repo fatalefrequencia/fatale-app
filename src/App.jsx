@@ -26,7 +26,7 @@ import WalletView from './components/WalletView';
 import ContentModal from './components/ContentModal';
 
 import API from './services/api';
-import { SECTORS, API_BASE_URL } from './constants';
+import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
 import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack } from './services/signalr';
 
@@ -90,15 +90,6 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [redirectTrigger, setRedirectTrigger] = useState(null); // Refactored to fix RefError
   const [user, setUser] = useState(null);
-  
-  // Robust ID extraction helper
-  const getUserId = (u) => {
-    if (!u) return null;
-    const raw = u.id || u.Id || u.userId || u.UserId;
-    if (!raw || raw === 'undefined' || raw === 'null') return null;
-    const parsed = parseInt(raw, 10);
-    return isNaN(parsed) ? null : parsed;
-  };
   
   const currentUserId = getUserId(user);
   const [tracks, setTracks] = useState([]);
@@ -851,12 +842,12 @@ function App() {
           email: rawData?.email || rawData?.Email || user?.email,
           credits: rawData?.creditsBalance !== undefined ? rawData?.creditsBalance : (rawData?.CreditsBalance !== undefined ? rawData?.CreditsBalance : (rawData?.credits || 0)),
           biography: rawData?.biography || rawData?.Biography || rawData?.bio || rawData?.Bio,
-          profileImageUrl: rawData?.profilePictureUrl || rawData?.profileImageUrl || rawData?.ProfilePictureUrl || rawData?.imageUrl || rawData?.ImageUrl,
+          profileImageUrl: getMediaUrl(rawData?.profilePictureUrl || rawData?.profileImageUrl || rawData?.ProfilePictureUrl || rawData?.imageUrl || rawData?.ImageUrl),
           residentSectorId: rawData?.residentSectorId !== undefined ? rawData?.residentSectorId : (rawData?.ResidentSectorId !== undefined ? rawData?.ResidentSectorId : 0),
           isLive: rawData?.isLive || rawData?.IsLive || false,
           featuredTrackId: rawData?.featuredTrackId || rawData?.FeaturedTrackId,
-          bannerUrl: rawData?.bannerUrl || rawData?.BannerUrl,
-          wallpaperVideoUrl: rawData?.wallpaperVideoUrl || rawData?.WallpaperVideoUrl,
+          bannerUrl: getMediaUrl(rawData?.bannerUrl || rawData?.BannerUrl),
+          wallpaperVideoUrl: getMediaUrl(rawData?.wallpaperVideoUrl || rawData?.WallpaperVideoUrl),
           themeColor: rawData?.themeColor || rawData?.ThemeColor || '#ff006e',
           textColor: rawData?.textColor || rawData?.TextColor || '#ffffff',
           backgroundColor: rawData?.backgroundColor || rawData?.BackgroundColor || '#000000',
@@ -1700,12 +1691,12 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
     const playlist = trackFeedItems.map(item => {
       const rawSource = item.source || item.Source;
       const source = rawSource && rawSource.startsWith('/uploads')
-        ? `${API_BASE_URL}${rawSource}`
+        ? getMediaUrl(rawSource)
         : rawSource;
 
       const rawImg = item.imageUrl || item.ImageUrl;
       const imageUrl = rawImg && rawImg.startsWith('/uploads')
-        ? `${API_BASE_URL}${rawImg}`
+        ? getMediaUrl(rawImg)
         : rawImg;
 
       return {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Book, Camera, Video, Share2, Download, ExternalLink } from 'lucide-react';
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL, getMediaUrl } from '../constants';
 
 const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
     if (!content) return null;
@@ -68,7 +68,7 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
                                 <div className="relative group">
                                     <div className="absolute inset-0 bg-[#9d00ff]/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
                                     <img
-                                        src={content.Url?.startsWith('http') ? content.Url : (content.Url ? `${API_BASE_URL}${content.Url}` : content.url)}
+                                        src={getMediaUrl(content.Url || content.url)}
                                         alt="Expanded Visual"
                                         className="max-w-full max-h-[65vh] object-contain border border-white/10 shadow-2xl relative z-10"
                                     />
@@ -84,7 +84,7 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
                         {type === 'VIDEO' && (
                             <div className="flex flex-col items-center justify-center min-h-[400px]">
                                 <video
-                                    src={content.Url?.startsWith('http') ? content.Url : (content.Url ? `${API_BASE_URL}${content.Url}` : content.url)}
+                                    src={getMediaUrl(content.Url || content.url)}
                                     controls
                                     autoPlay
                                     className="max-w-full max-h-[65vh] border border-white/10 shadow-2xl relative z-10"
