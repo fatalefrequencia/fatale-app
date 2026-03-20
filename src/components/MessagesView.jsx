@@ -369,13 +369,10 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
             {/* Inbox Header */}
             <div className="px-8 pt-8 pb-6 flex justify-between items-center z-10 relative border-b border-white/5">
                 <div>
-                    <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.3em] font-mono mb-1">// COMMS_HUB</div>
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-2xl font-black text-white tracking-tighter uppercase">TRANSMISSIONS</h1>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 bg-[#4eda2c] animate-pulse shadow-[0_0_8px_#4eda2c]" />
-                            <span className="text-[9px] text-[#4eda2c]/50 font-mono uppercase tracking-widest">ONLINE</span>
-                        </div>
+                    <div className="text-[10px] font-black text-[#ff006e] uppercase tracking-[0.3em] font-mono mb-1">// COMMS_HUB</div>
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 bg-[#4eda2c] animate-pulse shadow-[0_0_8px_#4eda2c]" />
+                        <span className="text-[9px] text-[#4eda2c]/50 font-mono uppercase tracking-widest">ONLINE</span>
                     </div>
                 </div>
 
