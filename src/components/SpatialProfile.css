@@ -758,8 +758,6 @@
 
 /* VIDEO PANEL STYLES */
 .video-panel {
-    grid-column: span 3;
-    grid-row: span 2;
     background: rgba(0, 0, 0, 0.8);
     border: 1px solid rgba(0, 255, 255, 0.3);
     box-shadow:
