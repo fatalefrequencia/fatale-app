@@ -1921,6 +1921,7 @@ export const ProfileView = React.memo(({
                                                 ) : null}
                                             </div>
                                         </div>
+                                    </div>
                                     )}
 
                                 {studioSubTab === 'Photos' && profileGallery.filter(c => c.Type === 'PHOTO').length === 0 && (
