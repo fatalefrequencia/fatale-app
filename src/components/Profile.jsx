@@ -1055,7 +1055,7 @@ export const ProfileView = React.memo(({
     return (
         <>
             <SpatialRoomLayout
-                monitorTitle={displayUser?.username || displayUser?.Username || 'GUEST_USER'}
+                monitorTitle={isLoadingProfile ? 'INITIALIZING_LINK...' : (displayUser?.username || displayUser?.Username || 'GUEST_USER')}
                 leftOpen={leftOpen}
                 rightOpen={rightOpen}
                 onToggleLeft={setLeftOpen}
@@ -1073,7 +1073,7 @@ export const ProfileView = React.memo(({
                 journal={isMe ? profileJournal : profileJournal.filter(j => j.IsPosted)}
                 bannerUrl={displayUser?.bannerUrl || displayUser?.BannerUrl}
                 wallpaperVideoUrl={displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl}
-                profileImageUrl={displayUser?.profileImageUrl || displayUser?.ProfileImageUrl}
+                profileImageUrl={displayUser?.profilePictureUrl || displayUser?.ProfilePictureUrl || displayUser?.profileImageUrl || displayUser?.ProfileImageUrl}
                 biography={displayUser?.biography || displayUser?.Biography || displayUser?.bio}
                 themeColor={displayUser?.themeColor || displayUser?.ThemeColor}
                 textColor={displayUser?.textColor || displayUser?.TextColor}
@@ -1099,11 +1099,13 @@ export const ProfileView = React.memo(({
                         <div className="space-y-4">
                             <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// BIOMETRIC_ID</div>
                             <div className="aspect-square border border-[var(--text-color)]/30 p-1 relative group bg-black overflow-hidden">
-                                {displayUser?.profileImageUrl ? (
-                                    <img src={displayUser.profileImageUrl.startsWith('http') ? displayUser.profileImageUrl : `${API_BASE_URL}${displayUser.profileImageUrl}`} className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/20"><Cpu size={40} /></div>
-                                )}
+                                {(() => {
+                                    const pfp = displayUser?.profilePictureUrl || displayUser?.ProfilePictureUrl || displayUser?.profileImageUrl || displayUser?.ProfileImageUrl;
+                                    if (pfp) {
+                                        return <img src={pfp.startsWith('http') ? pfp : `${API_BASE_URL}${pfp}`} className="w-full h-full object-cover" />;
+                                    }
+                                    return <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/20"><Cpu size={40} /></div>;
+                                })()}
                                 <div className="absolute inset-0 bg-[var(--text-color)]/5 pointer-events-none" />
                             </div>
                         </div>
@@ -1276,11 +1278,13 @@ export const ProfileView = React.memo(({
                                 </button>
                             )}
                             <div className="social-pic-frame">
-                                {(displayUser?.profileImageUrl || displayUser?.ProfileImageUrl) ? (
-                                    <img src={(displayUser?.profileImageUrl || displayUser?.ProfileImageUrl).startsWith('http') ? (displayUser?.profileImageUrl || displayUser?.ProfileImageUrl) : `${API_BASE_URL}${(displayUser?.profileImageUrl || displayUser?.ProfileImageUrl)}`} alt={displayUser?.username} />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/20"><Cpu size={32} /></div>
-                                )}
+                                {(() => {
+                                    const pfp = displayUser?.profilePictureUrl || displayUser?.ProfilePictureUrl || displayUser?.profileImageUrl || displayUser?.ProfileImageUrl;
+                                    if (pfp) {
+                                        return <img src={pfp.startsWith('http') ? pfp : `${API_BASE_URL}${pfp}`} alt={displayUser?.username} />;
+                                    }
+                                    return <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/20"><Cpu size={32} /></div>;
+                                })()}
                             </div>
                             <div className="social-info mt-6">
                                 <h1 className="social-name">{displayUser?.username || displayUser?.Username || 'GUEST_USER'}</h1>

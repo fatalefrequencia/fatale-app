@@ -24,7 +24,7 @@ api.interceptors.request.use((config) => {
             const user = JSON.parse(userJson);
             const uid = user?.id || user?.Id || user?.userId || user?.UserId;
             if (uid) {
-                config.headers.UserId = uid;
+                config.headers['UserId'] = uid;
                 console.log('[API_INTERCEPTOR] UserId header set:', uid, 'for', config.url);
             } else {
                 console.warn('[API_INTERCEPTOR] No valid user ID found in localStorage user object:', user);
@@ -88,7 +88,9 @@ const API = {
         deleteTrack: (id) => api.delete(`Tracks/${id}`),
     },
     Users: {
-        getProfile: () => api.get('users/profile'),
+        getProfile: (userId = null) => api.get('Users/profile', { 
+            headers: userId ? { 'UserId': userId } : {} 
+        }),
         updateProfile: (formData, userId) => api.put('Users/update-profile', formData, {
             headers: { 'Content-Type': 'multipart/form-data', UserId: userId },
             timeout: 120000 // 2 min for media updates

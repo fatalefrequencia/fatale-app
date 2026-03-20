@@ -884,12 +884,15 @@ function App() {
   };
 
   // Fetch User Profile & Credits
-  const fetchUserProfile = async (notify = false) => {
+  const fetchUserProfile = async (notify = false, userOverride = null) => {
     try {
-      const res = await API.Users.getProfile();
+      // Use override if provided (prevents race condition with localStorage)
+      const activeUser = userOverride || user; 
+      const res = await API.Users.getProfile(activeUser?.id || activeUser?.Id);
       console.log("Profile Refreshed:", res.data);
       if (res.data) {
-        const uid = res.data.id || res.data.Id || res.data.userId || res.data.UserId;
+        const rawData = res.data.user || res.data;
+        const uid = rawData?.id || rawData?.Id || rawData?.userId || rawData?.UserId || activeUser?.id || activeUser?.Id;
         if (!uid) {
           console.warn("[App] No user ID found in profile response!", res.data);
         }
@@ -897,23 +900,23 @@ function App() {
         const userData = {
           // Explicitly map all fields to camelCase for consistent frontend state
           id: uid,
-          username: res.data.username || res.data.Username || user?.username,
-          email: res.data.email || res.data.Email || user?.email,
-          credits: res.data.creditsBalance !== undefined ? res.data.creditsBalance : (res.data.CreditsBalance !== undefined ? res.data.CreditsBalance : (res.data.credits || 0)),
-          biography: res.data.biography || res.data.Biography || res.data.bio || res.data.Bio,
-          profileImageUrl: res.data.profileImageUrl || res.data.ProfilePictureUrl || res.data.imageUrl || res.data.ImageUrl,
-          residentSectorId: res.data.residentSectorId !== undefined ? res.data.residentSectorId : (res.data.ResidentSectorId !== undefined ? res.data.ResidentSectorId : 0),
-          isLive: res.data.isLive || res.data.IsLive || false,
-          featuredTrackId: res.data.featuredTrackId || res.data.FeaturedTrackId,
-          bannerUrl: res.data.bannerUrl || res.data.BannerUrl,
-          wallpaperVideoUrl: res.data.wallpaperVideoUrl || res.data.WallpaperVideoUrl,
-          themeColor: res.data.themeColor || res.data.ThemeColor || '#ff006e',
-          textColor: res.data.textColor || res.data.TextColor || '#ffffff',
-          backgroundColor: res.data.backgroundColor || res.data.BackgroundColor || '#000000',
-          isGlass: res.data.isGlass || res.data.IsGlass || false,
-          communityId: res.data.communityId || res.data.CommunityId,
-          communityName: res.data.communityName || res.data.CommunityName,
-          communityColor: res.data.communityColor || res.data.CommunityColor
+          username: rawData?.username || rawData?.Username || user?.username,
+          email: rawData?.email || rawData?.Email || user?.email,
+          credits: rawData?.creditsBalance !== undefined ? rawData?.creditsBalance : (rawData?.CreditsBalance !== undefined ? rawData?.CreditsBalance : (rawData?.credits || 0)),
+          biography: rawData?.biography || rawData?.Biography || rawData?.bio || rawData?.Bio,
+          profileImageUrl: rawData?.profilePictureUrl || rawData?.profileImageUrl || rawData?.ProfilePictureUrl || rawData?.imageUrl || rawData?.ImageUrl,
+          residentSectorId: rawData?.residentSectorId !== undefined ? rawData?.residentSectorId : (rawData?.ResidentSectorId !== undefined ? rawData?.ResidentSectorId : 0),
+          isLive: rawData?.isLive || rawData?.IsLive || false,
+          featuredTrackId: rawData?.featuredTrackId || rawData?.FeaturedTrackId,
+          bannerUrl: rawData?.bannerUrl || rawData?.BannerUrl,
+          wallpaperVideoUrl: rawData?.wallpaperVideoUrl || rawData?.WallpaperVideoUrl,
+          themeColor: rawData?.themeColor || rawData?.ThemeColor || '#ff006e',
+          textColor: rawData?.textColor || rawData?.TextColor || '#ffffff',
+          backgroundColor: rawData?.backgroundColor || rawData?.BackgroundColor || '#000000',
+          isGlass: rawData?.isGlass || rawData?.IsGlass || false,
+          communityId: rawData?.communityId || rawData?.CommunityId,
+          communityName: rawData?.communityName || rawData?.CommunityName,
+          communityColor: rawData?.communityColor || rawData?.CommunityColor
         };
 
         setUser(prev => {
@@ -929,7 +932,12 @@ function App() {
     } catch (error) {
       console.error("Error fetching profile:", error);
       if (error.response?.status === 401) {
-        console.warn("[App] Session expired or invalid. Logging out...");
+        const detail = error.response?.data?.message || error.response?.data?.error || "SESSION_EXPIRED";
+        console.warn("[App] Session expired or invalid. Logging out...", detail);
+        // On mobile, show a clear alert to diagnose
+        if (window.innerWidth < 768) {
+          alert(`SYNC_ERROR (401): ${detail}\nUser: ${user?.username || 'None'}`);
+        }
         handleLogout();
       }
     }
@@ -1199,7 +1207,8 @@ function App() {
       localStorage.setItem('user', JSON.stringify(authData.user));
       setUser(authData.user);
     }
-    fetchUserProfile();
+    // Pass userOverride to prevent race condition with interceptor headers
+    fetchUserProfile(false, authData.user); 
     setView('discovery');
   };
 
@@ -1391,7 +1400,7 @@ function App() {
               onPurchase={handlePurchase}
               onDownload={handleDownload}
               onAddCredits={addCreditsDebug}
-              onRefreshProfile={() => fetchUserProfile(true)}
+              onRefreshProfile={() => fetchUserProfile(true, user?.id)}
               onRefreshTracks={fetchTracks}
               globalStats={globalStats}
               navigateToProfile={navigateToProfile}

@@ -42,11 +42,14 @@ const AuthView = ({ onLoginSuccess }) => {
 
             console.log('[AUTH] Backend Response:', response.data);
 
+            const rawUser = response.data.user || response.data;
+            const uid = rawUser?.id || rawUser?.Id || rawUser?.userId || rawUser?.UserId || response.data.userId || response.data.id;
+            
             const finalUser = {
-                ...(response.data.user || {}),
-                id: response.data.user?.id || response.data.userId,
-                username: response.data.user?.username || response.data.username || formData.username,
-                email: response.data.user?.email || response.data.email || formData.email || 'user@system.local'
+                ...(rawUser || {}),
+                id: uid,
+                username: rawUser?.username || rawUser?.Username || formData.username,
+                email: rawUser?.email || rawUser?.Email || formData.email || 'user@system.local'
             };
 
             console.log('[AUTH] Final User Object:', finalUser);
