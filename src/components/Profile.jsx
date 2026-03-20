@@ -579,10 +579,11 @@ export const ProfileView = React.memo(({
 
     const [showUpload, setShowUpload] = useState(false);
     const [showGoLiveModal, setShowGoLiveModal] = useState(false);
-    const [goLiveFormData, setGoLiveFormData] = useState({ sessionTitle: '', description: '' });
+    const [goLiveFormData, setGoLiveFormData] = useState({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true });
     const [showSettings, setShowSettings] = useState(false);
     const [showEditProfile, setShowEditProfile] = useState(false);
     const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
+    const [broadcasterTab, setBroadcasterTab] = useState('requests');
 
     const [leftOpen, setLeftOpen] = useState(false);
     const [rightOpen, setRightOpen] = useState(false);
@@ -639,11 +640,13 @@ export const ProfileView = React.memo(({
             const API = await import('../services/api').then(mod => mod.default);
             await API.Stations.goLive({
                 SessionTitle: title,
-                Description: desc || null
+                Description: desc || null,
+                IsChatEnabled: goLiveFormData.isChatEnabled,
+                IsQueueEnabled: goLiveFormData.isQueueEnabled
             });
             showNotification("BROADCAST_ACTIVE", "Signal established. Frequency is now LIVE.", "success");
             setShowGoLiveModal(false);
-            setGoLiveFormData({ sessionTitle: '', description: '' });
+            setGoLiveFormData({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true });
             if (onRefreshProfile) onRefreshProfile();
             // Refresh local station data
             const sRes = await API.Stations.getByUserId(currentUser?.id || currentUser?.Id);
@@ -1343,58 +1346,76 @@ export const ProfileView = React.memo(({
                                         END BROADCAST
                                     </button>
                                 </div>
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1 min-h-0">
-                                    {/* Request Queue Column */}
-                                    <div className="flex flex-col bg-black/40 border border-[var(--text-color)]/10 rounded-sm overflow-hidden">
-                                        <div className="p-3 bg-[var(--text-color)]/10 border-b border-[var(--text-color)]/20 text-[10px] font-black uppercase text-[var(--text-color)] tracking-widest flex justify-between items-center">
-                                            <span>REQUEST_QUEUE</span>
-                                            <span className="text-[var(--text-color)]/60">[{stationQueue?.length || 0}]</span>
-                                        </div>
-                                        <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-                                            {stationQueue && stationQueue.length > 0 ? stationQueue.map((req, idx) => (
-                                                <div key={idx} className="p-3 border border-[var(--text-color)]/20 bg-black hover:border-[var(--text-color)]/60 transition-colors flex justify-between items-center group">
-                                                    <div>
-                                                        <div className="text-[11px] font-bold text-white tracking-wider">{req.trackTitle}</div>
-                                                        <div className="text-[9px] text-[var(--text-color)] font-mono mt-1">REQ_BY: {req.username}</div>
-                                                    </div>
-                                                    {allTracks && (
-                                                        <button 
-                                                            onClick={async () => {
-                                                                const matchIdx = allTracks.findIndex(t => t.id === req.trackId || t.Id === req.trackId);
-                                                                if (matchIdx !== -1 && onPlayPlaylist) {
-                                                                    onPlayPlaylist(allTracks, matchIdx);
-                                                                }
-                                                            }}
-                                                            className="w-8 h-8 rounded-full border border-[var(--text-color)]/40 flex items-center justify-center text-[var(--text-color)] group-hover:bg-[var(--text-color)] group-hover:text-black transition-all"
-                                                        >
-                                                            <Play size={14} fill="currentColor" />
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            )) : (
-                                                <div className="h-full flex flex-col items-center justify-center opacity-30 text-[10px] font-mono uppercase text-[var(--text-color)] text-center p-8">
-                                                    <Radio size={24} className="mb-4 opacity-50 block mx-auto" />
-                                                    WAITING FOR INCOMING REQUESTS...
-                                                </div>
-                                            )}
-                                        </div>
+                                <div className="flex-1 min-h-0 flex flex-col">
+                                    {/* Mobile Sub-tabs for Broadcaster Dashboard */}
+                                    <div className="flex lg:hidden mb-4 border-b border-[var(--text-color)]/20">
+                                        <button
+                                            onClick={() => setBroadcasterTab('requests')}
+                                            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${broadcasterTab === 'requests' ? 'text-[var(--text-color)] border-b-2 border-[var(--text-color)]' : 'text-[var(--text-color)]/40'}`}
+                                        >
+                                            REQUESTS
+                                        </button>
+                                        <button
+                                            onClick={() => setBroadcasterTab('chat')}
+                                            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${broadcasterTab === 'chat' ? 'text-[var(--text-color)] border-b-2 border-[var(--text-color)]' : 'text-[var(--text-color)]/40'}`}
+                                        >
+                                            COMM_LINK
+                                        </button>
                                     </div>
-                                    
-                                    {/* Comm Link Chat Column */}
-                                    <div className="flex flex-col bg-black/40 border border-[var(--text-color)]/10 rounded-sm overflow-hidden">
-                                        <div className="p-3 bg-[var(--text-color)]/10 border-b border-[var(--text-color)]/20 text-[10px] font-black uppercase text-[var(--text-color)] tracking-widest">
-                                            LIVE_COMM_LINK
+
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1 min-h-0">
+                                        {/* Request Queue Column */}
+                                        <div className={`flex flex-col bg-black/40 border border-[var(--text-color)]/10 rounded-sm overflow-hidden ${broadcasterTab !== 'requests' ? 'hidden lg:flex' : 'flex'}`}>
+                                            <div className="p-3 bg-[var(--text-color)]/10 border-b border-[var(--text-color)]/20 text-[10px] font-black uppercase text-[var(--text-color)] tracking-widest flex justify-between items-center">
+                                                <span>REQUEST_QUEUE</span>
+                                                <span className="text-[var(--text-color)]/60">[{stationQueue?.length || 0}]</span>
+                                            </div>
+                                            <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                                                {stationQueue && stationQueue.length > 0 ? stationQueue.map((req, idx) => (
+                                                    <div key={idx} className="p-3 border border-[var(--text-color)]/20 bg-black hover:border-[var(--text-color)]/60 transition-colors flex justify-between items-center group">
+                                                        <div>
+                                                            <div className="text-[11px] font-bold text-white tracking-wider">{req.trackTitle}</div>
+                                                            <div className="text-[9px] text-[var(--text-color)] font-mono mt-1">REQ_BY: {req.username}</div>
+                                                        </div>
+                                                        {allTracks && (
+                                                            <button 
+                                                                onClick={async () => {
+                                                                    const matchIdx = allTracks.findIndex(t => t.id === req.trackId || t.Id === req.trackId);
+                                                                    if (matchIdx !== -1 && onPlayPlaylist) {
+                                                                        onPlayPlaylist(allTracks, matchIdx);
+                                                                    }
+                                                                }}
+                                                                className="w-8 h-8 rounded-full border border-[var(--text-color)]/40 flex items-center justify-center text-[var(--text-color)] group-hover:bg-[var(--text-color)] group-hover:text-black transition-all"
+                                                            >
+                                                                <Play size={14} fill="currentColor" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )) : (
+                                                    <div className="h-full flex flex-col items-center justify-center opacity-30 text-[10px] font-mono uppercase text-[var(--text-color)] text-center p-8">
+                                                        <Radio size={24} className="mb-4 opacity-50 block mx-auto" />
+                                                        WAITING FOR INCOMING REQUESTS...
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-                                            {stationChat && stationChat.length > 0 ? stationChat.map((msg, idx) => (
-                                                <div key={idx} className="font-mono text-[10px]">
-                                                    <span className="text-[var(--text-color)] font-bold">[{msg.username}]</span> <span className="text-white/80">{msg.message}</span>
-                                                </div>
-                                            )) : (
-                                                <div className="h-full flex items-center justify-center opacity-30 text-[10px] font-mono uppercase text-[var(--text-color)]">
-                                                    COMM LINK IDLE...
-                                                </div>
-                                            )}
+                                        
+                                        {/* Comm Link Chat Column */}
+                                        <div className={`flex flex-col bg-black/40 border border-[var(--text-color)]/10 rounded-sm overflow-hidden ${broadcasterTab !== 'chat' ? 'hidden lg:flex' : 'flex'}`}>
+                                            <div className="p-3 bg-[var(--text-color)]/10 border-b border-[var(--text-color)]/20 text-[10px] font-black uppercase text-[var(--text-color)] tracking-widest">
+                                                LIVE_COMM_LINK
+                                            </div>
+                                            <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                                                {stationChat && stationChat.length > 0 ? stationChat.map((msg, idx) => (
+                                                    <div key={idx} className="font-mono text-[10px]">
+                                                        <span className="text-[var(--text-color)] font-bold">[{msg.username}]</span> <span className="text-white/80">{msg.message}</span>
+                                                    </div>
+                                                )) : (
+                                                    <div className="h-full flex items-center justify-center opacity-30 text-[10px] font-mono uppercase text-[var(--text-color)]">
+                                                        COMM LINK IDLE...
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2176,6 +2197,31 @@ export const ProfileView = React.memo(({
                                             className="w-full bg-white/[0.03] border border-white/10 p-4 text-white/70 outline-none focus:border-[var(--text-color)]/50 tracking-wide transition-all text-[11px] resize-none custom-scrollbar rounded-sm"
                                             placeholder="describe_signal_feed..."
                                         />
+                                    </div>
+                                    
+                                    {/* Toggles */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div 
+                                            onClick={() => setGoLiveFormData(p => ({ ...p, isChatEnabled: !p.isChatEnabled }))}
+                                            className={`p-3 border cursor-pointer transition-all flex items-center justify-between group rounded-sm ${goLiveFormData.isChatEnabled ? 'border-[var(--text-color)]/40 bg-[var(--text-color)]/5' : 'border-white/5 bg-white/5 opacity-40 hover:opacity-100'}`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <MessageSquare size={14} className={goLiveFormData.isChatEnabled ? 'text-[var(--text-color)]' : 'text-white/40'} />
+                                                <span className="text-[9px] mono font-bold uppercase tracking-widest">Enable Chat</span>
+                                            </div>
+                                            <div className={`w-2 h-2 rounded-full ${goLiveFormData.isChatEnabled ? 'bg-[var(--text-color)] shadow-[0_0_10px_var(--text-color)]' : 'bg-white/10'}`} />
+                                        </div>
+
+                                        <div 
+                                            onClick={() => setGoLiveFormData(p => ({ ...p, isQueueEnabled: !p.isQueueEnabled }))}
+                                            className={`p-3 border cursor-pointer transition-all flex items-center justify-between group rounded-sm ${goLiveFormData.isQueueEnabled ? 'border-[var(--text-color)]/40 bg-[var(--text-color)]/5' : 'border-white/5 bg-white/5 opacity-40 hover:opacity-100'}`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <Radio size={14} className={goLiveFormData.isQueueEnabled ? 'text-[var(--text-color)]' : 'text-white/40'} />
+                                                <span className="text-[9px] mono font-bold uppercase tracking-widest">Enable Requests</span>
+                                            </div>
+                                            <div className={`w-2 h-2 rounded-full ${goLiveFormData.isQueueEnabled ? 'bg-[var(--text-color)] shadow-[0_0_10px_var(--text-color)]' : 'bg-white/10'}`} />
+                                        </div>
                                     </div>
 
                                     {/* Actions */}
