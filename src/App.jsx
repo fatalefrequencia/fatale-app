@@ -63,12 +63,6 @@ const hashStr = (s) => {
   return Math.abs(h);
 };
 
-const getMediaUrl = (path) => {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-  return `${API_BASE_URL}${path}`;
-};
-
 // --- COMPONENTE PRINCIPAL ---
 function App() {
   const [activeView, setViewOriginal] = useState('login');
