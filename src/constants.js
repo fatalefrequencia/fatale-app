@@ -1,6 +1,6 @@
 export const API_BASE_URL = (import.meta.env.VITE_SIGNALR_URL || 
   (import.meta.env.PROD 
-    ? (import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api/', '') : 'https://fatale-core.up.railway.app')
+    ? (import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api/', '') : 'https://fatalecore-production.up.railway.app')
     : 'http://localhost:5264')).replace(/\/+$/, '') + '/'; // Ensure exactly ONE trailing slash
 
 export const getMediaUrl = (path) => {

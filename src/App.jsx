@@ -133,7 +133,9 @@ function App() {
 
   // Discovery Analytics State
   const [globalStats, setGlobalStats] = useState(null);
-  const [likedYoutubeIds, setLikedYoutubeIds] = useState(new Set());
+  const [likedYoutubeIds, setLikedYoutubeIds] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('liked_youtube_ids') || '[]')); } catch { return new Set(); }
+  });
   const [subscription, setSubscription] = useState(null);
   const [cachedTrackIds, setCachedTrackIds] = useState(new Set());
   const [followedCommunities, setFollowedCommunities] = useState(() => {
@@ -821,40 +823,34 @@ function App() {
         return;
       }
       const res = await API.Users.getProfile(userIdToFetch);
-      console.log("Profile Refreshed:", res.data);
       if (res.data) {
         const rawData = res.data.user || res.data;
-        const uid = rawData?.id || rawData?.Id || rawData?.userId || rawData?.UserId || activeUser?.id || activeUser?.Id;
-        if (!uid) {
-          console.warn("[App] No user ID found in profile response!", res.data);
-        }
-
+        const uid = rawData?.id || rawData?.Id || rawData?.userId || rawData?.UserId || userIdToFetch;
+        
+        // Deep extraction with previous state fallbacks to prevent "empty profile" glitch
         const userData = {
-          // Explicitly map all fields to camelCase for consistent frontend state
           id: uid,
           username: rawData?.username || rawData?.Username || user?.username,
           email: rawData?.email || rawData?.Email || user?.email,
-          credits: rawData?.creditsBalance !== undefined ? rawData?.creditsBalance : (rawData?.CreditsBalance !== undefined ? rawData?.CreditsBalance : (rawData?.credits || 0)),
-          biography: rawData?.biography || rawData?.Biography || rawData?.bio || rawData?.Bio,
-          profileImageUrl: getMediaUrl(rawData?.profilePictureUrl || rawData?.profileImageUrl || rawData?.ProfilePictureUrl || rawData?.imageUrl || rawData?.ImageUrl),
-          residentSectorId: rawData?.residentSectorId !== undefined ? rawData?.residentSectorId : (rawData?.ResidentSectorId !== undefined ? rawData?.ResidentSectorId : 0),
-          isLive: rawData?.isLive || rawData?.IsLive || false,
-          featuredTrackId: rawData?.featuredTrackId || rawData?.FeaturedTrackId,
-          bannerUrl: getMediaUrl(rawData?.bannerUrl || rawData?.BannerUrl),
-          wallpaperVideoUrl: getMediaUrl(rawData?.wallpaperVideoUrl || rawData?.WallpaperVideoUrl),
-          themeColor: rawData?.themeColor || rawData?.ThemeColor || '#ff006e',
-          textColor: rawData?.textColor || rawData?.TextColor || '#ffffff',
-          backgroundColor: rawData?.backgroundColor || rawData?.BackgroundColor || '#000000',
-          isGlass: rawData?.isGlass || rawData?.IsGlass || false,
-          communityId: rawData?.communityId || rawData?.CommunityId,
-          communityName: rawData?.communityName || rawData?.CommunityName,
-          communityColor: rawData?.communityColor || rawData?.CommunityColor
+          credits: rawData?.creditsBalance !== undefined ? rawData?.creditsBalance : (rawData?.CreditsBalance !== undefined ? rawData?.CreditsBalance : (user?.credits || 0)),
+          biography: rawData?.biography || rawData?.Biography || rawData?.bio || rawData?.Bio || user?.biography || '',
+          profileImageUrl: getMediaUrl(rawData?.profilePictureUrl || rawData?.profileImageUrl || rawData?.ProfilePictureUrl || rawData?.imageUrl || rawData?.ImageUrl) || user?.profileImageUrl,
+          residentSectorId: rawData?.residentSectorId !== undefined ? rawData?.residentSectorId : (rawData?.ResidentSectorId !== undefined ? rawData?.ResidentSectorId : (user?.residentSectorId || 0)),
+          isLive: rawData?.isLive !== undefined ? rawData?.isLive : (rawData?.IsLive !== undefined ? rawData?.IsLive : (user?.isLive || false)),
+          bannerUrl: getMediaUrl(rawData?.bannerUrl || rawData?.BannerUrl) || user?.bannerUrl,
+          wallpaperVideoUrl: getMediaUrl(rawData?.wallpaperVideoUrl || rawData?.WallpaperVideoUrl) || user?.wallpaperVideoUrl,
+          themeColor: rawData?.themeColor || rawData?.ThemeColor || user?.themeColor || '#ff006e',
+          textColor: rawData?.textColor || rawData?.TextColor || user?.textColor || '#ffffff',
+          backgroundColor: rawData?.backgroundColor || rawData?.BackgroundColor || user?.backgroundColor || '#000000',
+          isGlass: rawData?.isGlass !== undefined ? rawData?.isGlass : (rawData?.IsGlass !== undefined ? rawData?.IsGlass : (user?.isGlass || false)),
+          communityId: rawData?.communityId || rawData?.CommunityId || user?.communityId,
+          communityName: rawData?.communityName || rawData?.CommunityName || user?.communityName,
+          communityColor: rawData?.communityColor || rawData?.CommunityColor || user?.communityColor
         };
 
         setUser(prev => {
-          // We no longer spread res.data to avoid duplicate PascalCase properties
           const updated = { ...userData };
-          localStorage.setItem('user', JSON.stringify(updated));
+          try { localStorage.setItem('user', JSON.stringify(updated)); } catch(e) {}
           return updated;
         });
         if (notify) {
