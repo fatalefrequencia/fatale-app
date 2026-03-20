@@ -318,7 +318,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
             >
                 <div className="monitor-screen custom-scrollbar relative">
                     <DataStream />
-                    <div className="relative z-10 h-full overflow-y-auto custom-scrollbar pt-16 lg:pt-0 pb-40 lg:pb-12">
+                    <div className="relative z-10 h-full overflow-y-auto custom-scrollbar pt-16 lg:pt-0 pb-28 lg:pb-12">
                         {/* Consolidated Monitor Navigation - Responsive for Mobile */}
                         <div className="absolute top-4 left-4 right-4 z-[100] flex flex-wrap justify-between gap-2 items-start pointer-events-none">
                             <div className="flex gap-1.5 flex-wrap pointer-events-auto">
@@ -1723,7 +1723,7 @@ export const ProfileView = React.memo(({
 
                                 {/* Studio Content Header / Carousel for Media Tabs */}
                                 {['All', 'Photos', 'Video'].includes(studioSubTab) && (
-                                    <div className="mb-8 space-y-4">
+                                    <div className="mb-4 lg:mb-8 space-y-4">
                                         <div className="flex justify-between items-center">
                                             <h3 className="mono text-[10px] font-black text-[var(--text-color)]/60 uppercase tracking-[0.3em]">
                                                 {studioSubTab === 'All' ? 'SIGNAL_GALLERY' : studioSubTab === 'Photos' ? 'VISUAL_ARCHIVE' : 'VIDEO_FEED'}
@@ -1857,13 +1857,13 @@ export const ProfileView = React.memo(({
                                 )}
 
                                 {studioSubTab === 'Photos' && profileGallery.filter(c => c.Type === 'PHOTO').length === 0 && (
-                                    <div className="col-span-full py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
+                                    <div className="col-span-full py-10 lg:py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
                                         <Camera size={24} className="mb-4 text-[var(--text-color)]" />
                                         <span className="mono text-[8px] uppercase tracking-[0.2em]">GALLERY_ENCRYPTED_OR_EMPTY</span>
                                     </div>
                                 )}
                                 {studioSubTab === 'Video' && profileGallery.filter(c => c.Type === 'VIDEO').length === 0 && (
-                                    <div className="col-span-full py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
+                                    <div className="col-span-full py-10 lg:py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
                                         <Video size={24} className="mb-4 text-[var(--text-color)]" />
                                         <span className="mono text-[8px] uppercase tracking-[0.2em]">VISUAL_FEED_OFFLINE</span>
                                     </div>
@@ -2075,7 +2075,7 @@ export const ProfileView = React.memo(({
                                                                 </div>
                                                             ))
                                                     ) : (
-                                                        <div className="col-span-full py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
+                                                        <div className="col-span-full py-10 lg:py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
                                                             <Book size={32} className="mb-4 text-[var(--text-color)]" />
                                                             <span className="mono text-[10px] uppercase tracking-[0.2em]">NO_ARCHIVED_LOGS_FOUND</span>
                                                         </div>
