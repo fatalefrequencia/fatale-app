@@ -43,10 +43,10 @@ const AuthView = ({ onLoginSuccess }) => {
             console.log('[AUTH] Backend Response:', response.data);
 
             const finalUser = {
-                id: response.data.userId,
-                username: response.data.username || formData.username,
-                email: response.data.email || formData.email || 'user@system.local',
-                createdAt: response.data.createdAt
+                ...(response.data.user || {}),
+                id: response.data.user?.id || response.data.userId,
+                username: response.data.user?.username || response.data.username || formData.username,
+                email: response.data.user?.email || response.data.email || formData.email || 'user@system.local'
             };
 
             console.log('[AUTH] Final User Object:', finalUser);

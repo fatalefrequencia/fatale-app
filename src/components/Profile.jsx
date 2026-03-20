@@ -1055,7 +1055,7 @@ export const ProfileView = React.memo(({
     return (
         <>
             <SpatialRoomLayout
-                monitorTitle={displayUser?.username || 'GUEST_USER'}
+                monitorTitle={displayUser?.username || displayUser?.Username || 'GUEST_USER'}
                 leftOpen={leftOpen}
                 rightOpen={rightOpen}
                 onToggleLeft={setLeftOpen}
@@ -1283,7 +1283,7 @@ export const ProfileView = React.memo(({
                                 )}
                             </div>
                             <div className="social-info mt-6">
-                                <h1 className="social-name">{displayUser?.username || 'GUEST_USER'}</h1>
+                                <h1 className="social-name">{displayUser?.username || displayUser?.Username || 'GUEST_USER'}</h1>
                                 {(displayUser?.communityName || displayUser?.CommunityName) && (
                                     <div className="mt-2 flex">
                                         <div 
