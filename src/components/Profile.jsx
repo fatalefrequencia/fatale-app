@@ -568,8 +568,11 @@ export const ProfileView = React.memo(({
     const [isFollowing, setIsFollowing] = useState(false);
     const [isLoadingProfile, setIsLoadingProfile] = useState(false);
     const [profileTracks, setProfileTracks] = useState([]);
+    const [isLoadingTracks, setIsLoadingTracks] = useState(false);
     const [profileJournal, setProfileJournal] = useState([]);
+    const [isLoadingJournal, setIsLoadingJournal] = useState(false);
     const [profileGallery, setProfileGallery] = useState([]);
+    const [isLoadingGallery, setIsLoadingGallery] = useState(false);
     const [myLikes, setMyLikes] = useState([]);
 
     const [isAboutOpen, setIsAboutOpen] = useState(true);
