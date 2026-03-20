@@ -90,6 +90,17 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [redirectTrigger, setRedirectTrigger] = useState(null); // Refactored to fix RefError
   const [user, setUser] = useState(null);
+  
+  // Robust ID extraction helper
+  const getUserId = (u) => {
+    if (!u) return null;
+    const raw = u.id || u.Id || u.userId || u.UserId;
+    if (!raw || raw === 'undefined' || raw === 'null') return null;
+    const parsed = parseInt(raw, 10);
+    return isNaN(parsed) ? null : parsed;
+  };
+  
+  const currentUserId = getUserId(user);
   const [tracks, setTracks] = useState([]);
   const [libraryTracks, setLibraryTracks] = useState([]);
 
@@ -165,8 +176,13 @@ function App() {
     }
   }, [isMuted, volume, youtubePlayer]);
 
-  const fetchFavoriteStations = async () => {
+  const fetchFavoriteStations = async (uid) => {
     try {
+      const targetId = uid || user?.id || user?.Id;
+      if (!targetId || targetId === 'undefined') {
+        // Favorited stations require a user context
+        return;
+      }
       const res = await API.Stations.getFavorites();
       setFavoriteStations(res.data || []);
     } catch (e) {
@@ -181,9 +197,10 @@ function App() {
         setLiveStations(res.data);
         
         // Auto-sync host's activeStation
-        if (user && !activeStation) {
+        const currentUserId = user?.id || user?.Id;
+        if (currentUserId && !activeStation) {
            const myStation = res.data.find(s => 
-             String(s.artistUserId || s.ArtistUserId) === String(user.id || user.Id)
+             String(s.artistUserId || s.ArtistUserId) === String(currentUserId)
            );
            if (myStation && (myStation.isLive || myStation.IsLive)) {
              setActiveStation(myStation);
@@ -281,12 +298,39 @@ function App() {
 
   useEffect(() => {
     // Check for existing session
-    const token = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
+    let token = localStorage.getItem('token');
+    let savedUser = localStorage.getItem('user');
+    
+    // Sanitize: sometimes 'undefined' string gets stored if logic is buggy
+    if (token === 'undefined' || !token) {
+      localStorage.removeItem('token');
+      token = null; // Clear token for current session
+    }
+    
+    if (savedUser && savedUser !== 'undefined') {
+      try {
+        const parsed = JSON.parse(savedUser);
+        if (parsed && (parsed.id || parsed.Id)) {
+          setUser(parsed);
+          setView('discovery'); // Default to discovery if we have a valid session
+        } else {
+          console.warn("[App] Corrupt user object in localStorage, clearing.");
+          localStorage.removeItem('user');
+          savedUser = null; // Clear savedUser for current session
+          setUser(null);
+        }
+      } catch (e) {
+        console.error("[App] Failed to parse saved user", e);
+        localStorage.removeItem('user');
+        savedUser = null; // Clear savedUser for current session
+        setUser(null);
+      }
+    } else if (savedUser === 'undefined') {
+      localStorage.removeItem('user');
+      savedUser = null; // Clear savedUser for current session
+    }
+
     if (token && savedUser) {
-      setUser(JSON.parse(savedUser));
-      setView('player'); // Or discovery/feed based on preference
-      
       // Initialize SignalR listener
       const conn = initSignalR(token);
 
@@ -345,266 +389,164 @@ function App() {
 
   // --- HOST BROADCASTING LOGIC ---
   useEffect(() => {
-     if (user && user.isLive && isPlaying && currentTrack && currentTrackIndex >= 0) {
-         // Throttle broadcasting sync events
-         const targetStationId = user.residentSectorId || 1; // Assuming we use their sector, or their actual station ID.
-         // Wait, the API Station has its own Id. We need to fetch the artist's stationId or rely on them pulling it.
-         // Let's assume Profile.jsx handles the host GoLive logic and we just broadcast the state.
-         API.Stations.getByUserId(user.id || user.Id).then(res => {
-             if (res.data) {
-                 syncTrack(res.data.id || res.data.Id, currentTrack, currentTime, isPlaying);
-             }
-         });
-     }
-  }, [currentTrack?.id, isPlaying]); // Intentionally omitting currentTime to only trigger on track change or play/pause
-
-  const fetchPlaylists = async () => {
-    try {
-      if (user) {
-        const userId = user.id || user.Id;
-        const res = await API.Playlists.getUserPlaylists(userId);
-        const validPlaylists = (res.data || []).filter(p => p && (p.id || p.Id));
-        setUserPlaylists(validPlaylists);
+      const uid = currentUserId;
+      if (uid && currentTrack) {
+          API.Stations.getByUserId(uid).then(res => {
+              if (res.data) {
+                  syncTrack(res.data.id || res.data.Id, currentTrack, currentTime, isPlaying);
+              }
+          }).catch(e => console.warn("Track sync failed:", e));
       }
+   }, [currentTrack?.id, isPlaying, currentUserId]);
+
+  const fetchPlaylists = async (uid) => {
+    try {
+      const targetId = uid || user?.id || user?.Id;
+      if (!targetId || targetId === 'undefined') {
+        console.warn("[App] Skipping playlist fetch: invalid target ID", targetId);
+        return;
+      }
+      const res = await API.Playlists.getUserPlaylists(targetId);
+      const validPlaylists = (res.data || []).filter(p => p && (p.id || p.Id));
+      setUserPlaylists(validPlaylists);
     } catch (err) {
       console.error("App: Fatal error syncing playlists", err);
     }
   };
 
   useEffect(() => {
-    if (user) {
-      fetchLikes();
-      fetchFavoriteStations();
-      fetchLiveStations();
-      fetchPlaylists();
+    const uid = currentUserId;
+    if (uid) {
+      console.log("[App] Syncing user data for ID:", uid);
+      fetchLikes(uid);
+      fetchFavoriteStations(uid);
+      fetchLiveStations(uid);
+      fetchPlaylists(uid);
     }
-  }, [user]);
+  }, [currentUserId]);
 
   // Fetch Tracks, Purchases, Likes (Local & YouTube), Subscription
   const fetchTracks = async () => {
     try {
-      const currentUserId = user?.id || user?.Id || user?.userId || user?.UserId;
-      if (currentUserId) {
-        console.log("[App] Syncing tracks for User:", currentUserId, "Full User Object:", user);
-        // Parallel Fetch for efficiency and avoiding race conditions
-        const [tracksRes, purchasesRes, likesRes, subRes, cachedRes] = await Promise.all([
-          API.Tracks.getAllTracks().catch(e => { console.error("[App] Tracks fetch failed:", e); return { data: [] }; }),
-          API.Purchases.getMyPurchases().catch(e => { console.error("[App] Purchases fetch failed:", e); return { data: [] }; }),
-          API.Likes.getMyLikes().catch(e => { console.error("[App] Likes fetch failed:", e); return { data: [] }; }),
-          API.Subscriptions.getStatus().catch(e => { console.error("[App] SubStatus fetch failed:", e); return { data: { isActive: false } }; }),
-          API.YoutubeCache.getMyCachedTracks().catch(e => { console.error("[App] Cache fetch failed:", e); return { data: [] }; })
-        ]);
+      const uid = currentUserId;
+      if (!uid) return;
+      console.log("[App] Fetching tracks for user:", uid);
 
-        const purchases = (purchasesRes.data || []).filter(p => p && (p.trackId || p.TrackId || p.id || p.Id));
-        const likes = (likesRes.data || []).filter(l => l && (l.id || l.Id));
-        const cachedTracks = cachedRes.data || [];
+      // Parallel Fetch for efficiency and avoiding race conditions
+      const [tracksRes, purchasesRes, likesRes, subRes, cachedRes] = await Promise.all([
+        API.Tracks.getAllTracks().catch(e => { console.error("[App] Tracks fetch failed:", e); return { data: [] }; }),
+        API.Purchases.getMyPurchases().catch(e => { console.error("[App] Purchases fetch failed:", e); return { data: [] }; }),
+        API.Likes.getMyLikes().catch(e => { console.error("[App] Likes fetch failed:", e); return { data: [] }; }),
+        API.Subscriptions.getStatus().catch(e => { console.error("[App] SubStatus fetch failed:", e); return { data: { isActive: false } }; }),
+        API.YoutubeCache.getMyCachedTracks().catch(e => { console.error("[App] Cache fetch failed:", e); return { data: [] }; })
+      ]);
 
-        setSubscription(subRes.data);
+      const purchases = (purchasesRes.data || []).filter(p => p && (p.trackId || p.TrackId || p.id || p.Id));
+      const likes = (likesRes.data || []).filter(l => l && (l.id || l.Id));
+      const cachedTracks = cachedRes.data || [];
 
-        // Update Liked YouTube IDs Set from unified likes
-        const ytIds = new Set(likes
-          .filter(t => t && (t.source || t.Source)?.startsWith('youtube:'))
-          .map(t => (t.source || t.Source).split(':')[1])
-          .filter(Boolean)
-        );
-        setLikedYoutubeIds(ytIds);
+      setSubscription(subRes.data);
 
-        // Update Cached Track IDs Set
-        const cachedIds = new Set(cachedTracks.map(t => t.youtubeTrackId || t.YoutubeTrackId));
-        setCachedTrackIds(cachedIds);
+      const ytIds = new Set(likes
+        .filter(t => t && (t.source || t.Source)?.startsWith('youtube:'))
+        .map(t => (t.source || t.Source).split(':')[1])
+        .filter(Boolean)
+      );
+      setLikedYoutubeIds(ytIds);
 
-        console.log("[App] Synced Liked YouTube IDs:", ytIds.size, Array.from(ytIds));
-        console.log("[App] Synced Cached Tracks:", cachedIds.size);
-        console.log("[App] Unified Likes List:", likes.length);
-        if (likes.length > 0) console.table(likes.map(l => ({ id: l.id || l.Id, title: l.title || l.Title, source: l.source || l.Source })));
+      const cachedIds = new Set(cachedTracks.map(t => t.youtubeTrackId || t.YoutubeTrackId));
+      setCachedTrackIds(cachedIds);
 
-        // Normalize IDs
-        const ownedTrackIds = new Set(purchases.map(p => String(p.trackId || p.TrackId || p.id || p.Id)));
-        const likedTrackIds = new Set(likes.map(l => String(l.trackId || l.TrackId || l.id || l.Id)));
+      const ownedTrackIds = new Set(purchases.map(p => String(p.trackId || p.TrackId || p.id || p.Id)));
+      const likedTrackIds = new Set(likes.map(l => String(l.trackId || l.TrackId || l.id || l.Id)));
 
+      const uniqueTracksMap = new Map();
+      const titleArtistMap = new Map();
 
-        // Helper for formatting duration
-        const formatDuration = (seconds) => {
-          if (!seconds) return '0:00';
-          const m = Math.floor(seconds / 60);
-          const s = seconds % 60;
-          return `${m}:${s < 10 ? '0' : ''}${s} `;
-        };
+      const getUniqueKey = (t) => {
+        const src = t.source || t.Source;
+        if (src && src.startsWith('youtube:')) return src;
+        return src || String(t.id || t.Id);
+      };
 
-        // 221. Deduplication Maps
-        const uniqueTracksMap = new Map(); // Key -> Track
-        const titleArtistMap = new Map();  // "Artist - Title" -> Key
+      const getMetaKey = (t) => {
+        const title = (t.title || t.Title || "").toLowerCase().trim();
+        const artist = (t.artist || t.ArtistName || t.album?.artist?.name || "").toLowerCase().trim();
+        return title ? `${artist} - ${title}` : null;
+      };
 
-        // Helper to generate a robust unique key
-        const getUniqueKey = (t) => {
-          const src = t.source || t.Source;
-          if (src && src.startsWith('youtube:')) return src;
-          if (src) return src;
-          return String(t.id || t.Id);
-        };
+      if (tracksRes.data && tracksRes.data.length > 0) {
+        tracksRes.data.forEach((t) => {
+          const trackId = String(t.id || t.Id || "");
+          if (!trackId || trackId === "undefined") return;
 
-        const getMetaKey = (t) => {
-          const title = (t.title || t.Title || "").toLowerCase().trim();
-          const artist = (t.artist || t.ArtistName || t.album?.artist?.name || "").toLowerCase().trim();
-          if (!title) return null;
-          return `${artist} - ${title}`;
-        };
+          const artistUserId = t.artistUserId || t.ArtistUserId || t.album?.artist?.userId || t.Album?.Artist?.UserId;
+          const isMine = artistUserId && String(artistUserId) === String(uid);
 
-        // 1. Process Local/DB Tracks
-        if (tracksRes.data && tracksRes.data.length > 0) {
-          tracksRes.data.forEach((t, idx) => {
-            const trackId = String(t.id || t.Id || "");
-            if (!trackId || trackId === "undefined") return;
+          const trackSource = t.source || t.Source || t.filePath || t.FilePath;
+          const isYT = trackSource?.startsWith('youtube:');
+          const resolvedSource = isYT ? trackSource : getMediaUrl(trackSource);
 
-            const rawPrice = t.price !== undefined ? t.price : (t.Price !== undefined ? t.Price : 0);
-            const rawIsLocked = t.isLocked !== undefined ? t.isLocked : (t.IsLocked !== undefined ? t.IsLocked : false);
-            const artistUserId = t.artistUserId || t.ArtistUserId ||
-              t.album?.artist?.userId || t.Album?.Artist?.UserId ||
-              t.album?.artist?.UserId || t.Album?.Artist?.userId;
+          if (!resolvedSource || resolvedSource === BASE_API_URL || resolvedSource === `${BASE_API_URL}/`) return;
 
-            if (idx < 5) console.log(`[App] Track ${trackId} (${t.title}) -> artistUserId: ${artistUserId}`);
+          const artistName = t.album?.artist?.name || t.Album?.Artist?.Name || '';
+          if (artistName === 'The Archive') return;
 
-            const isMine = artistUserId !== undefined && artistUserId !== null && String(artistUserId) === String(currentUserId);
+          const mappedTrack = {
+            ...t,
+            id: trackId,
+            title: t.title || t.Title || 'Unknown Title',
+            artist: artistName || 'Unknown Artist',
+            album: t.album?.title || t.Album?.Title || 'Unknown Album',
+            duration: t.duration || t.Duration || '3:00',
+            cover: getMediaUrl(t.coverImageUrl || t.CoverImageUrl),
+            source: resolvedSource,
+            isOwned: ownedTrackIds.has(trackId) || isMine,
+            isLiked: likedTrackIds.has(trackId),
+            isCached: cachedIds.has(Number(trackId)) || cachedIds.has(trackId),
+          };
 
-            const trackSource = t.source || t.Source || t.filePath || t.FilePath;
-            const isYT = trackSource?.startsWith('youtube:');
+          const key = getUniqueKey(mappedTrack);
+          const metaKey = getMetaKey(mappedTrack);
 
-            // ── Skip tracks with no playable audio source (e.g. Archive placeholder entries)
-            const resolvedSource = isYT ? trackSource : getMediaUrl(t.filePath || t.FilePath || t.source || t.Source);
-            if (!resolvedSource || resolvedSource === BASE_API_URL || resolvedSource === `${BASE_API_URL}/`) return;
-
-            // ── Is this track from The Archive (system aggregator, UserId = null or artistName = 'The Archive')?
-            const artistName = t.album?.artist?.name || t.Album?.Artist?.Name || '';
-            const isArchiveTrack = artistUserId === null || artistUserId === undefined || artistName === 'The Archive';
-
-            // Skip Archive metadata stubs so only real user 'Fatale' songs are displayed
-            if (isArchiveTrack) return;
-
-            const mappedTrack = {
-              ...t,
-              id: trackId,
-              title: t.title || t.Title || 'Unknown Title',
-              artist: artistName || 'Unknown Artist',
-              album: t.album?.title || t.Album?.Title || 'Unknown Album',
-              albumId: t.album?.id || t.Album?.Id,
-              artistId: t.album?.artist?.id || t.Album?.Artist?.Id || t.artistId,
-              artistUserId: artistUserId,
-              duration: t.duration || t.Duration || '3:00',
-              cover: getMediaUrl(t.coverImageUrl || t.CoverImageUrl),
-              source: resolvedSource,
-              price: rawPrice,
-              isLocked: rawIsLocked,
-              isOwned: ownedTrackIds.has(trackId) || isMine,
-              isLiked: likedTrackIds.has(trackId),
-              playCount: t.playCount || t.PlayCount || 0,
-              isCached: cachedIds.has(Number(trackId)) || cachedIds.has(trackId),
-              isArchive: isArchiveTrack,
-            };
-
-            const key = getUniqueKey(mappedTrack);
-            const metaKey = getMetaKey(mappedTrack);
-
-            if (!uniqueTracksMap.has(key)) {
-              if (metaKey && titleArtistMap.has(metaKey)) {
-                const existingKey = titleArtistMap.get(metaKey);
-                const existing = uniqueTracksMap.get(existingKey);
-                // Prefer real user uploads over Archive versions
-                if (isArchiveTrack && existing && !existing.isArchive) {
-                  // Archive duplicate of a real user track — skip it
-                  console.log(`[DUPE] Dropping Archive duplicate of user track: ${metaKey}`);
-                } else if (!isArchiveTrack && existing?.isArchive) {
-                  // Real user track replaces the Archive version
-                  console.log(`[DUPE REPLACE] Replacing Archive track with user upload: ${metaKey}`);
-                  uniqueTracksMap.delete(existingKey);
-                  uniqueTracksMap.set(key, mappedTrack);
-                  titleArtistMap.set(metaKey, key);
-                } else {
-                  console.log(`[DUPE] Skipping duplicate local: ${metaKey}`);
-                }
-              } else {
-                uniqueTracksMap.set(key, mappedTrack);
-                if (metaKey) titleArtistMap.set(metaKey, key);
-              }
-            }
-          });
-        }
-
-        // 2. Process YouTube Likes (Merge or Add)
-        if (likes.length > 0) {
-          likes
-            .filter(yt => (yt.source || yt.Source)?.startsWith('youtube:'))
-            .forEach(yt => {
-              const yId = (yt.source || yt.Source).split(':')[1];
-              const sourceKey = `youtube:${yId}`;
-
-              const dbId = String(yt.id || yt.Id || "");
-
-              // 2a. Check Key (Exact Source Match)
-              if (uniqueTracksMap.has(sourceKey)) {
-                const existing = uniqueTracksMap.get(sourceKey);
-                uniqueTracksMap.set(sourceKey, { ...existing, isLiked: true });
-                return;
-              }
-
-              // 2b. Check Meta Key (Artist - Title Match)
-              const tempObj = {
-                title: yt.title || yt.Title,
-                artist: (yt.album?.artist?.name || yt.Album?.Artist?.Name) || yt.channelTitle
-              };
-              const metaKey = getMetaKey(tempObj);
-
-              if (metaKey && titleArtistMap.has(metaKey)) {
-                const existingKey = titleArtistMap.get(metaKey);
-                const existing = uniqueTracksMap.get(existingKey);
-                // Merge: Update the existing local track to be liked!
-                console.log(`[DUPE MERGE] Merging YouTube Like into Local: ${metaKey}`);
-                uniqueTracksMap.set(existingKey, { ...existing, isLiked: true });
-                return;
-              }
-
-              // Find cache info
-              const cachedVersion = cachedTracks.find(c => c.youtubeId === yId || c.youtubeTrackId === yt.id);
-
-              const mappedYt = {
-                id: dbId || `yt-${yId}`,
-                videoId: yId,
-                title: yt.title || yt.Title,
-                artist: (yt.album?.artist?.name || yt.Album?.Artist?.Name) || yt.channelTitle || "Unknown Artist",
-                album: (yt.album?.title || yt.Album?.Title) || 'YouTube Library',
-                cover: yt.thumbnailUrl || yt.ThumbnailUrl || yt.coverImageUrl || yt.CoverImageUrl,
-                duration: yt.duration || yt.Duration || '0:00',
-                source: sourceKey,
-                isLiked: true,
-                isOwned: false,
-                isLocked: false,
-                price: 0,
-                artistUserId: null,
-                playCount: yt.playCount || yt.PlayCount || 0,
-                isCached: cachedIds.has(yt.id),
-                cachedAt: cachedVersion?.cachedAt
-              };
-
-              uniqueTracksMap.set(sourceKey, mappedYt);
-              if (metaKey) titleArtistMap.set(metaKey, sourceKey);
-            });
-        }
-
-        const allTracks = Array.from(uniqueTracksMap.values());
-        // FALLBACK LOGIC: Only use generic TRACKS if we are NOT logged in and server returns nothing.
-        // If logged in, we want to see OUR real (empty) library.
-        const finalTracks = (allTracks.length > 0) ? allTracks : (user ? [] : TRACKS);
-        setLibraryTracks(finalTracks);
-
-        // Update current queue ONLY if it was empty or contains generic mock data
-        setTracks(prev => {
-          const isMock = prev.length > 0 && String(prev[0].id).startsWith('mock-');
-          if (prev.length === 0 || isMock) return finalTracks;
-          return prev;
+          if (!uniqueTracksMap.has(key)) {
+            uniqueTracksMap.set(key, mappedTrack);
+            if (metaKey) titleArtistMap.set(metaKey, key);
+          }
         });
-      } else {
-        setLibraryTracks(TRACKS);
-        setTracks(prev => prev.length === 0 ? TRACKS : prev);
       }
+
+      if (likes.length > 0) {
+        likes.filter(yt => (yt.source || yt.Source)?.startsWith('youtube:')).forEach(yt => {
+          const yId = (yt.source || yt.Source).split(':')[1];
+          const sourceKey = `youtube:${yId}`;
+          if (uniqueTracksMap.has(sourceKey)) {
+            const existing = uniqueTracksMap.get(sourceKey);
+            uniqueTracksMap.set(sourceKey, { ...existing, isLiked: true });
+            return;
+          }
+          const mappedYt = {
+            id: String(yt.id || yt.Id || `yt-${yId}`),
+            videoId: yId,
+            title: yt.title || yt.Title,
+            artist: yt.channelTitle || "Unknown Artist",
+            source: sourceKey,
+            isLiked: true,
+            isOwned: false,
+            isLocked: false,
+            isCached: cachedIds.has(yt.id)
+          };
+          uniqueTracksMap.set(sourceKey, mappedYt);
+        });
+      }
+
+      const allTracks = Array.from(uniqueTracksMap.values());
+      const finalTracks = allTracks.length > 0 ? allTracks : (uid ? [] : TRACKS);
+      setLibraryTracks(finalTracks);
+      setTracks(prev => {
+        const isMock = prev.length > 0 && String(prev[0].id).startsWith('mock-');
+        return (prev.length === 0 || isMock) ? finalTracks : prev;
+      });
     } catch (error) {
       console.error("Failed to fetch tracks", error);
       setLibraryTracks(TRACKS);
@@ -614,7 +556,7 @@ function App() {
 
   useEffect(() => {
     fetchTracks();
-  }, [user]);
+  }, [currentUserId]);
 
   // Fetch Global Stats for Discovery Hub
   useEffect(() => {
@@ -887,8 +829,13 @@ function App() {
   const fetchUserProfile = async (notify = false, userOverride = null) => {
     try {
       // Use override if provided (prevents race condition with localStorage)
-      const activeUser = userOverride || user; 
-      const res = await API.Users.getProfile(activeUser?.id || activeUser?.Id);
+      const activeUser = userOverride || user;
+      const userIdToFetch = activeUser?.id || activeUser?.Id;
+      if (!userIdToFetch || userIdToFetch === 'undefined') {
+        console.warn("[App] Skipping profile fetch: invalid user ID", userIdToFetch);
+        return;
+      }
+      const res = await API.Users.getProfile(userIdToFetch);
       console.log("Profile Refreshed:", res.data);
       if (res.data) {
         const rawData = res.data.user || res.data;
@@ -1086,8 +1033,13 @@ function App() {
     }
   };
 
-  const fetchLikes = async () => {
+  const fetchLikes = async (uid) => {
     try {
+      const targetId = uid || user?.id || user?.Id;
+      if (!targetId || targetId === 'undefined') {
+        console.warn("[App] Skipping likes fetch: invalid target ID", targetId);
+        return;
+      }
       const res = await API.Likes.getMyLikes();
       const normalized = (res.data || []).map(t => ({
         ...t,
@@ -1202,14 +1154,23 @@ function App() {
   };
 
   const handleAuthSuccess = (authData) => {
+    console.log("[App] handleAuthSuccess invoked with:", authData);
+    
     if (authData.token) localStorage.setItem('token', authData.token);
-    if (authData.user) {
-      localStorage.setItem('user', JSON.stringify(authData.user));
-      setUser(authData.user);
+    
+    // Ensure we have a valid user object with an ID before updating state
+    const validUser = authData.user && (authData.user.id || authData.user.Id) ? authData.user : null;
+    
+    if (validUser) {
+      localStorage.setItem('user', JSON.stringify(validUser));
+      setUser(validUser);
+      // Pass validUser directly to prevent race condition
+      fetchUserProfile(false, validUser); 
+      setView('discovery');
+    } else {
+      console.error("[App] Login succeeded but user data is missing or invalid!", authData);
+      showNotification("AUTH_ERROR", "Login success but identity data is corrupt. Try again.", "error");
     }
-    // Pass userOverride to prevent race condition with interceptor headers
-    fetchUserProfile(false, authData.user); 
-    setView('discovery');
   };
 
   const handleLogout = () => {

@@ -22,18 +22,20 @@ api.interceptors.request.use((config) => {
     if (userJson) {
         try {
             const user = JSON.parse(userJson);
-            const uid = user?.id || user?.Id || user?.userId || user?.UserId;
-            if (uid) {
-                config.headers['UserId'] = uid;
-                console.log('[API_INTERCEPTOR] UserId header set:', uid, 'for', config.url);
+            // Robust extraction: check multiple variants and ensure it's a valid ID
+            const rawId = user?.id ?? user?.Id ?? user?.userId ?? user?.UserId;
+            const uid = parseInt(rawId, 10);
+
+            if (!isNaN(uid) && uid > 0) {
+                config.headers['UserId'] = String(uid);
+                // console.log('[API_INTERCEPTOR] UserId header established:', uid);
             } else {
-                console.warn('[API_INTERCEPTOR] No valid user ID found in localStorage user object:', user);
+                // If we have a user object but no valid ID, it's a corrupt session
+                console.warn('[API_INTERCEPTOR] Session corruption detected. Invalid ID:', rawId);
             }
         } catch (e) {
             console.error("[API] Failed to parse user for headers", e);
         }
-    } else {
-        console.warn('[API] No user found in localStorage');
     }
 
     console.log('[API] Headers:', config.headers);
