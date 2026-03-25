@@ -66,6 +66,7 @@ export const IPodPlayer = ({
     const [resonantTag, setResonantTag] = useState('');
     const [loadingStations, setLoadingStations] = useState(false);
     const fileInputRef = useRef(null);
+    const listRef = useRef(null);
     const [favorites, setFavorites] = useState(() => {
         try {
             const saved = localStorage.getItem('pod_favorites');
@@ -73,12 +74,34 @@ export const IPodPlayer = ({
         } catch (e) { return []; }
     });
 
+    const [isVertical, setIsVertical] = useState(() =>
+        typeof window !== 'undefined' ? (window.innerHeight > window.innerWidth || window.innerWidth <= 768) : false
+    );
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsVertical(typeof window !== 'undefined' && (window.innerHeight > window.innerWidth || window.innerWidth <= 768));
+        };
+        handleResize(); // ensure correct initial state
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     useEffect(() => {
         localStorage.setItem('pod_favorites', JSON.stringify(favorites));
     }, [favorites]);
 
     // Debug logging
     console.log("[IPodPlayer] Render. Screen:", screen, "Force:", forceNowPlaying, "Initial:", initialScreen);
+
+    useEffect(() => {
+        if (listRef.current && (screen === 'MAIN' || screen.includes('SONGS') || screen.includes('PLAYLIST') || screen.includes('MENU') || isSearching)) {
+            const selectedElement = listRef.current.children[selectedIndex];
+            if (selectedElement) {
+                selectedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
+        }
+    }, [selectedIndex, screen, isSearching]);
 
     useEffect(() => {
         console.log("[IPodPlayer] Effect Triggered. Force:", forceNowPlaying);
@@ -865,6 +888,14 @@ export const IPodPlayer = ({
         // CRITICAL: Ignore if clicking any button (Pause, Skip, Menu)
         if (e.target.closest('button')) return;
 
+        // Prevent browser scroll/overscroll during wheel interaction
+        if (e.type.startsWith('touch')) {
+            // passive: false is usually needed for preventDefault in scroll-related events
+            // but for React events on components it can vary. 
+            // Better to use touch-action: none on the container as well.
+            if (e.cancelable) e.preventDefault();
+        }
+
         setIsDragging(true);
         const pos = e.touches ? e.touches[0] : e;
         lastAngle.current = getAngle(pos.clientX, pos.clientY);
@@ -872,6 +903,12 @@ export const IPodPlayer = ({
 
     const onMove = (e) => {
         if (!isDragging) return;
+
+        // Prevent browser scroll/overscroll during wheel rotation
+        if (e.type.startsWith('touch') && e.cancelable) {
+            e.preventDefault();
+        }
+
         const pos = e.touches ? e.touches[0] : e;
         const currentAngle = getAngle(pos.clientX, pos.clientY);
         if (lastAngle.current !== null) {
@@ -891,7 +928,7 @@ export const IPodPlayer = ({
         };
         window.addEventListener('mousemove', onMove);
         window.addEventListener('mouseup', onEnd);
-        window.addEventListener('touchmove', onMove);
+        window.addEventListener('touchmove', onMove, { passive: false });
         window.addEventListener('touchend', onEnd);
         return () => {
             window.removeEventListener('mousemove', onMove);
@@ -943,11 +980,11 @@ export const IPodPlayer = ({
 
             {/* ... Existing JSX ... */}
             {/* LARGE PREMIUM FRAME - REDUCED BORDER */}
-            <div className="relative w-full max-w-[400px] h-[700px] bg-[#000] rounded-[55px] border-[6px] border-[#333] shadow-[0_50px_120px_rgba(255,0,110,0.2),inset_0_2px_10px_rgba(255,0,110,0.1)] flex flex-col items-center p-8 select-none shrink-0 border-t-[#333] border-l-[#222] scale-100 sm:scale-110">
+            <div className={`relative w-full ${isVertical ? 'max-w-[280px] h-[480px] rounded-[30px] p-4' : 'max-w-[400px] h-[700px] rounded-[55px] p-8'} bg-[#000] border-[6px] border-[#333] shadow-[0_50px_120px_rgba(255,0,110,0.2),inset_0_2px_10px_rgba(255,0,110,0.1)] flex flex-col items-center select-none shrink-0 border-t-[#333] border-l-[#222] transition-all duration-500`}>
                 {/* ... */}
 
                 {/* SCREEN CONTAINER */}
-                <div className="w-full h-[320px] bg-black rounded-2xl border-4 border-[#f00060]/20 overflow-hidden relative shadow-[inset_0_0_50px_rgba(255,0,110,0.1)] flex flex-col">
+                <div className={`w-full ${isVertical ? 'h-[190px]' : 'h-[320px]'} bg-black rounded-2xl border-4 border-[#f00060]/20 overflow-hidden relative shadow-[inset_0_0_50px_rgba(255,0,110,0.1)] flex flex-col transition-all duration-300`}>
 
                     {/* STATUS BAR - REDESIGNED */}
                     <div className="h-7 bg-gradient-to-b from-[#1a1a1a] to-black/40 backdrop-blur-md border-b border-[#f00060]/30 flex justify-between items-center px-4 z-20">
@@ -964,203 +1001,212 @@ export const IPodPlayer = ({
 
                     {/* CONTENT AREA */}
                     <div className="flex-1 bg-[#050505] relative overflow-hidden">
-                        {screen === 'NOW_PLAYING' ? (
-                            // --- NOW PLAYING (THE SLEEK LOOK) ---
-                            <div className="flex flex-col h-full bg-[#050505] text-white p-3 pt-1 relative">
-                                {/* MINIMALIST EVOLVE BUTTON */}
-                                {/* CYBERPUNK EVOLVE BUTTON */}
-                                <motion.button
-                                    onClick={(e) => { e.stopPropagation(); onNext && onNext(); }}
-                                    className="absolute top-1.5 right-2 z-50 bg-white/[0.03] border border-white/10 px-2 h-4 rounded-sm hover:border-[#f00060]/60 active:scale-95 transition-colors group overflow-hidden"
-                                    whileHover={{ boxShadow: "0 0 15px rgba(240,0,96,0.2)" }}
-                                    title="Evolve Signal"
+                        <AnimatePresence mode="wait">
+                            {screen === 'NOW_PLAYING' ? (
+                                // --- NOW PLAYING (THE SLEEK LOOK) ---
+                                <motion.div
+                                    key="now-playing"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="flex flex-col h-full bg-[#050505] text-white p-3 pt-1 relative"
                                 >
-                                    {/* Glitch Scanline */}
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#f00060]/20 to-transparent w-full h-full -translate-x-full group-hover:animate-[scan_1.5s_infinite] pointer-events-none" />
-
-                                    <motion.span
-                                        className="text-[7px] font-black text-white/40 tracking-[0.2em] font-mono group-hover:text-white transition-colors relative z-10 block leading-none"
-                                        whileHover={{ x: [0, -1, 1, -1, 0] }}
-                                        transition={{ repeat: Infinity, duration: 0.2 }}
+                                    {/* CYBERPUNK EVOLVE BUTTON */}
+                                    <motion.button
+                                        onClick={(e) => { e.stopPropagation(); onNext && onNext(); }}
+                                        className="absolute top-1.5 right-2 z-50 bg-white/[0.03] border border-white/10 px-2 h-4 rounded-sm hover:border-[#f00060]/60 active:scale-95 transition-colors group overflow-hidden"
+                                        whileHover={{ boxShadow: "0 0 15px rgba(240,0,96,0.2)" }}
+                                        title="Evolve Signal"
                                     >
-                                        EVOLVE
-                                    </motion.span>
-                                </motion.button>
-
-                                {/* COVER ART - CENTERED */}
-                                <div className="flex items-center justify-center py-1 flex-shrink-0">
-                                    <div className="w-36 h-36 bg-black border-2 border-[#f00060]/30 shadow-[0_0_40px_rgba(255,0,110,0.15)] flex items-center justify-center relative overflow-hidden rounded-xl group/cover">
-                                        {currentTrack.cover ? (
-                                            <img src={currentTrack.cover} alt="Cover" className={`w-full h-full object-cover transition-all duration-500 ${isLocked ? 'blur-md grayscale opacity-40 scale-110' : 'group-hover/cover:scale-105'}`} />
-                                        ) : (
-                                            <Zap size={50} className="text-[#f00060] animate-pulse" />
-                                        )}
-
-                                        {isLocked && (
-                                            <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/40">
-                                                <div className="bg-[#f00060] text-black font-black text-[11px] px-3 py-1 rounded-sm leading-none mb-1 shadow-[0_0_15px_#f00060]">LOCKED</div>
-                                                <div className="text-white font-bold text-[10px] tracking-[0.2em]">{currentTrack.price} CRD</div>
-                                            </div>
-                                        )}
-                                        <div className="absolute -inset-10 border border-[#f00060]/5 rotate-45 pointer-events-none" />
-                                    </div>
-                                </div>
-
-                                {/* TRACK INFO - BELOW COVER */}
-                                <div className="flex-1 flex flex-col justify-start min-h-0 space-y-1.5 pt-1 px-2 text-center">
-                                    <div>
-                                        <h3 className="text-sm font-black text-white truncate tracking-tighter drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">{currentTrack.title}</h3>
-                                        <p
-                                            className="text-[10px] font-bold text-[#f00060] truncate tracking-[0.2em] cursor-pointer hover:underline hover:text-white transition-colors"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                const targetId = currentTrack.artistUserId;
-                                                if (targetId && navigateToProfile) navigateToProfile(targetId);
-                                            }}
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#f00060]/20 to-transparent w-full h-full -translate-x-full group-hover:animate-[scan_1.5s_infinite] pointer-events-none" />
+                                        <motion.span
+                                            className="text-[7px] font-black text-white/40 tracking-[0.2em] font-mono group-hover:text-white transition-colors relative z-10 block leading-none"
+                                            whileHover={{ x: [0, -1, 1, -1, 0] }}
+                                            transition={{ repeat: Infinity, duration: 0.2 }}
                                         >
-                                            {currentTrack.artist}
-                                        </p>
-                                    </div>
+                                            EVOLVE
+                                        </motion.span>
+                                    </motion.button>
 
-                                    {/* ACTION BUTTONS (LIKE/DOWNLOAD/ANTENNA) - BELOW TITLE */}
-                                    <div className="flex justify-center gap-6 py-1">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                if (currentTrack.source?.startsWith('youtube:')) {
-                                                    const isFav = favorites.some(f => f.id === currentTrack.id);
-                                                    if (isFav) {
-                                                        setFavorites(prev => prev.filter(f => f.id !== currentTrack.id));
-                                                    } else {
-                                                        setFavorites(prev => [...prev, currentTrack]);
-                                                    }
-                                                } else {
-                                                    onLike && onLike(currentTrack);
-                                                }
-                                            }}
-                                            className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1"
-                                        >
-                                            <Heart
-                                                size={18}
-                                                fill={(currentTrack.isLiked || favorites.some(f => f.id === currentTrack.id)) ? "#f00060" : "transparent"}
-                                                strokeWidth={3}
-                                            />
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setScreen('ACTION_MENU');
-                                                setSelectedIndex(0);
-                                            }}
-                                            className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1"
-                                        >
-                                            <DownloadIcon size={18} strokeWidth={3} />
-                                        </button>
-                                        {/* ANTENNA: Resonant Stations */}
-                                        <button
-                                            onClick={async (e) => {
-                                                e.stopPropagation();
-                                                setShowResonantStations(true);
-                                                setLoadingStations(true);
-                                                try {
-                                                    const API = await import('../services/api').then(m => m.default);
-                                                    // Derive topTag from track tags or title keywords
-                                                    const trackTags = (currentTrack.tags || currentTrack.Tags || '').toLowerCase();
-                                                    const tagGuess = trackTags.split(/[,\s]+/).find(t => t.length > 2) || 'music';
-                                                    setResonantTag(tagGuess);
-                                                    const res = await API.Pulse.getResonantStations(tagGuess);
-                                                    setResonantStations(res.data?.stations || []);
-                                                } catch (err) {
-                                                    console.warn('[PULSE] Failed to fetch resonant stations', err);
-                                                    setResonantStations([]);
-                                                } finally {
-                                                    setLoadingStations(false);
-                                                }
-                                            }}
-                                            className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1 relative"
-                                            title="Resonant Stations"
-                                        >
-                                            <AntennaIcon size={18} strokeWidth={3} />
-                                        </button>
-                                    </div>
-
-                                    {/* RESONANT STATIONS SLIDE-UP PANEL */}
-                                    {showResonantStations && (
-                                        <div
-                                            className="absolute inset-0 bg-black/95 z-50 flex flex-col p-3 rounded-xl"
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            <div className="flex justify-between items-center mb-2 border-b border-[#f00060]/20 pb-2">
-                                                <div className="flex items-center gap-2">
-                                                    <AntennaIcon size={14} className="text-[#f00060] animate-pulse" />
-                                                    <span className="text-[10px] font-black text-[#f00060] tracking-widest font-mono uppercase">RESONANT SIGNAL</span>
-                                                </div>
-                                                <button onClick={() => setShowResonantStations(false)} className="text-white/40 hover:text-white text-xs font-mono">✕</button>
-                                            </div>
-                                            <p className="text-white/30 text-[9px] font-mono mb-3 tracking-wider uppercase">Stations tuned to: <span className="text-[#f00060]">{resonantTag}</span></p>
-                                            {loadingStations ? (
-                                                <div className="flex-1 flex items-center justify-center">
-                                                    <RefreshCw size={20} className="text-[#f00060] animate-spin" />
-                                                </div>
-                                            ) : resonantStations.length === 0 ? (
-                                                <div className="flex-1 flex flex-col items-center justify-center gap-2">
-                                                    <AntennaIcon size={32} className="text-white/10" />
-                                                    <p className="text-white/30 text-[10px] font-mono text-center">NO LIVE SIGNAL DETECTED<br />Check back when stations are broadcasting</p>
-                                                </div>
+                                    {/* COVER ART - CENTERED */}
+                                    <div className="flex items-center justify-center py-1 flex-shrink-0">
+                                        <div className={`${isVertical ? 'w-20 h-20' : 'w-36 h-36'} bg-black border-2 border-[#f00060]/30 shadow-[0_0_40px_rgba(255,0,110,0.15)] flex items-center justify-center relative overflow-hidden rounded-xl group/cover transition-all duration-300`}>
+                                            {currentTrack.cover ? (
+                                                <img src={currentTrack.cover} alt="Cover" className={`w-full h-full object-cover transition-all duration-500 ${isLocked ? 'blur-md grayscale opacity-40 scale-110' : 'group-hover/cover:scale-105'}`} />
                                             ) : (
-                                                <div className="flex-1 overflow-y-auto space-y-2.5">
-                                                    {resonantStations.map(station => (
-                                                        <div key={station.stationId} className="flex items-center justify-between bg-white/5 border border-[#f00060]/20 rounded-lg px-3 py-2">
-                                                            <div className="min-w-0">
-                                                                <p className="text-white text-[11px] font-bold truncate">{station.name}</p>
-                                                                <p className="text-[#f00060]/70 text-[9px] font-mono truncate">{station.djName} · {station.genre}</p>
-                                                                {station.sessionTitle && <p className="text-white/30 text-[9px] truncate italic">"{station.sessionTitle}"</p>}
-                                                            </div>
-                                                            <div className="flex flex-col items-end gap-1 shrink-0 pl-2">
-                                                                <span className="text-[8px] font-black text-green-400 font-mono tracking-wider">● LIVE</span>
-                                                                <span className="text-[8px] text-white/30 font-mono">{station.listenerCount} listeners</span>
-                                                            </div>
-                                                        </div>
-                                                    ))}
+                                                <Zap size={44} className="text-[#f00060] animate-pulse" />
+                                            )}
+
+                                            {isLocked && (
+                                                <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/40">
+                                                    <div className="bg-[#f00060] text-black font-black text-[11px] px-3 py-1 rounded-sm leading-none mb-1 shadow-[0_0_15px_#f00060]">LOCKED</div>
+                                                    <div className="text-white font-bold text-[10px] tracking-[0.2em]">{currentTrack.price} CRD</div>
                                                 </div>
                                             )}
-                                        </div>
-                                    )}
-
-                                    {/* PROGRESS BAR - AT THE BOTTOM OF AREA */}
-                                    <div
-                                        className="mt-auto space-y-1 pb-1 cursor-pointer group/progress"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            const rect = e.currentTarget.getBoundingClientRect();
-                                            const x = e.clientX - rect.left;
-                                            const pct = x / rect.width;
-                                            const targetTime = pct * trackDurationSec;
-                                            onSeek && onSeek(targetTime);
-                                        }}
-                                    >
-                                        <div className="h-2 bg-[#1a1a1a] rounded-full overflow-hidden border border-[#f00060]/20 relative">
-                                            <motion.div
-                                                className="h-full bg-gradient-to-r from-[#f00060] to-[#c70055] shadow-[0_0_15px_#f00060]"
-                                                animate={{ width: `${(visualTime / trackDurationSec) * 100}%` }}
-                                                transition={{ type: "spring", bounce: 0, duration: 0.1 }}
-                                            />
-                                        </div>
-                                        <div className="flex justify-between text-[9px] font-mono text-[#f00060]/60 font-black tracking-widest">
-                                            <span>{formatTime(visualTime)}</span>
-                                            <span>-{formatTime(Math.max(0, trackDurationSec - visualTime))}</span>
+                                            <div className="absolute -inset-10 border border-[#f00060]/5 rotate-45 pointer-events-none" />
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        ) : (
-                            // --- MENU SYSTEM ---
-                            <div className="flex flex-col h-full bg-[#050505] scrollbar-hide">
-                                <div className="p-3 border-b border-[#f00060]/30 bg-gradient-to-r from-black/80 via-[#1a1a1a] to-black/80 backdrop-blur-sm flex items-center justify-between h-[42px] relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5 pointer-events-none" />
-                                    {
-                                        isSearching ? (
-                                            <div className="flex items-center w-full gap-2" >
+
+                                    {/* TRACK INFO - BELOW COVER */}
+                                    <div className="flex-1 flex flex-col justify-start min-h-0 space-y-1 pt-1 px-2 text-center">
+                                        <div>
+                                            <h3 className={`${isVertical ? 'text-[10px]' : 'text-sm'} font-black text-white truncate tracking-tighter drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] transition-all`}>{currentTrack.title}</h3>
+                                            <p
+                                                className={`${isVertical ? 'text-[7px]' : 'text-[10px]'} font-bold text-[#f00060] truncate tracking-[0.2em] cursor-pointer hover:underline hover:text-white transition-all`}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const targetId = currentTrack.artistUserId;
+                                                    if (targetId && navigateToProfile) navigateToProfile(targetId);
+                                                }}
+                                            >
+                                                {currentTrack.artist}
+                                            </p>
+                                        </div>
+
+                                        {/* ACTION BUTTONS (LIKE/DOWNLOAD/ANTENNA) - BELOW TITLE */}
+                                        <div className={`flex justify-center ${isVertical ? 'gap-2' : 'gap-6'} py-1 transition-all`}>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (currentTrack.source?.startsWith('youtube:')) {
+                                                        const isFav = favorites.some(f => f.id === currentTrack.id);
+                                                        if (isFav) {
+                                                            setFavorites(prev => prev.filter(f => f.id !== currentTrack.id));
+                                                        } else {
+                                                            setFavorites(prev => [...prev, currentTrack]);
+                                                        }
+                                                    } else {
+                                                        onLike && onLike(currentTrack);
+                                                    }
+                                                }}
+                                                className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1"
+                                            >
+                                                <Heart
+                                                    size={18}
+                                                    fill={(currentTrack.isLiked || favorites.some(f => f.id === currentTrack.id)) ? "#f00060" : "transparent"}
+                                                    strokeWidth={3}
+                                                />
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setScreen('ACTION_MENU');
+                                                    setSelectedIndex(0);
+                                                }}
+                                                className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1"
+                                            >
+                                                <DownloadIcon size={18} strokeWidth={3} />
+                                            </button>
+                                            <button
+                                                onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    setShowResonantStations(true);
+                                                    setLoadingStations(true);
+                                                    try {
+                                                        const API = await import('../services/api').then(m => m.default);
+                                                        const trackTags = (currentTrack.tags || currentTrack.Tags || '').toLowerCase();
+                                                        const tagGuess = trackTags.split(/[,\s]+/).find(t => t.length > 2) || 'music';
+                                                        setResonantTag(tagGuess);
+                                                        const res = await API.Pulse.getResonantStations(tagGuess);
+                                                        setResonantStations(res.data?.stations || []);
+                                                    } catch (err) {
+                                                        console.warn('[PULSE] Failed to fetch resonant stations', err);
+                                                        setResonantStations([]);
+                                                    } finally {
+                                                        setLoadingStations(false);
+                                                    }
+                                                }}
+                                                className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1 relative"
+                                                title="Resonant Stations"
+                                            >
+                                                <AntennaIcon size={18} strokeWidth={3} />
+                                            </button>
+                                        </div>
+
+                                        {/* RESONANT STATIONS SLIDE-UP PANEL */}
+                                        {showResonantStations && (
+                                            <div
+                                                className="absolute inset-0 bg-black/95 z-50 flex flex-col p-3 rounded-xl"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <div className="flex justify-between items-center mb-2 border-b border-[#f00060]/20 pb-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <AntennaIcon size={14} className="text-[#f00060] animate-pulse" />
+                                                        <span className="text-[10px] font-black text-[#f00060] tracking-widest font-mono uppercase">RESONANT SIGNAL</span>
+                                                    </div>
+                                                    <button onClick={() => setShowResonantStations(false)} className="text-white/40 hover:text-white text-xs font-mono">✕</button>
+                                                </div>
+                                                <p className="text-white/30 text-[9px] font-mono mb-3 tracking-wider uppercase">Stations tuned to: <span className="text-[#f00060]">{resonantTag}</span></p>
+                                                {loadingStations ? (
+                                                    <div className="flex-1 flex items-center justify-center">
+                                                        <RefreshCw size={20} className="text-[#f00060] animate-spin" />
+                                                    </div>
+                                                ) : resonantStations.length === 0 ? (
+                                                    <div className="flex-1 flex flex-col items-center justify-center gap-2">
+                                                        <AntennaIcon size={32} className="text-white/10" />
+                                                        <p className="text-white/30 text-[10px] font-mono text-center">NO LIVE SIGNAL DETECTED<br />Check back when stations are broadcasting</p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex-1 overflow-y-auto space-y-2.5">
+                                                        {resonantStations.map(station => (
+                                                            <div key={station.stationId} className="flex items-center justify-between bg-white/5 border border-[#f00060]/20 rounded-lg px-3 py-2">
+                                                                <div className="min-w-0">
+                                                                    <p className="text-white text-[11px] font-bold truncate">{station.name}</p>
+                                                                    <p className="text-[#f00060]/70 text-[9px] font-mono truncate">{station.djName} · {station.genre}</p>
+                                                                    {station.sessionTitle && <p className="text-white/30 text-[9px] truncate italic">"{station.sessionTitle}"</p>}
+                                                                </div>
+                                                                <div className="flex flex-col items-end gap-1 shrink-0 pl-2">
+                                                                    <span className="text-[8px] font-black text-green-400 font-mono tracking-wider">● LIVE</span>
+                                                                    <span className="text-[8px] text-white/30 font-mono">{station.listenerCount} listeners</span>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* PROGRESS BAR */}
+                                        <div
+                                            className="mt-auto space-y-1 pb-1 cursor-pointer group/progress"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                const rect = e.currentTarget.getBoundingClientRect();
+                                                const x = e.clientX - rect.left;
+                                                const pct = x / rect.width;
+                                                const targetTime = pct * trackDurationSec;
+                                                onSeek && onSeek(targetTime);
+                                            }}
+                                        >
+                                            <div className={`${isVertical ? 'h-1.5' : 'h-2'} bg-[#1a1a1a] rounded-full overflow-hidden border border-[#f00060]/20 relative transition-all`}>
+                                                <motion.div
+                                                    className="h-full bg-gradient-to-r from-[#f00060] to-[#c70055] shadow-[0_0_15px_#f00060]"
+                                                    animate={{ width: `${(visualTime / trackDurationSec) * 100}%` }}
+                                                    transition={{ type: "spring", bounce: 0, duration: 0.1 }}
+                                                />
+                                            </div>
+                                            <div className={`flex justify-between ${isVertical ? 'text-[8px]' : 'text-[9px]'} font-mono text-[#f00060]/60 font-black tracking-widest transition-all`}>
+                                                <span>{formatTime(visualTime)}</span>
+                                                <span>-{formatTime(Math.max(0, trackDurationSec - visualTime))}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                // --- MENU SYSTEM ---
+                                <motion.div
+                                    key="menu"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="flex flex-col h-full bg-[#050505] no-scrollbar overflow-hidden"
+                                >
+                                    <div className="p-3 border-b border-[#f00060]/30 bg-gradient-to-r from-black/80 via-[#1a1a1a] to-black/80 backdrop-blur-sm flex items-center justify-between h-[42px] relative overflow-hidden">
+                                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5 pointer-events-none" />
+                                        {isSearching ? (
+                                            <div className="flex items-center w-full gap-2">
                                                 <Search size={12} className="text-[#f00060] animate-pulse" />
                                                 <input
                                                     autoFocus
@@ -1197,55 +1243,64 @@ export const IPodPlayer = ({
                                                                                             screen}
                                             </h2>
                                         )}
-                                    <button
-                                        onClick={() => {
-                                            if (isSearching) {
-                                                setIsSearching(false);
-                                                setSearchQuery('');
-                                            } else {
-                                                setIsSearching(true);
-                                                setSelectedIndex(0);
-                                            }
-                                        }}
-                                        className={`transition-colors ${isSearching ? 'text-white hover:text-red-500' : 'text-[#f00060] hover:text-[#f00060]/80'}`}
+                                        <button
+                                            onClick={() => {
+                                                if (isSearching) {
+                                                    setIsSearching(false);
+                                                    setSearchQuery('');
+                                                } else {
+                                                    setIsSearching(true);
+                                                    setSelectedIndex(0);
+                                                }
+                                            }}
+                                            className={`transition-colors ${isSearching ? 'text-white hover:text-red-500' : 'text-[#f00060] hover:text-[#f00060]/80'}`}
+                                        >
+                                            {isSearching ? <Minimize2 size={12} /> : <Search size={12} />}
+                                        </button>
+                                    </div>
+                                    <div
+                                        ref={listRef}
+                                        className="flex-1 overflow-y-auto p-1 py-3 no-scrollbar scroll-smooth"
                                     >
-                                        {isSearching ? <Minimize2 size={12} /> : <Search size={12} />}
-                                    </button>
-                                </div>
-                                <div className="flex-1 overflow-y-auto p-1 py-3 scrollbar-hide">
-                                    {getCurrentItems().map((item, idx) => {
-                                        const isAction = ['BACK', 'BACK_SM', 'BACK_AM', 'BACK_NP', 'PLAY_ALL_FILTERED', 'SHUFFLE_ALL_FILTERED', 'PLAY_PLAYLIST', 'SHUFFLE_PLAYLIST'].includes(item.id);
-                                        const track = typeof item.id === 'number' ? tracks[item.id] : null;
-                                        const isDisabled = !isOnline && track && !track.isOwned;
+                                        {getCurrentItems().map((item, idx) => {
+                                            const isAction = ['BACK', 'BACK_SM', 'BACK_AM', 'BACK_NP', 'PLAY_ALL_FILTERED', 'SHUFFLE_ALL_FILTERED', 'PLAY_PLAYLIST', 'SHUFFLE_PLAYLIST'].includes(item.id);
+                                            const track = typeof item.id === 'number' ? tracks[item.id] : null;
+                                            const isDisabled = !isOnline && track && !track.isOwned;
 
-                                        return (
-                                            <div
-                                                key={item.id + idx}
-                                                className={`flex items-center justify-between px-5 py-3 rounded-lg mb-1.5 transition-all cursor-pointer 
-                                                    ${idx === selectedIndex
-                                                        ? 'bg-gradient-to-r from-[#f00060] to-[#c70055] text-black shadow-[0_0_25px_rgba(240,0,96,0.8)] font-black scale-[1.02]'
-                                                        : isDisabled
-                                                            ? 'text-[#666] opacity-50 cursor-not-allowed'
-                                                            : isAction ? 'text-[#f00060] font-black' : 'text-[#f00060]/90 hover:text-[#f00060]'
-                                                    }`}
-                                                onClick={(e) => {
-                                                    if (isDisabled) return;
-                                                    e.stopPropagation();
-                                                    setSelectedIndex(idx);
-                                                    handleCenterClick(e, item);
-                                                }}
-                                            >
-                                                <span className="text-[11px] tracking-widest truncate font-bold">
-                                                    {item.type === 'YOUTUBE_SIGNAL' && <span className="text-white/20 mr-2">[SIGNAL]</span>}
-                                                    {item.label}
-                                                </span>
-                                                <ChevronRight size={14} className={idx === selectedIndex ? 'text-black' : isDisabled ? 'text-transparent' : 'text-[#f00060]/60'} />
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
+                                            return (
+                                                <motion.div
+                                                    key={item.id + idx}
+                                                    initial={false}
+                                                    animate={{
+                                                        scale: idx === selectedIndex ? 1.02 : 1,
+                                                        x: idx === selectedIndex ? 4 : 0
+                                                    }}
+                                                    className={`flex items-center justify-between px-4 ${isVertical ? 'py-1' : 'py-3'} rounded-lg mb-1 transition-all cursor-pointer 
+                                                        ${idx === selectedIndex
+                                                            ? 'bg-gradient-to-r from-[#f00060] to-[#c70055] text-black shadow-[0_0_25px_rgba(240,0,96,0.8),inset_0_0_10px_rgba(0,0,0,0.2)] font-black'
+                                                            : isDisabled
+                                                                ? 'text-[#666] opacity-50 cursor-not-allowed'
+                                                                : isAction ? 'text-[#f00060] font-black' : 'text-[#f00060]/90 hover:text-[#f00060]'
+                                                        }`}
+                                                    onClick={(e) => {
+                                                        if (isDisabled) return;
+                                                        e.stopPropagation();
+                                                        setSelectedIndex(idx);
+                                                        handleCenterClick(e, item);
+                                                    }}
+                                                >
+                                                    <span className="text-[11px] tracking-widest truncate font-bold">
+                                                        {item.type === 'YOUTUBE_SIGNAL' && <span className="text-white/20 mr-2">[SIGNAL]</span>}
+                                                        {item.label}
+                                                    </span>
+                                                    <ChevronRight size={14} className={idx === selectedIndex ? 'text-black animate-pulse' : isDisabled ? 'text-transparent' : 'text-[#f00060]/60'} />
+                                                </motion.div>
+                                            );
+                                        })}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         {/* SCREEN OVERLAYS: SCANLINES & GLOSS */}
                         <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] z-40 bg-[length:100%_2px,3px_100%] pointer-events-none opacity-20" />
@@ -1254,26 +1309,26 @@ export const IPodPlayer = ({
                 </div>
 
                 {/* CLICK WHEEL SECTION */}
-                <div className="flex-1 w-full flex items-center justify-center relative pt-10 pb-6">
+                <div className={`flex-1 w-full flex items-center justify-center relative ${isVertical ? 'pt-4 pb-1' : 'pt-10 pb-6'}`}>
                     {/* EVOLVE BUTTON — bottom-right of circle */}
 
                     <div
                         ref={wheelRef}
                         onMouseDown={onStart}
                         onTouchStart={onStart}
-                        className="w-64 h-64 rounded-full bg-[#111] border-2 border-[#333] shadow-[0_15px_60px_rgba(0,0,0,1),inset_0_2px_10px_rgba(255,255,255,0.05)] relative flex items-center justify-center cursor-pointer active:scale-[0.99] transition-transform group"
+                        className={`${isVertical ? 'w-42 h-42' : 'w-64 h-64'} rounded-full bg-[#111] border-2 border-[#333] shadow-[0_15px_60px_rgba(0,0,0,1),inset_0_2px_10px_rgba(255,255,255,0.05)] relative flex items-center justify-center cursor-pointer active:scale-[0.99] transition-all duration-300 group touch-none`}
                     >
                         {/* WHEEL BUTTONS - POLISHED */}
-                        <button onClick={handleMenuClick} className="absolute top-6 text-xs font-black text-[#f00060]/40 hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] tracking-widest transition-all font-mono uppercase z-50">MENU</button>
-                        <button onClick={(e) => { e.stopPropagation(); onMinimize(); }} className="absolute bottom-6 text-[#666] hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] transition-all z-50"><Minimize2 size={24} /></button>
-                        <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="absolute left-6 text-[#666] hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] transition-all active:scale-95 z-50"><SkipBack size={28} fill="currentColor" /></button>
-                        <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="absolute right-6 text-[#666] hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] transition-all active:scale-95 z-50"><SkipForward size={28} fill="currentColor" /></button>
+                        <button onClick={handleMenuClick} className={`absolute ${isVertical ? 'top-4' : 'top-6'} text-xs font-black text-[#f00060]/40 hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] tracking-widest transition-all font-mono uppercase z-50`}>MENU</button>
+                        <button onClick={(e) => { e.stopPropagation(); onMinimize(); }} className={`absolute ${isVertical ? 'bottom-4' : 'bottom-6'} text-[#666] hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] transition-all z-50`}><Minimize2 size={isVertical ? 20 : 24} /></button>
+                        <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className={`absolute ${isVertical ? 'left-4' : 'left-6'} text-[#666] hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] transition-all active:scale-95 z-50`}><SkipBack size={isVertical ? 24 : 28} fill="currentColor" /></button>
+                        <button onClick={(e) => { e.stopPropagation(); onNext(); }} className={`absolute ${isVertical ? 'right-4' : 'right-6'} text-[#666] hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] transition-all active:scale-95 z-50`}><SkipForward size={isVertical ? 24 : 28} fill="currentColor" /></button>
 
 
                         {/* CENTER "SELECT" BUTTON */}
                         <button
                             onClick={handleCenterClick}
-                            className="w-24 h-24 rounded-full bg-[#080808] border-2 border-[#222] shadow-[0_0_30px_rgba(0,0,0,1)] flex items-center justify-center active:bg-[#f00060] transition-all group/select overflow-hidden relative z-50"
+                            className={`${isVertical ? 'w-14 h-14' : 'w-24 h-24'} rounded-full bg-[#080808] border-2 border-[#222] shadow-[0_0_30px_rgba(0,0,0,1)] flex items-center justify-center active:bg-[#f00060] transition-all group/select overflow-hidden relative z-50`}
                         >
                             <AnimatePresence mode="wait">
                                 {isLocked && screen === 'NOW_PLAYING' ? (
@@ -1291,9 +1346,9 @@ export const IPodPlayer = ({
                                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                                     >
                                         {isPlaying ? (
-                                            <Pause size={32} fill="#f00060" className="drop-shadow-[0_0_8px_#f00060]" />
+                                            <Pause size={isVertical ? 24 : 32} fill="#f00060" className="drop-shadow-[0_0_8px_#f00060]" />
                                         ) : (
-                                            <Play size={32} fill="#f00060" className="drop-shadow-[0_0_8px_#f00060] ml-1" />
+                                            <Play size={isVertical ? 24 : 32} fill="#f00060" className="drop-shadow-[0_0_8px_#f00060] ml-1" />
                                         )}
                                     </motion.div>
                                 )}

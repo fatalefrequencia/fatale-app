@@ -1193,6 +1193,63 @@ function App() {
     setViewOriginal('profile');
   };
 
+  // --- SWIPE NAVIGATION LOGIC ---
+  useEffect(() => {
+    const VIEWS_SEQUENCE = ['discovery', 'feed', 'messages', 'profile'];
+    
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const EDGE_THRESHOLD = 50; // Sensitive area from sides
+    const MIN_SWIPE_DISTANCE = 60; // Min drag distance
+
+    const handleTouchStart = (e) => {
+      // Don't swipe if we're in login
+      if (activeView === 'login') return;
+      
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+    };
+
+    const handleTouchEnd = (e) => {
+      if (activeView === 'login') return;
+
+      const touch = e.changedTouches[0];
+      const deltaX = touch.clientX - touchStartX;
+      const deltaY = touch.clientY - touchStartY;
+
+      // Ensure it's a primarily horizontal swipe
+      if (Math.abs(deltaX) > Math.abs(deltaY) * 1.5 && Math.abs(deltaX) > MIN_SWIPE_DISTANCE) {
+        const currentIndex = VIEWS_SEQUENCE.indexOf(activeView);
+        if (currentIndex === -1) return;
+
+        // SWIPE FROM RIGHT TO LEFT (Next)
+        if (deltaX < 0 && touchStartX > window.innerWidth - EDGE_THRESHOLD) {
+           if (currentIndex < VIEWS_SEQUENCE.length - 1) {
+             const nextView = VIEWS_SEQUENCE[currentIndex + 1];
+             if (nextView === 'profile') navigateToProfile(null);
+             else setView(nextView);
+           }
+        } 
+        // SWIPE FROM LEFT TO RIGHT (Prev)
+        else if (deltaX > 0 && touchStartX < EDGE_THRESHOLD) {
+           if (currentIndex > 0) {
+             const prevView = VIEWS_SEQUENCE[currentIndex - 1];
+             if (prevView === 'profile') navigateToProfile(null);
+             else setView(prevView);
+           }
+        }
+      }
+    };
+
+    window.addEventListener('touchstart', handleTouchStart);
+    window.addEventListener('touchend', handleTouchEnd);
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [activeView, viewingUserId]);
+
   const handleCache = async (track) => {
     if (!subscription?.isActive) {
       showNotification("SUBSCRIPTION_REQUIRED", "Please upgrade to cache tracks.", "warning");
@@ -1453,7 +1510,7 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto no-scrollbar relative pb-24"> {/* Changed custom-scrollbar to no-scrollbar */}
+        <div className={`flex-1 relative ${activeView === 'discovery' ? 'overflow-hidden' : 'overflow-y-auto no-scrollbar pb-24'}`}>
           <AnimatePresence mode="wait">
             {activeView === 'discovery' && (
               <DiscoveryMapView
@@ -1581,63 +1638,76 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
 
   return (
     <motion.div
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
-      exit={{ y: 100 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className={`absolute bottom-20 left-4 right-4 lg:bottom-4 lg:left-72 lg:right-8 backdrop-blur-xl border p-3 rounded-2xl flex items-center gap-4 z-[100] shadow-lg ${isMessages
-        ? 'bg-black border-black/10 shadow-[0_0_10px_rgba(255,0,110,0.2)]'
-        : 'bg-[#0a0a0a]/90 border-[#ff006e]/10 border-t-[#ff006e]/20 shadow-[0_0_15px_rgba(0,0,0,0.3)]'
+      initial={{ y: 100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: 100, opacity: 0 }}
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+      className={`fixed bottom-0 left-0 right-0 backdrop-blur-3xl border-t p-3 pb-8 lg:pb-3 flex items-center gap-3 z-[100] shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${isMessages
+        ? 'bg-black/95 border-white/10'
+        : 'bg-[#050505]/90 border-[#ff006e]/30 shadow-[0_0_30px_rgba(255,0,110,0.1)]'
         } `}
     >
+      {/* Progress Bar (Decorative/Subtle) */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-white/5 overflow-hidden">
+         <motion.div 
+            className="h-full bg-[#ff0060]" 
+            initial={{ width: 0 }}
+            animate={{ width: '45%' }} // Placeholder progress
+            transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}
+         />
+      </div>
+
       {/* Track Info (Click to expand) */}
       <div className="flex items-center gap-3 lg:gap-4 flex-1 cursor-pointer group min-w-0" onClick={onExpand}>
-        <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-lg border flex items-center justify-center relative overflow-hidden shrink-0 ${isMessages ? 'bg-[#111] border-[#333]' : 'bg-[#111] border-[#ff006e]/10'}`}>
+        <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded border flex items-center justify-center relative overflow-hidden shrink-0 ${isMessages ? 'bg-[#111] border-[#333]' : 'bg-[#111] border-[#ff006e]/10'}`}>
           {track?.cover || track?.thumbnail ? (
-            <img src={track.cover || track.thumbnail} alt="Cover" className="w-full h-full object-cover" />
+            <img src={track.cover || track.thumbnail} alt="Cover" className="w-full h-full object-cover filter brightness-75 group-hover:brightness-100 transition-all" />
           ) : (
-            <Music size={18} className={`transition-colors ${isMessages ? 'text-[#ff006e]' : 'text-[#ff006e]/40 group-hover:text-[#ff006e]'}`} />
+            <Music size={18} className={`transition-colors ${isMessages ? 'text-[#ff006e]' : 'text-[#ff006e]/30 group-hover:text-[#ff006e]'}`} />
           )}
-          {isPlaying && (!track?.cover && !track?.thumbnail) && <div className={`absolute inset-0 animate-pulse ${isMessages ? 'bg-[#ff006e]/10' : 'bg-[#ff006e]/10'}`} />}
         </div>
         <div className="flex-1 min-w-0 overflow-hidden">
-          <h4 className={`text-[10px] lg:text-xs font-black uppercase truncate transition-colors ${isMessages ? 'text-white' : 'text-white group-hover:text-[#ff006e]'}`}>{track?.title || 'No Track'}</h4>
-          <p className={`text-[8px] lg:text-[10px] font-bold uppercase truncate ${isMessages ? 'text-[#ff006e]' : 'text-[#ff006e]/50'}`}>{track?.artist || 'Unknown'}</p>
+          <h4 className={`text-[10px] lg:text-xs font-black uppercase truncate transition-colors leading-none mb-1 ${isMessages ? 'text-white' : 'text-white group-hover:text-[#ff006e]'}`}>{track?.title || 'No Track'}</h4>
+          <div className="flex items-center gap-2">
+            <p className={`text-[8px] lg:text-[9px] font-bold uppercase truncate tracking-widest ${isMessages ? 'text-[#ff006e]' : 'text-[#ff006e]/40'}`}>{track?.artist || 'Unknown'}</p>
+            <div className="w-1 h-1 rounded-full bg-[#ff006e]/20" />
+            <span className="text-[7px] text-white/20 uppercase font-mono">SIGNAL_ON</span>
+          </div>
         </div>
       </div>
 
       {/* Controls */}
       <div className="flex items-center gap-3 lg:gap-6 px-1 lg:px-4 shrink-0">
-        <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className={`transition-colors ${isMessages ? 'text-[#ff006e]/60 hover:text-[#ff006e]' : 'text-[#ff006e]/60 hover:text-white'}`}>
-          <SkipBack size={18} fill="currentColor" />
+        <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="text-white/20 hover:text-white transition-colors">
+          <SkipBack size={16} fill="currentColor" />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
-          className={`w-8 h-8 lg:w-10 lg:h-10 flex items-center justify-center transition-all active:scale-90 ${isMessages ? 'text-[#ff006e]/60 hover:text-[#ff006e]' : 'text-[#ff006e]/60 hover:text-white'}`}
+          className={`w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-90 ${isMessages ? 'bg-[#ff006e]/10 text-[#ff006e]' : 'bg-white/5 border border-white/10 text-white hover:bg-[#ff006e] hover:text-black hover:border-transparent'}`}
         >
           {isPlaying ? (
-            <Pause size={24} fill="currentColor" />
+            <Pause size={20} fill="currentColor" />
           ) : (
-            <Play size={24} fill="currentColor" className="ml-0.5" />
+            <Play size={20} fill="currentColor" className="ml-0.5" />
           )}
         </button>
-        <button onClick={(e) => { e.stopPropagation(); onNext(); }} className={`transition-colors ${isMessages ? 'text-[#ff006e]/60 hover:text-[#ff006e]' : 'text-[#ff006e]/60 hover:text-white'}`}>
-          <SkipForward size={18} fill="currentColor" />
+        <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="text-white/20 hover:text-white transition-colors">
+          <SkipForward size={16} fill="currentColor" />
         </button>
       </div>
 
-      {/* Extra Actions */}
-      <div className={`hidden sm:flex items-center gap-4 lg:gap-6 px-2 border-l pl-4 lg:pl-6 ${isMessages ? 'border-[#ff006e]/10' : 'border-[#ff006e]/10'}`}>
+      {/* Extra Actions - Desktop/Side Panel */}
+      <div className={`hidden sm:flex items-center gap-4 lg:gap-6 px-2 border-l pl-4 lg:pl-6 border-white/5`}>
         <Heart
           size={18}
-          className={`cursor-pointer transition-colors ${track?.isLiked ? 'text-[#ff006e] fill-[#ff006e]' : 'text-[#ff006e]/40 hover:text-[#ff006e]'}`}
+          className={`cursor-pointer transition-colors ${track?.isLiked ? 'text-[#ff006e] fill-[#ff006e]' : 'text-white/20 hover:text-[#ff006e]'}`}
           onClick={(e) => { e.stopPropagation(); onLike && onLike(track); }}
         />
         <div onClick={(e) => { e.stopPropagation(); onToggleMute && onToggleMute(); }} className="cursor-pointer">
           {isMuted ? (
-            <VolumeX size={18} className={isMessages ? 'text-[#ff006e]' : 'text-[#ff006e]'} />
+            <VolumeX size={18} className="text-[#ff006e]" />
           ) : (
-            <Volume2 size={18} className={`transition-colors ${isMessages ? 'text-[#ff006e]/40 hover:text-[#ff006e]' : 'text-[#ff006e]/40 hover:text-[#ff006e]'}`} />
+            <Volume2 size={18} className="text-white/20 hover:text-[#ff006e] transition-colors" />
           )}
         </div>
       </div>

@@ -165,15 +165,6 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
             {roomMode === 'room' && (
                 <>
                     <div className="absolute top-6 left-6 z-[200] flex items-center gap-4">
-                        {onExitProfile && (
-                            <button
-                                onClick={onExitProfile}
-                                className="p-2 bg-black/40 backdrop-blur-md border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition-all rounded-full"
-                                title="Return to Previous Location"
-                            >
-                                <ChevronLeft size={24} />
-                            </button>
-                        )}
                         {!isMe && onMessageClick && (
                             <button
                                 onClick={onMessageClick}

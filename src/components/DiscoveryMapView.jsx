@@ -10,8 +10,8 @@ import { useNotification } from '../contexts/NotificationContext';
 const WORLD_W = 6000;
 const WORLD_H = 3800;
 const isDesktop = typeof window !== 'undefined' ? window.innerWidth >= 768 : true;
-const NODE_W = isDesktop ? 280 : 340; // Wider columns for premium poster-like look
-const NODE_H = isDesktop ? 280 : 340;
+const NODE_W = isDesktop ? 220 : 180; // Reduced for cleaner layout
+const NODE_H = isDesktop ? 220 : 180;
 
 // Gaps increased to match the spacious modern aesthetic in the reference images
 const COL_GAP = NODE_W + 32;
@@ -33,14 +33,14 @@ const hashStr = (s) => {
 const getOrbitalPos = (index, total, centerX, centerY) => {
     // Archimedean spiral for dense packing Without overlaps
     // Increased 'a' (starting radius) and 'b' (spiral width per turn) to prevent card overlap
-    const a = NODE_W * 0.7; // Initial pushout to clear the central community text
-    const b = NODE_W * 0.32; // Distance between turns (wider for large blocks)
-    const angle = index * 2.4; // Golden angle approx (radians)
+    const a = isDesktop ? NODE_W * 0.7 : NODE_W * 0.9; // More initial space on mobile
+    const b = isDesktop ? NODE_W * 0.32 : NODE_W * 0.45; // Wider spiral on mobile
+    const angle = index * 2.4; 
 
     const radius = a + b * angle;
     return {
         x: centerX + Math.cos(angle) * radius,
-        y: centerY + Math.sin(angle) * (radius * 1.25) // Account for portrait ratio bounds
+        y: centerY + Math.sin(angle) * (radius * (isDesktop ? 1.25 : 1.45)) // More vertical spacing for mobile portrait
     };
 };
 
@@ -104,13 +104,13 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
     const [viewState, setViewState] = useState({
         x: 0,
         y: 0,
-        zoom: (typeof window !== 'undefined' && (window.innerHeight > window.innerWidth || window.innerWidth <= 768)) ? 0.70 : 1.05
+        zoom: (typeof window !== 'undefined' && (window.innerHeight > window.innerWidth || window.innerWidth <= 768)) ? 0.85 : 1.05
     });
 
     // Enforce 0.70 zoom whenever we are vertical
     useEffect(() => {
-        if (isVertical && viewState.zoom !== 0.70) {
-            setViewState(prev => ({ ...prev, zoom: 0.70 }));
+        if (isVertical && viewState.zoom < 0.85) {
+            setViewState(prev => ({ ...prev, zoom: 0.85 }));
         }
     }, [isVertical, viewState.zoom]);
 
@@ -1425,289 +1425,278 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                 HUD ELEMENTS
             ══════════════════════════════════════════ */}
 
-            {/* TOP RIGHT: HUD controls and stats */}
-            <div data-hud className="absolute top-4 right-4 z-50 flex flex-col items-end gap-3">
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => setIsCreatingCommunity(true)}
-                        className="hud-panel rounded-sm px-4 py-2.5 flex items-center gap-2 group relative outline-none transition-colors duration-200"
-                    >
-                        {/* Active/Hover Background Layer */}
-                        <div className="absolute inset-0 bg-[#ff006e]/5 group-hover:bg-[#ff006e]/10 transition-colors" />
+            {/* TOP HUD: Unified for Mobile, Split for Desktop */}
+            <div data-hud className={`absolute left-0 right-0 z-50 flex pointer-events-none ${isVertical ? 'top-0 p-4 flex-col gap-2' : 'top-4 px-4 justify-between items-start'}`}>
+                {/* Left Side: System & Search */}
+                <div className={`flex flex-col gap-2 pointer-events-auto ${isVertical ? 'w-full' : ''}`}>
+                    <div className={`hud-panel bg-black/40 rounded-sm flex items-center justify-between relative overflow-hidden transition-all ${isVertical ? 'px-3 py-2 w-full' : 'px-5 py-2.5 gap-4'}`}>
+                        <div className="hud-bracket-tl text-[#ff0000]" />
+                        <div className="hud-bracket-br text-[#ff0000]" />
 
-                        <div className="hud-bracket-tl text-[#ff006e] opacity-40 group-hover:opacity-100" />
-                        <div className="hud-bracket-tr text-[#ff006e] opacity-40 group-hover:opacity-100" />
-                        <div className="hud-bracket-bl text-[#ff006e] opacity-40 group-hover:opacity-100" />
-                        <div className="hud-bracket-br text-[#ff006e] opacity-40 group-hover:opacity-100" />
-
-                        <Plus size={12} className="relative text-white opacity-70 group-hover:text-[#ff006e] group-hover:opacity-100 transition-all group-hover:scale-110" />
-                        <span className="relative mono text-[9px] tracking-[0.3em] text-white font-black group-hover:text-[#ff006e] opacity-60 group-hover:opacity-100 transition-all">
-                            found a community....
-                        </span>
-                    </button>
-
-                    <button
-                        onClick={() => flyTo(4200, 1900, 0.35)}
-                        className="hud-panel rounded-sm w-10 h-10 flex items-center justify-center text-white/30 hover:text-[#ff006e] relative group outline-none"
-                        title="Reset View"
-                    >
-                        <div className="hud-bracket-tl opacity-10 group-hover:opacity-60" />
-                        <div className="hud-bracket-tr opacity-10 group-hover:opacity-60" />
-                        <div className="hud-bracket-bl opacity-10 group-hover:opacity-60" />
-                        <div className="hud-bracket-br opacity-10 group-hover:opacity-60" />
-                        <Activity size={14} className="group-hover:scale-110 transition-transform" />
-                    </button>
-                    {user && (
-                        <button
-                            onClick={() => {
-                                const me = artists.find(a => a.userId === user.id || a.userId === user.Id);
-                                if (me) flyTo(me.x, me.y, 1.2);
-                            }}
-                            className="hud-panel rounded-sm w-10 h-10 flex items-center justify-center text-white/30 hover:text-[#ff006e] relative group outline-none"
-                            title="Find Me"
-                        >
-                            <div className="hud-bracket-tl opacity-10 group-hover:opacity-60" />
-                            <div className="hud-bracket-tr opacity-10 group-hover:opacity-60" />
-                            <div className="hud-bracket-bl opacity-10 group-hover:opacity-60" />
-                            <div className="hud-bracket-br opacity-10 group-hover:opacity-60" />
-                            <MapPin size={14} className="group-hover:scale-110 transition-transform" />
-                        </button>
-                    )}
-                </div>
-
-                <div className="hud-panel rounded-sm px-4 py-2.5 flex gap-4 md:gap-10 relative overflow-hidden">
-                    <div className="hud-bracket-tl text-[#ff006e]/30" />
-                    <div className="hud-bracket-br text-[#ff006e]/30" />
-
-                    <div className="flex flex-col items-end">
-                        <div className="mono text-[7px] tracking-[0.3em] text-[#ff0000]/50 uppercase mb-1 font-black">node_results</div>
-                        <div className="mono text-[16px] font-black tracking-[0.1em] leading-none" style={{ color: 'rgba(255,0,0,0.7)' }}>
-                            {stats.tracks.toLocaleString()}
+                        <div className="flex flex-col">
+                            <span className={`mono tracking-[0.4em] text-[#ff0000] uppercase font-black ${isVertical ? 'text-[8px]' : 'text-[10px]'}`}>FATALE_SYSTEM // DISCOVERY_05</span>
+                            <div className="flex items-center gap-2 mt-0.5">
+                                <MapClock />
+                            </div>
                         </div>
-                    </div>
-                    <div className="flex flex-col items-end border-l border-white/5 pl-10">
-                        <div className="mono text-[7px] tracking-[0.3em] text-[#ff006e]/50 uppercase mb-1 font-black">users_sync</div>
-                        <div className="mono text-[16px] font-black tracking-[0.1em] leading-none" style={{ color: 'rgba(255,0,110,0.7)' }}>
-                            {stats.online.toLocaleString()}
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            {/* TOP-LEFT: Search + title */}
-            <div data-hud className="absolute top-4 left-4 z-50 flex flex-col gap-2">
-                {/* Title bar */}
-                <div className="hud-panel bg-black/40 rounded-sm px-5 py-2.5 flex items-center gap-4 relative overflow-hidden">
-                    <div className="hud-bracket-tl text-[#ff0000]" />
-                    <div className="hud-bracket-br text-[#ff0000]" />
-
-                    <div className="flex flex-col">
-                        <span className="mono text-[10px] tracking-[0.4em] text-[#ff0000] uppercase font-black">FATALE_SYSTEM // DISCOVERY_05</span>
-                        <div className="flex items-center gap-2 mt-1">
-                            <MapClock />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Search */}
-                <div className="flex flex-col gap-1">
-                    <div
-                        className="hud-panel rounded-sm flex items-center gap-2 px-3 overflow-hidden transition-all duration-300 relative z-[60]"
-                        style={{ width: searchOpen ? (isVertical ? 'calc(100vw - 32px)' : 320) : 38, height: 36 }}
-                    >
-                        <div className="hud-bracket-tl text-[#ff0000]/40" />
-                        <div className="hud-bracket-br text-[#ff0000]/40" />
-                        <button
-                            onClick={() => {
-                                setSearchOpen(s => !s);
-                                if (searchOpen) {
-                                    setSearchQuery('');
-                                }
-                            }}
-                            className="flex-shrink-0 text-[#ff0000]/60 hover:text-[#ff0000] transition-colors"
-                        >
-                            {searchOpen ? <X size={13} /> : <Search size={13} />}
-                        </button>
-                        {searchOpen && (
-                            <input
-                                autoFocus
-                                placeholder="SEARCH_NODES_OR_STREAM..."
-                                value={searchQuery}
-                                onChange={e => setSearchQuery(e.target.value)}
-                                className="flex-1 bg-transparent text-white/80 text-[10px] outline-none placeholder:text-white/20 mono tracking-widest"
-                            />
+                        {isVertical && (
+                            <div className="flex gap-4 border-l border-white/5 pl-4">
+                                <div className="flex flex-col items-end">
+                                    <div className="mono text-[6px] tracking-[0.2em] text-[#ff0000]/60 uppercase font-bold">NODES</div>
+                                    <div className="mono text-[12px] font-black text-white/90 leading-none">{stats.tracks}</div>
+                                </div>
+                                <div className="flex flex-col items-end">
+                                    <div className="mono text-[6px] tracking-[0.2em] text-[#ff006e]/60 uppercase font-bold">SYNC</div>
+                                    <div className="mono text-[12px] font-black text-white/90 leading-none">{stats.online}</div>
+                                </div>
+                            </div>
                         )}
-                        {searchingYoutube && <div className="w-3 h-3 border border-[#ff0000] border-t-transparent rounded-full animate-spin mr-1" />}
                     </div>
 
-                    {/* Search Results Dropdown */}
-                    <AnimatePresence>
-                        {searchOpen && searchQuery.length >= 2 && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                className={`hud-panel rounded-lg ${isVertical ? 'w-[calc(100vw-32px)]' : 'w-[320px]'} max-h-[400px] overflow-y-auto custom-scrollbar p-2 flex flex-col gap-1 border border-white/5 shadow-2xl mt-1`}
+                    <div className="flex flex-col gap-1">
+                        <div
+                            className="hud-panel rounded-sm flex items-center gap-2 px-3 overflow-hidden transition-all duration-300 relative z-[60]"
+                            style={{ 
+                                width: searchOpen ? (isVertical ? '100%' : 320) : 38, 
+                                height: 36,
+                                background: searchOpen ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.45)'
+                            }}
+                        >
+                            <div className="hud-bracket-tl text-[#ff0000]/40" />
+                            <div className="hud-bracket-br text-[#ff0000]/40" />
+                            <button
+                                onClick={() => {
+                                    setSearchOpen(s => !s);
+                                    if (searchOpen) setSearchQuery('');
+                                }}
+                                className="flex-shrink-0 text-[#ff0000]/60 hover:text-[#ff0000] transition-colors"
                             >
-                                {/* Local Tracks */}
-                                {localTracks.length > 0 && (
-                                    <div className="flex flex-col gap-1">
-                                        <div className="mono text-[8px] text-white/30 px-2 py-1 tracking-widest uppercase">Fatale Songs</div>
-                                        {localTracks.map(t => (
-                                            <button
-                                                key={`local-trk-${t.id}`}
-                                                onClick={() => {
-                                                    onPlayPlaylist?.([t], 0);
-                                                    setSearchQuery('');
-                                                    setSearchOpen(false);
-                                                }}
-                                                className="w-full text-left p-2 rounded hover:bg-white/5 flex items-center gap-3 group transition-colors"
-                                            >
-                                                <div className="w-6 h-6 rounded bg-white/5 flex items-center justify-center">
-                                                    <Music size={12} className="text-[#00ffff]/50 group-hover:text-[#00ffff]" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-[10px] text-white font-bold truncate tracking-wider">{t.title}</div>
-                                                    <div className="text-[8px] text-white/60 mono uppercase truncate">{t.artist}</div>
-                                                </div>
-                                                <Play size={10} className="text-white/30 group-hover:text-[#ff006e]" />
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
+                                {searchOpen ? <X size={13} /> : <Search size={13} />}
+                            </button>
+                            {searchOpen && (
+                                <input
+                                    autoFocus
+                                    placeholder="SEARCH_NODES..."
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                    className="flex-1 bg-transparent text-white/80 text-[10px] outline-none placeholder:text-white/20 mono tracking-widest"
+                                />
+                            )}
+                        </div>
 
-                                {/* Local Artists */}
-                                {localArtists.length > 0 && (
-                                    <div className="flex flex-col gap-1 mt-2 border-t border-white/5 pt-2">
-                                        <div className="mono text-[8px] text-white/30 px-2 py-1 tracking-widest uppercase">Fatale Profiles</div>
-                                        {localArtists.slice(0, 5).map(a => (
-                                            <button
-                                                key={`local-art-${a.id}`}
-                                                onClick={() => {
-                                                    flyTo(a.x, a.y, 0.8);
-                                                    setSearchQuery('');
-                                                    setSearchOpen(false);
-                                                }}
-                                                className="w-full text-left p-2 rounded hover:bg-white/5 flex items-center gap-3 group transition-colors"
-                                            >
-                                                <div className="w-6 h-6 rounded bg-white/5 flex items-center justify-center">
-                                                    <MapPin size={12} className="text-[#ff006e]/50 group-hover:text-[#ff006e]" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-[10px] text-white font-bold truncate tracking-wider">{a.name}</div>
-                                                    <div className="text-[8px] text-white/60 mono uppercase">{a.sector}</div>
-                                                </div>
-                                                <ChevronRight size={12} className="text-white/30 group-hover:text-white/60" />
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-
-                                {/* YouTube Results */}
-                                {youtubeResults.length > 0 && (
-                                    <div className="flex flex-col gap-1 mt-2 border-t border-white/5 pt-2">
-                                        <div className="mono text-[8px] text-[#fbbf24]/60 px-2 py-1 tracking-widest uppercase font-black italic">GLOBAL_STREAM_CARRIER</div>
-                                        {youtubeResults.slice(0, 8).map((yt, idx) => {
-                                            const id = yt.id || yt.Id || `yt-fallback-${idx}`;
-                                            const title = yt.title || yt.Title || 'Unknown Title';
-                                            const author = yt.author || yt.Author || yt.channelTitle || 'Unknown Artist';
-                                            const thumb = yt.thumbnailUrl || yt.ThumbnailUrl || (yt.snippet?.thumbnails?.default?.url);
-
-                                            return (
+                        {/* Search Results Dropdown */}
+                        <AnimatePresence>
+                            {searchOpen && searchQuery.length >= 2 && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className={`hud-panel rounded-lg ${isVertical ? 'w-full' : 'w-[320px]'} max-h-[400px] overflow-y-auto custom-scrollbar p-2 flex flex-col gap-1 border border-white/5 shadow-2xl mt-1`}
+                                >
+                                    {/* Local Tracks */}
+                                    {localTracks.length > 0 && (
+                                        <div className="flex flex-col gap-1">
+                                            <div className="mono text-[8px] text-white/30 px-2 py-1 tracking-widest uppercase">Fatale Songs</div>
+                                            {localTracks.map(t => (
                                                 <button
-                                                    key={id}
+                                                    key={`local-trk-${t.id}`}
                                                     onClick={() => {
-                                                        const track = {
-                                                            id,
-                                                            title,
-                                                            artist: author,
-                                                            duration: '0:00',
-                                                            cover: thumb,
-                                                            source: `youtube:${id}`,
-                                                            isYoutube: true,
-                                                            isYT: true,
-                                                            isOwned: true,
-                                                            isLocked: false
-                                                        };
-                                                        onPlayPlaylist?.([track], 0);
+                                                        onPlayPlaylist?.([t], 0);
                                                         setSearchQuery('');
                                                         setSearchOpen(false);
                                                     }}
-                                                    className="w-full text-left p-2 border-b border-[#fbbf24]/5 hover:bg-[#fbbf24]/5 flex items-center gap-3 group transition-colors"
+                                                    className="w-full text-left p-2 rounded hover:bg-white/5 flex items-center gap-3 group transition-colors"
                                                 >
-                                                    <div className="w-10 h-6 bg-black/40 overflow-hidden relative flex-shrink-0 border border-[#fbbf24]/20 group-hover:border-[#fbbf24]/60">
-                                                        <img src={thumb} alt="" className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
-                                                        <div className="absolute inset-0 bg-[#fbbf24]/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    <div className="w-6 h-6 rounded bg-white/5 flex items-center justify-center">
+                                                        <Music size={12} className="text-[#00ffff]/50 group-hover:text-[#00ffff]" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="text-[9px] text-white/90 font-bold truncate leading-tight group-hover:text-[#fbbf24]" dangerouslySetInnerHTML={{ __html: title }} />
-                                                        <div className="text-[7px] text-[#fbbf24]/50 mono uppercase truncate">AUTH // {author}</div>
+                                                        <div className="text-[10px] text-white font-bold truncate tracking-wider">{t.title}</div>
+                                                        <div className="text-[8px] text-white/60 mono uppercase truncate">{t.artist}</div>
                                                     </div>
-                                                    <Play size={10} className="text-[#fbbf24]/30 group-hover:text-[#fbbf24] flex-shrink-0" />
+                                                    <Play size={10} className="text-white/30 group-hover:text-[#ff006e]" />
                                                 </button>
-                                            );
-                                        })}
-                                    </div>
-                                )}
+                                            ))}
+                                        </div>
+                                    )}
 
-                                {searchingYoutube && youtubeResults.length === 0 && (
-                                    <div className="p-6 flex flex-col items-center gap-2">
-                                        <div className="w-4 h-4 border-2 border-[#fbbf24] border-t-transparent rounded-full animate-spin" />
-                                        <div className="mono text-[8px] text-[#fbbf24]/40 tracking-[0.2em]">CONNECTING_TO_GLOBAL_GRID...</div>
-                                    </div>
-                                )}
+                                    {/* Local Artists */}
+                                    {localArtists.length > 0 && (
+                                        <div className="flex flex-col gap-1 mt-2 border-t border-white/5 pt-2">
+                                            <div className="mono text-[8px] text-white/30 px-2 py-1 tracking-widest uppercase">Fatale Profiles</div>
+                                            {localArtists.slice(0, 5).map(a => (
+                                                <button
+                                                    key={`local-art-${a.id}`}
+                                                    onClick={() => {
+                                                        flyTo(a.x, a.y, 0.8);
+                                                        setSearchQuery('');
+                                                        setSearchOpen(false);
+                                                    }}
+                                                    className="w-full text-left p-2 rounded hover:bg-white/5 flex items-center gap-3 group transition-colors"
+                                                >
+                                                    <div className="w-6 h-6 rounded bg-white/5 flex items-center justify-center">
+                                                        <MapPin size={12} className="text-[#ff006e]/50 group-hover:text-[#ff006e]" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-[10px] text-white font-bold truncate tracking-wider">{a.name}</div>
+                                                        <div className="text-[8px] text-white/60 mono uppercase">{a.sector}</div>
+                                                    </div>
+                                                    <ChevronRight size={12} className="text-white/30 group-hover:text-white/60" />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
 
-                                {localArtists.length === 0 && localTracks.length === 0 && youtubeResults.length === 0 && !searchingYoutube && (
-                                    <div className="p-8 text-center flex flex-col items-center gap-2">
-                                        <Search size={20} className="text-[#fbbf24]/10 mb-2" />
-                                        <div className="mono text-[9px] text-[#fbbf24]/20 tracking-widest italic font-bold">SIGNAL LOST: ZERO_MATCHES_DETECTED</div>
+                                    {/* YouTube Results */}
+                                    {youtubeResults.length > 0 && (
+                                        <div className="flex flex-col gap-1 mt-2 border-t border-white/5 pt-2">
+                                            <div className="mono text-[8px] text-[#fbbf24]/60 px-2 py-1 tracking-widest uppercase font-black italic">GLOBAL_STREAM_CARRIER</div>
+                                            {youtubeResults.slice(0, 8).map((yt, idx) => {
+                                                const id = yt.id || yt.Id || `yt-fallback-${idx}`;
+                                                const title = yt.title || yt.Title || 'Unknown Title';
+                                                const author = yt.author || yt.Author || yt.channelTitle || 'Unknown Artist';
+                                                const thumb = yt.thumbnailUrl || yt.ThumbnailUrl || (yt.snippet?.thumbnails?.default?.url);
+
+                                                return (
+                                                    <button
+                                                        key={id}
+                                                        onClick={() => {
+                                                            const track = {
+                                                                id, title, artist: author, duration: '0:00', cover: thumb,
+                                                                source: `youtube:${id}`, isYoutube: true, isYT: true, isOwned: true, isLocked: false
+                                                            };
+                                                            onPlayPlaylist?.([track], 0);
+                                                            setSearchQuery('');
+                                                            setSearchOpen(false);
+                                                        }}
+                                                        className="w-full text-left p-2 border-b border-[#fbbf24]/5 hover:bg-[#fbbf24]/5 flex items-center gap-3 group transition-colors"
+                                                    >
+                                                        <div className="w-10 h-6 bg-black/40 overflow-hidden relative flex-shrink-0 border border-[#fbbf24]/20 group-hover:border-[#fbbf24]/60">
+                                                            <img src={thumb} alt="" className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
+                                                            <div className="absolute inset-0 bg-[#fbbf24]/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="text-[9px] text-white/90 font-bold truncate leading-tight group-hover:text-[#fbbf24]" dangerouslySetInnerHTML={{ __html: title }} />
+                                                            <div className="text-[7px] text-[#fbbf24]/50 mono uppercase truncate">AUTH // {author}</div>
+                                                        </div>
+                                                        <Play size={10} className="text-[#fbbf24]/30 group-hover:text-[#fbbf24] flex-shrink-0" />
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </div>
+
+                {/* Right Side: Navigation Controls */}
+                <div className={`flex flex-col items-end gap-2 pointer-events-auto ${isVertical ? 'w-full' : ''}`}>
+                    <div className="flex gap-2">
+                        {!isVertical && (
+                            <button
+                                onClick={() => setIsCreatingCommunity(true)}
+                                className="hud-panel rounded-sm px-4 py-2.5 flex items-center gap-2 group relative outline-none transition-colors duration-200"
+                            >
+                                <div className="absolute inset-0 bg-[#ff006e]/5 group-hover:bg-[#ff006e]/10 transition-colors" />
+                                <div className="hud-bracket-tl text-[#ff006e] opacity-40 group-hover:opacity-100" />
+                                <div className="hud-bracket-br text-[#ff006e] opacity-40 group-hover:opacity-100" />
+                                <Plus size={12} className="relative text-white opacity-70 group-hover:text-[#ff006e] group-hover:opacity-100 transition-all group-hover:scale-110" />
+                                <span className="relative mono text-[9px] tracking-[0.3em] text-white font-black group-hover:text-[#ff006e] opacity-60 group-hover:opacity-100 transition-all">
+                                    found a community....
+                                </span>
+                            </button>
+                        )}
+
+                        <button
+                            onClick={() => flyTo(4200, 1900, isVertical ? 0.85 : 0.35)}
+                            className={`hud-panel rounded-sm flex items-center justify-center text-white/30 hover:text-[#ff006e] relative group outline-none ${isVertical ? 'w-9 h-9' : 'w-10 h-10'}`}
+                            title="Reset View"
+                        >
+                            <div className="hud-bracket-tl opacity-10 group-hover:opacity-60" />
+                            <div className="hud-bracket-br opacity-10 group-hover:opacity-60" />
+                            <Activity size={isVertical ? 14 : 14} className="group-hover:scale-110 transition-transform" />
+                        </button>
+                        {user && (
+                            <button
+                                onClick={() => {
+                                    const me = artists.find(a => a.userId === user.id || a.userId === user.Id);
+                                    if (me) flyTo(me.x, me.y, 1.2);
+                                }}
+                                className={`hud-panel rounded-sm flex items-center justify-center text-white/30 hover:text-[#ff006e] relative group outline-none ${isVertical ? 'w-9 h-9' : 'w-10 h-10'}`}
+                                title="Find Me"
+                            >
+                                <div className="hud-bracket-tl opacity-10 group-hover:opacity-60" />
+                                <div className="hud-bracket-br opacity-10 group-hover:opacity-60" />
+                                <MapPin size={isVertical ? 14 : 14} className="group-hover:scale-110 transition-transform" />
+                            </button>
+                        )}
+                    </div>
+
+                    {!isVertical && (
+                        <div className="hud-panel rounded-sm px-4 py-2.5 flex gap-10 relative overflow-hidden">
+                            <div className="hud-bracket-tl text-[#ff006e]/30" />
+                            <div className="hud-bracket-br text-[#ff006e]/30" />
+
+                            <div className="flex flex-col items-end">
+                                <div className="mono text-[7px] tracking-[0.3em] text-[#ff0000]/50 uppercase mb-1 font-black">node_results</div>
+                                <div className="mono text-[16px] font-black tracking-[0.1em] leading-none" style={{ color: 'rgba(255,0,0,0.7)' }}>
+                                    {stats.tracks.toLocaleString()}
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-end border-l border-white/5 pl-10">
+                                <div className="mono text-[7px] tracking-[0.3em] text-[#ff006e]/50 uppercase mb-1 font-black">users_sync</div>
+                                <div className="mono text-[16px] font-black tracking-[0.1em] leading-none" style={{ color: 'rgba(255,0,110,0.7)' }}>
+                                    {stats.online.toLocaleString()}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Favorite Frequencies Panel */}
+                    <AnimatePresence>
+                        {favoriteStations && favoriteStations.filter(s => (s.isLive || s.IsLive)).length > 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="mt-4 flex flex-col gap-2"
+                            >
+                                <div className="hud-panel rounded-sm p-4 w-64 relative overflow-hidden">
+                                    <div className="hud-bracket-tl text-[#fbbf24]/40" />
+                                    <div className="hud-bracket-br text-[#fbbf24]/40" />
+                                    <div className="absolute top-0 right-0 p-1 px-2 text-[6px] text-[#fbbf24]/30 font-black tracking-widest bg-[#fbbf24]/5 uppercase">FREQUENCY_LINK_SCAN</div>
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="w-1.5 h-1.5 rounded-sm bg-[#fbbf24] animate-pulse shadow-[0_0_8px_#fbbf24]" />
+                                        <span className="mono text-[9px] tracking-[0.3em] text-[#fbbf24] uppercase font-black">ACTIVE_FREQUENCIES</span>
                                     </div>
-                                )}
+                                    <div className="space-y-3">
+                                        {favoriteStations.filter(s => (s.isLive || s.IsLive)).slice(0, 3).map(station => (
+                                            <button
+                                                key={`hud-fav-${station.id || station.Id}`}
+                                                onClick={(e) => { e.stopPropagation(); navigateToProfile?.(station.artistUserId || station.ArtistUserId); }}
+                                                className="w-full text-left group transition-all"
+                                            >
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <div className="text-[10px] font-black text-white/80 uppercase truncate group-hover:text-[#fbbf24] transition-colors">{station.name || station.Name}</div>
+                                                    <div className="text-[7px] text-[#fbbf24] mono animate-pulse">LIVE</div>
+                                                </div>
+                                                <div className="text-[8px] text-white/30 truncate uppercase tracking-widest mono">
+                                                    {station.currentSessionTitle || station.CurrentSessionTitle || 'STREAMING_DATA'}
+                                                </div>
+                                                <div className="w-full h-[1px] bg-white/5 mt-2 group-hover:bg-[#fbbf24]/20 transition-colors" />
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
                 </div>
-
-                {/* Favorite Frequencies Panel */}
-                <AnimatePresence>
-                    {favoriteStations && favoriteStations.filter(s => (s.isLive || s.IsLive)).length > 0 && (
-                        <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="mt-4 flex flex-col gap-2"
-                        >
-                            <div className="hud-panel rounded-sm p-4 w-64 relative overflow-hidden">
-                                <div className="hud-bracket-tl text-[#fbbf24]/40" />
-                                <div className="hud-bracket-br text-[#fbbf24]/40" />
-                                <div className="absolute top-0 right-0 p-1 px-2 text-[6px] text-[#fbbf24]/30 font-black tracking-widest bg-[#fbbf24]/5 uppercase">FREQUENCY_LINK_SCAN</div>
-                                <div className="flex items-center gap-2 mb-4">
-                                    <div className="w-1.5 h-1.5 rounded-sm bg-[#fbbf24] animate-pulse shadow-[0_0_8px_#fbbf24]" />
-                                    <span className="mono text-[9px] tracking-[0.3em] text-[#fbbf24] uppercase font-black">ACTIVE_FREQUENCIES</span>
-                                </div>
-                                <div className="space-y-3">
-                                    {favoriteStations.filter(s => (s.isLive || s.IsLive)).slice(0, 3).map(station => (
-                                        <button
-                                            key={`hud-fav-${station.id || station.Id}`}
-                                            onClick={(e) => { e.stopPropagation(); navigateToProfile?.(station.artistUserId || station.ArtistUserId); }}
-                                            className="w-full text-left group transition-all"
-                                        >
-                                            <div className="flex justify-between items-start mb-1">
-                                                <div className="text-[10px] font-black text-white/80 uppercase truncate group-hover:text-[#fbbf24] transition-colors">{station.name || station.Name}</div>
-                                                <div className="text-[7px] text-[#fbbf24] mono animate-pulse">LIVE</div>
-                                            </div>
-                                            <div className="text-[8px] text-white/30 truncate uppercase tracking-widest mono">
-                                                {station.currentSessionTitle || station.CurrentSessionTitle || 'STREAMING_DATA'}
-                                            </div>
-                                            <div className="w-full h-[1px] bg-white/5 mt-2 group-hover:bg-[#fbbf24]/20 transition-colors" />
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
             </div>
+
 
             {/* BOTTOM-LEFT: Zoom + Favorites */}
             <div data-hud className={`absolute left-4 z-50 flex flex-col gap-1 ${isVertical ? 'bottom-20' : 'bottom-8'}`}>
@@ -1778,11 +1767,15 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                 </AnimatePresence>
             </div>
 
-            {/* BOTTOM-CENTER: Sector nav */}
-            <div data-hud className={`absolute z-50 flex items-center ${isVertical ? 'bottom-2 left-4 w-[calc(100vw-32px)] overflow-x-auto no-scrollbar justify-start' : 'bottom-8 left-1/2 -translate-x-1/2 gap-1'}`}
-                style={isVertical ? { WebkitMaskImage: 'linear-gradient(to right, black 85%, transparent)' } : {}}
+            {/* BOTTOM HUD FRAME */}
+            <div data-hud 
+                className={`absolute z-[60] transition-all duration-500 flex items-center ${
+                    isVertical 
+                    ? 'bottom-16 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/40 to-transparent gap-4' 
+                    : 'bottom-8 left-1/2 -translate-x-1/2 gap-1 pointer-events-none'
+                }`}
             >
-                <div className={`flex items-center gap-1 ${isVertical ? 'pr-8 pb-1' : ''}`}>
+                <div className={`flex items-center gap-1 pointer-events-auto ${isVertical ? 'overflow-x-auto no-scrollbar flex-1' : ''}`}>
                     {SECTORS.map(s => (
                         <button
                             key={s.name}
@@ -2159,18 +2152,18 @@ const TopTrackSignal = React.memo(({ signal, onClick }) => {
                 )}
 
                 {/* Content Overlay */}
-                <div className="absolute inset-0 p-5 flex flex-col justify-between text-white">
+                 <div className={`absolute inset-0 flex flex-col justify-between text-white ${isVertical ? 'p-3' : 'p-5'}`}>
                     {/* Top Tag */}
-                    <div className="self-end px-2 py-1 bg-black/50 backdrop-blur-md rounded-lg text-[9px] font-black tracking-widest uppercase border" style={{ borderColor: `${signal.color}50`, color: signal.color }}>
+                    <div className={`self-end bg-black/50 backdrop-blur-md rounded-lg font-black tracking-widest uppercase border ${isVertical ? 'px-1.5 py-0.5 text-[7px]' : 'px-2 py-1 text-[9px]'}`} style={{ borderColor: `${signal.color}50`, color: signal.color }}>
                         {isYt ? 'Global Stream' : 'Trending Node'}
                     </div>
 
                     {/* Bottom Info */}
                     <div className="flex flex-col gap-1">
-                        <div className="text-[10px] font-bold opacity-80 tracking-widest uppercase" style={{ color: coverImage ? signal.color : '#000' }}>
+                        <div className={`font-bold opacity-80 tracking-widest uppercase ${isVertical ? 'text-[8px]' : 'text-[10px]'}`} style={{ color: coverImage ? signal.color : '#000' }}>
                             {signal.artist}
                         </div>
-                        <h4 className="text-[20px] font-black leading-tight tracking-tight uppercase line-clamp-2" style={{ color: coverImage ? '#fff' : '#000' }}>
+                        <h4 className={`font-black leading-tight tracking-tight uppercase line-clamp-2 ${isVertical ? 'text-sm' : 'text-[20px]'}`} style={{ color: coverImage ? '#fff' : '#000' }}>
                             {signal.title}
                         </h4>
                     </div>
@@ -2359,7 +2352,7 @@ const ArtistNode = React.memo(({ artist, zoom, hovered, isSearchResult, dimmed, 
                         {/* Top Area: Tag/Type */}
                         <div className="flex justify-between items-start">
                             <div
-                                className="px-3 py-1.5 rounded-full text-[10px] md:text-[12px] font-bold tracking-widest uppercase inline-flex items-center gap-2 backdrop-blur-md"
+                                className={`rounded-full font-bold tracking-widest uppercase inline-flex items-center gap-2 backdrop-blur-md ${isVertical ? 'px-2 py-1 text-[8px]' : 'px-3 py-1.5 text-[10px] md:text-[12px]'}`}
                                 style={{
                                     backgroundColor: artist.profileImage ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
                                     color: artist.profileImage ? '#fff' : '#000'
@@ -2384,10 +2377,10 @@ const ArtistNode = React.memo(({ artist, zoom, hovered, isSearchResult, dimmed, 
                                     Featured Node
                                 </span>
                             )}
-                            <h3 className="text-2xl md:text-4xl font-black tracking-tight leading-[1.1] uppercase max-w-[90%]">
+                            <h3 className={`font-black tracking-tight leading-[1.1] uppercase max-w-[90%] ${isVertical ? 'text-lg' : 'text-2xl md:text-4xl'}`}>
                                 {artist.name}
                             </h3>
-                            <div className="flex gap-4 mt-2 opacity-60 text-[10px] md:text-[12px] font-medium tracking-widest uppercase">
+                            <div className={`flex gap-4 mt-2 opacity-60 font-medium tracking-widest uppercase ${isVertical ? 'text-[8px]' : 'text-[10px] md:text-[12px]'}`}>
                                 <span>{artist.plays?.toLocaleString()} PLAYS</span>
                                 <span>PROFILE {'>'}</span>
                             </div>
@@ -2489,7 +2482,7 @@ const RadarMinimap = React.memo(({ artists, pan, zoom, sectors, containerRef, on
             data-hud
             className="absolute z-50 rounded-sm overflow-hidden group/radar shadow-2xl"
             style={{
-                bottom: isVertical ? '80px' : '2rem',
+                bottom: isVertical ? '5rem' : '2rem',
                 right: isVertical ? '1rem' : '1.5rem',
                 width: RW, height: RH,
                 background: 'rgba(0,0,0,0.65)',
