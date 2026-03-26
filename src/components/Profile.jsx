@@ -545,7 +545,8 @@ export const ProfileView = React.memo(({
     isPlaying,
     onExitProfile,
     onMessageUser,
-    setActiveStation
+    setActiveStation,
+    setUser // ADDED
 }) => {
     const effectiveId = targetUserId || currentUser?.id || currentUser?.Id;
     const isMe = String(effectiveId) === String(currentUser?.id || currentUser?.Id);
@@ -906,10 +907,32 @@ export const ProfileView = React.memo(({
         try {
             const API = await import('../services/api').then(mod => mod.default);
             const uid = currentUser?.id || currentUser?.Id || currentUser?.userId || currentUser?.UserId;
-            await API.Users.updateProfile(formData, uid);
+            const res = await API.Users.updateProfile(formData, uid);
             showNotification("PROFILE_SYNCED", "Identity modifications committed to core.", "success");
             setShowEditProfile(false);
-            onRefreshProfile?.();
+            
+            if (res?.data?.user && setUser) {
+                const rawData = res.data.user;
+                const getMediaUrl = await import('../services/api').then(m => m.getMediaUrl);
+                const updated = {
+                    ...currentUser,
+                    username: rawData.username || rawData.Username || currentUser.username,
+                    biography: rawData.biography || rawData.Biography || currentUser.biography,
+                    residentSectorId: rawData.residentSectorId !== undefined ? rawData.residentSectorId : (rawData.ResidentSectorId !== undefined ? rawData.ResidentSectorId : currentUser.residentSectorId),
+                    profileImageUrl: getMediaUrl(rawData.profilePictureUrl || rawData.ProfilePictureUrl) || currentUser.profileImageUrl,
+                    bannerUrl: getMediaUrl(rawData.bannerUrl || rawData.BannerUrl) || currentUser.bannerUrl,
+                    themeColor: rawData.themeColor || rawData.ThemeColor || currentUser.themeColor,
+                    textColor: rawData.textColor || rawData.TextColor || currentUser.textColor,
+                    backgroundColor: rawData.backgroundColor || rawData.BackgroundColor || currentUser.backgroundColor,
+                    isGlass: rawData.isGlass !== undefined ? rawData.isGlass : (rawData.IsGlass !== undefined ? rawData.IsGlass : currentUser.isGlass)
+                };
+                setUser(prev => {
+                    try { localStorage.setItem('user', JSON.stringify(updated)); } catch(e) {}
+                    return updated;
+                });
+            } else {
+                onRefreshProfile?.();
+            }
         } catch (error) {
             console.error("Profile Sync Error:", error);
             showNotification("SYNC_FAILED", "Failed to commit modifications to core.", "error");

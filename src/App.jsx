@@ -1542,6 +1542,7 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
                 tracks={tracks}
                 onLogout={onLogout}
                 onAddCredits={onAddCredits}
+                setUser={setUser}
                 onRefreshProfile={onRefreshProfile}
                 onRefreshTracks={onRefreshTracks}
                 navigateToProfile={navigateToProfile}
