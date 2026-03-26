@@ -90,7 +90,7 @@ const API = {
         deleteTrack: (id) => api.delete(`Tracks/${id}`),
     },
     Users: {
-        getProfile: (userId = null) => api.get('Users/profile', { 
+        getProfile: (userId = null) => api.get(`Users/profile?_t=${new Date().getTime()}`, { 
             headers: userId ? { 'UserId': userId } : {} 
         }),
         updateProfile: (formData, userId) => api.put('Users/update-profile', formData, {
