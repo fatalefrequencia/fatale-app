@@ -251,8 +251,8 @@ const DiscoveryCanvas = ({
             const built = buildNodes(artists, playlists, currentZoom);
             setNodes(built);
 
-            // Fetch YouTube results in background
-            fetchYoutube(onPlayTrack);
+            // YouTube results now only fetched on explicit search to preserve API quota
+            // fetchYoutube(onPlayTrack);
         } catch (e) {
             console.error('[DiscoveryCanvas] fetch error', e);
         } finally {
@@ -275,11 +275,24 @@ const DiscoveryCanvas = ({
     // ── YouTube search: trigger on query change (debounced) ──
     const ytSearchRef = useRef(null);
     useEffect(() => {
-        if (!searchQuery.trim()) return;
+        const query = searchQuery.trim();
+        if (query.length < 3) {
+            // Clear search results if query is too short
+            setYoutubeNodes(prev => prev.filter(n => !n.id.startsWith('yt-search-')));
+            return;
+        }
+
         if (ytSearchRef.current) clearTimeout(ytSearchRef.current);
+        
         ytSearchRef.current = setTimeout(async () => {
             try {
-                const res = await API.Youtube.getDiscoveryNodes(searchQuery.trim()).catch(() => null);
+                const res = await API.Youtube.getDiscoveryNodes(query).catch(err => {
+                    if (err.response?.status === 403 || err.response?.data?.includes('quota')) {
+                        showNotification('YouTube API quota exceeded. Try again tomorrow.', 'warning');
+                    }
+                    return null;
+                });
+                
                 const items = Array.isArray(res?.data) ? res.data : [];
                 const searchResults = items.map((item, idx) => {
                     const videoId = item.Id || item.id;
@@ -304,14 +317,16 @@ const DiscoveryCanvas = ({
                         zIndex: 10,
                     };
                 });
+                
                 setYoutubeNodes(prev => {
                     const bg = prev.filter(n => !n.id.startsWith('yt-search-'));
                     return [...bg, ...searchResults];
                 });
             } catch {}
-        }, 600);
+        }, 1200); // 1.2s debounce to be very conservative with quota
+        
         return () => clearTimeout(ytSearchRef.current);
-    }, [searchQuery]);
+    }, [searchQuery, currentZoom, onPlayTrack, showNotification]);
 
     // ── Filter nodes by sector + search ──
     const filteredNodes = useMemo(() => {
