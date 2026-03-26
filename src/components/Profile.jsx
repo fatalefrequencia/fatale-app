@@ -913,7 +913,6 @@ export const ProfileView = React.memo(({
             
             if (res?.data?.user && setUser) {
                 const rawData = res.data.user;
-                const getMediaUrl = await import('../services/api').then(m => m.getMediaUrl);
                 const updated = {
                     ...currentUser,
                     username: rawData.username || rawData.Username || currentUser.username,
