@@ -78,17 +78,28 @@ const SectorHubPanel = ({
                         </span>
                     </div>
                     <button 
-                        onClick={onClose}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onClose();
+                        }}
+                        onTouchEnd={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onClose();
+                        }}
                         style={{ 
                             background: 'none', 
                             border: 'none', 
                             color: 'rgba(255,255,255,0.3)', 
                             cursor: 'pointer',
-                            padding: '10px',
-                            marginRight: '-10px',
+                            padding: '12px',
+                            marginRight: '-12px',
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center'
+                            justifyContent: 'center',
+                            zIndex: 1100,
+                            position: 'relative',
+                            pointerEvents: 'auto'
                         }}
                     >
                         <X size={24} />

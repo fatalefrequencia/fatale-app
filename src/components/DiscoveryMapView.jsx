@@ -281,9 +281,7 @@ const DiscoveryCanvas = ({
 
             const built = buildNodes(artists, playlists, currentZoom);
             setNodes(built);
-
-            // YouTube results now only fetched on explicit search to preserve API quota
-            // fetchYoutube(onPlayTrack);
+            console.log(`[DiscoveryCanvas] fetchAll complete. Artists: ${artists.length}, Comms: ${comms.length}, Playlists: ${playlists.length}`);
         } catch (e) {
             console.error('[DiscoveryCanvas] fetch error', e);
         } finally {
@@ -457,6 +455,24 @@ const DiscoveryCanvas = ({
                     }}
                 >
                     {searchOpen ? <X size={14} /> : <Search size={14} />}
+                </button>
+                <button
+                    onClick={() => { fetchAll(); showNotification('Syncing frequencies...', 'info'); }}
+                    style={{
+                        background: 'rgba(10,10,10,0.92)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: 8,
+                        color: 'rgba(255,255,255,0.6)',
+                        padding: '8px 10px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                    }}
+                    title="Refresh Map"
+                >
+                    <motion.div whileTap={{ rotate: 180 }} transition={{ duration: 0.3 }}>
+                        <Filter size={14} /> 
+                    </motion.div>
                 </button>
             </div>
 

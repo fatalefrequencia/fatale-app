@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-                 (import.meta.env.PROD ? 'https://fatalecore-production.up.railway.app/api/' : 'http://localhost:5264/api/');
+const BASE_URL = 'https://fatalecore-production.up.railway.app/api/';
+console.log('[API_SERVICE] Initializing with production URL:', BASE_URL);
 
 const api = axios.create({
     baseURL: BASE_URL,

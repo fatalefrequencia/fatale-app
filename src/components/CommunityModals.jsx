@@ -209,17 +209,28 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                             <Heart size={18} fill={isFollowed ? color : 'transparent'} className={isFollowed ? 'drop-shadow-[0_0_8px_currentColor]' : ''} />
                         </button>
                         <button 
-                            onClick={onClose} 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onClose();
+                            }} 
+                            onTouchEnd={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onClose();
+                            }}
                             style={{ 
                                 background: 'none', 
                                 border: 'none', 
                                 color: 'rgba(255,255,255,0.3)', 
                                 cursor: 'pointer',
-                                padding: '10px',
-                                marginRight: '-5px',
+                                padding: '12px',
+                                marginRight: '-12px',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center'
+                                justifyContent: 'center',
+                                zIndex: 1100,
+                                position: 'relative',
+                                pointerEvents: 'auto'
                             }}
                         >
                             <X size={24} />
