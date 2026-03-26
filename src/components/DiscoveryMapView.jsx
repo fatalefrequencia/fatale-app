@@ -134,7 +134,9 @@ const DiscoveryCanvas = ({
                         sectorColor: sec.color,
                         isLive,
                         trackCount,
-                        userId: a.userId || a.UserId,
+                        isLive,
+                        trackCount,
+                        userId: a.userId || a.UserId || a.id || a.Id,
                         navigateToProfile,
                         zoom,
                     },
@@ -146,7 +148,7 @@ const DiscoveryCanvas = ({
         // 4. Place playlist nodes (near their owner's sector)
         playlists.forEach((pl, idx) => {
             const ownerId = pl.userId || pl.UserId || pl.ownerId;
-            const ownerArtist = artists.find(a => String(a.userId || a.UserId) === String(ownerId));
+            const ownerArtist = artists.find(a => String(a.userId || a.UserId || a.id || a.Id) === String(ownerId));
             const dbSectorId = ownerArtist?.sectorId ?? ownerArtist?.SectorId;
             const h = hashStr((ownerId || idx).toString());
             const secId = (dbSectorId !== null && dbSectorId !== undefined && SECTORS[dbSectorId])
@@ -172,7 +174,7 @@ const DiscoveryCanvas = ({
                     trackCount: pl.trackCount || pl.TrackCount || (pl.tracks?.length ?? 0),
                     creatorName: pl.creatorName || pl.username || null,
                     zoom,
-                    onClick: () => setSelectedPlaylist(pl),
+                    pl, // pass full playlist object for click handler
                 },
                 zIndex: 2,
             });
@@ -271,6 +273,24 @@ const DiscoveryCanvas = ({
             data: { ...n.data, zoom: z },
         })));
     }, [setNodes]);
+    
+    // ── Central Node Click Handler ──
+    const handleNodeClick = useCallback((event, node) => {
+        if (node.type === 'artistNode') {
+            const uid = node.data?.userId;
+            if (uid && navigateToProfile) {
+                navigateToProfile(uid);
+            }
+        } else if (node.type === 'playlistNode') {
+            if (node.data?.pl) {
+                setSelectedPlaylist(node.data.pl);
+            }
+        } else if (node.type === 'youtubeNode') {
+            if (node.data?.onPlay) {
+                node.data.onPlay(node.data);
+            }
+        }
+    }, [navigateToProfile]);
 
     // ── YouTube search: trigger on query change (debounced) ──
     const ytSearchRef = useRef(null);
@@ -488,6 +508,7 @@ const DiscoveryCanvas = ({
                 nodes={filteredNodes}
                 edges={[]}
                 onNodesChange={onNodesChange}
+                onNodeClick={handleNodeClick}
                 nodeTypes={nodeTypes}
                 onMove={handleMove}
                 minZoom={0.1}
