@@ -5,9 +5,9 @@ import { Play, Youtube } from 'lucide-react';
 const YoutubeNode = ({ data }) => {
     const {
         title,
-        channelTitle,
-        thumbnail,
-        videoId,
+        author,
+        thumbnailUrl,
+        id,
         sectorColor = '#ff006e',
         onPlay,
         zoom = 1,
@@ -44,9 +44,9 @@ const YoutubeNode = ({ data }) => {
             <Handle type="source" position={Position.Right} style={{ opacity: 0, pointerEvents: 'none' }} />
 
             {/* Thumbnail */}
-            {thumbnail ? (
+            {thumbnailUrl ? (
                 <img
-                    src={thumbnail}
+                    src={thumbnailUrl}
                     alt={title}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 />
@@ -107,12 +107,12 @@ const YoutubeNode = ({ data }) => {
                     }}>
                         {title}
                     </div>
-                    {channelTitle && (
+                    {author && (
                         <div style={{
                             color: 'rgba(255,255,255,0.5)', fontSize: 9, fontFamily: 'monospace',
                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                         }}>
-                            {channelTitle}
+                            {author}
                         </div>
                     )}
                 </div>

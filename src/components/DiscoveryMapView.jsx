@@ -195,7 +195,7 @@ const DiscoveryCanvas = ({
                 const res = await API.Youtube.getDiscoveryNodes(query).catch(() => null);
                 const items = Array.isArray(res?.data) ? res.data : [];
                 items.forEach((item, idx) => {
-                    const videoId = item.videoId || item.VideoId || item.id || item.Id;
+                    const videoId = item.Id || item.id;
                     if (!videoId) return;
                     // Place YT nodes in an outer ring around the sector
                     const angle = (idx * 0.85) + 4.2;
@@ -203,19 +203,19 @@ const DiscoveryCanvas = ({
                     const xj = ((hashStr(videoId + 'ytx') % 80) - 40);
                     const yj = ((hashStr(videoId + 'yty') % 80) - 40);
                     results.push({
-                        id: `yt-${videoId}-${sec.id}`,
+                        id: `yt-${videoId}-${sec.id}-${idx}`,
                         type: 'youtubeNode',
                         position: {
                             x: sec.x + Math.cos(angle) * radius + xj,
                             y: sec.y + Math.sin(angle) * radius * 1.2 + yj,
                         },
                         data: {
-                            title: item.title || item.Title || 'YouTube Signal',
-                            channelTitle: item.channelTitle || item.ChannelTitle || '',
-                            thumbnail: item.thumbnail || item.Thumbnail || item.thumbnailUrl || '',
-                            videoId,
+                            title: item.Title || item.title || 'YouTube Signal',
+                            author: item.Author || item.author || item.ChannelTitle || '',
+                            thumbnailUrl: item.ThumbnailUrl || item.thumbnailUrl || item.thumbnail || '',
+                            id: videoId,
                             sectorColor: sec.color,
-                            zoom: 0.45,
+                            zoom: currentZoom,
                             onPlay: onPlayTrackFn,
                         },
                         zIndex: 3,
@@ -272,6 +272,47 @@ const DiscoveryCanvas = ({
         })));
     }, [setNodes]);
 
+    // ── YouTube search: trigger on query change (debounced) ──
+    const ytSearchRef = useRef(null);
+    useEffect(() => {
+        if (!searchQuery.trim()) return;
+        if (ytSearchRef.current) clearTimeout(ytSearchRef.current);
+        ytSearchRef.current = setTimeout(async () => {
+            try {
+                const res = await API.Youtube.getDiscoveryNodes(searchQuery.trim()).catch(() => null);
+                const items = Array.isArray(res?.data) ? res.data : [];
+                const searchResults = items.map((item, idx) => {
+                    const videoId = item.Id || item.id;
+                    const angle = idx * 0.72;
+                    const radius = 300 + (idx % 5) * 140;
+                    return {
+                        id: `yt-search-${videoId}-${idx}`,
+                        type: 'youtubeNode',
+                        position: {
+                            x: 2200 + Math.cos(angle) * radius,
+                            y: 1800 + Math.sin(angle) * radius,
+                        },
+                        data: {
+                            title: item.Title || item.title || 'YouTube Signal',
+                            author: item.Author || item.author || '',
+                            thumbnailUrl: item.ThumbnailUrl || item.thumbnailUrl || '',
+                            id: videoId,
+                            sectorColor: '#ff006e',
+                            zoom: currentZoom,
+                            onPlay: onPlayTrack,
+                        },
+                        zIndex: 10,
+                    };
+                });
+                setYoutubeNodes(prev => {
+                    const bg = prev.filter(n => !n.id.startsWith('yt-search-'));
+                    return [...bg, ...searchResults];
+                });
+            } catch {}
+        }, 600);
+        return () => clearTimeout(ytSearchRef.current);
+    }, [searchQuery]);
+
     // ── Filter nodes by sector + search ──
     const filteredNodes = useMemo(() => {
         let n = nodes;
@@ -281,14 +322,15 @@ const DiscoveryCanvas = ({
             n = n.filter(node => {
                 if (node.type === 'sectorLabel') return node.id === `sector-label-${activeSector}`;
                 if (node.type === 'artistNode') return node.data?.sectorColor === sec.color;
-                return true; // keep playlists always
+                return true;
             });
         }
 
         if (searchQuery.trim()) {
             const q = searchQuery.trim().toLowerCase();
             n = n.filter(node => {
-                if (node.type === 'sectorLabel') return true;
+                // Always keep labels, youtube, and playlist nodes visible
+                if (node.type === 'sectorLabel' || node.type === 'youtubeNode' || node.type === 'playlistNode') return true;
                 return (node.data?.name || '').toLowerCase().includes(q);
             });
         }
