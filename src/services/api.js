@@ -221,7 +221,7 @@ const API = {
         endLive: () => api.post('Stations/end-live'),
     },
     Communities: {
-        getAll: () => api.get('Communities'),
+        getAll: () => api.get(`Communities?_t=${new Date().getTime()}`),
         create: (data) => api.post('Communities', data),
         join: (id) => api.post(`Communities/${id}/join`),
         leave: () => api.post('Communities/leave'),
