@@ -21,6 +21,7 @@ import { CommunityDetailsModal, CreateCommunityModal } from './CommunityModals';
 import ArtistNode from './discovery/ArtistNode';
 import PlaylistNode from './discovery/PlaylistNode';
 import SectorLabel from './discovery/SectorLabel';
+import YoutubeNode from './discovery/YoutubeNode';
 import PlaylistPreviewPanel from './discovery/PlaylistPreviewPanel';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -52,6 +53,7 @@ const nodeTypes = {
     artistNode: ArtistNode,
     playlistNode: PlaylistNode,
     sectorLabel: SectorLabel,
+    youtubeNode: YoutubeNode,
 };
 
 // ─── Inner canvas (needs ReactFlow context) ─────────────────────────────────
@@ -77,6 +79,7 @@ const DiscoveryCanvas = ({
     const [communities, setCommunities] = useState([]);
     const [selectedCommunity, setSelectedCommunity] = useState(null);
     const [isCreatingCommunity, setIsCreatingCommunity] = useState(false);
+    const [youtubeNodes, setYoutubeNodes] = useState([]);
 
     // Track current viewport zoom for node visibility
     const [currentZoom, setCurrentZoom] = useState(0.45);
@@ -175,8 +178,53 @@ const DiscoveryCanvas = ({
             });
         });
 
+        // 5. Merge in YouTube nodes fetched separately
+        youtubeNodes.forEach(yn => result.push(yn));
+
         return result;
-    }, [navigateToProfile]);
+    }, [navigateToProfile, youtubeNodes]);
+
+    // ── Fetch YouTube results per sector ──
+    const fetchYoutube = useCallback(async (onPlayTrackFn) => {
+        const results = [];
+        // Sample 3 sectors to avoid too many requests
+        const sampledSectors = SECTORS.slice(0, 4);
+        await Promise.all(sampledSectors.map(async (sec) => {
+            try {
+                const query = sec.subgenres?.[0] || sec.name;
+                const res = await API.Youtube.getDiscoveryNodes(query).catch(() => null);
+                const items = Array.isArray(res?.data) ? res.data : [];
+                items.forEach((item, idx) => {
+                    const videoId = item.videoId || item.VideoId || item.id || item.Id;
+                    if (!videoId) return;
+                    // Place YT nodes in an outer ring around the sector
+                    const angle = (idx * 0.85) + 4.2;
+                    const radius = 900 + (idx % 4) * 160;
+                    const xj = ((hashStr(videoId + 'ytx') % 80) - 40);
+                    const yj = ((hashStr(videoId + 'yty') % 80) - 40);
+                    results.push({
+                        id: `yt-${videoId}-${sec.id}`,
+                        type: 'youtubeNode',
+                        position: {
+                            x: sec.x + Math.cos(angle) * radius + xj,
+                            y: sec.y + Math.sin(angle) * radius * 1.2 + yj,
+                        },
+                        data: {
+                            title: item.title || item.Title || 'YouTube Signal',
+                            channelTitle: item.channelTitle || item.ChannelTitle || '',
+                            thumbnail: item.thumbnail || item.Thumbnail || item.thumbnailUrl || '',
+                            videoId,
+                            sectorColor: sec.color,
+                            zoom: 0.45,
+                            onPlay: onPlayTrackFn,
+                        },
+                        zIndex: 3,
+                    });
+                });
+            } catch {}
+        }));
+        setYoutubeNodes(results);
+    }, []);
 
     // ── Fetch data ──
     const fetchAll = useCallback(async () => {
@@ -202,6 +250,9 @@ const DiscoveryCanvas = ({
 
             const built = buildNodes(artists, playlists, currentZoom);
             setNodes(built);
+
+            // Fetch YouTube results in background
+            fetchYoutube(onPlayTrack);
         } catch (e) {
             console.error('[DiscoveryCanvas] fetch error', e);
         } finally {
