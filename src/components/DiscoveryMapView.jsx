@@ -1150,6 +1150,7 @@ const DiscoveryMapView = ({ navigateToProfile, onPlayPlaylist, allTracks = [], f
                         onClick={() => {
                             if (onPlayPlaylist && sig.track) onPlayPlaylist([sig.track], 0);
                         }}
+                        isVertical={isVertical}
                     />
                 ))}
 
@@ -2103,7 +2104,7 @@ const YoutubeSignalNode = React.memo(({ node, onPlay }) => {
 });
 
 // ─── VITALITY COMPONENTS ──────────────────────────────────────────────────
-const TopTrackSignal = React.memo(({ signal, onClick }) => {
+const TopTrackSignal = React.memo(({ signal, onClick, isVertical }) => {
     // Determine image for block background
     const coverImage = signal.track?.cover || signal.track?.imageUrl || null;
     const isYt = signal.isYoutube;
@@ -2260,7 +2261,7 @@ const ClusterNode = React.memo(({ cluster, onClick, dimmed, isSearchResult }) =>
 });
 
 // ─── ARTIST NODE ─────────────────────────────────────────────────────────
-const ArtistNode = React.memo(({ artist, zoom, hovered, isSearchResult, dimmed, onHover, onClick }) => {
+const ArtistNode = React.memo(({ artist, zoom, hovered, isSearchResult, dimmed, onHover, onClick, isVertical }) => {
     // Use the absolute base constants to prevent mobile multipliers from breaking the spiral math
 
     // Zoom LOD for rendering details

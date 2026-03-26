@@ -474,7 +474,7 @@ function App() {
           const isYT = trackSource?.startsWith('youtube:');
           const resolvedSource = isYT ? trackSource : getMediaUrl(trackSource);
 
-          if (!resolvedSource || resolvedSource === BASE_API_URL || resolvedSource === `${BASE_API_URL}/`) return;
+          if (!resolvedSource || resolvedSource === API_BASE_URL || resolvedSource === `${API_BASE_URL}/`) return;
 
           const artistName = t.album?.artist?.name || t.Album?.Artist?.Name || '';
           if (artistName === 'The Archive') return;
