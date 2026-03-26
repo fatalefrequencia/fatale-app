@@ -208,8 +208,21 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                         >
                             <Heart size={18} fill={isFollowed ? color : 'transparent'} className={isFollowed ? 'drop-shadow-[0_0_8px_currentColor]' : ''} />
                         </button>
-                        <button onClick={onClose} className="p-1.5 text-white/30 hover:text-white transition-colors">
-                            <X size={20} />
+                        <button 
+                            onClick={onClose} 
+                            style={{ 
+                                background: 'none', 
+                                border: 'none', 
+                                color: 'rgba(255,255,255,0.3)', 
+                                cursor: 'pointer',
+                                padding: '10px',
+                                marginRight: '-5px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            <X size={24} />
                         </button>
                     </div>
                 </div>

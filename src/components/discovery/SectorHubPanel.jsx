@@ -79,9 +79,19 @@ const SectorHubPanel = ({
                     </div>
                     <button 
                         onClick={onClose}
-                        style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer' }}
+                        style={{ 
+                            background: 'none', 
+                            border: 'none', 
+                            color: 'rgba(255,255,255,0.3)', 
+                            cursor: 'pointer',
+                            padding: '10px',
+                            marginRight: '-10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
                     >
-                        <X size={20} />
+                        <X size={24} />
                     </button>
                 </div>
 

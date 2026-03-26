@@ -601,21 +601,25 @@ const DiscoveryCanvas = ({
             />
 
             {/* ── Community Modals ── */}
-            <SectorHubPanel
-                sector={activeSectorHub?.sector}
-                communities={activeSectorHub?.communities || []}
-                onClose={() => setActiveSectorHub(null)}
-                onOpenCommunity={(comm) => {
-                    setSelectedCommunity(comm);
-                    setActiveSectorHub(null);
-                }}
-                onCreateCommunity={(sid) => {
-                    setCreatingSectorId(sid);
-                    setIsCreatingCommunity(true);
-                    setActiveSectorHub(null);
-                }}
-                currentUser={user}
-            />
+            <AnimatePresence>
+                {activeSectorHub && (
+                    <SectorHubPanel
+                        sector={activeSectorHub?.sector}
+                        communities={activeSectorHub?.communities || []}
+                        onClose={() => setActiveSectorHub(null)}
+                        onOpenCommunity={(comm) => {
+                            setSelectedCommunity(comm);
+                            setActiveSectorHub(null);
+                        }}
+                        onCreateCommunity={(sid) => {
+                            setCreatingSectorId(sid);
+                            setIsCreatingCommunity(true);
+                            setActiveSectorHub(null);
+                        }}
+                        currentUser={user}
+                    />
+                )}
+            </AnimatePresence>
 
             {selectedCommunity && (
                 <CommunityDetailsModal
