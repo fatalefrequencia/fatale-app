@@ -427,10 +427,10 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
 };
 
 // ─── CREATE COMMUNITY MODAL ───────────────────────────────────────────────
-export const CreateCommunityModal = ({ onClose, onSubmit, loading, user_credits = 0 }) => {
+export const CreateCommunityModal = ({ onClose, onSubmit, loading, user_credits = 0, preselectedSectorId = null }) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    const [sectorId, setSectorId] = useState(0);
+    const [sectorId, setSectorId] = useState(preselectedSectorId !== null ? preselectedSectorId : 0);
     const [localError, setLocalError] = useState(null);
     const CREATION_COST = 0;
     const canAfford = (user_credits || 0) >= CREATION_COST;

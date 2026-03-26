@@ -23,6 +23,8 @@ import PlaylistNode from './discovery/PlaylistNode';
 import SectorLabel from './discovery/SectorLabel';
 import YoutubeNode from './discovery/YoutubeNode';
 import PlaylistPreviewPanel from './discovery/PlaylistPreviewPanel';
+import SectorHubNode from './discovery/SectorHubNode';
+import SectorHubPanel from './discovery/SectorHubPanel';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 const hashStr = (s) => {
@@ -54,6 +56,7 @@ const nodeTypes = {
     playlistNode: PlaylistNode,
     sectorLabel: SectorLabel,
     youtubeNode: YoutubeNode,
+    sectorHubNode: SectorHubNode,
 };
 
 // ─── Inner canvas (needs ReactFlow context) ─────────────────────────────────
@@ -78,7 +81,9 @@ const DiscoveryCanvas = ({
     const [selectedPlaylist, setSelectedPlaylist] = useState(null);
     const [communities, setCommunities] = useState([]);
     const [selectedCommunity, setSelectedCommunity] = useState(null);
+    const [activeSectorHub, setActiveSectorHub] = useState(null); // { sector, communities }
     const [isCreatingCommunity, setIsCreatingCommunity] = useState(false);
+    const [creatingSectorId, setCreatingSectorId] = useState(null);
     const [youtubeNodes, setYoutubeNodes] = useState([]);
 
     // Track current viewport zoom for node visibility
@@ -142,6 +147,30 @@ const DiscoveryCanvas = ({
                     },
                     zIndex: isLive ? 10 : 1,
                 });
+            });
+        });
+
+        // 3.5. Place Sector Hub Nodes (One per sector)
+        SECTORS.forEach(sec => {
+            const sectorCommunities = (communities || []).filter(c => c.sectorId === sec.id);
+            const userIsMember = sectorCommunities.some(c => 
+                String(c.id) === String(user?.communityId || user?.CommunityId)
+            );
+
+            result.push({
+                id: `sector-hub-${sec.id}`,
+                type: 'sectorHubNode',
+                position: { x: sec.x, y: sec.y },
+                data: {
+                    name: sec.name,
+                    color: sec.color,
+                    communityCount: sectorCommunities.length,
+                    isMember: userIsMember,
+                    zoom,
+                    sector: sec,
+                    communities: sectorCommunities
+                },
+                zIndex: 5,
             });
         });
 
@@ -260,7 +289,7 @@ const DiscoveryCanvas = ({
         } finally {
             setLoading(false);
         }
-    }, [buildNodes, currentZoom]);
+    }, [buildNodes, currentZoom, communities, user]);
 
     useEffect(() => { fetchAll(); }, []);
 
@@ -289,6 +318,11 @@ const DiscoveryCanvas = ({
             if (node.data?.onPlay) {
                 node.data.onPlay(node.data);
             }
+        } else if (node.type === 'sectorHubNode') {
+            setActiveSectorHub({
+                sector: node.data.sector,
+                communities: node.data.communities
+            });
         }
     }, [navigateToProfile]);
 
@@ -567,21 +601,61 @@ const DiscoveryCanvas = ({
             />
 
             {/* ── Community Modals ── */}
+            <SectorHubPanel
+                sector={activeSectorHub?.sector}
+                communities={activeSectorHub?.communities || []}
+                onClose={() => setActiveSectorHub(null)}
+                onOpenCommunity={(comm) => {
+                    setSelectedCommunity(comm);
+                    setActiveSectorHub(null);
+                }}
+                onCreateCommunity={(sid) => {
+                    setCreatingSectorId(sid);
+                    setIsCreatingCommunity(true);
+                    setActiveSectorHub(null);
+                }}
+                currentUser={user}
+            />
+
             {selectedCommunity && (
                 <CommunityDetailsModal
                     community={selectedCommunity}
                     onClose={() => setSelectedCommunity(null)}
-                    user={user}
-                    followedCommunities={followedCommunities}
-                    onFollowUpdate={onFollowUpdate}
-                    onCommunityUpdate={onCommunityUpdate}
+                    currentUser={user}
+                    onJoin={async (id) => {
+                        await API.Communities.join(id);
+                        fetchAll();
+                        onCommunityUpdate?.();
+                    }}
+                    onLeave={async (id) => {
+                        await API.Communities.leave(id);
+                        fetchAll();
+                        onCommunityUpdate?.();
+                    }}
+                    onFollow={async (id) => {
+                        await API.Artists.likeArtist(id); // Using follow logic
+                        fetchAll();
+                        onFollowUpdate?.();
+                    }}
+                    navigateToProfile={navigateToProfile}
                 />
             )}
             {isCreatingCommunity && (
                 <CreateCommunityModal
-                    onClose={() => setIsCreatingCommunity(false)}
-                    onCommunityUpdate={onCommunityUpdate}
-                    user={user}
+                    onClose={() => {
+                        setIsCreatingCommunity(false);
+                        setCreatingSectorId(null);
+                    }}
+                    onSubmit={async (dto) => {
+                        await API.Communities.create(dto);
+                        setIsCreatingCommunity(false);
+                        setCreatingSectorId(null);
+                        fetchAll();
+                        onCommunityUpdate?.();
+                        showNotification('Community founded successfully!', 'success');
+                    }}
+                    preselectedSectorId={creatingSectorId}
+                    user_credits={user?.creditsBalance || user?.CreditsBalance || 0}
                 />
             )}
 
