@@ -1376,6 +1376,7 @@ function App() {
           <>
             {console.log("[App] Rendering Dashboard. Redirect Trigger:", redirectTrigger)}
             <Dashboard
+              setUser={setUser}
               activeView={activeView}
               setView={setView}
               hasNewMessages={hasNewMessages}
@@ -1457,7 +1458,14 @@ const LoginView = ({ onLogin }) => (
   </motion.div>
 );
 
-const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, setIsPlaying, user, tracks, libraryTracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal, favoriteStations, liveStations, activeStation, stationChat, stationQueue, onExitProfile, activeMessageUser, setActiveMessageUser, isMuted, onToggleMute, followedCommunities, onFollowUpdate, setActiveStation, sendMessage, requestTrack }) => {
+const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, 
+setIsPlaying, user, tracks, libraryTracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, 
+onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, 
+globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, 
+playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal, 
+favoriteStations, liveStations, activeStation, stationChat, stationQueue, onExitProfile, activeMessageUser, 
+setActiveMessageUser, isMuted, onToggleMute, followedCommunities, onFollowUpdate, setActiveStation, sendMessage, 
+requestTrack, setUser }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   return (
