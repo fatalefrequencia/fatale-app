@@ -382,7 +382,7 @@ const DiscoveryCanvas = ({
 
     // ── Filter nodes by sector + search ──
     const filteredNodes = useMemo(() => {
-        let n = nodes;
+        let n = [...nodes, ...youtubeNodes];
 
         if (activeSector !== null) {
             const sec = SECTORS[activeSector];
@@ -403,7 +403,7 @@ const DiscoveryCanvas = ({
         }
 
         return n;
-    }, [nodes, activeSector, searchQuery]);
+    }, [nodes, youtubeNodes, activeSector, searchQuery]);
 
     // ─── Render ────────────────────────────────────────────────────────────
     return (
