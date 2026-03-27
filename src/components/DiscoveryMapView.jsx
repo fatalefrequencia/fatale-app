@@ -289,7 +289,7 @@ const DiscoveryCanvas = ({
         }
     }, [buildNodes, currentZoom, communities, user]);
 
-    useEffect(() => { fetchAll(); }, []);
+    useEffect(() => { fetchAll(); fetchYoutube(onPlayTrack); }, []);
 
     // ── Update zoom on all nodes when viewport changes ──
     const handleMove = useCallback((evt, viewport) => {
