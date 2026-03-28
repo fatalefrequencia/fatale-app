@@ -69,6 +69,7 @@ const DiscoveryCanvas = ({
     onCommunityUpdate,
     followedCommunities = [],
     onFollowUpdate,
+    isPlayerActive,
 }) => {
     const handleYoutubePlay = useCallback((nodeData) => {
         if (onPlayTrack) {
@@ -712,4 +713,5 @@ const DiscoveryMapView = (props) => (
 );
 
 export default React.memo(DiscoveryMapView);
+
 
