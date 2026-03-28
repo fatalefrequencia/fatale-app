@@ -39,15 +39,11 @@ const hashStr = (s) => {
 const jitter = (seed, range) => ((hashStr(seed + 'x') % range) - range / 2);
 
 // Archimedean spiral for scattering artists around sector center
-const spiral = (index, cx, cy) => {
-    const a = 180;
-    const b = 95;
-    const angle = index * 2.4;
-    const radius = a + b * angle;
-    return {
-        x: cx + Math.cos(angle) * radius + jitter(index + 'ax', 40),
-        y: cy + Math.sin(angle) * radius * 1.15 + jitter(index + 'ay', 40),
-    };
+const spiral = (index, cx, cy, startRadius = 240, spacing = 160) => {
+    const angle = index * 2.39996; 
+    const radius = startRadius + Math.sqrt(index) * spacing; 
+    return { x: cx + Math.cos(angle) * radius, y: cy + Math.sin(angle) * radius * 0.9 };
+};
 };
 
 // --- Node types registered outside component to avoid recreation ---
@@ -116,7 +112,7 @@ const DiscoveryCanvas = ({
             result.push({
                 id: `sector-label-${sec.id}`,
                 type: 'sectorLabel',
-                position: { x: sec.x - 280, y: sec.y - 200 },
+                position: spiral(idx + 30, sec.x, sec.y, 750, 180),
                 data: { name: sec.name, color: sec.color, desc: sec.desc, zoom },
                 draggable: false,
                 selectable: false,
@@ -143,8 +139,8 @@ const DiscoveryCanvas = ({
         Object.entries(sectorGroups).forEach(([secId, group]) => {
             const sec = SECTORS[parseInt(secId)] || SECTORS[0];
             group.forEach((a, idx) => {
-                const pos = spiral(idx, sec.x, sec.y);
-                const id = (a.id || a.Id || `a-${a.userId || a.UserId}-${idx}`).toString();
+                const pos = spiral(idx, sec.x, sec.y, 250, 140);
+                const id = `a-${a.id || a.userId || idx}`;
                 const trackCount = a.trackCount || a.TrackCount || 0;
                 const isLive = a.isLive || a.IsLive || false;
                 result.push({
@@ -178,7 +174,7 @@ const DiscoveryCanvas = ({
             result.push({
                 id: `sector-hub-${sec.id}`,
                 type: 'sectorHubNode',
-                position: { x: sec.x, y: sec.y },
+                position: spiral(idx + 30, sec.x, sec.y, 750, 180),
                 data: {
                     name: sec.name,
                     color: sec.color,
@@ -204,12 +200,7 @@ const DiscoveryCanvas = ({
             const sec = SECTORS[secId] || SECTORS[0];
 
             // Place playlists further out from the sector center
-            const angle = (idx * 1.7) + 0.5;
-            const radius = 600 + (idx % 5) * 120;
-            const pos = {
-                x: sec.x + Math.cos(angle) * radius + jitter(idx + 'plx', 60),
-                y: sec.y + Math.sin(angle) * radius * 1.1 + jitter(idx + 'ply', 60),
-            };
+            const pos = spiral(idx + 15, sec.x, sec.y, 450, 160);
 
             result.push({
                 id: `pl-${pl.id || pl.Id || idx}`,
@@ -254,10 +245,7 @@ const DiscoveryCanvas = ({
                     results.push({
                         id: `yt-${videoId}-${sec.id}-${idx}`,
                         type: 'youtubeNode',
-                        position: {
-                            x: sec.x + Math.cos(angle) * radius + xj,
-                            y: sec.y + Math.sin(angle) * radius * 1.2 + yj,
-                        },
+                        position: spiral(idx + 30, sec.x, sec.y, 750, 180),
                         data: {
                             title: item.Title || item.title || 'YouTube Signal',
                             author: item.Author || item.author || item.album?.artist?.name || item.ChannelTitle || '',
@@ -364,17 +352,7 @@ const DiscoveryCanvas = ({
                 });
                 
                 const items = Array.isArray(res?.data) ? res.data : [];
-                const searchResults = items.map((item, idx) => {
-                    const videoId = item.Id || item.id;
-                    const angle = idx * 0.72;
-                    const radius = 300 + (idx % 5) * 140;
-                    return {
-                        id: `yt-search-${videoId}-${idx}`,
-                        type: 'youtubeNode',
-                        position: {
-                            x: 2200 + Math.cos(angle) * radius,
-                            y: 1800 + Math.sin(angle) * radius,
-                        },
+                const searchResults = items.map((item, idx) => {`r`n                    const videoId = item.Id || item.id;`r`n                    const pos = spiral(idx + 5, 2200, 1800, 300, 180);`r`n                    return {`r`n                        id: `yt-search-${videoId}-${idx}`,`r`n                        type: "youtubeNode",`r`n                        position: pos,
                         data: {
                             title: item.Title || item.title || 'YouTube Signal',
                             author: item.Author || item.author || item.album?.artist?.name || '',
@@ -704,6 +682,10 @@ const DiscoveryMapView = (props) => (
 );
 
 export default React.memo(DiscoveryMapView);
+
+
+
+
 
 
 
