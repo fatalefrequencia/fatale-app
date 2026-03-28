@@ -152,8 +152,6 @@ const DiscoveryCanvas = ({
                         sectorColor: sec.color,
                         isLive,
                         trackCount,
-                        isLive,
-                        trackCount,
                         userId: a.userId || a.UserId || a.id || a.Id,
                         navigateToProfile,
                         zoom,
@@ -173,7 +171,7 @@ const DiscoveryCanvas = ({
             result.push({
                 id: `sector-hub-${sec.id}`,
                 type: 'sectorHubNode',
-                position: spiral(idx + 30, sec.x, sec.y, 750, 180),
+                position: { x: sec.x, y: sec.y },
                 data: {
                     name: sec.name,
                     color: sec.color,
