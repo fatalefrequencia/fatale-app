@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
     ReactFlow,
     useNodesState,
@@ -351,7 +351,13 @@ const DiscoveryCanvas = ({
                 });
                 
                 const items = Array.isArray(res?.data) ? res.data : [];
-                const searchResults = items.map((item, idx) => {`r`n                    const videoId = item.Id || item.id;`r`n                    const pos = spiral(idx + 5, 2200, 1800, 300, 180);`r`n                    return {`r`n                        id: `yt-search-${videoId}-${idx}`,`r`n                        type: "youtubeNode",`r`n                        position: pos,
+                const searchResults = items.map((item, idx) => {
+                    const videoId = item.Id || item.id;
+                    const pos = spiral(idx + 5, 2200, 1800, 300, 180);
+                    return {
+                        id: `yt-search-${videoId}-${idx}`,
+                        type: "youtubeNode",
+                        position: pos,
                         data: {
                             title: item.Title || item.title || 'YouTube Signal',
                             author: item.Author || item.author || item.album?.artist?.name || '',
