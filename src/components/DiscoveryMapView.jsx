@@ -600,16 +600,7 @@ const DiscoveryCanvas = ({
                     size={1}
                     color="rgba(255,0,110,0.08)"
                 />
-                <Controls
-                    style={{
-                        bottom: isPlayerActive ? 140 : 60,
-                        right: 12,
-                        background: 'rgba(10,10,10,0.9)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        borderRadius: 10,
-                    }}
-                    showInteractive={false}
-                />
+                        <Controls position="bottom-left" style={{ bottom: isPlayerActive ? 150 : 60, background: "rgba(10,10,10,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10 }} showInteractive={false} />
                 
             </ReactFlow>
 
@@ -713,5 +704,6 @@ const DiscoveryMapView = (props) => (
 );
 
 export default React.memo(DiscoveryMapView);
+
 
 
