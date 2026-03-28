@@ -1546,6 +1546,7 @@ requestTrack, setUser }) => {
                 followedCommunities={followedCommunities}
                 onFollowUpdate={onFollowUpdate}
                 onCommunityUpdate={onRefreshProfile} // ADDED TO REFRESH USER/MAP WHEN JOINING COMM
+                isPlayerActive={currentTrackIndex >= 0}
               />
             )}
             {activeView === 'wallet' && <WalletView user={user} onRefreshProfile={onRefreshProfile} />}

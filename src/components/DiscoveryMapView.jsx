@@ -3,7 +3,7 @@ import {
     ReactFlow,
     useNodesState,
     Controls,
-    MiniMap,
+    
     Background,
     BackgroundVariant,
     useReactFlow,
@@ -495,7 +495,7 @@ const DiscoveryCanvas = ({
 
             {/* ── Sector Filter Pills ── */}
             <div style={{
-                position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
+                position: 'absolute', bottom: isPlayerActive ? 92 : 12, left: '50%', transform: 'translateX(-50%)',
                 zIndex: 100,
                 display: 'flex', gap: 6, flexWrap: 'nowrap',
                 pointerEvents: 'auto',
@@ -601,7 +601,7 @@ const DiscoveryCanvas = ({
                 />
                 <Controls
                     style={{
-                        bottom: 60,
+                        bottom: isPlayerActive ? 140 : 60,
                         right: 12,
                         background: 'rgba(10,10,10,0.9)',
                         border: '1px solid rgba(255,255,255,0.08)',
@@ -609,20 +609,7 @@ const DiscoveryCanvas = ({
                     }}
                     showInteractive={false}
                 />
-                <MiniMap
-                    style={{
-                        background: 'rgba(6,6,6,0.9)',
-                        border: '1px solid rgba(255,0,110,0.2)',
-                        borderRadius: 10,
-                        bottom: 60,
-                    }}
-                    nodeColor={node => {
-                        if (node.type === 'artistNode') return node.data?.sectorColor || '#ff006e';
-                        if (node.type === 'playlistNode') return 'rgba(255,255,255,0.3)';
-                        return 'transparent';
-                    }}
-                    maskColor="rgba(2,2,2,0.7)"
-                />
+                
             </ReactFlow>
 
             {/* ── Playlist Preview Panel ── */}
@@ -725,3 +712,4 @@ const DiscoveryMapView = (props) => (
 );
 
 export default React.memo(DiscoveryMapView);
+
