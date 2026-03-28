@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+﻿import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
     ReactFlow,
     useNodesState,
@@ -26,7 +26,7 @@ import PlaylistPreviewPanel from './discovery/PlaylistPreviewPanel';
 import SectorHubNode from './discovery/SectorHubNode';
 import SectorHubPanel from './discovery/SectorHubPanel';
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const hashStr = (s) => {
     if (!s) return 0;
     let h = 0;
@@ -44,7 +44,6 @@ const spiral = (index, cx, cy, startRadius = 240, spacing = 160) => {
     const radius = startRadius + Math.sqrt(index) * spacing; 
     return { x: cx + Math.cos(angle) * radius, y: cy + Math.sin(angle) * radius * 0.9 };
 };
-};
 
 // --- Node types registered outside component to avoid recreation ---
 const nodeTypes = {
@@ -55,7 +54,7 @@ const nodeTypes = {
     sectorHubNode: SectorHubNode,
 };
 
-// ─── Inner canvas (needs ReactFlow context) ─────────────────────────────────
+// â”€â”€â”€ Inner canvas (needs ReactFlow context) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const DiscoveryCanvas = ({
     navigateToProfile,
     onPlayPlaylist,
@@ -103,7 +102,7 @@ const DiscoveryCanvas = ({
     // Track current viewport zoom for node visibility
     const [currentZoom, setCurrentZoom] = useState(0.45);
 
-    // ── Build nodes from API data ──
+    // â”€â”€ Build nodes from API data â”€â”€
     const buildNodes = useCallback((artists, playlists, zoom) => {
         const result = [];
 
@@ -224,7 +223,7 @@ const DiscoveryCanvas = ({
         return result;
     }, [navigateToProfile, youtubeNodes]);
 
-    // ── Fetch YouTube results per sector ──
+    // â”€â”€ Fetch YouTube results per sector â”€â”€
     const fetchYoutube = useCallback(async (onPlayTrackFn) => {
         const results = [];
         // Sample 3 sectors to avoid too many requests
@@ -263,7 +262,7 @@ const DiscoveryCanvas = ({
         setYoutubeNodes(results);
     }, []);
 
-    // ── Fetch data ──
+    // â”€â”€ Fetch data â”€â”€
     const fetchAll = useCallback(async () => {
         setLoading(true);
         try {
@@ -297,7 +296,7 @@ const DiscoveryCanvas = ({
 
     useEffect(() => { fetchAll(); fetchYoutube(handleYoutubePlay); }, []);
 
-    // ── Update zoom on all nodes when viewport changes ──
+    // â”€â”€ Update zoom on all nodes when viewport changes â”€â”€
     const handleMove = useCallback((evt, viewport) => {
         const z = viewport?.zoom ?? 1;
         setCurrentZoom(z);
@@ -307,7 +306,7 @@ const DiscoveryCanvas = ({
         })));
     }, [setNodes]);
     
-    // ── Central Node Click Handler ──
+    // â”€â”€ Central Node Click Handler â”€â”€
     const handleNodeClick = useCallback((event, node) => {
         if (node.type === 'artistNode') {
             const uid = node.data?.userId;
@@ -330,7 +329,7 @@ const DiscoveryCanvas = ({
         }
     }, [navigateToProfile]);
 
-    // ── YouTube search: trigger on query change (debounced) ──
+    // â”€â”€ YouTube search: trigger on query change (debounced) â”€â”€
     const ytSearchRef = useRef(null);
     useEffect(() => {
         const query = searchQuery.trim();
@@ -376,7 +375,7 @@ const DiscoveryCanvas = ({
         return () => clearTimeout(ytSearchRef.current);
     }, [searchQuery, currentZoom, onPlayTrack, showNotification]);
 
-    // ── Filter nodes by sector + search ──
+    // â”€â”€ Filter nodes by sector + search â”€â”€
     const filteredNodes = useMemo(() => {
         let n = [...nodes, ...youtubeNodes];
 
@@ -401,10 +400,10 @@ const DiscoveryCanvas = ({
         return n;
     }, [nodes, youtubeNodes, activeSector, searchQuery]);
 
-    // ─── Render ────────────────────────────────────────────────────────────
+    // â”€â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     return (
         <div style={{ width: '100%', height: '100%', position: 'relative', background: '#020202' }}>
-            {/* ── Overlay Controls ── */}
+            {/* â”€â”€ Overlay Controls â”€â”€ */}
             <div style={{
                 position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
                 zIndex: 100, display: 'flex', alignItems: 'center', gap: 8,
@@ -472,7 +471,7 @@ const DiscoveryCanvas = ({
                 </button>
             </div>
 
-            {/* ── Sector Filter Pills ── */}
+            {/* â”€â”€ Sector Filter Pills â”€â”€ */}
             <div style={{
                 position: 'absolute', bottom: isPlayerActive ? 92 : 12, left: '50%', transform: 'translateX(-50%)',
                 zIndex: 100,
@@ -527,7 +526,7 @@ const DiscoveryCanvas = ({
                 ))}
             </div>
 
-            {/* ── Loading ── */}
+            {/* â”€â”€ Loading â”€â”€ */}
             {loading && (
                 <div style={{
                     position: 'absolute', inset: 0, zIndex: 200,
@@ -549,7 +548,7 @@ const DiscoveryCanvas = ({
                 </div>
             )}
 
-            {/* ── React Flow Canvas ── */}
+            {/* â”€â”€ React Flow Canvas â”€â”€ */}
             <ReactFlow
                 nodes={filteredNodes}
                 edges={[]}
@@ -582,7 +581,7 @@ const DiscoveryCanvas = ({
                 
             </ReactFlow>
 
-            {/* ── Playlist Preview Panel ── */}
+            {/* â”€â”€ Playlist Preview Panel â”€â”€ */}
             <PlaylistPreviewPanel
                 playlist={selectedPlaylist}
                 onClose={() => setSelectedPlaylist(null)}
@@ -590,7 +589,7 @@ const DiscoveryCanvas = ({
                 onPlayPlaylist={onPlayPlaylist}
             />
 
-            {/* ── Community Modals ── */}
+            {/* â”€â”€ Community Modals â”€â”€ */}
             <AnimatePresence>
                 {activeSectorHub && (
                     <SectorHubPanel
@@ -674,7 +673,7 @@ const DiscoveryCanvas = ({
     );
 };
 
-// ─── Exported component wrapped in provider ──────────────────────────────────
+// â”€â”€â”€ Exported component wrapped in provider â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const DiscoveryMapView = (props) => (
     <ReactFlowProvider>
         <DiscoveryCanvas {...props} />
@@ -682,6 +681,7 @@ const DiscoveryMapView = (props) => (
 );
 
 export default React.memo(DiscoveryMapView);
+
 
 
 
