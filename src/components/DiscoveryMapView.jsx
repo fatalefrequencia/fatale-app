@@ -70,6 +70,23 @@ const DiscoveryCanvas = ({
     followedCommunities = [],
     onFollowUpdate,
 }) => {
+    const handleYoutubePlay = useCallback((nodeData) => {
+        if (onPlayTrack) {
+            onPlayTrack(nodeData);
+        } else if (onPlayPlaylist) {
+            const track = {
+                id: `youtube:${nodeData.id}`,
+                title: nodeData.title,
+                artist: nodeData.author,
+                source: `youtube:${nodeData.id}`,
+                cover: nodeData.thumbnailUrl,
+                isLocked: false,
+                isOwned: true,
+                category: 'YouTube'
+            };
+            onPlayPlaylist([track], 0);
+        }
+    }, [onPlayTrack, onPlayPlaylist]);
     const { showNotification } = useNotification();
     const { getViewport } = useReactFlow();
 
@@ -242,12 +259,12 @@ const DiscoveryCanvas = ({
                         },
                         data: {
                             title: item.Title || item.title || 'YouTube Signal',
-                            author: item.Author || item.author || item.ChannelTitle || '',
-                            thumbnailUrl: item.ThumbnailUrl || item.thumbnailUrl || item.thumbnail || '',
+                            author: item.Author || item.author || item.album?.artist?.name || item.ChannelTitle || '',
+                            thumbnailUrl: item.ThumbnailUrl || item.thumbnailUrl || item.coverImageUrl || item.CoverImageUrl || item.thumbnail || '',
                             id: videoId,
                             sectorColor: sec.color,
                             zoom: currentZoom,
-                            onPlay: onPlayTrackFn,
+                            onPlay: handleYoutubePlay,
                         },
                         zIndex: 3,
                     });
@@ -289,7 +306,7 @@ const DiscoveryCanvas = ({
         }
     }, [buildNodes, currentZoom, communities, user]);
 
-    useEffect(() => { fetchAll(); fetchYoutube(onPlayTrack); }, []);
+    useEffect(() => { fetchAll(); fetchYoutube(handleYoutubePlay); }, [handleYoutubePlay, fetchAll]);
 
     // ── Update zoom on all nodes when viewport changes ──
     const handleMove = useCallback((evt, viewport) => {
@@ -359,12 +376,12 @@ const DiscoveryCanvas = ({
                         },
                         data: {
                             title: item.Title || item.title || 'YouTube Signal',
-                            author: item.Author || item.author || '',
-                            thumbnailUrl: item.ThumbnailUrl || item.thumbnailUrl || '',
+                            author: item.Author || item.author || item.album?.artist?.name || '',
+                            thumbnailUrl: item.ThumbnailUrl || item.thumbnailUrl || item.coverImageUrl || item.CoverImageUrl || '',
                             id: videoId,
                             sectorColor: '#ff006e',
                             zoom: currentZoom,
-                            onPlay: onPlayTrack,
+                            onPlay: handleYoutubePlay,
                         },
                         zIndex: 10,
                     };
