@@ -141,8 +141,8 @@ export const IPodPlayer = ({
                 const results = (res.data || []).map((item, idx) => {
                     const videoId = item.id || item.Id || item.videoId || `yt-fb-${idx}`;
                     const title = item.title || item.Title || 'Unknown Signal';
-                    const author = item.author || item.Author || item.channelTitle || 'External Broadcast';
-                    const thumb = item.thumbnailUrl || item.ThumbnailUrl || item.cover;
+                    const author = item.author || item.Author || item.album?.artist?.name || item.channelTitle || 'External Broadcast';
+                    const thumb = item.thumbnailUrl || item.ThumbnailUrl || item.coverImageUrl || item.CoverImageUrl || item.cover;
 
                     return {
                         id: `yt-${videoId}`,
