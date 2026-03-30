@@ -1,6 +1,6 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Users, Zap } from 'lucide-react';
+import { Users, Skull } from 'lucide-react';
 
 const SectorHubNode = ({ data }) => {
     const {
@@ -126,7 +126,7 @@ const SectorHubNode = ({ data }) => {
                 top: 40,
                 opacity: 0.3
             }}>
-                <Zap size={20} style={{ color }} />
+                <Skull size={20} style={{ color }} />
             </div>
         </div>
     );

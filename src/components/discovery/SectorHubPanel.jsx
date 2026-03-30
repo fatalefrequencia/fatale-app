@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Users, Zap, Plus, ChevronRight, Shield } from 'lucide-react';
+import { X, Users, Skull, Plus, ChevronRight, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const SectorHubPanel = ({ 
@@ -65,7 +65,7 @@ const SectorHubPanel = ({
                         borderRadius: 4,
                         border: `1px solid ${color}33`
                     }}>
-                        <Zap size={12} style={{ color }} />
+                        <Skull size={12} style={{ color }} />
                         <span style={{
                             color,
                             fontSize: 10,
@@ -199,7 +199,7 @@ const SectorHubPanel = ({
                                 justifyContent: 'center',
                                 flexShrink: 0
                             }}>
-                                <Zap size={18} style={{ color }} />
+                                <Skull size={18} style={{ color }} />
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ 
