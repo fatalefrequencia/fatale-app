@@ -19,11 +19,11 @@ const YoutubeNode = ({ data }) => {
         <div
             onClick={() => onPlay && onPlay(data)}
             style={{
-                width: 150,
-                height: 100,
+                width: 120,
+                height: 120,
                 border: '2px solid #ffffff',
                 boxShadow: '0 0 15px rgba(255, 255, 255, 0.4)',
-                borderRadius: 4,
+                borderRadius: 8,
                 overflow: 'hidden',
                 position: 'relative',
                 cursor: 'pointer',
