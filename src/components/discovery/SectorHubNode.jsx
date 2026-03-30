@@ -1,6 +1,7 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Users, Skull } from 'lucide-react';
+import { Users } from 'lucide-react';
+import OrganicSkull from './OrganicSkull';
 
 const SectorHubNode = ({ data }) => {
     const {
@@ -126,7 +127,7 @@ const SectorHubNode = ({ data }) => {
                 top: 40,
                 opacity: 0.3
             }}>
-                <Skull size={20} style={{ color }} />
+                <OrganicSkull size={24} color={color} />
             </div>
         </div>
     );

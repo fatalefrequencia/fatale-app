@@ -1,6 +1,7 @@
 import React from 'react';
-import { X, Users, Skull, Plus, ChevronRight, Shield } from 'lucide-react';
+import { X, Users, Plus, ChevronRight, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import OrganicSkull from './OrganicSkull';
 
 const SectorHubPanel = ({ 
     sector, 
@@ -65,7 +66,7 @@ const SectorHubPanel = ({
                         borderRadius: 4,
                         border: `1px solid ${color}33`
                     }}>
-                        <Skull size={12} style={{ color }} />
+                        <OrganicSkull size={14} color={color} />
                         <span style={{
                             color,
                             fontSize: 10,
@@ -199,7 +200,7 @@ const SectorHubPanel = ({
                                 justifyContent: 'center',
                                 flexShrink: 0
                             }}>
-                                <Skull size={18} style={{ color }} />
+                                <OrganicSkull size={20} color={color} />
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ 
