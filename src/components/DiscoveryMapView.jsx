@@ -42,7 +42,7 @@ const hashStr = (s) => {
 const jitter = (seed, range) => ((hashStr(seed + 'x') % range) - range / 2);
 
 // Archimedean spiral for scattering artists around sector center
-const spiral = (index, cx, cy, startRadius = 240, spacing = 160) => {
+const spiral = (index, cx, cy, startRadius = 300, spacing = 220) => {
     const angle = index * 2.39996; 
     const radius = startRadius + Math.sqrt(index) * spacing; 
     return { x: cx + Math.cos(angle) * radius, y: cy + Math.sin(angle) * radius * 0.9 };
@@ -132,7 +132,7 @@ const DiscoveryCanvas = ({
         Object.entries(sectorGroups).forEach(([secId, group]) => {
             const sec = SECTORS[parseInt(secId)] || SECTORS[0];
             group.forEach((a, idx) => {
-                const pos = spiral(idx, sec.x, sec.y, 420, 160); // Pushed further out
+                const pos = spiral(idx, sec.x, sec.y, 520, 240); // Even more breathing room
                 const id = `a-${a.id || a.userId || idx}`;
                 const trackCount = a.trackCount || a.TrackCount || 0;
                 const isLive = a.isLive || a.IsLive || false;
@@ -183,9 +183,9 @@ const DiscoveryCanvas = ({
             // Individual Community Nodes (Orbiting the hub)
             sectorCommunities.forEach((comm, cidx) => {
                 const angle = (cidx / sectorCommunities.length) * 2 * Math.PI;
-                const radius = 240; // Orbit around the hub
+                const radius = 300; // Increased from 240 for larger hub
                 const pos = {
-                    x: sec.x + Math.cos(angle) * radius - 50, // 50 is half of approx base size
+                    x: sec.x + Math.cos(angle) * radius - 50,
                     y: sec.y + Math.sin(angle) * radius - 50
                 };
 
@@ -217,7 +217,7 @@ const DiscoveryCanvas = ({
             const sec = SECTORS[secId] || SECTORS[0];
 
             // Place playlists further out from the sector center
-            const pos = spiral(idx + 15, sec.x, sec.y, 450, 160);
+            const pos = spiral(idx + 15, sec.x, sec.y, 700, 260);
 
             result.push({
                 id: `pl-${pl.id || pl.Id || idx}`,
