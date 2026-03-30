@@ -401,6 +401,19 @@ function App() {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const res = await API.Auth.getMe();
+      if (res.data) {
+        setUser(res.data);
+        localStorage.setItem('user', JSON.stringify(res.data));
+        console.log("[App] User state refreshed:", res.data);
+      }
+    } catch (e) {
+      console.error("[App] Failed to refresh user state", e);
+    }
+  };
+
   useEffect(() => {
     const uid = currentUserId;
     if (uid) {
@@ -409,6 +422,7 @@ function App() {
       fetchFavoriteStations(uid);
       fetchLiveStations(uid);
       fetchPlaylists(uid);
+      refreshUser(); // Get latest DB profile including communityId
     }
   }, [currentUserId]);
 
@@ -1553,7 +1567,7 @@ requestTrack, setUser }) => {
                 favoriteStations={favoriteStations}
                 followedCommunities={followedCommunities}
                 onFollowUpdate={onFollowUpdate}
-                onCommunityUpdate={onRefreshProfile} // ADDED TO REFRESH USER/MAP WHEN JOINING COMM
+                onCommunityUpdate={refreshUser} // REFRESH USER/MAP WHEN JOINING COMM
                 isPlayerActive={currentTrackIndex >= 0}
               />
             )}
@@ -2089,15 +2103,27 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
             )}
           </div>
           <div className="space-y-1">
-            {/* Unified list of community links: Member Community + Followed Communities */}
+            {/* Unified list of community links: Member Community (First) + Followed Communities */}
             {(() => {
               const userCommId = user?.communityId || user?.CommunityId;
+              
+              // Normalize all IDs to strings for robust comparison and Set uniqueness
+              const memberIdStr = userCommId ? String(userCommId) : null;
+              const followedIds = (followedCommunities || []).map(id => String(id));
+
               const uniqueLinks = Array.from(new Set([
-                ...(userCommId ? [userCommId] : []),
-                ...(followedCommunities || [])
+                ...(memberIdStr ? [memberIdStr] : []),
+                ...followedIds
               ])).filter(Boolean);
 
-              if (uniqueLinks.length === 0) {
+              // Priority sorting: ensure member community is ALWAYS first
+              const sortedLinks = uniqueLinks.sort((a, b) => {
+                if (a === memberIdStr) return -1;
+                if (b === memberIdStr) return 1;
+                return 0; // Maintain relative order for others
+              });
+
+              if (sortedLinks.length === 0) {
                 return (
                   <div className="px-3 py-4 border border-dashed border-white/5 rounded text-center opacity-20">
                     <div className="text-[8px] uppercase">No Links Established</div>
@@ -2105,11 +2131,11 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                 );
               }
 
-              return uniqueLinks.map((cid) => {
+              return sortedLinks.map((cid) => {
                 const comm = allCommunities.find(c => String(c.id) === String(cid));
                 if (!comm) return null;
                 const sectorColor = SECTORS[comm.sectorId]?.color || '#ffffff';
-                const isMemberBadge = String(cid) === String(userCommId);
+                const isMemberBadge = String(cid) === memberIdStr;
 
                 return (
                   <button
@@ -2130,7 +2156,7 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {isMemberBadge && (
-                          <span className="text-[7px] font-black text-[#00ffff]/40 border border-[#00ffff]/20 px-1 rounded-sm">MEMBER</span>
+                          <span className="text-[7px] font-black text-[#00ffff]/60 border border-[#00ffff]/30 px-1 rounded-sm bg-[#00ffff]/5">MEMBER</span>
                       )}
                       {String(selectedCommunityId) === String(cid) && <Zap size={10} className="text-[#00ffff] animate-pulse" />}
                     </div>
