@@ -401,16 +401,12 @@ function App() {
     }
   };
 
-  const refreshUser = async () => {
+  const onRefreshProfile = async () => {
     try {
-      const res = await API.Auth.getMe();
-      if (res.data) {
-        setUser(res.data);
-        localStorage.setItem('user', JSON.stringify(res.data));
-        console.log("[App] User state refreshed:", res.data);
-      }
+      await fetchUserProfile(false);
+      console.log("[App] Profiler refreshed via common handler");
     } catch (e) {
-      console.error("[App] Failed to refresh user state", e);
+      console.error("[App] Failed to refresh profile", e);
     }
   };
 
@@ -422,7 +418,7 @@ function App() {
       fetchFavoriteStations(uid);
       fetchLiveStations(uid);
       fetchPlaylists(uid);
-      refreshUser(); // Get latest DB profile including communityId
+      onRefreshProfile(); // Get latest DB profile including communityId
     }
   }, [currentUserId]);
 
@@ -1430,7 +1426,7 @@ function App() {
               onPurchase={handlePurchase}
               onDownload={handleDownload}
               onAddCredits={addCreditsDebug}
-              onRefreshProfile={() => fetchUserProfile(true, user?.id)}
+              onRefreshProfile={onRefreshProfile}
               onRefreshTracks={fetchTracks}
               globalStats={globalStats}
               navigateToProfile={navigateToProfile}
@@ -1567,7 +1563,7 @@ requestTrack, setUser }) => {
                 favoriteStations={favoriteStations}
                 followedCommunities={followedCommunities}
                 onFollowUpdate={onFollowUpdate}
-                onCommunityUpdate={refreshUser} // REFRESH USER/MAP WHEN JOINING COMM
+                onCommunityUpdate={onRefreshProfile} // REFRESH USER/MAP WHEN JOINING COMM
                 isPlayerActive={currentTrackIndex >= 0}
               />
             )}
