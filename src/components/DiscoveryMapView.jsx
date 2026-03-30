@@ -120,10 +120,9 @@ const DiscoveryCanvas = ({
 
         artists.forEach((a, i) => {
             const dbSectorId = a.sectorId ?? a.SectorId;
-            const h = hashStr((a.userId || a.UserId || a.id || i).toString());
             const secId = (dbSectorId !== null && dbSectorId !== undefined && SECTORS[dbSectorId])
                 ? dbSectorId
-                : h % SECTORS.length;
+                : i % SECTORS.length; // Perfectly balanced fallback
             if (!sectorGroups[secId]) sectorGroups[secId] = [];
             sectorGroups[secId].push(a);
         });
@@ -248,7 +247,8 @@ const DiscoveryCanvas = ({
             try {
                 const query = sec.subgenres?.[0] || sec.name;
                 const res = await API.Youtube.getDiscoveryNodes(query).catch(() => null);
-                const items = Array.isArray(res?.data) ? res.data : [];
+                // Cap at 12 nodes per sector for visual balance
+                const items = (Array.isArray(res?.data) ? res.data : []).slice(0, 12);
                 items.forEach((item, idx) => {
                     const videoId = item.Id || item.id;
                     if (!videoId) return;
@@ -443,7 +443,8 @@ const DiscoveryCanvas = ({
                     return null;
                 });
                 
-                const items = Array.isArray(res?.data) ? res.data : [];
+                // Cap search results to keep the map clean (15 max)
+                const items = (Array.isArray(res?.data) ? res.data : []).slice(0, 15);
                 const searchResults = items.map((item, idx) => {
                     const videoId = item.Id || item.id;
                     const title = item.Title || item.title || 'YouTube Signal';
