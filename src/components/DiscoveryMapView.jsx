@@ -242,8 +242,8 @@ const DiscoveryCanvas = ({
     // â”€â”€ Fetch YouTube results per sector â”€â”€
     const fetchYoutube = useCallback(async (onPlayTrackFn) => {
         const results = [];
-        // Sample 3 sectors to avoid too many requests
-        const sampledSectors = SECTORS.slice(0, 4);
+        // Fetch all sectors for a complete map ecosystem
+        const sampledSectors = SECTORS.slice(0, 6);
         await Promise.all(sampledSectors.map(async (sec) => {
             try {
                 const query = sec.subgenres?.[0] || sec.name;
@@ -410,6 +410,17 @@ const DiscoveryCanvas = ({
             if (node.data?.onClick) node.data.onClick();
         }
     }, [navigateToProfile]);
+    // --- Helper for genre categorization ---
+    const getSectorByMetadata = (title, author) => {
+        const text = `${title} ${author}`.toLowerCase();
+        for (const sec of SECTORS) {
+            if (text.includes(sec.name.toLowerCase())) return sec;
+            for (const sub of (sec.subgenres || [])) {
+                if (text.includes(sub.toLowerCase())) return sec;
+            }
+        }
+        return null;
+    };
 
     // â”€â”€ YouTube search: trigger on query change (debounced) â”€â”€
     const ytSearchRef = useRef(null);
@@ -435,21 +446,32 @@ const DiscoveryCanvas = ({
                 const items = Array.isArray(res?.data) ? res.data : [];
                 const searchResults = items.map((item, idx) => {
                     const videoId = item.Id || item.id;
-                    const pos = spiral(idx + 5, 2200, 1800, 300, 180);
+                    const title = item.Title || item.title || 'YouTube Signal';
+                    const author = item.Author || item.author || item.album?.artist?.name || '';
+                    
+                    const matchedSector = getSectorByMetadata(title, author);
+                    
+                    // If matched, spiral near sector hub. Else, spiral near center (4000, 3000)
+                    const centerX = matchedSector ? matchedSector.x : 4000;
+                    const centerY = matchedSector ? matchedSector.y : 3000;
+                    const color = matchedSector ? matchedSector.color : '#ffffff';
+                    
+                    const pos = spiral(idx + 5, centerX, centerY, 450, 220);
+                    
                     return {
                         id: `yt-search-${videoId}-${idx}`,
                         type: "youtubeNode",
                         position: pos,
                         data: {
-                            title: item.Title || item.title || 'YouTube Signal',
-                            author: item.Author || item.author || item.album?.artist?.name || '',
+                            title,
+                            author,
                             thumbnailUrl: item.ThumbnailUrl || item.thumbnailUrl || item.coverImageUrl || item.CoverImageUrl || '',
                             id: videoId,
-                            sectorColor: '#ff006e',
+                            sectorColor: color,
                             zoom: currentZoom,
                             onPlay: handleYoutubePlay,
                         },
-                        zIndex: 10,
+                        zIndex: 15,
                     };
                 });
                 
