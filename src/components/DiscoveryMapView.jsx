@@ -107,7 +107,7 @@ const DiscoveryCanvas = ({
         const result = [];
 
         // 1. Sector background labels
-        SECTORS.forEach(sec => {
+        SECTORS.forEach((sec, idx) => {
             result.push({
                 id: `sector-label-${sec.id}`,
                 type: 'sectorLabel',
@@ -215,11 +215,8 @@ const DiscoveryCanvas = ({
             });
         });
 
-        // 5. Merge in YouTube nodes fetched separately
-        youtubeNodes.forEach(yn => result.push(yn));
-
         return result;
-    }, [navigateToProfile, youtubeNodes]);
+    }, [navigateToProfile]);
 
     // â”€â”€ Fetch YouTube results per sector â”€â”€
     const fetchYoutube = useCallback(async (onPlayTrackFn) => {
