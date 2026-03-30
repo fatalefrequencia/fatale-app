@@ -17,9 +17,10 @@ const SectorHubNode = ({ data }) => {
 
     return (
         <div
+            onClick={data.onClick}
             style={{
-                width: 180,
-                height: 180,
+                width: 260,
+                height: 260,
                 clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
                 background: `radial-gradient(circle at center, ${color}33 0%, #080808 90%)`,
                 display: 'flex',
@@ -71,12 +72,12 @@ const SectorHubNode = ({ data }) => {
 
             <div style={{
                 color: color,
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: 900,
-                letterSpacing: '0.3em',
+                letterSpacing: '0.4em',
                 textTransform: 'uppercase',
                 fontFamily: 'monospace',
-                marginBottom: 4,
+                marginBottom: 6,
                 opacity: 0.6
             }}>
                 Sector_Hub
@@ -84,37 +85,37 @@ const SectorHubNode = ({ data }) => {
 
             <div style={{
                 color: '#fff',
-                fontSize: 18,
+                fontSize: 26,
                 fontWeight: 900,
                 textAlign: 'center',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
-                textShadow: `0 0 10px ${color}88`,
+                textShadow: `0 0 15px ${color}88`,
                 maxWidth: '85%',
-                lineHeight: 1.1
+                lineHeight: 1
             }}>
                 {name}
             </div>
 
             {showDetails && (
                 <div style={{
-                    marginTop: 10,
+                    marginTop: 15,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 6,
+                    gap: 8,
                     background: 'rgba(255,255,255,0.05)',
-                    padding: '4px 10px',
+                    padding: '6px 14px',
                     borderRadius: 4,
                     border: `1px solid ${color}33`
                 }}>
-                    <Users size={12} style={{ color }} />
+                    <Users size={16} style={{ color }} />
                     <span style={{
                         color: '#fff',
-                        fontSize: 10,
+                        fontSize: 12,
                         fontWeight: 700,
                         fontFamily: 'monospace'
                     }}>
-                        {communityCount} NODES
+                        {communityCount} NODES ACTIVE
                     </span>
                 </div>
             )}
@@ -122,10 +123,10 @@ const SectorHubNode = ({ data }) => {
             {/* Ambient icon at top */}
             <div style={{
                 position: 'absolute',
-                top: 25,
+                top: 40,
                 opacity: 0.3
             }}>
-                <Zap size={14} style={{ color }} />
+                <Zap size={20} style={{ color }} />
             </div>
         </div>
     );

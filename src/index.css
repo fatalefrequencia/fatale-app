@@ -169,4 +169,25 @@
     .hud-bracket-tr { position: absolute; top: 0; right: 0; width: 6px; height: 6px; border-top: 1px solid currentColor; border-right: 1px solid currentColor; opacity: 0.4; }
     .hud-bracket-bl { position: absolute; bottom: 0; left: 0; width: 6px; height: 6px; border-bottom: 1px solid currentColor; border-left: 1px solid currentColor; opacity: 0.4; }
     .hud-bracket-br { position: absolute; bottom: 0; right: 0; width: 6px; height: 6px; border-bottom: 1px solid currentColor; border-right: 1px solid currentColor; opacity: 0.4; }
+    /* DISCOVERY MAP EDGES */
+    @keyframes edge-pulse {
+        from { stroke-dashoffset: 35; }
+        to { stroke-dashoffset: 0; }
+    }
+
+    .discovery-edge path {
+        stroke-dasharray: 7;
+        animation: edge-pulse 3s linear infinite;
+    }
+
+    .discovery-edge-inactive {
+        opacity: 0.08 !important;
+        transition: opacity 0.5s ease;
+    }
+
+    .discovery-edge-active {
+        opacity: 1 !important;
+        stroke-width: 2px !important;
+        transition: all 0.3s ease;
+    }
 }

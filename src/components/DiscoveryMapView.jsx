@@ -25,6 +25,8 @@ import YoutubeNode from './discovery/YoutubeNode';
 import PlaylistPreviewPanel from './discovery/PlaylistPreviewPanel';
 import SectorHubNode from './discovery/SectorHubNode';
 import SectorHubPanel from './discovery/SectorHubPanel';
+import CommunityNode from './discovery/CommunityNode';
+import { BaseEdge, EdgeLabelRenderer, getBezierPath, SimpleBezierEdge } from '@xyflow/react';
 
 // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const hashStr = (s) => {
@@ -52,6 +54,7 @@ const nodeTypes = {
     sectorLabel: SectorLabel,
     youtubeNode: YoutubeNode,
     sectorHubNode: SectorHubNode,
+    communityNode: CommunityNode,
 };
 
 // â”€â”€â”€ Inner canvas (needs ReactFlow context) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -87,6 +90,7 @@ const DiscoveryCanvas = ({
     const { getViewport } = useReactFlow();
 
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
+    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchOpen, setSearchOpen] = useState(false);
@@ -101,24 +105,13 @@ const DiscoveryCanvas = ({
 
     // Track current viewport zoom for node visibility
     const [currentZoom, setCurrentZoom] = useState(0.45);
+    const [hoveredNodeId, setHoveredNodeId] = useState(null);
 
     // â”€â”€ Build nodes from API data â”€â”€
     const buildNodes = useCallback((artists, playlists, zoom) => {
         const result = [];
 
-        // 1. Sector background labels
-        SECTORS.forEach((sec, idx) => {
-            result.push({
-                id: `sector-label-${sec.id}`,
-                type: 'sectorLabel',
-                position: spiral(idx + 30, sec.x, sec.y, 750, 180),
-                data: { name: sec.name, color: sec.color, desc: sec.desc, zoom },
-                draggable: false,
-                selectable: false,
-                focusable: false,
-                zIndex: -10,
-            });
-        });
+        // 1. (REMOVED REDUNDANT SECTOR LABELS)
 
         // 2. Group artists by sector
         const sectorGroups = {};
@@ -138,7 +131,7 @@ const DiscoveryCanvas = ({
         Object.entries(sectorGroups).forEach(([secId, group]) => {
             const sec = SECTORS[parseInt(secId)] || SECTORS[0];
             group.forEach((a, idx) => {
-                const pos = spiral(idx, sec.x, sec.y, 250, 140);
+                const pos = spiral(idx, sec.x, sec.y, 420, 160); // Pushed further out
                 const id = `a-${a.id || a.userId || idx}`;
                 const trackCount = a.trackCount || a.TrackCount || 0;
                 const isLive = a.isLive || a.IsLive || false;
@@ -161,17 +154,18 @@ const DiscoveryCanvas = ({
             });
         });
 
-        // 3.5. Place Sector Hub Nodes (One per sector)
+        // 3.5. Place Sector Hub Nodes and Individual Community Nodes
         SECTORS.forEach(sec => {
             const sectorCommunities = (communities || []).filter(c => c.sectorId === sec.id);
             const userIsMember = sectorCommunities.some(c => 
                 String(c.id) === String(user?.communityId || user?.CommunityId)
             );
 
+            // The main Hub (Landmark)
             result.push({
                 id: `sector-hub-${sec.id}`,
                 type: 'sectorHubNode',
-                position: { x: sec.x, y: sec.y },
+                position: { x: sec.x - 130, y: sec.y - 130 }, // Centered (260/2)
                 data: {
                     name: sec.name,
                     color: sec.color,
@@ -179,9 +173,34 @@ const DiscoveryCanvas = ({
                     isMember: userIsMember,
                     zoom,
                     sector: sec,
-                    communities: sectorCommunities
+                    communities: sectorCommunities,
+                    onClick: () => setActiveSectorHub({ sector: sec, communities: sectorCommunities })
                 },
                 zIndex: 5,
+            });
+
+            // Individual Community Nodes (Orbiting the hub)
+            sectorCommunities.forEach((comm, cidx) => {
+                const angle = (cidx / sectorCommunities.length) * 2 * Math.PI;
+                const radius = 240; // Orbit around the hub
+                const pos = {
+                    x: sec.x + Math.cos(angle) * radius - 50, // 50 is half of approx base size
+                    y: sec.y + Math.sin(angle) * radius - 50
+                };
+
+                result.push({
+                    id: `comm-${comm.id}`,
+                    type: 'communityNode',
+                    position: pos,
+                    data: {
+                        name: comm.name || 'COMMUNITY',
+                        color: sec.color,
+                        memberCount: comm.memberCount || 0,
+                        zoom,
+                        onClick: () => setSelectedCommunity(comm)
+                    },
+                    zIndex: 10
+                });
             });
         });
 
@@ -281,7 +300,33 @@ const DiscoveryCanvas = ({
 
             const built = buildNodes(artists, playlists, currentZoom);
             setNodes(built);
-            console.log(`[DiscoveryCanvas] fetchAll complete. Artists: ${artists.length}, Comms: ${comms.length}, Playlists: ${playlists.length}`);
+
+            // Build Tethers (Edges)
+            const builtEdges = [];
+            artists.forEach(a => {
+                const commId = a.communityId || a.CommunityId;
+                if (commId) {
+                    const artistNodeId = `a-${a.id || a.userId}`;
+                    const commNodeId = `comm-${commId}`;
+                    const dbSectorId = a.sectorId ?? a.SectorId;
+                    const sec = SECTORS[dbSectorId] || SECTORS[0];
+
+                    const isHighlighted = hoveredNodeId === artistNodeId || hoveredNodeId === commNodeId;
+
+                    builtEdges.push({
+                        id: `e-${artistNodeId}-${commNodeId}`,
+                        source: commNodeId,
+                        target: artistNodeId,
+                        type: 'simplebezier',
+                        animated: true,
+                        className: `discovery-edge ${hoveredNodeId ? (isHighlighted ? 'discovery-edge-active' : 'discovery-edge-inactive') : ''}`,
+                        style: { stroke: sec.color, strokeWidth: isHighlighted ? 2 : 1, opacity: hoveredNodeId ? (isHighlighted ? 0.9 : 0.05) : 0.35 },
+                    });
+                }
+            });
+            setEdges(builtEdges);
+
+            console.log(`[DiscoveryCanvas] fetchAll complete. Artists: ${artists.length}, Comms: ${comms.length}, Playlists: ${playlists.length}, Edges: ${builtEdges.length}`);
         } catch (e) {
             console.error('[DiscoveryCanvas] fetch error', e);
         } finally {
@@ -317,10 +362,16 @@ const DiscoveryCanvas = ({
                 node.data.onPlay(node.data);
             }
         } else if (node.type === 'sectorHubNode') {
-            setActiveSectorHub({
-                sector: node.data.sector,
-                communities: node.data.communities
-            });
+            if (node.data?.onClick) {
+                node.data.onClick();
+            } else {
+                setActiveSectorHub({
+                    sector: node.data.sector,
+                    communities: node.data.communities
+                });
+            }
+        } else if (node.type === 'communityNode') {
+            if (node.data?.onClick) node.data.onClick();
         }
     }, [navigateToProfile]);
 
@@ -552,9 +603,12 @@ const DiscoveryCanvas = ({
             {/* â”€â”€ React Flow Canvas â”€â”€ */}
             <ReactFlow
                 nodes={filteredNodes}
-                edges={[]}
+                edges={edges}
                 onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
                 onNodeClick={handleNodeClick}
+                onNodeMouseEnter={(_, node) => setHoveredNodeId(node.id)}
+                onNodeMouseLeave={() => setHoveredNodeId(null)}
                 nodeTypes={nodeTypes}
                 onMove={handleMove}
                 minZoom={0.1}
