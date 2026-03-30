@@ -228,6 +228,7 @@ const DiscoveryCanvas = ({
                     imageUrl: pl.imageUrl || pl.ImageUrl || null,
                     trackCount: pl.trackCount || pl.TrackCount || (pl.tracks?.length ?? 0),
                     creatorName: pl.creatorName || pl.username || null,
+                    sectorColor: sec.color, // ADDED FOR FILTERING
                     zoom,
                     pl, // pass full playlist object for click handler
                 },
@@ -469,18 +470,25 @@ const DiscoveryCanvas = ({
         if (activeSector !== null) {
             const sec = SECTORS[activeSector];
             n = n.filter(node => {
+                // Structural nodes
                 if (node.type === 'sectorLabel') return node.id === `sector-label-${activeSector}`;
-                if (node.type === 'artistNode') return node.data?.sectorColor === sec.color;
-                return true;
+                if (node.type === 'sectorHubNode') return node.id === `sector-hub-${activeSector}`;
+                
+                // Content nodes (match by color)
+                const nodeColor = node.data?.sectorColor || node.data?.color;
+                return nodeColor === sec.color;
             });
         }
 
         if (searchQuery.trim()) {
             const q = searchQuery.trim().toLowerCase();
             n = n.filter(node => {
-                // Always keep labels, youtube, and playlist nodes visible
-                if (node.type === 'sectorLabel' || node.type === 'youtubeNode' || node.type === 'playlistNode') return true;
-                return (node.data?.name || '').toLowerCase().includes(q);
+                // Always keep landmarks visible (unless sector-filtered)
+                if (node.type === 'sectorHubNode' || node.type === 'sectorLabel') return true;
+                
+                // Match name or title
+                const contentName = (node.data?.name || node.data?.title || '').toLowerCase();
+                return contentName.includes(q);
             });
         }
 
