@@ -567,15 +567,18 @@ const DiscoveryCanvas = ({
             </div>
 
             {/* â”€â”€ Sector Filter Pills â”€â”€ */}
-            <div style={{
-                position: 'absolute', bottom: isPlayerActive ? 92 : 12, left: '50%', transform: 'translateX(-50%)',
-                zIndex: 100,
-                display: 'flex', gap: 6, flexWrap: 'nowrap',
-                pointerEvents: 'auto',
-                overflowX: 'auto',
-                maxWidth: 'calc(100vw - 120px)',
-                padding: '0 4px',
-            }}>
+            <div 
+                className="no-scrollbar"
+                style={{
+                    position: 'absolute', bottom: isPlayerActive ? 92 : 12, left: '50%', transform: 'translateX(-50%)',
+                    zIndex: 100,
+                    display: 'flex', gap: 8, flexWrap: 'nowrap',
+                    pointerEvents: 'auto',
+                    overflowX: 'auto',
+                    maxWidth: 'calc(100vw - 40px)',
+                    padding: '8px 4px',
+                }}
+            >
                 <button
                     onClick={() => setActiveSector(null)}
                     style={{
@@ -756,6 +759,8 @@ const DiscoveryCanvas = ({
             {/* Spinner keyframes */}
             <style>{`
                 @keyframes spin { to { transform: rotate(360deg); } }
+                .no-scrollbar::-webkit-scrollbar { display: none; }
+                .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
                 .react-flow__controls-button {
                     background: rgba(10,10,10,0.9) !important;
                     border-color: rgba(255,255,255,0.1) !important;
