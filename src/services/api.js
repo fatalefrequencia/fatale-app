@@ -232,12 +232,16 @@ const API = {
                 followed.push(id);
                 localStorage.setItem('followed_communities', JSON.stringify(followed));
             }
+            // Dispatch custom event for immediate UI sync across components
+            window.dispatchEvent(new CustomEvent('communityFollowChanged', { detail: { id, followed: true } }));
             return Promise.resolve({ data: { success: true } });
         },
         unfollow: (id) => {
             let followed = JSON.parse(localStorage.getItem('followed_communities') || '[]');
             followed = followed.filter(cid => cid !== id);
             localStorage.setItem('followed_communities', JSON.stringify(followed));
+            // Dispatch custom event for immediate UI sync
+            window.dispatchEvent(new CustomEvent('communityFollowChanged', { detail: { id, followed: false } }));
             return Promise.resolve({ data: { success: true } });
         },
         getFollowed: () => JSON.parse(localStorage.getItem('followed_communities') || '[]')

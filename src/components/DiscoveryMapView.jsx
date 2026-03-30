@@ -715,10 +715,13 @@ const DiscoveryCanvas = ({
                         fetchAll();
                         onCommunityUpdate?.();
                     }}
+                    isFollowed={followedCommunities.includes(selectedCommunity.id)}
                     onFollow={async (id) => {
-                        await API.Artists.likeArtist(id); // Using follow logic
-                        fetchAll();
-                        onFollowUpdate?.();
+                        await API.Communities.follow(id);
+                        // No need for fetchAll here as state syncs via event/props
+                    }}
+                    onUnfollow={async (id) => {
+                        await API.Communities.unfollow(id);
                     }}
                     navigateToProfile={navigateToProfile}
                 />

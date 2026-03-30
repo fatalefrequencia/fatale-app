@@ -591,6 +591,14 @@ function App() {
     }
   }, [currentTrack?.id, isPlaying, currentTrack?.isLocked, currentTrack?.isOwned]);
 
+  useEffect(() => {
+    const handleFollowChange = () => {
+      setFollowedCommunities(API.Communities.getFollowed());
+    };
+    window.addEventListener('communityFollowChanged', handleFollowChange);
+    return () => window.removeEventListener('communityFollowChanged', handleFollowChange);
+  }, []);
+
   // Efecto para manejar el audio
   useEffect(() => {
     if (!audioRef.current || currentTrackIndex < 0) return;
@@ -2081,36 +2089,55 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
             )}
           </div>
           <div className="space-y-1">
-            {followedCommunities.map((cid) => {
-              const comm = allCommunities.find(c => String(c.id) === String(cid));
-              if (!comm) return null;
-              const sectorColor = SECTORS[comm.sectorId]?.color || '#ffffff';
-              return (
-                <button
-                  key={`comm-link-${cid}`}
-                  onClick={() => {
-                      setSelectedCommunityId(cid);
-                      setSelectedSector(null);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded transition-all border ${String(selectedCommunityId) === String(cid)
-                    ? 'bg-[#00ffff]/10 border-[#00ffff]/30'
-                    : 'bg-black/20 border-white/5 hover:border-[#00ffff]/20'}`}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="w-1 h-1 rounded-full shadow-[0_0_5px_currentColor]" style={{ backgroundColor: sectorColor, color: sectorColor }} />
-                    <span className={`text-[9px] font-bold uppercase tracking-widest ${String(selectedCommunityId) === String(cid) ? 'text-white' : 'text-white/40'}`}>
-                      {comm.name.replace(' ', '_')}
-                    </span>
+            {/* Unified list of community links: Member Community + Followed Communities */}
+            {(() => {
+              const userCommId = user?.communityId || user?.CommunityId;
+              const uniqueLinks = Array.from(new Set([
+                ...(userCommId ? [userCommId] : []),
+                ...(followedCommunities || [])
+              ])).filter(Boolean);
+
+              if (uniqueLinks.length === 0) {
+                return (
+                  <div className="px-3 py-4 border border-dashed border-white/5 rounded text-center opacity-20">
+                    <div className="text-[8px] uppercase">No Links Established</div>
                   </div>
-                  {String(selectedCommunityId) === String(cid) && <Zap size={10} className="text-[#00ffff] animate-pulse" />}
-                </button>
-              );
-            })}
-            {followedCommunities.length === 0 && (
-              <div className="px-3 py-4 border border-dashed border-white/5 rounded text-center opacity-20">
-                <div className="text-[8px] uppercase">No Links Established</div>
-              </div>
-            )}
+                );
+              }
+
+              return uniqueLinks.map((cid) => {
+                const comm = allCommunities.find(c => String(c.id) === String(cid));
+                if (!comm) return null;
+                const sectorColor = SECTORS[comm.sectorId]?.color || '#ffffff';
+                const isMemberBadge = String(cid) === String(userCommId);
+
+                return (
+                  <button
+                    key={`comm-link-${cid}`}
+                    onClick={() => {
+                        setSelectedCommunityId(cid);
+                        setSelectedSector(null);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded transition-all border ${String(selectedCommunityId) === String(cid)
+                      ? 'bg-[#00ffff]/10 border-[#00ffff]/30'
+                      : 'bg-black/20 border-white/5 hover:border-[#00ffff]/20'}`}
+                  >
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <div className="w-1 h-1 rounded-full shadow-[0_0_5px_currentColor] shrink-0" style={{ backgroundColor: sectorColor, color: sectorColor }} />
+                      <span className={`text-[9px] font-bold uppercase tracking-widest truncate ${String(selectedCommunityId) === String(cid) ? 'text-white' : 'text-white/40'}`}>
+                        {comm.name.replace(' ', '_')}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {isMemberBadge && (
+                          <span className="text-[7px] font-black text-[#00ffff]/40 border border-[#00ffff]/20 px-1 rounded-sm">MEMBER</span>
+                      )}
+                      {String(selectedCommunityId) === String(cid) && <Zap size={10} className="text-[#00ffff] animate-pulse" />}
+                    </div>
+                  </button>
+                );
+              });
+            })()}
           </div>
         </div>
       </div>
