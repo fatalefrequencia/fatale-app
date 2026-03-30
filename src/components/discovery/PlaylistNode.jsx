@@ -22,25 +22,24 @@ const PlaylistNode = ({ data }) => {
             style={{
                 width: 130,
                 height: 130,
-                border: '2px solid rgba(255,255,255,0.2)',
-                boxShadow: '0 0 10px rgba(255,255,255,0.08)',
-                borderRadius: 14,
+                border: '2px solid #ffd1dc', // Pastel Pink 
+                boxShadow: '0 0 15px rgba(255, 209, 220, 0.4)',
+                borderRadius: 4,
                 overflow: 'hidden',
                 position: 'relative',
                 cursor: 'pointer',
-                background: '#111',
+                background: '#0a0a0a',
                 transition: 'box-shadow 0.2s, transform 0.15s',
                 userSelect: 'none',
+                zIndex: 1,
             }}
             onMouseEnter={e => {
-                e.currentTarget.style.boxShadow = '0 0 20px rgba(255,255,255,0.2)';
-                e.currentTarget.style.transform = 'scale(1.06)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)';
+                e.currentTarget.style.boxShadow = '0 0 25px rgba(255, 209, 220, 0.7)';
+                e.currentTarget.style.transform = 'scale(1.05)';
             }}
             onMouseLeave={e => {
-                e.currentTarget.style.boxShadow = '0 0 10px rgba(255,255,255,0.08)';
+                e.currentTarget.style.boxShadow = '0 0 15px rgba(255, 209, 220, 0.4)';
                 e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
             }}
         >
             <Handle type="target" position={Position.Left} style={{ opacity: 0, pointerEvents: 'none' }} />

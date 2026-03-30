@@ -18,45 +18,54 @@ const SectorHubNode = ({ data }) => {
     return (
         <div
             style={{
-                width: 160,
-                height: 160,
-                borderRadius: '50%',
-                border: `3px solid ${color}`,
-                background: `radial-gradient(circle at center, ${color}22 0%, #050505 80%)`,
+                width: 180,
+                height: 180,
+                clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+                background: `radial-gradient(circle at center, ${color}33 0%, #080808 90%)`,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
                 position: 'relative',
-                boxShadow: `0 0 30px ${color}33, inset 0 0 20px ${color}22`,
                 transform: `scale(${scale})`,
-                transition: 'transform 0.2s, box-shadow 0.2s, border-color 0.2s',
+                transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), filter 0.3s',
                 zIndex: 50,
+                filter: `drop-shadow(0 0 15px ${color}44)`,
+                border: 'none', // Clip-path handles the shape, border won't follow it easily
             }}
             onMouseEnter={e => {
-                e.currentTarget.style.boxShadow = `0 0 50px ${color}66, inset 0 0 30px ${color}44`;
-                e.currentTarget.style.borderColor = color;
-                e.currentTarget.style.transform = `scale(${scale * 1.05})`;
+                e.currentTarget.style.filter = `drop-shadow(0 0 30px ${color}88) brightness(1.2)`;
+                e.currentTarget.style.transform = `scale(${scale * 1.08})`;
             }}
             onMouseLeave={e => {
-                e.currentTarget.style.boxShadow = `0 0 30px ${color}33, inset 0 0 20px ${color}22`;
-                e.currentTarget.style.borderColor = `${color}cc`;
+                e.currentTarget.style.filter = `drop-shadow(0 0 15px ${color}44)`;
                 e.currentTarget.style.transform = `scale(${scale})`;
             }}
         >
+            {/* Hexagonal Inner Border Emulation */}
+            <div style={{
+                position: 'absolute',
+                inset: 2,
+                clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+                background: '#050505',
+                zIndex: -1,
+                opacity: 0.95
+            }} />
+
             <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
             <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
 
-            {/* Pulsing outer ring if member */}
+            {/* Pulsing Hexagonal highlight if member */}
             {isMember && (
                 <div style={{
                     position: 'absolute',
-                    inset: -8,
-                    borderRadius: '50%',
-                    border: `1px solid ${color}`,
+                    inset: -5,
+                    clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+                    background: color,
                     animation: 'pulse 2s infinite',
-                    opacity: 0.5
+                    opacity: 0.2,
+                    zIndex: -2
                 }} />
             )}
 
@@ -68,7 +77,7 @@ const SectorHubNode = ({ data }) => {
                 textTransform: 'uppercase',
                 fontFamily: 'monospace',
                 marginBottom: 4,
-                opacity: 0.8
+                opacity: 0.6
             }}>
                 Sector_Hub
             </div>
@@ -81,7 +90,7 @@ const SectorHubNode = ({ data }) => {
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
                 textShadow: `0 0 10px ${color}88`,
-                maxWidth: '90%',
+                maxWidth: '85%',
                 lineHeight: 1.1
             }}>
                 {name}
@@ -95,7 +104,7 @@ const SectorHubNode = ({ data }) => {
                     gap: 6,
                     background: 'rgba(255,255,255,0.05)',
                     padding: '4px 10px',
-                    borderRadius: 20,
+                    borderRadius: 4,
                     border: `1px solid ${color}33`
                 }}>
                     <Users size={12} style={{ color }} />
@@ -113,7 +122,7 @@ const SectorHubNode = ({ data }) => {
             {/* Ambient icon at top */}
             <div style={{
                 position: 'absolute',
-                top: 20,
+                top: 25,
                 opacity: 0.3
             }}>
                 <Zap size={14} style={{ color }} />

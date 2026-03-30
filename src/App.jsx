@@ -1038,7 +1038,7 @@ function App() {
   };
 
   const handleLike = async (track) => {
-    const trackId = track.id || track.Id;
+    let trackId = track.id || track.Id;
     if (!trackId) {
       console.error("Cannot like track: ID is missing", track);
       return;
@@ -1047,25 +1047,33 @@ function App() {
     const isYoutube = track.source?.startsWith('youtube:') || typeof trackId === 'string'; // YouTube IDs are strings
     const isLiking = !track.isLiked;
 
+    let pureYoutubeId = null;
+    if (isYoutube) {
+      pureYoutubeId = typeof trackId === 'string' && trackId.includes(':')
+        ? trackId.split(':')[1]
+        : (typeof trackId === 'string' && trackId.startsWith('yt-')
+          ? trackId.replace('yt-', '')
+          : (track.source?.startsWith('youtube:') ? track.source.split(':')[1] : String(trackId)));
+
+      if (typeof trackId === 'string') trackId = pureYoutubeId; // Fix 'youtube:youtube:...' DB bug
+    }
+
     console.log(`Attempting to ${isLiking ? 'like' : 'unlike'} ${isYoutube ? 'YouTube' : 'Local'} track: `, trackId);
 
     // Optimistic Update Tracks State
     setTracks(prev => prev.map(t => {
       const tId = t.id || t.Id;
-      return String(tId) === String(trackId) ? { ...t, isLiked: isLiking } : t;
+      return String(tId) === String(trackId) || String(tId) === `youtube:${trackId}` || String(tId) === `yt-${trackId}` ? { ...t, isLiked: isLiking } : t;
     }));
 
     // Optimistic Update Liked Set for YouTube
-    if (isYoutube) {
-      const videoId = typeof trackId === 'string' ? trackId : track.source?.split(':')[1];
-      if (videoId) {
-        setLikedYoutubeIds(prev => {
-          const next = new Set(prev);
-          if (isLiking) next.add(String(videoId));
-          else next.delete(String(videoId));
-          return next;
-        });
-      }
+    if (isYoutube && pureYoutubeId) {
+      setLikedYoutubeIds(prev => {
+        const next = new Set(prev);
+        if (isLiking) next.add(pureYoutubeId);
+        else next.delete(pureYoutubeId);
+        return next;
+      });
     }
 
     try {
@@ -1075,7 +1083,7 @@ function App() {
         // 1. Ensure track exists in DB if we only have string ID
         if (!dbId) {
           const trackData = {
-            youtubeId: trackId, // It's a string videoId here
+            youtubeId: pureYoutubeId,
             title: track.title,
             channelTitle: track.artist || track.channelTitle || "Unknown",
             thumbnailUrl: track.cover || track.thumbnail || "",
@@ -1538,6 +1546,7 @@ requestTrack, setUser }) => {
                 followedCommunities={followedCommunities}
                 onFollowUpdate={onFollowUpdate}
                 onCommunityUpdate={onRefreshProfile} // ADDED TO REFRESH USER/MAP WHEN JOINING COMM
+                isPlayerActive={currentTrackIndex >= 0}
               />
             )}
             {activeView === 'wallet' && <WalletView user={user} onRefreshProfile={onRefreshProfile} />}

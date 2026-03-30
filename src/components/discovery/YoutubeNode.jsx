@@ -21,9 +21,9 @@ const YoutubeNode = ({ data }) => {
             style={{
                 width: 150,
                 height: 100,
-                border: `2px solid ${sectorColor}80`,
-                boxShadow: `0 0 10px ${sectorColor}30`,
-                borderRadius: 10,
+                border: '2px solid #ffffff',
+                boxShadow: '0 0 15px rgba(255, 255, 255, 0.4)',
+                borderRadius: 4,
                 overflow: 'hidden',
                 position: 'relative',
                 cursor: 'pointer',
@@ -32,11 +32,11 @@ const YoutubeNode = ({ data }) => {
                 userSelect: 'none',
             }}
             onMouseEnter={e => {
-                e.currentTarget.style.boxShadow = `0 0 20px ${sectorColor}80`;
+                e.currentTarget.style.boxShadow = '0 0 25px rgba(255, 255, 255, 0.7)';
                 e.currentTarget.style.transform = 'scale(1.05)';
             }}
             onMouseLeave={e => {
-                e.currentTarget.style.boxShadow = `0 0 10px ${sectorColor}30`;
+                e.currentTarget.style.boxShadow = '0 0 15px rgba(255, 255, 255, 0.4)';
                 e.currentTarget.style.transform = 'scale(1)';
             }}
         >
