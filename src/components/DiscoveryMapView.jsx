@@ -109,7 +109,7 @@ const DiscoveryCanvas = ({
     const [hoveredNodeId, setHoveredNodeId] = useState(null);
 
     // â”€â”€ Build nodes from API data â”€â”€
-    const buildNodes = useCallback((artists, playlists, zoom) => {
+    const buildNodes = useCallback((artists, playlists, communitiesData, zoom) => {
         const result = [];
 
         // 1. (REMOVED REDUNDANT SECTOR LABELS)
@@ -157,7 +157,7 @@ const DiscoveryCanvas = ({
 
         // 3.5. Place Sector Hub Nodes and Individual Community Nodes
         SECTORS.forEach(sec => {
-            const sectorCommunities = (communities || []).filter(c => c.sectorId === sec.id);
+            const sectorCommunities = (communitiesData || []).filter(c => c.sectorId === sec.id);
             const userIsMember = sectorCommunities.some(c => 
                 String(c.id) === String(user?.communityId || user?.CommunityId)
             );
@@ -299,21 +299,23 @@ const DiscoveryCanvas = ({
                 playlists = [];
             }
 
-            const built = buildNodes(artists, playlists, currentZoom);
+            const built = buildNodes(artists, playlists, comms, currentZoom);
             setNodes(built);
 
             // Build Tethers (Edges)
             const builtEdges = [];
+
+            // 1. Sector Connections
             artists.forEach(a => {
+                const artistNodeId = `a-${a.id || a.userId}`;
+                const dbSectorId = a.sectorId ?? a.SectorId;
+                const sec = SECTORS[dbSectorId] || SECTORS[0];
                 const commId = a.communityId || a.CommunityId;
+
                 if (commId) {
-                    const artistNodeId = `a-${a.id || a.userId}`;
+                    // Artist -> Community
                     const commNodeId = `comm-${commId}`;
-                    const dbSectorId = a.sectorId ?? a.SectorId;
-                    const sec = SECTORS[dbSectorId] || SECTORS[0];
-
                     const isHighlighted = hoveredNodeId === artistNodeId || hoveredNodeId === commNodeId;
-
                     builtEdges.push({
                         id: `e-${artistNodeId}-${commNodeId}`,
                         source: commNodeId,
@@ -323,8 +325,40 @@ const DiscoveryCanvas = ({
                         className: `discovery-edge ${hoveredNodeId ? (isHighlighted ? 'discovery-edge-active' : 'discovery-edge-inactive') : ''}`,
                         style: { stroke: sec.color, strokeWidth: isHighlighted ? 2 : 1, opacity: hoveredNodeId ? (isHighlighted ? 0.9 : 0.05) : 0.35 },
                     });
+                } else {
+                    // Artist -> Sector Hub (Direct)
+                    const hubId = `sector-hub-${sec.id}`;
+                    const isHighlighted = hoveredNodeId === artistNodeId || hoveredNodeId === hubId;
+                    builtEdges.push({
+                        id: `e-${artistNodeId}-${hubId}`,
+                        source: hubId,
+                        target: artistNodeId,
+                        type: 'simplebezier',
+                        animated: true,
+                        className: `discovery-edge ${hoveredNodeId ? (isHighlighted ? 'discovery-edge-active' : 'discovery-edge-inactive') : ''}`,
+                        style: { stroke: sec.color, strokeWidth: isHighlighted ? 1.5 : 0.8, opacity: hoveredNodeId ? (isHighlighted ? 0.6 : 0.03) : 0.15 },
+                    });
                 }
             });
+
+            // 2. Community -> Hub Connections
+            comms.forEach(c => {
+                const commNodeId = `comm-${c.id}`;
+                const sec = SECTORS[c.sectorId] || SECTORS[0];
+                const hubId = `sector-hub-${sec.id}`;
+                const isHighlighted = hoveredNodeId === commNodeId || hoveredNodeId === hubId;
+
+                builtEdges.push({
+                    id: `e-${commNodeId}-${hubId}`,
+                    source: hubId,
+                    target: commNodeId,
+                    type: 'simplebezier',
+                    animated: true,
+                    className: `discovery-edge ${hoveredNodeId ? (isHighlighted ? 'discovery-edge-active' : 'discovery-edge-inactive') : ''}`,
+                    style: { stroke: sec.color, strokeWidth: isHighlighted ? 3 : 2, opacity: hoveredNodeId ? (isHighlighted ? 1 : 0.1) : 0.4 },
+                });
+            });
+
             setEdges(builtEdges);
 
             console.log(`[DiscoveryCanvas] fetchAll complete. Artists: ${artists.length}, Comms: ${comms.length}, Playlists: ${playlists.length}, Edges: ${builtEdges.length}`);
