@@ -118,7 +118,7 @@ const ArtistNode = ({ data }) => {
                             transition: 'all 0.2s ease'
                         }}
                     >
-                        <span>{`[SIG_${trackCount}] > ${name}`}</span>
+                        <span>{`> ${name}`}</span>
                     </div>
                 </div>
             )}

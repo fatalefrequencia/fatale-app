@@ -106,7 +106,7 @@ const YoutubeNode = ({ data }) => {
                             transition: 'all 0.2s ease'
                         }}
                     >
-                        <span>{`[SRC_${author?.substring(0, 6) || 'YT'}] > ${title}`}</span>
+                        <span>{`> ${title}`}</span>
                     </div>
                     {author && (
                         <div style={{

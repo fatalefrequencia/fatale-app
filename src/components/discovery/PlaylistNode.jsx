@@ -107,7 +107,7 @@ const PlaylistNode = ({ data }) => {
                             transition: 'all 0.2s ease'
                         }}
                     >
-                        <span>{`[ID_${creatorName?.substring(0, 4) || 'NULL'}] > ${name}`}</span>
+                        <span>{`> ${name}`}</span>
                     </div>
                 </div>
             )}

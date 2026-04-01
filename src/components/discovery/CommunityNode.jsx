@@ -101,7 +101,7 @@ const CommunityNode = ({ data }) => {
                     transition: 'all 0.2s ease'
                 }}
             >
-                <span>{`[SIG_${memberCount}] > ${name}`}</span>
+                <span>{`> ${name}`}</span>
             </div>
 
             <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
