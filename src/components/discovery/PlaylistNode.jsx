@@ -42,7 +42,7 @@ const PlaylistNode = ({ data }) => {
             <Handle type="source" position={Position.Right} style={{ opacity: 0, pointerEvents: 'none' }} />
 
             {/* Playlist art */}
-            {mediaUrl ? (
+            {mediaUrl && (
                 <img
                     src={mediaUrl}
                     alt={name}

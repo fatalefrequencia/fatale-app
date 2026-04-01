@@ -79,7 +79,7 @@ const ArtistNode = ({ data }) => {
             }} />
 
             {/* Profile image */}
-            {mediaUrl ? (
+            {mediaUrl && (
                 <img
                     src={mediaUrl}
                     alt={name}
