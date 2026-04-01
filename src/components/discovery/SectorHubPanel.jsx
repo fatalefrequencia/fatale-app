@@ -110,7 +110,7 @@ const SectorHubPanel = ({
                 <h2 style={{
                     fontSize: 28,
                     fontWeight: 900,
-                    color: '#fff',
+                    color: color,
                     textTransform: 'uppercase',
                     letterSpacing: '0.02em',
                     marginBottom: 4

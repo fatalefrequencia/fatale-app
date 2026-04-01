@@ -170,7 +170,8 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                                 NEURAL_STATION // SECTOR_{community.sectorId}
                             </span>
                         </div>
-                        <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight leading-none truncate">
+                        <h1 className="text-2xl md:text-3xl font-black tracking-tight leading-none truncate"
+                            style={{ color: `${color}D9` }}>
                             {community.name}
                         </h1>
                         <p className="text-white/40 text-xs mt-1 mono leading-relaxed max-w-xl line-clamp-2">
