@@ -208,10 +208,15 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                                             try {
                                                 const formData = new FormData();
                                                 formData.append('file', file);
-                                                const uploadRes = await API.Files.upload(formData);
-                                                const path = uploadRes.data.Path;
+                                                const res = await API.Files.upload(formData);
+                                                const path = res.data?.path || res.data?.Path;
                                                 
-                                                await API.Communities.updateImageUrl(community.id, JSON.stringify(path));
+                                                if (!path) {
+                                                    console.error('[CommunityModals] Upload failed: No path returned', res.data);
+                                                    throw new Error('No path returned from server');
+                                                }
+
+                                                await API.Communities.updateImageUrl(community.id, path);
                                                 // Trigger a refresh of the parent state or local state
                                                 window.location.reload(); // Simple full sync
                                             } catch (err) {
