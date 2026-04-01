@@ -49,6 +49,7 @@ const PlaylistNode = ({ data }) => {
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                     onError={e => { e.target.style.display = 'none'; }}
                 />
+            )}
             {!mediaUrl && (
                 <div style={{
                     width: '100%', height: '100%',

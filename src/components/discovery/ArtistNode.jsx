@@ -86,6 +86,7 @@ const ArtistNode = ({ data }) => {
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: 0.8 }}
                     onError={e => { e.target.style.display = 'none'; }}
                 />
+            )}
             {!mediaUrl && (
                 <div style={{
                     width: '100%', height: '100%', display: 'flex',
