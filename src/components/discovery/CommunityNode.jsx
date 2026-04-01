@@ -80,10 +80,9 @@ const CommunityNode = ({ data }) => {
             </div>
 
             <div 
-                className={`terminal-hover-scroll ${hovered ? 'is-hovered' : ''}`}
                 style={{
                     color: '#fff',
-                    fontSize: hovered ? (size > 110 ? 10 : 9) : Math.max(6, Math.min(size > 110 ? 10 : 9, (size * 0.8) / (name.length + 2))),
+                    fontSize: Math.max(6, Math.min(size > 110 ? 10 : 9, (size * 0.8) / (name.length + 2))),
                     fontWeight: 700,
                     textAlign: 'center',
                     textTransform: 'uppercase',
@@ -92,14 +91,14 @@ const CommunityNode = ({ data }) => {
                     marginBottom: 2,
                     zIndex: 2,
                     fontFamily: "'Share Tech Mono', monospace",
-                    letterSpacing: hovered ? '0.08em' : '0.04em',
+                    letterSpacing: '0.04em',
                     textShadow: hovered ? `0 0 5px ${color}` : '0 1px 2px rgba(0,0,0,0.8)',
                     transition: 'all 0.2s ease',
-                    whiteSpace: hovered ? 'nowrap' : 'normal',
-                    wordBreak: hovered ? 'normal' : 'break-all'
+                    whiteSpace: 'normal',
+                    wordBreak: 'break-all'
                 }}
             >
-                <span>{`> ${name}`}</span>
+                {`> ${name}`}
             </div>
 
             <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
