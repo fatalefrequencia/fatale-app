@@ -98,10 +98,12 @@ const ArtistNode = ({ data }) => {
             {/* Centered Label for Diamond */}
             {showLabel && (
                 <div style={{
-                    position: 'absolute', bottom: '20%', left: 0, right: 0,
-                    padding: '0 15%',
+                    position: 'absolute', top: '50%', left: 0, right: 0,
+                    transform: 'translateY(-50%)',
+                    padding: '0 10%',
                     pointerEvents: 'auto',
-                    textAlign: 'center'
+                    textAlign: 'center',
+                    zIndex: 10
                 }}>
                     <div 
                         style={{

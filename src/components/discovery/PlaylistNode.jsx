@@ -89,9 +89,12 @@ const PlaylistNode = ({ data }) => {
             {/* Label */}
             {showLabel && (
                 <div style={{
-                    position: 'absolute', bottom: 0, left: 0, right: 0,
-                    padding: '4px 6px 6px',
+                    position: 'absolute', top: '50%', left: 0, right: 0,
+                    transform: 'translateY(-50%)',
+                    padding: '0 10%',
                     pointerEvents: 'auto',
+                    zIndex: 10,
+                    textAlign: 'center'
                 }}>
                     <div 
                         className={`terminal-hover-scroll ${hovered ? 'is-hovered' : ''}`}
