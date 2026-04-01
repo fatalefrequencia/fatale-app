@@ -16,7 +16,10 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
     const pollRef = useRef(null);
     const lastTickRef = useRef(null);
 
-    const color = community?.color || '#ff006e';
+    const sectorColor = (community?.sectorId !== undefined && community?.sectorId !== null) 
+        ? SECTORS.find(s => s.id === community.sectorId)?.color 
+        : null;
+    const color = sectorColor || community?.color || '#ff006e';
     const userCommunityId = currentUser?.communityId ?? currentUser?.CommunityId;
     const userId = currentUser?.id ?? currentUser?.Id;
     const isMember = userCommunityId != null && String(userCommunityId) === String(community?.id);
