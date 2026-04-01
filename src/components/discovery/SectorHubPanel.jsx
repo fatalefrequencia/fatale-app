@@ -136,7 +136,7 @@ const SectorHubPanel = ({
                     fontFamily: "'Share Tech Mono', monospace",
                     letterSpacing: '0.03em'
                 }}>
-                    {sector.desc || 'Establish your frequency in this sector.'}
+                    {`> ${sector.desc || 'Establish your frequency in this sector.'}`}
                 </p>
             </div>
 
@@ -304,7 +304,7 @@ const SectorHubPanel = ({
                     textTransform: 'uppercase',
                     letterSpacing: '0.1em'
                 }}>
-                    Establish a new point of frequency in {sector.name}.
+                    {`> Establish a new point of frequency in ${sector.name}.`}
                 </div>
             </div>
         </motion.div>
