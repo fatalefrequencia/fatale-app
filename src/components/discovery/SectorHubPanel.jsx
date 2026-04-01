@@ -28,7 +28,7 @@ const SectorHubPanel = ({
                 bottom: 0,
                 width: '100%',
                 maxWidth: 400,
-                background: 'rgba(10, 10, 10, 0.95)',
+                background: 'rgba(4, 4, 4, 0.98)',
                 backdropFilter: 'blur(10px)',
                 borderLeft: `1px solid ${color}40`,
                 zIndex: 1000,
