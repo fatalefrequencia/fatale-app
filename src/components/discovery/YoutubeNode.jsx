@@ -98,10 +98,12 @@ const YoutubeNode = ({ data }) => {
                     <div 
                         className={`terminal-hover-scroll ${hovered ? 'is-hovered' : ''}`}
                         style={{
-                            color: '#fff', fontSize: 10, fontWeight: 700,
+                            color: '#fff', fontSize: 11, fontWeight: 900,
                             textTransform: 'uppercase',
-                            textShadow: '0 1px 4px rgba(0,0,0,0.9)',
-                            fontFamily: "'Share Tech Mono', monospace"
+                            letterSpacing: '0.12em',
+                            textShadow: hovered ? '0 0 10px #fff, 0 0 20px rgba(255,255,255,0.4)' : '0 1px 4px rgba(0,0,0,0.9)',
+                            fontFamily: "'Orbitron', sans-serif",
+                            transition: 'text-shadow 0.3s ease'
                         }}
                     >
                         <span>{`> ${title}`}</span>

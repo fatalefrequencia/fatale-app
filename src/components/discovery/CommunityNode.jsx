@@ -87,17 +87,18 @@ const CommunityNode = ({ data }) => {
                 className={`terminal-hover-scroll ${hovered ? 'is-hovered' : ''}`}
                 style={{
                     color: '#fff',
-                    fontSize: size > 110 ? 11 : 9,
+                    fontSize: size > 110 ? 12 : 10,
                     fontWeight: 900,
                     textAlign: 'center',
                     textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    maxWidth: '85%',
+                    maxWidth: '90%',
                     lineHeight: 1.1,
-                    marginBottom: 2,
+                    marginBottom: 4,
                     zIndex: 2,
-                    textShadow: '0 2px 4px rgba(0,0,0,0.8)',
-                    fontFamily: "'Share Tech Mono', monospace"
+                    fontFamily: "'Orbitron', sans-serif",
+                    letterSpacing: '0.12em',
+                    textShadow: hovered ? `0 0 10px ${color}, 0 0 20px ${color}44` : '0 2px 4px rgba(0,0,0,0.8)',
+                    transition: 'text-shadow 0.3s ease'
                 }}
             >
                 <span>{`> ${name}`}</span>
@@ -106,20 +107,27 @@ const CommunityNode = ({ data }) => {
             {showLabel && (
                 <div style={{
                     display: 'flex',
+                    flexDirection: 'column',
                     alignItems: 'center',
-                    gap: 3,
-                    opacity: 0.8,
+                    gap: 1,
+                    opacity: 0.7,
                     zIndex: 2,
                     fontFamily: "'Share Tech Mono', monospace"
                 }}>
-                    <Users size={size > 110 ? 10 : 8} style={{ color }} />
-                    <span style={{
-                        color: '#fff',
-                        fontSize: size > 110 ? 9 : 8,
-                        fontWeight: 700
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 3,
                     }}>
-                        {`ID_${memberCount} _`}
-                    </span>
+                        <Users size={size > 110 ? 10 : 8} style={{ color }} />
+                        <span style={{
+                            color: '#fff',
+                            fontSize: size > 110 ? 9 : 8,
+                            fontWeight: 700
+                        }}>
+                            {`ID_${memberCount} // SECURE_`}
+                        </span>
+                    </div>
                 </div>
             )}
 

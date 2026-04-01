@@ -86,18 +86,19 @@ const SectorHubNode = ({ data }) => {
 
             <div style={{
                 color: '#fff',
-                fontSize: 26,
+                fontSize: 27,
                 fontWeight: 900,
                 textAlign: 'center',
                 textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                textShadow: `0 0 15px ${color}88`,
+                letterSpacing: '0.12em',
+                textShadow: `0 0 15px ${color}, 0 0 30px ${color}44`,
                 maxWidth: '85%',
                 lineHeight: 1.1,
-                fontFamily: "'Share Tech Mono', monospace",
+                fontFamily: "'Orbitron', sans-serif",
                 whiteSpace: 'normal',
                 wordBreak: 'break-word',
-                zIndex: 2
+                zIndex: 2,
+                transition: 'all 0.3s ease'
             }}>
                 {`> ${name}`}
             </div>

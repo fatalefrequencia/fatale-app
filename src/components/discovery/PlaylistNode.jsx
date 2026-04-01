@@ -98,27 +98,27 @@ const PlaylistNode = ({ data }) => {
                         className={`terminal-hover-scroll ${hovered ? 'is-hovered' : ''}`}
                         style={{
                             color: '#fff',
-                            fontSize: 11,
-                            fontWeight: 700,
+                            fontSize: 12,
+                            fontWeight: 900,
                             textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            textShadow: '0 1px 4px rgba(0,0,0,0.9)',
-                            fontFamily: "'Share Tech Mono', monospace"
+                            letterSpacing: '0.12em',
+                            textShadow: hovered ? '0 0 10px #ffd1dc, 0 0 20px #ffd1dc44' : '0 1px 4px rgba(0,0,0,0.9)',
+                            fontFamily: "'Orbitron', sans-serif",
+                            transition: 'text-shadow 0.3s ease'
                         }}
                     >
                         <span>{`> ${name}`}</span>
                     </div>
                     {creatorName && (
                         <div style={{
-                            color: 'rgba(255,255,255,0.55)',
+                            color: 'rgba(219, 219, 219, 0.65)',
                             fontSize: 8,
                             fontFamily: "'Share Tech Mono', monospace",
                             textTransform: 'uppercase',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
+                            marginTop: 2,
+                            letterSpacing: '0.05em'
                         }}>
-                            {`ID_${creatorName.substring(0, 8)} // TRK_${trackCount} _`}
+                            {`ID_${creatorName.substring(0, 8)} // SYSLINK_`}
                         </div>
                     )}
                 </div>
