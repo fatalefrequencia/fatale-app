@@ -130,10 +130,11 @@ const SectorHubPanel = ({
                     </motion.span>
                 </h2>
                 <p style={{
-                    fontSize: 12,
-                    color: 'rgba(255,255,255,0.5)',
+                    fontSize: 11,
+                    color: `${color}cc`,
                     lineHeight: 1.5,
-                    fontFamily: 'monospace'
+                    fontFamily: "'Share Tech Mono', monospace",
+                    letterSpacing: '0.03em'
                 }}>
                     {sector.desc || 'Establish your frequency in this sector.'}
                 </p>
@@ -296,10 +297,10 @@ const SectorHubPanel = ({
                 </button>
                 <div style={{ 
                     textAlign: 'center', 
-                    color: 'rgba(255,255,255,0.2)', 
+                    color: `${color}88`, 
                     fontSize: 8, 
                     marginTop: 12, 
-                    fontFamily: 'monospace', 
+                    fontFamily: "'Share Tech Mono', monospace", 
                     textTransform: 'uppercase',
                     letterSpacing: '0.1em'
                 }}>
