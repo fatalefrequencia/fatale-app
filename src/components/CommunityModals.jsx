@@ -253,6 +253,7 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                             {community.description || 'No manifesto data found for this node.'}
                         </p>
                     </div>
+                </div>
 
                     <div className="flex items-center gap-3 shrink-0">
                         {/* Stats pill */}
