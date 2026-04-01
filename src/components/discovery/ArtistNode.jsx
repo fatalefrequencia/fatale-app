@@ -109,40 +109,17 @@ const ArtistNode = ({ data }) => {
                         className={`terminal-hover-scroll ${hovered ? 'is-hovered' : ''}`}
                         style={{
                             color: '#fff',
-                            fontSize: tier === 'large' ? 13 : 11,
-                            fontWeight: 900,
+                            fontSize: tier === 'large' ? 11 : 9,
+                            fontWeight: 700,
                             textTransform: 'uppercase',
-                            letterSpacing: '0.12em',
-                            textShadow: hovered ? `0 0 10px ${sectorColor}, 0 0 20px ${sectorColor}44` : '0 0 8px rgba(0,0,0,1)',
-                            fontFamily: "'Orbitron', sans-serif",
-                            transition: 'text-shadow 0.3s ease'
+                            letterSpacing: '0.08em',
+                            textShadow: hovered ? `0 0 5px ${sectorColor}` : '0 0 4px rgba(0,0,0,1)',
+                            fontFamily: "'Share Tech Mono', monospace",
+                            transition: 'all 0.2s ease'
                         }}
                     >
-                        <span>{`> ${name}`}</span>
+                        <span>{`[SIG_${trackCount}] > ${name}`}</span>
                     </div>
-                    {tier !== 'small' && (
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            marginTop: 3,
-                            opacity: 0.8
-                        }}>
-                            <div style={{
-                                width: 40, height: 2, 
-                                background: `linear-gradient(90deg, ${sectorColor} 0%, transparent 100%)`,
-                                marginBottom: 2
-                            }} />
-                            <div style={{
-                                color: sectorColor,
-                                fontSize: 8,
-                                fontFamily: "'Share Tech Mono', monospace",
-                                textTransform: 'uppercase',
-                            }}>
-                                {`SIG_${trackCount} // DATA_OOK_`}
-                            </div>
-                        </div>
-                    )}
                 </div>
             )}
 

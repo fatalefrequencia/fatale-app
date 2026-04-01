@@ -87,49 +87,22 @@ const CommunityNode = ({ data }) => {
                 className={`terminal-hover-scroll ${hovered ? 'is-hovered' : ''}`}
                 style={{
                     color: '#fff',
-                    fontSize: size > 110 ? 12 : 10,
-                    fontWeight: 900,
+                    fontSize: size > 110 ? 10 : 9,
+                    fontWeight: 700,
                     textAlign: 'center',
                     textTransform: 'uppercase',
                     maxWidth: '90%',
                     lineHeight: 1.1,
-                    marginBottom: 4,
+                    marginBottom: 2,
                     zIndex: 2,
-                    fontFamily: "'Orbitron', sans-serif",
-                    letterSpacing: '0.12em',
-                    textShadow: hovered ? `0 0 10px ${color}, 0 0 20px ${color}44` : '0 2px 4px rgba(0,0,0,0.8)',
-                    transition: 'text-shadow 0.3s ease'
+                    fontFamily: "'Share Tech Mono', monospace",
+                    letterSpacing: '0.08em',
+                    textShadow: hovered ? `0 0 5px ${color}` : '0 1px 3px rgba(0,0,0,0.8)',
+                    transition: 'all 0.2s ease'
                 }}
             >
-                <span>{`> ${name}`}</span>
+                <span>{`[SIG_${memberCount}] > ${name}`}</span>
             </div>
-
-            {showLabel && (
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 1,
-                    opacity: 0.7,
-                    zIndex: 2,
-                    fontFamily: "'Share Tech Mono', monospace"
-                }}>
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 3,
-                    }}>
-                        <Users size={size > 110 ? 10 : 8} style={{ color }} />
-                        <span style={{
-                            color: '#fff',
-                            fontSize: size > 110 ? 9 : 8,
-                            fontWeight: 700
-                        }}>
-                            {`ID_${memberCount} // SECURE_`}
-                        </span>
-                    </div>
-                </div>
-            )}
 
             <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
             <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />

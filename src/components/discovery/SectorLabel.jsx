@@ -22,13 +22,13 @@ const SectorLabel = ({ data }) => {
             <Handle type="source" position={Position.Right} style={{ opacity: 0, pointerEvents: 'none' }} />
 
             <div style={{
-                fontSize: 74,
-                fontWeight: 900,
-                fontFamily: "'Orbitron', sans-serif",
+                fontSize: 68,
+                fontWeight: 700,
+                fontFamily: "'Share Tech Mono', monospace",
                 textTransform: 'uppercase',
-                letterSpacing: '0.2em',
-                color: `${color}20`,
-                textShadow: `0 0 60px ${color}30`,
+                letterSpacing: '0.15em',
+                color: `${color}15`,
+                textShadow: `0 0 30px ${color}20`,
                 lineHeight: 1,
                 whiteSpace: 'nowrap',
             }}>
