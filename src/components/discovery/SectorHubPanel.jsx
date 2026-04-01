@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Users, Plus, ChevronRight, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import OrganicSkull from './OrganicSkull';
+import { getMediaUrl } from '../../constants';
 
 const SectorHubPanel = ({ 
     sector, 

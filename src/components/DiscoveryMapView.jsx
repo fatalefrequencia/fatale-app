@@ -196,6 +196,7 @@ const DiscoveryCanvas = ({
                         name: comm.name || 'COMMUNITY',
                         color: sec.color,
                         memberCount: comm.memberCount || 0,
+                        imageUrl: comm.imageUrl,
                         zoom,
                         onClick: () => setSelectedCommunity(comm)
                     },
