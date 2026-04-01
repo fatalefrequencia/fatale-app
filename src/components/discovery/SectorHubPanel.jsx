@@ -108,14 +108,16 @@ const SectorHubPanel = ({
                 </div>
 
                 <h2 style={{
-                    fontSize: 28,
+                    fontSize: 32,
                     fontWeight: 900,
-                    color: color,
-                    filter: 'brightness(0.7)',
-                    textShadow: `0 0 15px ${color}40`,
+                    color: 'transparent',
+                    WebkitTextStroke: `1px ${color}`,
+                    textShadow: `0 0 20px ${color}40`,
                     textTransform: 'uppercase',
-                    letterSpacing: '0.02em',
-                    marginBottom: 4
+                    letterSpacing: '0.25em',
+                    marginBottom: 8,
+                    fontFamily: 'monospace',
+                    opacity: 0.9
                 }}>
                     {sector.name}
                 </h2>

@@ -170,14 +170,29 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                                 NEURAL_STATION // SECTOR_{community.sectorId}
                             </span>
                         </div>
-                        <h1 className="text-2xl md:text-3xl font-black tracking-tight leading-none truncate"
+                        <motion.h1 
+                            animate={{ 
+                                opacity: [1, 0.85, 1, 0.95, 1],
+                                filter: [
+                                    `brightness(1.4) drop-shadow(0 0 10px ${color}60)`,
+                                    `brightness(1.2) drop-shadow(0 0 5px ${color}40)`,
+                                    `brightness(1.4) drop-shadow(0 0 10px ${color}60)`
+                                ]
+                            }}
+                            transition={{ 
+                                duration: 4, 
+                                repeat: Infinity, 
+                                ease: "easeInOut" 
+                            }}
+                            className="text-3xl md:text-4xl font-black tracking-tight leading-none truncate mb-1"
                             style={{ 
-                                color: color, 
-                                filter: 'brightness(1.4)',
-                                textShadow: `0 0 20px ${color}60, 0 0 40px ${color}30` 
+                                background: `linear-gradient(to bottom, #fff 20%, ${color} 100%)`,
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                display: 'inline-block'
                             }}>
                             {community.name}
-                        </h1>
+                        </motion.h1>
                         <p className="text-white/40 text-xs mt-1 mono leading-relaxed max-w-xl line-clamp-2">
                             {community.description || 'No manifesto data found for this node.'}
                         </p>
