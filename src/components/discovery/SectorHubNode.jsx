@@ -73,11 +73,11 @@ const SectorHubNode = ({ data }) => {
 
             <div style={{
                 color: color,
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: 900,
                 letterSpacing: '0.4em',
                 textTransform: 'uppercase',
-                fontFamily: 'monospace',
+                fontFamily: "'Share Tech Mono', monospace",
                 marginBottom: 6,
                 opacity: 0.6
             }}>
@@ -93,9 +93,10 @@ const SectorHubNode = ({ data }) => {
                 letterSpacing: '0.05em',
                 textShadow: `0 0 15px ${color}88`,
                 maxWidth: '85%',
-                lineHeight: 1
+                lineHeight: 1,
+                fontFamily: "'Share Tech Mono', monospace"
             }}>
-                {name}
+                {`> ${name}`}
             </div>
 
             {showDetails && (
@@ -107,16 +108,16 @@ const SectorHubNode = ({ data }) => {
                     background: 'rgba(255,255,255,0.05)',
                     padding: '6px 14px',
                     borderRadius: 4,
-                    border: `1px solid ${color}33`
+                    border: `1px solid ${color}33`,
+                    fontFamily: "'Share Tech Mono', monospace"
                 }}>
                     <Users size={16} style={{ color }} />
                     <span style={{
                         color: '#fff',
-                        fontSize: 12,
-                        fontWeight: 700,
-                        fontFamily: 'monospace'
+                        fontSize: 11,
+                        fontWeight: 700
                     }}>
-                        {communityCount} NODES ACTIVE
+                        {`HUB_${communityCount} _`}
                     </span>
                 </div>
             )}

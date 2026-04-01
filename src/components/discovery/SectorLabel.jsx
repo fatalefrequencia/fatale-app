@@ -24,26 +24,27 @@ const SectorLabel = ({ data }) => {
             <div style={{
                 fontSize: 72,
                 fontWeight: 900,
-                fontFamily: 'monospace',
+                fontFamily: "'Share Tech Mono', monospace",
                 textTransform: 'uppercase',
-                letterSpacing: '0.1em',
+                letterSpacing: '0.15em',
                 color: `${color}18`,
                 textShadow: `0 0 80px ${color}40`,
                 lineHeight: 1,
                 whiteSpace: 'nowrap',
             }}>
-                {name}
+                {`> ${name}`}
             </div>
             {desc && (
                 <div style={{
                     fontSize: 12,
-                    fontFamily: 'monospace',
+                    fontFamily: "'Share Tech Mono', monospace",
                     color: `${color}66`,
-                    letterSpacing: '0.3em',
+                    letterSpacing: '0.4em',
                     textTransform: 'uppercase',
                     marginTop: 4,
+                    opacity: 0.8
                 }}>
-                    {desc}
+                    {`SYS_LINK // ${desc} _`}
                 </div>
             )}
         </div>

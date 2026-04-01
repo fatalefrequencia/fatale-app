@@ -101,18 +101,21 @@ const YoutubeNode = ({ data }) => {
                 }}>
                     <div style={{
                         color: '#fff', fontSize: 10, fontWeight: 700,
-                        fontFamily: 'monospace',
+                        textTransform: 'uppercase',
                         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                         textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+                        fontFamily: "'Share Tech Mono', monospace"
                     }}>
-                        {title}
+                        {`> ${title}`}
                     </div>
                     {author && (
                         <div style={{
-                            color: 'rgba(255,255,255,0.5)', fontSize: 9, fontFamily: 'monospace',
+                            color: 'rgba(255,255,255,0.5)', fontSize: 8, 
+                            fontFamily: "'Share Tech Mono', monospace",
+                            textTransform: 'uppercase',
                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                         }}>
-                            {author}
+                            {`SRC_${author.substring(0, 12)} _`}
                         </div>
                     )}
                 </div>

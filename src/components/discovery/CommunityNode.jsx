@@ -94,9 +94,10 @@ const CommunityNode = ({ data }) => {
                 lineHeight: 1.1,
                 marginBottom: 2,
                 zIndex: 2,
-                textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                textShadow: '0 2px 4px rgba(0,0,0,0.8)',
+                fontFamily: "'Share Tech Mono', monospace"
             }}>
-                {name}
+                {`> ${name}`}
             </div>
 
             {showLabel && (
@@ -105,16 +106,16 @@ const CommunityNode = ({ data }) => {
                     alignItems: 'center',
                     gap: 3,
                     opacity: 0.8,
-                    zIndex: 2
+                    zIndex: 2,
+                    fontFamily: "'Share Tech Mono', monospace"
                 }}>
                     <Users size={size > 110 ? 10 : 8} style={{ color }} />
                     <span style={{
                         color: '#fff',
                         fontSize: size > 110 ? 9 : 8,
-                        fontWeight: 700,
-                        fontFamily: 'monospace'
+                        fontWeight: 700
                     }}>
-                        {memberCount}
+                        {`ID_${memberCount} _`}
                     </span>
                 </div>
             )}
