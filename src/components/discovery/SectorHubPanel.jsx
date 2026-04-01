@@ -107,30 +107,27 @@ const SectorHubPanel = ({
                     </button>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, borderLeft: `4px solid ${color}`, paddingLeft: 12 }}>
-                    <h2 style={{
-                        fontSize: 24,
-                        fontWeight: 900,
-                        color: '#fff',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                        fontFamily: 'monospace'
-                    }}>
-                        {sector.name}
-                    </h2>
-                    <div style={{ 
-                        marginLeft: 'auto', 
-                        fontSize: 8, 
-                        color: `${color}88`, 
-                        fontFamily: 'monospace', 
-                        border: `1px solid ${color}44`,
-                        padding: '2px 6px',
-                        borderRadius: 2,
-                        textTransform: 'uppercase'
-                    }}>
-                        STATUS: ACTIVE
-                    </div>
-                </div>
+                <h2 className="mono" style={{
+                    fontSize: 22,
+                    fontWeight: 400,
+                    color: color,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    marginBottom: 8,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8
+                }}>
+                    <span style={{ opacity: 0.5 }}>&gt;</span>
+                    {sector.name}
+                    <motion.span 
+                        animate={{ opacity: [1, 0, 1] }} 
+                        transition={{ duration: 1, repeat: Infinity, ease: "steps(1)" }}
+                        style={{ color }}
+                    >
+                        _
+                    </motion.span>
+                </h2>
                 <p style={{
                     fontSize: 12,
                     color: 'rgba(255,255,255,0.5)',
