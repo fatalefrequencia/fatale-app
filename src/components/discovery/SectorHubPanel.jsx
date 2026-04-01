@@ -67,7 +67,6 @@ const SectorHubPanel = ({
                         borderRadius: 4,
                         border: `1px solid ${color}33`
                     }}>
-                        <OrganicSkull size={14} color={color} />
                         <span style={{
                             color,
                             fontSize: 10,
