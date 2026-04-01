@@ -99,25 +99,25 @@ const YoutubeNode = ({ data }) => {
                     padding: '3px 6px 5px',
                     pointerEvents: 'none',
                 }}>
-                    <div className="marquee-container" style={{
-                        color: '#fff', fontSize: 10, fontWeight: 700,
-                        textTransform: 'uppercase',
-                        textShadow: '0 1px 4px rgba(0,0,0,0.9)',
-                        fontFamily: "'Share Tech Mono', monospace"
-                    }}>
-                        <div className="marquee-content">
-                            {`> ${title}`}
-                        </div>
+                    <div 
+                        className="terminal-hover-scroll"
+                        style={{
+                            color: '#fff', fontSize: 10, fontWeight: 700,
+                            textTransform: 'uppercase',
+                            textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+                            fontFamily: "'Share Tech Mono', monospace"
+                        }}
+                    >
+                        <span>{`> ${title}`}</span>
                     </div>
                     {author && (
-                        <div className="marquee-container" style={{
+                        <div style={{
                             color: 'rgba(255,255,255,0.5)', fontSize: 8, 
                             fontFamily: "'Share Tech Mono', monospace",
                             textTransform: 'uppercase',
+                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                         }}>
-                            <div className="marquee-content">
-                                {`SRC_${author.substring(0, 12)} _`}
-                            </div>
+                            {`SRC_${author.substring(0, 12)} _`}
                         </div>
                     )}
                 </div>

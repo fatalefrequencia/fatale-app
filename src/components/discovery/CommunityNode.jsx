@@ -84,42 +84,42 @@ const CommunityNode = ({ data }) => {
             </div>
 
             <div 
-                className="marquee-container"
+                className="terminal-hover-scroll"
                 style={{
                     color: '#fff',
                     fontSize: size > 110 ? 11 : 9,
                     fontWeight: 900,
+                    textAlign: 'center',
                     textTransform: 'uppercase',
                     letterSpacing: '0.05em',
+                    maxWidth: '85%',
                     lineHeight: 1.1,
                     marginBottom: 2,
                     zIndex: 2,
                     textShadow: '0 2px 4px rgba(0,0,0,0.8)',
-                    fontFamily: "'Share Tech Mono', monospace",
-                    padding: '0 5px'
+                    fontFamily: "'Share Tech Mono', monospace"
                 }}
             >
-                <div className="marquee-content">
-                    {`> ${name}`}
-                </div>
+                <span>{`> ${name}`}</span>
             </div>
 
             {showLabel && (
-                <div className="marquee-container" style={{
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 3,
                     opacity: 0.8,
                     zIndex: 2,
                     fontFamily: "'Share Tech Mono', monospace"
                 }}>
-                    <div className="marquee-content" style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                        <Users size={size > 110 ? 10 : 8} style={{ color }} />
-                        <span style={{
-                            color: '#fff',
-                            fontSize: size > 110 ? 9 : 8,
-                            fontWeight: 700
-                        }}>
-                            {`ID_${memberCount} _`}
-                        </span>
-                    </div>
+                    <Users size={size > 110 ? 10 : 8} style={{ color }} />
+                    <span style={{
+                        color: '#fff',
+                        fontSize: size > 110 ? 9 : 8,
+                        fontWeight: 700
+                    }}>
+                        {`ID_${memberCount} _`}
+                    </span>
                 </div>
             )}
 

@@ -131,35 +131,15 @@
     }
 
     @keyframes blink {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.4; }
-    }
 
-    @keyframes terminal-marquee {
-        0% { transform: translateX(0); }
-        15% { transform: translateX(0); }
-        50% { transform: translateX(calc(-100% + 100%)); } /* Fallback, usually overridden inline */
-        85% { transform: translateX(0); }
-        100% { transform: translateX(0); }
-    }
+        0%,
+        100% {
+            opacity: 1;
+        }
 
-    .marquee-container {
-        overflow: hidden;
-        white-space: nowrap;
-        mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
-        -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
-        width: 100%;
-        display: flex;
-        justify-content: center;
-    }
-
-    .marquee-content {
-        display: inline-block;
-        transition: transform 0.3s ease-out;
-    }
-
-    .marquee-container:hover .marquee-content {
-        animation: terminal-marquee 10s linear infinite;
+        50% {
+            opacity: 0.4;
+        }
     }
 
     @keyframes scan {
@@ -209,5 +189,23 @@
         opacity: 1 !important;
         stroke-width: 2px !important;
         transition: all 0.3s ease;
+    }
+
+    @keyframes marquee-scroll {
+        0% { transform: translateX(0); }
+        30% { transform: translateX(0); }
+        100% { transform: translateX(-100%); }
+    }
+
+    .terminal-hover-scroll:hover > span {
+        display: inline-block;
+        animation: marquee-scroll 8s linear infinite;
+        padding-right: 50px;
+    }
+
+    .terminal-hover-scroll {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: clip; /* We want it to be clean for the animation */
     }
 }
