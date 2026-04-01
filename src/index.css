@@ -190,22 +190,31 @@
         stroke-width: 2px !important;
         transition: all 0.3s ease;
     }
+}
 
-    @keyframes marquee-scroll {
-        0% { transform: translateX(0); }
-        30% { transform: translateX(0); }
-        100% { transform: translateX(-100%); }
-    }
+/* Global Terminal Utilities - Outside @layer for maximum compatibility */
+@keyframes marquee-scroll {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
 
-    .terminal-hover-scroll.is-hovered > span {
-        display: inline-block;
-        animation: marquee-scroll 10s linear infinite;
-        padding-right: 50px;
-    }
+.terminal-hover-scroll {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: clip;
+    position: relative;
+    pointer-events: auto !important;
+}
 
-    .terminal-hover-scroll {
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: clip; /* We want it to be clean for the animation */
-    }
+.terminal-hover-scroll.is-hovered {
+    background: rgba(255, 255, 255, 0.05); /* Subtle visual hint hover is active */
+}
+
+.terminal-hover-scroll.is-hovered > span {
+    display: inline-block;
+    padding-left: 10%;
+    animation: marquee-scroll 10s linear infinite;
+    width: max-content;
 }
