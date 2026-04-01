@@ -215,6 +215,6 @@
 .terminal-hover-scroll.is-hovered > span {
     display: inline-block;
     padding-left: 10%;
-    animation: marquee-scroll 10s linear infinite;
+    animation: marquee-scroll 6s linear infinite;
     width: max-content;
 }
