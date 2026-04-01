@@ -245,9 +245,7 @@ const API = {
             return Promise.resolve({ data: { success: true } });
         },
         getFollowed: () => JSON.parse(localStorage.getItem('followed_communities') || '[]'),
-        updateImageUrl: (id, imageUrl) => api.post(`Communities/${id}/image`, imageUrl, {
-            headers: { 'Content-Type': 'application/json' }
-        })
+        updateImageUrl: (id, imageUrl) => api.post(`Communities/${id}/image`, { imageUrl })
     },
     Files: {
         upload: (formData) => api.post('File/upload', formData, {
