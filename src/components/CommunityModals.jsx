@@ -170,29 +170,20 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                                 NEURAL_STATION // SECTOR_{community.sectorId}
                             </span>
                         </div>
-                        <motion.h1 
-                            animate={{ 
-                                opacity: [1, 0.85, 1, 0.95, 1],
-                                filter: [
-                                    `brightness(1.4) drop-shadow(0 0 10px ${color}60)`,
-                                    `brightness(1.2) drop-shadow(0 0 5px ${color}40)`,
-                                    `brightness(1.4) drop-shadow(0 0 10px ${color}60)`
-                                ]
-                            }}
-                            transition={{ 
-                                duration: 4, 
-                                repeat: Infinity, 
-                                ease: "easeInOut" 
-                            }}
-                            className="text-3xl md:text-4xl font-black tracking-tight leading-none truncate mb-1"
-                            style={{ 
-                                background: `linear-gradient(to bottom, #fff 20%, ${color} 100%)`,
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                display: 'inline-block'
-                            }}>
-                            {community.name}
-                        </motion.h1>
+                        <div className="flex items-baseline gap-4 mb-2">
+                            <h1 className="text-3xl md:text-5xl font-black text-white tracking-tighter uppercase italic leading-none">
+                                {community.name}
+                            </h1>
+                            <div className="h-6 w-[1px] bg-white/10 rotate-12" />
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-black mono tracking-[0.2em]" style={{ color }}>
+                                    NODE_ID: {community.id?.toString(16).toUpperCase().padStart(4, '0')}
+                                </span>
+                                <span className="text-[8px] mono text-white/20 tracking-widest uppercase">
+                                    // frequency sync active
+                                </span>
+                            </div>
+                        </div>
                         <p className="text-white/40 text-xs mt-1 mono leading-relaxed max-w-xl line-clamp-2">
                             {community.description || 'No manifesto data found for this node.'}
                         </p>

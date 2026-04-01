@@ -107,20 +107,30 @@ const SectorHubPanel = ({
                     </button>
                 </div>
 
-                <h2 style={{
-                    fontSize: 32,
-                    fontWeight: 900,
-                    color: 'transparent',
-                    WebkitTextStroke: `1px ${color}`,
-                    textShadow: `0 0 20px ${color}40`,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.25em',
-                    marginBottom: 8,
-                    fontFamily: 'monospace',
-                    opacity: 0.9
-                }}>
-                    {sector.name}
-                </h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, borderLeft: `4px solid ${color}`, paddingLeft: 12 }}>
+                    <h2 style={{
+                        fontSize: 24,
+                        fontWeight: 900,
+                        color: '#fff',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        fontFamily: 'monospace'
+                    }}>
+                        {sector.name}
+                    </h2>
+                    <div style={{ 
+                        marginLeft: 'auto', 
+                        fontSize: 8, 
+                        color: `${color}88`, 
+                        fontFamily: 'monospace', 
+                        border: `1px solid ${color}44`,
+                        padding: '2px 6px',
+                        borderRadius: 2,
+                        textTransform: 'uppercase'
+                    }}>
+                        STATUS: ACTIVE
+                    </div>
+                </div>
                 <p style={{
                     fontSize: 12,
                     color: 'rgba(255,255,255,0.5)',
