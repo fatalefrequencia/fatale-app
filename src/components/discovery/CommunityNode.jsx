@@ -4,6 +4,7 @@ import { Users } from 'lucide-react';
 import { getMediaUrl } from '../../constants';
 
 const CommunityNode = ({ data }) => {
+    const [hovered, setHovered] = React.useState(false);
     const {
         name,
         color = '#ff006e',
@@ -12,17 +13,21 @@ const CommunityNode = ({ data }) => {
         zoom = 1,
         onClick,
     } = data;
-
     // Logarithmic scaling for size based on members (base 85, grows with members)
     const baseSize = 85;
     const growth = Math.log10(Math.max(memberCount, 1) + 1) * 25;
     const size = baseSize + growth;
 
     const showLabel = zoom > 0.45;
-
     return (
         <div
             onClick={onClick}
+            onMouseEnter={() => {
+                setHovered(true);
+            }}
+            onMouseLeave={() => {
+                setHovered(false);
+            }}
             style={{
                 width: size,
                 height: size,
@@ -37,17 +42,12 @@ const CommunityNode = ({ data }) => {
                 cursor: 'pointer',
                 position: 'relative',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                filter: `drop-shadow(0 0 10px ${color}33)`,
+                filter: hovered 
+                    ? `drop-shadow(0 0 20px ${color}66) brightness(1.2)`
+                    : `drop-shadow(0 0 10px ${color}33)`,
+                transform: hovered ? 'scale(1.1)' : 'scale(1)',
                 border: 'none',
                 overflow: 'hidden'
-            }}
-            onMouseEnter={e => {
-                e.currentTarget.style.filter = `drop-shadow(0 0 20px ${color}66) brightness(1.2)`;
-                e.currentTarget.style.transform = 'scale(1.1)';
-            }}
-            onMouseLeave={e => {
-                e.currentTarget.style.filter = `drop-shadow(0 0 10px ${color}33)`;
-                e.currentTarget.style.transform = 'scale(1)';
             }}
         >
             {/* Background Image / Placeholder */}
@@ -84,7 +84,7 @@ const CommunityNode = ({ data }) => {
             </div>
 
             <div 
-                className="terminal-hover-scroll"
+                className={`terminal-hover-scroll ${hovered ? 'is-hovered' : ''}`}
                 style={{
                     color: '#fff',
                     fontSize: size > 110 ? 11 : 9,

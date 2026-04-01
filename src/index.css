@@ -197,9 +197,9 @@
         100% { transform: translateX(-100%); }
     }
 
-    .terminal-hover-scroll:hover > span {
+    .terminal-hover-scroll.is-hovered > span {
         display: inline-block;
-        animation: marquee-scroll 8s linear infinite;
+        animation: marquee-scroll 10s linear infinite;
         padding-right: 50px;
     }
 

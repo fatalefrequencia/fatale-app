@@ -3,6 +3,7 @@ import { Handle, Position } from '@xyflow/react';
 import { Play, Youtube } from 'lucide-react';
 
 const YoutubeNode = ({ data }) => {
+    const [hovered, setHovered] = React.useState(false);
     const {
         title,
         author,
@@ -12,17 +13,19 @@ const YoutubeNode = ({ data }) => {
         onPlay,
         zoom = 1,
     } = data;
-
     const showLabel = zoom > 0.55;
-
     return (
         <div
             onClick={() => onPlay && onPlay(data)}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
             style={{
                 width: 120,
                 height: 120,
                 border: '2px solid #ffffff',
-                boxShadow: '0 0 15px rgba(255, 255, 255, 0.4)',
+                boxShadow: hovered 
+                    ? '0 0 25px rgba(255, 255, 255, 0.7)' 
+                    : '0 0 15px rgba(255, 255, 255, 0.4)',
                 borderRadius: 8,
                 overflow: 'hidden',
                 position: 'relative',
@@ -30,14 +33,7 @@ const YoutubeNode = ({ data }) => {
                 background: '#0a0a0a',
                 transition: 'box-shadow 0.2s, transform 0.15s',
                 userSelect: 'none',
-            }}
-            onMouseEnter={e => {
-                e.currentTarget.style.boxShadow = '0 0 25px rgba(255, 255, 255, 0.7)';
-                e.currentTarget.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={e => {
-                e.currentTarget.style.boxShadow = '0 0 15px rgba(255, 255, 255, 0.4)';
-                e.currentTarget.style.transform = 'scale(1)';
+                transform: hovered ? 'scale(1.05)' : 'scale(1)',
             }}
         >
             <Handle type="target" position={Position.Left} style={{ opacity: 0, pointerEvents: 'none' }} />
@@ -97,10 +93,10 @@ const YoutubeNode = ({ data }) => {
                 <div style={{
                     position: 'absolute', bottom: 0, left: 0, right: 0,
                     padding: '3px 6px 5px',
-                    pointerEvents: 'none',
+                    pointerEvents: 'auto',
                 }}>
                     <div 
-                        className="terminal-hover-scroll"
+                        className={`terminal-hover-scroll ${hovered ? 'is-hovered' : ''}`}
                         style={{
                             color: '#fff', fontSize: 10, fontWeight: 700,
                             textTransform: 'uppercase',

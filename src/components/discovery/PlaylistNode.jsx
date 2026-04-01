@@ -4,6 +4,7 @@ import { getMediaUrl } from '../../constants';
 import { ListMusic } from 'lucide-react';
 
 const PlaylistNode = ({ data }) => {
+    const [hovered, setHovered] = React.useState(false);
     const {
         name,
         imageUrl,
@@ -12,18 +13,20 @@ const PlaylistNode = ({ data }) => {
         onClick,
         zoom = 1,
     } = data;
-
     const showLabel = zoom > 0.55;
     const mediaUrl = imageUrl ? getMediaUrl(imageUrl) : null;
-
     return (
         <div
             onClick={onClick}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
             style={{
                 width: 130,
                 height: 130,
                 border: '2px solid #ffd1dc', // Pastel Pink 
-                boxShadow: '0 0 15px rgba(255, 209, 220, 0.4)',
+                boxShadow: hovered 
+                    ? '0 0 25px rgba(255, 209, 220, 0.7)' 
+                    : '0 0 15px rgba(255, 209, 220, 0.4)',
                 borderRadius: 4,
                 overflow: 'hidden',
                 position: 'relative',
@@ -32,14 +35,7 @@ const PlaylistNode = ({ data }) => {
                 transition: 'box-shadow 0.2s, transform 0.15s',
                 userSelect: 'none',
                 zIndex: 1,
-            }}
-            onMouseEnter={e => {
-                e.currentTarget.style.boxShadow = '0 0 25px rgba(255, 209, 220, 0.7)';
-                e.currentTarget.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={e => {
-                e.currentTarget.style.boxShadow = '0 0 15px rgba(255, 209, 220, 0.4)';
-                e.currentTarget.style.transform = 'scale(1)';
+                transform: hovered ? 'scale(1.05)' : 'scale(1)',
             }}
         >
             <Handle type="target" position={Position.Left} style={{ opacity: 0, pointerEvents: 'none' }} />
@@ -96,10 +92,10 @@ const PlaylistNode = ({ data }) => {
                 <div style={{
                     position: 'absolute', bottom: 0, left: 0, right: 0,
                     padding: '4px 6px 6px',
-                    pointerEvents: 'none',
+                    pointerEvents: 'auto',
                 }}>
                     <div 
-                        className="terminal-hover-scroll"
+                        className={`terminal-hover-scroll ${hovered ? 'is-hovered' : ''}`}
                         style={{
                             color: '#fff',
                             fontSize: 11,

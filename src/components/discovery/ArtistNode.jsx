@@ -17,6 +17,7 @@ const TIER_DIMS = {
 };
 
 const ArtistNode = ({ data }) => {
+    const [hovered, setHovered] = React.useState(false);
     const {
         name,
         imageUrl,
@@ -27,7 +28,6 @@ const ArtistNode = ({ data }) => {
         navigateToProfile,
         zoom = 1,
     } = data;
-
     const tier = getSizeTier(trackCount, isLive);
     const { w, h } = TIER_DIMS[tier];
 
@@ -42,10 +42,11 @@ const ArtistNode = ({ data }) => {
     }, [navigateToProfile, userId]);
 
     const mediaUrl = imageUrl ? getMediaUrl(imageUrl) : null;
-
     return (
         <div
             onClick={handleClick}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
             style={{
                 width: w,
                 height: h,
@@ -55,19 +56,12 @@ const ArtistNode = ({ data }) => {
                 position: 'relative',
                 transition: 'transform 0.2s, filter 0.2s',
                 zIndex: 1,
-                filter: isLive 
-                    ? `drop-shadow(0 0 15px ${sectorColor}88) drop-shadow(0 0 5px ${sectorColor})`
-                    : `drop-shadow(0 0 8px ${sectorColor}44)`,
-            }}
-            onMouseEnter={e => {
-                e.currentTarget.style.filter = `drop-shadow(0 0 25px ${sectorColor}cc) drop-shadow(0 0 10px ${sectorColor})`;
-                e.currentTarget.style.transform = 'scale(1.06)';
-            }}
-            onMouseLeave={e => {
-                e.currentTarget.style.filter = isLive 
-                    ? `drop-shadow(0 0 15px ${sectorColor}88) drop-shadow(0 0 5px ${sectorColor})`
-                    : `drop-shadow(0 0 8px ${sectorColor}44)`;
-                e.currentTarget.style.transform = 'scale(1)';
+                filter: hovered
+                    ? `drop-shadow(0 0 25px ${sectorColor}cc) drop-shadow(0 0 10px ${sectorColor})`
+                    : isLive 
+                        ? `drop-shadow(0 0 15px ${sectorColor}88) drop-shadow(0 0 5px ${sectorColor})`
+                        : `drop-shadow(0 0 8px ${sectorColor}44)`,
+                transform: hovered ? 'scale(1.06)' : 'scale(1)',
             }}
         >
             {/* Handles for context */}
@@ -108,11 +102,11 @@ const ArtistNode = ({ data }) => {
                 <div style={{
                     position: 'absolute', bottom: '20%', left: 0, right: 0,
                     padding: '0 15%',
-                    pointerEvents: 'none',
+                    pointerEvents: 'auto',
                     textAlign: 'center'
                 }}>
                     <div 
-                        className="terminal-hover-scroll"
+                        className={`terminal-hover-scroll ${hovered ? 'is-hovered' : ''}`}
                         style={{
                             color: '#fff',
                             fontSize: tier === 'large' ? 12 : 10,
