@@ -98,31 +98,29 @@ const PlaylistNode = ({ data }) => {
                     padding: '4px 6px 6px',
                     pointerEvents: 'none',
                 }}>
-                    <div style={{
+                    <div className="marquee-container" style={{
                         color: '#fff',
                         fontSize: 11,
                         fontWeight: 700,
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
                         textShadow: '0 1px 4px rgba(0,0,0,0.9)',
                         fontFamily: "'Share Tech Mono', monospace"
                     }}>
-                        {`> ${name}`}
+                        <div className="marquee-content">
+                            {`> ${name}`}
+                        </div>
                     </div>
                     {creatorName && (
-                        <div style={{
+                        <div className="marquee-container" style={{
                             color: 'rgba(255,255,255,0.55)',
                             fontSize: 8,
                             fontFamily: "'Share Tech Mono', monospace",
                             textTransform: 'uppercase',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
                         }}>
-                            {`ID_${creatorName.substring(0, 8)} // TRK_${trackCount} _`}
+                            <div className="marquee-content">
+                                {`ID_${creatorName.substring(0, 8)} // TRK_${trackCount} _`}
+                            </div>
                         </div>
                     )}
                 </div>

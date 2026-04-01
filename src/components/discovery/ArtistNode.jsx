@@ -111,22 +111,21 @@ const ArtistNode = ({ data }) => {
                     pointerEvents: 'none',
                     textAlign: 'center'
                 }}>
-                    <div style={{
+                    <div className="marquee-container" style={{
                         color: '#fff',
                         fontSize: tier === 'large' ? 12 : 10,
                         fontWeight: 900,
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
                         textShadow: '0 0 8px rgba(0,0,0,1)',
                         fontFamily: "'Share Tech Mono', monospace"
                     }}>
-                        {`> ${name}`}
+                        <div className="marquee-content">
+                            {`> ${name}`}
+                        </div>
                     </div>
                     {tier !== 'small' && (
-                        <div style={{
+                        <div className="marquee-container" style={{
                             color: sectorColor,
                             fontSize: 8,
                             fontFamily: "'Share Tech Mono', monospace",
@@ -134,7 +133,9 @@ const ArtistNode = ({ data }) => {
                             marginTop: 2,
                             opacity: 0.8
                         }}>
-                             {`SIG_${trackCount} _`}
+                             <div className="marquee-content">
+                                {`SIG_${trackCount} _`}
+                             </div>
                         </div>
                     )}
                 </div>

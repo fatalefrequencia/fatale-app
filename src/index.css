@@ -131,15 +131,35 @@
     }
 
     @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
 
-        0%,
-        100% {
-            opacity: 1;
-        }
+    @keyframes terminal-marquee {
+        0% { transform: translateX(0); }
+        15% { transform: translateX(0); }
+        50% { transform: translateX(calc(-100% + 100%)); } /* Fallback, usually overridden inline */
+        85% { transform: translateX(0); }
+        100% { transform: translateX(0); }
+    }
 
-        50% {
-            opacity: 0.4;
-        }
+    .marquee-container {
+        overflow: hidden;
+        white-space: nowrap;
+        mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+        -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .marquee-content {
+        display: inline-block;
+        transition: transform 0.3s ease-out;
+    }
+
+    .marquee-container:hover .marquee-content {
+        animation: terminal-marquee 10s linear infinite;
     }
 
     @keyframes scan {

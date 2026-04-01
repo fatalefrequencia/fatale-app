@@ -71,54 +71,68 @@ const SectorHubNode = ({ data }) => {
                 }} />
             )}
 
-            <div style={{
-                color: color,
-                fontSize: 11,
-                fontWeight: 900,
-                letterSpacing: '0.4em',
-                textTransform: 'uppercase',
-                fontFamily: "'Share Tech Mono', monospace",
-                marginBottom: 6,
-                opacity: 0.6
-            }}>
-                Sector_Hub
+            <div 
+                className="marquee-container"
+                style={{
+                    color: color,
+                    fontSize: 11,
+                    fontWeight: 900,
+                    letterSpacing: '0.4em',
+                    textTransform: 'uppercase',
+                    fontFamily: "'Share Tech Mono', monospace",
+                    marginBottom: 6,
+                    opacity: 0.6,
+                    padding: '0 10px'
+                }}
+            >
+                <div className="marquee-content">
+                    Sector_Hub
+                </div>
             </div>
 
-            <div style={{
-                color: '#fff',
-                fontSize: 26,
-                fontWeight: 900,
-                textAlign: 'center',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                textShadow: `0 0 15px ${color}88`,
-                maxWidth: '85%',
-                lineHeight: 1,
-                fontFamily: "'Share Tech Mono', monospace"
-            }}>
-                {`> ${name}`}
+            <div 
+                className="marquee-container"
+                style={{
+                    color: '#fff',
+                    fontSize: 26,
+                    fontWeight: 900,
+                    textAlign: 'center',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    textShadow: `0 0 15px ${color}88`,
+                    maxWidth: '85%',
+                    lineHeight: 1,
+                    fontFamily: "'Share Tech Mono', monospace",
+                    padding: '0 10px'
+                }}
+            >
+                <div className="marquee-content">
+                    {`> ${name}`}
+                </div>
             </div>
 
             {showDetails && (
-                <div style={{
-                    marginTop: 15,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    background: 'rgba(255,255,255,0.05)',
-                    padding: '6px 14px',
-                    borderRadius: 4,
-                    border: `1px solid ${color}33`,
-                    fontFamily: "'Share Tech Mono', monospace"
-                }}>
-                    <Users size={16} style={{ color }} />
-                    <span style={{
-                        color: '#fff',
-                        fontSize: 11,
-                        fontWeight: 700
-                    }}>
-                        {`HUB_${communityCount} _`}
-                    </span>
+                <div 
+                    className="marquee-container"
+                    style={{
+                        marginTop: 15,
+                        background: 'rgba(255,255,255,0.05)',
+                        padding: '6px 14px',
+                        borderRadius: 4,
+                        border: `1px solid ${color}33`,
+                        fontFamily: "'Share Tech Mono', monospace"
+                    }}
+                >
+                    <div className="marquee-content" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Users size={16} style={{ color }} />
+                        <span style={{
+                            color: '#fff',
+                            fontSize: 11,
+                            fontWeight: 700
+                        }}>
+                            {`HUB_${communityCount} _`}
+                        </span>
+                    </div>
                 </div>
             )}
 
