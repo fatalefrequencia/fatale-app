@@ -49,14 +49,12 @@ const PlaylistNode = ({ data }) => {
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                     onError={e => { e.target.style.display = 'none'; }}
                 />
-            ) : (
+            {!mediaUrl && (
                 <div style={{
                     width: '100%', height: '100%',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-                }}>
-                    <ListMusic size={40} color="rgba(255,255,255,0.3)" />
-                </div>
+                }} />
             )}
 
             {/* Overlay */}

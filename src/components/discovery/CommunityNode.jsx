@@ -62,16 +62,12 @@ const CommunityNode = ({ data }) => {
                 alignItems: 'center',
                 justifyContent: 'center'
             }}>
-                {imageUrl ? (
+                {imageUrl && (
                     <img 
                         src={getMediaUrl(imageUrl)} 
                         alt="" 
                         style={{ width: '105%', height: '105%', objectFit: 'cover', opacity: 0.8 }} 
                     />
-                ) : (
-                    <div style={{ opacity: 0.15, transform: 'scale(0.8)' }}>
-                        <Users size={size * 0.5} color={color} />
-                    </div>
                 )}
                 {/* Overlay gradient for text readability */}
                 <div style={{

@@ -86,15 +86,12 @@ const ArtistNode = ({ data }) => {
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: 0.8 }}
                     onError={e => { e.target.style.display = 'none'; }}
                 />
-            ) : (
+            {!mediaUrl && (
                 <div style={{
                     width: '100%', height: '100%', display: 'flex',
                     alignItems: 'center', justifyContent: 'center',
-                    background: `linear-gradient(135deg, #0a0a0a 0%, ${sectorColor}22 100%)`,
-                    fontSize: tier === 'large' ? 48 : tier === 'medium' ? 36 : 26,
-                }}>
-                    🎵
-                </div>
+                    background: `linear-gradient(135deg, #0a0a0a 0%, ${sectorColor}22 100%)`
+                }} />
             )}
 
             {/* Centered Label for Diamond */}
