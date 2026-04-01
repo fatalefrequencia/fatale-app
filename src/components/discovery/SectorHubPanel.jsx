@@ -209,9 +209,18 @@ const SectorHubPanel = ({
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                flexShrink: 0
+                                flexShrink: 0,
+                                overflow: 'hidden'
                             }}>
-                                <OrganicSkull size={20} color={color} />
+                                {comm.imageUrl ? (
+                                    <img 
+                                        src={getMediaUrl(comm.imageUrl)} 
+                                        alt="" 
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                    />
+                                ) : (
+                                    <OrganicSkull size={20} color={color} />
+                                )}
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ 

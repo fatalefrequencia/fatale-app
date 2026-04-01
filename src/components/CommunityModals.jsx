@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Users, Globe, LogOut, Loader2, Send, Shield, Zap, ChevronRight, Minimize2, Heart } from 'lucide-react';
 import API from '../services/api';
 import { SECTORS, API_BASE_URL, getMediaUrl } from '../constants';
+import OrganicSkull from './discovery/OrganicSkull';
+import { Camera } from 'lucide-react';
 
 // ─── NEURAL STATION — Community Hub Modal ──────────────────────────────────
 export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, onLeave, onFollow, onUnfollow, isFollowed, currentUser, loadingAction, navigateToProfile }) => {
@@ -15,6 +17,8 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
     const chatEndRef = useRef(null);
     const pollRef = useRef(null);
     const lastTickRef = useRef(null);
+    const fileInputRef = useRef(null);
+    const [uploadingImage, setUploadingImage] = useState(false);
 
     const sectorColor = (community?.sectorId !== undefined && community?.sectorId !== null) 
         ? SECTORS.find(s => s.id === community.sectorId)?.color 
@@ -166,7 +170,62 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                 {/* ─── HEADER ─────────────────────────────────── */}
                 <div className="relative z-10 px-6 pt-5 pb-4 border-b flex items-start justify-between gap-4 shrink-0"
                     style={{ borderColor: `${color}25` }}>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 flex-1 min-w-0">
+                        {/* ICON / UPLOAD SECTION */}
+                        <div className="relative group shrink-0">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-sm bg-white/5 border flex items-center justify-center overflow-hidden"
+                                style={{ borderColor: `${color}40` }}>
+                                {community.imageUrl ? (
+                                    <img src={getMediaUrl(community.imageUrl)} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                    <OrganicSkull size={40} color={color} />
+                                )}
+                            </div>
+
+                            {isFounder && (
+                                <>
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={uploadingImage}
+                                        className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                    >
+                                        {uploadingImage ? (
+                                            <Loader2 size={24} className="text-white animate-spin" />
+                                        ) : (
+                                            <Camera size={24} className="text-white" />
+                                        )}
+                                    </button>
+                                    <input 
+                                        type="file" 
+                                        ref={fileInputRef} 
+                                        className="hidden" 
+                                        accept="image/*"
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+                                            
+                                            setUploadingImage(true);
+                                            try {
+                                                const formData = new FormData();
+                                                formData.append('file', file);
+                                                const uploadRes = await API.Files.upload(formData);
+                                                const path = uploadRes.data.Path;
+                                                
+                                                await API.Communities.updateImageUrl(community.id, JSON.stringify(path));
+                                                // Trigger a refresh of the parent state or local state
+                                                window.location.reload(); // Simple full sync
+                                            } catch (err) {
+                                                console.error('[COMM_IMAGE_UPLOAD_ERROR]', err);
+                                            } finally {
+                                                setUploadingImage(false);
+                                            }
+                                        }}
+                                    />
+                                </>
+                            )}
+                        </div>
+
+                        <div className="flex-1 min-w-0 text-center sm:text-left">
                         <div className="flex items-center gap-3 mb-1">
                             <div className="w-2 h-2 rounded-full animate-pulse shadow-lg" style={{ background: color, boxShadow: `0 0 8px ${color}` }} />
                             <span className="text-[9px] font-black tracking-[0.4em] uppercase mono" style={{ color }}>

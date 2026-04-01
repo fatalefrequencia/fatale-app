@@ -244,7 +244,15 @@ const API = {
             window.dispatchEvent(new CustomEvent('communityFollowChanged', { detail: { id, followed: false } }));
             return Promise.resolve({ data: { success: true } });
         },
-        getFollowed: () => JSON.parse(localStorage.getItem('followed_communities') || '[]')
+        getFollowed: () => JSON.parse(localStorage.getItem('followed_communities') || '[]'),
+        updateImageUrl: (id, imageUrl) => api.post(`Communities/${id}/image`, imageUrl, {
+            headers: { 'Content-Type': 'application/json' }
+        })
+    },
+    Files: {
+        upload: (formData) => api.post('File/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        })
     },
     Organic: {
         logEvent: (eventData) => api.post('listening-events', eventData),
