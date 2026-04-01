@@ -97,13 +97,15 @@ const PlaylistNode = ({ data }) => {
                         className={`terminal-hover-scroll ${hovered ? 'is-hovered' : ''}`}
                         style={{
                             color: '#fff',
-                            fontSize: 11,
+                            fontSize: hovered ? 11 : Math.max(6, Math.min(11, (130 * 0.8) / (name.length + 2))),
                             fontWeight: 700,
                             textTransform: 'uppercase',
-                            letterSpacing: '0.08em',
+                            letterSpacing: hovered ? '0.08em' : '0.04em',
                             textShadow: hovered ? '0 0 5px #ffd1dc' : '0 1px 3px rgba(0,0,0,0.9)',
                             fontFamily: "'Share Tech Mono', monospace",
-                            transition: 'all 0.2s ease'
+                            transition: 'all 0.2s ease',
+                            whiteSpace: hovered ? 'nowrap' : 'normal',
+                            wordBreak: hovered ? 'normal' : 'break-all'
                         }}
                     >
                         <span>{`> ${name}`}</span>

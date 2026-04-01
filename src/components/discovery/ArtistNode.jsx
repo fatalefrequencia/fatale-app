@@ -107,13 +107,16 @@ const ArtistNode = ({ data }) => {
                         className={`terminal-hover-scroll ${hovered ? 'is-hovered' : ''}`}
                         style={{
                             color: '#fff',
-                            fontSize: tier === 'large' ? 11 : 9,
+                            fontSize: hovered ? (tier === 'large' ? 11 : 9) : Math.max(6, Math.min(tier === 'large' ? 11 : 9, (w * 0.7) / (name.length + 2))),
                             fontWeight: 700,
                             textTransform: 'uppercase',
-                            letterSpacing: '0.08em',
+                            letterSpacing: hovered ? '0.08em' : '0.04em',
                             textShadow: hovered ? `0 0 5px ${sectorColor}` : '0 0 4px rgba(0,0,0,1)',
                             fontFamily: "'Share Tech Mono', monospace",
-                            transition: 'all 0.2s ease'
+                            transition: 'all 0.2s ease',
+                            whiteSpace: hovered ? 'nowrap' : 'normal',
+                            wordBreak: hovered ? 'normal' : 'break-all',
+                            textAlign: 'center'
                         }}
                     >
                         <span>{`> ${name}`}</span>

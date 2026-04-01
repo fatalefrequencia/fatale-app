@@ -213,12 +213,14 @@ const SectorHubPanel = ({
                                 flexShrink: 0,
                                 overflow: 'hidden'
                             }}>
-                                {comm.imageUrl && (
+                                {comm.imageUrl ? (
                                     <img 
                                         src={getMediaUrl(comm.imageUrl)} 
                                         alt="" 
                                         style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                                     />
+                                ) : (
+                                    <OrganicSkull size={20} color={color} />
                                 )}
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
