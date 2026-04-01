@@ -171,7 +171,11 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                             </span>
                         </div>
                         <h1 className="text-2xl md:text-3xl font-black tracking-tight leading-none truncate"
-                            style={{ color: `${color}D9` }}>
+                            style={{ 
+                                color: color, 
+                                filter: 'brightness(1.4)',
+                                textShadow: `0 0 20px ${color}60, 0 0 40px ${color}30` 
+                            }}>
                             {community.name}
                         </h1>
                         <p className="text-white/40 text-xs mt-1 mono leading-relaxed max-w-xl line-clamp-2">

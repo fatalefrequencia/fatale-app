@@ -111,6 +111,8 @@ const SectorHubPanel = ({
                     fontSize: 28,
                     fontWeight: 900,
                     color: color,
+                    filter: 'brightness(0.7)',
+                    textShadow: `0 0 15px ${color}40`,
                     textTransform: 'uppercase',
                     letterSpacing: '0.02em',
                     marginBottom: 4
