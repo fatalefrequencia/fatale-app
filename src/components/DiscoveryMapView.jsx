@@ -307,38 +307,64 @@ const DiscoveryCanvas = ({
             // Build Tethers (Edges)
             const builtEdges = [];
 
-            // 1. Sector Connections
+            // 1. Artist Connections (Multi-Relational Tracers)
             artists.forEach(a => {
                 const artistNodeId = `a-${a.id || a.userId}`;
-                const dbSectorId = a.sectorId ?? a.SectorId;
-                const sec = SECTORS[dbSectorId] || SECTORS[0];
-                const commId = a.communityId || a.CommunityId;
+                const residentSectorId = a.sectorId ?? a.SectorId;
+                const residentSec = SECTORS[residentSectorId] || SECTORS[0];
+                
+                const memberCommId = a.communityId || a.CommunityId;
+                // Find any communities this artist has founded
+                const foundedComms = comms.filter(c => String(c.founderUserId || c.FounderUserId) === String(a.id || a.userId));
+                
+                // Collect all unique community IDs for this artist
+                const linkedCommIds = new Set();
+                if (memberCommId) linkedCommIds.add(String(memberCommId));
+                foundedComms.forEach(c => linkedCommIds.add(String(c.id)));
 
-                if (commId) {
-                    // Artist -> Community
-                    const commNodeId = `comm-${commId}`;
-                    const isHighlighted = hoveredNodeId === artistNodeId || hoveredNodeId === commNodeId;
-                    builtEdges.push({
-                        id: `e-${artistNodeId}-${commNodeId}`,
-                        source: commNodeId,
-                        target: artistNodeId,
-                        type: 'simplebezier',
-                        animated: true,
-                        className: `discovery-edge ${hoveredNodeId ? (isHighlighted ? 'discovery-edge-active' : 'discovery-edge-inactive') : ''}`,
-                        style: { stroke: sec.color, strokeWidth: isHighlighted ? 2 : 1, opacity: hoveredNodeId ? (isHighlighted ? 0.9 : 0.05) : 0.35 },
+                if (linkedCommIds.size > 0) {
+                    linkedCommIds.forEach(cid => {
+                        const commNodeId = `comm-${cid}`;
+                        const commObj = comms.find(c => String(c.id) === String(cid));
+                        const edgeColor = commObj ? (SECTORS[commObj.sectorId]?.color || residentSec.color) : residentSec.color;
+                        
+                        const isHighlighted = hoveredNodeId === artistNodeId || hoveredNodeId === commNodeId;
+                        builtEdges.push({
+                            id: `e-${artistNodeId}-${commNodeId}`,
+                            source: commNodeId,
+                            target: artistNodeId,
+                            type: 'simplebezier',
+                            animated: true,
+                            className: `discovery-edge ${hoveredNodeId ? (isHighlighted ? 'discovery-edge-active' : 'discovery-edge-inactive') : ''}`,
+                            style: { stroke: edgeColor, strokeWidth: isHighlighted ? 2 : 1, opacity: hoveredNodeId ? (isHighlighted ? 0.9 : 0.05) : 0.4 },
+                        });
+
+                        // High-Precision Sector Hub Tracer (Artist -> Hub) - only if in a community
+                        const hubId = `sector-hub-${commObj?.sectorId ?? residentSectorId}`;
+                        const isHubHighlighted = hoveredNodeId === artistNodeId || hoveredNodeId === hubId;
+                        builtEdges.push({
+                            id: `e-h-${artistNodeId}-${hubId}`,
+                            source: hubId,
+                            target: artistNodeId,
+                            type: 'simplebezier',
+                            animated: true,
+                            className: `discovery-edge ${hoveredNodeId ? (isHubHighlighted ? 'discovery-edge-active' : 'discovery-edge-inactive') : ''}`,
+                            style: { stroke: edgeColor, strokeWidth: isHubHighlighted ? 1.5 : 0.8, opacity: hoveredNodeId ? (isHubHighlighted ? 0.6 : 0.03) : 0.18 },
+                        });
                     });
                 } else {
-                    // Artist -> Sector Hub (Direct)
-                    const hubId = `sector-hub-${sec.id}`;
-                    const isHighlighted = hoveredNodeId === artistNodeId || hoveredNodeId === hubId;
+                    // (Optional) Unaffiliated Artist -> Resident Hub link? 
+                    // User said "only applicable if they belong to a specific community or have founded i think"
+                    // So we skip the direct hub connection for pure unaffiliated artists for "extra sleek" look if they want.
+                    // But usually, we want SOME connection to the map.
+                    // I'll keep a very faint connection to their resident hub for spatial context.
+                    const hubId = `sector-hub-${residentSec.id}`;
                     builtEdges.push({
-                        id: `e-${artistNodeId}-${hubId}`,
+                        id: `e-direct-${artistNodeId}-${hubId}`,
                         source: hubId,
                         target: artistNodeId,
                         type: 'simplebezier',
-                        animated: true,
-                        className: `discovery-edge ${hoveredNodeId ? (isHighlighted ? 'discovery-edge-active' : 'discovery-edge-inactive') : ''}`,
-                        style: { stroke: sec.color, strokeWidth: isHighlighted ? 1.5 : 0.8, opacity: hoveredNodeId ? (isHighlighted ? 0.6 : 0.03) : 0.15 },
+                        style: { stroke: residentSec.color, strokeWidth: 0.5, opacity: 0.08, strokeDasharray: '4 4' },
                     });
                 }
             });
