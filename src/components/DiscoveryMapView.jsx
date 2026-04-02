@@ -308,25 +308,34 @@ const DiscoveryCanvas = ({
             const builtEdges = [];
 
             // 1. Artist Connections (Multi-Relational Tracers)
-            artists.forEach(a => {
-                const artistNodeId = `a-${a.id || a.userId}`;
-                const residentSectorId = a.sectorId ?? a.SectorId;
+            artists.forEach((a, idx) => {
+                const aId = a.id || a.Id || a.userId || a.UserId || idx;
+                const artistNodeId = `a-${aId}`;
+                const residentSectorId = a.sectorId ?? a.SectorId ?? (idx % SECTORS.length);
                 const residentSec = SECTORS[residentSectorId] || SECTORS[0];
                 
                 const memberCommId = a.communityId || a.CommunityId;
                 // Find any communities this artist has founded
-                const foundedComms = comms.filter(c => String(c.founderUserId || c.FounderUserId) === String(a.id || a.userId));
+                const foundedComms = comms.filter(c => {
+                    const fId = c.founderUserId || c.FounderUserId;
+                    const thisAId = a.id || a.Id || a.userId || a.UserId;
+                    return fId && String(fId) === String(thisAId);
+                });
                 
                 // Collect all unique community IDs for this artist
                 const linkedCommIds = new Set();
                 if (memberCommId) linkedCommIds.add(String(memberCommId));
-                foundedComms.forEach(c => linkedCommIds.add(String(c.id)));
+                foundedComms.forEach(c => {
+                    const cId = c.id || c.Id;
+                    if (cId) linkedCommIds.add(String(cId));
+                });
 
                 if (linkedCommIds.size > 0) {
                     linkedCommIds.forEach(cid => {
                         const commNodeId = `comm-${cid}`;
-                        const commObj = comms.find(c => String(c.id) === String(cid));
-                        const edgeColor = commObj ? (SECTORS[commObj.sectorId]?.color || residentSec.color) : residentSec.color;
+                        const commObj = comms.find(c => String(c.id || c.Id) === String(cid));
+                        const cSectorId = commObj?.sectorId ?? commObj?.SectorId ?? residentSectorId;
+                        const edgeColor = SECTORS[cSectorId]?.color || residentSec.color;
                         
                         const isHighlighted = hoveredNodeId === artistNodeId || hoveredNodeId === commNodeId;
                         builtEdges.push({
@@ -339,8 +348,8 @@ const DiscoveryCanvas = ({
                             style: { stroke: edgeColor, strokeWidth: isHighlighted ? 2 : 1, opacity: hoveredNodeId ? (isHighlighted ? 0.9 : 0.05) : 0.4 },
                         });
 
-                        // High-Precision Sector Hub Tracer (Artist -> Hub) - only if in a community
-                        const hubId = `sector-hub-${commObj?.sectorId ?? residentSectorId}`;
+                        // High-Precision Sector Hub Tracer (Artist -> Hub)
+                        const hubId = `sector-hub-${cSectorId}`;
                         const isHubHighlighted = hoveredNodeId === artistNodeId || hoveredNodeId === hubId;
                         builtEdges.push({
                             id: `e-h-${artistNodeId}-${hubId}`,
@@ -353,18 +362,14 @@ const DiscoveryCanvas = ({
                         });
                     });
                 } else {
-                    // (Optional) Unaffiliated Artist -> Resident Hub link? 
-                    // User said "only applicable if they belong to a specific community or have founded i think"
-                    // So we skip the direct hub connection for pure unaffiliated artists for "extra sleek" look if they want.
-                    // But usually, we want SOME connection to the map.
-                    // I'll keep a very faint connection to their resident hub for spatial context.
+                    // Unaffiliated Artist -> Resident Hub link
                     const hubId = `sector-hub-${residentSec.id}`;
                     builtEdges.push({
                         id: `e-direct-${artistNodeId}-${hubId}`,
                         source: hubId,
                         target: artistNodeId,
                         type: 'simplebezier',
-                        style: { stroke: residentSec.color, strokeWidth: 0.5, opacity: 0.08, strokeDasharray: '4 4' },
+                        style: { stroke: residentSec.color, strokeWidth: 0.5, opacity: 0.12, strokeDasharray: '4 4' },
                     });
                 }
             });
