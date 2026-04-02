@@ -118,11 +118,11 @@ const DiscoveryCanvas = ({
         const sectorGroups = {};
         SECTORS.forEach(s => sectorGroups[s.id] = []);
 
-        artists.forEach((a, i) => {
+        artists.forEach((a, idx) => {
             const dbSectorId = a.sectorId ?? a.SectorId;
             const secId = (dbSectorId !== null && dbSectorId !== undefined && SECTORS[dbSectorId])
                 ? dbSectorId
-                : i % SECTORS.length; // Perfectly balanced fallback
+                : idx % SECTORS.length;
             if (!sectorGroups[secId]) sectorGroups[secId] = [];
             sectorGroups[secId].push(a);
         });
@@ -131,8 +131,11 @@ const DiscoveryCanvas = ({
         Object.entries(sectorGroups).forEach(([secId, group]) => {
             const sec = SECTORS[parseInt(secId)] || SECTORS[0];
             group.forEach((a, idx) => {
-                const pos = spiral(idx, sec.x, sec.y, 520, 240); // Even more breathing room
-                const id = `a-${a.id || a.userId || idx}`;
+                const pos = spiral(idx, sec.x, sec.y, 520, 240);
+                // UNIFIED ID LOGIC
+                const aId = a.id || a.Id || a.userId || a.UserId || `fallback-${idx}`;
+                const id = `a-${aId}`;
+                
                 const trackCount = a.trackCount || a.TrackCount || 0;
                 const isLive = a.isLive || a.IsLive || false;
                 result.push({
@@ -309,20 +312,20 @@ const DiscoveryCanvas = ({
 
             // 1. Artist Connections (Multi-Relational Tracers)
             artists.forEach((a, idx) => {
-                const aId = a.id || a.Id || a.userId || a.UserId || idx;
+                // UNIFIED ID LOGIC (Must match buildNodes exactly)
+                const aId = a.id || a.Id || a.userId || a.UserId || `fallback-${idx}`;
                 const artistNodeId = `a-${aId}`;
+                
                 const residentSectorId = a.sectorId ?? a.SectorId ?? (idx % SECTORS.length);
                 const residentSec = SECTORS[residentSectorId] || SECTORS[0];
                 
                 const memberCommId = a.communityId || a.CommunityId;
-                // Find any communities this artist has founded
                 const foundedComms = comms.filter(c => {
                     const fId = c.founderUserId || c.FounderUserId;
                     const thisAId = a.id || a.Id || a.userId || a.UserId;
                     return fId && String(fId) === String(thisAId);
                 });
                 
-                // Collect all unique community IDs for this artist
                 const linkedCommIds = new Set();
                 if (memberCommId) linkedCommIds.add(String(memberCommId));
                 foundedComms.forEach(c => {
@@ -338,14 +341,21 @@ const DiscoveryCanvas = ({
                         const edgeColor = SECTORS[cSectorId]?.color || residentSec.color;
                         
                         const isHighlighted = hoveredNodeId === artistNodeId || hoveredNodeId === commNodeId;
+                        
+                        // Artist -> Community (MEMBERSHIP/FOUNDER TETHER)
                         builtEdges.push({
-                            id: `e-${artistNodeId}-${commNodeId}`,
+                            id: `e-c-${artistNodeId}-${commNodeId}`,
                             source: commNodeId,
                             target: artistNodeId,
                             type: 'simplebezier',
-                            animated: true,
+                            animated: isHighlighted, // Only animate on hover
                             className: `discovery-edge ${hoveredNodeId ? (isHighlighted ? 'discovery-edge-active' : 'discovery-edge-inactive') : ''}`,
-                            style: { stroke: edgeColor, strokeWidth: isHighlighted ? 2 : 1, opacity: hoveredNodeId ? (isHighlighted ? 0.9 : 0.05) : 0.4 },
+                            style: { 
+                                stroke: edgeColor, 
+                                strokeWidth: isHighlighted ? 2.5 : 1.5, 
+                                opacity: hoveredNodeId ? (isHighlighted ? 0.95 : 0.05) : 0.6,
+                                transition: 'all 0.3s ease'
+                            },
                         });
 
                         // High-Precision Sector Hub Tracer (Artist -> Hub)
@@ -358,18 +368,22 @@ const DiscoveryCanvas = ({
                             type: 'simplebezier',
                             animated: true,
                             className: `discovery-edge ${hoveredNodeId ? (isHubHighlighted ? 'discovery-edge-active' : 'discovery-edge-inactive') : ''}`,
-                            style: { stroke: edgeColor, strokeWidth: isHubHighlighted ? 1.5 : 0.8, opacity: hoveredNodeId ? (isHubHighlighted ? 0.6 : 0.03) : 0.18 },
+                            style: { 
+                                stroke: edgeColor, 
+                                strokeWidth: isHubHighlighted ? 1.5 : 0.8, 
+                                opacity: hoveredNodeId ? (isHubHighlighted ? 0.6 : 0.03) : 0.15 
+                            },
                         });
                     });
                 } else {
-                    // Unaffiliated Artist -> Resident Hub link
+                    // Unaffiliated Artist -> Resident Hub link (Subtle spatial context)
                     const hubId = `sector-hub-${residentSec.id}`;
                     builtEdges.push({
                         id: `e-direct-${artistNodeId}-${hubId}`,
                         source: hubId,
                         target: artistNodeId,
                         type: 'simplebezier',
-                        style: { stroke: residentSec.color, strokeWidth: 0.5, opacity: 0.12, strokeDasharray: '4 4' },
+                        style: { stroke: residentSec.color, strokeWidth: 0.5, opacity: 0.1, strokeDasharray: '4 4' },
                     });
                 }
             });
