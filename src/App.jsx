@@ -1496,6 +1496,9 @@ function App() {
                 const updated = API.Communities.getFollowed();
                 setFollowedCommunities(updated);
               }}
+              setShowGlobalGoLive={setShowGlobalGoLive}
+              setShowGlobalUpload={setShowGlobalUpload}
+              setShowGlobalIngest={setShowGlobalIngest}
             />
           </>
         )}
@@ -1637,7 +1640,7 @@ globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, 
 playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal, 
 favoriteStations, liveStations, activeStation, stationChat, stationQueue, onExitProfile, activeMessageUser, 
 setActiveMessageUser, isMuted, onToggleMute, followedCommunities, onFollowUpdate, setActiveStation, sendMessage, 
-requestTrack, setUser }) => {
+requestTrack, setUser, setShowGlobalGoLive, setShowGlobalUpload, setShowGlobalIngest }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   return (
