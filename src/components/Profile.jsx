@@ -546,7 +546,10 @@ export const ProfileView = React.memo(({
     onExitProfile,
     onMessageUser,
     setActiveStation,
-    setUser // ADDED
+    setUser, // ADDED
+    setShowGlobalGoLive,
+    setShowGlobalUpload,
+    setShowGlobalIngest
 }) => {
     const effectiveId = targetUserId || currentUser?.id || currentUser?.Id;
     const isMe = String(effectiveId) === String(currentUser?.id || currentUser?.Id);
@@ -571,8 +574,6 @@ export const ProfileView = React.memo(({
     const [isStatsOpen, setIsStatsOpen] = useState(true);
 
     const [showUpload, setShowUpload] = useState(false);
-    const [showGoLiveModal, setShowGoLiveModal] = useState(false);
-    const [goLiveFormData, setGoLiveFormData] = useState({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true });
     const [showSettings, setShowSettings] = useState(false);
     const [showEditProfile, setShowEditProfile] = useState(false);
     const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
@@ -630,8 +631,8 @@ export const ProfileView = React.memo(({
     };
 
     const handleGoLive = async (sessionTitle, description) => {
-        const title = sessionTitle || goLiveFormData.sessionTitle;
-        const desc = description || goLiveFormData.description;
+        const title = sessionTitle;
+        const desc = description;
         if (!title) {
             showNotification("BROADCAST_ERROR", "A session title is required to go live.", "error");
             return;
@@ -641,12 +642,11 @@ export const ProfileView = React.memo(({
             await API.Stations.goLive({
                 SessionTitle: title,
                 Description: desc || null,
-                IsChatEnabled: goLiveFormData.isChatEnabled,
-                IsQueueEnabled: goLiveFormData.isQueueEnabled
+                IsChatEnabled: true,
+                IsQueueEnabled: true
             });
             showNotification("BROADCAST_ACTIVE", "Signal established. Frequency is now LIVE.", "success");
-            setShowGoLiveModal(false);
-            setGoLiveFormData({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true });
+            setShowGlobalGoLive(false);
             if (onRefreshProfile) onRefreshProfile();
             // Refresh local station data
             const sRes = await API.Stations.getByUserId(currentUser?.id || currentUser?.Id);
@@ -2167,142 +2167,6 @@ export const ProfileView = React.memo(({
 
             {/* Global Overlays */}
             <AnimatePresence>
-                {/* ─── Go Live Modal ─────────────────────────────── */}
-                {showGoLiveModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-                    >
-                        {/* Backdrop */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-black/40 backdrop-blur-[12px]"
-                            onClick={() => setShowGoLiveModal(false)}
-                        />
-
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.98, y: 10 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.98, y: 10 }}
-                            className="relative w-full max-w-lg rounded-sm overflow-visible"
-                            style={{
-                                background: 'rgba(5, 5, 5, 0.92)',
-                                backdropFilter: 'blur(30px)',
-                                border: '1px solid rgba(var(--text-color-rgb), 0.2)',
-                                boxShadow: '0 0 50px -10px rgba(0,0,0,0.5)',
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {/* 4-Corner Brackets */}
-                            <div className="hud-bracket-tl text-[var(--text-color)]" />
-                            <div className="hud-bracket-tr text-[var(--text-color)]" />
-                            <div className="hud-bracket-bl text-[var(--text-color)]" />
-                            <div className="hud-bracket-br text-[var(--text-color)]" />
-
-                            {/* Animated Scan Line */}
-                            <motion.div
-                                className="absolute inset-x-0 h-[1px] bg-[var(--text-color)]/20 blur-[1px] z-10 pointer-events-none"
-                                animate={{ top: ['0%', '100%'] }}
-                                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                            />
-
-                            <div className="p-8 relative z-10">
-                                {/* Header */}
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className="space-y-1">
-                                        <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/20 rounded-sm">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-[var(--text-color)] animate-pulse shadow-[0_0_8px_rgba(var(--text-color-rgb),0.5)]" />
-                                            <span className="text-[8px] mono font-black text-[var(--text-color)] tracking-[0.3em] uppercase">+ LIVE_BROADCAST</span>
-                                        </div>
-                                        <div className="text-[9px] mono text-white/30 uppercase tracking-widest mt-1 ml-1">
-                                            Station goes on-air — no track required
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-5">
-                                    {/* Session title */}
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-[var(--text-color)] opacity-40 uppercase tracking-[0.4em] ml-1">signal_metadata // title</label>
-                                        <div className="relative">
-                                            <input
-                                                type="text"
-                                                value={goLiveFormData.sessionTitle}
-                                                onChange={e => setGoLiveFormData(p => ({ ...p, sessionTitle: e.target.value }))}
-                                                className="w-full bg-white/[0.03] border border-white/10 p-4 text-white font-black outline-none focus:border-[var(--text-color)] tracking-[0.2em] transition-all text-sm rounded-sm"
-                                                placeholder="establish_session_id..."
-                                            />
-                                            <div className="absolute top-0 right-0 p-4 text-[var(--text-color)]/20 mono text-[10px] uppercase">req_id: 104.2</div>
-                                        </div>
-                                    </div>
-
-                                    {/* Description */}
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-[var(--text-color)] opacity-40 uppercase tracking-[0.4em] ml-1">transmission_log // desc</label>
-                                        <textarea
-                                            value={goLiveFormData.description}
-                                            onChange={e => setGoLiveFormData(p => ({ ...p, description: e.target.value }))}
-                                            rows={3}
-                                            className="w-full bg-white/[0.03] border border-white/10 p-4 text-white/70 outline-none focus:border-[var(--text-color)]/50 tracking-wide transition-all text-[11px] resize-none custom-scrollbar rounded-sm"
-                                            placeholder="describe_signal_feed..."
-                                        />
-                                    </div>
-                                    
-                                    {/* Toggles */}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div 
-                                            onClick={() => setGoLiveFormData(p => ({ ...p, isChatEnabled: !p.isChatEnabled }))}
-                                            className={`p-3 border cursor-pointer transition-all flex items-center justify-between group rounded-sm ${goLiveFormData.isChatEnabled ? 'border-[var(--text-color)]/40 bg-[var(--text-color)]/5' : 'border-white/5 bg-white/5 opacity-40 hover:opacity-100'}`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <MessageSquare size={14} className={goLiveFormData.isChatEnabled ? 'text-[var(--text-color)]' : 'text-white/40'} />
-                                                <span className="text-[9px] mono font-bold uppercase tracking-widest">Enable Chat</span>
-                                            </div>
-                                            <div className={`w-2 h-2 rounded-full ${goLiveFormData.isChatEnabled ? 'bg-[var(--text-color)] shadow-[0_0_10px_var(--text-color)]' : 'bg-white/10'}`} />
-                                        </div>
-
-                                        <div 
-                                            onClick={() => setGoLiveFormData(p => ({ ...p, isQueueEnabled: !p.isQueueEnabled }))}
-                                            className={`p-3 border cursor-pointer transition-all flex items-center justify-between group rounded-sm ${goLiveFormData.isQueueEnabled ? 'border-[var(--text-color)]/40 bg-[var(--text-color)]/5' : 'border-white/5 bg-white/5 opacity-40 hover:opacity-100'}`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <Radio size={14} className={goLiveFormData.isQueueEnabled ? 'text-[var(--text-color)]' : 'text-white/40'} />
-                                                <span className="text-[9px] mono font-bold uppercase tracking-widest">Enable Requests</span>
-                                            </div>
-                                            <div className={`w-2 h-2 rounded-full ${goLiveFormData.isQueueEnabled ? 'bg-[var(--text-color)] shadow-[0_0_10px_var(--text-color)]' : 'bg-white/10'}`} />
-                                        </div>
-                                    </div>
-
-                                    {/* Actions */}
-                                    <div className="flex gap-4 pt-4">
-                                        <button
-                                            onClick={() => setShowGoLiveModal(false)}
-                                            className="flex-1 px-8 py-4 hud-panel border-white/10 text-white/30 font-black uppercase text-[10px] tracking-[0.3em] hover:text-[var(--text-color)] hover:border-[var(--text-color)]/30 transition-all outline-none rounded-sm"
-                                        >
-                                            ABORT_INIT
-                                        </button>
-                                        <button
-                                            onClick={() => handleGoLive(goLiveFormData.sessionTitle, goLiveFormData.description)}
-                                            disabled={!goLiveFormData.sessionTitle.trim()}
-                                            className={`flex-[2] py-4 border font-black uppercase text-[10px] tracking-[0.3em] relative overflow-hidden group transition-all outline-none rounded-sm ${!goLiveFormData.sessionTitle.trim()
-                                                ? 'bg-white/5 border-white/10 text-white/20 opacity-50'
-                                                : 'bg-[var(--theme-color)]/10 border-[var(--theme-color)] text-[var(--text-color)] hover:bg-[var(--theme-color)] hover:text-black hover:shadow-[0_0_50px_rgba(var(--theme-color-rgb),0.4)]'}`}
-                                        >
-                                            <div className="hud-bracket-tl opacity-60 group-hover:opacity-100" />
-                                            <div className="hud-bracket-br opacity-60 group-hover:opacity-100" />
-                                            INIT_BROADCAST
-                                            {goLiveFormData.sessionTitle.trim() && <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
             </AnimatePresence>
 
             {/* Global Overlays */}

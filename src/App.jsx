@@ -1739,6 +1739,9 @@ requestTrack, setUser, setShowGlobalGoLive, setShowGlobalUpload, setShowGlobalIn
                 onExitProfile={onExitProfile}
                 onMessageUser={(u) => { setActiveMessageUser(u); setView('messages'); }}
                 setActiveStation={setActiveStation}
+                setShowGlobalGoLive={setShowGlobalGoLive}
+                setShowGlobalUpload={setShowGlobalUpload}
+                setShowGlobalIngest={setShowGlobalIngest}
               />
             )}
             {activeView === 'player' && <PlayerContent
