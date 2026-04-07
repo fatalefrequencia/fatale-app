@@ -2375,12 +2375,12 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
         )}
 
         {/* ── MOBILE HEADER / RELOAD CONTAINER ── */}
-        <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-[#ff006e]/10 px-4 py-2 flex items-center justify-between shrink-0">
-          <div className="lg:hidden flex items-center gap-2">
+        <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-[#ff006e]/10 px-4 py-2 flex items-center justify-between gap-4 shrink-0">
+          <div className="lg:hidden flex-1 flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
             <button
               id="feed-mobile-filters-btn"
               onClick={() => { setMobilePanelTab('filters'); setMobilePanelOpen(p => mobilePanelTab === 'filters' ? !p : true); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${
                 mobilePanelOpen && mobilePanelTab === 'filters'
                   ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
                   : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
@@ -2394,14 +2394,14 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
             <button
               id="feed-mobile-favorites-btn"
               onClick={() => { setMobilePanelTab('favorites'); setMobilePanelOpen(p => mobilePanelTab === 'favorites' ? !p : true); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${
                 mobilePanelOpen && mobilePanelTab === 'favorites'
                   ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
                   : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
               }`}
             >
               <Star size={11} />
-              FAV_STNS
+              LIVE_FAVS
               {favoriteStations && favoriteStations.filter(s => s.isLive || s.IsLive).length > 0 && (
                 <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] shadow-[0_0_6px_#ff006e] animate-pulse" />
               )}
@@ -2409,7 +2409,7 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
             <button
               id="feed-mobile-stations-btn"
               onClick={() => { setMobilePanelTab('stations'); setMobilePanelOpen(p => mobilePanelTab === 'stations' ? !p : true); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${
                 mobilePanelOpen && mobilePanelTab === 'stations'
                   ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
                   : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
@@ -2428,7 +2428,7 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
              <div className="w-24 h-px bg-[#ff006e]/10 border-t border-dashed border-[#ff006e]/20" />
           </div>
 
-          <div className="bg-black/60 backdrop-blur-sm p-1 rounded-sm border border-[#ff006e]/10">
+          <div className="bg-black/60 backdrop-blur-sm p-1 rounded-sm border border-[#ff006e]/10 shrink-0">
             <RefreshCw
               size={16}
               className={`text-[#ff006e]/60 hover:text-[#ff006e] cursor-pointer transition-colors ${loading ? 'animate-spin' : ''}`}
@@ -2822,7 +2822,7 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
             {/* Drag handle + header */}
             <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-[#ff006e]/10 shrink-0">
               <div className="flex gap-3">
-                {[['filters', <Zap size={10} key="z" />, 'FILTERS'], ['favorites', <Star size={10} key="s" />, 'FAV_STNS'], ['stations', <Radio size={10} key="r" />, 'LIVE_STATIONS']].map(([tab, icon, label]) => (
+                {[['filters', <Zap size={10} key="z" />, 'FILTERS'], ['favorites', <Star size={10} key="s" />, 'LIVE_FAVS'], ['stations', <Radio size={10} key="r" />, 'LIVE_STATIONS']].map(([tab, icon, label]) => (
                   <button
                     key={tab}
                     onClick={() => setMobilePanelTab(tab)}
