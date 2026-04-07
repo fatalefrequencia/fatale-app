@@ -127,6 +127,7 @@ const API = {
         toggleRepost: (itemType, itemId) => api.post('SocialAction/repost', { itemType, itemId }),
         addFeedComment: (itemType, itemId, content, parentId = null) => api.post('SocialAction/comment', { itemType, itemId, content, parentId }),
         getFeedComments: (itemType, itemId) => api.get(`SocialAction/comments/${itemType}/${itemId}`),
+        deleteFeedComment: (commentId) => api.delete(`SocialAction/comment/${commentId}`),
     },
     User: {
         followUser: (id) => api.post(`User/follow/${id}`),

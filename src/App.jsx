@@ -1751,6 +1751,100 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
   );
 };
 
+// --- RECURSIVE COMMENT NODE ---
+const CommentNode = ({ comment, depth = 0, setReplyingToComment, onDelete, currentUserId, user }) => {
+  const resolvedUserId = getUserId(comment);
+    const isOwner = (resolvedUserId && currentUserId && String(resolvedUserId) === String(currentUserId)) || 
+                    (String(comment.Username || comment.username || "").toLowerCase() === String(user?.username || user?.Username || "").toLowerCase() && (comment.Username || comment.username));
+  const [showActions, setShowActions] = useState(false);
+  const longPressTimer = useRef(null);
+
+  const handleTouchStart = () => {
+    longPressTimer.current = setTimeout(() => {
+      setShowActions(prev => !prev);
+    }, 600);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+  };
+
+  return (
+    <div className={`group/node relative ${depth > 0 ? 'ml-3 sm:ml-6 mt-3 sm:mt-4 pl-3 sm:pl-4 border-l border-[#ff006e]/20' : ''}`}>
+      {depth > 0 && (
+        <div className="absolute top-5 left-0 w-2 sm:w-4 h-[1px] bg-[#ff006e]/20 -translate-x-full" />
+      )}
+      
+      <div className="space-y-3">
+        <div 
+          onClick={() => !showActions && setReplyingToComment(comment)}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onContextMenu={(e) => { e.preventDefault(); setShowActions(!showActions); }}
+          className="group/comment relative cursor-pointer active:opacity-70 transition-opacity"
+        >
+          <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 text-[7px] font-mono text-white/30 uppercase mb-1">
+            <span className={depth > 0 ? 'text-[#00ffff]' : 'text-[#ff006e] font-black'}>
+              [PKT_{hashStr(comment.Id).toString().substr(0, 4)}]
+              {depth > 0 && '_RE'}
+              {isOwner && <span className="text-[#00ff00] ml-1 opacity-80 brightness-125 select-none">[OWNER]</span>}
+            </span>
+            {comment.IsOperator && (
+              <span className="text-amber-400 font-bold bg-amber-400/10 px-1 border border-amber-400/20 animate-pulse">
+                [V_OPERATOR]
+              </span>
+            )}
+            <span>SIG: 100%</span>
+            <span>SRC: {comment.Username}</span>
+            <div className="ml-auto flex items-center gap-3">
+              {(isOwner && (showActions || window.innerWidth >= 640)) && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onDelete && onDelete(comment.Id); }}
+                  className="text-red-500 hover:text-red-500 transition-colors opacity-100 font-black animate-pulse"
+                >
+                  [ DISPOSE ]
+                </button>
+              )}
+              {(showActions || window.innerWidth >= 640) && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setReplyingToComment(comment); }}
+                  className="text-[#ff006e] hover:text-white transition-colors opacity-100 font-black"
+                >
+                  [ REPLY ]
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className={`border bg-black/40 group-hover/comment:border-[#ff006e]/40 transition-colors p-3 relative ${comment.IsOperator ? 'border-amber-400/30 shadow-[0_0_15px_rgba(251,191,36,0.05)]' : 'border-white/10'}`}>
+            <div className="absolute top-0 right-0 p-1 text-[7px] text-white/10 tabular-nums">
+              {new Date(comment.CreatedAt).toLocaleTimeString('en-GB', { hour12: false })}
+            </div>
+            <p className={`text-[10px] leading-relaxed font-mono whitespace-pre-wrap ${comment.IsOperator ? 'text-amber-100/90' : 'text-white/80'}`}>
+              {comment.Content}
+            </p>
+          </div>
+        </div>
+
+        {comment.replies && comment.replies.length > 0 && (
+          <div className="space-y-4">
+            {comment.replies.map(r => (
+              <CommentNode 
+                key={r.Id} 
+                comment={r} 
+                depth={depth + 1} 
+                setReplyingToComment={setReplyingToComment} 
+                onDelete={onDelete}
+                currentUserId={currentUserId}
+                user={user}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 
 // --- CONTENIDO: FEED (3 COLUMNAS) ---
@@ -1761,6 +1855,9 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
   const [selectedSector, setSelectedSector] = useState(null);
   const [selectedCommunityId, setSelectedCommunityId] = useState(null);
   const [allCommunities, setAllCommunities] = useState([]);
+  // Mobile slide-up panel
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  const [mobilePanelTab, setMobilePanelTab] = useState('filters'); // 'filters' | 'favorites' | 'stations'
 
   useEffect(() => {
     API.Communities.getAll().then(res => setAllCommunities(res.data || [])).catch(() => {});
@@ -1770,7 +1867,23 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
     setLoading(true);
     try {
       const res = await API.Feed.getGlobalFeed();
-      setFeed(res.data);
+      // Normalize all social counts and properties for consistent rendering
+      const normalizedFeed = (res.data || []).map(item => ({
+        ...item,
+        Id: item.id || item.Id,
+        CommentCount: item.commentCount ?? item.CommentCount ?? 0,
+        LikeCount: item.likeCount ?? item.LikeCount ?? 0,
+        RepostCount: item.repostCount ?? item.RepostCount ?? 0,
+        IsLiked: item.isLiked ?? item.IsLiked ?? false,
+        IsReposted: item.isReposted ?? item.IsReposted ?? false,
+        Type: (item.type || item.Type || "").toLowerCase(),
+        Artist: item.artist || item.Artist,
+        Title: item.title || item.Title,
+        Content: item.content || item.Content,
+        CreatedAt: item.createdAt || item.CreatedAt,
+        ImageUrl: item.imageUrl || item.ImageUrl,
+      }));
+      setFeed(normalizedFeed);
     } catch (e) {
       console.error("Feed error", e);
     } finally {
@@ -1783,25 +1896,19 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
   }, []);
 
   const handleTrackPlay = (trackId) => {
-    const trackFeedItems = feed.filter(item => (item.type || item.Type) === 'track');
+    const trackFeedItems = feed.filter(item => item.Type === 'track');
     const playlist = trackFeedItems.map(item => {
-      const rawSource = item.source || item.Source;
-      const source = rawSource && rawSource.startsWith('/uploads')
-        ? getMediaUrl(rawSource)
-        : rawSource;
-
-      const rawImg = item.imageUrl || item.ImageUrl;
-      const imageUrl = rawImg && rawImg.startsWith('/uploads')
-        ? getMediaUrl(rawImg)
-        : rawImg;
+      const source = item.ImageUrl && item.ImageUrl.startsWith('/uploads')
+        ? getMediaUrl(item.ImageUrl)
+        : item.ImageUrl; // Fallback source logic
 
       return {
         ...item,
         id: item.trackId || item.TrackId,
-        title: item.title || item.Title,
-        artist: item.artist || item.Artist,
-        source: source,
-        cover: imageUrl,
+        title: item.Title,
+        artist: item.Artist,
+        source: item.source || item.Source,
+        cover: getMediaUrl(item.ImageUrl),
         dbId: item.trackId || item.TrackId
       };
     });
@@ -1861,14 +1968,69 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
 
   useEffect(() => {
     if (replyingTo) {
-      setReplyingToComment(null); // Reset nested reply when opening modal
+      setReplyingToComment(null); 
       const fetchComments = async () => {
         setLoadingComments(true);
         try {
-          const type = replyingTo.Type || replyingTo.type;
+          const type = replyingTo.Type;
           const itemId = replyingTo.ItemId || replyingTo.itemId;
           const { data } = await API.Social.getFeedComments(type, itemId);
-          setComments(data || []);
+          
+          // Helper to organize comments into a tree
+          const organizeThreads = (rawList) => {
+            const map = {};
+            const roots = [];
+            
+            // First pass: normalize and map using string keys for robust matching
+            rawList.forEach(c => {
+                const id = String(c.id || c.Id);
+                const normalized = {
+                    ...c,
+                    Id: id,
+                    UserId: getUserId(c),
+                    ParentId: c.parentId || c.ParentId ? String(c.parentId || c.ParentId) : null,
+                    Username: c.username || c.Username,
+                    Content: c.content || c.Content,
+                    CreatedAt: c.createdAt || c.CreatedAt,
+                    IsOperator: c.isOperator ?? c.IsOperator ?? false,
+                    replies: []
+                };
+                map[id] = normalized;
+            });
+
+            // Second pass: link children
+            Object.values(map).forEach(c => {
+                const pid = c.ParentId;
+                if (pid && map[pid]) {
+                    map[pid].replies.push(c);
+                } else {
+                    roots.push(c);
+                }
+            });
+
+            // Sort by date (oldest first for chronological stream)
+            const sortByDate = (a, b) => new Date(a.CreatedAt).getTime() - new Date(b.CreatedAt).getTime();
+            roots.sort(sortByDate);
+            
+            // Recursive sort for replies
+            const sortDeep = (node) => {
+              if (node.replies) {
+                node.replies.sort(sortByDate);
+                node.replies.forEach(sortDeep);
+              }
+            };
+            roots.forEach(sortDeep);
+            
+            return roots;
+          };
+
+          const organized = organizeThreads(data || []);
+          setComments(organized);
+          
+          // Update the main feed count to ensure accuracy
+          setFeed(prev => prev.map(f => 
+            f.Id === replyingTo.Id ? { ...f, CommentCount: (data || []).length } : f
+          ));
         } catch (err) {
           console.error("Failed to load comments", err);
         } finally {
@@ -1972,23 +2134,64 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
         } : f
       ));
 
-      // Add to local comment list
+      // Add to local comment list with correct nesting
       const newComment = {
-        Id: data.Id || Date.now(),
+        Id: String(data.id || data.Id || Date.now()),
+        UserId: getUserId(user),
         Username: user?.Username || user?.username || "YOU",
         Content: commentText,
         CreatedAt: new Date().toISOString(),
-        ParentId: replyingToComment?.Id,
-        IsOperator: false // Local user is unlikely to be the artist in this view
+        ParentId: replyingToComment ? String(replyingToComment.Id) : null,
+        IsOperator: false,
+        replies: []
       };
-      setComments(prev => [...prev, newComment]);
 
+      setComments(prev => {
+        if (!newComment.ParentId) return [...prev, newComment];
+        
+        const addToParent = (list) => list.map(c => {
+          if (c.Id === newComment.ParentId) {
+            return { ...c, replies: [...(c.replies || []), newComment] };
+          }
+          if (c.replies && c.replies.length > 0) {
+            return { ...c, replies: addToParent(c.replies) };
+          }
+          return c;
+        });
+        return addToParent(prev);
+      });
       setCommentText("");
       setReplyingToComment(null);
     } catch (e) {
       console.error("Comment failed", e);
     } finally {
       setIsSubmittingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm("ARE_YOU_SURE_YOU_WANT_TO_DISPOSE_OF_THIS_SIGNAL_PACKET?")) return;
+    try {
+      await API.Social.deleteFeedComment(commentId);
+      
+      const removeRecursive = (list) => {
+        return list.filter(c => String(c.Id) !== String(commentId)).map(c => ({
+          ...c,
+          replies: c.replies ? removeRecursive(c.replies) : []
+        }));
+      };
+      setComments(prev => removeRecursive(prev));
+
+      if (replyingTo) {
+        setFeed(prev => prev.map(f =>
+          f.Id === replyingTo.Id ? {
+            ...f,
+            CommentCount: Math.max(0, (f.CommentCount || 0) - 1)
+          } : f
+        ));
+      }
+    } catch (err) {
+      console.error("Failed to delete signal", err);
     }
   };
 
@@ -2001,11 +2204,11 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
             onClose={() => setSelectedMedia(null)}
             content={{
               ...selectedMedia,
-              Url: selectedMedia.imageUrl || selectedMedia.ImageUrl,
-              Title: selectedMedia.title || selectedMedia.Title,
-              Content: selectedMedia.content || selectedMedia.Content
+              Url: selectedMedia.ImageUrl,
+              Title: selectedMedia.Title,
+              Content: selectedMedia.Content
             }}
-            type={(selectedMedia.mediaType || selectedMedia.MediaType || selectedMedia.type || selectedMedia.Type || '').toUpperCase()}
+            type={(selectedMedia.mediaType || selectedMedia.MediaType || selectedMedia.Type || '').toUpperCase()}
           />
         )}
       </AnimatePresence>
@@ -2085,7 +2288,6 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
           </div>
         </div>
 
-        {/* Community Signals */}
         <div className="space-y-4 px-2">
           <div className="flex justify-between items-center px-2">
             <h3 className="text-[10px] font-black uppercase text-[#00ffff] tracking-widest">:: COMMUNITY_LINKS ::</h3>
@@ -2099,24 +2301,19 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
             )}
           </div>
           <div className="space-y-1">
-            {/* Unified list of community links: Member Community (First) + Followed Communities */}
             {(() => {
               const userCommId = user?.communityId || user?.CommunityId;
-              
-              // Normalize all IDs to strings for robust comparison and Set uniqueness
               const memberIdStr = userCommId ? String(userCommId) : null;
               const followedIds = (followedCommunities || []).map(id => String(id));
-
               const uniqueLinks = Array.from(new Set([
                 ...(memberIdStr ? [memberIdStr] : []),
                 ...followedIds
               ])).filter(Boolean);
 
-              // Priority sorting: ensure member community is ALWAYS first
               const sortedLinks = uniqueLinks.sort((a, b) => {
                 if (a === memberIdStr) return -1;
                 if (b === memberIdStr) return 1;
-                return 0; // Maintain relative order for others
+                return 0;
               });
 
               if (sortedLinks.length === 0) {
@@ -2177,7 +2374,6 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
           </div>
         )}
 
-        {/* Global Loading Indicator (Deciphering) */}
         <div className="absolute top-4 right-6 z-40 bg-black/60 backdrop-blur-sm p-1 rounded-sm border border-[#ff006e]/10">
           <RefreshCw
             size={16}
@@ -2217,11 +2413,8 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                   return String(itemCommId) === String(selectedCommunityId);
                 }
                 if (selectedSector !== null) {
-                  const idSource = item.artistUserId || item.ArtistUserId || item.artistId || item.ArtistId;
-                  const dbSectorId = item.sectorId ?? item.SectorId;
-                  const h = hashStr(idSource);
-                  const itemSectorIdx = (dbSectorId !== null && dbSectorId !== undefined) ? dbSectorId : (h % SECTORS.length);
-                  return itemSectorIdx === selectedSector;
+                  const sectorId = item.sectorId ?? item.SectorId;
+                  return sectorId === selectedSector;
                 }
                 return true;
               }).length === 0 ? (
@@ -2229,12 +2422,11 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                   <div className="text-[10px] text-[#ff006e] uppercase tracking-[0.4em]">
                     {selectedSector !== null ? `-- NO_SIGNALS_IN_SECTOR --` : (selectedCommunityId !== null ? `-- NO_COMMUNITY_SIGNALS --` : `-- NO_SIGNALS_DETECTED --`)}
                   </div>
-                  <div className="text-[8px] text-white/20 uppercase">Network scanning active...</div>
                 </div>
               ) : (
                 <>
                   {selectedCommunityId !== null && (
-                    <div className="mb-6 p-4 bg-[#00ffff]/5 border border-[#00ffff]/20 rounded flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-500">
+                    <div className="mb-6 p-4 bg-[#00ffff]/5 border border-[#00ffff]/20 rounded flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="w-2 h-2 rounded-full bg-[#00ffff] shadow-[0_0_10px_#00ffff] animate-pulse" />
                         <div>
@@ -2257,29 +2449,25 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                       return String(itemCommId) === String(selectedCommunityId);
                     }
                     if (selectedSector !== null) {
-                      const idSource = item.artistUserId || item.ArtistUserId || item.artistId || item.ArtistId;
-                      const dbSectorId = item.sectorId ?? item.SectorId;
-                      const h = hashStr(idSource);
-                      const itemSectorIdx = (dbSectorId !== null && dbSectorId !== undefined) ? dbSectorId : (h % SECTORS.length);
-                      return itemSectorIdx === selectedSector;
+                      const sectorId = item.sectorId ?? item.SectorId;
+                      return sectorId === selectedSector;
                     }
                     return true;
                   }).map(item => {
-                    const typeRaw = item.type || item.Type || "";
-                    const type = typeRaw.toLowerCase();
-                    const artist = item.artist || item.Artist;
-                    const title = item.title || item.Title;
-                    const content = item.content || item.Content;
-                    const createdAt = item.createdAt || item.CreatedAt;
-                    const playCount = item.playCount || item.PlayCount;
-                    const mediaType = item.mediaType || item.MediaType;
-                    const isOriginal = item.isOriginalSignal ?? item.IsOriginalSignal ?? true;
-                    const repostedBy = item.repostedBy || item.RepostedBy;
-                    const imageUrl = getMediaUrl(item.imageUrl || item.ImageUrl);
+                    const type = item.Type;
+                    const artist = item.Artist;
+                    const title = item.Title;
+                    const content = item.Content;
+                    const createdAt = item.CreatedAt;
+                    const playCount = item.PlayCount;
+                    const mediaType = item.MediaType;
+                    const isOriginal = item.IsOriginalSignal ?? true;
+                    const repostedBy = item.RepostedBy;
+                    const imageUrl = getMediaUrl(item.ImageUrl);
 
                     if (type === 'system') {
                       return (
-                        <div key={item.Id || item.id} className="flex gap-4 p-2 bg-[#ffc300]/5 border-l-2 border-[#ffc300]/30 mb-2">
+                        <div key={item.Id} className="flex gap-4 p-2 bg-[#ffc300]/5 border-l-2 border-[#ffc300]/30 mb-2">
                           <span className="text-[10px] text-[#ffc300] font-black">{getTime(createdAt)}</span>
                           <span className="text-[10px] text-white/80 font-bold uppercase tracking-widest">{title}</span>
                           <span className="text-[10px] text-white/40 uppercase">{content}</span>
@@ -2288,7 +2476,7 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                     }
 
                     return (
-                      <div key={item.Id || item.id} className="group transition-colors hover:bg-white/[0.05] py-2 px-3 rounded border border-transparent hover:border-white/10 relative mb-4">
+                      <div key={item.Id} className="group transition-colors hover:bg-white/[0.05] py-2 px-3 rounded border border-transparent hover:border-white/10 relative mb-4">
                         {!isOriginal && repostedBy && (
                           <div className="flex items-center gap-2 mb-1 px-1">
                             <Repeat size={10} className="text-[#ff006e] animate-pulse" />
@@ -2297,6 +2485,7 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                             </span>
                           </div>
                         )}
+
                         <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
                           <span className="text-[11px] text-white/80 whitespace-nowrap select-none font-bold">[{getTime(createdAt)}]</span>
                           <span className={`text-[11px] font-bold whitespace-nowrap ${getColor(type)}`}>[{getPrefix(type)}]</span>
@@ -2313,11 +2502,10 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                           </span>
                         </div>
 
-                        {/* Expanded Content Area */}
                         <div className="ml-0 sm:ml-40 mt-3 space-y-4">
                           {type === 'track' && (
                             <div
-                              onClick={() => handleTrackPlay(item.trackId || item.TrackId)}
+                              onClick={() => handleTrackPlay(item.Id)}
                               className="bg-black/90 border border-[#ff006e]/30 p-4 flex items-center gap-4 hover:border-[#ff006e]/60 transition-all group/track cursor-pointer max-w-md shadow-xl"
                             >
                               <div className="w-12 h-12 bg-black border border-[#ff006e]/20 overflow-hidden shrink-0 flex items-center justify-center">
@@ -2352,9 +2540,6 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                               ) : (
                                 <img src={imageUrl} className="w-full h-auto opacity-90 group-hover/studio:opacity-100 transition-opacity" alt="" />
                               )}
-                              <div className="absolute top-2 right-2 p-1 bg-black/60 opacity-0 group-hover/studio:opacity-100 transition-opacity">
-                                <Maximize2 size={14} className="text-white/60" />
-                              </div>
                             </div>
                           )}
 
@@ -2376,27 +2561,26 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                             </div>
                           )}
 
-                          {/* Unified Social Buttons */}
                           <div className="flex gap-6 text-[9px] font-black text-white/60 uppercase pt-2">
                             <button
                               onClick={() => handleFeedLike(item)}
-                              className={`flex items-center gap-1.5 transition-all group/social ${item.IsLiked ? 'text-[#ff006e] drop-shadow-[0_0_5px_rgba(255,0,110,0.5)]' : 'hover:text-[#ff006e]'}`}
+                              className={`flex items-center gap-1.5 transition-all group/social ${item.IsLiked ? 'text-[#ff006e]' : 'hover:text-[#ff006e]'}`}
                             >
-                              <Heart size={12} fill={item.IsLiked ? "currentColor" : "none"} className={item.IsLiked ? 'scale-110' : 'group-hover/social:scale-110 transition-transform'} />
+                              <Heart size={12} fill={item.IsLiked ? "currentColor" : "none"} className={item.IsLiked ? 'scale-110' : 'group-hover/social:scale-110'} />
                               <span className="tracking-tighter">LIKE_{item.LikeCount || 0}</span>
                             </button>
                             <button
                               onClick={() => setReplyingTo(item)}
-                              className="flex items-center gap-1.5 hover:text-[#ff006e] transition-all group/social"
+                              className="flex items-center gap-1.5 hover:text-[#ff006e] transition-colors group/social"
                             >
-                              <MessageSquare size={12} className="group-hover/social:scale-110 transition-transform" />
+                              <MessageSquare size={12} className="group-hover/social:scale-110" />
                               <span className="tracking-tighter">REPLY_{item.CommentCount || 0}</span>
                             </button>
                             <button
                               onClick={() => handleFeedRepost(item)}
-                              className={`flex items-center gap-1.5 transition-all group/social ${item.IsReposted ? 'text-[#ff006e] drop-shadow-[0_0_5px_rgba(255,0,110,0.5)]' : 'hover:text-[#ff006e]'}`}
+                              className={`flex items-center gap-1.5 transition-all group/social ${item.IsReposted ? 'text-[#ff006e]' : 'hover:text-[#ff006e]'}`}
                             >
-                              <Repeat size={12} className={item.IsReposted ? 'animate-pulse' : 'group-hover/social:scale-110 transition-transform'} />
+                              <Repeat size={12} className={item.IsReposted ? 'animate-pulse' : 'group-hover/social:scale-110'} />
                               <span className="tracking-tighter">RE_SYNC_{item.RepostCount || 0}</span>
                             </button>
                           </div>
@@ -2412,141 +2596,150 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
 
         <AnimatePresence>
           {replyingTo && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="w-full max-w-lg bg-[#111] border border-[#ff006e]/30 rounded-sm overflow-hidden shadow-[0_0_50px_rgba(255,0,110,0.3)]"
+                className="w-full max-w-2xl hud-panel border border-[#ff006e]/30 rounded-sm overflow-hidden shadow-[0_0_100px_rgba(255,0,110,0.1)] relative"
               >
-                <div className="px-4 py-2 border-b border-[#ff006e]/20 flex justify-between items-center bg-[#ff006e]/5 font-mono">
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black text-[#ff006e] animate-pulse">●</span>
-                    <span className="text-[9px] font-black uppercase text-white tracking-[0.2em]">SIGNAL_INTERCEPT_MODE // PORT_8080</span>
-                  </div>
+                {/* Animated Scanline Overlay */}
+                <style>{`
+                  @keyframes scanline {
+                    0% { transform: translateY(-100%); }
+                    100% { transform: translateY(100vh); }
+                  }
+                  .animate-scanline {
+                    animation: scanline 4s linear infinite;
+                  }
+                `}</style>
+                <div className="absolute inset-0 pointer-events-none z-[110] opacity-[0.03] overflow-hidden">
+                  <div className="w-full h-[2px] bg-white animate-scanline shadow-[0_0_10px_white]" />
                 </div>
 
-                <div className="p-6 space-y-6 relative">
-                  {/* Top ASCII Border decoration */}
-                  <div className="absolute top-0 left-6 text-[8px] text-white/10 font-mono select-none">
-                    +-------------------------------------------------------------+
+                {/* HUD Brackets Decor */}
+                <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[#ff006e]/40 z-[105]" />
+                <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-[#ff006e]/40 z-[105]" />
+                <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-[#ff006e]/40 z-[105]" />
+                <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-[#ff006e]/40 z-[105]" />
+
+                {/* Diagnostic Corners (Hidden on Mobile) */}
+                <div className="hidden sm:flex absolute top-12 left-2 flex-col gap-1 z-[105] opacity-20 pointer-events-none font-mono">
+                  <div className="text-[5px] text-[#ff006e]">LAT: 35.6895° N</div>
+                  <div className="text-[5px] text-[#ff006e]">LNG: 139.6917° E</div>
+                  <div className="text-[5px] text-[#ff006e]">ENC: RSA-4096</div>
+                </div>
+                <div className="hidden sm:flex absolute top-12 right-2 flex-col items-end gap-1 z-[105] opacity-20 pointer-events-none font-mono">
+                  <div className="text-[5px] text-[#ff006e]">PKT_LOSS: 0.00%</div>
+                  <div className="text-[5px] text-[#ff006e]">BUFFER: 1024KB</div>
+                  <div className="text-[5px] text-[#ff006e]">SYNC: ESTABLISHED</div>
+                </div>
+
+                <div className="px-5 py-3 border-b border-[#ff006e]/20 flex justify-between items-center bg-[#ff006e]/10 backdrop-blur-md">
+                  <div className="flex items-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_15px_#ff006e]" />
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black uppercase text-white tracking-[0.4em] drop-shadow-[0_0_8px_#ff006e]">SIGNAL_INTERCEPT_V2.5</span>
+                      <span className="text-[6px] font-mono text-[#ff006e]/60 tracking-[0.2em] -mt-0.5">UPLINK_STABLE // PORT_AUTH_8080</span>
+                    </div>
+                  </div>
+                  <button onClick={() => setReplyingTo(null)} className="text-[#ff006e]/40 hover:text-[#ff006e] transition-all hover:rotate-90">
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 relative max-h-[85vh] overflow-y-auto no-scrollbar">
+                  {/* Target Signal Header */}
+                  <div className="bg-[#050505] border-l-2 border-[#ff006e] p-4 relative group/target">
+                    <div className="absolute top-0 right-0 p-1 px-3 text-[7px] font-black uppercase tracking-[0.2em] bg-[#ff006e]/10 text-[#ff006e]">SOURCE_NODE_CAPTURED</div>
+                    <div className="text-[9px] text-[#ff006e]/80 font-black uppercase mb-1 tracking-widest">{replyingTo.Artist}</div>
+                    <div className="text-[11px] text-white/90 leading-relaxed font-mono italic">
+                      "{replyingTo.Title || replyingTo.Content}"
+                    </div>
                   </div>
 
-                  <div className="bg-black/60 border border-white/5 p-3 relative overflow-hidden group/target">
-                    <div className="absolute top-0 right-0 p-1 px-2 text-[7px] text-white/20 font-black uppercase tracking-tighter bg-white/5">TARGET_NODE</div>
-                    <div className="text-[9px] text-[#ff006e] font-black uppercase mb-1 tracking-widest">{replyingTo.Artist || replyingTo.artist}</div>
-                    <div className="text-[10px] text-white/60 line-clamp-1 italic font-mono select-all">"{replyingTo.Title || replyingTo.title || replyingTo.Content || replyingTo.content}"</div>
-                  </div>
-
-                  {/* Comment Thread as Packet Stream */}
-                  <div className="max-h-64 overflow-y-auto pr-2 space-y-5 custom-scrollbar-sharp">
+                  {/* Packet Stream (Comment Thread) */}
+                  <div className="space-y-8 pb-4">
                     {loadingComments ? (
-                      <div className="text-[9px] text-[#ff006e] animate-pulse py-6 font-mono flex flex-col items-center gap-2 border border-white/5 bg-white/5">
-                        <RefreshCw size={14} className="animate-spin" />
-                        <span>ESTABLISHING_ENCRYPTED_TUNNEL...</span>
-                        <span className="text-[7px] opacity-40">[ ATTEMPTING_HANDSHAKE ]</span>
+                      <div className="flex flex-col items-center justify-center py-12 gap-4 border border-white/5 bg-white/[0.02]">
+                         <RefreshCw className="animate-spin text-[#ff006e]" size={24} />
+                         <span className="text-[10px] text-[#ff006e] animate-pulse tracking-[0.5em]">HANDSHAKING_ENCRYPTED_SIGNAL...</span>
                       </div>
                     ) : comments.length === 0 ? (
-                      <div className="text-[9px] text-white/10 font-mono text-center py-8 border border-dashed border-white/10 uppercase tracking-[0.3em]">
-                        -- NO_SIGNALS_FOUND_IN_BUFFER --
+                      <div className="text-center py-12 border border-dashed border-white/5 rounded">
+                        <span className="text-[9px] text-white/10 uppercase tracking-[0.3em]">-- NO_PACKETS_DETECTED --</span>
                       </div>
                     ) : (
-                      comments.map((c, idx) => (
-                        <div
-                          key={c.Id || idx}
-                          className={`space-y-1 group/comment relative transition-all duration-300 ${c.ParentId ? 'ml-6 opacity-80 scale-95 origin-left' : ''}`}
-                        >
-                          <div className="flex items-center gap-2 text-[7px] font-mono text-white/30 uppercase">
-                            <span className="text-[#ff006e] font-black">[PKT_{idx.toString().padStart(3, '0')}]</span>
-                            {c.IsOperator && (
-                              <span className="text-amber-400 font-bold bg-amber-400/10 px-1 border border-amber-400/20 shadow-[0_0_8px_rgba(251,191,36,0.2)] animate-pulse">
-                                [V_OPERATOR]
-                              </span>
-                            )}
-                            <span>SIG: 100%</span>
-                            <span>CRC: {(Math.random().toString(16).substr(2, 4)).toUpperCase()}</span>
-                            <span>SRC: {c.Username || c.username}</span>
-                            <button
-                              onClick={() => setReplyingToComment(c)}
-                              className="ml-auto text-[#ff006e] hover:text-white transition-colors opacity-0 group-hover/comment:opacity-100"
-                            >
-                              [ INTERCEPT ]
-                            </button>
-                          </div>
-
-                          <div className={`border bg-black/40 hover:border-[#ff006e]/40 transition-colors p-3 relative ${c.IsOperator ? 'border-amber-400/30' : 'border-white/10'}`}>
-                            <div className="absolute top-0 right-0 p-1 text-[7px] text-white/10 tabular-nums">
-                              {new Date(c.CreatedAt || c.createdAt).toLocaleTimeString('en-GB', { hour12: false })}
-                            </div>
-                            <p className={`text-[10px] leading-relaxed font-mono whitespace-pre-wrap ${c.IsOperator ? 'text-amber-100/90' : 'text-white/80'}`}>
-                              {c.Content || c.content}
-                            </p>
-                          </div>
-
-                          <div className={`absolute -left-2 top-0 bottom-0 w-[1px] transition-colors ${c.ParentId ? 'bg-white/10' : 'bg-white/5'} group-hover/comment:bg-[#ff006e]/30`} />
-                        </div>
+                      comments.map(c => (
+                        <CommentNode 
+                          key={c.Id} 
+                          comment={c} 
+                          setReplyingToComment={setReplyingToComment} 
+                          onDelete={handleDeleteComment}
+                          currentUserId={getUserId(user)}
+                          user={user}
+                        />
                       ))
                     )}
                     <div ref={commentsEndRef} />
                   </div>
 
-                  <div className="relative">
-                    <div className="text-[7px] text-white/20 font-mono mb-1 flex justify-between">
+                  {/* Input Area */}
+                  <div className="sticky bottom-0 bg-[#0a0a0a] pt-4 border-t border-white/5 space-y-4">
+                    <div className="flex justify-between items-center text-[7px] text-white/30 font-mono uppercase">
                       {replyingToComment ? (
                         <div className="flex items-center gap-2">
                           <span className="text-amber-400">:: RE_SIGNAL_TO //</span>
-                          <span className="text-white/60">@{replyingToComment.Username || replyingToComment.username}</span>
-                          <button onClick={() => setReplyingToComment(null)} className="text-[#ff006e] hover:text-white ml-2">[ CANCEL_RE ]</button>
+                          <span className="text-white/60">@{replyingToComment.Username}</span>
+                          <button onClick={() => setReplyingToComment(null)} className="text-[#ff006e] hover:text-white ml-2 underline underline-offset-2 tracking-widest">ABORT_RE</button>
                         </div>
                       ) : (
-                        <span>:: INPUT_BUFFER ::</span>
+                        <span>:: INPUT_BUFFER_READY ::</span>
                       )}
-                      <span>CHAR_COUNT: {commentText.length} / 280</span>
+                      <span>BYTES_STORED: {commentText.length}/280</span>
                     </div>
-                    <textarea
-                      autoFocus
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value.substring(0, 280))}
-                      placeholder="Enter raw signal content..."
-                      className="w-full h-20 bg-black/90 border border-white/10 rounded-sm p-3 text-[10px] text-white focus:border-[#ff006e]/50 outline-none resize-none font-mono placeholder:text-white/10"
-                    />
-                    {isSubmittingComment && (
-                      <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center backdrop-blur-sm z-10 border border-[#ff006e]/20">
-                        <span className="text-[9px] font-black text-[#ff006e] animate-pulse tracking-[0.4em]">LOADING_DATA_PACKET...</span>
-                        <div className="w-32 h-[1px] bg-white/10 mt-2 relative overflow-hidden">
-                          <motion.div className="absolute inset-0 bg-[#ff006e]" animate={{ x: ['-100%', '100%'] }} transition={{ repeat: Infinity, duration: 1 }} />
+
+                    <div className="relative group/input">
+                      <textarea
+                        autoFocus
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value.substring(0, 280))}
+                        placeholder="Enter raw signal content..."
+                        className="w-full h-24 bg-black border border-white/10 focus:border-[#ff006e]/50 p-4 text-[11px] text-white outline-none resize-none font-mono placeholder:text-white/5 transition-all"
+                      />
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                      {/* Input Area Diagnostics (Hidden on Mobile) */}
+                      <div className="hidden sm:flex flex-between items-center gap-4 flex-1">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[7px] text-[#ff006e]/60 font-mono">ENCRYPTION: AES-256-GCM_V2</span>
+                          <span className="text-[7px] text-white/20 font-mono">SIG_ID: {replyingTo.Id} // PKT_TYPE: {replyingTo.Type?.toUpperCase()}</span>
                         </div>
+                        <div className="flex-1 border-b border-[#ff006e]/10 border-dashed mx-4 mb-2" />
                       </div>
-                    )}
-                  </div>
 
-                  <div className="flex justify-between items-end gap-3 pt-2">
-                    <div className="text-[7px] text-white/10 font-mono italic leading-tight">
-                      CAUTION: SIGNALS_ARE_PERMANENT<br />
-                      ENCRYPTION: AES-256_ACTIVE
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
+                        <button
+                          onClick={() => setReplyingTo(null)}
+                          className="px-5 py-2.5 text-[10px] font-black text-white/40 hover:text-white uppercase tracking-widest transition-all border border-white/5 sm:border-none rounded-sm sm:rounded-none"
+                        >
+                          [ ABORT_SIG ]
+                        </button>
+                        <button
+                          onClick={submitComment}
+                          disabled={isSubmittingComment || !commentText.trim()}
+                          className="px-8 py-2.5 bg-[#ff006e]/10 border border-[#ff006e]/40 text-[#ff006e] text-[10px] font-black uppercase tracking-[0.3em] hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_30px_rgba(255,0,110,0.3)] transition-all disabled:opacity-20 flex-1 sm:flex-none text-center"
+                        >
+                          {isSubmittingComment ? 'TRANSMITTING...' : '[ BROADCAST_PAYLOAD ]'}
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => setReplyingTo(null)}
-                        className="px-4 py-2 text-[9px] font-black text-white/20 hover:text-white uppercase tracking-widest border border-transparent hover:border-white/5 transition-all"
-                      >
-                        [ ABORT ]
-                      </button>
-                      <button
-                        onClick={submitComment}
-                        disabled={isSubmittingComment || !commentText.trim()}
-                        className="px-6 py-2 bg-[#ff006e]/20 border border-[#ff006e]/50 text-[#ff006e] text-[9px] font-black uppercase tracking-[0.2em] hover:bg-[#ff006e] hover:text-black transition-all shadow-[0_0_15px_rgba(255,0,110,0.2)] disabled:opacity-20"
-                      >
-                        {isSubmittingComment ? 'TRANSMITTING...' : '[ BROADCAST_SIGNAL ]'}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Scanline overlay for modal content */}
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.05] z-50">
-                    <div className="absolute inset-0 bg-[repeating-linear-gradient(transparent_0px,transparent_1px,rgba(255,255,255,0.05)_2px)] bg-[length:100%_3px]" />
                   </div>
                 </div>
+                
+                {/* Scanline overlay */}
+                <div className="absolute inset-0 pointer-events-none opacity-[0.03] overflow-hidden bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-fixed" />
               </motion.div>
             </div>
           )}
@@ -2557,6 +2750,299 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
           <div className="absolute inset-0 bg-[repeating-linear-gradient(rgba(255,0,110,0.1)_0px,transparent_1px,rgba(255,0,110,0.1)_2px)] bg-[length:100%_3px]" />
         </div>
       </div>
+
+      {/* ── MOBILE FEED PANEL TRIGGER BAR ── */}
+      <div className="lg:hidden flex items-center justify-around border-t border-[#ff006e]/10 bg-black/95 backdrop-blur-xl px-2 py-2 z-30 shrink-0">
+        <button
+          id="feed-mobile-filters-btn"
+          onClick={() => { setMobilePanelTab('filters'); setMobilePanelOpen(p => mobilePanelTab === 'filters' ? !p : true); }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all ${
+            mobilePanelOpen && mobilePanelTab === 'filters'
+              ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
+              : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
+          }`}
+        >
+          <Zap size={11} />
+          {selectedSector !== null || selectedCommunityId !== null ? (
+            <span className="flex items-center gap-1">ACTIVE_FILTER <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] shadow-[0_0_6px_#ff006e] inline-block" /></span>
+          ) : 'FILTERS'}
+        </button>
+        <button
+          id="feed-mobile-favorites-btn"
+          onClick={() => { setMobilePanelTab('favorites'); setMobilePanelOpen(p => mobilePanelTab === 'favorites' ? !p : true); }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all ${
+            mobilePanelOpen && mobilePanelTab === 'favorites'
+              ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
+              : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
+          }`}
+        >
+          <Star size={11} />
+          FAV_STATIONS
+          {favoriteStations && favoriteStations.filter(s => s.isLive || s.IsLive).length > 0 && (
+            <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] shadow-[0_0_6px_#ff006e] animate-pulse" />
+          )}
+        </button>
+        <button
+          id="feed-mobile-stations-btn"
+          onClick={() => { setMobilePanelTab('stations'); setMobilePanelOpen(p => mobilePanelTab === 'stations' ? !p : true); }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all ${
+            mobilePanelOpen && mobilePanelTab === 'stations'
+              ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
+              : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
+          }`}
+        >
+          <Radio size={11} />
+          LIVE_BANDS
+          {liveStations && liveStations.filter(s => s.isLive || s.IsLive).length > 0 && (
+            <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] shadow-[0_0_6px_#ff006e] animate-pulse" />
+          )}
+        </button>
+      </div>
+
+      {/* ── MOBILE SLIDE-UP PANEL ── */}
+      <AnimatePresence>
+        {mobilePanelOpen && (
+          <motion.div
+            id="feed-mobile-panel"
+            key="mobile-feed-panel"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 26, stiffness: 300 }}
+            className="lg:hidden fixed inset-x-0 bottom-0 z-[200] bg-[#070710] border-t-2 border-[#ff006e]/30 shadow-[0_-20px_60px_rgba(255,0,110,0.12)] max-h-[70vh] flex flex-col"
+          >
+            {/* Drag handle + header */}
+            <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-[#ff006e]/10 shrink-0">
+              <div className="flex gap-3">
+                {[['filters', <Zap size={10} key="z" />, 'FILTERS'], ['favorites', <Star size={10} key="s" />, 'FAV_STNS'], ['stations', <Radio size={10} key="r" />, 'LIVE_BANDS']].map(([tab, icon, label]) => (
+                  <button
+                    key={tab}
+                    onClick={() => setMobilePanelTab(tab)}
+                    className={`flex items-center gap-1 px-2 py-1 text-[9px] font-black uppercase tracking-widest border rounded-sm transition-all ${
+                      mobilePanelTab === tab
+                        ? 'border-[#ff006e]/50 bg-[#ff006e]/10 text-[#ff006e]'
+                        : 'border-white/5 text-white/30 hover:text-white/60'
+                    }`}
+                  >
+                    {icon}{label}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setMobilePanelOpen(false)}
+                className="text-white/30 hover:text-[#ff006e] transition-colors p-1"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Scrollable panel content */}
+            <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4">
+
+              {/* ── TAB: FILTERS ── */}
+              {mobilePanelTab === 'filters' && (
+                <div className="space-y-5">
+                  {/* Quick actions */}
+                  <div className="bg-[#0a0a0a]/80 border border-[#ff006e]/20 rounded-lg overflow-hidden">
+                    <div className="p-2.5 bg-[#ff006e]/5 border-b border-[#ff006e]/10 text-[9px] font-black uppercase text-white tracking-widest">:: TERMINAL_CMDS ::</div>
+                    <div className="p-3 space-y-1">
+                      <button onClick={() => { navigateToProfile(user?.id, 'studio'); setMobilePanelOpen(false); }} className="w-full text-left p-2 text-[9px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/10 transition-all uppercase tracking-widest">{`> NEW_POST`}</button>
+                      <button onClick={() => { navigateToProfile(user?.id, 'upload'); setMobilePanelOpen(false); }} className="w-full text-left p-2 text-[9px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/10 transition-all uppercase tracking-widest">{`> UPLOAD_TRACK`}</button>
+                      <button onClick={() => { setView('discovery'); setMobilePanelOpen(false); }} className="w-full text-left p-2 text-[9px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/10 transition-all uppercase tracking-widest">{`> LIVE_STREAM`}</button>
+                    </div>
+                  </div>
+
+                  {/* Sector filter */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-[9px] font-black uppercase text-[#ff006e] tracking-widest">:: SECTOR_SIGNALS ::</h3>
+                      {selectedSector !== null && (
+                        <button onClick={() => { setSelectedSector(null); setMobilePanelOpen(false); }} className="text-[8px] text-[#ff006e]/40 hover:text-[#ff006e] uppercase tracking-tighter blink">[ RESET ]</button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {SECTORS.map((sector, idx) => (
+                        <button
+                          key={sector.name}
+                          onClick={() => { setSelectedSector(selectedSector === idx ? null : idx); setMobilePanelOpen(false); }}
+                          className={`flex items-center gap-2 px-3 py-2 rounded border text-[9px] font-bold uppercase tracking-widest transition-all ${
+                            selectedSector === idx
+                              ? 'text-white'
+                              : 'bg-black/20 border-white/5 text-white/40 hover:border-white/20'
+                          }`}
+                          style={selectedSector === idx ? { backgroundColor: `${sector.color}20`, borderColor: `${sector.color}50` } : {}}
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: sector.color }} />
+                          <span className="truncate">{sector.name.replace(' ', '_')}</span>
+                          {selectedSector === idx && <Zap size={9} className="ml-auto animate-pulse shrink-0" style={{ color: sector.color }} />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Community filter */}
+                  {(() => {
+                    const userCommId = user?.communityId || user?.CommunityId;
+                    const memberIdStr = userCommId ? String(userCommId) : null;
+                    const followedIds = (followedCommunities || []).map(id => String(id));
+                    const uniqueLinks = Array.from(new Set([...(memberIdStr ? [memberIdStr] : []), ...followedIds])).filter(Boolean);
+                    if (uniqueLinks.length === 0) return null;
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-[9px] font-black uppercase text-[#00ffff] tracking-widest">:: COMMUNITY_LINKS ::</h3>
+                          {selectedCommunityId !== null && (
+                            <button onClick={() => { setSelectedCommunityId(null); setMobilePanelOpen(false); }} className="text-[8px] text-[#00ffff]/40 hover:text-[#00ffff] uppercase tracking-tighter">[ RESET ]</button>
+                          )}
+                        </div>
+                        <div className="space-y-1.5">
+                          {uniqueLinks.map(cid => {
+                            const comm = allCommunities.find(c => String(c.id) === String(cid));
+                            if (!comm) return null;
+                            const sectorColor = SECTORS[comm.sectorId]?.color || '#ffffff';
+                            const isMember = String(cid) === memberIdStr;
+                            return (
+                              <button
+                                key={`mob-comm-${cid}`}
+                                onClick={() => { setSelectedCommunityId(String(selectedCommunityId) === String(cid) ? null : cid); setSelectedSector(null); setMobilePanelOpen(false); }}
+                                className={`w-full flex items-center justify-between px-3 py-2 rounded border text-[9px] transition-all ${
+                                  String(selectedCommunityId) === String(cid)
+                                    ? 'bg-[#00ffff]/10 border-[#00ffff]/30 text-white'
+                                    : 'bg-black/20 border-white/5 text-white/40 hover:border-[#00ffff]/20'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: sectorColor }} />
+                                  <span className="font-bold uppercase tracking-widest truncate">{comm.name.replace(' ', '_')}</span>
+                                </div>
+                                {isMember && <span className="text-[7px] font-black text-[#00ffff]/60 border border-[#00ffff]/30 px-1 rounded-sm bg-[#00ffff]/5 shrink-0">MEMBER</span>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* ── TAB: FAVORITES ── */}
+              {mobilePanelTab === 'favorites' && (
+                <div className="space-y-3">
+                  <h3 className="text-[9px] font-black uppercase text-[#ff006e] tracking-widest">:: LIVE_FAVORITES ::</h3>
+                  {favoriteStations && favoriteStations.filter(s => s.isLive || s.IsLive).length > 0 ? (
+                    favoriteStations.filter(s => s.isLive || s.IsLive).map(station => (
+                      <button
+                        key={`mob-fav-${station.id || station.Id}`}
+                        onClick={() => { navigateToProfile(station.artistUserId || station.ArtistUserId); setMobilePanelOpen(false); }}
+                        className="w-full flex items-center gap-3 px-3 py-3 bg-[#ff006e]/5 border border-[#ff006e]/20 rounded hover:bg-[#ff006e]/10 transition-all"
+                      >
+                        <div className="w-2 h-2 rounded-full bg-[#ff006e] blink shadow-[0_0_8px_#ff006e] shrink-0" />
+                        <div className="flex-1 min-w-0 text-left">
+                          <div className="text-[10px] font-black text-white uppercase truncate">{station.name || station.Name}</div>
+                          <div className="text-[8px] text-[#ff006e]/60 uppercase truncate mt-0.5">LIVE // {station.currentSessionTitle || station.CurrentSessionTitle || 'Broadcasting'}</div>
+                        </div>
+                        <ChevronRight size={14} className="text-[#ff006e]/40 shrink-0" />
+                      </button>
+                    ))
+                  ) : favoriteStations && favoriteStations.length > 0 ? (
+                    <div>
+                      <div className="px-3 py-2 text-[8px] text-white/20 uppercase italic mb-3">All frequencies offline</div>
+                      {favoriteStations.map(station => (
+                        <button
+                          key={`mob-fav-off-${station.id || station.Id}`}
+                          onClick={() => { navigateToProfile(station.artistUserId || station.ArtistUserId); setMobilePanelOpen(false); }}
+                          className="w-full flex items-center gap-3 px-3 py-3 bg-black/40 border border-white/5 rounded opacity-50 hover:opacity-70 transition-all mb-1.5"
+                        >
+                          <div className="w-2 h-2 rounded-full bg-gray-600 shrink-0" />
+                          <div className="flex-1 min-w-0 text-left">
+                            <div className="text-[10px] font-black text-white uppercase truncate">{station.name || station.Name}</div>
+                            <div className="text-[8px] text-white/30 uppercase mt-0.5">STATUS: OFFLINE</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="px-3 py-8 border border-dashed border-white/5 rounded text-center opacity-20">
+                      <Star size={24} className="mx-auto mb-2 opacity-50" />
+                      <div className="text-[8px] uppercase tracking-widest">No Favorited Stations</div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── TAB: LIVE STATIONS ── */}
+              {mobilePanelTab === 'stations' && (
+                <div className="space-y-3">
+                  <h3 className="text-[9px] font-black uppercase text-[#ff006e]/60 tracking-[0.4em]">LIVE_STATIONS</h3>
+                  {liveStations && liveStations.length > 0 ? (
+                    liveStations.map(station => (
+                      <div
+                        key={`mob-stn-${station.id || station.Id}`}
+                        className={`p-4 rounded border ${
+                          (station.isLive || station.IsLive)
+                            ? 'bg-[#ff006e]/5 border-[#ff006e]/20 shadow-[0_0_15px_rgba(255,0,110,0.05)]'
+                            : 'bg-black/60 border-white/5 opacity-60'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                            (station.isLive || station.IsLive)
+                              ? 'bg-[#ff006e] blink shadow-[0_0_8px_#ff006e]'
+                              : 'bg-gray-600'
+                          }`} />
+                          <span className="text-[10px] font-black text-white uppercase tracking-wider truncate">{station.name || station.Name}</span>
+                        </div>
+                        <p className="text-[9px] text-white/40 mb-3 italic truncate">
+                          {(station.isLive || station.IsLive)
+                            ? `Live: ${station.currentSessionTitle || station.CurrentSessionTitle || 'Broadcasting'}`
+                            : 'STATUS: OFFLINE'}
+                        </p>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[8px] font-bold text-[#ff006e]/40 uppercase">{station.listenerCount || station.ListenerCount || 0} CONNECTED</span>
+                          {(station.isLive || station.IsLive) && (
+                            <button
+                              onClick={() => {
+                                setActiveStation(station);
+                                import('./services/signalr').then(m => m.joinStation(station.id || station.Id));
+                                setMobilePanelOpen(false);
+                                setView('player');
+                              }}
+                              className="px-3 py-1 border border-[#ff006e] text-[#ff006e] text-[8px] font-black rounded hover:bg-[#ff006e] hover:text-black transition-all"
+                            >
+                              TUNE_IN
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-8 border border-dashed border-white/5 text-center opacity-20">
+                      <Radio size={28} className="mx-auto mb-2 opacity-50" />
+                      <div className="text-[9px] uppercase tracking-widest">No Frequencies Cached</div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── MOBILE BACKDROP ── */}
+      <AnimatePresence>
+        {mobilePanelOpen && (
+          <motion.div
+            key="mobile-feed-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setMobilePanelOpen(false)}
+            className="lg:hidden fixed inset-0 z-[199] bg-black/60 backdrop-blur-sm"
+          />
+        )}
+      </AnimatePresence>
 
       {/* Derecha: Radios & Broadcaster Panel */}
       <div className="hidden xl:block w-80 p-6 space-y-8 bg-black/40 border-l border-[#ff006e]/5 relative z-10 overflow-y-auto no-scrollbar">

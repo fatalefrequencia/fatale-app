@@ -291,8 +291,27 @@ const DiscoveryCanvas = ({
                 API.Communities.getAll().catch(() => ({ data: [] })),
             ]);
 
-            const artists = Array.isArray(artistRes?.data) ? artistRes.data : [];
-            const comms = Array.isArray(commRes?.data) ? commRes.data : [];
+            const artists = (Array.isArray(artistRes?.data) ? artistRes.data : []).map(a => ({
+                ...a,
+                id: a.id || a.Id,
+                userId: a.userId || a.UserId || a.id || a.Id,
+                sectorId: a.sectorId ?? a.SectorId,
+                communityId: a.communityId || a.CommunityId,
+                name: a.name || a.Name || 'ARTIST',
+                imageUrl: a.imageUrl || a.ImageUrl || a.profileImageUrl || null,
+                isLive: a.isLive || a.IsLive || false,
+                trackCount: a.trackCount || a.TrackCount || 0
+            }));
+
+            const comms = (Array.isArray(commRes?.data) ? commRes.data : []).map(c => ({
+                ...c,
+                id: c.id || c.Id,
+                sectorId: c.sectorId ?? c.SectorId,
+                founderUserId: c.founderUserId || c.FounderUserId,
+                name: c.name || c.Name || 'COMMUNITY',
+                memberCount: c.memberCount || c.MemberCount || 0
+            }));
+
             setCommunities(comms);
 
             // Fetch public playlists from all artists (grab first page)
