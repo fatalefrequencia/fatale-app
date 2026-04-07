@@ -1068,41 +1068,6 @@ export const ProfileView = React.memo(({
     }, [targetUserId, isMe, currentUser]);
 
 
-    // ─── HYPER_ROBUST_TERMINAL_PROTOCOL ────────────────────────────
-    const handledProtocolRef = React.useRef(null);
-
-    React.useEffect(() => {
-        if (initialModal && initialModal !== handledProtocolRef.current) {
-            console.log(`%c[PROTOCOL_LOCK] Initiating action: ${initialModal}`, "color: #ff006e; font-weight: bold; background: #000; padding: 2px 5px;");
-            handledProtocolRef.current = initialModal;
-            
-            // Allow 250ms for profile metadata and session context to settle
-            const protocolTimer = setTimeout(() => {
-                // FORCE: MONITOR_MODE (Terminal Interface)
-                setRoomMode('monitor');
-
-                if (initialModal === 'post' || initialModal === 'studio') {
-                    setActiveTab('Studio');
-                    setStudioSubTab('All');
-                    setShowIngestMenu(true);
-                } else if (initialModal === 'upload') {
-                    setActiveTab('Music');
-                    setShowUpload(true);
-                } else if (initialModal === 'live') {
-                    setShowGoLiveModal(true);
-                }
-                
-                // Finalize protocol by clearing the trigger prop
-                if (onClearInitialModal) onClearInitialModal();
-                
-                // Allow future triggers by clearing the ref in 500ms
-                setTimeout(() => { handledProtocolRef.current = null; }, 500);
-            }, 250);
-
-            return () => clearTimeout(protocolTimer);
-        }
-    }, [initialModal, onClearInitialModal]);
-
     const handleFollow = async () => {
         try {
             const API = await import('../services/api').then(mod => mod.default);
