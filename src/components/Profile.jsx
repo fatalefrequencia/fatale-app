@@ -1071,22 +1071,28 @@ export const ProfileView = React.memo(({
     // Handle Initial Modal Triggers from Feed/Discovery
     React.useEffect(() => {
         if (initialModal) {
-            console.log(`[PROFILE_TRIGGER] Initializing modal: ${initialModal}`);
-            if (initialModal === 'post' || initialModal === 'studio') {
-                setActiveTab('Studio');
-                setStudioSubTab('All');
-                setShowIngestMenu(true);
-                setRoomMode('monitor');
-            } else if (initialModal === 'upload') {
-                setActiveTab('Music');
-                setShowUpload(true);
-                setRoomMode('monitor');
-            } else if (initialModal === 'live') {
-                setShowGoLiveModal(true);
-                setRoomMode('monitor');
-            }
-            // Clear the trigger after handling
-            if (onClearInitialModal) onClearInitialModal();
+            console.log(`[PROFILE_PROTOCOL] Triggering initial action: ${initialModal}`);
+            
+            const timer = setTimeout(() => {
+                if (initialModal === 'post' || initialModal === 'studio') {
+                    setActiveTab('Studio');
+                    setStudioSubTab('All');
+                    setShowIngestMenu(true);
+                    setRoomMode('monitor');
+                } else if (initialModal === 'upload') {
+                    setActiveTab('Music');
+                    setShowUpload(true);
+                    setRoomMode('monitor');
+                } else if (initialModal === 'live') {
+                    setShowGoLiveModal(true);
+                    setRoomMode('monitor');
+                }
+                
+                // Clear the trigger after handling to avoid re-triggering
+                if (onClearInitialModal) onClearInitialModal();
+            }, 100);
+
+            return () => clearTimeout(timer);
         }
     }, [initialModal, onClearInitialModal]);
 
