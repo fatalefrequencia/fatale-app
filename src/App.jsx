@@ -1210,7 +1210,9 @@ function App() {
     setYoutubePlayer(null);
   };
 
-  const navigateToProfile = (id, initialModal = null) => {
+   const navigateToProfile = (id, initialModal = null) => {
+    console.log(`[NAV_PROTOCOL] Navigating to: ${id || 'SELF'} | Trigger: ${initialModal}`);
+    console.trace('[NAV_TRACE]');
     setViewingUserId(id);
     setProfileInitialModal(initialModal);
     if (activeView !== 'profile' && activeView !== 'login') {

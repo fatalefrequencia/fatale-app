@@ -1068,31 +1068,38 @@ export const ProfileView = React.memo(({
     }, [targetUserId, isMe, currentUser]);
 
 
-    // Handle Initial Modal Triggers from Feed/Discovery
+    // ─── HYPER_ROBUST_TERMINAL_PROTOCOL ────────────────────────────
+    const handledProtocolRef = React.useRef(null);
+
     React.useEffect(() => {
-        if (initialModal) {
-            console.log(`[PROFILE_PROTOCOL] Triggering initial action: ${initialModal}`);
+        if (initialModal && initialModal !== handledProtocolRef.current) {
+            console.log(`%c[PROTOCOL_LOCK] Initiating action: ${initialModal}`, "color: #ff006e; font-weight: bold; background: #000; padding: 2px 5px;");
+            handledProtocolRef.current = initialModal;
             
-            const timer = setTimeout(() => {
+            // Allow 250ms for profile metadata and session context to settle
+            const protocolTimer = setTimeout(() => {
+                // FORCE: MONITOR_MODE (Terminal Interface)
+                setRoomMode('monitor');
+
                 if (initialModal === 'post' || initialModal === 'studio') {
                     setActiveTab('Studio');
                     setStudioSubTab('All');
                     setShowIngestMenu(true);
-                    setRoomMode('monitor');
                 } else if (initialModal === 'upload') {
                     setActiveTab('Music');
                     setShowUpload(true);
-                    setRoomMode('monitor');
                 } else if (initialModal === 'live') {
                     setShowGoLiveModal(true);
-                    setRoomMode('monitor');
                 }
                 
-                // Clear the trigger after handling to avoid re-triggering
+                // Finalize protocol by clearing the trigger prop
                 if (onClearInitialModal) onClearInitialModal();
-            }, 100);
+                
+                // Allow future triggers by clearing the ref in 500ms
+                setTimeout(() => { handledProtocolRef.current = null; }, 500);
+            }, 250);
 
-            return () => clearTimeout(timer);
+            return () => clearTimeout(protocolTimer);
         }
     }, [initialModal, onClearInitialModal]);
 
