@@ -1076,11 +1076,14 @@ export const ProfileView = React.memo(({
                 setActiveTab('Studio');
                 setStudioSubTab('All');
                 setShowIngestMenu(true);
+                setRoomMode('monitor');
             } else if (initialModal === 'upload') {
                 setActiveTab('Music');
                 setShowUpload(true);
+                setRoomMode('monitor');
             } else if (initialModal === 'live') {
                 setShowGoLiveModal(true);
+                setRoomMode('monitor');
             }
             // Clear the trigger after handling
             if (onClearInitialModal) onClearInitialModal();
