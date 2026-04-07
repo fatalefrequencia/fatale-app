@@ -27,7 +27,7 @@ import TrackUploadView from './components/UploadTrackView';
 import WalletView from './components/WalletView';
 import ContentModal from './components/ContentModal';
 
-import API from './services/api';
+
 import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
 import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack } from './services/signalr';
