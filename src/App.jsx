@@ -2856,7 +2856,7 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                     <div className="p-3 space-y-1">
                       <button onClick={() => { navigateToProfile(user?.id, 'studio'); setMobilePanelOpen(false); }} className="w-full text-left p-2 text-[9px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/10 transition-all uppercase tracking-widest">{`> NEW_POST`}</button>
                       <button onClick={() => { navigateToProfile(user?.id, 'upload'); setMobilePanelOpen(false); }} className="w-full text-left p-2 text-[9px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/10 transition-all uppercase tracking-widest">{`> UPLOAD_TRACK`}</button>
-                      <button onClick={() => { setView('discovery'); setMobilePanelOpen(false); }} className="w-full text-left p-2 text-[9px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/10 transition-all uppercase tracking-widest">{`> LIVE_STREAM`}</button>
+                      <button onClick={() => { navigateToProfile(user?.id, 'live'); setMobilePanelOpen(false); }} className="w-full text-left p-2 text-[9px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/10 transition-all uppercase tracking-widest">{`> LIVE_STREAM`}</button>
                     </div>
                   </div>
 

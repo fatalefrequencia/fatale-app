@@ -1074,10 +1074,13 @@ export const ProfileView = React.memo(({
             console.log(`[PROFILE_TRIGGER] Initializing modal: ${initialModal}`);
             if (initialModal === 'post' || initialModal === 'studio') {
                 setActiveTab('Studio');
-                setStudioSubTab('All'); // User requested "all posts" tab within Studio
+                setStudioSubTab('All');
+                setShowIngestMenu(true);
             } else if (initialModal === 'upload') {
                 setActiveTab('Music');
                 setShowUpload(true);
+            } else if (initialModal === 'live') {
+                setShowGoLiveModal(true);
             }
             // Clear the trigger after handling
             if (onClearInitialModal) onClearInitialModal();
