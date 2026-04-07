@@ -2374,12 +2374,67 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
           </div>
         )}
 
-        <div className="absolute top-4 right-6 z-40 bg-black/60 backdrop-blur-sm p-1 rounded-sm border border-[#ff006e]/10">
-          <RefreshCw
-            size={16}
-            className={`text-[#ff006e]/60 hover:text-[#ff006e] cursor-pointer transition-colors ${loading ? 'animate-spin' : ''}`}
-            onClick={fetchFeed}
-          />
+        {/* ── MOBILE HEADER / RELOAD CONTAINER ── */}
+        <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-[#ff006e]/10 px-4 py-2 flex items-center justify-between shrink-0">
+          <div className="lg:hidden flex items-center gap-2">
+            <button
+              id="feed-mobile-filters-btn"
+              onClick={() => { setMobilePanelTab('filters'); setMobilePanelOpen(p => mobilePanelTab === 'filters' ? !p : true); }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all ${
+                mobilePanelOpen && mobilePanelTab === 'filters'
+                  ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
+                  : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
+              }`}
+            >
+              <Zap size={11} />
+              {selectedSector !== null || selectedCommunityId !== null ? (
+                <span className="flex items-center gap-1">ACTIVE_FILTER <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] shadow-[0_0_6px_#ff006e] inline-block" /></span>
+              ) : 'FILTERS'}
+            </button>
+            <button
+              id="feed-mobile-favorites-btn"
+              onClick={() => { setMobilePanelTab('favorites'); setMobilePanelOpen(p => mobilePanelTab === 'favorites' ? !p : true); }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all ${
+                mobilePanelOpen && mobilePanelTab === 'favorites'
+                  ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
+                  : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
+              }`}
+            >
+              <Star size={11} />
+              FAV_STNS
+              {favoriteStations && favoriteStations.filter(s => s.isLive || s.IsLive).length > 0 && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] shadow-[0_0_6px_#ff006e] animate-pulse" />
+              )}
+            </button>
+            <button
+              id="feed-mobile-stations-btn"
+              onClick={() => { setMobilePanelTab('stations'); setMobilePanelOpen(p => mobilePanelTab === 'stations' ? !p : true); }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all ${
+                mobilePanelOpen && mobilePanelTab === 'stations'
+                  ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
+                  : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
+              }`}
+            >
+              <Radio size={11} />
+              LIVE_STATIONS
+              {liveStations && liveStations.filter(s => s.isLive || s.IsLive).length > 0 && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] shadow-[0_0_6px_#ff006e] animate-pulse" />
+              )}
+            </button>
+          </div>
+
+          <div className="hidden lg:flex items-center gap-2">
+             <span className="text-[9px] text-white/20 font-black uppercase tracking-[0.2em]">TERMINAL_FEED_STREAM</span>
+             <div className="w-24 h-px bg-[#ff006e]/10 border-t border-dashed border-[#ff006e]/20" />
+          </div>
+
+          <div className="bg-black/60 backdrop-blur-sm p-1 rounded-sm border border-[#ff006e]/10">
+            <RefreshCw
+              size={16}
+              className={`text-[#ff006e]/60 hover:text-[#ff006e] cursor-pointer transition-colors ${loading ? 'animate-spin' : ''}`}
+              onClick={fetchFeed}
+            />
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-1 flex flex-col justify-start pb-32">
@@ -2751,53 +2806,6 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
         </div>
       </div>
 
-      {/* ── MOBILE FEED PANEL TRIGGER BAR ── */}
-      <div className="lg:hidden flex items-center justify-around border-t border-[#ff006e]/10 bg-black/95 backdrop-blur-xl px-2 py-2 z-30 shrink-0">
-        <button
-          id="feed-mobile-filters-btn"
-          onClick={() => { setMobilePanelTab('filters'); setMobilePanelOpen(p => mobilePanelTab === 'filters' ? !p : true); }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all ${
-            mobilePanelOpen && mobilePanelTab === 'filters'
-              ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
-              : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
-          }`}
-        >
-          <Zap size={11} />
-          {selectedSector !== null || selectedCommunityId !== null ? (
-            <span className="flex items-center gap-1">ACTIVE_FILTER <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] shadow-[0_0_6px_#ff006e] inline-block" /></span>
-          ) : 'FILTERS'}
-        </button>
-        <button
-          id="feed-mobile-favorites-btn"
-          onClick={() => { setMobilePanelTab('favorites'); setMobilePanelOpen(p => mobilePanelTab === 'favorites' ? !p : true); }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all ${
-            mobilePanelOpen && mobilePanelTab === 'favorites'
-              ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
-              : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
-          }`}
-        >
-          <Star size={11} />
-          FAV_STATIONS
-          {favoriteStations && favoriteStations.filter(s => s.isLive || s.IsLive).length > 0 && (
-            <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] shadow-[0_0_6px_#ff006e] animate-pulse" />
-          )}
-        </button>
-        <button
-          id="feed-mobile-stations-btn"
-          onClick={() => { setMobilePanelTab('stations'); setMobilePanelOpen(p => mobilePanelTab === 'stations' ? !p : true); }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all ${
-            mobilePanelOpen && mobilePanelTab === 'stations'
-              ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
-              : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
-          }`}
-        >
-          <Radio size={11} />
-          LIVE_BANDS
-          {liveStations && liveStations.filter(s => s.isLive || s.IsLive).length > 0 && (
-            <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] shadow-[0_0_6px_#ff006e] animate-pulse" />
-          )}
-        </button>
-      </div>
 
       {/* ── MOBILE SLIDE-UP PANEL ── */}
       <AnimatePresence>
@@ -2814,7 +2822,7 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
             {/* Drag handle + header */}
             <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-[#ff006e]/10 shrink-0">
               <div className="flex gap-3">
-                {[['filters', <Zap size={10} key="z" />, 'FILTERS'], ['favorites', <Star size={10} key="s" />, 'FAV_STNS'], ['stations', <Radio size={10} key="r" />, 'LIVE_BANDS']].map(([tab, icon, label]) => (
+                {[['filters', <Zap size={10} key="z" />, 'FILTERS'], ['favorites', <Star size={10} key="s" />, 'FAV_STNS'], ['stations', <Radio size={10} key="r" />, 'LIVE_STATIONS']].map(([tab, icon, label]) => (
                   <button
                     key={tab}
                     onClick={() => setMobilePanelTab(tab)}
