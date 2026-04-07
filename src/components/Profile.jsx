@@ -1729,7 +1729,7 @@ export const ProfileView = React.memo(({
                                                                 onClick={() => document.getElementById('ingest-log').click()}
                                                                 className="w-full text-left px-4 py-2 text-[8px] font-bold text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:bg-[var(--text-color)]/10 transition-all uppercase mono flex items-center gap-3"
                                                             >
-                                                                <Book size={12} /> [ JOURNAL_ENTRY ]
+                                                                <Book size={12} /> [ JOURNAL_LOG ]
                                                             </button>
                                                             <button
                                                                 onClick={() => document.getElementById('ingest-visual').click()}
@@ -1741,7 +1741,7 @@ export const ProfileView = React.memo(({
                                                                 onClick={() => document.getElementById('ingest-signal').click()}
                                                                 className="w-full text-left px-4 py-2 text-[8px] font-bold text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:bg-[var(--text-color)]/10 transition-all uppercase mono flex items-center gap-3"
                                                             >
-                                                                <Video size={12} /> [ SIGNAL_FEED ]
+                                                                <Video size={12} /> [ VISUAL_FEED ]
                                                             </button>
                                                         </div>
 

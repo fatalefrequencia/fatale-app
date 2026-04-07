@@ -1579,15 +1579,14 @@ function App() {
             <div className="absolute inset-0 bg-black/80 backdrop-blur-2xl" onClick={() => setShowGlobalIngest(false)} />
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative w-full max-w-2xl text-center space-y-12">
                <div className="space-y-4">
-                 <h2 className="text-4xl font-black text-white uppercase tracking-[0.5em] italic">FATALE_INGEST_PROTOCOL</h2>
                  <p className="text-[10px] text-[#ff006e] mono uppercase tracking-[0.6em] animate-pulse">/ Select Data Sector for Transmission /</p>
                </div>
 
                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                  {[
                    { id: 'journal', label: 'JOURNAL_LOG', icon: <BookOpen />, desc: 'Text-based entry', color: '#ff006e', action: () => { navigateToProfile(user?.id, 'studio'); setShowGlobalIngest(false); } },
-                   { id: 'visual', label: 'VISUAL_FEED', icon: <Camera />, desc: 'Photos & Art', color: '#00f2ff', action: () => { navigateToProfile(user?.id, 'studio'); setShowGlobalIngest(false); } },
-                   { id: 'signal', label: 'SIGNAL_LINK', icon: <Music />, desc: 'Audio Transmissions', color: '#7000ff', action: () => { setShowGlobalUpload(true); setShowGlobalIngest(false); } }
+                   { id: 'visual', label: 'VISUAL_DATA', icon: <Camera />, desc: 'Photos & Art', color: '#00f2ff', action: () => { navigateToProfile(user?.id, 'studio'); setShowGlobalIngest(false); } },
+                   { id: 'video', label: 'VISUAL_FEED', icon: <Video />, desc: 'Video Transmissions', color: '#7000ff', action: () => { navigateToProfile(user?.id, 'studio'); setShowGlobalIngest(false); } }
                  ].map(item => (
                    <button 
                      key={item.id} 
