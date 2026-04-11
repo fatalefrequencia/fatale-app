@@ -153,14 +153,6 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                     <div className="absolute -bottom-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10" style={{ background: color }} />
                 </div>
 
-                {/* Scanline */}
-                <motion.div
-                    className="absolute inset-x-0 h-[1px] blur-[1px] z-10 pointer-events-none opacity-30"
-                    style={{ background: color }}
-                    animate={{ top: ['0%', '100%'] }}
-                    transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
-                />
-
                 {/* Corner brackets */}
                 <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 z-20" style={{ borderColor: color }} />
                 <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 z-20" style={{ borderColor: color }} />
@@ -596,11 +588,6 @@ export const CreateCommunityModal = ({ onClose, onSubmit, loading, user_credits 
                   'bottom-0 left-0 border-b-2 border-l-2', 'bottom-0 right-0 border-b-2 border-r-2'].map((cls, i) => (
                     <div key={i} className={`absolute w-4 h-4 ${cls} z-20`} style={{ borderColor: activeSector.color }} />
                 ))}
-                {/* Scanline */}
-                <motion.div className="absolute inset-x-0 h-[1px] z-10 pointer-events-none opacity-20"
-                    style={{ background: activeSector.color }}
-                    animate={{ top: ['0%','100%'] }}
-                    transition={{ duration: 5, repeat: Infinity, ease: 'linear' }} />
 
                 <div className="p-7 relative z-10">
                     {/* Header */}

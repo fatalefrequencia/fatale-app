@@ -262,13 +262,6 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                 <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-white/5 pointer-events-none" />
                 <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-white/5 pointer-events-none" />
 
-                {/* Animated Scan Line */}
-                <motion.div
-                    className="absolute inset-x-0 h-[1px] bg-[#ff006e]/20 blur-[1px] z-10 pointer-events-none"
-                    animate={{ top: ['0%', '100%'] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                />
-
                 <div className="p-0 relative z-10">
                     {/* Header */}
                     <div className="flex justify-between items-start mb-10 mt-1 ml-1 cursor-default">
