@@ -1600,7 +1600,7 @@ function App() {
                             <span className="text-[8px] mono font-black text-[#ff006e] tracking-[0.3em] uppercase">+ GLOBAL_BROADCAST_INIT</span>
                         </div>
                     </div>
-                    <button onClick={() => setShowGlobalGoLive(false)} className="text-white/20 hover:text-white transition-colors"><X size={18} /></button>
+                    <button onClick={() => setShowGlobalGoLive(false)} className="text-[#ff006e]/60 hover:text-[#ff006e] transition-colors"><X size={18} /></button>
                 </div>
 
                 <div className="space-y-5">
@@ -1610,7 +1610,7 @@ function App() {
                             type="text"
                             value={goLiveFormData.sessionTitle}
                             onChange={e => setGoLiveFormData(p => ({ ...p, sessionTitle: e.target.value }))}
-                            className="w-full bg-white/[0.03] border border-white/10 p-4 text-white font-black outline-none focus:border-[#ff006e] tracking-widest text-xs transition-all"
+                            className="w-full bg-black border border-white/10 p-4 text-white font-black outline-none focus:border-[#ff006e] tracking-widest text-xs transition-all"
                             placeholder="establish_session_id..."
                         />
                     </div>
@@ -1619,7 +1619,7 @@ function App() {
                         <textarea
                             value={goLiveFormData.description}
                             onChange={e => setGoLiveFormData(p => ({ ...p, description: e.target.value }))}
-                            className="w-full bg-white/[0.03] border border-white/10 p-4 text-white font-medium outline-none focus:border-[#ff006e]/50 min-h-[100px] text-[10px] resize-none transition-all"
+                            className="w-full bg-black border border-white/10 p-4 text-white font-medium outline-none focus:border-[#ff006e]/50 min-h-[100px] text-[10px] resize-none transition-all"
                             placeholder="Optional signal details..."
                         />
                     </div>
