@@ -21,13 +21,14 @@ const ArtistNode = ({ data }) => {
     const {
         name,
         imageUrl,
-        sectorColor = '#ff006e',
+        sectorColor = '#ff3131', // Artist default as Neon Red
         isLive = false,
         trackCount = 0,
         userId,
         navigateToProfile,
         zoom = 1,
     } = data;
+    const artistColor = '#ff3131'; // Lock artist aesthetic to neon red for differentiation
     const tier = getSizeTier(trackCount, isLive);
     const { w, h } = TIER_DIMS[tier];
 
@@ -57,10 +58,10 @@ const ArtistNode = ({ data }) => {
                 transition: 'transform 0.2s, filter 0.2s',
                 zIndex: 1,
                 filter: hovered
-                    ? `drop-shadow(0 0 25px ${sectorColor}cc) drop-shadow(0 0 10px ${sectorColor})`
+                    ? `drop-shadow(0 0 25px ${artistColor}cc) drop-shadow(0 0 10px ${artistColor})`
                     : isLive 
-                        ? `drop-shadow(0 0 15px ${sectorColor}88) drop-shadow(0 0 5px ${sectorColor})`
-                        : `drop-shadow(0 0 8px ${sectorColor}44)`,
+                        ? `drop-shadow(0 0 15px ${artistColor}88) drop-shadow(0 0 5px ${artistColor})`
+                        : `drop-shadow(0 0 8px ${artistColor}44)`,
                 transform: hovered ? 'scale(1.06)' : 'scale(1)',
             }}
         >
@@ -91,7 +92,7 @@ const ArtistNode = ({ data }) => {
                 <div style={{
                     width: '100%', height: '100%', display: 'flex',
                     alignItems: 'center', justifyContent: 'center',
-                    background: `linear-gradient(135deg, #0a0a0a 0%, ${sectorColor}22 100%)`
+                    background: `linear-gradient(135deg, #0a0a0a 0%, ${artistColor}22 100%)`
                 }} />
             )}
 
@@ -112,7 +113,7 @@ const ArtistNode = ({ data }) => {
                             fontWeight: 700,
                             textTransform: 'uppercase',
                             letterSpacing: '0.04em',
-                            textShadow: hovered ? `0 0 5px ${sectorColor}` : '0 0 4px rgba(0,0,0,1)',
+                            textShadow: hovered ? `0 0 5px ${artistColor}` : '0 0 4px rgba(0,0,0,1)',
                             fontFamily: "'Share Tech Mono', monospace",
                             transition: 'all 0.2s ease',
                             whiteSpace: 'normal',

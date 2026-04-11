@@ -11,6 +11,7 @@ const PlaylistNode = ({ data }) => {
         trackCount = 0,
         creatorName,
         onClick,
+        sectorColor = '#ff006e', // Default to Fatale Pink
         zoom = 1,
     } = data;
     const showLabel = zoom > 0.55;
@@ -23,16 +24,16 @@ const PlaylistNode = ({ data }) => {
             style={{
                 width: 130,
                 height: 130,
-                border: '2px solid #ffd1dc', // Pastel Pink 
+                border: `2px solid ${sectorColor}88`,
                 boxShadow: hovered 
-                    ? '0 0 25px rgba(255, 209, 220, 0.7)' 
-                    : '0 0 15px rgba(255, 209, 220, 0.4)',
+                    ? `0 0 25px ${sectorColor}cc, inset 0 0 10px ${sectorColor}22` 
+                    : `0 0 15px ${sectorColor}44`,
                 borderRadius: 4,
                 overflow: 'hidden',
                 position: 'relative',
                 cursor: 'pointer',
                 background: '#0a0a0a',
-                transition: 'box-shadow 0.2s, transform 0.15s',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                 userSelect: 'none',
                 zIndex: 1,
                 transform: hovered ? 'scale(1.05)' : 'scale(1)',
@@ -104,7 +105,7 @@ const PlaylistNode = ({ data }) => {
                             fontWeight: 700,
                             textTransform: 'uppercase',
                             letterSpacing: hovered ? '0.08em' : '0.04em',
-                            textShadow: hovered ? '0 0 5px #ffd1dc' : '0 1px 3px rgba(0,0,0,0.9)',
+                            textShadow: hovered ? `0 0 5px ${sectorColor}` : '0 0 4px rgba(0,0,0,1)',
                             fontFamily: "'Share Tech Mono', monospace",
                             transition: 'all 0.2s ease',
                             whiteSpace: hovered ? 'nowrap' : 'normal',
