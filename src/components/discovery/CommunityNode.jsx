@@ -34,7 +34,7 @@ const CommunityNode = ({ data }) => {
                 clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
                 background: imageUrl 
                     ? `linear-gradient(45deg, ${color}44 0%, ${color}11 100%)`
-                    : `radial-gradient(circle at center, ${color}22 0%, #0a0a0a 100%)`,
+                    : `#020202`,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -55,7 +55,7 @@ const CommunityNode = ({ data }) => {
                 position: 'absolute',
                 inset: 1.5,
                 clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
-                background: '#050505',
+                background: '#020202',
                 zIndex: 0,
                 overflow: 'hidden',
                 display: 'flex',

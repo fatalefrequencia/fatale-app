@@ -141,9 +141,10 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                 transition={{ type: 'spring', stiffness: 260, damping: 28 }}
                 className="relative w-full max-w-4xl h-[85vh] max-h-[700px] flex flex-col rounded-sm overflow-hidden"
                 style={{
-                    background: '#020202',
-                    backgroundImage: `radial-gradient(rgba(255, 0, 110, 0.05) 1px, transparent 0)`,
+                    background: 'rgba(2, 2, 2, 0.7)',
+                    backgroundImage: `radial-gradient(rgba(255, 0, 110, 0.02) 1px, transparent 0)`,
                     backgroundSize: '24px 24px',
+                    backdropFilter: 'blur(12px)',
                     border: `1px solid ${color}30`,
                     boxShadow: `0 0 80px -20px ${color}50, 0 0 200px -60px ${color}30`,
                 }}
@@ -579,9 +580,10 @@ export const CreateCommunityModal = ({ onClose, onSubmit, loading, user_credits 
                 transition={{ type: 'spring', stiffness: 280, damping: 30 }}
                 className="relative w-full max-w-lg rounded-sm overflow-hidden"
                 style={{
-                    background: '#020202',
-                    backgroundImage: `radial-gradient(rgba(255, 0, 110, 0.05) 1px, transparent 0)`,
+                    background: 'rgba(2, 2, 2, 0.7)',
+                    backgroundImage: `radial-gradient(rgba(255, 0, 110, 0.02) 1px, transparent 0)`,
                     backgroundSize: '24px 24px',
+                    backdropFilter: 'blur(12px)',
                     border: `1px solid ${activeSector.color}25`,
                     boxShadow: `0 0 60px -15px ${activeSector.color}40`,
                 }}

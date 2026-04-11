@@ -23,7 +23,7 @@ const SectorHubNode = ({ data }) => {
                 width: 260,
                 height: 260,
                 clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
-                background: `radial-gradient(circle at center, ${color}33 0%, #080808 90%)`,
+                background: `radial-gradient(circle at center, ${color}33 0%, #020202 90%)`,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -50,7 +50,7 @@ const SectorHubNode = ({ data }) => {
                 position: 'absolute',
                 inset: 2,
                 clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
-                background: '#050505',
+                background: '#020202',
                 zIndex: -1,
                 opacity: 0.95
             }} />
