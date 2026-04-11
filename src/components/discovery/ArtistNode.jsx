@@ -52,7 +52,7 @@ const ArtistNode = ({ data }) => {
                 width: w,
                 height: h,
                 clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-                background: '#0a0a0a',
+                background: artistColor,
                 cursor: 'pointer',
                 position: 'relative',
                 transition: 'transform 0.2s, filter 0.2s',
