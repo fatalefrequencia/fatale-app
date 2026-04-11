@@ -446,9 +446,16 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                     )}
 
                                     <div className="flex gap-4 pt-2">
-                                        <button type="submit" disabled={uploading} className="w-full py-4 border border-[#ff006e] bg-[#ff006e]/20 text-[#ff006e] font-black uppercase text-[10px] tracking-[0.2em] relative overflow-hidden group active:scale-95 transition-all shadow-[0_0_30px_#ff006e10] hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_50px_#ff006e40] disabled:opacity-50">
-                                            {uploading ? <div className="flex items-center justify-center gap-3"><div className="w-2 h-2 bg-black animate-ping" /> TRANSMITTING...</div> : 'INIT_UPLOAD'}
-                                            <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                                        <button 
+                                            type="submit" 
+                                            disabled={uploading} 
+                                            className="w-full py-4 border border-[#ff006e] bg-[#ff006e]/10 text-[#ff006e] text-[10px] font-black uppercase tracking-widest transition-all hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_40px_rgba(255,0,110,0.4)] disabled:opacity-50 disabled:shadow-none"
+                                        >
+                                            {uploading ? (
+                                                <div className="flex items-center justify-center gap-3">
+                                                    <div className="w-2 h-2 bg-[#ff006e] animate-ping" /> TRANSMITTING...
+                                                </div>
+                                            ) : 'Init_Upload'}
                                         </button>
                                     </div>
                                 </form>
@@ -519,9 +526,16 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                     )}
 
                                     <div className="flex gap-4 pt-4">
-                                        <button type="submit" disabled={uploading} className="w-full py-4 border border-[#ff006e] bg-[#ff006e]/20 text-[#ff006e] font-black uppercase text-[10px] tracking-[0.2em] relative overflow-hidden group active:scale-95 transition-all shadow-[0_0_30px_#ff006e10] hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_50px_#ff006e40] disabled:opacity-50">
-                                            {uploading ? <div className="flex items-center justify-center gap-3"><div className="w-2 h-2 bg-black animate-ping" /> TRANSMITTING...</div> : 'INIT_UPLOAD'}
-                                            <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                                        <button 
+                                            type="submit" 
+                                            disabled={uploading} 
+                                            className="w-full py-4 border border-[#ff006e] bg-[#ff006e]/10 text-[#ff006e] text-[10px] font-black uppercase tracking-widest transition-all hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_40px_rgba(255,0,110,0.4)] disabled:opacity-50 disabled:shadow-none"
+                                        >
+                                            {uploading ? (
+                                                <div className="flex items-center justify-center gap-3">
+                                                    <div className="w-2 h-2 bg-[#ff006e] animate-ping" /> TRANSMITTING...
+                                                </div>
+                                            ) : 'Init_Upload'}
                                         </button>
                                     </div>
                                 </form>
