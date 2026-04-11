@@ -5,12 +5,12 @@ const ActionModal = ({ isOpen, onClose, onConfirm, title, message, confirmText =
     return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.98, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.98, y: 10 }}
-                        className="w-full max-w-sm bg-black/95 border border-[#ff006e]/40 backdrop-blur-xl relative overflow-hidden group shadow-[0_0_30px_rgba(255,0,110,0.15)]"
+                        className="w-full max-w-sm bg-black border border-[#ff006e]/30 relative overflow-hidden group shadow-[0_0_40px_rgba(0,0,0,0.5)]"
                     >
                         {/* Corner Accent & Close */}
                         <div className="absolute top-0 right-0 p-3 flex items-start gap-4">

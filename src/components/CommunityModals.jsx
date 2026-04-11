@@ -141,8 +141,8 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                 transition={{ type: 'spring', stiffness: 260, damping: 28 }}
                 className="relative w-full max-w-4xl h-[85vh] max-h-[700px] flex flex-col rounded-sm overflow-hidden"
                 style={{
-                    background: 'rgba(4,4,4,0.97)',
-                    border: `1px solid ${color}40`,
+                    background: '#000000',
+                    border: `1px solid ${color}30`,
                     boxShadow: `0 0 80px -20px ${color}50, 0 0 200px -60px ${color}30`,
                 }}
                 onClick={e => e.stopPropagation()}
@@ -581,8 +581,8 @@ export const CreateCommunityModal = ({ onClose, onSubmit, loading, user_credits 
                 transition={{ type: 'spring', stiffness: 280, damping: 30 }}
                 className="relative w-full max-w-lg rounded-sm overflow-hidden"
                 style={{
-                    background: 'rgba(5,5,5,0.95)',
-                    border: `1px solid ${activeSector.color}35`,
+                    background: '#000000',
+                    border: `1px solid ${activeSector.color}25`,
                     boxShadow: `0 0 60px -15px ${activeSector.color}40`,
                 }}
                 onClick={e => e.stopPropagation()}
@@ -643,7 +643,7 @@ export const CreateCommunityModal = ({ onClose, onSubmit, loading, user_credits 
                                 onChange={e => { setName(e.target.value); if (localError) setLocalError(null); }}
                                 maxLength={100}
                                 required
-                                className="w-full bg-black/40 border px-4 py-3 text-white font-semibold outline-none transition-all text-sm mono rounded-sm"
+                                className="w-full bg-black border px-4 py-3 text-white font-semibold outline-none transition-all text-sm mono rounded-sm"
                                 style={{ borderColor: `${activeSector.color}30` }}
                                 onFocus={e => e.target.style.borderColor = `${activeSector.color}70`}
                                 onBlur={e => e.target.style.borderColor = `${activeSector.color}30`}

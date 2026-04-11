@@ -2171,9 +2171,8 @@ export const ProfileView = React.memo(({
 
             {/* Global Overlays */}
             <AnimatePresence>
-                {showCreatePlaylist && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[110] bg-black/40 backdrop-blur-md flex items-center justify-center p-6">
-                        <div className="bg-black/60 backdrop-blur-xl border border-[var(--text-color)]/30 p-10 max-w-md w-full relative shadow-[0_0_50px_rgba(255,0,110,0.1)]">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
+                        <div className="bg-black border border-[var(--text-color)]/25 p-10 max-w-md w-full relative shadow-[0_0_60px_rgba(0,0,0,0.8)]">
                             {/* Corner Accents */}
                             <div className="absolute top-0 left-0 w-6 h-6 border-t border-l border-[var(--text-color)]/40" />
                             <div className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-[var(--text-color)]/40" />
@@ -2197,7 +2196,7 @@ export const ProfileView = React.memo(({
                 )}
                 {
                     showUpload && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] bg-black/40 backdrop-blur-md p-6 flex flex-col justify-center items-center overflow-y-auto">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] bg-black/80 backdrop-blur-sm p-6 flex flex-col justify-center items-center overflow-y-auto">
                             <div className="max-w-xl w-full">
                                 <UploadTrackView
                                     onClose={() => setShowUpload(false)}
@@ -2212,8 +2211,8 @@ export const ProfileView = React.memo(({
                 }
                 {
                     showEditProfile && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] bg-black/40 backdrop-blur-md flex items-center justify-center p-6">
-                            <div className="bg-black border border-[var(--text-color)]/30 p-10 max-w-xl w-full relative shadow-[0_0_50px_rgba(var(--text-color-rgb),0.1)] rounded-2xl overflow-hidden">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
+                            <div className="bg-black border border-[var(--text-color)]/30 p-10 max-w-xl w-full relative shadow-[0_0_60px_rgba(0,0,0,0.8)] rounded-2xl overflow-hidden">
                                 <button onClick={() => setShowEditProfile(false)} className="absolute top-4 right-4 text-[var(--text-color)]/40 hover:text-[var(--text-color)] transition-all"><X size={20} /></button>
                                 <div className="max-h-[70vh] overflow-y-auto no-scrollbar pr-1">
                                     <EditProfileForm
@@ -2238,8 +2237,8 @@ export const ProfileView = React.memo(({
                 }
                 {
                     selectedPlaylistId && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
-                            <div className="bg-black border border-[var(--text-color)]/20 w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden relative">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div className="bg-black border border-[var(--text-color)]/15 w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden relative shadow-[0_0_80px_rgba(0,0,0,1)]">
                                 <button onClick={() => setSelectedPlaylistId(null)} className="absolute top-4 right-4 z-50 text-[var(--text-color)]/40 hover:text-[var(--text-color)]">[ DISCONNECT ]</button>
                                 {isLoadingPlaylist ? (
                                     <div className="flex-1 flex items-center justify-center"><RefreshCw className="animate-spin text-[var(--text-color)]" /></div>
@@ -2287,7 +2286,7 @@ const ProfileTabIcon = ({ label, active, onClick }) => (
 );
 
 const Accordion = ({ title, isOpen, onToggle, children }) => (
-    <div className="border border-[var(--text-color)]/20 rounded-2xl overflow-hidden bg-[#0a0a0a]/80 backdrop-blur-md">
+    <div className="border border-[var(--text-color)]/10 rounded-2xl overflow-hidden bg-black shadow-lg">
         <button
             onClick={onToggle}
             className="w-full flex justify-between items-center p-5 text-[11px] font-black uppercase tracking-[0.3em] text-[var(--text-color)] hover:bg-[var(--text-color)]/5"

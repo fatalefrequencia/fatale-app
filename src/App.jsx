@@ -3036,7 +3036,7 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 26, stiffness: 300 }}
-            className="lg:hidden fixed inset-x-0 bottom-0 z-[200] bg-[#070710] border-t-2 border-[#ff006e]/30 shadow-[0_-20px_60px_rgba(255,0,110,0.12)] max-h-[70vh] flex flex-col"
+            className="lg:hidden fixed inset-x-0 bottom-0 z-[200] bg-black border-t-2 border-[#ff006e]/30 shadow-[0_-20px_60px_rgba(0,0,0,0.8)] max-h-[70vh] flex flex-col"
           >
             {/* Drag handle + header */}
             <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-[#ff006e]/10 shrink-0">
@@ -3070,7 +3070,7 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
               {mobilePanelTab === 'filters' && (
                 <div className="space-y-5">
                   {/* Quick actions */}
-                  <div className="bg-[#0a0a0a]/80 border border-[#ff006e]/20 rounded-lg overflow-hidden">
+                  <div className="bg-black border border-[#ff006e]/20 rounded-lg overflow-hidden">
                     <div className="p-2.5 bg-[#ff006e]/5 border-b border-[#ff006e]/10 text-[9px] font-black uppercase text-white tracking-widest">:: TERMINAL_CMDS ::</div>
                     <div className="p-3 space-y-1">
                       <button onClick={() => { setShowGlobalIngest(true); setMobilePanelOpen(false); }} className="w-full text-left p-2 text-[9px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/10 transition-all uppercase tracking-widest">{`> NEW_POST`}</button>
@@ -3266,13 +3266,13 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setMobilePanelOpen(false)}
-            className="lg:hidden fixed inset-0 z-[199] bg-black/60 backdrop-blur-sm"
+            className="lg:hidden fixed inset-0 z-[199] bg-black/90 backdrop-blur-sm"
           />
         )}
       </AnimatePresence>
 
       {/* Derecha: Radios & Broadcaster Panel */}
-      <div className="hidden xl:block w-80 p-6 space-y-8 bg-black/40 border-l border-[#ff006e]/5 relative z-10 overflow-y-auto no-scrollbar">
+      <div className="hidden xl:block w-80 p-6 space-y-8 bg-black border-l border-[#ff006e]/5 relative z-10 overflow-y-auto no-scrollbar">
         {activeStation && (String(activeStation.artistUserId || activeStation.ArtistUserId) === String(user?.id || user?.Id)) && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
             <div className="flex items-center gap-3 pb-3 border-b border-[#ff006e]/20">

@@ -26,7 +26,7 @@ const AlbumTrackRow = ({ track, index, onChange, onRemove, canRemove }) => {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="border border-white/10 bg-black/40 p-5 space-y-4 relative group rounded-sm"
+            className="border border-white/5 bg-black p-5 space-y-4 relative group rounded-sm"
         >
             {/* HUD Brackets for track unit */}
             <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#ff006e]/40 transition-colors group-hover:border-[#ff006e]" />
@@ -258,9 +258,8 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                 exit={{ opacity: 0, scale: 0.98, y: 10 }}
                 className="relative w-full max-w-lg rounded-sm overflow-visible"
                 style={{
-                    background: 'rgba(5, 5, 5, 0.92)',
-                    backdropFilter: 'blur(30px)',
-                    border: '1px solid rgba(255, 0, 110, 0.2)',
+                    background: '#000000',
+                    border: '1px solid rgba(255, 0, 110, 0.15)',
                     boxShadow: '0 0 50px -10px rgba(0,0,0,0.5)',
                 }}
             >
@@ -342,7 +341,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                             type="text"
                                             value={formData.title}
                                             onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                            className="w-full bg-white/[0.03] border border-white/10 p-4 text-white font-black outline-none focus:border-[#ff006e] tracking-[0.2em] transition-all rounded-sm"
+                                            className="w-full bg-black border border-white/10 p-4 text-white font-black outline-none focus:border-[#ff006e] tracking-[0.2em] transition-all rounded-sm"
                                             placeholder="track_id"
                                             required
                                         />
@@ -379,7 +378,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                     <div className="space-y-1">
                                         <div
                                             onClick={() => setFormData({ ...formData, isLocked: !formData.isLocked })}
-                                            className={`flex items-center justify-between p-4 border cursor-pointer transition-all group ${formData.isLocked ? 'bg-[#ff006e]/5 border-[#ff006e]/40' : 'bg-black/20 border-white/5 hover:border-white/20'}`}
+                                            className={`flex items-center justify-between p-4 border cursor-pointer transition-all group ${formData.isLocked ? 'bg-[#ff006e]/5 border-[#ff006e]/40' : 'bg-black border-white/5 hover:border-white/10'}`}
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-all ${formData.isLocked ? 'border-[#ff006e] bg-[#ff006e]/20 shadow-[0_0_10px_#ff006e40]' : 'border-white/20'}`}>
