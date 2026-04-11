@@ -29,13 +29,15 @@ const SectorHubPanel = ({
                 bottom: 0,
                 width: '100%',
                 maxWidth: 400,
-                background: 'rgba(4, 4, 4, 0.98)',
+                background: '#020202',
+                backgroundImage: `radial-gradient(rgba(255, 0, 110, 0.05) 1px, transparent 0)`,
+                backgroundSize: '24px 24px',
                 backdropFilter: 'blur(10px)',
                 borderLeft: `1px solid ${color}40`,
                 zIndex: 1000,
                 display: 'flex',
                 flexDirection: 'column',
-                boxShadow: `-10px 0 30px rgba(0,0,0,0.5)`
+                boxShadow: `-10px 0 30px rgba(0,0,0,0.8)`
             }}
         >
             {/* Header */}
