@@ -1631,9 +1631,9 @@ function App() {
                       <button 
                         onClick={() => handleGlobalGoLive()} 
                         disabled={!goLiveFormData.sessionTitle.trim()}
-                        className="w-full py-4 bg-white text-black text-[10px] font-black uppercase tracking-[0.3em] shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:bg-[#ff006e] transition-all duration-500 disabled:opacity-5 disabled:grayscale active:scale-[0.98]"
+                        className="w-full py-4 border border-[#ff006e] bg-[#ff006e]/10 text-[#ff006e] text-[10px] font-black uppercase tracking-widest transition-all hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_40px_rgba(255,0,110,0.4)] disabled:opacity-50 disabled:shadow-none"
                       >
-                        Initialize_Broadcast
+                        Init_Broadcast
                       </button>
                     </div>
                 </div>
