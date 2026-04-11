@@ -70,7 +70,7 @@ const ArtistNode = ({ data }) => {
                     width: '100%',
                     height: '100%',
                     clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-                    background: '#0a0a0a',
+                    background: '#020202',
                     cursor: 'pointer',
                     position: 'relative',
                     transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -86,7 +86,7 @@ const ArtistNode = ({ data }) => {
                     position: 'absolute',
                     inset: 2,
                     clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-                    background: '#050505',
+                    background: '#020202',
                     zIndex: -1,
                     opacity: 0.95
                 }} />
@@ -103,7 +103,7 @@ const ArtistNode = ({ data }) => {
                 {!mediaUrl && (
                     <div style={{
                         width: '100%', height: '100%', 
-                        background: deepRed, // SOLID DEEP RED BACKGROUND
+                        background: '#020202', // Hollow/Discovery Match
                     }} />
                 )}
 
