@@ -1091,7 +1091,7 @@ export const ProfileView = React.memo(({
                 setRoomMode={setRoomMode}
                 isPlaying={isPlaying}
                 onUpload={() => setShowUpload(true)}
-                onGoLive={() => setShowGoLiveModal(true)}
+                onGoLive={() => setShowGlobalGoLive(true)}
                 onModifyId={() => setShowEditProfile(true)}
                 onLogout={onLogout}
                 onExpandContent={setSelectedContent}
@@ -1169,7 +1169,7 @@ export const ProfileView = React.memo(({
                                     </button>
                                 ) : (
                                     <button
-                                        onClick={() => setShowGoLiveModal(true)}
+                                        onClick={() => setShowGlobalGoLive(true)}
                                         className="w-full py-4 border border-[var(--text-color)] bg-black text-[var(--text-color)] font-bold text-[10px] uppercase transition-all hover:bg-[var(--text-color)] hover:text-black shadow-[0_0_15px_rgba(var(--text-color-rgb),0.1)]"
                                     >
                                         [ GO_LIVE ]
