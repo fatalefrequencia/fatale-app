@@ -248,7 +248,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/40 backdrop-blur-[12px]"
+                className="absolute inset-0 bg-black/98 backdrop-blur-md"
                 onClick={() => !uploading && onClose()}
             />
 
@@ -256,18 +256,11 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                 initial={{ opacity: 0, scale: 0.98, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.98, y: 10 }}
-                className="relative w-full max-w-lg rounded-sm overflow-visible"
-                style={{
-                    background: '#000000',
-                    border: '1px solid rgba(255, 0, 110, 0.15)',
-                    boxShadow: '0 0 50px -10px rgba(0,0,0,0.5)',
-                }}
+                className="relative w-full max-w-lg bg-[#000000] border border-white/10 p-8 shadow-[0_0_100px_rgba(0,0,0,1)] rounded-sm overflow-visible"
             >
-                {/* 4-Corner Brackets */}
-                <div className="hud-bracket-tl text-[#ff006e]" />
-                <div className="hud-bracket-tr text-[#ff006e]" />
-                <div className="hud-bracket-bl text-[#ff006e]" />
-                <div className="hud-bracket-br text-[#ff006e]" />
+                {/* HUD Elements */}
+                <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-white/5 pointer-events-none" />
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-white/5 pointer-events-none" />
 
                 {/* Animated Scan Line */}
                 <motion.div
@@ -276,21 +269,21 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                     transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                 />
 
-                <div className="p-8 relative z-10">
+                <div className="p-0 relative z-10">
                     {/* Header */}
-                    <div className="flex justify-between items-start mb-6 mt-1 ml-1 cursor-default">
-                        <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-[#ff006e]/10 border border-[#ff006e]/20 rounded-sm">
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_8px_#ff006e]" />
-                            <span className="text-[8px] mono font-black text-[#ff006e] tracking-[0.3em] uppercase">
-                                + UPLOAD_SIGNAL
+                    <div className="flex justify-between items-start mb-10 mt-1 ml-1 cursor-default">
+                        <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-white/5 border border-white/10 rounded-sm">
+                            <div className="w-1 h-1 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_8px_#ff006e]" />
+                            <span className="text-[8px] mono font-black text-white/40 tracking-[0.4em] uppercase">
+                                SIGNAL_UPLOAD_INIT
                             </span>
                         </div>
                         <button 
                             onClick={onClose} 
                             disabled={uploading}
-                            className="text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300 p-1"
+                            className="text-white/20 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300 transform active:scale-90"
                         >
-                            <X size={18} />
+                            <X size={20} />
                         </button>
                     </div>
 
