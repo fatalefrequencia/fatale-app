@@ -1586,50 +1586,54 @@ function App() {
         {/* ─── Go Live Modal ─── */}
         {showGlobalGoLive && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[500] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-xl" onClick={() => setShowGlobalGoLive(false)} />
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative w-full max-w-lg bg-[#050505]/95 border border-[#ff006e]/30 p-8 shadow-[0_0_100px_rgba(255,0,110,0.15)] rounded-sm">
-                <div className="hud-bracket-tl text-[#ff006e]" />
-                <div className="hud-bracket-tr text-[#ff006e]" />
-                <div className="hud-bracket-bl text-[#ff006e]" />
-                <div className="hud-bracket-br text-[#ff006e]" />
+            <div className="absolute inset-0 bg-black/98 backdrop-blur-md" onClick={() => setShowGlobalGoLive(false)} />
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative w-full max-w-lg bg-[#000000] border border-white/10 p-8 shadow-[0_0_100px_rgba(0,0,0,1)] rounded-sm">
+                {/* HUD Elements */}
+                <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-white/5 pointer-events-none" />
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-white/5 pointer-events-none" />
                 
-                <div className="flex justify-between items-start mb-6">
+                <div className="flex justify-between items-start mb-10">
                     <div className="space-y-1">
-                        <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-[#ff006e]/10 border border-[#ff006e]/20 rounded-sm">
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_8px_#ff006e]" />
-                            <span className="text-[8px] mono font-black text-[#ff006e] tracking-[0.3em] uppercase">+ GLOBAL_BROADCAST_INIT</span>
+                        <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-white/5 border border-white/10 rounded-sm">
+                            <div className="w-1 h-1 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_8px_#ff006e]" />
+                            <span className="text-[8px] mono font-black text-white/40 tracking-[0.4em] uppercase">SIGNAL_BROADCAST_INIT</span>
                         </div>
                     </div>
-                    <button onClick={() => setShowGlobalGoLive(false)} className="text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300"><X size={18} /></button>
+                    <button 
+                        onClick={() => setShowGlobalGoLive(false)} 
+                        className="text-white/20 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300 transform active:scale-90"
+                    >
+                        <X size={20} />
+                    </button>
                 </div>
 
-                <div className="space-y-5">
-                    <div className="space-y-2">
-                        <label className="text-[9px] font-black text-[#ff006e]/60 uppercase tracking-widest ml-1">signal_metadata // title</label>
+                <div className="space-y-8">
+                    <div className="space-y-3">
+                        <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] ml-1">signal_metadata // title</label>
                         <input
                             type="text"
                             value={goLiveFormData.sessionTitle}
                             onChange={e => setGoLiveFormData(p => ({ ...p, sessionTitle: e.target.value }))}
-                            className="w-full bg-black border border-white/10 p-4 text-white font-black outline-none focus:border-[#ff006e] tracking-widest text-xs transition-all"
+                            className="w-full bg-[#050505] border border-white/5 p-4 text-white font-black outline-none focus:border-[#ff006e]/40 tracking-widest text-xs transition-all placeholder:text-white/5"
                             placeholder="establish_session_id..."
                         />
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-[9px] font-black text-[#ff006e]/60 uppercase tracking-widest ml-1">transmission_log // description</label>
+                    <div className="space-y-3">
+                        <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] ml-1">transmission_log // description</label>
                         <textarea
                             value={goLiveFormData.description}
                             onChange={e => setGoLiveFormData(p => ({ ...p, description: e.target.value }))}
-                            className="w-full bg-black border border-white/10 p-4 text-white font-medium outline-none focus:border-[#ff006e]/50 min-h-[100px] text-[10px] resize-none transition-all"
+                            className="w-full bg-[#050505] border border-white/5 p-4 text-white font-medium outline-none focus:border-[#ff006e]/20 min-h-[100px] text-[10px] resize-none transition-all placeholder:text-white/5"
                             placeholder="Optional signal details..."
                         />
                     </div>
-                    <div className="flex gap-4">
+                    <div className="pt-4">
                       <button 
                         onClick={() => handleGlobalGoLive()} 
                         disabled={!goLiveFormData.sessionTitle.trim()}
-                        className="w-full py-3 bg-[#ff006e] text-black text-[10px] font-black uppercase tracking-widest shadow-[0_0_30px_rgba(255,0,110,0.3)] disabled:opacity-30 disabled:shadow-none"
+                        className="w-full py-4 bg-white text-black text-[10px] font-black uppercase tracking-[0.3em] shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:bg-[#ff006e] transition-all duration-500 disabled:opacity-5 disabled:grayscale active:scale-[0.98]"
                       >
-                        Init_Broadcast
+                        Initialize_Broadcast
                       </button>
                     </div>
                 </div>
@@ -1652,9 +1656,9 @@ function App() {
         {/* ─── Ingest Choice Modal (NEW_POST) ─── */}
         {showGlobalIngest && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[500] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-2xl" onClick={() => setShowGlobalIngest(false)} />
+            <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" onClick={() => setShowGlobalIngest(false)} />
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative w-full max-w-2xl text-center space-y-12">
-               <button onClick={() => setShowGlobalIngest(false)} className="absolute top-0 right-0 p-2 text-white/20 hover:text-white transition-colors">
+               <button onClick={() => setShowGlobalIngest(false)} className="absolute top-0 right-0 p-2 text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300">
                  <X size={20} />
                </button>
                <div className="space-y-4">
@@ -1670,7 +1674,7 @@ function App() {
                    <button 
                      key={item.id} 
                      onClick={item.action}
-                     className="group relative p-8 border border-white/10 bg-[#050505] hover:border-white/30 transition-all overflow-hidden text-left"
+                     className="group relative p-8 border border-white/10 bg-black hover:border-white/30 transition-all overflow-hidden text-left"
                    >
                      <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-100 group-hover:scale-125 transition-all" style={{ color: item.color }}>{item.icon}</div>
                      <div className="space-y-3 relative z-10">
