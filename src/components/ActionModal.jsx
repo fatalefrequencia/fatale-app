@@ -16,7 +16,7 @@ const ActionModal = ({ isOpen, onClose, onConfirm, title, message, confirmText =
                         <div className="absolute top-0 right-0 p-3 flex items-start gap-4">
                             <button 
                                 onClick={onClose}
-                                className="text-[#ff006e] hover:text-[#ff006e]/80 transition-colors p-1"
+                                className="text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300 p-1"
                             >
                                 <X size={20} />
                             </button>

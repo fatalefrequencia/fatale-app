@@ -2177,7 +2177,7 @@ export const ProfileView = React.memo(({
                             {/* Corner Accents */}
                             <div className="absolute top-0 left-0 w-6 h-6 border-t border-l border-[var(--text-color)]/40" />
                             <div className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-[var(--text-color)]/40" />
-                            <button onClick={() => setShowCreatePlaylist(false)} className="absolute top-4 right-4 text-[#ff006e] hover:text-[#ff006e]/80 transition-colors">
+                            <button onClick={() => setShowCreatePlaylist(false)} className="absolute top-4 right-4 text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300">
                                 <X size={20} />
                             </button>
                             <h3 className="text-xl font-bold text-white uppercase tracking-tighter mb-8 pb-4 border-b border-[var(--text-color)]/20">// INIT_SEQ_MAP_V1</h3>
@@ -2214,7 +2214,7 @@ export const ProfileView = React.memo(({
                     showEditProfile && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
                             <div className="bg-black border border-[var(--text-color)]/30 p-10 max-w-xl w-full relative shadow-[0_0_60px_rgba(0,0,0,0.8)] rounded-2xl overflow-hidden">
-                                <button onClick={() => setShowEditProfile(false)} className="absolute top-4 right-4 text-[#ff006e] hover:text-[#ff006e]/80 transition-all"><X size={20} /></button>
+                                <button onClick={() => setShowEditProfile(false)} className="absolute top-4 right-4 text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300"><X size={20} /></button>
                                 <div className="max-h-[70vh] overflow-y-auto no-scrollbar pr-1">
                                     <EditProfileForm
                                         user={displayUser}
@@ -2240,7 +2240,7 @@ export const ProfileView = React.memo(({
                     selectedPlaylistId && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
                             <div className="bg-black border border-[var(--text-color)]/15 w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden relative shadow-[0_0_80px_rgba(0,0,0,1)]">
-                                <button onClick={() => setSelectedPlaylistId(null)} className="absolute top-4 right-4 z-50 text-[#ff006e] hover:text-[#ff006e]/80 transition-all">
+                                <button onClick={() => setSelectedPlaylistId(null)} className="absolute top-4 right-4 z-50 text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300">
                                     <X size={24} />
                                 </button>
                                 {isLoadingPlaylist ? (

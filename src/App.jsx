@@ -1600,7 +1600,7 @@ function App() {
                             <span className="text-[8px] mono font-black text-[#ff006e] tracking-[0.3em] uppercase">+ GLOBAL_BROADCAST_INIT</span>
                         </div>
                     </div>
-                    <button onClick={() => setShowGlobalGoLive(false)} className="text-[#ff006e]/60 hover:text-[#ff006e] transition-colors"><X size={18} /></button>
+                    <button onClick={() => setShowGlobalGoLive(false)} className="text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300"><X size={18} /></button>
                 </div>
 
                 <div className="space-y-5">
@@ -3057,7 +3057,7 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
               </div>
               <button
                 onClick={() => setMobilePanelOpen(false)}
-                className="text-[#ff006e] hover:text-[#ff006e]/80 transition-colors p-1"
+                className="text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300 p-1"
               >
                 <X size={16} />
               </button>
