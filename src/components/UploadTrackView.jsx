@@ -286,6 +286,13 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                 + UPLOAD_SIGNAL
                             </span>
                         </div>
+                        <button 
+                            onClick={onClose} 
+                            disabled={uploading}
+                            className="text-white/20 hover:text-white transition-colors"
+                        >
+                            <X size={18} />
+                        </button>
                     </div>
 
                     {/* Mode tabs */}
@@ -440,8 +447,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                     )}
 
                                     <div className="flex gap-4 pt-2">
-                                        <button type="button" onClick={onClose} className="flex-1 px-8 py-4 bg-black border border-white/10 text-white/40 font-black uppercase text-[10px] tracking-[0.2em] hover:text-white hover:border-white/30 transition-all">Abort</button>
-                                        <button type="submit" disabled={uploading} className={`flex-[2] py-4 border border-[#ff006e] bg-[#ff006e]/20 text-[#ff006e] font-black uppercase text-[10px] tracking-[0.2em] relative overflow-hidden group active:scale-95 transition-all shadow-[0_0_30px_#ff006e10] ${uploading ? 'opacity-50' : 'hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_50px_#ff006e40]'}`}>
+                                        <button type="submit" disabled={uploading} className="w-full py-4 border border-[#ff006e] bg-[#ff006e]/20 text-[#ff006e] font-black uppercase text-[10px] tracking-[0.2em] relative overflow-hidden group active:scale-95 transition-all shadow-[0_0_30px_#ff006e10] hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_50px_#ff006e40] disabled:opacity-50">
                                             {uploading ? <div className="flex items-center justify-center gap-3"><div className="w-2 h-2 bg-black animate-ping" /> TRANSMITTING...</div> : 'INIT_UPLOAD'}
                                             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                                         </button>
@@ -514,8 +520,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                     )}
 
                                     <div className="flex gap-4 pt-4">
-                                        <button type="button" onClick={onClose} className="flex-1 px-8 py-4 hud-panel border-white/10 text-white/30 font-black uppercase text-[10px] tracking-[0.3em] hover:text-[#ff006e] hover:border-[#ff006e]/30 transition-all outline-none rounded-sm">ABORT_INIT</button>
-                                        <button type="submit" disabled={uploading} className={`flex-[2] py-4 border border-[#ff006e] bg-[#ff006e]/20 text-[#ff006e] font-black uppercase text-[10px] tracking-[0.2em] relative overflow-hidden group active:scale-95 transition-all shadow-[0_0_30px_#ff006e10] ${uploading ? 'opacity-50' : 'hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_50px_#ff006e40]'}`}>
+                                        <button type="submit" disabled={uploading} className="w-full py-4 border border-[#ff006e] bg-[#ff006e]/20 text-[#ff006e] font-black uppercase text-[10px] tracking-[0.2em] relative overflow-hidden group active:scale-95 transition-all shadow-[0_0_30px_#ff006e10] hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_50px_#ff006e40] disabled:opacity-50">
                                             {uploading ? <div className="flex items-center justify-center gap-3"><div className="w-2 h-2 bg-black animate-ping" /> TRANSMITTING...</div> : 'INIT_UPLOAD'}
                                             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                                         </button>

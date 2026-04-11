@@ -2177,7 +2177,9 @@ export const ProfileView = React.memo(({
                             {/* Corner Accents */}
                             <div className="absolute top-0 left-0 w-6 h-6 border-t border-l border-[var(--text-color)]/40" />
                             <div className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-[var(--text-color)]/40" />
-                            <button onClick={() => setShowCreatePlaylist(false)} className="absolute top-4 right-4 text-[var(--text-color)]/40 hover:text-[var(--text-color)]">[ X ]</button>
+                            <button onClick={() => setShowCreatePlaylist(false)} className="absolute top-4 right-4 text-[var(--text-color)]/30 hover:text-[var(--text-color)] transition-colors">
+                                <X size={20} />
+                            </button>
                             <h3 className="text-xl font-bold text-white uppercase tracking-tighter mb-8 pb-4 border-b border-[var(--text-color)]/20">// INIT_SEQ_MAP_V1</h3>
                             <form onSubmit={handleCreatePlaylist} className="space-y-6">
                                 <div className="space-y-2">
@@ -2195,9 +2197,8 @@ export const ProfileView = React.memo(({
                 )}
                 {
                     showUpload && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] bg-black/40 backdrop-blur-md p-6 flex flex-col overflow-y-auto">
-                            <button onClick={() => setShowUpload(false)} className="self-end px-4 py-2 border border-[var(--text-color)]/30 text-[var(--text-color)]/40 hover:text-[var(--text-color)] mb-10 mono text-xs uppercase transition-all backdrop-blur-sm bg-black/20 hover:bg-[var(--text-color)]/10 hover:border-[var(--text-color)]">[ ABORT_SIGNAL ]</button>
-                            <div className="max-w-5xl mx-auto w-full">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] bg-black/40 backdrop-blur-md p-6 flex flex-col justify-center items-center overflow-y-auto">
+                            <div className="max-w-xl w-full">
                                 <UploadTrackView
                                     onClose={() => setShowUpload(false)}
                                     onRefreshTracks={onRefreshTracks}
@@ -2794,9 +2795,14 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
     if (isEditing) {
         return (
             <div className="flex-1 flex flex-col p-8 pt-16 gap-10 animate-in fade-in zoom-in-95 duration-300 overflow-y-auto custom-scrollbar">
-                <div className="border-b border-[var(--text-color)]/20 pb-4">
-                    <h3 className="text-2xl font-bold text-white uppercase tracking-tighter">// MODIFY_PLAYLIST_METADATA
-                    </h3>
+                <div className="flex justify-between items-center border-b border-[var(--text-color)]/20 pb-4">
+                    <h3 className="text-2xl font-bold text-white uppercase tracking-tighter">// MODIFY_PLAYLIST_METADATA</h3>
+                    <button 
+                        onClick={() => setIsEditing(false)} 
+                        className="text-[var(--text-color)]/30 hover:text-[var(--text-color)] transition-colors"
+                    >
+                        <X size={20} />
+                    </button>
                 </div>
 
                 <div className="space-y-10 max-w-lg mx-auto w-full pb-10">
@@ -2823,10 +2829,7 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-6">
-                        <button onClick={() => setIsEditing(false)} className="w-full py-4 hud-panel border-white/10 text-white/30 font-black uppercase tracking-[0.3em] hover:text-[#ff006e] hover:border-[#ff006e]/30 transition-all text-[10px] rounded-sm">
-                            ABORT_INIT
-                        </button>
+                    <div className="flex gap-6">
                         <button onClick={handleSave} className="w-full py-4 bg-[#ff006e]/10 border border-[#ff006e] text-[#ff006e] font-black uppercase tracking-[0.3em] hover:bg-[#ff006e] hover:text-black transition-all text-[10px] shadow-[0_0_30px_rgba(255,0,110,0.1)] rounded-sm">
                             SYNC_SIGNALS
                         </button>

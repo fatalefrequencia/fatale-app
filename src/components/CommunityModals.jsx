@@ -614,6 +614,13 @@ export const CreateCommunityModal = ({ onClose, onSubmit, loading, user_credits 
                                 <span className="text-white/20">]</span>
                             </h1>
                         </div>
+                        <button 
+                            onClick={onClose} 
+                            disabled={loading}
+                            className="text-white/20 hover:text-white transition-colors p-1"
+                        >
+                            <X size={18} />
+                        </button>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
@@ -686,14 +693,10 @@ export const CreateCommunityModal = ({ onClose, onSubmit, loading, user_credits 
                         </div>
 
                         <div className="pt-3 flex gap-3">
-                            <button type="button" onClick={onClose}
-                                className="flex-1 py-3 text-xs font-black mono uppercase tracking-widest text-white/30 hover:text-white border border-white/10 hover:border-white/20 transition-all rounded-sm">
-                                Abort
-                            </button>
                             <button
                                 type="submit"
                                 disabled={loading || !canAfford}
-                                className="flex-1 py-3 text-xs font-black mono uppercase tracking-widest text-white transition-all disabled:opacity-30 rounded-sm flex items-center justify-center gap-2"
+                                className="w-full py-4 text-xs font-black mono uppercase tracking-widest text-white transition-all disabled:opacity-30 rounded-sm flex items-center justify-center gap-2"
                                 style={{
                                     background: `linear-gradient(135deg, ${activeSector.color}50, ${activeSector.color}25)`,
                                     border: `1px solid ${activeSector.color}60`,

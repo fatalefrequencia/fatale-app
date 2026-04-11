@@ -1624,11 +1624,10 @@ function App() {
                         />
                     </div>
                     <div className="flex gap-4">
-                      <button onClick={() => setShowGlobalGoLive(false)} className="flex-1 py-3 text-[10px] font-black border border-white/10 text-white/40 uppercase tracking-widest hover:text-white transition-all">Abort_Task</button>
                       <button 
                         onClick={() => handleGlobalGoLive()} 
                         disabled={!goLiveFormData.sessionTitle.trim()}
-                        className="flex-[2] py-3 bg-[#ff006e] text-black text-[10px] font-black uppercase tracking-widest shadow-[0_0_30px_rgba(255,0,110,0.3)] disabled:opacity-30 disabled:shadow-none"
+                        className="w-full py-3 bg-[#ff006e] text-black text-[10px] font-black uppercase tracking-widest shadow-[0_0_30px_rgba(255,0,110,0.3)] disabled:opacity-30 disabled:shadow-none"
                       >
                         Init_Broadcast
                       </button>
@@ -1655,6 +1654,9 @@ function App() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[500] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/80 backdrop-blur-2xl" onClick={() => setShowGlobalIngest(false)} />
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative w-full max-w-2xl text-center space-y-12">
+               <button onClick={() => setShowGlobalIngest(false)} className="absolute top-0 right-0 p-2 text-white/20 hover:text-white transition-colors">
+                 <X size={20} />
+               </button>
                <div className="space-y-4">
                  <p className="text-[10px] text-[#ff006e] mono uppercase tracking-[0.6em] animate-pulse">/ Select Data Sector for Transmission /</p>
                </div>
@@ -1679,8 +1681,6 @@ function App() {
                    </button>
                  ))}
                </div>
-
-                <button onClick={() => setShowGlobalIngest(false)} className="text-[10px] text-white/30 hover:text-white uppercase tracking-[0.4em] transition-all">{'[ ABORT_INGEST_PROTOCOL ]'}</button>
             </motion.div>
           </motion.div>
         )}
@@ -2650,7 +2650,7 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
           </div>
 
           <div className="hidden lg:flex items-center gap-2">
-             <span className="text-[9px] text-white/20 font-black uppercase tracking-[0.2em]">TERMINAL_FEED_STREAM</span>
+             <span className="text-[9px] text-white/20 font-black uppercase tracking-[0.2em]">{`TERMINAL_FEED_STREAM`}</span>
              <div className="w-24 h-px bg-[#ff006e]/10 border-t border-dashed border-[#ff006e]/20" />
           </div>
 
@@ -2972,7 +2972,9 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                         <div className="flex items-center gap-2">
                           <span className="text-amber-400">:: RE_SIGNAL_TO //</span>
                           <span className="text-white/60">@{replyingToComment.Username}</span>
-                          <button onClick={() => setReplyingToComment(null)} className="text-[#ff006e] hover:text-white ml-2 underline underline-offset-2 tracking-widest">ABORT_RE</button>
+                          <button onClick={() => setReplyingToComment(null)} className="text-[#ff006e] hover:text-white ml-2 transition-colors">
+                            <X size={14} />
+                          </button>
                         </div>
                       ) : (
                         <span>:: INPUT_BUFFER_READY ::</span>
@@ -3000,21 +3002,13 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                         <div className="flex-1 border-b border-[#ff006e]/10 border-dashed mx-4 mb-2" />
                       </div>
 
-                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
-                        <button
-                          onClick={() => setReplyingTo(null)}
-                          className="px-5 py-2.5 text-[10px] font-black text-white/40 hover:text-white uppercase tracking-widest transition-all border border-white/5 sm:border-none rounded-sm sm:rounded-none"
-                        >
-                          [ ABORT_SIG ]
-                        </button>
-                        <button
-                          onClick={submitComment}
-                          disabled={isSubmittingComment || !commentText.trim()}
-                          className="px-8 py-2.5 bg-[#ff006e]/10 border border-[#ff006e]/40 text-[#ff006e] text-[10px] font-black uppercase tracking-[0.3em] hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_30px_rgba(255,0,110,0.3)] transition-all disabled:opacity-20 flex-1 sm:flex-none text-center"
-                        >
-                          {isSubmittingComment ? 'TRANSMITTING...' : '[ BROADCAST_PAYLOAD ]'}
-                        </button>
-                      </div>
+                          <button
+                            onClick={submitComment}
+                            disabled={isSubmittingComment || !commentText.trim()}
+                            className="w-full sm:w-auto px-8 py-2.5 bg-[#ff006e]/10 border border-[#ff006e]/40 text-[#ff006e] text-[10px] font-black uppercase tracking-[0.3em] hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_30px_rgba(255,0,110,0.3)] transition-all disabled:opacity-20 text-center"
+                          >
+                            {isSubmittingComment ? 'TRANSMITTING...' : '[ BROADCAST_PAYLOAD ]'}
+                          </button>
                     </div>
                   </div>
                 </div>
