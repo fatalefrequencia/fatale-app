@@ -1258,6 +1258,51 @@ function App() {
     setViewOriginal('profile');
   };
 
+  const handleGlobalIngestFile = async (e, type) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (type === 'CORE_LOG') {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const content = event.target.result;
+        const title = file.name.split('.')[0];
+        try {
+          await API.Journal.create({
+            Title: title,
+            Content: content,
+            IsPosted: true,
+            IsPinned: false
+          });
+          showNotification("INGEST_COMPLETE", `Journal [${title}] ingested into core archive.`, "success");
+          setShowGlobalIngest(false);
+          // Optional: Refresh if needed
+        } catch (err) {
+          console.error("Failed to commit log", err);
+          showNotification("INGEST_FAILURE", "Failed to ingest journal log.", "error");
+        }
+      };
+      reader.readAsText(file);
+    } else if (type === 'VISUAL_DATA' || type === 'SIGNAL_FEED') {
+      const contentType = type === 'VISUAL_DATA' ? 'PHOTO' : 'VIDEO';
+      const formData = new FormData();
+      formData.append('File', file);
+      formData.append('Type', contentType);
+      formData.append('Title', file.name.split('.')[0]);
+      formData.append('IsPosted', true);
+
+      try {
+        console.log(`[GLOBAL_INGEST] Starting ${contentType} upload:`, file.name);
+        await API.Studio.upload(formData);
+        showNotification("INGEST_COMPLETE", `${contentType} [${file.name.split('.')[0]}] ingested successfully.`, "success");
+        setShowGlobalIngest(false);
+      } catch (err) {
+        console.error("Failed to ingest media", err);
+        showNotification("INGEST_FAILURE", `Failed to ingest ${contentType}.`, "error");
+      }
+    }
+  };
+
   // --- SWIPE NAVIGATION LOGIC ---
   useEffect(() => {
     const VIEWS_SEQUENCE = ['discovery', 'feed', 'messages', 'profile'];
@@ -1365,6 +1410,38 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#020202] text-[#ff006e] font-mono selection:bg-[#ff006e] selection:text-black overflow-hidden">
+      {/* Hidden Global Ingest Inputs */}
+      <input
+        id="global-ingest-log"
+        type="file"
+        accept=".txt,.log,.md"
+        className="hidden"
+        onChange={(e) => {
+          handleGlobalIngestFile(e, 'CORE_LOG');
+          e.target.value = '';
+        }}
+      />
+      <input
+        id="global-ingest-visual"
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          handleGlobalIngestFile(e, 'VISUAL_DATA');
+          e.target.value = '';
+        }}
+      />
+      <input
+        id="global-ingest-signal"
+        type="file"
+        accept="video/*"
+        className="hidden"
+        onChange={(e) => {
+          handleGlobalIngestFile(e, 'SIGNAL_FEED');
+          e.target.value = '';
+        }}
+      />
+
       <audio
         ref={audioRef}
         onEnded={handleNext}
@@ -1584,9 +1661,9 @@ function App() {
 
                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                  {[
-                   { id: 'journal', label: 'JOURNAL_LOG', icon: <BookOpen />, desc: 'Text-based entry', color: '#ff006e', action: () => { navigateToProfile(user?.id, 'studio'); setShowGlobalIngest(false); } },
-                   { id: 'visual', label: 'VISUAL_DATA', icon: <Camera />, desc: 'Photos & Art', color: '#00f2ff', action: () => { navigateToProfile(user?.id, 'studio'); setShowGlobalIngest(false); } },
-                   { id: 'video', label: 'VISUAL_FEED', icon: <Video />, desc: 'Video Transmissions', color: '#7000ff', action: () => { navigateToProfile(user?.id, 'studio'); setShowGlobalIngest(false); } }
+                   { id: 'journal', label: 'JOURNAL_LOG', icon: <BookOpen />, desc: 'Text-based entry', color: '#ff006e', action: () => document.getElementById('global-ingest-log').click() },
+                   { id: 'visual', label: 'VISUAL_DATA', icon: <Camera />, desc: 'Photos & Art', color: '#00f2ff', action: () => document.getElementById('global-ingest-visual').click() },
+                   { id: 'video', label: 'VISUAL_FEED', icon: <Video />, desc: 'Video Transmissions', color: '#7000ff', action: () => document.getElementById('global-ingest-signal').click() }
                  ].map(item => (
                    <button 
                      key={item.id} 
