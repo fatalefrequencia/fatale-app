@@ -24,10 +24,10 @@ const PlaylistNode = ({ data }) => {
             style={{
                 width: 130,
                 height: 130,
-                border: `2px solid ${sectorColor}88`,
+                border: `1px solid ${sectorColor}33`,
                 boxShadow: hovered 
-                    ? `0 0 25px ${sectorColor}cc, inset 0 0 10px ${sectorColor}22` 
-                    : `0 0 15px ${sectorColor}44`,
+                    ? `0 0 30px ${sectorColor}cc, inset 0 0 15px ${sectorColor}44` 
+                    : `0 0 18px ${sectorColor}66`,
                 borderRadius: 4,
                 overflow: 'hidden',
                 position: 'relative',

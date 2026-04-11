@@ -52,16 +52,16 @@ const ArtistNode = ({ data }) => {
                 width: w,
                 height: h,
                 clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-                background: artistColor,
+                background: '#0a0a0a',
                 cursor: 'pointer',
                 position: 'relative',
-                transition: 'transform 0.2s, filter 0.2s',
+                transition: 'transform 0.2s, filter 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 zIndex: 1,
                 filter: hovered
-                    ? `drop-shadow(0 0 25px ${artistColor}cc) drop-shadow(0 0 10px ${artistColor})`
+                    ? `drop-shadow(0 0 15px ${artistColor}cc) drop-shadow(0 0 5px ${artistColor})`
                     : isLive 
-                        ? `drop-shadow(0 0 15px ${artistColor}88) drop-shadow(0 0 5px ${artistColor})`
-                        : `drop-shadow(0 0 8px ${artistColor}44)`,
+                        ? `drop-shadow(0 0 12px ${artistColor}88) drop-shadow(0 0 3px ${artistColor}aa)`
+                        : `drop-shadow(0 0 6px ${artistColor}66)`,
                 transform: hovered ? 'scale(1.06)' : 'scale(1)',
             }}
         >
