@@ -16,9 +16,9 @@ const ActionModal = ({ isOpen, onClose, onConfirm, title, message, confirmText =
                         <div className="absolute top-0 right-0 p-3 flex items-start gap-4">
                             <button 
                                 onClick={onClose}
-                                className="text-white/20 hover:text-white transition-colors"
+                                className="text-[#ff006e] hover:text-[#ff006e]/80 transition-colors p-1"
                             >
-                                <X size={18} />
+                                <X size={20} />
                             </button>
                             <div className="opacity-40">
                                 <div className="w-8 h-0.5 bg-[#ff006e]/40 mb-0.5"></div>

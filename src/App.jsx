@@ -3057,7 +3057,7 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
               </div>
               <button
                 onClick={() => setMobilePanelOpen(false)}
-                className="text-white/30 hover:text-[#ff006e] transition-colors p-1"
+                className="text-[#ff006e] hover:text-[#ff006e]/80 transition-colors p-1"
               >
                 <X size={16} />
               </button>

@@ -303,7 +303,7 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                             style={{ 
                                 background: 'none', 
                                 border: 'none', 
-                                color: 'rgba(255,255,255,0.3)', 
+                                color: '#ff006e', 
                                 cursor: 'pointer',
                                 padding: '12px',
                                 marginRight: '-12px',
@@ -600,25 +600,13 @@ export const CreateCommunityModal = ({ onClose, onSubmit, loading, user_credits 
 
                 <div className="p-7 relative z-10">
                     {/* Header */}
-                    <div className="flex items-start justify-between mb-8">
-                        <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: activeSector.color }} />
-                                <span className="text-[8px] font-black mono tracking-[0.4em] uppercase" style={{ color: activeSector.color }}>
-                                    genesis_protocol // node_initialization
-                                </span>
-                            </div>
-                            <h1 className="text-lg mono tracking-[0.1em] flex items-center gap-3 ml-1">
-                                <span className="text-white/20">[</span>
-                                <span className="text-white/20 font-light">found_community</span>
-                                <span className="text-white/20">]</span>
-                            </h1>
+                    <div className="relative z-10 px-6 py-5 border-b flex items-center justify-between"
+                        style={{ borderColor: `${activeSector.color}15` }}>
+                        <div className="flex items-center gap-3">
+                            <Users size={18} style={{ color: activeSector.color }} />
+                            <h2 className="mono font-black text-xs uppercase tracking-[0.4em] text-white">INITIALIZE_COMMUNITY</h2>
                         </div>
-                        <button 
-                            onClick={onClose} 
-                            disabled={loading}
-                            className="text-white/20 hover:text-white transition-colors p-1"
-                        >
+                        <button onClick={onClose} className="text-[#ff006e] hover:text-[#ff006e]/80 transition-colors">
                             <X size={18} />
                         </button>
                     </div>

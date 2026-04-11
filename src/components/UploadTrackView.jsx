@@ -288,7 +288,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                         <button 
                             onClick={onClose} 
                             disabled={uploading}
-                            className="text-white/20 hover:text-white transition-colors"
+                            className="text-[#ff006e] hover:text-[#ff006e]/80 transition-colors"
                         >
                             <X size={18} />
                         </button>
