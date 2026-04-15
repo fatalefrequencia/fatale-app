@@ -86,7 +86,7 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [redirectTrigger, setRedirectTrigger] = useState(null); // Refactored to fix RefError
   const [user, setUser] = useState(null);
-  
+
   const currentUserId = getUserId(user);
   const [tracks, setTracks] = useState([]);
   const [libraryTracks, setLibraryTracks] = useState([]);
@@ -153,29 +153,29 @@ function App() {
   const handleGlobalGoLive = async (sessionTitle, description) => {
     const title = sessionTitle || goLiveFormData.sessionTitle;
     const desc = description || goLiveFormData.description;
-    
+
     if (!title) {
-        showNotification("BROADCAST_ERROR", "A session title is required to initialize the frequency.", "error");
-        return;
+      showNotification("BROADCAST_ERROR", "A session title is required to initialize the frequency.", "error");
+      return;
     }
 
     try {
-        await API.Stations.goLive({
-            SessionTitle: title,
-            Description: desc || null,
-            IsChatEnabled: goLiveFormData.isChatEnabled,
-            IsQueueEnabled: goLiveFormData.isQueueEnabled
-        });
-        
-        showNotification("BROADCAST_ACTIVE", "Signal established. Frequency is now LIVE.", "success");
-        setShowGlobalGoLive(false);
-        setGoLiveFormData({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true });
-        
-        // After starting, briefly navigate to profile to show the broadcast interface
-        navigateToProfile(user?.id, 'broadcast');
+      await API.Stations.goLive({
+        SessionTitle: title,
+        Description: desc || null,
+        IsChatEnabled: goLiveFormData.isChatEnabled,
+        IsQueueEnabled: goLiveFormData.isQueueEnabled
+      });
+
+      showNotification("BROADCAST_ACTIVE", "Signal established. Frequency is now LIVE.", "success");
+      setShowGlobalGoLive(false);
+      setGoLiveFormData({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true });
+
+      // After starting, briefly navigate to profile to show the broadcast interface
+      navigateToProfile(user?.id, 'broadcast');
     } catch (e) {
-        console.error("Failed to go live global:", e);
-        showNotification("BROADCAST_FAILURE", "Neural interface failed to establish link.", "error");
+      console.error("Failed to go live global:", e);
+      showNotification("BROADCAST_FAILURE", "Neural interface failed to establish link.", "error");
     }
   };
 
@@ -219,16 +219,16 @@ function App() {
       const res = await API.Stations.getAll();
       if (res.data && res.data.length > 0) {
         setLiveStations(res.data);
-        
+
         // Auto-sync host's activeStation
         const currentUserId = user?.id || user?.Id;
         if (currentUserId && !activeStation) {
-           const myStation = res.data.find(s => 
-             String(s.artistUserId || s.ArtistUserId) === String(currentUserId)
-           );
-           if (myStation && (myStation.isLive || myStation.IsLive)) {
-             setActiveStation(myStation);
-           }
+          const myStation = res.data.find(s =>
+            String(s.artistUserId || s.ArtistUserId) === String(currentUserId)
+          );
+          if (myStation && (myStation.isLive || myStation.IsLive)) {
+            setActiveStation(myStation);
+          }
         }
       }
     } catch (e) {
@@ -310,11 +310,11 @@ function App() {
 
   useEffect(() => {
     const handleTuneIn = (e) => {
-        const station = e.detail;
-        setActiveStation(station);
-        joinStation(station.id || station.Id);
-        // Note: we can use the notification context if we wrap this in a component that has it,
-        // but App.jsx uses it. We might need to ensure showNotification is accessible or just let it be silent.
+      const station = e.detail;
+      setActiveStation(station);
+      joinStation(station.id || station.Id);
+      // Note: we can use the notification context if we wrap this in a component that has it,
+      // but App.jsx uses it. We might need to ensure showNotification is accessible or just let it be silent.
     };
     window.addEventListener('tuneIn', handleTuneIn);
     return () => window.removeEventListener('tuneIn', handleTuneIn);
@@ -324,13 +324,13 @@ function App() {
     // Check for existing session
     let token = localStorage.getItem('token');
     let savedUser = localStorage.getItem('user');
-    
+
     // Sanitize: sometimes 'undefined' string gets stored if logic is buggy
     if (token === 'undefined' || !token) {
       localStorage.removeItem('token');
       token = null; // Clear token for current session
     }
-    
+
     if (savedUser && savedUser !== 'undefined') {
       try {
         const parsed = JSON.parse(savedUser);
@@ -360,68 +360,68 @@ function App() {
 
       conn.on("TrackSynced", (trackData, syncTime, hostIsPlaying) => {
         setTracks(prev => {
-           const currentTrack = prev[0]; // If listening, queue is handled sequentially
-           if (!currentTrack || (currentTrack.id !== trackData.id && currentTrack.Id !== trackData.Id)) {
-               const mapped = { ...trackData, isLocked: false, isOwned: true };
-               return [mapped];
-           }
-           return prev;
+          const currentTrack = prev[0]; // If listening, queue is handled sequentially
+          if (!currentTrack || (currentTrack.id !== trackData.id && currentTrack.Id !== trackData.Id)) {
+            const mapped = { ...trackData, isLocked: false, isOwned: true };
+            return [mapped];
+          }
+          return prev;
         });
         setCurrentTrackIndex(0);
         setIsPlaying(hostIsPlaying);
-        
+
         // Use timeout to allow React to render the new track element before playing
         setTimeout(() => {
-            if (hostIsPlaying) {
-                const isYtLocal = trackData.source?.startsWith('youtube:');
-                if (isYtLocal) {
-                    // Try to seek youtube player if it exists. Note: youtube player state is hard to access here from effect without deps 
-                    // This relies on the useEffect `[isYoutubeMode, isPlaying, youtubePlayer]` picking up the seek and track change later.
-                    // But we can trigger handleSeek if accessible
-                } else if (audioRef.current) {
-                    audioRef.current.currentTime = syncTime;
-                }
+          if (hostIsPlaying) {
+            const isYtLocal = trackData.source?.startsWith('youtube:');
+            if (isYtLocal) {
+              // Try to seek youtube player if it exists. Note: youtube player state is hard to access here from effect without deps 
+              // This relies on the useEffect `[isYoutubeMode, isPlaying, youtubePlayer]` picking up the seek and track change later.
+              // But we can trigger handleSeek if accessible
+            } else if (audioRef.current) {
+              audioRef.current.currentTime = syncTime;
             }
+          }
         }, 100);
       });
 
       conn.on("ReceiveMessage", (msg) => {
-          setStationChat(prev => [...prev, msg].slice(-50));
+        setStationChat(prev => [...prev, msg].slice(-50));
       });
 
       conn.on("TrackRequested", (req) => {
-          setStationQueue(prev => [...prev, req].slice(-20));
+        setStationQueue(prev => [...prev, req].slice(-20));
       });
 
       conn.on("StationEnded", (data) => {
-          setActiveStation(prev => {
-              if (prev && (prev.id === data.stationId || prev.Id === data.stationId)) {
-                  showNotification("BROADCAST_ENDED", "The live radio station has disconnected.", "info");
-                  leaveStation(data.stationId);
-                  return null;
-              }
-              return prev;
-          });
-          fetchLiveStations();
+        setActiveStation(prev => {
+          if (prev && (prev.id === data.stationId || prev.Id === data.stationId)) {
+            showNotification("BROADCAST_ENDED", "The live radio station has disconnected.", "info");
+            leaveStation(data.stationId);
+            return null;
+          }
+          return prev;
+        });
+        fetchLiveStations();
       });
 
       conn.on("StationWentLive", (data) => {
-          fetchLiveStations();
+        fetchLiveStations();
       });
     }
   }, []);
 
   // --- HOST BROADCASTING LOGIC ---
   useEffect(() => {
-      const uid = currentUserId;
-      if (uid && currentTrack) {
-          API.Stations.getByUserId(uid).then(res => {
-              if (res.data) {
-                  syncTrack(res.data.id || res.data.Id, currentTrack, currentTime, isPlaying);
-              }
-          }).catch(e => console.warn("Track sync failed:", e));
-      }
-   }, [currentTrack?.id, isPlaying, currentUserId]);
+    const uid = currentUserId;
+    if (uid && currentTrack) {
+      API.Stations.getByUserId(uid).then(res => {
+        if (res.data) {
+          syncTrack(res.data.id || res.data.Id, currentTrack, currentTime, isPlaying);
+        }
+      }).catch(e => console.warn("Track sync failed:", e));
+    }
+  }, [currentTrack?.id, isPlaying, currentUserId]);
 
   const fetchPlaylists = async (uid) => {
     try {
@@ -797,6 +797,44 @@ function App() {
     }
   };
 
+  // --- MEDIA SESSION API (Background Audio Support) ---
+  useEffect(() => {
+    if ('mediaSession' in navigator && currentTrack && currentTrack.id) {
+      console.log("[MEDIA_SESSION] Syncing metadata for:", currentTrack.title);
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentTrack.title,
+        artist: currentTrack.artist,
+        album: currentTrack.album || "Fatale Digital",
+        artwork: [
+          { src: currentTrack.cover || skullImg, sizes: '96x96', type: 'image/png' },
+          { src: currentTrack.cover || skullImg, sizes: '128x128', type: 'image/png' },
+          { src: currentTrack.cover || skullImg, sizes: '192x192', type: 'image/png' },
+          { src: currentTrack.cover || skullImg, sizes: '256x256', type: 'image/png' },
+          { src: currentTrack.cover || skullImg, sizes: '384x384', type: 'image/png' },
+          { src: currentTrack.cover || skullImg, sizes: '512x512', type: 'image/png' },
+        ]
+      });
+
+      navigator.mediaSession.setActionHandler('play', () => {
+        setIsPlaying(true);
+        if (isYoutubeMode && youtubePlayer) youtubePlayer.playVideo();
+        else if (audioRef.current) audioRef.current.play();
+      });
+      navigator.mediaSession.setActionHandler('pause', () => {
+        setIsPlaying(false);
+        if (isYoutubeMode && youtubePlayer) youtubePlayer.pauseVideo();
+        else if (audioRef.current) audioRef.current.pause();
+      });
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        if (currentTrackIndex > 0) setCurrentTrackIndex(prev => prev - 1);
+      });
+      navigator.mediaSession.setActionHandler('nexttrack', handleNext);
+
+      // Sync playback state
+      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+    }
+  }, [currentTrack?.id, isPlaying, isYoutubeMode, youtubePlayer]);
+
   // --- ORGANIC LOGGING EFFECT ---
   useEffect(() => {
     if (isPlaying && currentTrackIndex >= 0 && currentTrack) {
@@ -881,7 +919,7 @@ function App() {
       if (res.data) {
         const rawData = res.data.user || res.data;
         const uid = rawData?.id || rawData?.Id || rawData?.userId || rawData?.UserId || userIdToFetch;
-        
+
         // Deep extraction with previous state fallbacks to prevent "empty profile" glitch
         const userData = {
           id: uid,
@@ -905,7 +943,7 @@ function App() {
 
         setUser(prev => {
           const updated = { ...userData };
-          try { localStorage.setItem('user', JSON.stringify(updated)); } catch(e) {}
+          try { localStorage.setItem('user', JSON.stringify(updated)); } catch (e) { }
           return updated;
         });
         if (notify) {
@@ -1199,17 +1237,17 @@ function App() {
 
   const handleAuthSuccess = (authData) => {
     console.log("[App] handleAuthSuccess invoked with:", authData);
-    
+
     if (authData.token) localStorage.setItem('token', authData.token);
-    
+
     // Ensure we have a valid user object with an ID before updating state
     const validUser = authData.user && (authData.user.id || authData.user.Id) ? authData.user : null;
-    
+
     if (validUser) {
       localStorage.setItem('user', JSON.stringify(validUser));
       setUser(validUser);
       // Pass validUser directly to prevent race condition
-      fetchUserProfile(false, validUser); 
+      fetchUserProfile(false, validUser);
       setView('discovery');
     } else {
       console.error("[App] Login succeeded but user data is missing or invalid!", authData);
@@ -1247,7 +1285,7 @@ function App() {
     setYoutubePlayer(null);
   };
 
-   const navigateToProfile = (id, initialModal = null) => {
+  const navigateToProfile = (id, initialModal = null) => {
     console.log(`[NAV_PROTOCOL] Navigating to: ${id || 'SELF'} | Trigger: ${initialModal}`);
     console.trace('[NAV_TRACE]');
     setViewingUserId(id);
@@ -1306,7 +1344,7 @@ function App() {
   // --- SWIPE NAVIGATION LOGIC ---
   useEffect(() => {
     const VIEWS_SEQUENCE = ['discovery', 'feed', 'messages', 'profile'];
-    
+
     let touchStartX = 0;
     let touchStartY = 0;
     const EDGE_THRESHOLD = 50; // Sensitive area from sides
@@ -1315,7 +1353,7 @@ function App() {
     const handleTouchStart = (e) => {
       // Don't swipe if we're in login
       if (activeView === 'login') return;
-      
+
       const touch = e.touches[0];
       touchStartX = touch.clientX;
       touchStartY = touch.clientY;
@@ -1335,19 +1373,19 @@ function App() {
 
         // SWIPE FROM RIGHT TO LEFT (Next)
         if (deltaX < 0 && touchStartX > window.innerWidth - EDGE_THRESHOLD) {
-           if (currentIndex < VIEWS_SEQUENCE.length - 1) {
-             const nextView = VIEWS_SEQUENCE[currentIndex + 1];
-             if (nextView === 'profile') navigateToProfile(null);
-             else setView(nextView);
-           }
-        } 
+          if (currentIndex < VIEWS_SEQUENCE.length - 1) {
+            const nextView = VIEWS_SEQUENCE[currentIndex + 1];
+            if (nextView === 'profile') navigateToProfile(null);
+            else setView(nextView);
+          }
+        }
         // SWIPE FROM LEFT TO RIGHT (Prev)
         else if (deltaX > 0 && touchStartX < EDGE_THRESHOLD) {
-           if (currentIndex > 0) {
-             const prevView = VIEWS_SEQUENCE[currentIndex - 1];
-             if (prevView === 'profile') navigateToProfile(null);
-             else setView(prevView);
-           }
+          if (currentIndex > 0) {
+            const prevView = VIEWS_SEQUENCE[currentIndex - 1];
+            if (prevView === 'profile') navigateToProfile(null);
+            else setView(prevView);
+          }
         }
       }
     };
@@ -1588,68 +1626,68 @@ function App() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[500] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/98 backdrop-blur-md" onClick={() => setShowGlobalGoLive(false)} />
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative w-full max-w-lg bg-[#000000] border border-white/10 p-8 shadow-[0_0_100px_rgba(0,0,0,1)] rounded-sm">
-                {/* HUD Elements */}
-                <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-white/5 pointer-events-none" />
-                <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-white/5 pointer-events-none" />
-                
-                <div className="flex justify-between items-start mb-10">
-                    <div className="space-y-1">
-                        <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-white/5 border border-white/10 rounded-sm">
-                            <div className="w-1 h-1 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_8px_#ff006e]" />
-                            <span className="text-[8px] mono font-black text-white/40 tracking-[0.4em] uppercase">SIGNAL_BROADCAST_INIT</span>
-                        </div>
-                    </div>
-                    <button 
-                        onClick={() => setShowGlobalGoLive(false)} 
-                        className="text-white/20 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300 transform active:scale-90"
-                    >
-                        <X size={20} />
-                    </button>
-                </div>
+              {/* HUD Elements */}
+              <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-white/5 pointer-events-none" />
+              <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-white/5 pointer-events-none" />
 
-                <div className="space-y-8">
-                    <div className="space-y-3">
-                        <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] ml-1">signal_metadata // title</label>
-                        <input
-                            type="text"
-                            value={goLiveFormData.sessionTitle}
-                            onChange={e => setGoLiveFormData(p => ({ ...p, sessionTitle: e.target.value }))}
-                            className="w-full bg-[#050505] border border-white/5 p-4 text-white font-black outline-none focus:border-[#ff006e]/40 tracking-widest text-xs transition-all placeholder:text-white/5"
-                            placeholder="establish_session_id..."
-                        />
-                    </div>
-                    <div className="space-y-3">
-                        <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] ml-1">transmission_log // description</label>
-                        <textarea
-                            value={goLiveFormData.description}
-                            onChange={e => setGoLiveFormData(p => ({ ...p, description: e.target.value }))}
-                            className="w-full bg-[#050505] border border-white/5 p-4 text-white font-medium outline-none focus:border-[#ff006e]/20 min-h-[100px] text-[10px] resize-none transition-all placeholder:text-white/5"
-                            placeholder="Optional signal details..."
-                        />
-                    </div>
-                    <div className="pt-4">
-                      <button 
-                        onClick={() => handleGlobalGoLive()} 
-                        disabled={!goLiveFormData.sessionTitle.trim()}
-                        className="w-full py-4 border border-[#ff006e] bg-[#ff006e]/10 text-[#ff006e] text-[10px] font-black uppercase tracking-widest transition-all hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_40px_rgba(255,0,110,0.4)] disabled:opacity-50 disabled:shadow-none"
-                      >
-                        Init_Broadcast
-                      </button>
-                    </div>
+              <div className="flex justify-between items-start mb-10">
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-white/5 border border-white/10 rounded-sm">
+                    <div className="w-1 h-1 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_8px_#ff006e]" />
+                    <span className="text-[8px] mono font-black text-white/40 tracking-[0.4em] uppercase">SIGNAL_BROADCAST_INIT</span>
+                  </div>
                 </div>
+                <button
+                  onClick={() => setShowGlobalGoLive(false)}
+                  className="text-white/20 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300 transform active:scale-90"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-8">
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] ml-1">signal_metadata // title</label>
+                  <input
+                    type="text"
+                    value={goLiveFormData.sessionTitle}
+                    onChange={e => setGoLiveFormData(p => ({ ...p, sessionTitle: e.target.value }))}
+                    className="w-full bg-[#050505] border border-white/5 p-4 text-white font-black outline-none focus:border-[#ff006e]/40 tracking-widest text-xs transition-all placeholder:text-white/5"
+                    placeholder="establish_session_id..."
+                  />
+                </div>
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] ml-1">transmission_log // description</label>
+                  <textarea
+                    value={goLiveFormData.description}
+                    onChange={e => setGoLiveFormData(p => ({ ...p, description: e.target.value }))}
+                    className="w-full bg-[#050505] border border-white/5 p-4 text-white font-medium outline-none focus:border-[#ff006e]/20 min-h-[100px] text-[10px] resize-none transition-all placeholder:text-white/5"
+                    placeholder="Optional signal details..."
+                  />
+                </div>
+                <div className="pt-4">
+                  <button
+                    onClick={() => handleGlobalGoLive()}
+                    disabled={!goLiveFormData.sessionTitle.trim()}
+                    className="w-full py-4 border border-[#ff006e] bg-[#ff006e]/10 text-[#ff006e] text-[10px] font-black uppercase tracking-widest transition-all hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_40px_rgba(255,0,110,0.4)] disabled:opacity-50 disabled:shadow-none"
+                  >
+                    Init_Broadcast
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         )}
 
         {/* ─── Upload Modal ─── */}
         {showGlobalUpload && (
-          <UploadTrackView 
-            onClose={() => setShowGlobalUpload(false)} 
+          <UploadTrackView
+            onClose={() => setShowGlobalUpload(false)}
             onRefreshTracks={async () => {
               const res = await API.Tracks.getAll();
               setTracks(res.data);
               showNotification("SYNC_COMPLETE", "Tracks verified and updated.", "success");
-            }} 
+            }}
           />
         )}
 
@@ -1658,33 +1696,33 @@ function App() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[500] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" onClick={() => setShowGlobalIngest(false)} />
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative w-full max-w-2xl text-center space-y-12">
-               <button onClick={() => setShowGlobalIngest(false)} className="absolute top-0 right-0 p-2 text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300">
-                 <X size={20} />
-               </button>
-               <div className="space-y-4">
-                 <p className="text-[10px] text-[#ff006e] mono uppercase tracking-[0.6em] animate-pulse">/ Select Data Sector for Transmission /</p>
-               </div>
+              <button onClick={() => setShowGlobalIngest(false)} className="absolute top-0 right-0 p-2 text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300">
+                <X size={20} />
+              </button>
+              <div className="space-y-4">
+                <p className="text-[10px] text-[#ff006e] mono uppercase tracking-[0.6em] animate-pulse">/ Select Data Sector for Transmission /</p>
+              </div>
 
-               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                 {[
-                   { id: 'journal', label: 'JOURNAL_LOG', icon: <BookOpen />, desc: 'Text-based entry', color: '#ff006e', action: () => document.getElementById('global-ingest-log').click() },
-                   { id: 'visual', label: 'VISUAL_DATA', icon: <Camera />, desc: 'Photos & Art', color: '#00f2ff', action: () => document.getElementById('global-ingest-visual').click() },
-                   { id: 'video', label: 'VISUAL_FEED', icon: <Video />, desc: 'Video Transmissions', color: '#7000ff', action: () => document.getElementById('global-ingest-signal').click() }
-                 ].map(item => (
-                   <button 
-                     key={item.id} 
-                     onClick={item.action}
-                     className="group relative p-8 border border-white/10 bg-black hover:border-white/30 transition-all overflow-hidden text-left"
-                   >
-                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-100 group-hover:scale-125 transition-all" style={{ color: item.color }}>{item.icon}</div>
-                     <div className="space-y-3 relative z-10">
-                       <span className="text-[10px] font-black uppercase tracking-[0.3em] group-hover:text-white transition-colors" style={{ color: item.color }}>[{item.label}]</span>
-                       <p className="text-[9px] text-white/40 uppercase tracking-widest">{item.desc}</p>
-                     </div>
-                     <div className="absolute bottom-0 left-0 w-1 group-hover:h-full h-0 transition-all duration-300" style={{ backgroundColor: item.color }} />
-                   </button>
-                 ))}
-               </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[
+                  { id: 'journal', label: 'JOURNAL_LOG', icon: <BookOpen />, desc: 'Text-based entry', color: '#ff006e', action: () => document.getElementById('global-ingest-log').click() },
+                  { id: 'visual', label: 'VISUAL_DATA', icon: <Camera />, desc: 'Photos & Art', color: '#00f2ff', action: () => document.getElementById('global-ingest-visual').click() },
+                  { id: 'video', label: 'VISUAL_FEED', icon: <Video />, desc: 'Video Transmissions', color: '#7000ff', action: () => document.getElementById('global-ingest-signal').click() }
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    onClick={item.action}
+                    className="group relative p-8 border border-white/10 bg-black hover:border-white/30 transition-all overflow-hidden text-left"
+                  >
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-100 group-hover:scale-125 transition-all" style={{ color: item.color }}>{item.icon}</div>
+                    <div className="space-y-3 relative z-10">
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] group-hover:text-white transition-colors" style={{ color: item.color }}>[{item.label}]</span>
+                      <p className="text-[9px] text-white/40 uppercase tracking-widest">{item.desc}</p>
+                    </div>
+                    <div className="absolute bottom-0 left-0 w-1 group-hover:h-full h-0 transition-all duration-300" style={{ backgroundColor: item.color }} />
+                  </button>
+                ))}
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -1713,14 +1751,14 @@ const LoginView = ({ onLogin }) => (
   </motion.div>
 );
 
-const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying, 
-setIsPlaying, user, tracks, libraryTracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase, 
-onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek, 
-globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds, 
-playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal, 
-favoriteStations, liveStations, activeStation, stationChat, stationQueue, onExitProfile, activeMessageUser, 
-setActiveMessageUser, isMuted, onToggleMute, followedCommunities, onFollowUpdate, setActiveStation, sendMessage, 
-requestTrack, setUser, setShowGlobalGoLive, setShowGlobalUpload, setShowGlobalIngest }) => {
+const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying,
+  setIsPlaying, user, tracks, libraryTracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase,
+  onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek,
+  globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds,
+  playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal,
+  favoriteStations, liveStations, activeStation, stationChat, stationQueue, onExitProfile, activeMessageUser,
+  setActiveMessageUser, isMuted, onToggleMute, followedCommunities, onFollowUpdate, setActiveStation, sendMessage,
+  requestTrack, setUser, setShowGlobalGoLive, setShowGlobalUpload, setShowGlobalIngest }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   return (
@@ -1890,6 +1928,8 @@ requestTrack, setUser, setShowGlobalGoLive, setShowGlobalUpload, setShowGlobalIn
               activeView={activeView}
               isMuted={isMuted}
               onToggleMute={onToggleMute}
+              currentTime={currentTime}
+              duration={duration}
             />
           )
         )}
@@ -1899,7 +1939,7 @@ requestTrack, setUser, setShowGlobalGoLive, setShowGlobalUpload, setShowGlobalIn
 });
 
 // --- MINI PLAYER COMPONENT ---
-const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView, isMuted, onToggleMute }) => {
+const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView, isMuted, onToggleMute, currentTime, duration }) => {
   const isMessages = activeView === 'messages';
 
   return (
@@ -1914,13 +1954,13 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
         } `}
     >
       {/* Progress Bar (Decorative/Subtle) */}
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-white/5 overflow-hidden">
-         <motion.div 
-            className="h-full bg-[#ff0060]" 
-            initial={{ width: 0 }}
-            animate={{ width: '45%' }} // Placeholder progress
-            transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}
-         />
+      <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-white/5 overflow-hidden">
+        <motion.div
+          className="h-full bg-[#ff0060] shadow-[0_0_8px_#ff0060]"
+          initial={{ width: 0 }}
+          animate={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%' }}
+          transition={{ duration: 0.5, ease: "linear" }}
+        />
       </div>
 
       {/* Track Info (Click to expand) */}
@@ -1984,8 +2024,8 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
 // --- RECURSIVE COMMENT NODE ---
 const CommentNode = ({ comment, depth = 0, setReplyingToComment, onDelete, currentUserId, user }) => {
   const resolvedUserId = getUserId(comment);
-    const isOwner = (resolvedUserId && currentUserId && String(resolvedUserId) === String(currentUserId)) || 
-                    (String(comment.Username || comment.username || "").toLowerCase() === String(user?.username || user?.Username || "").toLowerCase() && (comment.Username || comment.username));
+  const isOwner = (resolvedUserId && currentUserId && String(resolvedUserId) === String(currentUserId)) ||
+    (String(comment.Username || comment.username || "").toLowerCase() === String(user?.username || user?.Username || "").toLowerCase() && (comment.Username || comment.username));
   const [showActions, setShowActions] = useState(false);
   const longPressTimer = useRef(null);
 
@@ -2004,9 +2044,9 @@ const CommentNode = ({ comment, depth = 0, setReplyingToComment, onDelete, curre
       {depth > 0 && (
         <div className="absolute top-5 left-0 w-2 sm:w-4 h-[1px] bg-[#ff006e]/20 -translate-x-full" />
       )}
-      
+
       <div className="space-y-3">
-        <div 
+        <div
           onClick={() => !showActions && setReplyingToComment(comment)}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
@@ -2059,11 +2099,11 @@ const CommentNode = ({ comment, depth = 0, setReplyingToComment, onDelete, curre
         {comment.replies && comment.replies.length > 0 && (
           <div className="space-y-4">
             {comment.replies.map(r => (
-              <CommentNode 
-                key={r.Id} 
-                comment={r} 
-                depth={depth + 1} 
-                setReplyingToComment={setReplyingToComment} 
+              <CommentNode
+                key={r.Id}
+                comment={r}
+                depth={depth + 1}
+                setReplyingToComment={setReplyingToComment}
                 onDelete={onDelete}
                 currentUserId={currentUserId}
                 user={user}
@@ -2090,7 +2130,7 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
   const [mobilePanelTab, setMobilePanelTab] = useState('filters'); // 'filters' | 'favorites' | 'stations'
 
   useEffect(() => {
-    API.Communities.getAll().then(res => setAllCommunities(res.data || [])).catch(() => {});
+    API.Communities.getAll().then(res => setAllCommunities(res.data || [])).catch(() => { });
   }, []);
 
   const fetchFeed = async () => {
@@ -2198,50 +2238,50 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
 
   useEffect(() => {
     if (replyingTo) {
-      setReplyingToComment(null); 
+      setReplyingToComment(null);
       const fetchComments = async () => {
         setLoadingComments(true);
         try {
           const type = replyingTo.Type;
           const itemId = replyingTo.ItemId || replyingTo.itemId;
           const { data } = await API.Social.getFeedComments(type, itemId);
-          
+
           // Helper to organize comments into a tree
           const organizeThreads = (rawList) => {
             const map = {};
             const roots = [];
-            
+
             // First pass: normalize and map using string keys for robust matching
             rawList.forEach(c => {
-                const id = String(c.id || c.Id);
-                const normalized = {
-                    ...c,
-                    Id: id,
-                    UserId: getUserId(c),
-                    ParentId: c.parentId || c.ParentId ? String(c.parentId || c.ParentId) : null,
-                    Username: c.username || c.Username,
-                    Content: c.content || c.Content,
-                    CreatedAt: c.createdAt || c.CreatedAt,
-                    IsOperator: c.isOperator ?? c.IsOperator ?? false,
-                    replies: []
-                };
-                map[id] = normalized;
+              const id = String(c.id || c.Id);
+              const normalized = {
+                ...c,
+                Id: id,
+                UserId: getUserId(c),
+                ParentId: c.parentId || c.ParentId ? String(c.parentId || c.ParentId) : null,
+                Username: c.username || c.Username,
+                Content: c.content || c.Content,
+                CreatedAt: c.createdAt || c.CreatedAt,
+                IsOperator: c.isOperator ?? c.IsOperator ?? false,
+                replies: []
+              };
+              map[id] = normalized;
             });
 
             // Second pass: link children
             Object.values(map).forEach(c => {
-                const pid = c.ParentId;
-                if (pid && map[pid]) {
-                    map[pid].replies.push(c);
-                } else {
-                    roots.push(c);
-                }
+              const pid = c.ParentId;
+              if (pid && map[pid]) {
+                map[pid].replies.push(c);
+              } else {
+                roots.push(c);
+              }
             });
 
             // Sort by date (oldest first for chronological stream)
             const sortByDate = (a, b) => new Date(a.CreatedAt).getTime() - new Date(b.CreatedAt).getTime();
             roots.sort(sortByDate);
-            
+
             // Recursive sort for replies
             const sortDeep = (node) => {
               if (node.replies) {
@@ -2250,15 +2290,15 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
               }
             };
             roots.forEach(sortDeep);
-            
+
             return roots;
           };
 
           const organized = organizeThreads(data || []);
           setComments(organized);
-          
+
           // Update the main feed count to ensure accuracy
-          setFeed(prev => prev.map(f => 
+          setFeed(prev => prev.map(f =>
             f.Id === replyingTo.Id ? { ...f, CommentCount: (data || []).length } : f
           ));
         } catch (err) {
@@ -2378,7 +2418,7 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
 
       setComments(prev => {
         if (!newComment.ParentId) return [...prev, newComment];
-        
+
         const addToParent = (list) => list.map(c => {
           if (c.Id === newComment.ParentId) {
             return { ...c, replies: [...(c.replies || []), newComment] };
@@ -2403,7 +2443,7 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
     if (!window.confirm("ARE_YOU_SURE_YOU_WANT_TO_DISPOSE_OF_THIS_SIGNAL_PACKET?")) return;
     try {
       await API.Social.deleteFeedComment(commentId);
-      
+
       const removeRecursive = (list) => {
         return list.filter(c => String(c.Id) !== String(commentId)).map(c => ({
           ...c,
@@ -2501,9 +2541,9 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                 className={`w-full flex items-center justify-between px-3 py-2 rounded transition-all border ${selectedSector === idx
                   ? 'border-opacity-30'
                   : 'bg-black/20 border-white/5 hover:border-white/20'}`}
-                style={selectedSector === idx ? { 
-                    backgroundColor: `${sector.color}20`, 
-                    borderColor: `${sector.color}50` 
+                style={selectedSector === idx ? {
+                  backgroundColor: `${sector.color}20`,
+                  borderColor: `${sector.color}50`
                 } : {}}
               >
                 <div className="flex items-center gap-2">
@@ -2564,8 +2604,8 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                   <button
                     key={`comm-link-${cid}`}
                     onClick={() => {
-                        setSelectedCommunityId(cid);
-                        setSelectedSector(null);
+                      setSelectedCommunityId(cid);
+                      setSelectedSector(null);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded transition-all border ${String(selectedCommunityId) === String(cid)
                       ? 'bg-[#00ffff]/10 border-[#00ffff]/30'
@@ -2579,7 +2619,7 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {isMemberBadge && (
-                          <span className="text-[7px] font-black text-[#00ffff]/60 border border-[#00ffff]/30 px-1 rounded-sm bg-[#00ffff]/5">MEMBER</span>
+                        <span className="text-[7px] font-black text-[#00ffff]/60 border border-[#00ffff]/30 px-1 rounded-sm bg-[#00ffff]/5">MEMBER</span>
                       )}
                       {String(selectedCommunityId) === String(cid) && <Zap size={10} className="text-[#00ffff] animate-pulse" />}
                     </div>
@@ -2610,11 +2650,10 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
             <button
               id="feed-mobile-filters-btn"
               onClick={() => { setMobilePanelTab('filters'); setMobilePanelOpen(p => mobilePanelTab === 'filters' ? !p : true); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${
-                mobilePanelOpen && mobilePanelTab === 'filters'
-                  ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
-                  : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${mobilePanelOpen && mobilePanelTab === 'filters'
+                ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
+                : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
+                }`}
             >
               <Zap size={11} />
               {selectedSector !== null || selectedCommunityId !== null ? (
@@ -2624,11 +2663,10 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
             <button
               id="feed-mobile-favorites-btn"
               onClick={() => { setMobilePanelTab('favorites'); setMobilePanelOpen(p => mobilePanelTab === 'favorites' ? !p : true); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${
-                mobilePanelOpen && mobilePanelTab === 'favorites'
-                  ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
-                  : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${mobilePanelOpen && mobilePanelTab === 'favorites'
+                ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
+                : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
+                }`}
             >
               <Star size={11} />
               LIVE_FAVS
@@ -2639,11 +2677,10 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
             <button
               id="feed-mobile-stations-btn"
               onClick={() => { setMobilePanelTab('stations'); setMobilePanelOpen(p => mobilePanelTab === 'stations' ? !p : true); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${
-                mobilePanelOpen && mobilePanelTab === 'stations'
-                  ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
-                  : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${mobilePanelOpen && mobilePanelTab === 'stations'
+                ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
+                : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
+                }`}
             >
               <Radio size={11} />
               LIVE_STATIONS
@@ -2654,8 +2691,8 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
           </div>
 
           <div className="hidden lg:flex items-center gap-2">
-             <span className="text-[9px] text-white/20 font-black uppercase tracking-[0.2em]">{`TERMINAL_FEED_STREAM`}</span>
-             <div className="w-24 h-px bg-[#ff006e]/10 border-t border-dashed border-[#ff006e]/20" />
+            <span className="text-[9px] text-white/20 font-black uppercase tracking-[0.2em]">{`TERMINAL_FEED_STREAM`}</span>
+            <div className="w-24 h-px bg-[#ff006e]/10 border-t border-dashed border-[#ff006e]/20" />
           </div>
 
           <div className="bg-black/60 backdrop-blur-sm p-1 rounded-sm border border-[#ff006e]/10 shrink-0">
@@ -2947,8 +2984,8 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                   <div className="space-y-8 pb-4">
                     {loadingComments ? (
                       <div className="flex flex-col items-center justify-center py-12 gap-4 border border-white/5 bg-white/[0.02]">
-                         <RefreshCw className="animate-spin text-[#ff006e]" size={24} />
-                         <span className="text-[10px] text-[#ff006e] animate-pulse tracking-[0.5em]">HANDSHAKING_ENCRYPTED_SIGNAL...</span>
+                        <RefreshCw className="animate-spin text-[#ff006e]" size={24} />
+                        <span className="text-[10px] text-[#ff006e] animate-pulse tracking-[0.5em]">HANDSHAKING_ENCRYPTED_SIGNAL...</span>
                       </div>
                     ) : comments.length === 0 ? (
                       <div className="text-center py-12 border border-dashed border-white/5 rounded">
@@ -2956,10 +2993,10 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                       </div>
                     ) : (
                       comments.map(c => (
-                        <CommentNode 
-                          key={c.Id} 
-                          comment={c} 
-                          setReplyingToComment={setReplyingToComment} 
+                        <CommentNode
+                          key={c.Id}
+                          comment={c}
+                          setReplyingToComment={setReplyingToComment}
                           onDelete={handleDeleteComment}
                           currentUserId={getUserId(user)}
                           user={user}
@@ -3006,17 +3043,17 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                         <div className="flex-1 border-b border-[#ff006e]/10 border-dashed mx-4 mb-2" />
                       </div>
 
-                          <button
-                            onClick={submitComment}
-                            disabled={isSubmittingComment || !commentText.trim()}
-                            className="w-full sm:w-auto px-8 py-2.5 bg-[#ff006e]/10 border border-[#ff006e]/40 text-[#ff006e] text-[10px] font-black uppercase tracking-[0.3em] hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_30px_rgba(255,0,110,0.3)] transition-all disabled:opacity-20 text-center"
-                          >
-                            {isSubmittingComment ? 'TRANSMITTING...' : '[ BROADCAST_PAYLOAD ]'}
-                          </button>
+                      <button
+                        onClick={submitComment}
+                        disabled={isSubmittingComment || !commentText.trim()}
+                        className="w-full sm:w-auto px-8 py-2.5 bg-[#ff006e]/10 border border-[#ff006e]/40 text-[#ff006e] text-[10px] font-black uppercase tracking-[0.3em] hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_30px_rgba(255,0,110,0.3)] transition-all disabled:opacity-20 text-center"
+                      >
+                        {isSubmittingComment ? 'TRANSMITTING...' : '[ BROADCAST_PAYLOAD ]'}
+                      </button>
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Scanline overlay */}
                 <div className="absolute inset-0 pointer-events-none opacity-[0.03] overflow-hidden bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-fixed" />
               </motion.div>
@@ -3049,11 +3086,10 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                   <button
                     key={tab}
                     onClick={() => setMobilePanelTab(tab)}
-                    className={`flex items-center gap-1 px-2 py-1 text-[9px] font-black uppercase tracking-widest border rounded-sm transition-all ${
-                      mobilePanelTab === tab
-                        ? 'border-[#ff006e]/50 bg-[#ff006e]/10 text-[#ff006e]'
-                        : 'border-white/5 text-white/30 hover:text-white/60'
-                    }`}
+                    className={`flex items-center gap-1 px-2 py-1 text-[9px] font-black uppercase tracking-widest border rounded-sm transition-all ${mobilePanelTab === tab
+                      ? 'border-[#ff006e]/50 bg-[#ff006e]/10 text-[#ff006e]'
+                      : 'border-white/5 text-white/30 hover:text-white/60'
+                      }`}
                   >
                     {icon}{label}
                   </button>
@@ -3096,11 +3132,10 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                         <button
                           key={sector.name}
                           onClick={() => { setSelectedSector(selectedSector === idx ? null : idx); setMobilePanelOpen(false); }}
-                          className={`flex items-center gap-2 px-3 py-2 rounded border text-[9px] font-bold uppercase tracking-widest transition-all ${
-                            selectedSector === idx
-                              ? 'text-white'
-                              : 'bg-black/20 border-white/5 text-white/40 hover:border-white/20'
-                          }`}
+                          className={`flex items-center gap-2 px-3 py-2 rounded border text-[9px] font-bold uppercase tracking-widest transition-all ${selectedSector === idx
+                            ? 'text-white'
+                            : 'bg-black/20 border-white/5 text-white/40 hover:border-white/20'
+                            }`}
                           style={selectedSector === idx ? { backgroundColor: `${sector.color}20`, borderColor: `${sector.color}50` } : {}}
                         >
                           <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: sector.color }} />
@@ -3136,11 +3171,10 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                               <button
                                 key={`mob-comm-${cid}`}
                                 onClick={() => { setSelectedCommunityId(String(selectedCommunityId) === String(cid) ? null : cid); setSelectedSector(null); setMobilePanelOpen(false); }}
-                                className={`w-full flex items-center justify-between px-3 py-2 rounded border text-[9px] transition-all ${
-                                  String(selectedCommunityId) === String(cid)
-                                    ? 'bg-[#00ffff]/10 border-[#00ffff]/30 text-white'
-                                    : 'bg-black/20 border-white/5 text-white/40 hover:border-[#00ffff]/20'
-                                }`}
+                                className={`w-full flex items-center justify-between px-3 py-2 rounded border text-[9px] transition-all ${String(selectedCommunityId) === String(cid)
+                                  ? 'bg-[#00ffff]/10 border-[#00ffff]/30 text-white'
+                                  : 'bg-black/20 border-white/5 text-white/40 hover:border-[#00ffff]/20'
+                                  }`}
                               >
                                 <div className="flex items-center gap-2 overflow-hidden">
                                   <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: sectorColor }} />
@@ -3210,18 +3244,16 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                     liveStations.map(station => (
                       <div
                         key={`mob-stn-${station.id || station.Id}`}
-                        className={`p-4 rounded border ${
-                          (station.isLive || station.IsLive)
-                            ? 'bg-[#ff006e]/5 border-[#ff006e]/20 shadow-[0_0_15px_rgba(255,0,110,0.05)]'
-                            : 'bg-black/60 border-white/5 opacity-60'
-                        }`}
+                        className={`p-4 rounded border ${(station.isLive || station.IsLive)
+                          ? 'bg-[#ff006e]/5 border-[#ff006e]/20 shadow-[0_0_15px_rgba(255,0,110,0.05)]'
+                          : 'bg-black/60 border-white/5 opacity-60'
+                          }`}
                       >
                         <div className="flex items-center gap-2 mb-1.5">
-                          <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                            (station.isLive || station.IsLive)
-                              ? 'bg-[#ff006e] blink shadow-[0_0_8px_#ff006e]'
-                              : 'bg-gray-600'
-                          }`} />
+                          <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${(station.isLive || station.IsLive)
+                            ? 'bg-[#ff006e] blink shadow-[0_0_8px_#ff006e]'
+                            : 'bg-gray-600'
+                            }`} />
                           <span className="text-[10px] font-black text-white uppercase tracking-wider truncate">{station.name || station.Name}</span>
                         </div>
                         <p className="text-[9px] text-white/40 mb-3 italic truncate">
@@ -3304,8 +3336,8 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
             {/* Mini Queue */}
             <div className="space-y-3">
               <div className="text-[8px] font-bold text-white/40 uppercase tracking-widest flex justify-between">
-                 <span>REQUEST_QUEUE</span>
-                 <span>[{stationQueue?.length || 0}]</span>
+                <span>REQUEST_QUEUE</span>
+                <span>[{stationQueue?.length || 0}]</span>
               </div>
               <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-2">
                 {stationQueue && stationQueue.length > 0 ? stationQueue.map((req, idx) => (
@@ -3314,7 +3346,7 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                       <div className="text-[9px] font-bold text-white truncate">{req.trackTitle}</div>
                       <div className="text-[7px] text-[#ff006e]/60 font-mono">FROM: {req.username}</div>
                     </div>
-                    <button 
+                    <button
                       onClick={() => onPlayPlaylist && onPlayPlaylist([{ id: req.trackId, title: req.trackTitle, artist: 'REQUEST' }], 0)}
                       className="w-6 h-6 rounded-full border border-[#ff006e]/20 flex items-center justify-center text-[#ff006e] hover:bg-[#ff006e] hover:text-black transition-all"
                     >
@@ -3330,12 +3362,12 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
             </div>
 
             <div className="pt-4 border-t border-[#ff006e]/10">
-               <button 
+              <button
                 onClick={() => setView('player')}
                 className="w-full py-2 bg-[#ff006e]/10 border border-[#ff006e]/40 text-[#ff006e] text-[9px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all"
-               >
-                 [ OPEN_FULL_DASHBOARD ]
-               </button>
+              >
+                [ OPEN_FULL_DASHBOARD ]
+              </button>
             </div>
           </div>
         )}
@@ -3355,14 +3387,14 @@ const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, us
                 <div className="flex justify-between items-center">
                   <span className="text-[8px] font-bold text-[#ff006e]/40 uppercase">{(station.listenerCount || station.ListenerCount || 0)} CONNECTED</span>
                   {(station.isLive || station.IsLive) && (
-                    <button 
+                    <button
                       onClick={() => {
                         setActiveStation(station);
                         import('./services/signalr').then(m => m.joinStation(station.id || station.Id));
                         if (String(station.artistUserId || station.ArtistUserId) === String(user?.id || user?.Id)) {
-                           navigateToProfile(user?.id || user?.Id);
+                          navigateToProfile(user?.id || user?.Id);
                         } else {
-                           setView('player');
+                          setView('player');
                         }
                       }}
                       className="px-2 py-0.5 border border-[#ff006e] text-[#ff006e] text-[8px] font-black rounded hover:bg-[#ff006e] hover:text-black transition-all"
@@ -3459,7 +3491,7 @@ const SidebarLink = React.memo(({ icon, label, active, onClick, collapsed, hasNo
   >
     {/* Active Background Layer */}
     <div className={`absolute inset-0 hud-panel transition-opacity duration-300 pointer-events-none ${active ? 'opacity-100' : 'opacity-0'}`} />
-    
+
     {active && (
       <div className="absolute inset-0 pointer-events-none animate-in fade-in duration-500">
         <div className="hud-bracket-tl text-[#ff006e] opacity-80" />
@@ -3468,7 +3500,7 @@ const SidebarLink = React.memo(({ icon, label, active, onClick, collapsed, hasNo
         <div className="hud-bracket-br text-[#ff006e] opacity-80" />
       </div>
     )}
-    
+
     <div className={`relative transition-all duration-300 ${active ? 'scale-110 text-[#ff006e]' : 'opacity-60 group-hover:opacity-100 group-hover:scale-110'}`}>
       {icon}
     </div>
@@ -3487,7 +3519,7 @@ const NavButton = React.memo(({ icon, active, onClick, hasNotification }) => (
   <button onClick={onClick} className={`relative p-3.5 outline-none group rounded-sm ${active ? 'text-[#ff006e]' : 'text-white/20 hover:text-[#ff006e]'}`}>
     {/* Active Background Layer */}
     <div className={`absolute inset-0 hud-panel transition-opacity duration-300 pointer-events-none ${active ? 'opacity-100' : 'opacity-0'}`} />
-    
+
     {active && (
       <div className="absolute inset-0 pointer-events-none animate-in fade-in duration-500">
         <div className="hud-bracket-tl text-[#ff006e] opacity-80" />

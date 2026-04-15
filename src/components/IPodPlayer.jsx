@@ -1035,7 +1035,7 @@ export const IPodPlayer = ({
                                             {currentTrack.cover ? (
                                                 <img src={currentTrack.cover} alt="Cover" className={`w-full h-full object-cover transition-all duration-500 ${isLocked ? 'blur-md grayscale opacity-40 scale-110' : 'group-hover/cover:scale-105'}`} />
                                             ) : (
-                                                <Zap size={44} className="text-[#f00060] animate-pulse" />
+                                                <Zap size={44} className={`text-[#f00060] ${(!currentTrack.title || currentTrack.title === 'Loading...') ? 'animate-pulse' : ''}`} />
                                             )}
 
                                             {isLocked && (

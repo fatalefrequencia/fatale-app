@@ -11,9 +11,9 @@ const getSizeTier = (trackCount = 0, isLive = false) => {
 };
 
 const TIER_DIMS = {
-    large:  { w: 180, h: 180 },
-    medium: { w: 140, h: 140 },
-    small:  { w: 100, h: 100 },
+    large: { w: 220, h: 220 },
+    medium: { w: 180, h: 180 },
+    small: { w: 140, h: 140 },
 };
 
 const ArtistNode = ({ data }) => {
@@ -46,20 +46,21 @@ const ArtistNode = ({ data }) => {
     const mediaUrl = imageUrl ? getMediaUrl(imageUrl) : null;
 
     // Filter logic moved to wrapper for visible glow
+    // Simpler, cleaner shadow filter
     const shadowFilter = hovered
-        ? `drop-shadow(0 0 15px ${artistColor}cc) drop-shadow(0 0 5px ${artistColor})`
-        : isLive 
-            ? `drop-shadow(0 0 12px ${artistColor}88) drop-shadow(0 0 3px ${artistColor}aa)`
-            : `drop-shadow(0 0 6px ${artistColor}66)`;
+        ? `drop-shadow(0 0 15px ${artistColor})`
+        : isLive
+            ? `drop-shadow(0 0 10px ${artistColor}88)`
+            : `none`;
 
     return (
-        <div 
-            style={{ 
-                width: w, 
-                height: h, 
+        <div
+            style={{
+                width: w,
+                height: h,
                 filter: shadowFilter,
                 transition: 'filter 0.3s ease',
-                zIndex: hovered ? 100 : 1 
+                zIndex: hovered ? 100 : 1
             }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
@@ -81,14 +82,13 @@ const ArtistNode = ({ data }) => {
                 <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
                 <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
 
-                {/* Diamond Inner Border */}
+                {/* Simple Background */}
                 <div style={{
                     position: 'absolute',
-                    inset: 2,
+                    inset: 0,
                     clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-                    background: '#020202',
+                    background: '#0a0a0a',
                     zIndex: -1,
-                    opacity: 0.95
                 }} />
 
                 {/* Profile image */}
@@ -102,7 +102,7 @@ const ArtistNode = ({ data }) => {
                 )}
                 {!mediaUrl && (
                     <div style={{
-                        width: '100%', height: '100%', 
+                        width: '100%', height: '100%',
                         background: '#020202', // Hollow/Discovery Match
                     }} />
                 )}
@@ -117,7 +117,7 @@ const ArtistNode = ({ data }) => {
                         textAlign: 'center',
                         zIndex: 10
                     }}>
-                        <div 
+                        <div
                             style={{
                                 color: '#fff',
                                 fontSize: Math.max(6, Math.min(tier === 'large' ? 11 : 9, (w * 0.7) / (name.length + 2))),

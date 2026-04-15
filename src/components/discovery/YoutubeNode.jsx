@@ -20,18 +20,18 @@ const YoutubeNode = ({ data }) => {
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             style={{
-                width: 120,
-                height: 120,
-                border: '2px solid #ffffff',
-                boxShadow: hovered 
-                    ? '0 0 25px rgba(255, 255, 255, 0.7)' 
-                    : '0 0 15px rgba(255, 255, 255, 0.4)',
+                width: 160,
+                height: 160,
+                border: '1px solid rgba(255,255,255,0.1)',
+                boxShadow: hovered
+                    ? '0 0 20px rgba(255, 255, 255, 0.4)'
+                    : 'none',
                 borderRadius: 8,
                 overflow: 'hidden',
                 position: 'relative',
                 cursor: 'pointer',
                 background: '#0a0a0a',
-                transition: 'box-shadow 0.2s, transform 0.15s',
+                transition: 'all 0.2s',
                 userSelect: 'none',
                 transform: hovered ? 'scale(1.05)' : 'scale(1)',
             }}
@@ -98,10 +98,10 @@ const YoutubeNode = ({ data }) => {
                     zIndex: 10,
                     textAlign: 'center'
                 }}>
-                    <div 
+                    <div
                         className={`terminal-hover-scroll ${hovered ? 'is-hovered' : ''}`}
                         style={{
-                            color: '#fff', 
+                            color: '#fff',
                             fontSize: hovered ? 11 : Math.max(6, Math.min(11, (120 * 0.8) / (title.length + 2))),
                             fontWeight: 700,
                             textTransform: 'uppercase',
@@ -117,7 +117,7 @@ const YoutubeNode = ({ data }) => {
                     </div>
                     {author && (
                         <div style={{
-                            color: 'rgba(255,255,255,0.5)', fontSize: 8, 
+                            color: 'rgba(255,255,255,0.5)', fontSize: 8,
                             fontFamily: "'Share Tech Mono', monospace",
                             textTransform: 'uppercase',
                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',

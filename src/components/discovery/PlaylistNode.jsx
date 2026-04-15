@@ -22,13 +22,13 @@ const PlaylistNode = ({ data }) => {
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             style={{
-                width: 130,
-                height: 130,
-                border: `1px solid ${sectorColor}33`,
-                boxShadow: hovered 
-                    ? `0 0 30px ${sectorColor}cc, inset 0 0 15px ${sectorColor}44` 
-                    : `0 0 18px ${sectorColor}66`,
-                borderRadius: 4,
+                width: 180,
+                height: 180,
+                border: `1px solid ${sectorColor}20`,
+                boxShadow: hovered
+                    ? `0 0 25px ${sectorColor}88`
+                    : `none`,
+                borderRadius: 8,
                 overflow: 'hidden',
                 position: 'relative',
                 cursor: 'pointer',
@@ -97,15 +97,15 @@ const PlaylistNode = ({ data }) => {
                     zIndex: 10,
                     textAlign: 'center'
                 }}>
-                    <div 
+                    <div
                         className={`terminal-hover-scroll ${hovered ? 'is-hovered' : ''}`}
                         style={{
                             color: '#fff',
-                            fontSize: hovered ? 11 : Math.max(6, Math.min(11, (130 * 0.8) / (name.length + 2))),
-                            fontWeight: 700,
+                            fontSize: hovered ? 12 : Math.max(7, Math.min(12, (180 * 0.8) / (name.length + 2))),
+                            fontWeight: 800,
                             textTransform: 'uppercase',
                             letterSpacing: hovered ? '0.08em' : '0.04em',
-                            textShadow: hovered ? `0 0 5px ${sectorColor}` : '0 0 4px rgba(0,0,0,1)',
+                            textShadow: '0 2px 4px rgba(0,0,0,0.8)',
                             fontFamily: "'Share Tech Mono', monospace",
                             transition: 'all 0.2s ease',
                             whiteSpace: hovered ? 'nowrap' : 'normal',

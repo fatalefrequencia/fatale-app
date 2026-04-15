@@ -4,7 +4,7 @@ import {
     useNodesState,
     useEdgesState,
     Controls,
-    
+
     Background,
     BackgroundVariant,
     useReactFlow,
@@ -42,9 +42,9 @@ const hashStr = (s) => {
 const jitter = (seed, range) => ((hashStr(seed + 'x') % range) - range / 2);
 
 // Archimedean spiral for scattering artists around sector center
-const spiral = (index, cx, cy, startRadius = 300, spacing = 220) => {
-    const angle = index * 2.39996; 
-    const radius = startRadius + Math.sqrt(index) * spacing; 
+const spiral = (index, cx, cy, startRadius = 280, spacing = 120) => {
+    const angle = index * 2.39996;
+    const radius = startRadius + Math.sqrt(index) * spacing;
     return { x: cx + Math.cos(angle) * radius, y: cy + Math.sin(angle) * radius * 0.9 };
 };
 
@@ -88,7 +88,7 @@ const DiscoveryCanvas = ({
         }
     }, [onPlayTrack, onPlayPlaylist]);
     const { showNotification } = useNotification();
-    const { getViewport } = useReactFlow();
+    const { getViewport, setCenter, fitView } = useReactFlow();
 
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -107,6 +107,7 @@ const DiscoveryCanvas = ({
     // Track current viewport zoom for node visibility
     const [currentZoom, setCurrentZoom] = useState(0.45);
     const [hoveredNodeId, setHoveredNodeId] = useState(null);
+    const hasFetchedRef = useRef(false);
 
     // â”€â”€ Build nodes from API data â”€â”€
     const buildNodes = useCallback((artists, playlists, communitiesData, zoom) => {
@@ -131,11 +132,11 @@ const DiscoveryCanvas = ({
         Object.entries(sectorGroups).forEach(([secId, group]) => {
             const sec = SECTORS[parseInt(secId)] || SECTORS[0];
             group.forEach((a, idx) => {
-                const pos = spiral(idx, sec.x, sec.y, 520, 240);
+                const pos = spiral(idx, sec.x, sec.y, 300, 140);
                 // UNIFIED ID LOGIC
                 const aId = a.id || a.Id || a.userId || a.UserId || `fallback-${idx}`;
                 const id = `a-${aId}`;
-                
+
                 const trackCount = a.trackCount || a.TrackCount || 0;
                 const isLive = a.isLive || a.IsLive || false;
                 result.push({
@@ -160,7 +161,7 @@ const DiscoveryCanvas = ({
         // 3.5. Place Sector Hub Nodes and Individual Community Nodes
         SECTORS.forEach(sec => {
             const sectorCommunities = (communitiesData || []).filter(c => c.sectorId === sec.id);
-            const userIsMember = sectorCommunities.some(c => 
+            const userIsMember = sectorCommunities.some(c =>
                 String(c.id) === String(user?.communityId || user?.CommunityId)
             );
 
@@ -185,7 +186,7 @@ const DiscoveryCanvas = ({
             // Individual Community Nodes (Orbiting the hub)
             sectorCommunities.forEach((comm, cidx) => {
                 const angle = (cidx / sectorCommunities.length) * 2 * Math.PI;
-                const radius = 300; // Increased from 240 for larger hub
+                const radius = 180; // Denser orbit around the hub
                 const pos = {
                     x: sec.x + Math.cos(angle) * radius - 50,
                     y: sec.y + Math.sin(angle) * radius - 50
@@ -220,7 +221,7 @@ const DiscoveryCanvas = ({
             const sec = SECTORS[secId] || SECTORS[0];
 
             // Place playlists further out from the sector center
-            const pos = spiral(idx + 15, sec.x, sec.y, 700, 260);
+            const pos = spiral(idx + 15, sec.x, sec.y, 450, 160);
 
             result.push({
                 id: `pl-${pl.id || pl.Id || idx}`,
@@ -242,29 +243,40 @@ const DiscoveryCanvas = ({
         return result;
     }, [navigateToProfile]);
 
-    // â”€â”€ Fetch YouTube results per sector â”€â”€
-    const fetchYoutube = useCallback(async (onPlayTrackFn) => {
+    // ── Fetch YouTube results per sector ──
+    const fetchYoutube = useCallback(async () => {
         const results = [];
-        // Fetch all sectors for a complete map ecosystem
         const sampledSectors = SECTORS.slice(0, 6);
         await Promise.all(sampledSectors.map(async (sec) => {
             try {
-                const query = sec.subgenres?.[0] || sec.name;
+                // Focus query specifically on high-quality professional music content
+                const baseQuery = sec.subgenres?.[0] || sec.name;
+                const query = `${baseQuery} "music video" official -playlist -relaxing -live`;
                 const res = await API.Youtube.getDiscoveryNodes(query).catch(() => null);
-                // Cap at 12 nodes per sector for visual balance
-                const items = (Array.isArray(res?.data) ? res.data : []).slice(0, 12);
+
+                // Filter for musical content and remove "noise" results
+                const items = (Array.isArray(res?.data) ? res.data : [])
+                    .filter(item => {
+                        const title = (item.Title || item.title || '').toLowerCase();
+                        const channel = (item.Author || item.author || item.ChannelTitle || '').toLowerCase();
+
+                        // Strict filter to ensure professional artist content
+                        const isJunk = /vlog|tutorial|review|how to|reaction|unboxing|podcast|news|movie|trailer|meditation|sleep|study|relaxing/i.test(title);
+                        const isGeneric = /mix|playlist|best of|compilation|top 10|various/i.test(title) || /mix|playlist|relax/i.test(channel);
+                        const isMusic = /movie|audio|official|video|song|lyrics|feat|ft\.|album|track|remix/i.test(title);
+
+                        return !isJunk && !isGeneric && isMusic;
+                    })
+                    .slice(0, 10); // Cap at 10 high-quality nodes
+
                 items.forEach((item, idx) => {
                     const videoId = item.Id || item.id;
                     if (!videoId) return;
-                    // Place YT nodes in an outer ring around the sector
-                    const angle = (idx * 0.85) + 4.2;
-                    const radius = 900 + (idx % 4) * 160;
-                    const xj = ((hashStr(videoId + 'ytx') % 80) - 40);
-                    const yj = ((hashStr(videoId + 'yty') % 80) - 40);
+
                     results.push({
                         id: `yt-${videoId}-${sec.id}-${idx}`,
                         type: 'youtubeNode',
-                        position: spiral(idx + 30, sec.x, sec.y, 750, 180),
+                        position: spiral(idx + 30, sec.x, sec.y, 500, 120),
                         data: {
                             title: item.Title || item.title || 'YouTube Signal',
                             author: item.Author || item.author || item.album?.artist?.name || item.ChannelTitle || '',
@@ -277,12 +289,14 @@ const DiscoveryCanvas = ({
                         zIndex: 3,
                     });
                 });
-            } catch {}
+            } catch (err) {
+                console.error("Discovery YT Fetch Error:", err);
+            }
         }));
         setYoutubeNodes(results);
-    }, []);
+    }, [handleYoutubePlay]); // Removed currentZoom to avoid frequent re-fetches
 
-    // â”€â”€ Fetch data â”€â”€
+    // ── Fetch data ──
     const fetchAll = useCallback(async () => {
         setLoading(true);
         try {
@@ -334,17 +348,17 @@ const DiscoveryCanvas = ({
                 // UNIFIED ID LOGIC (Must match buildNodes exactly)
                 const aId = a.id || a.Id || a.userId || a.UserId || `fallback-${idx}`;
                 const artistNodeId = `a-${aId}`;
-                
+
                 const residentSectorId = a.sectorId ?? a.SectorId ?? (idx % SECTORS.length);
                 const residentSec = SECTORS[residentSectorId] || SECTORS[0];
-                
+
                 const memberCommId = a.communityId || a.CommunityId;
                 const foundedComms = comms.filter(c => {
                     const fId = c.founderUserId || c.FounderUserId;
                     const thisAId = a.id || a.Id || a.userId || a.UserId;
                     return fId && String(fId) === String(thisAId);
                 });
-                
+
                 const linkedCommIds = new Set();
                 if (memberCommId) linkedCommIds.add(String(memberCommId));
                 foundedComms.forEach(c => {
@@ -358,9 +372,9 @@ const DiscoveryCanvas = ({
                         const commObj = comms.find(c => String(c.id || c.Id) === String(cid));
                         const cSectorId = commObj?.sectorId ?? commObj?.SectorId ?? residentSectorId;
                         const edgeColor = SECTORS[cSectorId]?.color || residentSec.color;
-                        
+
                         const isHighlighted = hoveredNodeId === artistNodeId || hoveredNodeId === commNodeId;
-                        
+
                         // Artist -> Community (MEMBERSHIP/FOUNDER TETHER)
                         builtEdges.push({
                             id: `e-c-${artistNodeId}-${commNodeId}`,
@@ -369,9 +383,9 @@ const DiscoveryCanvas = ({
                             type: 'simplebezier',
                             animated: isHighlighted, // Only animate on hover
                             className: `discovery-edge ${hoveredNodeId ? (isHighlighted ? 'discovery-edge-active' : 'discovery-edge-inactive') : ''}`,
-                            style: { 
-                                stroke: edgeColor, 
-                                strokeWidth: isHighlighted ? 2.5 : 1.5, 
+                            style: {
+                                stroke: edgeColor,
+                                strokeWidth: isHighlighted ? 2.5 : 1.5,
                                 opacity: hoveredNodeId ? (isHighlighted ? 0.95 : 0.05) : 0.6,
                                 transition: 'all 0.3s ease'
                             },
@@ -387,10 +401,10 @@ const DiscoveryCanvas = ({
                             type: 'simplebezier',
                             animated: true,
                             className: `discovery-edge ${hoveredNodeId ? (isHubHighlighted ? 'discovery-edge-active' : 'discovery-edge-inactive') : ''}`,
-                            style: { 
-                                stroke: edgeColor, 
-                                strokeWidth: isHubHighlighted ? 1.5 : 0.8, 
-                                opacity: hoveredNodeId ? (isHubHighlighted ? 0.6 : 0.03) : 0.15 
+                            style: {
+                                stroke: edgeColor,
+                                strokeWidth: isHubHighlighted ? 1.5 : 0.8,
+                                opacity: hoveredNodeId ? (isHubHighlighted ? 0.6 : 0.03) : 0.15
                             },
                         });
                     });
@@ -433,20 +447,23 @@ const DiscoveryCanvas = ({
         } finally {
             setLoading(false);
         }
-    }, [buildNodes, currentZoom, communities, user]);
+    }, [buildNodes, user]); // Removed communities and currentZoom to avoid circular/excessive re-triggers
 
-    useEffect(() => { fetchAll(); fetchYoutube(handleYoutubePlay); }, []);
+    useEffect(() => {
+        if (!hasFetchedRef.current) {
+            fetchAll();
+            fetchYoutube();
+            hasFetchedRef.current = true;
+        }
+    }, [fetchAll, fetchYoutube]);
 
-    // â”€â”€ Update zoom on all nodes when viewport changes â”€â”€
+    // ── Update zoom on all nodes when viewport changes ──
     const handleMove = useCallback((evt, viewport) => {
         const z = viewport?.zoom ?? 1;
         setCurrentZoom(z);
-        setNodes(prev => prev.map(n => ({
-            ...n,
-            data: { ...n.data, zoom: z },
-        })));
-    }, [setNodes]);
-    
+        // Avoid bulk setNodes here to keep performance high and prevent blanking
+    }, []);
+
     // â”€â”€ Central Node Click Handler â”€â”€
     const handleNodeClick = useCallback((event, node) => {
         if (node.type === 'artistNode') {
@@ -498,32 +515,40 @@ const DiscoveryCanvas = ({
         }
 
         if (ytSearchRef.current) clearTimeout(ytSearchRef.current);
-        
+
         ytSearchRef.current = setTimeout(async () => {
             try {
-                const res = await API.Youtube.getDiscoveryNodes(query).catch(err => {
+                // Refine search query for music quality
+                const refinedQuery = `${query} music artist official`;
+                const res = await API.Youtube.getDiscoveryNodes(refinedQuery).catch(err => {
                     if (err.response?.status === 403 || err.response?.data?.includes('quota')) {
                         showNotification('YouTube API quota exceeded. Try again tomorrow.', 'warning');
                     }
                     return null;
                 });
-                
-                // Cap search results to keep the map clean (15 max)
-                const items = (Array.isArray(res?.data) ? res.data : []).slice(0, 15);
+
+                // Filter results to ensure they are music-related
+                const items = (Array.isArray(res?.data) ? res.data : [])
+                    .filter(item => {
+                        const title = (item.Title || item.title || '').toLowerCase();
+                        const isJunk = /vlog|tutorial|review|how to|reaction|unboxing|podcast|news/i.test(title);
+                        return !isJunk;
+                    })
+                    .slice(0, 15);
                 const searchResults = items.map((item, idx) => {
                     const videoId = item.Id || item.id;
                     const title = item.Title || item.title || 'YouTube Signal';
                     const author = item.Author || item.author || item.album?.artist?.name || '';
-                    
+
                     const matchedSector = getSectorByMetadata(title, author);
-                    
+
                     // If matched, spiral near sector hub. Else, spiral near center (4000, 3000)
                     const centerX = matchedSector ? matchedSector.x : 4000;
                     const centerY = matchedSector ? matchedSector.y : 3000;
                     const color = matchedSector ? matchedSector.color : '#ffffff';
-                    
-                    const pos = spiral(idx + 5, centerX, centerY, 450, 220);
-                    
+
+                    const pos = spiral(idx + 5, centerX, centerY, 250, 140);
+
                     return {
                         id: `yt-search-${videoId}-${idx}`,
                         type: "youtubeNode",
@@ -540,14 +565,14 @@ const DiscoveryCanvas = ({
                         zIndex: 15,
                     };
                 });
-                
+
                 setYoutubeNodes(prev => {
                     const bg = prev.filter(n => !n.id.startsWith('yt-search-'));
                     return [...bg, ...searchResults];
                 });
-            } catch {}
+            } catch { }
         }, 1200); // 1.2s debounce to be very conservative with quota
-        
+
         return () => clearTimeout(ytSearchRef.current);
     }, [searchQuery, currentZoom, onPlayTrack, showNotification]);
 
@@ -561,7 +586,7 @@ const DiscoveryCanvas = ({
                 // Structural nodes
                 if (node.type === 'sectorLabel') return node.id === `sector-label-${activeSector}`;
                 if (node.type === 'sectorHubNode') return node.id === `sector-hub-${activeSector}`;
-                
+
                 // Content nodes (match by color)
                 const nodeColor = node.data?.sectorColor || node.data?.color;
                 return nodeColor === sec.color;
@@ -573,7 +598,7 @@ const DiscoveryCanvas = ({
             n = n.filter(node => {
                 // Always keep landmarks visible (unless sector-filtered)
                 if (node.type === 'sectorHubNode' || node.type === 'sectorLabel') return true;
-                
+
                 // Match name or title
                 const contentName = (node.data?.name || node.data?.title || '').toLowerCase();
                 return contentName.includes(q);
@@ -649,13 +674,13 @@ const DiscoveryCanvas = ({
                     title="Refresh Map"
                 >
                     <motion.div whileTap={{ rotate: 180 }} transition={{ duration: 0.3 }}>
-                        <Filter size={14} /> 
+                        <Filter size={14} />
                     </motion.div>
                 </button>
             </div>
 
             {/* â”€â”€ Sector Filter Pills â”€â”€ */}
-            <div 
+            <div
                 className="no-scrollbar"
                 style={{
                     position: 'absolute', bottom: isPlayerActive ? 92 : 12, left: '50%', transform: 'translateX(-50%)',
@@ -668,43 +693,53 @@ const DiscoveryCanvas = ({
                 }}
             >
                 <button
-                    onClick={() => setActiveSector(null)}
+                    onClick={() => { setActiveSector(null); fitView({ duration: 1000, padding: 0.2 }); }}
                     style={{
                         background: activeSector === null ? '#ff006e' : 'rgba(10,10,10,0.85)',
                         border: '1px solid rgba(255,0,110,0.3)',
                         borderRadius: 20,
                         color: activeSector === null ? '#fff' : 'rgba(255,255,255,0.5)',
-                        padding: '5px 12px',
+                        padding: '6px 16px',
                         fontSize: 10,
                         fontFamily: 'monospace',
-                        fontWeight: 700,
+                        fontWeight: 900,
                         textTransform: 'uppercase',
-                        letterSpacing: '0.1em',
+                        letterSpacing: '0.15em',
                         cursor: 'pointer',
                         whiteSpace: 'nowrap',
                         flexShrink: 0,
+                        boxShadow: activeSector === null ? '0 0 20px rgba(255,0,110,0.3)' : 'none',
                     }}
                 >
-                    ALL
+                    GLOBAL_VIEW
                 </button>
                 {SECTORS.map(sec => (
                     <button
                         key={sec.id}
-                        onClick={() => setActiveSector(activeSector === sec.id ? null : sec.id)}
+                        onClick={() => {
+                            const newActive = activeSector === sec.id ? null : sec.id;
+                            setActiveSector(newActive);
+                            if (newActive !== null) {
+                                setCenter(sec.x, sec.y, { zoom: 1.1, duration: 1000 });
+                            } else {
+                                fitView({ duration: 1000, padding: 0.2 });
+                            }
+                        }}
                         style={{
                             background: activeSector === sec.id ? sec.color : 'rgba(10,10,10,0.85)',
                             border: `1px solid ${sec.color}60`,
                             borderRadius: 20,
                             color: activeSector === sec.id ? '#000' : sec.color,
-                            padding: '5px 12px',
+                            padding: '6px 16px',
                             fontSize: 10,
                             fontFamily: 'monospace',
-                            fontWeight: 700,
+                            fontWeight: 900,
                             textTransform: 'uppercase',
-                            letterSpacing: '0.08em',
+                            letterSpacing: '0.1em',
                             cursor: 'pointer',
                             whiteSpace: 'nowrap',
                             flexShrink: 0,
+                            boxShadow: activeSector === sec.id ? `0 0 20px ${sec.color}40` : 'none',
                         }}
                     >
                         {sec.name}
@@ -747,7 +782,7 @@ const DiscoveryCanvas = ({
                 onMove={handleMove}
                 minZoom={0.1}
                 maxZoom={2.5}
-                defaultViewport={{ x: 0, y: 0, zoom: 0.35 }}
+                defaultViewport={{ x: 0, y: 0, zoom: 0.55 }}
                 fitView
                 fitViewOptions={{ padding: 0.15 }}
                 nodesDraggable={false}
@@ -766,8 +801,8 @@ const DiscoveryCanvas = ({
                     size={1}
                     color="rgba(255,0,110,0.08)"
                 />
-                        <Controls position="bottom-left" style={{ bottom: isPlayerActive ? 150 : 60, background: "rgba(10,10,10,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10 }} showInteractive={false} />
-                
+                <Controls position="bottom-left" style={{ bottom: isPlayerActive ? 150 : 60, background: "rgba(10,10,10,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10 }} showInteractive={false} />
+
             </ReactFlow>
 
             {/* â”€â”€ Playlist Preview Panel â”€â”€ */}
