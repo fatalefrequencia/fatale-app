@@ -1626,7 +1626,7 @@ export const ProfileView = React.memo(({
                                                 )}
                                                 <div className="absolute top-0 left-0 bg-[var(--text-color)] text-black text-[8px] font-bold px-1.5 py-0.5 mono">#{String(p.id).padStart(3, '0')}</div>
                                                 {isMe && (
-                                                    <div className="absolute top-2 right-2 z-30 flex gap-2">
+                                                    <div className="absolute top-2 left-2 z-30 flex gap-2">
                                                         <button
                                                             onClick={async (e) => {
                                                                 e.stopPropagation();
@@ -1925,7 +1925,7 @@ export const ProfileView = React.memo(({
                                                                     />
                                                                 </div>
                                                             ) : (
-                                                                <div className="absolute top-2 right-2 z-30 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                                                <div className="absolute top-2 left-2 z-30 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
                                                                     <button
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
