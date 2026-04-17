@@ -36,12 +36,12 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
                 {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-white/5 bg-black/40 relative z-10">
                     <div className="flex items-center gap-3 text-[#9d00ff]">
-                        {normalizedType === 'JOURNAL' && <Book size={18} />}
-                        {normalizedType === 'PHOTO' && <Camera size={18} />}
-                        {normalizedType === 'VIDEO' && <Video size={18} />}
+                        {['JOURNAL', 'TEXT'].includes(normalizedType) && <Book size={18} />}
+                        {['PHOTO', 'IMAGE', 'PICTURE'].includes(normalizedType) && <Camera size={18} />}
+                        {['VIDEO', 'MEDIA'].includes(normalizedType) && <Video size={18} />}
                         <div className="flex flex-col">
                             <span className="mono text-[10px] font-black tracking-[0.3em] uppercase">
-                                {normalizedType === 'JOURNAL' ? 'ARCHIVED_LOG_ENTRY' : normalizedType === 'PHOTO' ? 'VISUAL_DATA_FRAGMENT' : 'SIGNAL_FEED_RECORDING'}
+                                {['JOURNAL', 'TEXT'].includes(normalizedType) ? 'ARCHIVED_LOG_ENTRY' : ['PHOTO', 'IMAGE', 'PICTURE'].includes(normalizedType) ? 'VISUAL_DATA_FRAGMENT' : 'SIGNAL_FEED_RECORDING'}
                             </span>
                             <span className="text-[7px] text-[#9d00ff]/40 mono uppercase">:: ACCESS_PROTOCOL_SECURED ::</span>
                         </div>
@@ -51,7 +51,7 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
                 {/* Content Body */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10">
                     <div className="p-8 md:p-12 relative">
-                        {normalizedType === 'JOURNAL' && (
+                        {['JOURNAL', 'TEXT'].includes(normalizedType) && (
                             <div className="space-y-8">
                                 <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter italic leading-tight">
                                     {content.Title || content.title || '// UNTITLED_LOG'}
@@ -59,34 +59,34 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
                                 <div className="w-24 h-1 bg-gradient-to-r from-[#9d00ff] to-transparent"></div>
                                 <div className="prose prose-invert max-w-none">
                                     <p className="text-sm md:text-base text-white/80 leading-relaxed font-mono whitespace-pre-wrap tracking-wide">
-                                        {content.Content || content.content}
+                                        {content.Content || content.content || content.Text || content.text}
                                     </p>
                                 </div>
                             </div>
                         )}
 
-                        {normalizedType === 'PHOTO' && (
+                        {['PHOTO', 'IMAGE', 'PICTURE'].includes(normalizedType) && (
                             <div className="flex flex-col items-center justify-center min-h-[400px]">
                                 <div className="relative group">
                                     <div className="absolute inset-0 bg-[#9d00ff]/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
                                     <img
-                                        src={getMediaUrl(content.Url || content.url || content.imageUrl || content.ImageUrl || content.thumbnailUrl || content.ThumbnailUrl)}
+                                        src={getMediaUrl(content.Url || content.url || content.imageUrl || content.ImageUrl || content.thumbnailUrl || content.ThumbnailUrl || content.source || content.Source)}
                                         alt="Expanded Visual"
                                         className="max-w-full max-h-[65vh] object-contain border border-white/10 shadow-2xl relative z-10"
                                     />
                                 </div>
-                                {(content.caption || content.Caption || content.description || content.Description) && (
+                                {(content.caption || content.Caption || content.description || content.Description || content.Content || content.content) && (
                                     <p className="mt-8 text-[10px] text-white/60 mono uppercase tracking-[0.3em] text-center border-t border-white/5 pt-4">
-                                        {content.caption || content.Caption || content.description || content.Description}
+                                        {content.caption || content.Caption || content.description || content.Description || content.Content || content.content}
                                     </p>
                                 )}
                             </div>
                         )}
 
-                        {normalizedType === 'VIDEO' && (
+                        {['VIDEO', 'MEDIA'].includes(normalizedType) && (
                             <div className="flex flex-col items-center justify-center min-h-[400px]">
                                 <video
-                                    src={getMediaUrl(content.Url || content.url || content.videoUrl || content.VideoUrl || content.mediaUrl || content.MediaUrl)}
+                                    src={getMediaUrl(content.Url || content.url || content.videoUrl || content.VideoUrl || content.mediaUrl || content.MediaUrl || content.source || content.Source)}
                                     controls
                                     autoPlay
                                     className="max-w-full max-h-[65vh] border border-white/10 shadow-2xl relative z-10"
