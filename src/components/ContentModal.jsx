@@ -5,6 +5,7 @@ import { API_BASE_URL, getMediaUrl } from '../constants';
 
 const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
     if (!content) return null;
+    const normalizedType = (type || '').toUpperCase();
 
     return (
         <motion.div
@@ -34,12 +35,12 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
                 {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-white/5 bg-black/40 relative z-10">
                     <div className="flex items-center gap-3 text-[#9d00ff]">
-                        {type === 'JOURNAL' && <Book size={18} />}
-                        {type === 'PHOTO' && <Camera size={18} />}
-                        {type === 'VIDEO' && <Video size={18} />}
+                        {normalizedType === 'JOURNAL' && <Book size={18} />}
+                        {normalizedType === 'PHOTO' && <Camera size={18} />}
+                        {normalizedType === 'VIDEO' && <Video size={18} />}
                         <div className="flex flex-col">
                             <span className="mono text-[10px] font-black tracking-[0.3em] uppercase">
-                                {type === 'JOURNAL' ? 'ARCHIVED_LOG_ENTRY' : type === 'PHOTO' ? 'VISUAL_DATA_FRAGMENT' : 'SIGNAL_FEED_RECORDING'}
+                                {normalizedType === 'JOURNAL' ? 'ARCHIVED_LOG_ENTRY' : normalizedType === 'PHOTO' ? 'VISUAL_DATA_FRAGMENT' : 'SIGNAL_FEED_RECORDING'}
                             </span>
                             <span className="text-[7px] text-[#9d00ff]/40 mono uppercase">:: ACCESS_PROTOCOL_SECURED ::</span>
                         </div>
@@ -49,7 +50,7 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
                 {/* Content Body */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10">
                     <div className="p-8 md:p-12 relative">
-                        {type === 'JOURNAL' && (
+                        {normalizedType === 'JOURNAL' && (
                             <div className="space-y-8">
                                 <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter italic leading-tight">
                                     {content.Title || '// UNTITLED_LOG'}
@@ -57,13 +58,13 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
                                 <div className="w-24 h-1 bg-gradient-to-r from-[#9d00ff] to-transparent"></div>
                                 <div className="prose prose-invert max-w-none">
                                     <p className="text-sm md:text-base text-white/80 leading-relaxed font-mono whitespace-pre-wrap tracking-wide">
-                                        {content.Content}
+                                        {content.Content || content.content}
                                     </p>
                                 </div>
                             </div>
                         )}
 
-                        {type === 'PHOTO' && (
+                        {normalizedType === 'PHOTO' && (
                             <div className="flex flex-col items-center justify-center min-h-[400px]">
                                 <div className="relative group">
                                     <div className="absolute inset-0 bg-[#9d00ff]/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -73,15 +74,15 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
                                         className="max-w-full max-h-[65vh] object-contain border border-white/10 shadow-2xl relative z-10"
                                     />
                                 </div>
-                                {content.caption && (
+                                {(content.caption || content.Caption) && (
                                     <p className="mt-8 text-[10px] text-white/60 mono uppercase tracking-[0.3em] text-center border-t border-white/5 pt-4">
-                                        {content.caption}
+                                        {content.caption || content.Caption}
                                     </p>
                                 )}
                             </div>
                         )}
 
-                        {type === 'VIDEO' && (
+                        {normalizedType === 'VIDEO' && (
                             <div className="flex flex-col items-center justify-center min-h-[400px]">
                                 <video
                                     src={getMediaUrl(content.Url || content.url)}

@@ -1688,8 +1688,8 @@ export const ProfileView = React.memo(({
                                     <div className="flex gap-4">
                                         {['All', 'Photos', 'Video', 'Journal'].map(tab => {
                                             const count = tab === 'All' ? profileGallery.length + profileJournal.length :
-                                                tab === 'Photos' ? profileGallery.filter(c => (c.type || c.Type) === 'PHOTO').length :
-                                                    tab === 'Video' ? profileGallery.filter(c => (c.type || c.Type) === 'VIDEO').length :
+                                                tab === 'Photos' ? profileGallery.filter(c => (c.type || c.Type || '').toUpperCase() === 'PHOTO').length :
+                                                    tab === 'Video' ? profileGallery.filter(c => (c.type || c.Type || '').toUpperCase() === 'VIDEO').length :
                                                         tab === 'Journal' ? profileJournal.length : 0;
                                             return (
                                                 <button
@@ -1824,7 +1824,7 @@ export const ProfileView = React.memo(({
                                             >
                                                 {profileGallery.length > 0 ? (
                                                     profileGallery
-                                                        .filter(c => studioSubTab === 'All' || (studioSubTab === 'Photos' && (c.type || c.Type) === 'PHOTO') || (studioSubTab === 'Video' && (c.type || c.Type) === 'VIDEO'))
+                                                        .filter(c => studioSubTab === 'All' || (studioSubTab === 'Photos' && (c.type || c.Type || '').toUpperCase() === 'PHOTO') || (studioSubTab === 'Video' && (c.type || c.Type || '').toUpperCase() === 'VIDEO'))
                                                     .sort((a, b) => {
                                                         const aPinned = isTruthy(a.isPinned || a.IsPinned) ? 1 : 0;
                                                         const bPinned = isTruthy(b.isPinned || b.IsPinned) ? 1 : 0;
@@ -1896,15 +1896,21 @@ export const ProfileView = React.memo(({
                                                             )}
 
                                                             <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end"
-                                                                onClick={() => setSelectedContent({ ...content, type: content.Type || 'PHOTO' })}>
+                                                                onClick={() => {
+                                                                    const t = (content.type || content.Type || 'PHOTO').toUpperCase();
+                                                                    setSelectedContent({ ...content, type: t });
+                                                                }}>
                                                                 <div className="text-[7px] mono font-bold text-[var(--text-color)] tracking-widest uppercase mb-1">
-                                                                    {(content.type || content.Type) === 'PHOTO' ? '// VISUAL_DATA' : '// SIGNAL_FEED'}
+                                                                    {(content.type || content.Type || '').toUpperCase() === 'PHOTO' ? '// VISUAL_DATA' : '// SIGNAL_FEED'}
                                                                 </div>
                                                                 <div className="text-[8px] mono text-white truncate uppercase">{content.title || content.Title}</div>
                                                             </div>
-                                                            {(content.type || content.Type) === 'VIDEO' ? (
+                                                            {(content.type || content.Type || '').toUpperCase() === 'VIDEO' ? (
                                                                 <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 space-y-2"
-                                                                    onClick={() => setSelectedContent({ ...content, type: content.type || content.Type || 'PHOTO' })}>
+                                                                    onClick={() => {
+                                                                        const t = (content.type || content.Type || 'VIDEO').toUpperCase();
+                                                                        setSelectedContent({ ...content, type: t });
+                                                                    }}>
                                                                     <Video size={16} className="text-[var(--text-color)]/40" />
                                                                     <div className="text-[6px] mono text-white/20 uppercase">DECODING_SIGNAL...</div>
                                                                 </div>
@@ -1913,7 +1919,10 @@ export const ProfileView = React.memo(({
                                                                     src={getMediaUrl(content.url || content.Url)}
                                                                     alt={content.title || content.Title}
                                                                     className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-500"
-                                                                    onClick={() => setSelectedContent({ ...content, type: content.type || content.Type || 'PHOTO' })}
+                                                                    onClick={() => {
+                                                                        const t = (content.type || content.Type || 'PHOTO').toUpperCase();
+                                                                        setSelectedContent({ ...content, type: t });
+                                                                    }}
                                                                 />
                                                             )}
                                                         </motion.div>
@@ -1928,7 +1937,7 @@ export const ProfileView = React.memo(({
                                     </div>
                                     )}
 
-                                {studioSubTab === 'Photos' && profileGallery.filter(c => (c.type || c.Type) === 'PHOTO').length === 0 && (
+                                {studioSubTab === 'Photos' && profileGallery.filter(c => (c.type || c.Type || '').toUpperCase() === 'PHOTO').length === 0 && (
                                     <div className="col-span-full py-10 lg:py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
                                         <Camera size={24} className="mb-4 text-[var(--text-color)]" />
                                         <span className="mono text-[8px] uppercase tracking-[0.2em]">GALLERY_ENCRYPTED_OR_EMPTY</span>

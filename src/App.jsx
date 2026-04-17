@@ -2865,10 +2865,10 @@ const FeedContent = React.memo(({
                     const content = item.Content;
                     const createdAt = item.CreatedAt;
                     const playCount = item.PlayCount;
-                    const mediaType = item.MediaType;
-                    const isOriginal = item.IsOriginalSignal ?? true;
-                    const repostedBy = item.RepostedBy;
-                    const imageUrl = getMediaUrl(item.ImageUrl);
+                    const mediaType = (item.mediaType || item.MediaType || '').toUpperCase();
+                    const isOriginal = item.IsOriginalSignal ?? item.isOriginalSignal ?? true;
+                    const repostedBy = item.RepostedBy || item.repostedBy;
+                    const imageUrl = getMediaUrl(item.imageUrl || item.ImageUrl);
 
                     if (type === 'system') {
                       return (
