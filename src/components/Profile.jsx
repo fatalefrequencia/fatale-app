@@ -1097,7 +1097,7 @@ export const ProfileView = React.memo(({
                 onGoLive={() => setShowGlobalGoLive(true)}
                 onModifyId={() => setShowEditProfile(true)}
                 onLogout={onLogout}
-                onExpandContent={setSelectedContent}
+                onExpandContent={onExpandContent}
                 gallery={profileGallery}
                 tracks={profileTracks}
                 journal={isMe ? profileJournal : profileJournal.filter(j => j.IsPosted || j.isPosted)}
@@ -1229,7 +1229,7 @@ export const ProfileView = React.memo(({
                                             const type = item.type || item.Type || (item.name ? 'PLAYLIST' : 'TRACK');
                                             if (type === 'TRACK') onPlayTrack?.(item);
                                             else if (type === 'PLAYLIST') onPlayPlaylist?.(item.tracks || [], 0);
-                                            else setSelectedContent?.({ ...item, type });
+                                            else onExpandContent?.(item, type);
                                         }}>
                                             <div className="w-10 h-10 border border-white text-black bg-white flex-shrink-0 overflow-hidden shadow-[0_0_10px_#fff]">
                                                 {(item.thumbnailUrl || item.ThumbnailUrl || item.cover || item.Url || item.imageUrl || item.ImageUrl) ? (
@@ -1264,7 +1264,7 @@ export const ProfileView = React.memo(({
                                             const type = item.type || item.Type || (item.name ? 'PLAYLIST' : 'TRACK');
                                             if (type === 'TRACK') onPlayTrack?.(item);
                                             else if (type === 'PLAYLIST') onPlayPlaylist?.(item.tracks || [], 0);
-                                            else setSelectedContent?.({ ...item, type });
+                                            else onExpandContent?.(item, type);
                                         }}>
                                             <div className="w-10 h-10 border border-[var(--text-color)]/20 flex-shrink-0 overflow-hidden bg-black/40">
                                                 {(item.thumbnailUrl || item.ThumbnailUrl || item.cover || item.Url) ? (
