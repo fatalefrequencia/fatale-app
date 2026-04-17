@@ -117,7 +117,7 @@ const SideTerminal = ({ title, children, side = "left", isOpen, onClose, roomMod
     </motion.div>
 );
 
-const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, leftOpen, rightOpen, onToggleLeft, onToggleRight, bannerUrl, wallpaperVideoUrl, profileImageUrl, biography, themeColor, textColor, backgroundColor, isGlass, previewThemeColor, previewTextColor, previewBackgroundColor, previewIsGlass, onUpload, onGoLive, onModifyId, onLogout, roomMode, setRoomMode, isPlaying, onExpandContent, journal, gallery, tracks, uid, playlists = [], onPlayTrack, onPlayPlaylist, isMe, onExitProfile, onMessageClick, communityId, communityName, communityColor }) => {
+const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, leftOpen, rightOpen, onToggleLeft, onToggleRight, bannerUrl, wallpaperVideoUrl, profileImageUrl, biography, themeColor, textColor, backgroundColor, isGlass, previewThemeColor, previewTextColor, previewBackgroundColor, previewIsGlass, onUpload, onGoLive, onModifyId, onLogout, roomMode, setRoomMode, isPlaying, onExpandContent, journal, gallery, tracks, uid, playlists = [], onPlayTrack, onPlayPlaylist, isMe, onExitProfile, onMessageClick, communityId, communityName, communityColor, hasMiniPlayer }) => {
     // Use preview colors if available, otherwise fall back to saved user props
     const activeTheme = previewThemeColor || themeColor || 'var(--text-color)';
     const activeText = previewTextColor || textColor || '#ffffff';
@@ -1093,6 +1093,7 @@ export const ProfileView = React.memo(({
                 roomMode={roomMode}
                 setRoomMode={setRoomMode}
                 isPlaying={isPlaying}
+                hasMiniPlayer={hasMiniPlayer}
                 onUpload={() => setShowGlobalUpload(true)}
 
                 onGoLive={() => setShowGlobalGoLive(true)}
