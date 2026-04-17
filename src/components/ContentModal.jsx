@@ -2,11 +2,33 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Book, Camera, Video, Share2, Download, ExternalLink } from 'lucide-react';
 import { API_BASE_URL, getMediaUrl } from '../constants';
+import { useNotification } from '../contexts/NotificationContext';
 
 const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true }) => {
+    const { showNotification } = useNotification();
     if (!content) return null;
     const normalizedType = (type || '').toUpperCase();
     console.log("[ContentModal] Received content:", content, "type:", normalizedType);
+
+    const handleShare = (e) => {
+        e.stopPropagation();
+        try {
+            const ownerId = content.userId || content.UserId || content.OwnerId || content.ownerId;
+            let baseUrl = window.location.origin;
+            
+            // If we have an owner, link to their profile with the content param
+            // Otherwise just link to current view with content param
+            const shareUrl = ownerId 
+                ? `${baseUrl}/profile/${ownerId}?content=${content.id || content.Id}`
+                : `${baseUrl}${window.location.pathname}?content=${content.id || content.Id}`;
+
+            navigator.clipboard.writeText(shareUrl);
+            showNotification("LINK_COPIED", "SIGNAL_ADDRESS_SECURED", "success");
+        } catch (err) {
+            console.error("Failed to copy link:", err);
+            showNotification("SYNC_ERROR", "FAILED_TO_COPY_SIGNAL_ADDRESS", "error");
+        }
+    };
 
     return (
         <motion.div
@@ -113,7 +135,10 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
                         </div>
                     </div>
                     <div className="flex gap-4">
-                        <button className="px-4 py-2 bg-white/5 border border-white/10 hover:border-[#9d00ff]/50 hover:text-white transition-all text-white/60 flex items-center gap-2">
+                        <button 
+                            onClick={handleShare}
+                            className="px-4 py-2 bg-white/5 border border-white/10 hover:border-[#9d00ff]/50 hover:text-white transition-all text-white/60 flex items-center gap-2"
+                        >
                             <Share2 size={12} /> SHARE_SIGNAL
                         </button>
                         <button
