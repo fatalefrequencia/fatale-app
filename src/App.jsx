@@ -1811,6 +1811,16 @@ const Dashboard = React.memo(({
 }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  const handleNav = (viewName, isProfile = false, userId = null) => {
+    setIsSidebarCollapsed(true);
+    if (isProfile) {
+      navigateToProfile(userId);
+    } else {
+      setView(viewName);
+    }
+  };
+
   return (
     <div className="flex h-screen w-full overflow-hidden relative bg-black bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-[#1a1a1a] via-[#050505] to-[#000000]">
       {/* Global Noise Texture */}
@@ -1831,14 +1841,14 @@ const Dashboard = React.memo(({
         </div>
 
         <nav className="flex-1 space-y-3 p-4">
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<Radio size={isSidebarCollapsed ? 18 : 22} />} label="DSC_SCAN" active={activeView === 'discovery'} onClick={() => setView('discovery')} />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<Hash size={isSidebarCollapsed ? 18 : 22} />} label="FEED_LNK" active={activeView === 'feed'} onClick={() => setView('feed')} />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<User size={isSidebarCollapsed ? 18 : 22} />} label="USR_LINK" active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => navigateToProfile(null)} />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<Play size={isSidebarCollapsed ? 18 : 22} />} label="PLY_CORE" active={activeView === 'player'} onClick={() => setView('player')} />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<MessageSquare size={isSidebarCollapsed ? 18 : 22} />} label="MSG_SYNC" active={activeView === 'messages'} onClick={() => setView('messages')} hasNotification={hasNewMessages} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<Radio size={isSidebarCollapsed ? 18 : 22} />} label="DSC_SCAN" active={activeView === 'discovery'} onClick={() => handleNav('discovery')} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<Hash size={isSidebarCollapsed ? 18 : 22} />} label="FEED_LNK" active={activeView === 'feed'} onClick={() => handleNav('feed')} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<User size={isSidebarCollapsed ? 18 : 22} />} label="USR_LINK" active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => handleNav('profile', true)} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<Play size={isSidebarCollapsed ? 18 : 22} />} label="PLY_CORE" active={activeView === 'player'} onClick={() => handleNav('player')} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<MessageSquare size={isSidebarCollapsed ? 18 : 22} />} label="MSG_SYNC" active={activeView === 'messages'} onClick={() => handleNav('messages')} hasNotification={hasNewMessages} />
 
           <div className="my-6 border-t border-white/5 opacity-50" />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<Wallet size={isSidebarCollapsed ? 18 : 22} />} label="WAL_BASE" active={activeView === 'wallet'} onClick={() => setView('wallet')} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<Wallet size={isSidebarCollapsed ? 18 : 22} />} label="WAL_BASE" active={activeView === 'wallet'} onClick={() => handleNav('wallet')} />
         </nav>
 
         <div className={`p-6 ${isSidebarCollapsed ? 'text-center' : 'text-left'}`}>
