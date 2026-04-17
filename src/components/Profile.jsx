@@ -2328,6 +2328,7 @@ export const ProfileView = React.memo(({
                             content={selectedContent}
                             type={selectedContent.type}
                             onClose={() => setSelectedContent(null)}
+                            hasMiniPlayer={hasMiniPlayer}
                         />
                     )
                 }

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Book, Camera, Video, Share2, Download, ExternalLink } from 'lucide-react';
 import { API_BASE_URL, getMediaUrl } from '../constants';
 
-const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
+const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true }) => {
     if (!content) return null;
     const normalizedType = (type || '').toUpperCase();
     console.log("[ContentModal] Received content:", content, "type:", normalizedType);
@@ -13,7 +13,7 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed top-0 left-0 right-0 bottom-0 lg:bottom-[80px] z-[9999] flex items-center justify-center p-4 md:p-10 bg-black/40 backdrop-blur-[12px]"
+            className={`fixed top-0 left-0 right-0 bottom-0 ${hasMiniPlayer ? 'lg:bottom-[80px]' : ''} z-[9999] flex items-center justify-center p-4 md:p-10 bg-black/40 backdrop-blur-[12px]`}
             onClick={onClose}
         >
             <motion.div

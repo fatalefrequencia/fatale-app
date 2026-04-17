@@ -1635,6 +1635,7 @@ function App() {
             content={globalExpandedContent}
             onClose={() => setGlobalExpandedContent(null)}
             type={globalExpandedType}
+            hasMiniPlayer={currentTrackIndex >= 0 && activeView !== 'player'}
           />
         )}
       </AnimatePresence>
