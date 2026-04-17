@@ -473,14 +473,18 @@ const DisplayWall = ({ tracks: originalTracks, uid, gallery, journal = [], playl
     }
 
     // Gallery (VISUAL) - Filtered by owner
-    if (Array.isArray(gallery)) {
         gallery.filter(c => String(c.UserId || c.userId) === String(uid))
             .forEach(c => {
                 if (isTruthy(c.IsPosted || c.isPosted)) {
-                    sectors.VISUAL.push({ id: c.id || c.Id, type: c.Type, title: c.Title, url: c.Url, original: c });
+                    sectors.VISUAL.push({ 
+                        id: c.id || c.Id, 
+                        type: c.type || c.Type, 
+                        title: c.title || c.Title, 
+                        url: c.url || c.Url, 
+                        original: c 
+                    });
                 }
             });
-    }
 
     // Journal (LOGS) - Filtered by owner
     if (Array.isArray(journal)) {
