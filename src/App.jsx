@@ -1619,8 +1619,23 @@ function App() {
                sendMessage={sendMessage}
                requestTrack={requestTrack}
                setUser={setUser}
+               onExpandContent={(content, type) => {
+                 setGlobalExpandedContent(content);
+                 setGlobalExpandedType(type);
+               }}
            />
           </>
+        )}
+      </AnimatePresence>
+
+      {/* ─── GLOBAL MODALS ─── */}
+      <AnimatePresence>
+        {globalExpandedContent && (
+          <ContentModal
+            content={globalExpandedContent}
+            onClose={() => setGlobalExpandedContent(null)}
+            type={globalExpandedType}
+          />
         )}
       </AnimatePresence>
 
@@ -1895,10 +1910,7 @@ const Dashboard = React.memo(({
                 onFollowUpdate={onFollowUpdate}
                 onCommunityUpdate={onRefreshProfile} // REFRESH USER/MAP WHEN JOINING COMM
                 isPlayerActive={currentTrackIndex >= 0}
-                onExpandContent={(content, type) => {
-                  setGlobalExpandedContent(content);
-                  setGlobalExpandedType(type);
-                }}
+                onExpandContent={onExpandContent}
               />
             )}
             {activeView === 'wallet' && <WalletView user={user} onRefreshProfile={onRefreshProfile} />}
@@ -1919,10 +1931,7 @@ const Dashboard = React.memo(({
                  setShowGlobalGoLive={setShowGlobalGoLive}
                  setShowGlobalUpload={setShowGlobalUpload}
                  setShowGlobalIngest={setShowGlobalIngest}
-                 onExpandContent={(content, type) => {
-                   setGlobalExpandedContent(content);
-                   setGlobalExpandedType(type);
-                 }}
+                 onExpandContent={onExpandContent}
                />
              )}
             {activeView === 'profile' && (
@@ -1950,6 +1959,7 @@ const Dashboard = React.memo(({
                 setShowGlobalGoLive={setShowGlobalGoLive}
                 setShowGlobalUpload={setShowGlobalUpload}
                 setShowGlobalIngest={setShowGlobalIngest}
+                onExpandContent={onExpandContent}
               />
             )}
             {activeView === 'player' && <PlayerContent
@@ -1993,16 +2003,7 @@ const Dashboard = React.memo(({
         </div>
       </main>
 
-      {/* GLOBAL MODALS */}
-      <AnimatePresence>
-        {globalExpandedContent && (
-          <ContentModal
-            content={globalExpandedContent}
-            onClose={() => setGlobalExpandedContent(null)}
-            type={globalExpandedType}
-          />
-        )}
-      </AnimatePresence>
+
 
       {/* MINI PLAYER (Todas las vistas excepto Player, y solo si hay track) */}
       <AnimatePresence>
