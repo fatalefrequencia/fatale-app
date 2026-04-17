@@ -149,6 +149,10 @@ function App() {
   const [showGlobalUpload, setShowGlobalUpload] = useState(false);
   const [showGlobalIngest, setShowGlobalIngest] = useState(false);
   const [goLiveFormData, setGoLiveFormData] = useState({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true });
+  
+  // --- GLOBAL MODAL STATE ---
+  const [globalExpandedContent, setGlobalExpandedContent] = useState(null);
+  const [globalExpandedType, setGlobalExpandedType] = useState('JOURNAL');
 
   const handleGlobalGoLive = async (sessionTitle, description) => {
     const title = sessionTitle || goLiveFormData.sessionTitle;
@@ -1805,9 +1809,8 @@ const Dashboard = React.memo(({
   sendMessage, 
   requestTrack, 
   setUser, 
-  setShowGlobalGoLive, 
-  setShowGlobalUpload, 
-  setShowGlobalIngest 
+  setShowGlobalIngest,
+  onExpandContent
 }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -1892,6 +1895,10 @@ const Dashboard = React.memo(({
                 onFollowUpdate={onFollowUpdate}
                 onCommunityUpdate={onRefreshProfile} // REFRESH USER/MAP WHEN JOINING COMM
                 isPlayerActive={currentTrackIndex >= 0}
+                onExpandContent={(content, type) => {
+                  setGlobalExpandedContent(content);
+                  setGlobalExpandedType(type);
+                }}
               />
             )}
             {activeView === 'wallet' && <WalletView user={user} onRefreshProfile={onRefreshProfile} />}
@@ -1912,6 +1919,10 @@ const Dashboard = React.memo(({
                  setShowGlobalGoLive={setShowGlobalGoLive}
                  setShowGlobalUpload={setShowGlobalUpload}
                  setShowGlobalIngest={setShowGlobalIngest}
+                 onExpandContent={(content, type) => {
+                   setGlobalExpandedContent(content);
+                   setGlobalExpandedType(type);
+                 }}
                />
              )}
             {activeView === 'profile' && (
@@ -1981,6 +1992,17 @@ const Dashboard = React.memo(({
           </AnimatePresence>
         </div>
       </main>
+
+      {/* GLOBAL MODALS */}
+      <AnimatePresence>
+        {globalExpandedContent && (
+          <ContentModal
+            content={globalExpandedContent}
+            onClose={() => setGlobalExpandedContent(null)}
+            type={globalExpandedType}
+          />
+        )}
+      </AnimatePresence>
 
       {/* MINI PLAYER (Todas las vistas excepto Player, y solo si hay track) */}
       <AnimatePresence>
@@ -2208,13 +2230,11 @@ const FeedContent = React.memo(({
   stationChat, 
   stationQueue, 
   followedCommunities, 
-  setShowGlobalGoLive,
-  setShowGlobalUpload,
-  setShowGlobalIngest
+  setShowGlobalIngest,
+  onExpandContent
 }) => {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMedia, setSelectedMedia] = useState(null);
   const [selectedSector, setSelectedSector] = useState(null);
   const [selectedCommunityId, setSelectedCommunityId] = useState(null);
   const [allCommunities, setAllCommunities] = useState([]);
@@ -2310,7 +2330,12 @@ const FeedContent = React.memo(({
   };
 
   const handleMediaExpand = (item) => {
-    setSelectedMedia(item);
+    onExpandContent({
+      ...item,
+      Url: item.ImageUrl || item.Url,
+      Title: item.Title,
+      Content: item.Content
+    }, (item.mediaType || item.MediaType || item.Type || '').toUpperCase());
   };
 
   const [replyingTo, setReplyingTo] = useState(null);
@@ -2562,21 +2587,6 @@ const FeedContent = React.memo(({
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col lg:flex-row h-full font-mono relative">
-      <AnimatePresence>
-        {selectedMedia && (
-          <ContentModal
-            isOpen={!!selectedMedia}
-            onClose={() => setSelectedMedia(null)}
-            content={{
-              ...selectedMedia,
-              Url: selectedMedia.ImageUrl,
-              Title: selectedMedia.Title,
-              Content: selectedMedia.Content
-            }}
-            type={(selectedMedia.mediaType || selectedMedia.MediaType || selectedMedia.Type || '').toUpperCase()}
-          />
-        )}
-      </AnimatePresence>
 
       {/* Izquierda: Acciones */}
       <div className="hidden lg:block w-72 p-6 space-y-6 border-r border-[#ff006e]/5 relative z-20">

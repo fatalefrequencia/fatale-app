@@ -551,9 +551,8 @@ export const ProfileView = React.memo(({
     onMessageUser,
     setActiveStation,
     setUser, // ADDED
-    setShowGlobalGoLive,
-    setShowGlobalUpload,
-    setShowGlobalIngest
+    setShowGlobalIngest,
+    onExpandContent
 }) => {
     const effectiveId = targetUserId || currentUser?.id || currentUser?.Id;
     const isMe = String(effectiveId) === String(currentUser?.id || currentUser?.Id);
@@ -603,7 +602,7 @@ export const ProfileView = React.memo(({
     }, []);
 
     const [showIngestMenu, setShowIngestMenu] = useState(false);
-    const [selectedContent, setSelectedContent] = useState(null);
+
     const [expandedEntries, setExpandedEntries] = useState({});
     const [showJournalForm, setShowJournalForm] = useState(false);
     const [stationData, setStationData] = useState(null);
@@ -1125,6 +1124,7 @@ export const ProfileView = React.memo(({
                 communityId={displayUser?.communityId || displayUser?.CommunityId}
                 communityName={displayUser?.communityName || displayUser?.CommunityName}
                 communityColor={displayUser?.communityColor || displayUser?.CommunityColor}
+                hasMiniPlayer={hasMiniPlayer}
                 leftContent={
                     <div className="space-y-8">
                         <div className="space-y-4">
@@ -1944,7 +1944,7 @@ export const ProfileView = React.memo(({
                                                             <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end"
                                                                 onClick={() => {
                                                                     const t = (content.type || content.Type || 'PHOTO').toUpperCase();
-                                                                    setSelectedContent({ ...content, type: t });
+                                                                    onExpandContent(content, t);
                                                                 }}>
                                                                 <div className="text-[7px] mono font-bold text-[var(--text-color)] tracking-widest uppercase mb-1">
                                                                     {(content.type || content.Type || '').toUpperCase() === 'PHOTO' ? '// VISUAL_DATA' : '// SIGNAL_FEED'}
@@ -1956,7 +1956,7 @@ export const ProfileView = React.memo(({
                                                                 <div className="w-full h-full relative"
                                                                     onClick={() => {
                                                                         const t = (content.type || content.Type || 'VIDEO').toUpperCase();
-                                                                        setSelectedContent({ ...content, type: t });
+                                                                        onExpandContent(content, t);
                                                                     }}>
                                                                     {(content.thumbnailUrl || content.ThumbnailUrl) ? (
                                                                         <img
@@ -1982,7 +1982,7 @@ export const ProfileView = React.memo(({
                                                                     className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-500"
                                                                     onClick={() => {
                                                                         const t = (content.type || content.Type || 'PHOTO').toUpperCase();
-                                                                        setSelectedContent({ ...content, type: t });
+                                                                        onExpandContent(content, t);
                                                                     }}
                                                                 />
                                                             )}
@@ -2214,7 +2214,7 @@ export const ProfileView = React.memo(({
                                                                             {entry.Content || entry.content}
                                                                         </p>
                                                                         <button
-                                                                            onClick={() => setSelectedContent({ ...entry, type: 'JOURNAL' })}
+                                                                            onClick={() => onExpandContent(entry, 'JOURNAL')}
                                                                             className="mt-2 text-[7px] font-bold text-[var(--text-color)] uppercase tracking-widest hover:underline"
                                                                         >
                                                                             [ EXPAND_SIGNAL_DATA ]
@@ -2322,15 +2322,7 @@ export const ProfileView = React.memo(({
                         </motion.div>
                     )
                 }
-                {
-                    selectedContent && (
-                        <ContentModal
-                            content={selectedContent}
-                            type={selectedContent.type}
-                            onClose={() => setSelectedContent(null)}
-                        />
-                    )
-                }
+
             </AnimatePresence>
             <CRTOverlay />
         </>
