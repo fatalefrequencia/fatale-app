@@ -2235,6 +2235,7 @@ const FeedContent = React.memo(({
         Content: item.content || item.Content,
         CreatedAt: item.createdAt || item.CreatedAt,
         ImageUrl: item.imageUrl || item.ImageUrl,
+        MediaType: (item.mediaType || item.MediaType || "").toUpperCase(),
       }));
       setFeed(normalizedFeed);
     } catch (e) {
