@@ -6,6 +6,7 @@ import { API_BASE_URL, getMediaUrl } from '../constants';
 const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
     if (!content) return null;
     const normalizedType = (type || '').toUpperCase();
+    console.log("[ContentModal] Received content:", content, "type:", normalizedType);
 
     return (
         <motion.div
@@ -53,7 +54,7 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
                         {normalizedType === 'JOURNAL' && (
                             <div className="space-y-8">
                                 <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter italic leading-tight">
-                                    {content.Title || '// UNTITLED_LOG'}
+                                    {content.Title || content.title || '// UNTITLED_LOG'}
                                 </h2>
                                 <div className="w-24 h-1 bg-gradient-to-r from-[#9d00ff] to-transparent"></div>
                                 <div className="prose prose-invert max-w-none">
@@ -69,14 +70,14 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
                                 <div className="relative group">
                                     <div className="absolute inset-0 bg-[#9d00ff]/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
                                     <img
-                                        src={getMediaUrl(content.Url || content.url)}
+                                        src={getMediaUrl(content.Url || content.url || content.imageUrl || content.ImageUrl || content.thumbnailUrl || content.ThumbnailUrl)}
                                         alt="Expanded Visual"
                                         className="max-w-full max-h-[65vh] object-contain border border-white/10 shadow-2xl relative z-10"
                                     />
                                 </div>
-                                {(content.caption || content.Caption) && (
+                                {(content.caption || content.Caption || content.description || content.Description) && (
                                     <p className="mt-8 text-[10px] text-white/60 mono uppercase tracking-[0.3em] text-center border-t border-white/5 pt-4">
-                                        {content.caption || content.Caption}
+                                        {content.caption || content.Caption || content.description || content.Description}
                                     </p>
                                 )}
                             </div>
@@ -85,7 +86,7 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL' }) => {
                         {normalizedType === 'VIDEO' && (
                             <div className="flex flex-col items-center justify-center min-h-[400px]">
                                 <video
-                                    src={getMediaUrl(content.Url || content.url)}
+                                    src={getMediaUrl(content.Url || content.url || content.videoUrl || content.VideoUrl || content.mediaUrl || content.MediaUrl)}
                                     controls
                                     autoPlay
                                     className="max-w-full max-h-[65vh] border border-white/10 shadow-2xl relative z-10"
