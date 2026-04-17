@@ -127,7 +127,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
     const [isJournalDetailed, setIsJournalDetailed] = useState(false);
 
     return (
-        <div className={`spatial-container ${roomMode === 'room' ? 'room-mode-active' : ''} ${leftOpen ? 'left-panel-open' : ''} ${rightOpen ? 'right-panel-open' : ''}`} style={{
+        <div className={`spatial-container ${roomMode === 'room' ? 'room-mode-active' : ''}`} style={{
             '--theme-color': activeTheme,
             '--text-color': activeText,
             '--text-color-rgb': hexToRgb(activeText),
@@ -215,10 +215,10 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
 
                             {communityName && (
                                 <div className="flex items-center justify-center mb-3">
-                                    <div 
+                                    <div
                                         className="px-2 py-0.5 border flex items-center gap-1.5"
-                                        style={{ 
-                                            borderColor: `${communityColor}40`, 
+                                        style={{
+                                            borderColor: `${communityColor}40`,
                                             backgroundColor: `${communityColor}10`,
                                             boxShadow: `0 0 10px ${communityColor}20`
                                         }}
@@ -287,10 +287,10 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
 
             <motion.div
                 className="monitor-frame frameless"
-                initial={roomMode === 'room' ? false : { rotateX: 5, y: '3vh', opacity: 0, scale: 0.95, translateZ: -100 }}
+                initial={roomMode === 'room' ? false : { rotateX: 5, y: 30, opacity: 0, scale: 0.95, translateZ: -100 }}
                 animate={roomMode === 'room' ? {
                     rotateX: 25,
-                    y: '-30vh',
+                    y: -300,
                     opacity: 0,
                     scale: 0.5,
                     translateZ: -1500,
@@ -383,7 +383,7 @@ const Sector = ({ id, label, items, onExpand, onPlayTrack, onPlayPlaylist }) => 
                         key={`${item.type}_${item.id}_${i}`}
                         className={`wall-item ${item.type === 'VIDEO' ? 'video-panel' : 'media-print'} group`}
                         style={{ transitionDelay: `${i * 0.05}s` }}
-                        onClick={() => onExpand({ ...item.original, type: item.type })}
+                        onClick={() => onExpand({ ...item.original, type: item.type }, item.type)}
                     >
                         {item.type === 'VIDEO' ? (
                             <div className="video-panel-content">
@@ -473,18 +473,18 @@ const DisplayWall = ({ tracks: originalTracks, uid, gallery, journal = [], playl
     }
 
     // Gallery (VISUAL) - Filtered by owner
-        gallery.filter(c => String(c.UserId || c.userId) === String(uid))
-            .forEach(c => {
-                if (isTruthy(c.IsPosted || c.isPosted)) {
-                    sectors.VISUAL.push({ 
-                        id: c.id || c.Id, 
-                        type: c.type || c.Type, 
-                        title: c.title || c.Title, 
-                        url: c.url || c.Url, 
-                        original: c 
-                    });
-                }
-            });
+    gallery.filter(c => String(c.UserId || c.userId) === String(uid))
+        .forEach(c => {
+            if (isTruthy(c.IsPosted || c.isPosted)) {
+                sectors.VISUAL.push({
+                    id: c.id || c.Id,
+                    type: c.type || c.Type,
+                    title: c.title || c.Title,
+                    url: c.url || c.Url,
+                    original: c
+                });
+            }
+        });
 
     // Journal (LOGS) - Filtered by owner
     if (Array.isArray(journal)) {
@@ -551,9 +551,9 @@ export const ProfileView = React.memo(({
     onMessageUser,
     setActiveStation,
     setUser, // ADDED
-    setShowGlobalIngest,
-    onExpandContent,
-    hasMiniPlayer
+    setShowGlobalGoLive,
+    setShowGlobalUpload,
+    setShowGlobalIngest
 }) => {
     const effectiveId = targetUserId || currentUser?.id || currentUser?.Id;
     const isMe = String(effectiveId) === String(currentUser?.id || currentUser?.Id);
@@ -603,7 +603,7 @@ export const ProfileView = React.memo(({
     }, []);
 
     const [showIngestMenu, setShowIngestMenu] = useState(false);
-
+    const [selectedContent, setSelectedContent] = useState(null);
     const [expandedEntries, setExpandedEntries] = useState({});
     const [showJournalForm, setShowJournalForm] = useState(false);
     const [stationData, setStationData] = useState(null);
@@ -913,7 +913,7 @@ export const ProfileView = React.memo(({
             const res = await API.Users.updateProfile(formData, uid);
             showNotification("PROFILE_SYNCED", "Identity modifications committed to core.", "success");
             setShowEditProfile(false);
-            
+
             if (res?.data?.user && setUser) {
                 const rawData = res.data.user;
                 const updated = {
@@ -929,7 +929,7 @@ export const ProfileView = React.memo(({
                     isGlass: rawData.isGlass !== undefined ? rawData.isGlass : (rawData.IsGlass !== undefined ? rawData.IsGlass : currentUser.isGlass)
                 };
                 setUser(prev => {
-                    try { localStorage.setItem('user', JSON.stringify(updated)); } catch(e) {}
+                    try { localStorage.setItem('user', JSON.stringify(updated)); } catch (e) { }
                     return updated;
                 });
             } else {
@@ -1098,7 +1098,7 @@ export const ProfileView = React.memo(({
                 onGoLive={() => setShowGlobalGoLive(true)}
                 onModifyId={() => setShowEditProfile(true)}
                 onLogout={onLogout}
-                onExpandContent={onExpandContent}
+                onExpandContent={setSelectedContent}
                 gallery={profileGallery}
                 tracks={profileTracks}
                 journal={isMe ? profileJournal : profileJournal.filter(j => j.IsPosted || j.isPosted)}
@@ -1125,7 +1125,6 @@ export const ProfileView = React.memo(({
                 communityId={displayUser?.communityId || displayUser?.CommunityId}
                 communityName={displayUser?.communityName || displayUser?.CommunityName}
                 communityColor={displayUser?.communityColor || displayUser?.CommunityColor}
-                hasMiniPlayer={hasMiniPlayer}
                 leftContent={
                     <div className="space-y-8">
                         <div className="space-y-4">
@@ -1230,7 +1229,7 @@ export const ProfileView = React.memo(({
                                             const type = item.type || item.Type || (item.name ? 'PLAYLIST' : 'TRACK');
                                             if (type === 'TRACK') onPlayTrack?.(item);
                                             else if (type === 'PLAYLIST') onPlayPlaylist?.(item.tracks || [], 0);
-                                            else onExpandContent?.(item, type);
+                                            else setSelectedContent?.({ ...item, type });
                                         }}>
                                             <div className="w-10 h-10 border border-white text-black bg-white flex-shrink-0 overflow-hidden shadow-[0_0_10px_#fff]">
                                                 {(item.thumbnailUrl || item.ThumbnailUrl || item.cover || item.Url || item.imageUrl || item.ImageUrl) ? (
@@ -1240,7 +1239,7 @@ export const ProfileView = React.memo(({
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center">
-                                                    { (item.type || item.Type) === 'VIDEO' ? <Video size={14} /> : item.name ? <Database size={14} /> : <Music size={14} />}
+                                                        {(item.type || item.Type) === 'VIDEO' ? <Video size={14} /> : item.name ? <Database size={14} /> : <Music size={14} />}
                                                     </div>
                                                 )}
                                             </div>
@@ -1265,7 +1264,7 @@ export const ProfileView = React.memo(({
                                             const type = item.type || item.Type || (item.name ? 'PLAYLIST' : 'TRACK');
                                             if (type === 'TRACK') onPlayTrack?.(item);
                                             else if (type === 'PLAYLIST') onPlayPlaylist?.(item.tracks || [], 0);
-                                            else onExpandContent?.(item, type);
+                                            else setSelectedContent?.({ ...item, type });
                                         }}>
                                             <div className="w-10 h-10 border border-[var(--text-color)]/20 flex-shrink-0 overflow-hidden bg-black/40">
                                                 {(item.thumbnailUrl || item.ThumbnailUrl || item.cover || item.Url) ? (
@@ -1286,7 +1285,7 @@ export const ProfileView = React.memo(({
                                             </div>
                                         </div>
                                     ))}
-                                  {profileTracks.length === 0 && profileGallery.length === 0 && (
+                                {profileTracks.length === 0 && profileGallery.length === 0 && (
                                     <div className="text-[8px] mono text-white/20 uppercase italic">
                                         &gt; NO_RECENT_TRANSMISSIONS
                                     </div>
@@ -1322,10 +1321,10 @@ export const ProfileView = React.memo(({
                                 <h1 className="social-name">{displayUser?.username || displayUser?.Username || 'GUEST_USER'}</h1>
                                 {(displayUser?.communityName || displayUser?.CommunityName) && (
                                     <div className="mt-2 flex">
-                                        <div 
+                                        <div
                                             className="px-2 py-0.5 border flex items-center gap-1.5"
-                                            style={{ 
-                                                borderColor: `${displayUser?.communityColor || displayUser?.CommunityColor || '#ff006e'}40`, 
+                                            style={{
+                                                borderColor: `${displayUser?.communityColor || displayUser?.CommunityColor || '#ff006e'}40`,
                                                 backgroundColor: `${displayUser?.communityColor || displayUser?.CommunityColor || '#ff006e'}10`,
                                                 boxShadow: `0 0 10px ${displayUser?.communityColor || displayUser?.CommunityColor || '#ff006e'}10`
                                             }}
@@ -1414,7 +1413,7 @@ export const ProfileView = React.memo(({
                                                             <div className="text-[9px] text-[var(--text-color)] font-mono mt-1">REQ_BY: {req.username}</div>
                                                         </div>
                                                         {allTracks && (
-                                                            <button 
+                                                            <button
                                                                 onClick={async () => {
                                                                     const matchIdx = allTracks.findIndex(t => t.id === req.trackId || t.Id === req.trackId);
                                                                     if (matchIdx !== -1 && onPlayPlaylist) {
@@ -1435,7 +1434,7 @@ export const ProfileView = React.memo(({
                                                 )}
                                             </div>
                                         </div>
-                                        
+
                                         {/* Comm Link Chat Column */}
                                         <div className={`flex flex-col bg-black/40 border border-[var(--text-color)]/10 rounded-sm overflow-hidden ${broadcasterTab !== 'chat' ? 'hidden lg:flex' : 'flex'}`}>
                                             <div className="p-3 bg-[var(--text-color)]/10 border-b border-[var(--text-color)]/20 text-[10px] font-black uppercase text-[var(--text-color)] tracking-widest">
@@ -1489,13 +1488,13 @@ export const ProfileView = React.memo(({
                                     </div>
                                     <div className="flex gap-4 items-center">
                                         {isMe && activeTab === 'Music' && (
-                                                <button
-                                                    onClick={() => setShowGlobalUpload(true)}
-                                                    className="px-4 py-1.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/30 text-[var(--text-color)] text-[9px] font-bold uppercase tracking-[0.2em] hover:bg-[var(--text-color)] hover:text-black transition-all flex items-center gap-2 rounded-sm mr-2"
-                                                    title="Upload Signal"
-                                                >
-                                                    <Plus size={12} /> UPLOAD_SIGNAL
-                                                </button>
+                                            <button
+                                                onClick={() => setShowGlobalUpload(true)}
+                                                className="px-4 py-1.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/30 text-[var(--text-color)] text-[9px] font-bold uppercase tracking-[0.2em] hover:bg-[var(--text-color)] hover:text-black transition-all flex items-center gap-2 rounded-sm mr-2"
+                                                title="Upload Signal"
+                                            >
+                                                <Plus size={12} /> UPLOAD_SIGNAL
+                                            </button>
                                         )}
                                         {!isMe && onMessageUser && (
                                             <button
@@ -1508,7 +1507,7 @@ export const ProfileView = React.memo(({
                                         )}
                                     </div>
                                 </div>
-                                
+
                                 {/* Tab Content */}
                                 {activeTab === 'Music' && (
                                     profileTracks.length > 0 ? (
@@ -1595,534 +1594,534 @@ export const ProfileView = React.memo(({
                                     ) : null
                                 )}
 
-                        {activeTab === 'Playlists' && (
-                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 max-h-[400px] overflow-y-auto custom-scrollbar pr-2 pb-8">
-                                {isMe && (
-                                    <button
-                                        onClick={() => setShowCreatePlaylist(true)}
-                                        className="border border-[var(--text-color)]/10 p-4 hover:border-[var(--text-color)]/40 transition-all cursor-pointer group bg-black/20 flex flex-col items-center justify-center gap-4 text-[var(--text-color)]/20 hover:text-[var(--text-color)]"
-                                    >
-                                        <Plus size={32} />
-                                        <span className="text-[10px] font-bold uppercase tracking-widest">INIT_NEW_PLAYLIST</span>
-                                    </button>
-                                )}
-                                {profilePlaylists
-                                    .sort((a, b) => {
-                                        const aPinned = isTruthy(a.isPinned || a.IsPinned) ? 1 : 0;
-                                        const bPinned = isTruthy(b.isPinned || b.IsPinned) ? 1 : 0;
-                                        if (bPinned !== aPinned) return bPinned - aPinned;
-
-                                        const aPosted = isTruthy(a.isPosted || a.IsPosted) ? 1 : 0;
-                                        const bPosted = isTruthy(b.isPosted || b.IsPosted) ? 1 : 0;
-                                        if (bPosted !== aPosted) return bPosted - aPosted;
-                                        return 0;
-                                    })
-                                    .map(p => (
-                                        <div key={p.id} onClick={() => handleOpenPlaylist(p.id)} className="border border-[var(--text-color)]/5 p-4 hover:border-[var(--text-color)]/40 transition-all cursor-pointer group bg-black/40">
-                                            <div className="aspect-square bg-black overflow-hidden relative mb-4">
-                                                {(p.imageUrl || p.ImageUrl) ? (
-                                                    <img src={getMediaUrl(p.imageUrl || p.ImageUrl)} className="w-full h-full object-cover grayscale opacity-40 group-hover:opacity-100 transition-all" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/10"><Database size={32} /></div>
-                                                )}
-                                                <div className="absolute top-0 left-0 bg-[var(--text-color)] text-black text-[8px] font-bold px-1.5 py-0.5 mono">#{String(p.id).padStart(3, '0')}</div>
-                                                {isMe && (
-                                                    <div className="absolute top-2 left-2 z-30 flex gap-2">
-                                                        <button
-                                                            onClick={async (e) => {
-                                                                e.stopPropagation();
-                                                                try {
-                                                                    const API = await import('../services/api').then(mod => mod.default);
-                                                                    await API.Playlists.togglePin(p.id || p.Id);
-                                                                    const isPinnedNow = !isTruthy(p.isPinned || p.IsPinned);
-                                                                    setProfilePlaylists(prev => prev.map(pl => (String(pl.id) === String(p.id)) ? { ...pl, isPinned: isPinnedNow, IsPinned: isPinnedNow } : pl));
-                                                                    showNotification(isPinnedNow ? "SIGNAL_LOCKED" : "SIGNAL_RELEASED", `PLAYLIST_${isPinnedNow ? 'PINNED_TO' : 'REMOVED_FROM'}_MONITOR`, "success");
-                                                                } catch (err) { console.error(err); }
-                                                            }}
-                                                            className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(p.isPinned || p.IsPinned) ? 'bg-white text-black border-white shadow-[0_0_15px_#fff]' : 'bg-black/60 border-white/20 text-white/40 hover:text-white hover:border-white/40'}`}
-                                                            title="Pin to Monitor"
-                                                        >
-                                                            <Star size={10} fill={isTruthy(p.isPinned || p.IsPinned) ? "currentColor" : "none"} />
-                                                        </button>
-
-                                                        <button
-                                                            onClick={async (e) => {
-                                                                e.stopPropagation();
-                                                                try {
-                                                                    const API = await import('../services/api').then(mod => mod.default);
-                                                                    await API.Playlists.togglePost(p.id || p.Id);
-                                                                    const isPostedNow = !isTruthy(p.isPosted || p.IsPosted);
-                                                                    setProfilePlaylists(prev => prev.map(pl => (String(pl.id) === String(p.id)) ? { ...pl, isPosted: isPostedNow, IsPosted: isPostedNow } : pl));
-                                                                    showNotification(isPostedNow ? "SIGNAL_POSTED" : "SIGNAL_RECALLED", `PLAYLIST_${isPostedNow ? 'ATTACHED_TO' : 'RECALLED_FROM'}_WALL`, "success");
-                                                                } catch (err) { console.error(err); }
-                                                            }}
-                                                            className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(p.isPosted || p.IsPosted) ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)] shadow-[0_0_15px_rgba(var(--theme-color-rgb),0.5)]' : 'bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/40 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40'}`}
-                                                            title="Pin to Wall"
-                                                        >
-                                                            <Share2 size={10} />
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?playlist=${p.id || p.Id}`;
-                                                                navigator.clipboard.writeText(link);
-                                                                showNotification("LINK_COPIED", "MAP_ADDRESS_SECURED_TO_CLIPBOARD", "success");
-                                                            }}
-                                                            className="p-1.5 border bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/40 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40 backdrop-blur-md transition-all"
-                                                            title="Copy Sequence Link"
-                                                        >
-                                                            <Link size={10} />
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <h4 className="text-[10px] font-bold text-[var(--text-color)] uppercase truncate tracking-widest">{p.name}</h4>
-                                        </div>
-                                    ))}
-                            </div>
-                        )}
-
-                        {activeTab === 'Studio' && (
-                            <div className="space-y-6 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
-                                {/* Studio Sub-tabs + Universal Ingest */}
-                                <div className="flex flex-col lg:flex-row justify-between items-center mb-6 pb-4 border-b border-white/5 gap-4">
-                                    <div className="flex gap-4">
-                                        {['All', 'Photos', 'Video', 'Journal'].map(tab => {
-                                            const count = tab === 'All' ? profileGallery.length + profileJournal.length :
-                                                tab === 'Photos' ? profileGallery.filter(c => (c.type || c.Type || '').toUpperCase() === 'PHOTO').length :
-                                                    tab === 'Video' ? profileGallery.filter(c => (c.type || c.Type || '').toUpperCase() === 'VIDEO').length :
-                                                        tab === 'Journal' ? profileJournal.length : 0;
-                                            return (
-                                                <button
-                                                    key={tab}
-                                                    onClick={() => setStudioSubTab(tab)}
-                                                    className={`flex items-center gap-2 text-[8px] mono font-bold tracking-widest uppercase transition-all ${studioSubTab === tab ? 'text-[var(--text-color)]' : 'text-white/20 hover:text-white/60'}`}
-                                                >
-                                                    {tab === 'Photos' && <Camera size={12} />}
-                                                    {tab === 'Video' && <Video size={12} />}
-                                                    {tab === 'Journal' && <Book size={12} />}
-                                                    {tab === 'All' && <Hash size={12} />}
-                                                    [{tab}] <span className="text-[var(--text-color)]/40">{count}</span>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-
-                                    {/* Log Terminal */}
-
-
-                                    {/* Universal Ingest Menu */}
-                                    {isMe && (
-                                        <div className="relative">
+                                {activeTab === 'Playlists' && (
+                                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 max-h-[400px] overflow-y-auto custom-scrollbar pr-2 pb-8">
+                                        {isMe && (
                                             <button
-                                                onClick={() => setShowIngestMenu(!showIngestMenu)}
-                                                className="px-3 lg:px-4 py-1.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/40 text-[var(--text-color)] text-[8px] lg:text-[9px] font-bold uppercase tracking-[0.1em] lg:tracking-[0.2em] hover:bg-[var(--text-color)] hover:text-black transition-all flex items-center gap-2"
+                                                onClick={() => setShowCreatePlaylist(true)}
+                                                className="border border-[var(--text-color)]/10 p-4 hover:border-[var(--text-color)]/40 transition-all cursor-pointer group bg-black/20 flex flex-col items-center justify-center gap-4 text-[var(--text-color)]/20 hover:text-[var(--text-color)]"
                                             >
-                                                <Upload size={12} /> [ INGEST_DATA ]
+                                                <Plus size={32} />
+                                                <span className="text-[10px] font-bold uppercase tracking-widest">INIT_NEW_PLAYLIST</span>
                                             </button>
+                                        )}
+                                        {profilePlaylists
+                                            .sort((a, b) => {
+                                                const aPinned = isTruthy(a.isPinned || a.IsPinned) ? 1 : 0;
+                                                const bPinned = isTruthy(b.isPinned || b.IsPinned) ? 1 : 0;
+                                                if (bPinned !== aPinned) return bPinned - aPinned;
 
-                                            <AnimatePresence>
-                                                {showIngestMenu && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0, y: -10 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        exit={{ opacity: 0, y: -10 }}
-                                                        className="absolute right-0 top-full mt-2 w-48 bg-black border border-[var(--text-color)]/30 shadow-[0_0_30px_rgba(var(--text-color-rgb),0.1)] z-[100]"
-                                                    >
-                                                        <div className="p-1 space-y-1">
-                                                            <button
-                                                                onClick={() => document.getElementById('ingest-log').click()}
-                                                                className="w-full text-left px-4 py-2 text-[8px] font-bold text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:bg-[var(--text-color)]/10 transition-all uppercase mono flex items-center gap-3"
-                                                            >
-                                                                <Book size={12} /> [ JOURNAL_LOG ]
-                                                            </button>
-                                                            <button
-                                                                onClick={() => document.getElementById('ingest-visual').click()}
-                                                                className="w-full text-left px-4 py-2 text-[8px] font-bold text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:bg-[var(--text-color)]/10 transition-all uppercase mono flex items-center gap-3"
-                                                            >
-                                                                <Camera size={12} /> [ VISUAL_DATA ]
-                                                            </button>
-                                                            <button
-                                                                onClick={() => document.getElementById('ingest-signal').click()}
-                                                                className="w-full text-left px-4 py-2 text-[8px] font-bold text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:bg-[var(--text-color)]/10 transition-all uppercase mono flex items-center gap-3"
-                                                            >
-                                                                <Video size={12} /> [ VISUAL_FEED ]
-                                                            </button>
-                                                        </div>
+                                                const aPosted = isTruthy(a.isPosted || a.IsPosted) ? 1 : 0;
+                                                const bPosted = isTruthy(b.isPosted || b.IsPosted) ? 1 : 0;
+                                                if (bPosted !== aPosted) return bPosted - aPosted;
+                                                return 0;
+                                            })
+                                            .map(p => (
+                                                <div key={p.id} onClick={() => handleOpenPlaylist(p.id)} className="border border-[var(--text-color)]/5 p-4 hover:border-[var(--text-color)]/40 transition-all cursor-pointer group bg-black/40">
+                                                    <div className="aspect-square bg-black overflow-hidden relative mb-4">
+                                                        {(p.imageUrl || p.ImageUrl) ? (
+                                                            <img src={getMediaUrl(p.imageUrl || p.ImageUrl)} className="w-full h-full object-cover grayscale opacity-40 group-hover:opacity-100 transition-all" />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/10"><Database size={32} /></div>
+                                                        )}
+                                                        <div className="absolute top-0 left-0 bg-[var(--text-color)] text-black text-[8px] font-bold px-1.5 py-0.5 mono">#{String(p.id).padStart(3, '0')}</div>
+                                                        {isMe && (
+                                                            <div className="absolute top-2 left-2 z-30 flex gap-2">
+                                                                <button
+                                                                    onClick={async (e) => {
+                                                                        e.stopPropagation();
+                                                                        try {
+                                                                            const API = await import('../services/api').then(mod => mod.default);
+                                                                            await API.Playlists.togglePin(p.id || p.Id);
+                                                                            const isPinnedNow = !isTruthy(p.isPinned || p.IsPinned);
+                                                                            setProfilePlaylists(prev => prev.map(pl => (String(pl.id) === String(p.id)) ? { ...pl, isPinned: isPinnedNow, IsPinned: isPinnedNow } : pl));
+                                                                            showNotification(isPinnedNow ? "SIGNAL_LOCKED" : "SIGNAL_RELEASED", `PLAYLIST_${isPinnedNow ? 'PINNED_TO' : 'REMOVED_FROM'}_MONITOR`, "success");
+                                                                        } catch (err) { console.error(err); }
+                                                                    }}
+                                                                    className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(p.isPinned || p.IsPinned) ? 'bg-white text-black border-white shadow-[0_0_15px_#fff]' : 'bg-black/60 border-white/20 text-white/40 hover:text-white hover:border-white/40'}`}
+                                                                    title="Pin to Monitor"
+                                                                >
+                                                                    <Star size={10} fill={isTruthy(p.isPinned || p.IsPinned) ? "currentColor" : "none"} />
+                                                                </button>
 
-                                                        {/* Hidden Inputs */}
-                                                        <input
-                                                            id="ingest-log"
-                                                            type="file"
-                                                            accept=".txt,.log,.md"
-                                                            className="hidden"
-                                                            onChange={(e) => {
-                                                                handleIngestFile(e, 'CORE_LOG');
-                                                                e.target.value = ''; // Reset to allow same file re-selection
-                                                            }}
-                                                        />
-                                                        <input
-                                                            id="ingest-visual"
-                                                            type="file"
-                                                            accept="image/*"
-                                                            className="hidden"
-                                                            onChange={(e) => {
-                                                                handleIngestFile(e, 'VISUAL_DATA');
-                                                                e.target.value = '';
-                                                            }}
-                                                        />
-                                                        <input
-                                                            id="ingest-signal"
-                                                            type="file"
-                                                            accept="video/*"
-                                                            className="hidden"
-                                                            onChange={(e) => {
-                                                                handleIngestFile(e, 'SIGNAL_FEED');
-                                                                e.target.value = '';
-                                                            }}
-                                                        />
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Studio Content Header / Carousel for Media Tabs */}
-                                {['All', 'Photos', 'Video'].includes(studioSubTab) && (
-                                    <div className="mb-4 lg:mb-8 space-y-4">
-                                        <div className="flex justify-between items-center">
-                                            <h3 className="mono text-[10px] font-black text-[var(--text-color)]/60 uppercase tracking-[0.3em]">
-                                                {studioSubTab === 'All' ? 'SIGNAL_GALLERY' : studioSubTab === 'Photos' ? 'VISUAL_ARCHIVE' : 'VIDEO_FEED'}
-                                            </h3>
-                                        </div>
-                                        <div className="relative group px-6 mb-4">
-                                            {profileGallery.length > 0 && (
-                                                <>
-                                                    <button
-                                                        onClick={() => {
-                                                            const el = document.getElementById('media-carousel');
-                                                            if (el) el.scrollBy({ left: -300, behavior: 'smooth' });
-                                                        }}
-                                                        className="absolute left-0 top-1/2 -translate-y-1/2 z-40 text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:scale-110 transition-all opacity-100"
-                                                    >
-                                                        <ChevronLeft size={20} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            const el = document.getElementById('media-carousel');
-                                                            if (el) el.scrollBy({ left: 300, behavior: 'smooth' });
-                                                        }}
-                                                        className="absolute right-0 top-1/2 -translate-y-1/2 z-40 text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:scale-110 transition-all opacity-100"
-                                                    >
-                                                        <ChevronRight size={20} />
-                                                    </button>
-                                                </>
-                                            )}
-                                            <div
-                                                id="media-carousel"
-                                                className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar scroll-smooth"
-                                            >
-                                                {profileGallery.length > 0 ? (
-                                                    profileGallery
-                                                        .filter(c => studioSubTab === 'All' || (studioSubTab === 'Photos' && (c.type || c.Type || '').toUpperCase() === 'PHOTO') || (studioSubTab === 'Video' && (c.type || c.Type || '').toUpperCase() === 'VIDEO'))
-                                                    .sort((a, b) => {
-                                                        const aPinned = isTruthy(a.isPinned || a.IsPinned) ? 1 : 0;
-                                                        const bPinned = isTruthy(b.isPinned || b.IsPinned) ? 1 : 0;
-                                                        if (bPinned !== aPinned) return bPinned - aPinned;
-
-                                                        const aPosted = isTruthy(a.isPosted || a.IsPosted) ? 1 : 0;
-                                                        const bPosted = isTruthy(b.isPosted || b.IsPosted) ? 1 : 0;
-                                                        if (bPosted !== aPosted) return bPosted - aPosted;
-
-                                                        return new Date(b.createdAt || b.CreatedAt) - new Date(a.createdAt || a.CreatedAt);
-                                                    })
-                                                    .map((content) => (
-                                                        <motion.div
-                                                            key={content.id || content.Id}
-                                                            initial={{ opacity: 0, scale: 0.9 }}
-                                                            animate={{ opacity: 1, scale: 1 }}
-                                                            whileHover={{ scale: 1.02 }}
-                                                            className="group relative flex-shrink-0 w-64 aspect-square bg-black border border-white/5 overflow-hidden cursor-pointer"
-                                                        >
-                                                            {/* Hover Controls */}
-                                                            {isMe ? (
-                                                                <div className="absolute top-2 left-2 z-30 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                                                    <button
-                                                                        onClick={async (e) => {
-                                                                            e.stopPropagation();
-                                                                            try {
-                                                                                const API = await import('../services/api').then(mod => mod.default);
-                                                                                await API.Studio.togglePin(content.id || content.Id);
-                                                                                const isPinnedNow = !isTruthy(content.IsPinned || content.isPinned);
-                                                                                setProfileGallery(prev => prev.map(c => (String(c.Id || c.id) === String(content.Id || content.id)) ? { ...c, isPinned: isPinnedNow, IsPinned: isPinnedNow } : c));
-                                                                                showNotification(isPinnedNow ? "SIGNAL_LOCKED" : "SIGNAL_RELEASED", `CONTENT_${isPinnedNow ? 'PINNED_TO' : 'RECALLED_FROM'}_MONITOR`, "success");
-                                                                            } catch (err) { console.error(err); }
-                                                                        }}
-                                                                        className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(content.IsPinned || content.isPinned) ? 'bg-white text-black border-white shadow-[0_0_15px_#fff]' : 'bg-black/60 text-white/40 border-white/10 hover:text-white hover:border-white/40'}`}
-                                                                        title="Pin to Monitor"
-                                                                    >
-                                                                        <Star size={10} fill={isTruthy(content.IsPinned || content.isPinned) ? "currentColor" : "none"} />
-                                                                    </button>
-
-                                                                    <button
-                                                                        onClick={async (e) => {
-                                                                            e.stopPropagation();
-                                                                            try {
-                                                                                const API = await import('../services/api').then(mod => mod.default);
-                                                                                await API.Studio.togglePost(content.id || content.Id);
-                                                                                const isPostedNow = !isTruthy(content.IsPosted || content.isPosted);
-                                                                                setProfileGallery(prev => prev.map(c => (String(c.Id || c.id) === String(content.Id || content.id)) ? { ...c, isPosted: isPostedNow, IsPosted: isPostedNow } : c));
-                                                                                showNotification(isPostedNow ? "SIGNAL_BROADCAST" : "SIGNAL_REDACTED", `CONTENT_${isPostedNow ? 'ADDED_TO' : 'REMOVED_FROM'}_WALL`, "success");
-                                                                            } catch (err) { console.error(err); }
-                                                                        }}
-                                                                        className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(content.IsPosted || content.isPosted) ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)] shadow-[0_0_15px_rgba(var(--theme-color-rgb),0.5)]' : 'bg-black/60 text-[var(--text-color)]/40 border-[var(--text-color)]/20 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40'}`}
-                                                                        title="Pin to Wall"
-                                                                    >
-                                                                        <Share2 size={10} />
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?content=${content.id || content.Id}`;
-                                                                            navigator.clipboard.writeText(link);
-                                                                            showNotification("LINK_COPIED", "SIGNAL_ADDRESS_SECURED", "success");
-                                                                        }}
-                                                                        className="p-1.5 border bg-black/60 border-white/10 text-white/40 hover:text-white backdrop-blur-md transition-all"
-                                                                        title="Copy Link"
-                                                                    >
-                                                                        <Share2 size={10} />
-                                                                    </button>
-                                                                    {(content.type || content.Type || '').toUpperCase() === 'VIDEO' && (
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                const input = document.getElementById(`thumb-upload-${content.id || content.Id}`);
-                                                                                if (input) input.click();
-                                                                            }}
-                                                                            className="p-1.5 border bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/40 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40 backdrop-blur-md transition-all"
-                                                                            title="Set Cover Image"
-                                                                        >
-                                                                            <Camera size={10} />
-                                                                        </button>
-                                                                    )}
-                                                                    <input
-                                                                        id={`thumb-upload-${content.id || content.Id}`}
-                                                                        type="file"
-                                                                        accept="image/*"
-                                                                        className="hidden"
-                                                                        onChange={async (e) => {
-                                                                            const file = e.target.files[0];
-                                                                            if (!file) return;
-                                                                            try {
-                                                                                const formData = new FormData();
-                                                                                formData.append('file', file);
-                                                                                const API = await import('../services/api').then(mod => mod.default);
-                                                                                const res = await API.Studio.updateThumbnail(content.id || content.Id, formData);
-                                                                                setProfileGallery(prev => prev.map(c => (String(c.id || c.Id) === String(content.id || content.Id)) ? { ...c, thumbnailUrl: res.data.thumbnailUrl, ThumbnailUrl: res.data.thumbnailUrl } : c));
-                                                                                showNotification("COVER_UPDATED", "SIGNAL_VISUAL_OVERRIDE_COMPLETE", "success");
-                                                                            } catch (err) { console.error(err); }
-                                                                        }}
-                                                                    />
-                                                                </div>
-                                                            ) : (
-                                                                <div className="absolute top-2 left-2 z-30 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?content=${content.id || content.Id}`;
-                                                                            navigator.clipboard.writeText(link);
-                                                                            showNotification("LINK_COPIED", "SIGNAL_ADDRESS_SECURED", "success");
-                                                                        }}
-                                                                        className="p-1.5 border bg-black/60 border-white/10 text-white/40 hover:text-white backdrop-blur-md transition-all"
-                                                                        title="Copy Link"
-                                                                    >
-                                                                        <Share2 size={10} />
-                                                                    </button>
-                                                                </div>
-                                                            )}
-
-                                                            <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end"
-                                                                onClick={() => {
-                                                                    const t = (content.type || content.Type || 'PHOTO').toUpperCase();
-                                                                    onExpandContent(content, t);
-                                                                }}>
-                                                                <div className="text-[7px] mono font-bold text-[var(--text-color)] tracking-widest uppercase mb-1">
-                                                                    {(content.type || content.Type || '').toUpperCase() === 'PHOTO' ? '// VISUAL_DATA' : '// SIGNAL_FEED'}
-                                                                </div>
-                                                                <div className="text-[8px] mono text-white truncate uppercase">{content.title || content.Title}</div>
+                                                                <button
+                                                                    onClick={async (e) => {
+                                                                        e.stopPropagation();
+                                                                        try {
+                                                                            const API = await import('../services/api').then(mod => mod.default);
+                                                                            await API.Playlists.togglePost(p.id || p.Id);
+                                                                            const isPostedNow = !isTruthy(p.isPosted || p.IsPosted);
+                                                                            setProfilePlaylists(prev => prev.map(pl => (String(pl.id) === String(p.id)) ? { ...pl, isPosted: isPostedNow, IsPosted: isPostedNow } : pl));
+                                                                            showNotification(isPostedNow ? "SIGNAL_POSTED" : "SIGNAL_RECALLED", `PLAYLIST_${isPostedNow ? 'ATTACHED_TO' : 'RECALLED_FROM'}_WALL`, "success");
+                                                                        } catch (err) { console.error(err); }
+                                                                    }}
+                                                                    className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(p.isPosted || p.IsPosted) ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)] shadow-[0_0_15px_rgba(var(--theme-color-rgb),0.5)]' : 'bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/40 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40'}`}
+                                                                    title="Pin to Wall"
+                                                                >
+                                                                    <Share2 size={10} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?playlist=${p.id || p.Id}`;
+                                                                        navigator.clipboard.writeText(link);
+                                                                        showNotification("LINK_COPIED", "MAP_ADDRESS_SECURED_TO_CLIPBOARD", "success");
+                                                                    }}
+                                                                    className="p-1.5 border bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/40 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40 backdrop-blur-md transition-all"
+                                                                    title="Copy Sequence Link"
+                                                                >
+                                                                    <Link size={10} />
+                                                                </button>
                                                             </div>
+                                                        )}
+                                                    </div>
+                                                    <h4 className="text-[10px] font-bold text-[var(--text-color)] uppercase truncate tracking-widest">{p.name}</h4>
+                                                </div>
+                                            ))}
+                                    </div>
+                                )}
 
-                                                            {(content.type || content.Type || '').toUpperCase() === 'VIDEO' ? (
-                                                                <div className="w-full h-full relative"
-                                                                    onClick={() => {
-                                                                        const t = (content.type || content.Type || 'VIDEO').toUpperCase();
-                                                                        onExpandContent(content, t);
-                                                                    }}>
-                                                                    {(content.thumbnailUrl || content.ThumbnailUrl) ? (
-                                                                        <img
-                                                                            src={getMediaUrl(content.thumbnailUrl || content.ThumbnailUrl)}
-                                                                            className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-500"
-                                                                        />
-                                                                    ) : (
-                                                                        <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 space-y-2">
-                                                                            <Video size={16} className="text-[var(--text-color)]/40" />
-                                                                            <div className="text-[6px] mono text-white/20 uppercase">DECODING_SIGNAL...</div>
-                                                                        </div>
-                                                                    )}
-                                                                    {(content.thumbnailUrl || content.ThumbnailUrl) && (
-                                                                        <div className="absolute top-2 right-2 p-1 bg-black/60 backdrop-blur-sm border border-white/10">
-                                                                            <Video size={8} className="text-white/60" />
-                                                                        </div>
-                                                                    )}
+                                {activeTab === 'Studio' && (
+                                    <div className="space-y-6 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
+                                        {/* Studio Sub-tabs + Universal Ingest */}
+                                        <div className="flex flex-col lg:flex-row justify-between items-center mb-6 pb-4 border-b border-white/5 gap-4">
+                                            <div className="flex gap-4">
+                                                {['All', 'Photos', 'Video', 'Journal'].map(tab => {
+                                                    const count = tab === 'All' ? profileGallery.length + profileJournal.length :
+                                                        tab === 'Photos' ? profileGallery.filter(c => (c.type || c.Type || '').toUpperCase() === 'PHOTO').length :
+                                                            tab === 'Video' ? profileGallery.filter(c => (c.type || c.Type || '').toUpperCase() === 'VIDEO').length :
+                                                                tab === 'Journal' ? profileJournal.length : 0;
+                                                    return (
+                                                        <button
+                                                            key={tab}
+                                                            onClick={() => setStudioSubTab(tab)}
+                                                            className={`flex items-center gap-2 text-[8px] mono font-bold tracking-widest uppercase transition-all ${studioSubTab === tab ? 'text-[var(--text-color)]' : 'text-white/20 hover:text-white/60'}`}
+                                                        >
+                                                            {tab === 'Photos' && <Camera size={12} />}
+                                                            {tab === 'Video' && <Video size={12} />}
+                                                            {tab === 'Journal' && <Book size={12} />}
+                                                            {tab === 'All' && <Hash size={12} />}
+                                                            [{tab}] <span className="text-[var(--text-color)]/40">{count}</span>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+
+                                            {/* Log Terminal */}
+
+
+                                            {/* Universal Ingest Menu */}
+                                            {isMe && (
+                                                <div className="relative">
+                                                    <button
+                                                        onClick={() => setShowIngestMenu(!showIngestMenu)}
+                                                        className="px-3 lg:px-4 py-1.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/40 text-[var(--text-color)] text-[8px] lg:text-[9px] font-bold uppercase tracking-[0.1em] lg:tracking-[0.2em] hover:bg-[var(--text-color)] hover:text-black transition-all flex items-center gap-2"
+                                                    >
+                                                        <Upload size={12} /> [ INGEST_DATA ]
+                                                    </button>
+
+                                                    <AnimatePresence>
+                                                        {showIngestMenu && (
+                                                            <motion.div
+                                                                initial={{ opacity: 0, y: -10 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                exit={{ opacity: 0, y: -10 }}
+                                                                className="absolute right-0 top-full mt-2 w-48 bg-black border border-[var(--text-color)]/30 shadow-[0_0_30px_rgba(var(--text-color-rgb),0.1)] z-[100]"
+                                                            >
+                                                                <div className="p-1 space-y-1">
+                                                                    <button
+                                                                        onClick={() => document.getElementById('ingest-log').click()}
+                                                                        className="w-full text-left px-4 py-2 text-[8px] font-bold text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:bg-[var(--text-color)]/10 transition-all uppercase mono flex items-center gap-3"
+                                                                    >
+                                                                        <Book size={12} /> [ JOURNAL_LOG ]
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => document.getElementById('ingest-visual').click()}
+                                                                        className="w-full text-left px-4 py-2 text-[8px] font-bold text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:bg-[var(--text-color)]/10 transition-all uppercase mono flex items-center gap-3"
+                                                                    >
+                                                                        <Camera size={12} /> [ VISUAL_DATA ]
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => document.getElementById('ingest-signal').click()}
+                                                                        className="w-full text-left px-4 py-2 text-[8px] font-bold text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:bg-[var(--text-color)]/10 transition-all uppercase mono flex items-center gap-3"
+                                                                    >
+                                                                        <Video size={12} /> [ VISUAL_FEED ]
+                                                                    </button>
                                                                 </div>
-                                                            ) : (
-                                                                <img
-                                                                    src={getMediaUrl(content.url || content.Url)}
-                                                                    alt={content.title || content.Title}
-                                                                    className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-500"
-                                                                    onClick={() => {
-                                                                        const t = (content.type || content.Type || 'PHOTO').toUpperCase();
-                                                                        onExpandContent(content, t);
+
+                                                                {/* Hidden Inputs */}
+                                                                <input
+                                                                    id="ingest-log"
+                                                                    type="file"
+                                                                    accept=".txt,.log,.md"
+                                                                    className="hidden"
+                                                                    onChange={(e) => {
+                                                                        handleIngestFile(e, 'CORE_LOG');
+                                                                        e.target.value = ''; // Reset to allow same file re-selection
                                                                     }}
                                                                 />
-                                                            )}
-                                                        </motion.div>
-                                                    ))
-                                                ) : !isLoadingGallery ? (
-                                                    <div className="w-full flex items-center justify-center py-10 opacity-20 mono text-[8px] uppercase tracking-widest">
-                                                        NO_SIGNALS_ARCHIVED_IN_GALLERY
-                                                    </div>
-                                                ) : null}
-                                            </div>
+                                                                <input
+                                                                    id="ingest-visual"
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    className="hidden"
+                                                                    onChange={(e) => {
+                                                                        handleIngestFile(e, 'VISUAL_DATA');
+                                                                        e.target.value = '';
+                                                                    }}
+                                                                />
+                                                                <input
+                                                                    id="ingest-signal"
+                                                                    type="file"
+                                                                    accept="video/*"
+                                                                    className="hidden"
+                                                                    onChange={(e) => {
+                                                                        handleIngestFile(e, 'SIGNAL_FEED');
+                                                                        e.target.value = '';
+                                                                    }}
+                                                                />
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
-                                    )}
 
-                                {studioSubTab === 'Photos' && profileGallery.filter(c => (c.type || c.Type || '').toUpperCase() === 'PHOTO').length === 0 && (
-                                    <div className="col-span-full py-10 lg:py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
-                                        <Camera size={24} className="mb-4 text-[var(--text-color)]" />
-                                        <span className="mono text-[8px] uppercase tracking-[0.2em]">GALLERY_ENCRYPTED_OR_EMPTY</span>
-                                    </div>
-                                )}
-                                {studioSubTab === 'Video' && profileGallery.filter(c => (c.type || c.Type) === 'VIDEO').length === 0 && (
-                                    <div className="col-span-full py-10 lg:py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
-                                        <Video size={24} className="mb-4 text-[var(--text-color)]" />
-                                        <span className="mono text-[8px] uppercase tracking-[0.2em]">VISUAL_FEED_OFFLINE</span>
-                                    </div>
-                                )}
-                                {(studioSubTab === 'Journal' || studioSubTab === 'All') && (
-                                    <div className="col-span-full space-y-6">
-                                        {isMe && showJournalForm && (
-                                            <div className="bg-black border border-[var(--text-color)]/20 p-6 space-y-4">
-                                                <div className="flex justify-between items-center border-b border-[var(--text-color)]/10 pb-4">
-                                                    <h3 className="mono text-[10px] font-black text-[var(--text-color)] uppercase tracking-[0.3em]">INIT_NEW_ENTRY</h3>
+                                        {/* Studio Content Header / Carousel for Media Tabs */}
+                                        {['All', 'Photos', 'Video'].includes(studioSubTab) && (
+                                            <div className="mb-4 lg:mb-8 space-y-4">
+                                                <div className="flex justify-between items-center">
+                                                    <h3 className="mono text-[10px] font-black text-[var(--text-color)]/60 uppercase tracking-[0.3em]">
+                                                        {studioSubTab === 'All' ? 'SIGNAL_GALLERY' : studioSubTab === 'Photos' ? 'VISUAL_ARCHIVE' : 'VIDEO_FEED'}
+                                                    </h3>
                                                 </div>
-                                                <input
-                                                    id="journal-title"
-                                                    type="text"
-                                                    placeholder="ENTRY_TITLE..."
-                                                    className="w-full bg-black/40 border border-white/5 p-3 text-[10px] text-white mono outline-none focus:border-[var(--text-color)]/40 transition-all tracking-widest"
-                                                />
-                                                <textarea
-                                                    id="journal-content"
-                                                    placeholder="ENCODE_CORE_LOG_DATA..."
-                                                    className="w-full bg-black/40 border border-white/5 p-3 text-[10px] text-white/60 mono outline-none focus:border-[var(--text-color)]/40 transition-all min-h-[100px] resize-none tracking-wider leading-relaxed"
-                                                />
-                                                <div className="flex justify-center pt-2">
-                                                    <button
-                                                        onClick={async () => {
-                                                            const titleInput = document.getElementById('journal-title');
-                                                            const contentInput = document.getElementById('journal-content');
-                                                            if (!titleInput?.value || !contentInput?.value) return;
+                                                <div className="relative group px-6 mb-4">
+                                                    {profileGallery.length > 0 && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => {
+                                                                    const el = document.getElementById('media-carousel');
+                                                                    if (el) el.scrollBy({ left: -300, behavior: 'smooth' });
+                                                                }}
+                                                                className="absolute left-0 top-1/2 -translate-y-1/2 z-40 text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:scale-110 transition-all opacity-100"
+                                                            >
+                                                                <ChevronLeft size={20} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    const el = document.getElementById('media-carousel');
+                                                                    if (el) el.scrollBy({ left: 300, behavior: 'smooth' });
+                                                                }}
+                                                                className="absolute right-0 top-1/2 -translate-y-1/2 z-40 text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:scale-110 transition-all opacity-100"
+                                                            >
+                                                                <ChevronRight size={20} />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    <div
+                                                        id="media-carousel"
+                                                        className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar scroll-smooth"
+                                                    >
+                                                        {profileGallery.length > 0 ? (
+                                                            profileGallery
+                                                                .filter(c => studioSubTab === 'All' || (studioSubTab === 'Photos' && (c.type || c.Type || '').toUpperCase() === 'PHOTO') || (studioSubTab === 'Video' && (c.type || c.Type || '').toUpperCase() === 'VIDEO'))
+                                                                .sort((a, b) => {
+                                                                    const aPinned = isTruthy(a.isPinned || a.IsPinned) ? 1 : 0;
+                                                                    const bPinned = isTruthy(b.isPinned || b.IsPinned) ? 1 : 0;
+                                                                    if (bPinned !== aPinned) return bPinned - aPinned;
 
-                                                            try {
-                                                                const API = await import('../services/api').then(mod => mod.default);
-                                                                await API.Journal.create({
-                                                                    Title: titleInput.value,
-                                                                    Content: contentInput.value,
-                                                                    IsPosted: true,
-                                                                    IsPinned: false
-                                                                });
-                                                                titleInput.value = '';
-                                                                contentInput.value = '';
-                                                                const res = await API.Journal.getMyJournal();
-                                                                setProfileJournal(res.data || []);
-                                                                setShowJournalForm(false);
-                                                            } catch (err) {
-                                                                console.error("Failed to commit log", err);
-                                                            }
-                                                        }}
-                                                        className="px-10 py-3 bg-[var(--text-color)]/10 border border-[var(--text-color)]/40 text-[var(--text-color)] text-[10px] font-black uppercase tracking-[0.4em] hover:bg-[var(--text-color)] hover:text-black transition-all"
-                                                    >
-                                                        [ COMMIT_LOG_TO_ARCHIVE ]
-                                                    </button>
-                                                </div>
+                                                                    const aPosted = isTruthy(a.isPosted || a.IsPosted) ? 1 : 0;
+                                                                    const bPosted = isTruthy(b.isPosted || b.IsPosted) ? 1 : 0;
+                                                                    if (bPosted !== aPosted) return bPosted - aPosted;
 
-                                                <div className="flex justify-center gap-8 pt-6 border-t border-white/5">
-                                                    <button
-                                                        onClick={() => {
-                                                            const t = document.getElementById('journal-title');
-                                                            const c = document.getElementById('journal-content');
-                                                            if (t) t.value = '';
-                                                            if (c) c.value = '';
-                                                        }}
-                                                        className="text-[9px] font-bold text-red-500/40 hover:text-red-500 uppercase mono flex items-center gap-2 transition-all tracking-widest"
-                                                    >
-                                                        <Database size={12} /> [ PURGE_BUFFER ]
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            const t = document.getElementById('journal-title');
-                                                            const c = document.getElementById('journal-content');
-                                                            if (t) t.value = '';
-                                                            if (c) c.value = '';
-                                                            setShowJournalForm(false);
-                                                        }}
-                                                        className="text-[9px] font-bold text-[#ff006e] hover:text-[#ff006e]/80 uppercase mono flex items-center gap-2 transition-all tracking-widest"
-                                                    >
-                                                        <X size={12} /> [ EXIT_POST_PROTOCOL ]
-                                                    </button>
+                                                                    return new Date(b.createdAt || b.CreatedAt) - new Date(a.createdAt || a.CreatedAt);
+                                                                })
+                                                                .map((content) => (
+                                                                    <motion.div
+                                                                        key={content.id || content.Id}
+                                                                        initial={{ opacity: 0, scale: 0.9 }}
+                                                                        animate={{ opacity: 1, scale: 1 }}
+                                                                        whileHover={{ scale: 1.02 }}
+                                                                        className="group relative flex-shrink-0 w-64 aspect-square bg-black border border-white/5 overflow-hidden cursor-pointer"
+                                                                    >
+                                                                        {/* Hover Controls */}
+                                                                        {isMe ? (
+                                                                            <div className="absolute top-2 left-2 z-30 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                                                                <button
+                                                                                    onClick={async (e) => {
+                                                                                        e.stopPropagation();
+                                                                                        try {
+                                                                                            const API = await import('../services/api').then(mod => mod.default);
+                                                                                            await API.Studio.togglePin(content.id || content.Id);
+                                                                                            const isPinnedNow = !isTruthy(content.IsPinned || content.isPinned);
+                                                                                            setProfileGallery(prev => prev.map(c => (String(c.Id || c.id) === String(content.Id || content.id)) ? { ...c, isPinned: isPinnedNow, IsPinned: isPinnedNow } : c));
+                                                                                            showNotification(isPinnedNow ? "SIGNAL_LOCKED" : "SIGNAL_RELEASED", `CONTENT_${isPinnedNow ? 'PINNED_TO' : 'RECALLED_FROM'}_MONITOR`, "success");
+                                                                                        } catch (err) { console.error(err); }
+                                                                                    }}
+                                                                                    className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(content.IsPinned || content.isPinned) ? 'bg-white text-black border-white shadow-[0_0_15px_#fff]' : 'bg-black/60 text-white/40 border-white/10 hover:text-white hover:border-white/40'}`}
+                                                                                    title="Pin to Monitor"
+                                                                                >
+                                                                                    <Star size={10} fill={isTruthy(content.IsPinned || content.isPinned) ? "currentColor" : "none"} />
+                                                                                </button>
+
+                                                                                <button
+                                                                                    onClick={async (e) => {
+                                                                                        e.stopPropagation();
+                                                                                        try {
+                                                                                            const API = await import('../services/api').then(mod => mod.default);
+                                                                                            await API.Studio.togglePost(content.id || content.Id);
+                                                                                            const isPostedNow = !isTruthy(content.IsPosted || content.isPosted);
+                                                                                            setProfileGallery(prev => prev.map(c => (String(c.Id || c.id) === String(content.Id || content.id)) ? { ...c, isPosted: isPostedNow, IsPosted: isPostedNow } : c));
+                                                                                            showNotification(isPostedNow ? "SIGNAL_BROADCAST" : "SIGNAL_REDACTED", `CONTENT_${isPostedNow ? 'ADDED_TO' : 'REMOVED_FROM'}_WALL`, "success");
+                                                                                        } catch (err) { console.error(err); }
+                                                                                    }}
+                                                                                    className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(content.IsPosted || content.isPosted) ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)] shadow-[0_0_15px_rgba(var(--theme-color-rgb),0.5)]' : 'bg-black/60 text-[var(--text-color)]/40 border-[var(--text-color)]/20 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40'}`}
+                                                                                    title="Pin to Wall"
+                                                                                >
+                                                                                    <Share2 size={10} />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?content=${content.id || content.Id}`;
+                                                                                        navigator.clipboard.writeText(link);
+                                                                                        showNotification("LINK_COPIED", "SIGNAL_ADDRESS_SECURED", "success");
+                                                                                    }}
+                                                                                    className="p-1.5 border bg-black/60 border-white/10 text-white/40 hover:text-white backdrop-blur-md transition-all"
+                                                                                    title="Copy Link"
+                                                                                >
+                                                                                    <Share2 size={10} />
+                                                                                </button>
+                                                                                {(content.type || content.Type || '').toUpperCase() === 'VIDEO' && (
+                                                                                    <button
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            const input = document.getElementById(`thumb-upload-${content.id || content.Id}`);
+                                                                                            if (input) input.click();
+                                                                                        }}
+                                                                                        className="p-1.5 border bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/40 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40 backdrop-blur-md transition-all"
+                                                                                        title="Set Cover Image"
+                                                                                    >
+                                                                                        <Camera size={10} />
+                                                                                    </button>
+                                                                                )}
+                                                                                <input
+                                                                                    id={`thumb-upload-${content.id || content.Id}`}
+                                                                                    type="file"
+                                                                                    accept="image/*"
+                                                                                    className="hidden"
+                                                                                    onChange={async (e) => {
+                                                                                        const file = e.target.files[0];
+                                                                                        if (!file) return;
+                                                                                        try {
+                                                                                            const formData = new FormData();
+                                                                                            formData.append('file', file);
+                                                                                            const API = await import('../services/api').then(mod => mod.default);
+                                                                                            const res = await API.Studio.updateThumbnail(content.id || content.Id, formData);
+                                                                                            setProfileGallery(prev => prev.map(c => (String(c.id || c.Id) === String(content.id || content.Id)) ? { ...c, thumbnailUrl: res.data.thumbnailUrl, ThumbnailUrl: res.data.thumbnailUrl } : c));
+                                                                                            showNotification("COVER_UPDATED", "SIGNAL_VISUAL_OVERRIDE_COMPLETE", "success");
+                                                                                        } catch (err) { console.error(err); }
+                                                                                    }}
+                                                                                />
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className="absolute top-2 left-2 z-30 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                                                                <button
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?content=${content.id || content.Id}`;
+                                                                                        navigator.clipboard.writeText(link);
+                                                                                        showNotification("LINK_COPIED", "SIGNAL_ADDRESS_SECURED", "success");
+                                                                                    }}
+                                                                                    className="p-1.5 border bg-black/60 border-white/10 text-white/40 hover:text-white backdrop-blur-md transition-all"
+                                                                                    title="Copy Link"
+                                                                                >
+                                                                                    <Share2 size={10} />
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+
+                                                                        <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end"
+                                                                            onClick={() => {
+                                                                                const t = (content.type || content.Type || 'PHOTO').toUpperCase();
+                                                                                setSelectedContent({ ...content, type: t });
+                                                                            }}>
+                                                                            <div className="text-[7px] mono font-bold text-[var(--text-color)] tracking-widest uppercase mb-1">
+                                                                                {(content.type || content.Type || '').toUpperCase() === 'PHOTO' ? '// VISUAL_DATA' : '// SIGNAL_FEED'}
+                                                                            </div>
+                                                                            <div className="text-[8px] mono text-white truncate uppercase">{content.title || content.Title}</div>
+                                                                        </div>
+
+                                                                        {(content.type || content.Type || '').toUpperCase() === 'VIDEO' ? (
+                                                                            <div className="w-full h-full relative"
+                                                                                onClick={() => {
+                                                                                    const t = (content.type || content.Type || 'VIDEO').toUpperCase();
+                                                                                    setSelectedContent({ ...content, type: t });
+                                                                                }}>
+                                                                                {(content.thumbnailUrl || content.ThumbnailUrl) ? (
+                                                                                    <img
+                                                                                        src={getMediaUrl(content.thumbnailUrl || content.ThumbnailUrl)}
+                                                                                        className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-500"
+                                                                                    />
+                                                                                ) : (
+                                                                                    <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 space-y-2">
+                                                                                        <Video size={16} className="text-[var(--text-color)]/40" />
+                                                                                        <div className="text-[6px] mono text-white/20 uppercase">DECODING_SIGNAL...</div>
+                                                                                    </div>
+                                                                                )}
+                                                                                {(content.thumbnailUrl || content.ThumbnailUrl) && (
+                                                                                    <div className="absolute top-2 right-2 p-1 bg-black/60 backdrop-blur-sm border border-white/10">
+                                                                                        <Video size={8} className="text-white/60" />
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        ) : (
+                                                                            <img
+                                                                                src={getMediaUrl(content.url || content.Url)}
+                                                                                alt={content.title || content.Title}
+                                                                                className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-500"
+                                                                                onClick={() => {
+                                                                                    const t = (content.type || content.Type || 'PHOTO').toUpperCase();
+                                                                                    setSelectedContent({ ...content, type: t });
+                                                                                }}
+                                                                            />
+                                                                        )}
+                                                                    </motion.div>
+                                                                ))
+                                                        ) : !isLoadingGallery ? (
+                                                            <div className="w-full flex items-center justify-center py-10 opacity-20 mono text-[8px] uppercase tracking-widest">
+                                                                NO_SIGNALS_ARCHIVED_IN_GALLERY
+                                                            </div>
+                                                        ) : null}
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
 
-                                        <div>
-                                            {/* Journal Carousel Header */}
-                                            <div className="flex justify-between items-center mb-4">
-                                                <h3 className="mono text-[10px] font-black text-[var(--text-color)]/60 uppercase tracking-[0.3em]">
-                                                    JOURNAL_ARCHIVE
-                                                </h3>
+                                        {studioSubTab === 'Photos' && profileGallery.filter(c => (c.type || c.Type || '').toUpperCase() === 'PHOTO').length === 0 && (
+                                            <div className="col-span-full py-10 lg:py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
+                                                <Camera size={24} className="mb-4 text-[var(--text-color)]" />
+                                                <span className="mono text-[8px] uppercase tracking-[0.2em]">GALLERY_ENCRYPTED_OR_EMPTY</span>
                                             </div>
+                                        )}
+                                        {studioSubTab === 'Video' && profileGallery.filter(c => (c.type || c.Type) === 'VIDEO').length === 0 && (
+                                            <div className="col-span-full py-10 lg:py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
+                                                <Video size={24} className="mb-4 text-[var(--text-color)]" />
+                                                <span className="mono text-[8px] uppercase tracking-[0.2em]">VISUAL_FEED_OFFLINE</span>
+                                            </div>
+                                        )}
+                                        {(studioSubTab === 'Journal' || studioSubTab === 'All') && (
+                                            <div className="col-span-full space-y-6">
+                                                {isMe && showJournalForm && (
+                                                    <div className="bg-black border border-[var(--text-color)]/20 p-6 space-y-4">
+                                                        <div className="flex justify-between items-center border-b border-[var(--text-color)]/10 pb-4">
+                                                            <h3 className="mono text-[10px] font-black text-[var(--text-color)] uppercase tracking-[0.3em]">INIT_NEW_ENTRY</h3>
+                                                        </div>
+                                                        <input
+                                                            id="journal-title"
+                                                            type="text"
+                                                            placeholder="ENTRY_TITLE..."
+                                                            className="w-full bg-black/40 border border-white/5 p-3 text-[10px] text-white mono outline-none focus:border-[var(--text-color)]/40 transition-all tracking-widest"
+                                                        />
+                                                        <textarea
+                                                            id="journal-content"
+                                                            placeholder="ENCODE_CORE_LOG_DATA..."
+                                                            className="w-full bg-black/40 border border-white/5 p-3 text-[10px] text-white/60 mono outline-none focus:border-[var(--text-color)]/40 transition-all min-h-[100px] resize-none tracking-wider leading-relaxed"
+                                                        />
+                                                        <div className="flex justify-center pt-2">
+                                                            <button
+                                                                onClick={async () => {
+                                                                    const titleInput = document.getElementById('journal-title');
+                                                                    const contentInput = document.getElementById('journal-content');
+                                                                    if (!titleInput?.value || !contentInput?.value) return;
 
-                                            <div className="relative group px-6 mb-4">
-                                                {profileJournal.length > 0 && (
-                                                    <>
-                                                        <button
-                                                            onClick={() => {
-                                                                const el = document.getElementById('journal-carousel');
-                                                                if (el) el.scrollBy({ left: -400, behavior: 'smooth' });
-                                                            }}
-                                                            className="absolute left-0 top-1/2 -translate-y-1/2 z-40 text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:scale-110 transition-all opacity-100"
-                                                        >
-                                                            <ChevronLeft size={20} />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => {
-                                                                const el = document.getElementById('journal-carousel');
-                                                                if (el) el.scrollBy({ left: 400, behavior: 'smooth' });
-                                                            }}
-                                                            className="absolute right-0 top-1/2 -translate-y-1/2 z-40 text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:scale-110 transition-all opacity-100"
-                                                        >
-                                                            <ChevronRight size={20} />
-                                                        </button>
-                                                    </>
+                                                                    try {
+                                                                        const API = await import('../services/api').then(mod => mod.default);
+                                                                        await API.Journal.create({
+                                                                            Title: titleInput.value,
+                                                                            Content: contentInput.value,
+                                                                            IsPosted: true,
+                                                                            IsPinned: false
+                                                                        });
+                                                                        titleInput.value = '';
+                                                                        contentInput.value = '';
+                                                                        const res = await API.Journal.getMyJournal();
+                                                                        setProfileJournal(res.data || []);
+                                                                        setShowJournalForm(false);
+                                                                    } catch (err) {
+                                                                        console.error("Failed to commit log", err);
+                                                                    }
+                                                                }}
+                                                                className="px-10 py-3 bg-[var(--text-color)]/10 border border-[var(--text-color)]/40 text-[var(--text-color)] text-[10px] font-black uppercase tracking-[0.4em] hover:bg-[var(--text-color)] hover:text-black transition-all"
+                                                            >
+                                                                [ COMMIT_LOG_TO_ARCHIVE ]
+                                                            </button>
+                                                        </div>
+
+                                                        <div className="flex justify-center gap-8 pt-6 border-t border-white/5">
+                                                            <button
+                                                                onClick={() => {
+                                                                    const t = document.getElementById('journal-title');
+                                                                    const c = document.getElementById('journal-content');
+                                                                    if (t) t.value = '';
+                                                                    if (c) c.value = '';
+                                                                }}
+                                                                className="text-[9px] font-bold text-red-500/40 hover:text-red-500 uppercase mono flex items-center gap-2 transition-all tracking-widest"
+                                                            >
+                                                                <Database size={12} /> [ PURGE_BUFFER ]
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    const t = document.getElementById('journal-title');
+                                                                    const c = document.getElementById('journal-content');
+                                                                    if (t) t.value = '';
+                                                                    if (c) c.value = '';
+                                                                    setShowJournalForm(false);
+                                                                }}
+                                                                className="text-[9px] font-bold text-[#ff006e] hover:text-[#ff006e]/80 uppercase mono flex items-center gap-2 transition-all tracking-widest"
+                                                            >
+                                                                <X size={12} /> [ EXIT_POST_PROTOCOL ]
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 )}
-                                            </div>
-                                        </div>
 
-                                        <div id="journal-carousel" className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar scroll-smooth snap-x snap-mandatory">
-                                            {profileJournal.length > 0 ? (
+                                                <div>
+                                                    {/* Journal Carousel Header */}
+                                                    <div className="flex justify-between items-center mb-4">
+                                                        <h3 className="mono text-[10px] font-black text-[var(--text-color)]/60 uppercase tracking-[0.3em]">
+                                                            JOURNAL_ARCHIVE
+                                                        </h3>
+                                                    </div>
+
+                                                    <div className="relative group px-6 mb-4">
+                                                        {profileJournal.length > 0 && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        const el = document.getElementById('journal-carousel');
+                                                                        if (el) el.scrollBy({ left: -400, behavior: 'smooth' });
+                                                                    }}
+                                                                    className="absolute left-0 top-1/2 -translate-y-1/2 z-40 text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:scale-110 transition-all opacity-100"
+                                                                >
+                                                                    <ChevronLeft size={20} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        const el = document.getElementById('journal-carousel');
+                                                                        if (el) el.scrollBy({ left: 400, behavior: 'smooth' });
+                                                                    }}
+                                                                    className="absolute right-0 top-1/2 -translate-y-1/2 z-40 text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:scale-110 transition-all opacity-100"
+                                                                >
+                                                                    <ChevronRight size={20} />
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <div id="journal-carousel" className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar scroll-smooth snap-x snap-mandatory">
+                                                    {profileJournal.length > 0 ? (
                                                         profileJournal.sort((a, b) => {
                                                             const aPinned = isTruthy(a.IsPinned || a.isPinned) ? 1 : 0;
                                                             const bPinned = isTruthy(b.IsPinned || b.isPinned) ? 1 : 0;
@@ -2215,7 +2214,7 @@ export const ProfileView = React.memo(({
                                                                             {entry.Content || entry.content}
                                                                         </p>
                                                                         <button
-                                                                            onClick={() => onExpandContent(entry, 'JOURNAL')}
+                                                                            onClick={() => setSelectedContent({ ...entry, type: 'JOURNAL' })}
                                                                             className="mt-2 text-[7px] font-bold text-[var(--text-color)] uppercase tracking-widest hover:underline"
                                                                         >
                                                                             [ EXPAND_SIGNAL_DATA ]
@@ -2228,16 +2227,16 @@ export const ProfileView = React.memo(({
                                                             <Book size={32} className="mb-4 text-[var(--text-color)]" />
                                                             <span className="mono text-[10px] uppercase tracking-[0.2em]">NO_ARCHIVED_LOGS_FOUND</span>
                                                         </div>
-                                                ) : null}
+                                                    ) : null}
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    )}
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
             </SpatialRoomLayout>
 
             {/* Global Overlays */}
@@ -2323,7 +2322,15 @@ export const ProfileView = React.memo(({
                         </motion.div>
                     )
                 }
-
+                {
+                    selectedContent && (
+                        <ContentModal
+                            content={selectedContent}
+                            type={selectedContent.type}
+                            onClose={() => setSelectedContent(null)}
+                        />
+                    )
+                }
             </AnimatePresence>
             <CRTOverlay />
         </>
@@ -2852,8 +2859,8 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
             <div className="flex-1 flex flex-col p-8 pt-16 gap-10 animate-in fade-in zoom-in-95 duration-300 overflow-y-auto custom-scrollbar">
                 <div className="flex justify-between items-center border-b border-[var(--text-color)]/20 pb-4">
                     <h3 className="text-2xl font-bold text-white uppercase tracking-tighter">// MODIFY_PLAYLIST_METADATA</h3>
-                    <button 
-                        onClick={() => setIsEditing(false)} 
+                    <button
+                        onClick={() => setIsEditing(false)}
                         className="text-[var(--text-color)]/30 hover:text-[var(--text-color)] transition-colors"
                     >
                         <X size={20} />
