@@ -573,7 +573,6 @@ export const ProfileView = React.memo(({
     const [isAboutOpen, setIsAboutOpen] = useState(true);
     const [isStatsOpen, setIsStatsOpen] = useState(true);
 
-    const [showUpload, setShowUpload] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [showEditProfile, setShowEditProfile] = useState(false);
     const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
@@ -1090,7 +1089,8 @@ export const ProfileView = React.memo(({
                 roomMode={roomMode}
                 setRoomMode={setRoomMode}
                 isPlaying={isPlaying}
-                onUpload={() => setShowUpload(true)}
+                onUpload={() => setShowGlobalUpload(true)}
+
                 onGoLive={() => setShowGlobalGoLive(true)}
                 onModifyId={() => setShowEditProfile(true)}
                 onLogout={onLogout}
@@ -1485,7 +1485,7 @@ export const ProfileView = React.memo(({
                                     <div className="flex gap-4 items-center">
                                         {isMe && activeTab === 'Music' && (
                                                 <button
-                                                    onClick={() => setShowUpload(true)}
+                                                    onClick={() => setShowGlobalUpload(true)}
                                                     className="px-4 py-1.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/30 text-[var(--text-color)] text-[9px] font-bold uppercase tracking-[0.2em] hover:bg-[var(--text-color)] hover:text-black transition-all flex items-center gap-2 rounded-sm mr-2"
                                                     title="Upload Signal"
                                                 >
@@ -2196,21 +2196,7 @@ export const ProfileView = React.memo(({
                     </motion.div>
                 )}
                 {
-                    showUpload && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] bg-black/80 backdrop-blur-sm p-6 flex flex-col justify-center items-center overflow-y-auto">
-                            <div className="max-w-xl w-full">
-                                <UploadTrackView
-                                    onClose={() => setShowUpload(false)}
-                                    onRefreshTracks={onRefreshTracks}
-                                    allTracks={allTracks}
-                                    onGoLive={handleGoLive}
-                                    currentUserId={currentUser?.id || currentUser?.Id}
-                                />
-                            </div>
-                        </motion.div>
-                    )
-                }
-                {
+
                     showEditProfile && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
                             <div className="bg-black border border-[var(--text-color)]/30 p-10 max-w-xl w-full relative shadow-[0_0_60px_rgba(0,0,0,0.8)] rounded-2xl overflow-hidden">

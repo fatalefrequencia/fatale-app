@@ -1555,66 +1555,67 @@ function App() {
         ) : (
           <>
             {console.log("[App] Rendering Dashboard. Redirect Trigger:", redirectTrigger)}
-            <Dashboard
-              setUser={setUser}
-              activeView={activeView}
-              setView={setView}
-              hasNewMessages={hasNewMessages}
-              currentTrackIndex={currentTrackIndex}
-              setCurrentTrackIndex={setCurrentTrackIndex}
-              isPlaying={isPlaying}
-              setIsPlaying={setIsPlaying}
-              onLogout={handleLogout}
-              user={user}
-              subscription={subscription} // PASS SUB
-              tracks={tracks}
-              currentTime={currentTime}
-              duration={duration}
-              onSeek={handleSeek}
-              onLike={handleLike}
-              onCache={handleCache} // PASS CACHE HANDLER
-              togglePlay={togglePlay}
-              handleNext={handleNext}
-              handlePrev={handlePrev}
-              handlePlayPlaylist={handlePlayPlaylist}
-              onPurchase={handlePurchase}
-              onDownload={handleDownload}
-              onAddCredits={addCreditsDebug}
-              onRefreshProfile={onRefreshProfile}
-              onRefreshTracks={fetchTracks}
-              globalStats={globalStats}
-              navigateToProfile={navigateToProfile}
-              viewingUserId={viewingUserId}
-              likedYoutubeIds={likedYoutubeIds}
-              cachedTrackIds={cachedTrackIds} // PASS CACHED IDS
-              playlists={userPlaylists}
-              onRefreshPlaylists={fetchPlaylists}
-              redirectTrigger={redirectTrigger} // Pass the redirect signal
-              setRedirectTrigger={setRedirectTrigger} // PASS THE SETTER
-              setProfileInitialModal={setProfileInitialModal}
-              favoriteStations={favoriteStations}
-              liveStations={liveStations}
-              activeStation={activeStation}
-              stationChat={stationChat}
-              stationQueue={stationQueue}
-              setActiveStation={setActiveStation}
-              sendMessage={sendMessage}
-              requestTrack={requestTrack}
-              onExitProfile={() => setViewOriginal(previousView)}
-              activeMessageUser={activeMessageUser}
-              setActiveMessageUser={setActiveMessageUser}
-              libraryTracks={libraryTracks}
-              isMuted={isMuted}
-              onToggleMute={() => setIsMuted(!isMuted)}
-              followedCommunities={followedCommunities}
-              onFollowUpdate={() => {
-                const updated = API.Communities.getFollowed();
-                setFollowedCommunities(updated);
-              }}
-              setShowGlobalGoLive={setShowGlobalGoLive}
-              setShowGlobalUpload={setShowGlobalUpload}
-              setShowGlobalIngest={setShowGlobalIngest}
-            />
+           <Dashboard
+               activeView={activeView}
+               setView={setView}
+               onLogout={handleLogout}
+               currentTrackIndex={currentTrackIndex}
+               setCurrentTrackIndex={setCurrentTrackIndex}
+               isPlaying={isPlaying}
+               setIsPlaying={setIsPlaying}
+               user={user}
+               tracks={tracks}
+               libraryTracks={libraryTracks}
+               togglePlay={togglePlay}
+               handleNext={handleNext}
+               handlePrev={handlePrev}
+               handlePlayPlaylist={handlePlayPlaylist}
+               onPurchase={handlePurchase}
+               onDownload={handleDownload}
+               onLike={handleLike}
+               onCache={handleCache}
+               onAddCredits={addCreditsDebug}
+               onRefreshProfile={onRefreshProfile}
+               onRefreshTracks={fetchTracks}
+               currentTime={currentTime}
+               duration={duration}
+               onSeek={handleSeek}
+               globalStats={globalStats}
+               hasNewMessages={hasNewMessages}
+               navigateToProfile={navigateToProfile}
+               viewingUserId={viewingUserId}
+               likedYoutubeIds={likedYoutubeIds}
+               subscription={subscription}
+               cachedTrackIds={cachedTrackIds}
+               playlists={userPlaylists}
+               onRefreshPlaylists={fetchPlaylists}
+               redirectTrigger={redirectTrigger}
+               setRedirectTrigger={setRedirectTrigger}
+               profileInitialModal={profileInitialModal}
+               setProfileInitialModal={setProfileInitialModal}
+               favoriteStations={favoriteStations}
+               liveStations={liveStations}
+               activeStation={activeStation}
+               stationChat={stationChat}
+               stationQueue={stationQueue}
+               onExitProfile={() => setViewOriginal(previousView)}
+               activeMessageUser={activeMessageUser}
+               setActiveMessageUser={setActiveMessageUser}
+               isMuted={isMuted}
+               onToggleMute={() => setIsMuted(!isMuted)}
+               followedCommunities={followedCommunities}
+               onFollowUpdate={() => {
+                 const updated = API.Communities.getFollowed();
+                 setFollowedCommunities(updated);
+               }}
+               setShowGlobalGoLive={setShowGlobalGoLive}
+               setShowGlobalUpload={setShowGlobalUpload}
+               setShowGlobalIngest={setShowGlobalIngest}
+               setActiveStation={setActiveStation}
+               sendMessage={sendMessage}
+               requestTrack={requestTrack}
+               setUser={setUser}
+           />
           </>
         )}
       </AnimatePresence>
@@ -1750,15 +1751,64 @@ const LoginView = ({ onLogin }) => (
     </div>
   </motion.div>
 );
-
-const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex, setCurrentTrackIndex, isPlaying,
-  setIsPlaying, user, tracks, libraryTracks, togglePlay, handleNext, handlePrev, handlePlayPlaylist, onPurchase,
-  onDownload, onLike, onCache, onAddCredits, onRefreshProfile, onRefreshTracks, currentTime, duration, onSeek,
-  globalStats, hasNewMessages, navigateToProfile, viewingUserId, likedYoutubeIds, subscription, cachedTrackIds,
-  playlists, onRefreshPlaylists, redirectTrigger, setRedirectTrigger, profileInitialModal, setProfileInitialModal,
-  favoriteStations, liveStations, activeStation, stationChat, stationQueue, onExitProfile, activeMessageUser,
-  setActiveMessageUser, isMuted, onToggleMute, followedCommunities, onFollowUpdate, setActiveStation, sendMessage,
-  requestTrack, setUser, setShowGlobalGoLive, setShowGlobalUpload, setShowGlobalIngest }) => {
+const Dashboard = React.memo(({ 
+  activeView, 
+  setView, 
+  onLogout, 
+  currentTrackIndex, 
+  setCurrentTrackIndex, 
+  isPlaying, 
+  setIsPlaying, 
+  user, 
+  tracks, 
+  libraryTracks, 
+  togglePlay, 
+  handleNext, 
+  handlePrev, 
+  handlePlayPlaylist, 
+  onPurchase, 
+  onDownload, 
+  onLike, 
+  onCache, 
+  onAddCredits, 
+  onRefreshProfile, 
+  onRefreshTracks, 
+  currentTime, 
+  duration, 
+  onSeek, 
+  globalStats, 
+  hasNewMessages, 
+  navigateToProfile, 
+  viewingUserId, 
+  likedYoutubeIds, 
+  subscription, 
+  cachedTrackIds, 
+  playlists, 
+  onRefreshPlaylists, 
+  redirectTrigger, 
+  setRedirectTrigger, 
+  profileInitialModal, 
+  setProfileInitialModal, 
+  favoriteStations, 
+  liveStations, 
+  activeStation, 
+  stationChat, 
+  stationQueue, 
+  onExitProfile, 
+  activeMessageUser, 
+  setActiveMessageUser, 
+  isMuted, 
+  onToggleMute, 
+  followedCommunities, 
+  onFollowUpdate, 
+  setActiveStation, 
+  sendMessage, 
+  requestTrack, 
+  setUser, 
+  setShowGlobalGoLive, 
+  setShowGlobalUpload, 
+  setShowGlobalIngest 
+}) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   return (
@@ -1835,7 +1885,25 @@ const Dashboard = React.memo(({ activeView, setView, onLogout, currentTrackIndex
               />
             )}
             {activeView === 'wallet' && <WalletView user={user} onRefreshProfile={onRefreshProfile} />}
-            {activeView === 'feed' && <FeedContent key="feed" setView={setView} onPlayPlaylist={handlePlayPlaylist} navigateToProfile={navigateToProfile} user={user} favoriteStations={favoriteStations} liveStations={liveStations} setActiveStation={setActiveStation} activeStation={activeStation} stationChat={stationChat} stationQueue={stationQueue} followedCommunities={followedCommunities} setShowGlobalGoLive={setShowGlobalGoLive} setShowGlobalUpload={setShowGlobalUpload} setShowGlobalIngest={setShowGlobalIngest} />}
+            {activeView === 'feed' && (
+               <FeedContent 
+                 key="feed" 
+                 setView={setView} 
+                 onPlayPlaylist={handlePlayPlaylist} 
+                 navigateToProfile={navigateToProfile} 
+                 user={user} 
+                 favoriteStations={favoriteStations} 
+                 liveStations={liveStations} 
+                 setActiveStation={setActiveStation} 
+                 activeStation={activeStation} 
+                 stationChat={stationChat} 
+                 stationQueue={stationQueue} 
+                 followedCommunities={followedCommunities} 
+                 setShowGlobalGoLive={setShowGlobalGoLive}
+                 setShowGlobalUpload={setShowGlobalUpload}
+                 setShowGlobalIngest={setShowGlobalIngest}
+               />
+             )}
             {activeView === 'profile' && (
               <ProfileView
                 key={viewingUserId || 'me'}
@@ -2118,7 +2186,22 @@ const CommentNode = ({ comment, depth = 0, setReplyingToComment, onDelete, curre
 
 
 // --- CONTENIDO: FEED (3 COLUMNAS) ---
-const FeedContent = React.memo(({ setView, onPlayPlaylist, navigateToProfile, user, favoriteStations, liveStations, setActiveStation, activeStation, stationChat, stationQueue, followedCommunities, setShowGlobalGoLive, setShowGlobalUpload, setShowGlobalIngest }) => {
+const FeedContent = React.memo(({ 
+  setView, 
+  onPlayPlaylist, 
+  navigateToProfile, 
+  user, 
+  favoriteStations, 
+  liveStations, 
+  setActiveStation, 
+  activeStation, 
+  stationChat, 
+  stationQueue, 
+  followedCommunities, 
+  setShowGlobalGoLive,
+  setShowGlobalUpload,
+  setShowGlobalIngest
+}) => {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMedia, setSelectedMedia] = useState(null);
