@@ -40,10 +40,8 @@
 .monitor-frame {
     position: relative;
     z-index: 10;
-    width: 900px;
-    max-width: 90vw;
-    height: 600px;
-    max-height: 80vh;
+    width: clamp(400px, 70vw, 900px);
+    height: clamp(400px, 75vh, 650px);
     background: #000;
     border: 1px solid var(--theme-color, #ff006e)30;
     box-shadow:
@@ -67,7 +65,7 @@
     position: fixed;
     top: 0;
     bottom: 0;
-    width: 300px;
+    width: clamp(240px, 20vw, 320px);
     background: rgba(var(--panel-bg-rgb, 0, 0, 0), var(--glass-opacity, 0.9));
     backdrop-filter: blur(var(--glass-blur, 0px)) saturate(180%);
     -webkit-backdrop-filter: blur(var(--glass-blur, 0px)) saturate(180%);
@@ -267,11 +265,10 @@
         0 0 60px rgba(0, 0, 0, 0.8),
         0 0 30px rgba(var(--theme-color-rgb), 0.08),
         inset 0 0 40px rgba(0, 0, 0, 0.6);
-    width: 100%;
-    max-width: 900px;
+    width: clamp(400px, 85vw, 900px);
     height: auto;
     max-height: 75vh;
-    margin-top: 60px;
+    margin-top: clamp(20px, 5vh, 60px);
     backdrop-filter: blur(2px);
     border-radius: 2px;
 }
@@ -653,7 +650,7 @@
     position: absolute;
     inset: 0;
     z-index: 1;
-    padding: 480px 80px 150px 80px;
+    padding: clamp(200px, 45vh, 480px) clamp(20px, 5vw, 80px) 150px clamp(20px, 5vw, 80px);
     /* Safe padding for identity and dock */
     opacity: 0;
     pointer-events: none;

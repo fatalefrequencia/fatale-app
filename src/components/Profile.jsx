@@ -287,10 +287,10 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
 
             <motion.div
                 className="monitor-frame frameless"
-                initial={roomMode === 'room' ? false : { rotateX: 5, y: 30, opacity: 0, scale: 0.95, translateZ: -100 }}
+                initial={roomMode === 'room' ? false : { rotateX: 5, y: '3vh', opacity: 0, scale: 0.95, translateZ: -100 }}
                 animate={roomMode === 'room' ? {
                     rotateX: 25,
-                    y: -300,
+                    y: '-30vh',
                     opacity: 0,
                     scale: 0.5,
                     translateZ: -1500,
