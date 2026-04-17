@@ -552,7 +552,8 @@ export const ProfileView = React.memo(({
     setActiveStation,
     setUser, // ADDED
     setShowGlobalIngest,
-    onExpandContent
+    onExpandContent,
+    hasMiniPlayer
 }) => {
     const effectiveId = targetUserId || currentUser?.id || currentUser?.Id;
     const isMe = String(effectiveId) === String(currentUser?.id || currentUser?.Id);

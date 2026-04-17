@@ -1962,6 +1962,7 @@ const Dashboard = React.memo(({
                 setShowGlobalUpload={setShowGlobalUpload}
                 setShowGlobalIngest={setShowGlobalIngest}
                 onExpandContent={onExpandContent}
+                hasMiniPlayer={currentTrackIndex >= 0}
               />
             )}
             {activeView === 'player' && <PlayerContent
