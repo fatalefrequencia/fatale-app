@@ -1101,7 +1101,7 @@ export const ProfileView = React.memo(({
                 onExpandContent={setSelectedContent}
                 gallery={profileGallery}
                 tracks={profileTracks}
-                journal={isMe ? profileJournal : profileJournal.filter(j => j.IsPosted)}
+                journal={isMe ? profileJournal : profileJournal.filter(j => j.IsPosted || j.isPosted)}
                 bannerUrl={displayUser?.bannerUrl || displayUser?.BannerUrl}
                 wallpaperVideoUrl={displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl}
                 profileImageUrl={displayUser?.profilePictureUrl || displayUser?.ProfilePictureUrl || displayUser?.profileImageUrl || displayUser?.ProfileImageUrl}
@@ -1226,7 +1226,7 @@ export const ProfileView = React.memo(({
                                     .slice(0, 3)
                                     .map((item, i) => (
                                         <div key={`pinned_${i}`} className="flex gap-3 items-center group cursor-pointer" onClick={() => {
-                                            const type = item.Type || (item.name ? 'PLAYLIST' : 'TRACK');
+                                            const type = item.type || item.Type || (item.name ? 'PLAYLIST' : 'TRACK');
                                             if (type === 'TRACK') onPlayTrack?.(item);
                                             else if (type === 'PLAYLIST') onPlayPlaylist?.(item.tracks || [], 0);
                                             else setSelectedContent?.({ ...item, type });
@@ -1239,12 +1239,12 @@ export const ProfileView = React.memo(({
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center">
-                                                        {item.Type === 'VIDEO' ? <Video size={14} /> : item.name ? <Database size={14} /> : <Music size={14} />}
+                                                    { (item.type || item.Type) === 'VIDEO' ? <Video size={14} /> : item.name ? <Database size={14} /> : <Music size={14} />}
                                                     </div>
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="text-[7px] mono text-white tracking-widest uppercase truncate">{item.Type || (item.name ? 'PLAYLIST' : 'AUDIO_SIGNAL')}</div>
+                                                <div className="text-[7px] mono text-white tracking-widest uppercase truncate">{(item.type || item.Type) || (item.name ? 'PLAYLIST' : 'AUDIO_SIGNAL')}</div>
                                                 <div className="text-[9px] mono text-white truncate uppercase">{item.title || item.Title || item.name || item.Name}</div>
                                             </div>
                                             <Star size={10} className="text-white fill-white" />
@@ -1261,7 +1261,7 @@ export const ProfileView = React.memo(({
                                     .slice(0, 5)
                                     .map((item, i) => (
                                         <div key={i} className="flex gap-3 items-center group cursor-pointer" onClick={() => {
-                                            const type = item.Type || (item.name ? 'PLAYLIST' : 'TRACK');
+                                            const type = item.type || item.Type || (item.name ? 'PLAYLIST' : 'TRACK');
                                             if (type === 'TRACK') onPlayTrack?.(item);
                                             else if (type === 'PLAYLIST') onPlayPlaylist?.(item.tracks || [], 0);
                                             else setSelectedContent?.({ ...item, type });
@@ -1275,12 +1275,12 @@ export const ProfileView = React.memo(({
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/40">
-                                                        {item.Type === 'VIDEO' ? <Video size={14} /> : <Music size={14} />}
+                                                        {(item.type || item.Type) === 'VIDEO' ? <Video size={14} /> : <Music size={14} />}
                                                     </div>
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="text-[7px] mono text-[var(--text-color)] tracking-widest uppercase truncate">{item.Type || 'AUDIO_SIGNAL'}</div>
+                                                <div className="text-[7px] mono text-[var(--text-color)] tracking-widest uppercase truncate">{(item.type || item.Type) || 'AUDIO_SIGNAL'}</div>
                                                 <div className="text-[9px] mono text-white/60 truncate uppercase">{item.title || item.Title}</div>
                                             </div>
                                         </div>
@@ -1688,8 +1688,8 @@ export const ProfileView = React.memo(({
                                     <div className="flex gap-4">
                                         {['All', 'Photos', 'Video', 'Journal'].map(tab => {
                                             const count = tab === 'All' ? profileGallery.length + profileJournal.length :
-                                                tab === 'Photos' ? profileGallery.filter(c => c.Type === 'PHOTO').length :
-                                                    tab === 'Video' ? profileGallery.filter(c => c.Type === 'VIDEO').length :
+                                                tab === 'Photos' ? profileGallery.filter(c => (c.type || c.Type) === 'PHOTO').length :
+                                                    tab === 'Video' ? profileGallery.filter(c => (c.type || c.Type) === 'VIDEO').length :
                                                         tab === 'Journal' ? profileJournal.length : 0;
                                             return (
                                                 <button
@@ -1824,21 +1824,21 @@ export const ProfileView = React.memo(({
                                             >
                                                 {profileGallery.length > 0 ? (
                                                     profileGallery
-                                                        .filter(c => studioSubTab === 'All' || (studioSubTab === 'Photos' && c.Type === 'PHOTO') || (studioSubTab === 'Video' && c.Type === 'VIDEO'))
+                                                        .filter(c => studioSubTab === 'All' || (studioSubTab === 'Photos' && (c.type || c.Type) === 'PHOTO') || (studioSubTab === 'Video' && (c.type || c.Type) === 'VIDEO'))
                                                     .sort((a, b) => {
-                                                        const aPinned = isTruthy(a.IsPinned || a.isPinned) ? 1 : 0;
-                                                        const bPinned = isTruthy(b.IsPinned || b.isPinned) ? 1 : 0;
+                                                        const aPinned = isTruthy(a.isPinned || a.IsPinned) ? 1 : 0;
+                                                        const bPinned = isTruthy(b.isPinned || b.IsPinned) ? 1 : 0;
                                                         if (bPinned !== aPinned) return bPinned - aPinned;
 
-                                                        const aPosted = isTruthy(a.IsPosted || a.isPosted) ? 1 : 0;
-                                                        const bPosted = isTruthy(b.IsPosted || b.isPosted) ? 1 : 0;
+                                                        const aPosted = isTruthy(a.isPosted || a.IsPosted) ? 1 : 0;
+                                                        const bPosted = isTruthy(b.isPosted || b.IsPosted) ? 1 : 0;
                                                         if (bPosted !== aPosted) return bPosted - aPosted;
 
-                                                        return new Date(b.CreatedAt || b.createdAt) - new Date(a.CreatedAt || a.createdAt);
+                                                        return new Date(b.createdAt || b.CreatedAt) - new Date(a.createdAt || a.CreatedAt);
                                                     })
                                                     .map((content) => (
                                                         <motion.div
-                                                            key={content.Id || content.id}
+                                                            key={content.id || content.Id}
                                                             initial={{ opacity: 0, scale: 0.9 }}
                                                             animate={{ opacity: 1, scale: 1 }}
                                                             whileHover={{ scale: 1.02 }}
@@ -1852,7 +1852,7 @@ export const ProfileView = React.memo(({
                                                                             e.stopPropagation();
                                                                             try {
                                                                                 const API = await import('../services/api').then(mod => mod.default);
-                                                                                await API.Studio.togglePin(content.Id || content.id);
+                                                                                await API.Studio.togglePin(content.id || content.Id);
                                                                                 const isPinnedNow = !isTruthy(content.IsPinned || content.isPinned);
                                                                                 setProfileGallery(prev => prev.map(c => (String(c.Id || c.id) === String(content.Id || content.id)) ? { ...c, isPinned: isPinnedNow, IsPinned: isPinnedNow } : c));
                                                                                 showNotification(isPinnedNow ? "SIGNAL_LOCKED" : "SIGNAL_RELEASED", `CONTENT_${isPinnedNow ? 'PINNED_TO' : 'RECALLED_FROM'}_MONITOR`, "success");
@@ -1869,7 +1869,7 @@ export const ProfileView = React.memo(({
                                                                             e.stopPropagation();
                                                                             try {
                                                                                 const API = await import('../services/api').then(mod => mod.default);
-                                                                                await API.Studio.togglePost(content.Id || content.id);
+                                                                                await API.Studio.togglePost(content.id || content.Id);
                                                                                 const isPostedNow = !isTruthy(content.IsPosted || content.isPosted);
                                                                                 setProfileGallery(prev => prev.map(c => (String(c.Id || c.id) === String(content.Id || content.id)) ? { ...c, isPosted: isPostedNow, IsPosted: isPostedNow } : c));
                                                                                 showNotification(isPostedNow ? "SIGNAL_BROADCAST" : "SIGNAL_REDACTED", `CONTENT_${isPostedNow ? 'ADDED_TO' : 'REMOVED_FROM'}_WALL`, "success");
@@ -1883,7 +1883,7 @@ export const ProfileView = React.memo(({
                                                                     <button
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
-                                                                            const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?content=${content.Id || content.id}`;
+                                                                            const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?content=${content.id || content.Id}`;
                                                                             navigator.clipboard.writeText(link);
                                                                             showNotification("LINK_COPIED", "SIGNAL_ADDRESS_SECURED", "success");
                                                                         }}
@@ -1898,22 +1898,22 @@ export const ProfileView = React.memo(({
                                                             <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end"
                                                                 onClick={() => setSelectedContent({ ...content, type: content.Type || 'PHOTO' })}>
                                                                 <div className="text-[7px] mono font-bold text-[var(--text-color)] tracking-widest uppercase mb-1">
-                                                                    {content.Type === 'PHOTO' ? '// VISUAL_DATA' : '// SIGNAL_FEED'}
+                                                                    {(content.type || content.Type) === 'PHOTO' ? '// VISUAL_DATA' : '// SIGNAL_FEED'}
                                                                 </div>
-                                                                <div className="text-[8px] mono text-white truncate uppercase">{content.Title}</div>
+                                                                <div className="text-[8px] mono text-white truncate uppercase">{content.title || content.Title}</div>
                                                             </div>
-                                                            {content.Type === 'VIDEO' ? (
+                                                            {(content.type || content.Type) === 'VIDEO' ? (
                                                                 <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 space-y-2"
-                                                                    onClick={() => setSelectedContent({ ...content, type: content.Type || 'PHOTO' })}>
+                                                                    onClick={() => setSelectedContent({ ...content, type: content.type || content.Type || 'PHOTO' })}>
                                                                     <Video size={16} className="text-[var(--text-color)]/40" />
                                                                     <div className="text-[6px] mono text-white/20 uppercase">DECODING_SIGNAL...</div>
                                                                 </div>
                                                             ) : (
                                                                 <img
-                                                                    src={getMediaUrl(content.Url)}
-                                                                    alt={content.Title}
+                                                                    src={getMediaUrl(content.url || content.Url)}
+                                                                    alt={content.title || content.Title}
                                                                     className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-500"
-                                                                    onClick={() => setSelectedContent({ ...content, type: content.Type || 'PHOTO' })}
+                                                                    onClick={() => setSelectedContent({ ...content, type: content.type || content.Type || 'PHOTO' })}
                                                                 />
                                                             )}
                                                         </motion.div>
@@ -2065,7 +2065,7 @@ export const ProfileView = React.memo(({
                                                         })
                                                             .map((entry, idx) => (
                                                                 <motion.div
-                                                                    key={entry.Id || idx}
+                                                                    key={entry.id || entry.Id || idx}
                                                                     initial={{ opacity: 0, y: 20 }}
                                                                     animate={{ opacity: 1, y: 0 }}
                                                                     transition={{ delay: idx * 0.1 }}
@@ -2085,7 +2085,7 @@ export const ProfileView = React.memo(({
                                                                                     onClick={async () => {
                                                                                         try {
                                                                                             const API = await import('../services/api').then(mod => mod.default);
-                                                                                            await API.Journal.togglePin(entry.Id || entry.id);
+                                                                                            await API.Journal.togglePin(entry.id || entry.Id);
                                                                                             const isPinnedNow = !isTruthy(entry.IsPinned || entry.isPinned);
                                                                                             setProfileJournal(prev => prev.map(j => (String(j.Id || j.id) === String(entry.Id || entry.id)) ? { ...j, isPinned: isPinnedNow, IsPinned: isPinnedNow } : j));
                                                                                             showNotification(isPinnedNow ? "LOG_LOCKED" : "LOG_RELEASED", `ENTRY_${isPinnedNow ? 'PINNED_TO' : 'RECALLED_FROM'}_MONITOR`, "success");
@@ -2101,7 +2101,7 @@ export const ProfileView = React.memo(({
                                                                                     onClick={async () => {
                                                                                         try {
                                                                                             const API = await import('../services/api').then(mod => mod.default);
-                                                                                            await API.Journal.togglePost(entry.Id || entry.id);
+                                                                                            await API.Journal.togglePost(entry.id || entry.Id);
                                                                                             const isPostedNow = !isTruthy(entry.IsPosted || entry.isPosted);
                                                                                             setProfileJournal(prev => prev.map(j => (String(j.Id || j.id) === String(entry.Id || entry.id)) ? { ...j, isPosted: isPostedNow, IsPosted: isPostedNow } : j));
                                                                                             showNotification(isPostedNow ? "PINNED_TO_WALL" : "REMOVED_FROM_WALL", `ENTRY_${isPostedNow ? 'ATTACHED_TO' : 'DETACHED_FROM'}_PROFILE_SURFACE`, "success");
@@ -2114,7 +2114,7 @@ export const ProfileView = React.memo(({
                                                                                 </button>
                                                                                 <button
                                                                                     onClick={() => {
-                                                                                        const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?journal=${entry.Id || entry.id}`;
+                                                                                        const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?journal=${entry.id || entry.Id}`;
                                                                                         navigator.clipboard.writeText(link);
                                                                                         showNotification("LINK_COPIED", "ARCHIVE_SIGNAL_SECURED", "success");
                                                                                     }}
@@ -2127,7 +2127,7 @@ export const ProfileView = React.memo(({
                                                                                         if (!window.confirm("DELETE_LOG_PERMANENTLY?")) return;
                                                                                         try {
                                                                                             const API = await import('../services/api').then(mod => mod.default);
-                                                                                            await API.Journal.delete(entry.Id);
+                                                                                            await API.Journal.delete(entry.id || entry.Id);
                                                                                             const res = await API.Journal.getMyJournal();
                                                                                             setProfileJournal(res.data || []);
                                                                                         } catch (err) { console.error(err); }
