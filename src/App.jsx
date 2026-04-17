@@ -1824,6 +1824,8 @@ const Dashboard = React.memo(({
   sendMessage, 
   requestTrack, 
   setUser, 
+  setShowGlobalGoLive,
+  setShowGlobalUpload,
   setShowGlobalIngest,
   onExpandContent
 }) => {
