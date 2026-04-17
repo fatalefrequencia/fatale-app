@@ -127,7 +127,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
     const [isJournalDetailed, setIsJournalDetailed] = useState(false);
 
     return (
-        <div className={`spatial-container ${roomMode === 'room' ? 'room-mode-active' : ''}`} style={{
+        <div className={`spatial-container ${roomMode === 'room' ? 'room-mode-active' : ''} ${leftOpen ? 'left-panel-open' : ''} ${rightOpen ? 'right-panel-open' : ''}`} style={{
             '--theme-color': activeTheme,
             '--text-color': activeText,
             '--text-color-rgb': hexToRgb(activeText),
