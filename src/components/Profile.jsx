@@ -1682,7 +1682,7 @@ export const ProfileView = React.memo(({
                         )}
 
                         {activeTab === 'Studio' && (
-                            <div className="space-y-6">
+                            <div className="space-y-6 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
                                 {/* Studio Sub-tabs + Universal Ingest */}
                                 <div className="flex flex-col lg:flex-row justify-between items-center mb-6 pb-4 border-b border-white/5 gap-4">
                                     <div className="flex gap-4">
@@ -1928,13 +1928,13 @@ export const ProfileView = React.memo(({
                                     </div>
                                     )}
 
-                                {studioSubTab === 'Photos' && profileGallery.filter(c => c.Type === 'PHOTO').length === 0 && (
+                                {studioSubTab === 'Photos' && profileGallery.filter(c => (c.type || c.Type) === 'PHOTO').length === 0 && (
                                     <div className="col-span-full py-10 lg:py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
                                         <Camera size={24} className="mb-4 text-[var(--text-color)]" />
                                         <span className="mono text-[8px] uppercase tracking-[0.2em]">GALLERY_ENCRYPTED_OR_EMPTY</span>
                                     </div>
                                 )}
-                                {studioSubTab === 'Video' && profileGallery.filter(c => c.Type === 'VIDEO').length === 0 && (
+                                {studioSubTab === 'Video' && profileGallery.filter(c => (c.type || c.Type) === 'VIDEO').length === 0 && (
                                     <div className="col-span-full py-10 lg:py-20 flex flex-col items-center justify-center border border-dashed border-white/5 opacity-20">
                                         <Video size={24} className="mb-4 text-[var(--text-color)]" />
                                         <span className="mono text-[8px] uppercase tracking-[0.2em]">VISUAL_FEED_OFFLINE</span>
