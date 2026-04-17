@@ -209,6 +209,9 @@ const API = {
         delete: (id) => api.delete(`Studio/${id}`),
         togglePin: (id) => api.post(`Studio/toggle-pin/${id}`),
         togglePost: (id) => api.post(`Studio/toggle-post/${id}`),
+        updateThumbnail: (id, formData) => api.post(`Studio/update-thumbnail/${id}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        }),
     },
     Feed: {
         getGlobalFeed: () => api.get('Feed'),

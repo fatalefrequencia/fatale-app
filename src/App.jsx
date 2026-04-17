@@ -2236,6 +2236,7 @@ const FeedContent = React.memo(({
         CreatedAt: item.createdAt || item.CreatedAt,
         ImageUrl: item.imageUrl || item.ImageUrl,
         MediaType: (item.mediaType || item.MediaType || "").toUpperCase(),
+        ThumbnailUrl: item.thumbnailUrl || item.ThumbnailUrl,
       }));
       setFeed(normalizedFeed);
     } catch (e) {
@@ -2938,10 +2939,24 @@ const FeedContent = React.memo(({
                             >
                               {mediaType === 'VIDEO' ? (
                                 <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
-                                  <video src={imageUrl} className="w-full h-full object-cover opacity-70" muted loop onMouseEnter={e => e.target.play()} onMouseLeave={e => e.target.pause()} />
-                                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover/studio:bg-black/20 transition-all">
-                                    <Video size={30} className="text-white/60" />
-                                  </div>
+                                  {item.ThumbnailUrl ? (
+                                    <div className="absolute inset-0 z-0">
+                                      <img src={getMediaUrl(item.ThumbnailUrl)} className="w-full h-full object-cover opacity-60" alt="" />
+                                      {/* Play overlay for video with cover */}
+                                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover/studio:bg-black/10 transition-all">
+                                        <div className="w-12 h-12 rounded-full border-2 border-white/20 flex items-center justify-center bg-black/40">
+                                          <Play size={20} className="text-white ml-1" fill="currentColor" />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <video src={imageUrl} className="w-full h-full object-cover opacity-70" muted loop onMouseEnter={e => e.target.play()} onMouseLeave={e => e.target.pause()} />
+                                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover/studio:bg-black/20 transition-all">
+                                        <Video size={30} className="text-white/60" />
+                                      </div>
+                                    </>
+                                  )}
                                 </div>
                               ) : (
                                 <img src={imageUrl} className="w-full h-auto opacity-90 group-hover/studio:opacity-100 transition-opacity" alt="" />

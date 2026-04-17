@@ -1232,9 +1232,9 @@ export const ProfileView = React.memo(({
                                             else setSelectedContent?.({ ...item, type });
                                         }}>
                                             <div className="w-10 h-10 border border-white text-black bg-white flex-shrink-0 overflow-hidden shadow-[0_0_10px_#fff]">
-                                                {(item.cover || item.Url || item.imageUrl || item.ImageUrl) ? (
+                                                {(item.thumbnailUrl || item.ThumbnailUrl || item.cover || item.Url || item.imageUrl || item.ImageUrl) ? (
                                                     <img
-                                                        src={getMediaUrl(item.cover || item.Url || item.imageUrl || item.ImageUrl)}
+                                                        src={getMediaUrl(item.thumbnailUrl || item.ThumbnailUrl || item.cover || item.Url || item.imageUrl || item.ImageUrl)}
                                                         className="w-full h-full object-cover"
                                                     />
                                                 ) : (
@@ -1267,9 +1267,9 @@ export const ProfileView = React.memo(({
                                             else setSelectedContent?.({ ...item, type });
                                         }}>
                                             <div className="w-10 h-10 border border-[var(--text-color)]/20 flex-shrink-0 overflow-hidden bg-black/40">
-                                                {(item.cover || item.Url) ? (
+                                                {(item.thumbnailUrl || item.ThumbnailUrl || item.cover || item.Url) ? (
                                                     <img
-                                                        src={(item.cover || item.Url).startsWith('http') ? (item.cover || item.Url) : `${API_BASE_URL}${item.cover || item.Url}`}
+                                                        src={getMediaUrl(item.thumbnailUrl || item.ThumbnailUrl || item.cover || item.Url)}
                                                         className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity"
                                                         loading="lazy"
                                                     />
@@ -1845,7 +1845,7 @@ export const ProfileView = React.memo(({
                                                             className="group relative flex-shrink-0 w-64 aspect-square bg-black border border-white/5 overflow-hidden cursor-pointer"
                                                         >
                                                             {/* Hover Controls */}
-                                                            {isMe && (
+                                                            {isMe ? (
                                                                 <div className="absolute top-2 left-2 z-30 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
                                                                     <button
                                                                         onClick={async (e) => {
@@ -1892,6 +1892,52 @@ export const ProfileView = React.memo(({
                                                                     >
                                                                         <Share2 size={10} />
                                                                     </button>
+                                                                    {(content.type || content.Type || '').toUpperCase() === 'VIDEO' && (
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                const input = document.getElementById(`thumb-upload-${content.id || content.Id}`);
+                                                                                if (input) input.click();
+                                                                            }}
+                                                                            className="p-1.5 border bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/40 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40 backdrop-blur-md transition-all"
+                                                                            title="Set Cover Image"
+                                                                        >
+                                                                            <Camera size={10} />
+                                                                        </button>
+                                                                    )}
+                                                                    <input
+                                                                        id={`thumb-upload-${content.id || content.Id}`}
+                                                                        type="file"
+                                                                        accept="image/*"
+                                                                        className="hidden"
+                                                                        onChange={async (e) => {
+                                                                            const file = e.target.files[0];
+                                                                            if (!file) return;
+                                                                            try {
+                                                                                const formData = new FormData();
+                                                                                formData.append('file', file);
+                                                                                const API = await import('../services/api').then(mod => mod.default);
+                                                                                const res = await API.Studio.updateThumbnail(content.id || content.Id, formData);
+                                                                                setProfileGallery(prev => prev.map(c => (String(c.id || c.Id) === String(content.id || content.Id)) ? { ...c, thumbnailUrl: res.data.thumbnailUrl, ThumbnailUrl: res.data.thumbnailUrl } : c));
+                                                                                showNotification("COVER_UPDATED", "SIGNAL_VISUAL_OVERRIDE_COMPLETE", "success");
+                                                                            } catch (err) { console.error(err); }
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            ) : (
+                                                                <div className="absolute top-2 right-2 z-30 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?content=${content.id || content.Id}`;
+                                                                            navigator.clipboard.writeText(link);
+                                                                            showNotification("LINK_COPIED", "SIGNAL_ADDRESS_SECURED", "success");
+                                                                        }}
+                                                                        className="p-1.5 border bg-black/60 border-white/10 text-white/40 hover:text-white backdrop-blur-md transition-all"
+                                                                        title="Copy Link"
+                                                                    >
+                                                                        <Share2 size={10} />
+                                                                    </button>
                                                                 </div>
                                                             )}
 
@@ -1905,14 +1951,29 @@ export const ProfileView = React.memo(({
                                                                 </div>
                                                                 <div className="text-[8px] mono text-white truncate uppercase">{content.title || content.Title}</div>
                                                             </div>
+
                                                             {(content.type || content.Type || '').toUpperCase() === 'VIDEO' ? (
-                                                                <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 space-y-2"
+                                                                <div className="w-full h-full relative"
                                                                     onClick={() => {
                                                                         const t = (content.type || content.Type || 'VIDEO').toUpperCase();
                                                                         setSelectedContent({ ...content, type: t });
                                                                     }}>
-                                                                    <Video size={16} className="text-[var(--text-color)]/40" />
-                                                                    <div className="text-[6px] mono text-white/20 uppercase">DECODING_SIGNAL...</div>
+                                                                    {(content.thumbnailUrl || content.ThumbnailUrl) ? (
+                                                                        <img
+                                                                            src={getMediaUrl(content.thumbnailUrl || content.ThumbnailUrl)}
+                                                                            className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-500"
+                                                                        />
+                                                                    ) : (
+                                                                        <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 space-y-2">
+                                                                            <Video size={16} className="text-[var(--text-color)]/40" />
+                                                                            <div className="text-[6px] mono text-white/20 uppercase">DECODING_SIGNAL...</div>
+                                                                        </div>
+                                                                    )}
+                                                                    {(content.thumbnailUrl || content.ThumbnailUrl) && (
+                                                                        <div className="absolute top-2 right-2 p-1 bg-black/60 backdrop-blur-sm border border-white/10">
+                                                                            <Video size={8} className="text-white/60" />
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             ) : (
                                                                 <img
