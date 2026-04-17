@@ -13,7 +13,7 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className={`fixed top-0 left-0 right-0 bottom-0 ${hasMiniPlayer ? 'lg:bottom-[80px]' : ''} z-[9999] flex items-center justify-center p-4 md:p-10 bg-black/40 backdrop-blur-[12px]`}
+            className={`fixed top-0 left-0 right-0 bottom-0 ${hasMiniPlayer ? 'lg:bottom-[72px]' : ''} z-[9999] flex items-center justify-center p-4 md:p-10 bg-black/40 backdrop-blur-[12px]`}
             onClick={onClose}
         >
             <motion.div
