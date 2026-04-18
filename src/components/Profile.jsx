@@ -144,8 +144,8 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
             '--panel-bg-rgb': hexToRgb(activeBackground),
             '--glass-opacity': activeIsGlass ? '0.2' : '0.95',
             '--glass-blur': activeIsGlass ? '20px' : '0px',
-            '--monitor-bg': activeMonitorBackground,
-            '--monitor-bg-rgb': hexToRgb(activeMonitorBackground),
+            '--monitor-bg': (activeMonitorImageUrl && activeMonitorImageUrl !== 'none') ? 'transparent' : activeMonitorBackground,
+            '--monitor-bg-rgb': (activeMonitorImageUrl && activeMonitorImageUrl !== 'none') ? '0, 0, 0' : hexToRgb(activeMonitorBackground),
             '--monitor-glass-opacity': activeMonitorIsGlass ? '0.2' : '0.95',
             '--monitor-glass-blur': activeMonitorIsGlass ? '20px' : '0px',
             '--monitor-bg-img': activeMonitorImageUrl === 'none' ? 'none' : `url(${activeMonitorImageUrl})`
@@ -319,7 +319,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                 transition={{ type: "tween", duration: 0.8, ease: "easeInOut" }}
             >
                 <div className="monitor-screen custom-scrollbar relative">
-                    <DataStream visible={!(monitorImageUrl || previewMonitorImageUrl)} />
+                    <DataStream visible={!((monitorImageUrl && monitorImageUrl !== 'none') || (previewMonitorImageUrl && previewMonitorImageUrl !== 'none'))} />
                     <div className="relative z-10 h-full overflow-y-auto custom-scrollbar pt-16 lg:pt-0 pb-28 lg:pb-12">
                         {/* Consolidated Monitor Navigation - Responsive for Mobile */}
                         <div className="absolute top-4 left-4 right-4 z-[100] flex flex-wrap justify-between gap-2 items-start pointer-events-none">

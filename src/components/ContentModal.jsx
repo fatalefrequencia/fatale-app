@@ -52,14 +52,14 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
                 transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
                 style={{ 
-                    backgroundColor: monitorIsGlass ? hexToRgba(monitorBackgroundColor, 0.4) : hexToRgba(monitorBackgroundColor, 0.8),
-                    borderColor: hexToRgba(activeTheme, 0.3),
                     boxShadow: `0 0 80px ${hexToRgba(activeTheme, 0.15)}`,
+                    borderColor: hexToRgba(activeTheme, 0.3),
                     backdropFilter: monitorIsGlass ? 'blur(20px)' : 'blur(12px)',
                     backgroundImage: (monitorImageUrl && monitorImageUrl !== 'none') ? `url(${getMediaUrl(monitorImageUrl)})` : 'none',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
-                    backgroundBlendMode: isGlass ? 'overlay' : 'normal'
+                    backgroundBlendMode: monitorIsGlass ? 'overlay' : 'normal',
+                    backgroundColor: (monitorImageUrl && monitorImageUrl !== 'none') ? 'transparent' : (monitorIsGlass ? hexToRgba(monitorBackgroundColor, 0.4) : hexToRgba(monitorBackgroundColor, 0.8)),
                 }}
                 className="relative w-full max-w-4xl border overflow-hidden flex flex-col max-h-[90vh]"
                 onClick={(e) => e.stopPropagation()}
