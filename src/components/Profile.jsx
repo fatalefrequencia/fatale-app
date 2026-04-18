@@ -129,9 +129,9 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
     const activeIsGlass = (previewIsGlass !== undefined && previewIsGlass !== null) ? previewIsGlass : (isGlass !== undefined ? isGlass : false);
     
     // Monitor Specific
-    const activeMonitorBackground = previewMonitorBackgroundColor || monitorBackgroundColor || '#000000';
+    const activeMonitorBackground = (previewMonitorBackgroundColor != null) ? previewMonitorBackgroundColor : (monitorBackgroundColor != null ? monitorBackgroundColor : '#1a0a1e');
     const activeMonitorIsGlass = (previewMonitorIsGlass !== undefined && previewMonitorIsGlass !== null) ? previewMonitorIsGlass : (monitorIsGlass !== undefined ? monitorIsGlass : false);
-    const activeMonitorImageUrl = (previewMonitorImageUrl === 'none') ? 'none' : (previewMonitorImageUrl || monitorImageUrl);
+    const activeMonitorImageUrl = (previewMonitorImageUrl === 'none') ? 'none' : (previewMonitorImageUrl || monitorImageUrl || null);
     const [scrolled, setScrolled] = useState(false);
     const [isJournalDetailed, setIsJournalDetailed] = useState(false);
 
@@ -147,7 +147,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
             '--glass-blur': activeIsGlass ? '20px' : '0px',
             '--monitor-bg': (activeMonitorImageUrl && activeMonitorImageUrl !== 'none') ? 'transparent' : activeMonitorBackground,
             '--monitor-bg-rgb': (activeMonitorImageUrl && activeMonitorImageUrl !== 'none') ? '0, 0, 0' : hexToRgb(activeMonitorBackground),
-            '--monitor-glass-opacity': activeMonitorIsGlass ? '0.2' : '0.95',
+            '--monitor-glass-opacity': activeMonitorIsGlass ? '0.2' : '1',
             '--monitor-glass-blur': activeMonitorIsGlass ? '20px' : '0px',
             '--monitor-bg-img': (activeMonitorImageUrl && activeMonitorImageUrl !== 'none') ? `url(${activeMonitorImageUrl})` : 'none'
         }}>
@@ -2447,8 +2447,11 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             setTextColor(user.textColor || user.TextColor || '#ffffff');
             setBackgroundColor(user.backgroundColor || user.BackgroundColor || '#000000');
             setIsGlass(user.isGlass || user.IsGlass || false);
-            setMonitorBackgroundColor(user.monitorBackgroundColor || user.MonitorBackgroundColor || '#000000');
+            setMonitorBackgroundColor(user.monitorBackgroundColor != null ? user.monitorBackgroundColor : (user.MonitorBackgroundColor != null ? user.MonitorBackgroundColor : '#000000'));
             setMonitorIsGlass(user.monitorIsGlass || user.MonitorIsGlass || false);
+            // CRITICAL: sync monitorMode from actual saved data
+            const hasImage = !!(user.monitorImageUrl || user.MonitorImageUrl);
+            setMonitorMode(hasImage ? 'image' : 'color');
         }
     }, [user]);
 

@@ -43,7 +43,6 @@
     width: clamp(400px, 55vw, 900px);
     height: clamp(400px, 75vh, 650px);
     transition: width 0.4s cubic-bezier(0.23, 1, 0.32, 1), transform 0.8s ease;
-    background: #000;
     border: 1px solid var(--theme-color, #ff006e)30;
     box-shadow:
         0 0 60px rgba(0, 0, 0, 0.8),
