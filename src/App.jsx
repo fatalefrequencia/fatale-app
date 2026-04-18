@@ -1842,6 +1842,13 @@ const Dashboard = React.memo(({
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
+  // Auto-collapse sidebar when leaving Discovery view
+  useEffect(() => {
+    if (activeView !== 'discovery') {
+      setIsSidebarCollapsed(true);
+    }
+  }, [activeView]);
+
   const handleNav = (viewName, isProfile = false, userId = null) => {
     setIsSidebarCollapsed(true);
     if (isProfile) {
