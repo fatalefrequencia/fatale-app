@@ -945,8 +945,8 @@ export const ProfileView = React.memo(({
                     monitorImageUrl: rawData.hasOwnProperty('monitorImageUrl') || rawData.hasOwnProperty('MonitorImageUrl') 
                         ? getMediaUrl(rawData.monitorImageUrl || rawData.MonitorImageUrl) 
                         : currentUser.monitorImageUrl,
-                    monitorBackgroundColor: rawData.monitorBackgroundColor || rawData.MonitorBackgroundColor || currentUser.monitorBackgroundColor,
-                    monitorIsGlass: rawData.monitorIsGlass !== undefined ? rawData.monitorIsGlass : (rawData.MonitorIsGlass !== undefined ? rawData.MonitorIsGlass : currentUser.monitorIsGlass)
+                    monitorBackgroundColor: rawData.hasOwnProperty('monitorBackgroundColor') ? rawData.monitorBackgroundColor : (rawData.hasOwnProperty('MonitorBackgroundColor') ? rawData.MonitorBackgroundColor : currentUser.monitorBackgroundColor),
+                    monitorIsGlass: rawData.hasOwnProperty('monitorIsGlass') ? rawData.monitorIsGlass : (rawData.hasOwnProperty('MonitorIsGlass') ? rawData.MonitorIsGlass : currentUser.monitorIsGlass)
                 };
                 setUser(prev => {
                     try { localStorage.setItem('user', JSON.stringify(updated)); } catch (e) { }
