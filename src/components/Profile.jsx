@@ -941,7 +941,9 @@ export const ProfileView = React.memo(({
                     textColor: rawData.textColor || rawData.TextColor || currentUser.textColor,
                     backgroundColor: rawData.backgroundColor || rawData.BackgroundColor || currentUser.backgroundColor,
                     isGlass: rawData.isGlass !== undefined ? rawData.isGlass : (rawData.IsGlass !== undefined ? rawData.IsGlass : currentUser.isGlass),
-                    monitorImageUrl: getMediaUrl(rawData.monitorImageUrl || rawData.MonitorImageUrl) || currentUser.monitorImageUrl,
+                    monitorImageUrl: rawData.hasOwnProperty('monitorImageUrl') || rawData.hasOwnProperty('MonitorImageUrl') 
+                        ? getMediaUrl(rawData.monitorImageUrl || rawData.MonitorImageUrl) 
+                        : currentUser.monitorImageUrl,
                     monitorBackgroundColor: rawData.monitorBackgroundColor || rawData.MonitorBackgroundColor || currentUser.monitorBackgroundColor,
                     monitorIsGlass: rawData.monitorIsGlass !== undefined ? rawData.monitorIsGlass : (rawData.MonitorIsGlass !== undefined ? rawData.MonitorIsGlass : currentUser.monitorIsGlass)
                 };
@@ -2427,6 +2429,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
     const [isGlass, setIsGlass] = useState(user?.isGlass || user?.IsGlass || false);
     const [monitorBackgroundColor, setMonitorBackgroundColor] = useState(user?.monitorBackgroundColor || user?.MonitorBackgroundColor || '#000000');
     const [monitorIsGlass, setMonitorIsGlass] = useState(user?.monitorIsGlass || user?.MonitorIsGlass || false);
+    const [monitorMode, setMonitorMode] = useState((user?.monitorImageUrl || user?.MonitorImageUrl) ? 'image' : 'color');
 
     // Sync state with user prop updates
     React.useEffect(() => {
@@ -2448,19 +2451,21 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
     // Notify parent of color changes for live preview
     React.useEffect(() => {
         let previewMonitorImageUrl = null;
-        if (monitorImageFile) {
-            previewMonitorImageUrl = URL.createObjectURL(monitorImageFile);
+        if (monitorMode === 'image') {
+            if (monitorImageFile) previewMonitorImageUrl = URL.createObjectURL(monitorImageFile);
+            else if (user?.monitorImageUrl) previewMonitorImageUrl = user.monitorImageUrl;
         }
+
         if (onColorPreview) onColorPreview({ 
             themeColor, 
             textColor, 
             backgroundColor, 
             isGlass, 
             previewMonitorImageUrl,
-            monitorBackgroundColor,
+            monitorBackgroundColor: monitorMode === 'color' ? monitorBackgroundColor : '#000000',
             monitorIsGlass
         });
-    }, [themeColor, textColor, backgroundColor, isGlass, monitorImageFile, monitorBackgroundColor, monitorIsGlass]);
+    }, [themeColor, textColor, backgroundColor, isGlass, monitorImageFile, monitorBackgroundColor, monitorIsGlass, monitorMode]);
 
     // Sort and filter tracks
     const processedTracks = React.useMemo(() => {
@@ -2510,6 +2515,9 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             formData.append('IsGlass', isGlass);
             formData.append('MonitorBackgroundColor', monitorBackgroundColor);
             formData.append('MonitorIsGlass', monitorIsGlass);
+            if (monitorMode === 'color') {
+                formData.append('ClearMonitorImage', true);
+            }
 
             await onSubmit(formData);
         } catch (error) {
@@ -2830,49 +2838,73 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
 
                         {/* MONITOR_STYLING */}
                         <div className="space-y-6">
-                            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-[var(--text-color)]/10">
-                                <Monitor size={14} className="text-cyan-400" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-color)]/80">MONITOR_STYLING</span>
+                            <div className="flex items-center justify-between mb-2 pb-2 border-b border-[var(--text-color)]/10">
+                                <div className="flex items-center gap-2">
+                                    <Monitor size={14} className="text-cyan-400" />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-color)]/80">MONITOR_STYLING</span>
+                                </div>
+                                <div className="flex gap-1">
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setMonitorMode('color')}
+                                        className={`px-2 py-0.5 text-[7px] font-bold border transition-all ${monitorMode === 'color' ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400' : 'border-white/10 text-white/30 hover:border-white/20'}`}
+                                    >
+                                        SOLID_COLOR
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setMonitorMode('image')}
+                                        className={`px-2 py-0.5 text-[7px] font-bold border transition-all ${monitorMode === 'image' ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400' : 'border-white/10 text-white/30 hover:border-white/20'}`}
+                                    >
+                                        IMAGE_FEED
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="space-y-4">
                                 {/* Monitor BG & Glass */}
-                                <div className="space-y-3">
-                                    <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">BASE_BACKDROP</label>
-                                    <div className="flex gap-4">
-                                        <div className="flex-1 flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--text-color)] transition-all">
-                                            <input type="color" value={monitorBackgroundColor} onChange={e => setMonitorBackgroundColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
-                                            <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20" style={{ backgroundColor: monitorBackgroundColor }} />
-                                            <span className="text-[10px] font-bold text-[var(--text-color)] mono">{monitorBackgroundColor}</span>
-                                        </div>
-                                        <button type="button" onClick={() => setMonitorIsGlass(!monitorIsGlass)} className={`w-24 px-4 py-3 border flex items-center justify-center transition-all ${monitorIsGlass ? 'bg-cyan-400/10 border-cyan-400 text-cyan-400' : 'bg-black border-[var(--text-color)]/10 text-[var(--text-color)]/40'}`}>
-                                            <span className="text-[8px] font-black uppercase tracking-widest">GLASS</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Monitor Image Signal */}
-                                <div className="space-y-3">
-                                    <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">SIGNAL_IMAGE</label>
-                                    <div className="relative group cursor-pointer border border-dashed border-[var(--text-color)]/20 hover:border-[var(--text-color)] transition-all bg-black hover:bg-white/5 h-[52px] flex items-center justify-center p-3">
-                                        <input type="file" accept="image/*" onChange={e => { if (e.target.files[0]) setMonitorImageFile(e.target.files[0]); }} className="absolute inset-0 opacity-0 cursor-pointer z-20" />
-                                        <div className="flex items-center justify-between w-full pointer-events-none">
-                                            <div className="flex items-center gap-3">
-                                                <Camera size={14} className="text-[var(--text-color)]/60" />
-                                                <span className="text-xs font-bold text-[var(--text-color)] truncate max-w-[120px]">
-                                                    {monitorImageFile ? monitorImageFile.name : (user?.monitorImageUrl ? 'UPLOADED' : 'SELECT_FILE')}
-                                                </span>
+                                {monitorMode === 'color' ? (
+                                    <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-300">
+                                        <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">BASE_BACKDROP</label>
+                                        <div className="flex gap-4">
+                                            <div className="flex-1 flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--text-color)] transition-all">
+                                                <input type="color" value={monitorBackgroundColor} onChange={e => setMonitorBackgroundColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
+                                                <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20" style={{ backgroundColor: monitorBackgroundColor }} />
+                                                <span className="text-[10px] font-bold text-[var(--text-color)] mono">{monitorBackgroundColor}</span>
                                             </div>
-                                            {monitorImageFile ? (
-                                                <button type="button" onClick={(e) => { e.stopPropagation(); setMonitorImageFile(null); }} className="p-1 hover:bg-white/10 text-red-500 transition-all pointer-events-auto">
-                                                    <X size={12} />
-                                                </button>
-                                            ) : user?.monitorImageUrl ? (
-                                                <div className="w-2 h-2 rounded-full bg-green-500" />
-                                            ) : null}
+                                            <button type="button" onClick={() => setMonitorIsGlass(!monitorIsGlass)} className={`w-24 px-4 py-3 border flex items-center justify-center transition-all ${monitorIsGlass ? 'bg-cyan-400/10 border-cyan-400 text-cyan-400' : 'bg-black border-[var(--text-color)]/10 text-[var(--text-color)]/40'}`}>
+                                                <span className="text-[8px] font-black uppercase tracking-widest">GLASS</span>
+                                            </button>
                                         </div>
                                     </div>
-                                </div>
+                                ) : (
+                                    <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-300">
+                                        <div className="flex justify-between items-center">
+                                            <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">SIGNAL_IMAGE</label>
+                                            <button type="button" onClick={() => setMonitorIsGlass(!monitorIsGlass)} className={`px-3 py-1 border flex items-center justify-center transition-all ${monitorIsGlass ? 'bg-cyan-400/10 border-cyan-400 text-cyan-400' : 'border-white/5 text-white/20'}`}>
+                                                <span className="text-[7px] font-black uppercase tracking-widest">GLASS_FX</span>
+                                            </button>
+                                        </div>
+                                        <div className="relative group cursor-pointer border border-dashed border-[var(--text-color)]/20 hover:border-[var(--text-color)] transition-all bg-black hover:bg-white/5 h-[52px] flex items-center justify-center p-3">
+                                            <input type="file" accept="image/*" onChange={e => { if (e.target.files[0]) setMonitorImageFile(e.target.files[0]); }} className="absolute inset-0 opacity-0 cursor-pointer z-20" />
+                                            <div className="flex items-center justify-between w-full pointer-events-none">
+                                                <div className="flex items-center gap-3">
+                                                    <Camera size={14} className="text-[var(--text-color)]/60" />
+                                                    <span className="text-xs font-bold text-[var(--text-color)] truncate max-w-[120px]">
+                                                        {monitorImageFile ? monitorImageFile.name : (user?.monitorImageUrl ? 'UPLOADED' : 'SELECT_FILE')}
+                                                    </span>
+                                                </div>
+                                                {monitorImageFile ? (
+                                                    <button type="button" onClick={(e) => { e.stopPropagation(); setMonitorImageFile(null); }} className="p-1 hover:bg-white/10 text-red-500 transition-all pointer-events-auto">
+                                                        <X size={12} />
+                                                    </button>
+                                                ) : user?.monitorImageUrl ? (
+                                                    <div className="w-2 h-2 rounded-full bg-green-500" />
+                                                ) : null}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
