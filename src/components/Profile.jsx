@@ -932,7 +932,8 @@ export const ProfileView = React.memo(({
                     themeColor: rawData.themeColor || rawData.ThemeColor || currentUser.themeColor,
                     textColor: rawData.textColor || rawData.TextColor || currentUser.textColor,
                     backgroundColor: rawData.backgroundColor || rawData.BackgroundColor || currentUser.backgroundColor,
-                    isGlass: rawData.isGlass !== undefined ? rawData.isGlass : (rawData.IsGlass !== undefined ? rawData.IsGlass : currentUser.isGlass)
+                    isGlass: rawData.isGlass !== undefined ? rawData.isGlass : (rawData.IsGlass !== undefined ? rawData.IsGlass : currentUser.isGlass),
+                    monitorImageUrl: getMediaUrl(rawData.monitorImageUrl || rawData.MonitorImageUrl) || currentUser.monitorImageUrl
                 };
                 setUser(prev => {
                     try { localStorage.setItem('user', JSON.stringify(updated)); } catch (e) { }
@@ -2296,7 +2297,8 @@ export const ProfileView = React.memo(({
                                                 previewThemeColor: colors.themeColor,
                                                 previewTextColor: colors.textColor,
                                                 previewBackgroundColor: colors.backgroundColor,
-                                                previewIsGlass: colors.isGlass
+                                                previewIsGlass: colors.isGlass,
+                                                previewMonitorImageUrl: colors.previewMonitorImageUrl
                                             }));
                                         }}
                                     />
@@ -2850,7 +2852,23 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                             </span>
                                         </div>
                                     </div>
-                                    {monitorImageFile && <div className="w-2 h-2 rounded-full bg-[var(--text-color)] animate-pulse shadow-[0_0_8px_currentColor]" />}
+                                    {monitorImageFile ? (
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-[var(--text-color)] animate-pulse shadow-[0_0_8px_currentColor]" />
+                                            <button 
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); setMonitorImageFile(null); }}
+                                                className="p-1 hover:bg-white/10 text-[var(--text-color)]/40 hover:text-red-500 transition-all pointer-events-auto"
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        </div>
+                                    ) : (user?.monitorImageUrl || user?.MonitorImageUrl) ? (
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
+                                            <span className="text-[7px] text-green-500/60 mono font-bold">SAVED</span>
+                                        </div>
+                                    ) : null}
                                 </div>
                             </div>
                         </div>

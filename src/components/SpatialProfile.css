@@ -69,7 +69,7 @@
     flex: 1;
     overflow: hidden;
     position: relative;
-    background: transparent;
+    background: var(--panel-bg, #000);
     background-image: var(--monitor-bg-img, none);
     background-size: cover;
     background-position: center;
