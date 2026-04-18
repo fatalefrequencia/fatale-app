@@ -1437,7 +1437,7 @@ export const ProfileView = React.memo(({
                             </div>
                         ) : (
                             <div className="flex-1 min-h-0 flex flex-col">
-                                <div className="social-tabs-header flex flex-col md:flex-row justify-between items-center mb-4 lg:mb-10 pb-2 lg:pb-6 border-b border-[var(--text-color)]/10 gap-4">
+                                <div className="social-tabs-header flex flex-col md:flex-row justify-center items-center mb-4 lg:mb-10 pb-2 lg:pb-6 border-b border-[var(--text-color)]/10 gap-8">
                                     <div className="flex gap-2 lg:gap-4 flex-wrap justify-center">
                                         <button
                                             onClick={() => setActiveTab('Music')}
