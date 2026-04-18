@@ -592,6 +592,7 @@ export const ProfileView = React.memo(({
     const { showNotification } = useNotification();
     const [activeTab, setActiveTab] = useState('Music');
     const [studioSubTab, setStudioSubTab] = useState('All');
+    const [musicSubTab, setMusicSubTab] = useState('All');
 
     // Profile Data State
     const [profileData, setProfileData] = useState(null);
@@ -1467,15 +1468,6 @@ export const ProfileView = React.memo(({
                                         </button>
                                     </div>
                                     <div className="flex gap-4 items-center">
-                                        {isMe && activeTab === 'Music' && (
-                                            <button
-                                                onClick={() => setShowGlobalUpload(true)}
-                                                className="px-4 py-1.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/30 text-[var(--text-color)] text-[9px] font-bold uppercase tracking-[0.2em] hover:bg-[var(--text-color)] hover:text-black transition-all flex items-center gap-2 rounded-sm mr-2"
-                                                title="Upload Signal"
-                                            >
-                                                <Plus size={12} /> UPLOAD_SIGNAL
-                                            </button>
-                                        )}
                                         {!isMe && onMessageUser && (
                                             <button
                                                 onClick={() => onMessageUser(displayUser)}
@@ -1490,9 +1482,44 @@ export const ProfileView = React.memo(({
 
                                 {/* Tab Content */}
                                 {activeTab === 'Music' && (
-                                    profileTracks.length > 0 ? (
+                                    <div className="flex-1 min-h-0 flex flex-col">
+                                        {/* Music Sub-tabs + Upload Signal Header */}
+                                        <div className="flex flex-col lg:flex-row justify-between items-center mb-6 pb-4 border-b border-white/5 gap-4">
+                                            <div className="flex gap-4">
+                                                {['All', 'albums', 'singles/ep5'].map(tab => (
+                                                    <button
+                                                        key={tab}
+                                                        onClick={() => setMusicSubTab(tab)}
+                                                        className={`flex items-center gap-2 text-[8px] mono font-bold tracking-widest transition-all ${musicSubTab === tab ? 'text-[var(--text-color)]' : 'text-white/20 hover:text-white/60'}`}
+                                                    >
+                                                        {tab === 'All' && <Hash size={12} />}
+                                                        [{tab.toUpperCase()}]
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            {isMe && (
+                                                <button
+                                                    onClick={() => setShowGlobalUpload(true)}
+                                                    className="px-3 lg:px-4 py-1.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/40 text-[var(--text-color)] text-[8px] lg:text-[9px] font-bold uppercase tracking-[0.1em] lg:tracking-[0.2em] hover:bg-[var(--text-color)] hover:text-black transition-all flex items-center gap-2 rounded-sm"
+                                                    title="Upload Signal"
+                                                >
+                                                    <Plus size={12} /> [ UPLOAD_SIGNAL ]
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {profileTracks.length > 0 ? (
                                         <div className="space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
                                             {profileTracks
+                                                .filter(track => {
+                                                    if (musicSubTab === 'All') return true;
+                                                    const type = (track.type || track.Type || '').toLowerCase();
+                                                    const genre = (track.genre || track.Genre || '').toLowerCase();
+                                                    if (musicSubTab === 'albums') return type === 'album' || genre === 'album' || genre === 'lp';
+                                                    if (musicSubTab === 'singles/ep5') return type === 'single' || type === 'ep' || genre === 'single' || genre === 'ep';
+                                                    return true;
+                                                })
                                                 .sort((a, b) => {
                                                     const aPosted = isTruthy(a.IsPosted || a.isPosted) ? 1 : 0;
                                                     const bPosted = isTruthy(b.IsPosted || b.isPosted) ? 1 : 0;
@@ -1571,7 +1598,8 @@ export const ProfileView = React.memo(({
                                             <Database size={24} className="mb-4 opacity-50 block mx-auto" />
                                             NO_SIGNALS_DETECTED_IN_CORE
                                         </div>
-                                    ) : null
+                                    ) : null}
+                                    </div>
                                 )}
 
                                 {activeTab === 'Playlists' && (
