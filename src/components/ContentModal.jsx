@@ -56,7 +56,7 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
                     borderColor: hexToRgba(activeTheme, 0.3),
                     boxShadow: `0 0 80px ${hexToRgba(activeTheme, 0.15)}`,
                     backdropFilter: monitorIsGlass ? 'blur(20px)' : 'blur(12px)',
-                    backgroundImage: monitorImageUrl ? `url(${getMediaUrl(monitorImageUrl)})` : 'none',
+                    backgroundImage: (monitorImageUrl && monitorImageUrl !== 'none') ? `url(${getMediaUrl(monitorImageUrl)})` : 'none',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundBlendMode: isGlass ? 'overlay' : 'normal'

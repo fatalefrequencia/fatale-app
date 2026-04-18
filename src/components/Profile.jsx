@@ -130,6 +130,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
     // Monitor Specific
     const activeMonitorBackground = previewMonitorBackgroundColor || monitorBackgroundColor || '#000000';
     const activeMonitorIsGlass = (previewMonitorIsGlass !== undefined && previewMonitorIsGlass !== null) ? previewMonitorIsGlass : (monitorIsGlass !== undefined ? monitorIsGlass : false);
+    const activeMonitorImageUrl = (previewMonitorImageUrl === 'none') ? 'none' : (previewMonitorImageUrl || monitorImageUrl);
     const [scrolled, setScrolled] = useState(false);
     const [isJournalDetailed, setIsJournalDetailed] = useState(false);
 
@@ -147,7 +148,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
             '--monitor-bg-rgb': hexToRgb(activeMonitorBackground),
             '--monitor-glass-opacity': activeMonitorIsGlass ? '0.2' : '0.95',
             '--monitor-glass-blur': activeMonitorIsGlass ? '20px' : '0px',
-            '--monitor-bg-img': previewMonitorImageUrl ? `url(${previewMonitorImageUrl})` : (monitorImageUrl ? `url(${monitorImageUrl})` : 'none')
+            '--monitor-bg-img': activeMonitorImageUrl === 'none' ? 'none' : `url(${activeMonitorImageUrl})`
         }}>
             <div className="absolute inset-0 z-0 overflow-hidden">
                 {wallpaperVideoUrl ? (
@@ -2359,9 +2360,11 @@ export const ProfileView = React.memo(({
                             onClose={() => setSelectedContent(null)}
                             hasMiniPlayer={hasMiniPlayer}
                             themeColor={(isMe && showEditProfile && profileData?.previewThemeColor) ? profileData.previewThemeColor : (displayUser?.themeColor || displayUser?.ThemeColor)}
-                            backgroundColor={(isMe && showEditProfile && profileData?.previewBackgroundColor) ? profileData.previewBackgroundColor : (displayUser?.backgroundColor || displayUser?.BackgroundColor)}
-                            isGlass={(isMe && showEditProfile && profileData?.previewIsGlass !== undefined && profileData?.previewIsGlass !== null) ? profileData.previewIsGlass : (displayUser?.isGlass || displayUser?.IsGlass)}
-                            monitorImageUrl={(isMe && showEditProfile && profileData?.previewMonitorImageUrl) ? profileData.previewMonitorImageUrl : (displayUser?.monitorImageUrl || displayUser?.MonitorImageUrl)}
+                            backgroundColor={isMe && showEditProfile ? (profileData?.previewBackgroundColor || displayUser?.backgroundColor) : (displayUser?.backgroundColor || displayUser?.BackgroundColor)}
+                            isGlass={isMe && showEditProfile ? (profileData?.previewIsGlass !== null ? profileData.previewIsGlass : displayUser?.isGlass) : (displayUser?.isGlass || displayUser?.IsGlass)}
+                            monitorImageUrl={isMe && showEditProfile ? (profileData?.previewMonitorImageUrl === 'none' ? 'none' : (profileData?.previewMonitorImageUrl || displayUser?.monitorImageUrl)) : (displayUser?.monitorImageUrl || displayUser?.MonitorImageUrl)}
+                            monitorBackgroundColor={isMe && showEditProfile ? (profileData?.previewMonitorBackgroundColor || displayUser?.monitorBackgroundColor) : (displayUser?.monitorBackgroundColor || displayUser?.MonitorBackgroundColor)}
+                            monitorIsGlass={isMe && showEditProfile ? (profileData?.previewMonitorIsGlass !== null ? profileData.previewMonitorIsGlass : (displayUser?.monitorIsGlass || displayUser?.MonitorIsGlass)) : (displayUser?.monitorIsGlass || displayUser?.MonitorIsGlass)}
                         />
                     )
                 }
