@@ -17,6 +17,7 @@ import { API_BASE_URL, getMediaUrl } from '../constants';
 
 // --- TERMINAL STYLING UTILITIES ---
 const hexToRgb = (hex) => {
+    if (!hex || typeof hex !== 'string') return '255, 0, 110';
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 0, 110';
 };
@@ -148,7 +149,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
             '--monitor-bg-rgb': (activeMonitorImageUrl && activeMonitorImageUrl !== 'none') ? '0, 0, 0' : hexToRgb(activeMonitorBackground),
             '--monitor-glass-opacity': activeMonitorIsGlass ? '0.2' : '0.95',
             '--monitor-glass-blur': activeMonitorIsGlass ? '20px' : '0px',
-            '--monitor-bg-img': activeMonitorImageUrl === 'none' ? 'none' : `url(${activeMonitorImageUrl})`
+            '--monitor-bg-img': (activeMonitorImageUrl && activeMonitorImageUrl !== 'none') ? `url(${activeMonitorImageUrl})` : 'none'
         }}>
             <div className="absolute inset-0 z-0 overflow-hidden">
                 {wallpaperVideoUrl ? (
