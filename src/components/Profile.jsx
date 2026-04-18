@@ -1204,7 +1204,13 @@ export const ProfileView = React.memo(({
                     </div>
                 }
                 rightContent={
-                    <div className="space-y-8">
+                        <div className="space-y-4">
+                            <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// IDENTITY_BIO</div>
+                            <div className="text-[10px] text-[var(--text-color)]/80 leading-relaxed mono break-words border-l border-[var(--text-color)]/20 pl-4 py-2">
+                                {displayUser?.biography || displayUser?.bio || '> NO_BIOMETRIC_DATA_AVAILABLE'}
+                            </div>
+                        </div>
+
                         {isMe && stationData && (
                             <div className="space-y-4">
                                 <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// BROADCAST_PROTOCOL</div>
@@ -1252,13 +1258,18 @@ export const ProfileView = React.memo(({
                         )}
 
                         <div className="space-y-4">
-                            <NeuroGraph userId={effectiveId} />
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// IDENTITY_BIO</div>
-                            <div className="text-[10px] text-[var(--text-color)]/80 leading-relaxed mono break-words border-l border-[var(--text-color)]/20 pl-4 py-2">
-                                {displayUser?.biography || displayUser?.bio || '> NO_BIOMETRIC_DATA_AVAILABLE'}
+                            <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// STATUS_METADATA</div>
+                            <div className="bg-black/40 border border-[var(--text-color)]/20 p-4 space-y-2 relative group overflow-hidden">
+                                <div className="flex justify-between items-center text-[7px] mono text-[var(--text-color)]/40 border-b border-[var(--text-color)]/10 pb-2 mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-[var(--text-color)] animate-pulse" />
+                                        <span>SIGNAL_HEARTBEAT: OK</span>
+                                    </div>
+                                    <span>{new Date().toISOString().split('T')[0]}</span>
+                                </div>
+                                <div className="text-[10px] text-[var(--text-color)] mono uppercase tracking-widest font-bold leading-tight">
+                                    {displayUser?.statusMessage || displayUser?.StatusMessage || '> NO_STATUS_SIGNAL...'}
+                                </div>
                             </div>
                         </div>
 
@@ -2399,6 +2410,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
     const [name, setName] = useState(user?.username || user?.Username || '');
     const [bio, setBio] = useState(user?.biography || user?.Biography || user?.bio || user?.Bio || '');
     const [sectorId, setSectorId] = useState(user?.residentSectorId || user?.ResidentSectorId || 0);
+    const [statusMessage, setStatusMessage] = useState(user?.statusMessage || user?.StatusMessage || '');
     const [file, setFile] = useState(null);
     const [isLive, setIsLive] = useState(user?.isLive || user?.IsLive || false);
     const [featuredTrackId, setFeaturedTrackId] = useState(user?.featuredTrackId || user?.FeaturedTrackId || -1);
@@ -2421,6 +2433,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             setName(user.username || user.Username || '');
             setBio(user.biography || user.Biography || user.bio || user.Bio || '');
             setSectorId(user.residentSectorId || user.ResidentSectorId || 0);
+            setStatusMessage(user.statusMessage || user.StatusMessage || '');
             setIsLive(user.isLive || user.IsLive || false);
             setFeaturedTrackId(user.featuredTrackId || user.FeaturedTrackId || -1);
             setThemeColor(user.themeColor || user.ThemeColor || 'var(--text-color)');
@@ -2486,6 +2499,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             const formData = new FormData();
             formData.append('Username', name);
             formData.append('Biography', bio);
+            formData.append('StatusMessage', statusMessage);
             // Re-added Sector Residency
             formData.append('ResidentSectorId', parseInt(sectorId) || 0);
             formData.append('IsLive', isLive);
@@ -2601,6 +2615,18 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                 <option value={4}>OUTER RIM</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <label className="text-xs font-bold text-[var(--text-color)]/60 uppercase tracking-widest ml-1">Signal Status</label>
+                        <input
+                            type="text"
+                            value={statusMessage}
+                            onChange={e => setStatusMessage(e.target.value)}
+                            className="w-full bg-black/40 border border-white/10 p-4 text-white font-bold outline-none focus:border-[var(--text-color)] transition-all font-mono uppercase"
+                            placeholder="INITIALIZE_STATUS_STREAM..."
+                            maxLength={100}
+                        />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
