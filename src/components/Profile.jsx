@@ -1339,71 +1339,8 @@ export const ProfileView = React.memo(({
                 }
             >
                 <div className="social-monitor-grid">
-                    {/* Left Side: Profile Sidebar (Fotolog Style) */}
-                    <aside className="social-sidebar">
-                        <div className="social-profile-card relative">
-                            {!isMe && onMessageUser && (
-                                <button
-                                    onClick={() => onMessageUser(displayUser)}
-                                    className="absolute top-4 left-4 p-1.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/30 text-[var(--text-color)] hover:bg-[var(--text-color)] hover:text-black transition-all rounded lg:hidden z-[100]"
-                                    title="Send Message"
-                                >
-                                    <MessageSquare size={16} />
-                                </button>
-                            )}
-                            <div className="social-pic-frame">
-                                {(() => {
-                                    const pfp = displayUser?.profilePictureUrl || displayUser?.ProfilePictureUrl || displayUser?.profileImageUrl || displayUser?.ProfileImageUrl;
-                                    if (pfp) {
-                                        return <img src={getMediaUrl(pfp)} alt={displayUser?.username} />;
-                                    }
-                                    return <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/20"><Cpu size={32} /></div>;
-                                })()}
-                            </div>
-                            <div className="social-info mt-6">
-                                <h1 className="social-name">{displayUser?.username || displayUser?.Username || 'GUEST_USER'}</h1>
-                                {(displayUser?.communityName || displayUser?.CommunityName) && (
-                                    <div className="mt-2 flex">
-                                        <div
-                                            className="px-2 py-0.5 border flex items-center gap-1.5"
-                                            style={{
-                                                borderColor: `${displayUser?.communityColor || displayUser?.CommunityColor || '#ff006e'}40`,
-                                                backgroundColor: `${displayUser?.communityColor || displayUser?.CommunityColor || '#ff006e'}10`,
-                                                boxShadow: `0 0 10px ${displayUser?.communityColor || displayUser?.CommunityColor || '#ff006e'}10`
-                                            }}
-                                        >
-                                            <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: displayUser?.communityColor || displayUser?.CommunityColor || '#ff006e' }} />
-                                            <span className="mono text-[8px] font-black tracking-[0.2em]" style={{ color: displayUser?.communityColor || displayUser?.CommunityColor || '#ff006e' }}>
-                                                [ {String(displayUser?.communityName || displayUser?.CommunityName).toUpperCase()} ]
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-                                <div className="social-bio-text mt-4">
-                                    {displayUser?.biography || displayUser?.bio || ''}
-                                </div>
-
-                                <div className="social-stats mt-8 space-y-2">
-                                    <div className="flex justify-between text-[8px] mono opacity-40">
-                                        <span>SIGNALS:</span>
-                                        <span>{profileTracks.length}</span>
-                                    </div>
-                                    <div className="flex justify-between text-[8px] mono opacity-40">
-                                        <span>ARCHIVE:</span>
-                                        <span>{profileGallery.length}</span>
-                                    </div>
-                                    <div className="flex justify-between text-[8px] mono opacity-40">
-                                        <span>STATUS:</span>
-                                        <span className="text-[var(--text-color)]">ONLINE</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </aside>
-
-                    {/* Right Side: Content Area */}
-                    <div className="social-main-pane">
+                    {/* Full-Width Content Pane */}
+                    <div className="social-main-pane" style={{ gridColumn: '1 / -1' }}>
                         {activeTab === 'Broadcast' ? (
                             // --- BROADCASTER DASHBOARD ---
                             <div className="flex flex-col h-full animate-in fade-in duration-500">

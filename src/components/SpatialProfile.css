@@ -317,11 +317,10 @@
     padding-bottom: 40px;
 }
 
-/* SOCIAL MONITOR GRID (RETRO-SOCIAL / FOTOLOG STYLE) */
+/* SOCIAL MONITOR GRID - Full width content pane */
 .social-monitor-grid {
     display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 30px;
+    grid-template-columns: 1fr;
     height: 100%;
     margin-top: 60px;
     /* Clear global header */
