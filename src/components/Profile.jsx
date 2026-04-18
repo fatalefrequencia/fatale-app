@@ -643,6 +643,14 @@ export const ProfileView = React.memo(({
 
     const displayUser = isMe ? currentUser : profileData;
 
+    const [localStatus, setLocalStatus] = useState(displayUser?.statusMessage || displayUser?.StatusMessage || '');
+    const [isSavingStatus, setIsSavingStatus] = useState(false);
+
+    // Sync local status when display user changes
+    useEffect(() => {
+        setLocalStatus(displayUser?.statusMessage || displayUser?.StatusMessage || '');
+    }, [displayUser?.statusMessage, displayUser?.StatusMessage]);
+
     // Auto-switch to Broadcast tab if live
     useEffect(() => {
         if (isMe && stationData && (stationData.isLive || stationData.IsLive) && activeTab === 'Music') {
@@ -979,6 +987,43 @@ export const ProfileView = React.memo(({
         }
     };
 
+    const handleInlineStatusUpdate = async () => {
+        const currentStatus = displayUser?.statusMessage || displayUser?.StatusMessage || '';
+        if (localStatus === currentStatus) return;
+
+        setIsSavingStatus(true);
+        try {
+            const API = await import('../services/api').then(mod => mod.default);
+            const uid = currentUser?.id || currentUser?.Id || currentUser?.userId || currentUser?.UserId;
+            
+            const formData = new FormData();
+            formData.append('StatusMessage', localStatus);
+            
+            const res = await API.Users.updateProfile(formData, uid);
+            
+            if (res?.data?.user && setUser) {
+                const rawData = res.data.user;
+                const updated = {
+                    ...currentUser,
+                    statusMessage: rawData.statusMessage || rawData.StatusMessage || localStatus,
+                    StatusMessage: rawData.statusMessage || rawData.StatusMessage || localStatus
+                };
+                setUser(prev => {
+                    try { localStorage.setItem('user', JSON.stringify(updated)); } catch (e) { }
+                    return updated;
+                });
+            }
+            
+            showNotification("SIGNAL_BROADCAST", "Frequency status updated successfully.", "success");
+        } catch (err) {
+            console.error('Status update failed:', err);
+            showNotification("BROADCAST_FAILURE", "Signal lost. Status synchronization failed.", "error");
+            setLocalStatus(currentStatus); // Revert UI
+        } finally {
+            setIsSavingStatus(false);
+        }
+    };
+
     const handleDeleteTrack = async (track) => {
         if (!window.confirm(`Are you sure you want to delete "${track.title}"?`)) return;
         try {
@@ -1268,8 +1313,28 @@ export const ProfileView = React.memo(({
                                     </div>
                                     <span>{new Date().toISOString().split('T')[0]}</span>
                                 </div>
-                                <div className="text-[10px] text-[var(--text-color)] mono uppercase tracking-widest font-bold leading-tight">
-                                    {displayUser?.statusMessage || displayUser?.StatusMessage || '> NO_STATUS_SIGNAL...'}
+                                <div className="text-[10px] text-[var(--text-color)] mono uppercase tracking-widest font-bold leading-tight relative group/status">
+                                    {isMe ? (
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={localStatus}
+                                                onChange={(e) => setLocalStatus(e.target.value)}
+                                                onBlur={handleInlineStatusUpdate}
+                                                onKeyDown={(e) => e.key === 'Enter' && handleInlineStatusUpdate()}
+                                                placeholder="> SET_BROADCAST_SIGNAL..."
+                                                className="w-full bg-transparent border-none outline-none text-[var(--text-color)] placeholder:text-[var(--text-color)]/20 p-0 m-0 focus:ring-0"
+                                                disabled={isSavingStatus}
+                                            />
+                                            {isSavingStatus && (
+                                                <div className="absolute right-0 top-0 text-[7px] animate-pulse text-[var(--text-color)]/60">
+                                                    [ SAVING... ]
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <span>{displayUser?.statusMessage || displayUser?.StatusMessage || '> NO_STATUS_SIGNAL...'}</span>
+                                    )}
                                 </div>
                             </div>
                         </div>
