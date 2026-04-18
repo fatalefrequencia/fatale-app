@@ -2876,7 +2876,6 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                             </div>
                         </div>
                     </div>
-                    </div>
                 </div>
             )}
 
