@@ -47,6 +47,7 @@ const DataStream = ({ visible = true }) => {
         {Array.from({ length: 40 }).map((_, i) => (
             <div key={i} className="whitespace-nowrap animate-data-scroll" style={{ animationDelay: `${i * 0.15}s`, opacity: 1 - (i * 0.02) }}>
                 {Math.random().toString(2).substring(2).repeat(10)}
+            </div>
         ))}
     </div>
     );
