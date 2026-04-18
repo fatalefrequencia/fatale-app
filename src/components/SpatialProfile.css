@@ -291,7 +291,6 @@
 }
 
 .monitor-frame.frameless .monitor-screen {
-    background: rgba(0, 0, 0, 0.5);
     padding-bottom: 40px;
 }
 
@@ -306,7 +305,7 @@
 }
 
 .social-sidebar {
-    background: rgba(0, 0, 0, 0.4);
+    background: transparent;
     border-right: 1px solid rgba(var(--theme-color-rgb), 0.1);
     padding: 30px;
     height: 100%;

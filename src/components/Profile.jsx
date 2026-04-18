@@ -322,10 +322,17 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                 <div 
                     className="monitor-screen custom-scrollbar relative"
                     style={{
-                        backgroundColor: (activeMonitorImageUrl && activeMonitorImageUrl !== 'none') ? 'transparent' : activeMonitorBackground,
+                        backgroundColor: (activeMonitorImageUrl && activeMonitorImageUrl !== 'none')
+                            ? 'transparent'
+                            : activeMonitorIsGlass
+                                ? `rgba(${hexToRgb(activeMonitorBackground)}, 0.15)`
+                                : activeMonitorBackground,
                         backgroundImage: (activeMonitorImageUrl && activeMonitorImageUrl !== 'none') ? `url(${activeMonitorImageUrl})` : 'none',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
+                        backdropFilter: activeMonitorIsGlass ? 'blur(20px) saturate(180%)' : 'none',
+                        WebkitBackdropFilter: activeMonitorIsGlass ? 'blur(20px) saturate(180%)' : 'none',
+                        transition: 'background-color 0.5s ease, backdrop-filter 0.5s ease',
                     }}
                 >
                     <DataStream visible={!((activeMonitorImageUrl && activeMonitorImageUrl !== 'none'))} />
