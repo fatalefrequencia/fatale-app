@@ -343,7 +343,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                                 {isMe && onLogout && (
                                     <button
                                         onClick={onLogout}
-                                        className="px-2 lg:px-3 py-1 bg-black/40 backdrop-blur-md border border-[var(--text-color)]/20 text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:border-[var(--text-color)] transition-all rounded flex items-center gap-1.5 mono text-[8px] lg:text-[9px] font-bold group/logout"
+                                        className="px-2 lg:px-3 py-1 bg-black/50 backdrop-blur-md border border-white/20 text-white/70 hover:text-white hover:border-white/50 transition-all rounded flex items-center gap-1.5 mono text-[8px] lg:text-[9px] font-bold group/logout"
                                     >
                                         <LogOut size={10} className="lg:w-3 lg:h-3 group-hover/logout:animate-pulse" />
                                         LOGOUT
@@ -352,7 +352,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                                 {isMe && onModifyId && (
                                     <button
                                         onClick={onModifyId}
-                                        className="px-2 lg:px-3 py-1 bg-[var(--text-color)]/10 backdrop-blur-md border border-[var(--text-color)]/30 text-[var(--text-color)] hover:bg-[var(--text-color)] hover:text-black transition-all rounded mono text-[8px] lg:text-[9px] font-black uppercase tracking-widest shadow-[0_0_10px_rgba(var(--theme-color-rgb),0.2)]"
+                                        className="px-2 lg:px-3 py-1 bg-black/50 backdrop-blur-md border border-[var(--theme-color)]/60 text-white hover:bg-[var(--theme-color)] hover:text-black transition-all rounded mono text-[8px] lg:text-[9px] font-black uppercase tracking-widest shadow-[0_0_10px_rgba(var(--theme-color-rgb),0.3)]"
                                     >
                                         MODIFY_ID
                                     </button>
@@ -362,7 +362,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                                 {onExitProfile && (
                                     <button
                                         onClick={onExitProfile}
-                                        className="px-2 lg:px-3 py-1 bg-black/40 backdrop-blur-md border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition-all rounded flex items-center gap-1.5 mono text-[8px] lg:text-[9px] font-bold"
+                                        className="px-2 lg:px-3 py-1 bg-black/50 backdrop-blur-md border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition-all rounded flex items-center gap-1.5 mono text-[8px] lg:text-[9px] font-bold"
                                         title="Exit to Previous Location"
                                     >
                                         <LogOut size={12} className="lg:w-3.5 lg:h-3.5" /> EXIT_CORE
@@ -371,7 +371,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
 
                                 <button
                                     onClick={() => { setRoomMode('room'); document.dispatchEvent(new CustomEvent('exitmonitor')); }}
-                                    className="px-2 lg:px-3 py-1 bg-[var(--text-color)]/20 backdrop-blur-md border border-[var(--text-color)]/30 text-[var(--text-color)] hover:bg-[var(--text-color)]/40 transition-all rounded flex items-center gap-1.5 mono text-[8px] lg:text-[9px] font-bold"
+                                    className="px-2 lg:px-3 py-1 bg-black/50 backdrop-blur-md border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition-all rounded flex items-center gap-1.5 mono text-[8px] lg:text-[9px] font-bold"
                                 >
                                     <Maximize2 size={12} className="lg:w-3.5 lg:h-3.5" /> EXIT_MONITOR
                                 </button>
