@@ -4,7 +4,7 @@ import { X, Book, Camera, Video, Share2, Download, ExternalLink } from 'lucide-r
 import { API_BASE_URL, getMediaUrl } from '../constants';
 import { useNotification } from '../contexts/NotificationContext';
 
-const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true }) => {
+const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true, themeColor = '#9d00ff', backgroundColor = '#000000', isGlass = false, monitorImageUrl = null }) => {
     const { showNotification } = useNotification();
     if (!content) return null;
     const normalizedType = (type || '').toUpperCase();
@@ -30,6 +30,14 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
         }
     };
 
+    const activeTheme = themeColor || '#9d00ff';
+    const hexToRgba = (hex, alpha) => {
+        const r = parseInt(hex.slice(1, 3), 16) || 157;
+        const g = parseInt(hex.slice(3, 5), 16) || 0;
+        const b = parseInt(hex.slice(5, 7), 16) || 255;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -43,21 +51,35 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
                 transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
-                className="relative w-full max-w-4xl bg-black/60 backdrop-blur-xl border border-[#9d00ff]/30 shadow-[0_0_80px_rgba(157,0,255,0.15)] overflow-hidden flex flex-col max-h-[90vh]"
+                style={{ 
+                    backgroundColor: isGlass ? hexToRgba(backgroundColor, 0.4) : hexToRgba(backgroundColor, 0.8),
+                    borderColor: hexToRgba(activeTheme, 0.3),
+                    boxShadow: `0 0 80px ${hexToRgba(activeTheme, 0.15)}`,
+                    backdropFilter: isGlass ? 'blur(20px)' : 'blur(12px)',
+                    backgroundImage: monitorImageUrl ? `url(${getMediaUrl(monitorImageUrl)})` : 'none',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundBlendMode: isGlass ? 'overlay' : 'normal'
+                }}
+                className="relative w-full max-w-4xl border overflow-hidden flex flex-col max-h-[90vh]"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Holographic Corner Accents */}
-                <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-[#9d00ff] opacity-40 z-20" />
-                <div className="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 border-[#9d00ff] opacity-40 z-20" />
-                <div className="absolute bottom-0 left-0 w-12 h-12 border-b-2 border-l-2 border-[#9d00ff] opacity-40 z-20" />
-                <div className="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-[#9d00ff] opacity-40 z-20" />
+                <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 opacity-40 z-20" style={{ borderColor: activeTheme }} />
+                <div className="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 opacity-40 z-20" style={{ borderColor: activeTheme }} />
+                <div className="absolute bottom-0 left-0 w-12 h-12 border-b-2 border-l-2 opacity-40 z-20" style={{ borderColor: activeTheme }} />
+                <div className="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 opacity-40 z-20" style={{ borderColor: activeTheme }} />
 
                 {/* Pulsing Scanline Effect */}
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(157,0,255,0.03),rgba(80,0,255,0.01),rgba(157,0,255,0.03))] z-0 pointer-events-none bg-[length:100%_2px,3px_100%]" />
+                {!monitorImageUrl && (
+                    <div className="absolute inset-0 z-0 pointer-events-none bg-[length:100%_2px,3px_100%]" 
+                         style={{ backgroundImage: `linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.1) 50%), linear-gradient(90deg, ${hexToRgba(activeTheme, 0.03)}, ${hexToRgba(activeTheme, 0.01)}, ${hexToRgba(activeTheme, 0.03)})` }} 
+                    />
+                )}
 
                 {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-white/5 bg-black/40 relative z-10">
-                    <div className="flex items-center gap-3 text-[#9d00ff]">
+                    <div className="flex items-center gap-3" style={{ color: activeTheme }}>
                         {['JOURNAL', 'TEXT'].includes(normalizedType) && <Book size={18} />}
                         {['PHOTO', 'IMAGE', 'PICTURE'].includes(normalizedType) && <Camera size={18} />}
                         {['VIDEO', 'MEDIA'].includes(normalizedType) && <Video size={18} />}

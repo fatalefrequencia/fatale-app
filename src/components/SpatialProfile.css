@@ -70,6 +70,10 @@
     overflow: hidden;
     position: relative;
     background: transparent;
+    background-image: var(--monitor-bg-img, none);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .side-terminal {

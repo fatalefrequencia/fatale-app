@@ -153,6 +153,7 @@ function App() {
   // --- GLOBAL MODAL STATE ---
   const [globalExpandedContent, setGlobalExpandedContent] = useState(null);
   const [globalExpandedType, setGlobalExpandedType] = useState('JOURNAL');
+  const [globalExpandedTheme, setGlobalExpandedTheme] = useState(null);
 
   const handleGlobalGoLive = async (sessionTitle, description) => {
     const title = sessionTitle || goLiveFormData.sessionTitle;
@@ -936,6 +937,7 @@ function App() {
           isLive: rawData?.isLive !== undefined ? rawData?.isLive : (rawData?.IsLive !== undefined ? rawData?.IsLive : (user?.isLive || false)),
           bannerUrl: getMediaUrl(rawData?.bannerUrl || rawData?.BannerUrl) || user?.bannerUrl,
           wallpaperVideoUrl: getMediaUrl(rawData?.wallpaperVideoUrl || rawData?.WallpaperVideoUrl) || user?.wallpaperVideoUrl,
+          monitorImageUrl: getMediaUrl(rawData?.monitorImageUrl || rawData?.MonitorImageUrl) || user?.monitorImageUrl,
           themeColor: rawData?.themeColor || rawData?.ThemeColor || user?.themeColor || '#ff006e',
           textColor: rawData?.textColor || rawData?.TextColor || user?.textColor || '#ffffff',
           backgroundColor: rawData?.backgroundColor || rawData?.BackgroundColor || user?.backgroundColor || '#000000',
@@ -1619,9 +1621,10 @@ function App() {
                sendMessage={sendMessage}
                requestTrack={requestTrack}
                setUser={setUser}
-               onExpandContent={(content, type) => {
+               onExpandContent={(content, type, themeData) => {
                  setGlobalExpandedContent(content);
                  setGlobalExpandedType(type);
+                 setGlobalExpandedTheme(themeData);
                }}
            />
           </>
@@ -1633,9 +1636,13 @@ function App() {
         {globalExpandedContent && (
           <ContentModal
             content={globalExpandedContent}
-            onClose={() => setGlobalExpandedContent(null)}
+            onClose={() => { setGlobalExpandedContent(null); setGlobalExpandedTheme(null); }}
             type={globalExpandedType}
             hasMiniPlayer={currentTrackIndex >= 0 && activeView !== 'player'}
+            themeColor={globalExpandedTheme?.themeColor}
+            backgroundColor={globalExpandedTheme?.backgroundColor}
+            isGlass={globalExpandedTheme?.isGlass}
+            monitorImageUrl={globalExpandedTheme?.monitorImageUrl}
           />
         )}
       </AnimatePresence>

@@ -40,15 +40,17 @@ const CRTOverlay = () => (
     </div>
 );
 
-const DataStream = () => (
+const DataStream = ({ visible = true }) => {
+    if (!visible) return null;
+    return (
     <div className="absolute inset-0 overflow-hidden opacity-5 pointer-events-none mono text-[8px] leading-none text-[var(--text-color)] break-all select-none">
         {Array.from({ length: 40 }).map((_, i) => (
             <div key={i} className="whitespace-nowrap animate-data-scroll" style={{ animationDelay: `${i * 0.15}s`, opacity: 1 - (i * 0.02) }}>
                 {Math.random().toString(2).substring(2).repeat(10)}
-            </div>
         ))}
     </div>
-);
+    );
+};
 
 const CyberDust = ({ count = 30 }) => (
     <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
@@ -117,7 +119,7 @@ const SideTerminal = ({ title, children, side = "left", isOpen, onClose, roomMod
     </motion.div>
 );
 
-const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, leftOpen, rightOpen, onToggleLeft, onToggleRight, bannerUrl, wallpaperVideoUrl, profileImageUrl, biography, themeColor, textColor, backgroundColor, isGlass, previewThemeColor, previewTextColor, previewBackgroundColor, previewIsGlass, onUpload, onGoLive, onModifyId, onLogout, roomMode, setRoomMode, isPlaying, onExpandContent, journal, gallery, tracks, uid, playlists = [], onPlayTrack, onPlayPlaylist, isMe, onExitProfile, onMessageClick, communityId, communityName, communityColor, hasMiniPlayer }) => {
+const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, leftOpen, rightOpen, onToggleLeft, onToggleRight, bannerUrl, wallpaperVideoUrl, profileImageUrl, biography, themeColor, textColor, backgroundColor, isGlass, monitorImageUrl, previewThemeColor, previewTextColor, previewBackgroundColor, previewIsGlass, previewMonitorImageUrl, onUpload, onGoLive, onModifyId, onLogout, roomMode, setRoomMode, isPlaying, onExpandContent, journal, gallery, tracks, uid, playlists = [], onPlayTrack, onPlayPlaylist, isMe, onExitProfile, onMessageClick, communityId, communityName, communityColor, hasMiniPlayer }) => {
     // Use preview colors if available, otherwise fall back to saved user props
     const activeTheme = previewThemeColor || themeColor || 'var(--text-color)';
     const activeText = previewTextColor || textColor || '#ffffff';
@@ -135,7 +137,8 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
             '--panel-bg': activeBackground,
             '--panel-bg-rgb': hexToRgb(activeBackground),
             '--glass-opacity': activeIsGlass ? '0.2' : '0.95',
-            '--glass-blur': activeIsGlass ? '20px' : '0px'
+            '--glass-blur': activeIsGlass ? '20px' : '0px',
+            '--monitor-bg-img': previewMonitorImageUrl ? `url(${previewMonitorImageUrl})` : (monitorImageUrl ? `url(${monitorImageUrl})` : 'none')
         }}>
             <div className="absolute inset-0 z-0 overflow-hidden">
                 {wallpaperVideoUrl ? (
@@ -306,7 +309,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                 transition={{ type: "tween", duration: 0.8, ease: "easeInOut" }}
             >
                 <div className="monitor-screen custom-scrollbar relative">
-                    <DataStream />
+                    <DataStream visible={!(monitorImageUrl || previewMonitorImageUrl)} />
                     <div className="relative z-10 h-full overflow-y-auto custom-scrollbar pt-16 lg:pt-0 pb-28 lg:pb-12">
                         {/* Consolidated Monitor Navigation - Responsive for Mobile */}
                         <div className="absolute top-4 left-4 right-4 z-[100] flex flex-wrap justify-between gap-2 items-start pointer-events-none">
@@ -1113,11 +1116,13 @@ export const ProfileView = React.memo(({
                 textColor={displayUser?.textColor || displayUser?.TextColor}
                 backgroundColor={displayUser?.backgroundColor || displayUser?.BackgroundColor}
                 isGlass={displayUser?.isGlass || displayUser?.IsGlass}
+                monitorImageUrl={displayUser?.monitorImageUrl || displayUser?.MonitorImageUrl}
                 // Override with preview values if editing (and isMe)
                 previewThemeColor={isMe && showEditProfile ? profileData?.previewThemeColor : null}
                 previewTextColor={isMe && showEditProfile ? profileData?.previewTextColor : null}
                 previewBackgroundColor={isMe && showEditProfile ? profileData?.previewBackgroundColor : null}
                 previewIsGlass={isMe && showEditProfile ? profileData?.previewIsGlass : null}
+                previewMonitorImageUrl={isMe && showEditProfile ? profileData?.previewMonitorImageUrl : null}
                 playlists={profilePlaylists}
                 uid={effectiveId}
                 onPlayTrack={onPlayTrack}
@@ -2332,11 +2337,15 @@ export const ProfileView = React.memo(({
                             type={selectedContent.type}
                             onClose={() => setSelectedContent(null)}
                             hasMiniPlayer={hasMiniPlayer}
+                            themeColor={(isMe && showEditProfile && profileData?.previewThemeColor) ? profileData.previewThemeColor : (displayUser?.themeColor || displayUser?.ThemeColor)}
+                            backgroundColor={(isMe && showEditProfile && profileData?.previewBackgroundColor) ? profileData.previewBackgroundColor : (displayUser?.backgroundColor || displayUser?.BackgroundColor)}
+                            isGlass={(isMe && showEditProfile && profileData?.previewIsGlass !== undefined && profileData?.previewIsGlass !== null) ? profileData.previewIsGlass : (displayUser?.isGlass || displayUser?.IsGlass)}
+                            monitorImageUrl={(isMe && showEditProfile && profileData?.previewMonitorImageUrl) ? profileData.previewMonitorImageUrl : (displayUser?.monitorImageUrl || displayUser?.MonitorImageUrl)}
                         />
                     )
                 }
             </AnimatePresence>
-            <CRTOverlay />
+            {!(displayUser?.monitorImageUrl || displayUser?.MonitorImageUrl || (isMe && showEditProfile && profileData?.previewMonitorImageUrl)) && <CRTOverlay />}
         </>
     );
 });
@@ -2392,6 +2401,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [bannerFile, setBannerFile] = useState(null);
     const [wallpaperVideoFile, setWallpaperVideoFile] = useState(null);
+    const [monitorImageFile, setMonitorImageFile] = useState(null);
     const [themeColor, setThemeColor] = useState(user?.themeColor || user?.ThemeColor || 'var(--text-color)');
     const [textColor, setTextColor] = useState(user?.textColor || user?.TextColor || '#ffffff');
     const [backgroundColor, setBackgroundColor] = useState(user?.backgroundColor || user?.BackgroundColor || '#000000');
@@ -2414,8 +2424,12 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
 
     // Notify parent of color changes for live preview
     React.useEffect(() => {
-        if (onColorPreview) onColorPreview({ themeColor, textColor, backgroundColor, isGlass });
-    }, [themeColor, textColor, backgroundColor, isGlass]);
+        let previewMonitorImageUrl = null;
+        if (monitorImageFile) {
+            previewMonitorImageUrl = URL.createObjectURL(monitorImageFile);
+        }
+        if (onColorPreview) onColorPreview({ themeColor, textColor, backgroundColor, isGlass, previewMonitorImageUrl });
+    }, [themeColor, textColor, backgroundColor, isGlass, monitorImageFile]);
 
     // Sort and filter tracks
     const processedTracks = React.useMemo(() => {
@@ -2458,6 +2472,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             if (file) formData.append('ProfilePicture', file);
             if (bannerFile) formData.append('Banner', bannerFile);
             if (wallpaperVideoFile) formData.append('WallpaperVideo', wallpaperVideoFile);
+            if (monitorImageFile) formData.append('MonitorImage', monitorImageFile);
             formData.append('ThemeColor', themeColor);
             formData.append('TextColor', textColor);
             formData.append('BackgroundColor', backgroundColor);
@@ -2809,6 +2824,33 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                     </div>
                                     <span className="text-[8px] font-bold uppercase tracking-widest">GLASS_FX</span>
                                 </button>
+                            </div>
+                        </div>
+
+                        {/* Monitor Background Upload */}
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest">MONITOR_BG</label>
+                            <div className="relative group cursor-pointer border border-dashed border-[var(--text-color)]/20 hover:border-[var(--text-color)] transition-all bg-black hover:bg-white/5 h-full min-h-[64px] flex items-center justify-center">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={e => {
+                                        if (e.target.files[0]) setMonitorImageFile(e.target.files[0]);
+                                    }}
+                                    className="absolute inset-0 opacity-0 cursor-pointer z-20"
+                                />
+                                <div className="flex items-center gap-3 w-full px-4 justify-between pointer-events-none">
+                                    <div className="flex items-center gap-3">
+                                        <Camera size={14} className="text-[var(--text-color)]/60" />
+                                        <div className="flex flex-col">
+                                            <span className="text-[9px] text-[var(--text-color)]/40 uppercase tracking-widest">SIGNAL_IMAGE</span>
+                                            <span className="text-xs font-bold text-[var(--text-color)] truncate max-w-[100px]">
+                                                {monitorImageFile ? monitorImageFile.name : (user?.monitorImageUrl ? 'UPLOADED' : 'SELECT_FILE')}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    {monitorImageFile && <div className="w-2 h-2 rounded-full bg-[var(--text-color)] animate-pulse shadow-[0_0_8px_currentColor]" />}
+                                </div>
                             </div>
                         </div>
                     </div>
