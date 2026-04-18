@@ -57,11 +57,11 @@
 /* Dynamic scaling based on open panels to prevent overlap */
 .left-panel-open .monitor-frame,
 .right-panel-open .monitor-frame {
-    width: clamp(400px, 45vw, 900px) !important;
+    width: clamp(400px, 60vw, 900px) !important;
 }
 
 .left-panel-open.right-panel-open .monitor-frame {
-    width: clamp(400px, 35vw, 900px) !important;
+    width: clamp(400px, 50vw, 900px) !important;
 }
 
 .monitor-screen {
@@ -305,7 +305,7 @@
         0 0 60px rgba(0, 0, 0, 0.8),
         0 0 30px rgba(var(--theme-color-rgb), 0.08),
         inset 0 0 40px rgba(0, 0, 0, 0.6);
-    width: clamp(400px, 85vw, 900px);
+    width: clamp(400px, 75vw, 900px);
     height: auto;
     max-height: 75vh;
     margin-top: clamp(20px, 5vh, 60px);

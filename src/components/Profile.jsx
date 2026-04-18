@@ -136,7 +136,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
     const [isJournalDetailed, setIsJournalDetailed] = useState(false);
 
     return (
-        <div className={`spatial-container ${roomMode === 'room' ? 'room-mode-active' : ''}`} style={{
+        <div className={`spatial-container ${roomMode === 'room' ? 'room-mode-active' : ''} ${leftOpen ? 'left-panel-open' : ''} ${rightOpen ? 'right-panel-open' : ''}`} style={{
             '--theme-color': activeTheme,
             '--text-color': activeText,
             '--text-color-rgb': hexToRgb(activeText),
@@ -300,7 +300,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
             </div>
 
             <motion.div
-                className="monitor-frame frameless"
+                className={`monitor-frame ${roomMode === 'monitor' ? 'frameless' : ''}`}
                 initial={roomMode === 'room' ? false : { rotateX: 5, y: 30, opacity: 0, scale: 0.95, translateZ: -100 }}
                 animate={roomMode === 'room' ? {
                     rotateX: 25,
