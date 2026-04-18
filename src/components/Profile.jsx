@@ -319,8 +319,16 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                 }}
                 transition={{ type: "tween", duration: 0.8, ease: "easeInOut" }}
             >
-                <div className="monitor-screen custom-scrollbar relative">
-                    <DataStream visible={!((monitorImageUrl && monitorImageUrl !== 'none') || (previewMonitorImageUrl && previewMonitorImageUrl !== 'none'))} />
+                <div 
+                    className="monitor-screen custom-scrollbar relative"
+                    style={{
+                        backgroundColor: (activeMonitorImageUrl && activeMonitorImageUrl !== 'none') ? 'transparent' : activeMonitorBackground,
+                        backgroundImage: (activeMonitorImageUrl && activeMonitorImageUrl !== 'none') ? `url(${activeMonitorImageUrl})` : 'none',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                    }}
+                >
+                    <DataStream visible={!((activeMonitorImageUrl && activeMonitorImageUrl !== 'none'))} />
                     <div className="relative z-10 h-full overflow-y-auto custom-scrollbar pt-16 lg:pt-0 pb-28 lg:pb-12">
                         {/* Consolidated Monitor Navigation - Responsive for Mobile */}
                         <div className="absolute top-4 left-4 right-4 z-[100] flex flex-wrap justify-between gap-2 items-start pointer-events-none">
