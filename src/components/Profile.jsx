@@ -1204,6 +1204,7 @@ export const ProfileView = React.memo(({
                     </div>
                 }
                 rightContent={
+                    <div className="space-y-8">
                         <div className="space-y-4">
                             <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// IDENTITY_BIO</div>
                             <div className="text-[10px] text-[var(--text-color)]/80 leading-relaxed mono break-words border-l border-[var(--text-color)]/20 pl-4 py-2">
