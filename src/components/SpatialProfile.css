@@ -69,14 +69,14 @@
     flex: 1;
     overflow: hidden;
     position: relative;
-    background: var(--monitor-bg, #000);
+    background-color: rgba(var(--monitor-bg-rgb, 0, 0, 0), var(--monitor-glass-opacity, 0.95));
     background-image: var(--monitor-bg-img, none);
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     backdrop-filter: blur(var(--monitor-glass-blur, 0px)) saturate(180%);
     -webkit-backdrop-filter: blur(var(--monitor-glass-blur, 0px)) saturate(180%);
-    transition: background 0.5s ease, backdrop-filter 0.5s ease;
+    transition: background-color 0.5s ease, backdrop-filter 0.5s ease;
 }
 
 .side-terminal {
