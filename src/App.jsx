@@ -938,6 +938,8 @@ function App() {
           bannerUrl: getMediaUrl(rawData?.bannerUrl || rawData?.BannerUrl) || user?.bannerUrl,
           wallpaperVideoUrl: getMediaUrl(rawData?.wallpaperVideoUrl || rawData?.WallpaperVideoUrl) || user?.wallpaperVideoUrl,
           monitorImageUrl: getMediaUrl(rawData?.monitorImageUrl || rawData?.MonitorImageUrl) || user?.monitorImageUrl,
+          monitorBackgroundColor: rawData?.monitorBackgroundColor || rawData?.MonitorBackgroundColor || user?.monitorBackgroundColor || '#000000',
+          monitorIsGlass: rawData?.monitorIsGlass !== undefined ? rawData?.monitorIsGlass : (rawData?.MonitorIsGlass !== undefined ? rawData?.MonitorIsGlass : (user?.monitorIsGlass || false)),
           themeColor: rawData?.themeColor || rawData?.ThemeColor || user?.themeColor || '#ff006e',
           textColor: rawData?.textColor || rawData?.TextColor || user?.textColor || '#ffffff',
           backgroundColor: rawData?.backgroundColor || rawData?.BackgroundColor || user?.backgroundColor || '#000000',

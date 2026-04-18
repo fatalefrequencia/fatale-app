@@ -120,12 +120,16 @@ const SideTerminal = ({ title, children, side = "left", isOpen, onClose, roomMod
     </motion.div>
 );
 
-const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, leftOpen, rightOpen, onToggleLeft, onToggleRight, bannerUrl, wallpaperVideoUrl, profileImageUrl, biography, themeColor, textColor, backgroundColor, isGlass, monitorImageUrl, previewThemeColor, previewTextColor, previewBackgroundColor, previewIsGlass, previewMonitorImageUrl, onUpload, onGoLive, onModifyId, onLogout, roomMode, setRoomMode, isPlaying, onExpandContent, journal, gallery, tracks, uid, playlists = [], onPlayTrack, onPlayPlaylist, isMe, onExitProfile, onMessageClick, communityId, communityName, communityColor, hasMiniPlayer }) => {
+const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, leftOpen, rightOpen, onToggleLeft, onToggleRight, bannerUrl, wallpaperVideoUrl, profileImageUrl, biography, themeColor, textColor, backgroundColor, isGlass, monitorImageUrl, monitorBackgroundColor, monitorIsGlass, previewThemeColor, previewTextColor, previewBackgroundColor, previewIsGlass, previewMonitorImageUrl, previewMonitorBackgroundColor, previewMonitorIsGlass, onUpload, onGoLive, onModifyId, onLogout, roomMode, setRoomMode, isPlaying, onExpandContent, journal, gallery, tracks, uid, playlists = [], onPlayTrack, onPlayPlaylist, isMe, onExitProfile, onMessageClick, communityId, communityName, communityColor, hasMiniPlayer }) => {
     // Use preview colors if available, otherwise fall back to saved user props
     const activeTheme = previewThemeColor || themeColor || 'var(--text-color)';
     const activeText = previewTextColor || textColor || '#ffffff';
     const activeBackground = previewBackgroundColor || backgroundColor || '#000000';
     const activeIsGlass = (previewIsGlass !== undefined && previewIsGlass !== null) ? previewIsGlass : (isGlass !== undefined ? isGlass : false);
+    
+    // Monitor Specific
+    const activeMonitorBackground = previewMonitorBackgroundColor || monitorBackgroundColor || '#000000';
+    const activeMonitorIsGlass = (previewMonitorIsGlass !== undefined && previewMonitorIsGlass !== null) ? previewMonitorIsGlass : (monitorIsGlass !== undefined ? monitorIsGlass : false);
     const [scrolled, setScrolled] = useState(false);
     const [isJournalDetailed, setIsJournalDetailed] = useState(false);
 
@@ -139,6 +143,10 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
             '--panel-bg-rgb': hexToRgb(activeBackground),
             '--glass-opacity': activeIsGlass ? '0.2' : '0.95',
             '--glass-blur': activeIsGlass ? '20px' : '0px',
+            '--monitor-bg': activeMonitorBackground,
+            '--monitor-bg-rgb': hexToRgb(activeMonitorBackground),
+            '--monitor-glass-opacity': activeMonitorIsGlass ? '0.2' : '0.95',
+            '--monitor-glass-blur': activeMonitorIsGlass ? '20px' : '0px',
             '--monitor-bg-img': previewMonitorImageUrl ? `url(${previewMonitorImageUrl})` : (monitorImageUrl ? `url(${monitorImageUrl})` : 'none')
         }}>
             <div className="absolute inset-0 z-0 overflow-hidden">
@@ -933,7 +941,9 @@ export const ProfileView = React.memo(({
                     textColor: rawData.textColor || rawData.TextColor || currentUser.textColor,
                     backgroundColor: rawData.backgroundColor || rawData.BackgroundColor || currentUser.backgroundColor,
                     isGlass: rawData.isGlass !== undefined ? rawData.isGlass : (rawData.IsGlass !== undefined ? rawData.IsGlass : currentUser.isGlass),
-                    monitorImageUrl: getMediaUrl(rawData.monitorImageUrl || rawData.MonitorImageUrl) || currentUser.monitorImageUrl
+                    monitorImageUrl: getMediaUrl(rawData.monitorImageUrl || rawData.MonitorImageUrl) || currentUser.monitorImageUrl,
+                    monitorBackgroundColor: rawData.monitorBackgroundColor || rawData.MonitorBackgroundColor || currentUser.monitorBackgroundColor,
+                    monitorIsGlass: rawData.monitorIsGlass !== undefined ? rawData.monitorIsGlass : (rawData.MonitorIsGlass !== undefined ? rawData.MonitorIsGlass : currentUser.monitorIsGlass)
                 };
                 setUser(prev => {
                     try { localStorage.setItem('user', JSON.stringify(updated)); } catch (e) { }
@@ -1119,12 +1129,16 @@ export const ProfileView = React.memo(({
                 backgroundColor={displayUser?.backgroundColor || displayUser?.BackgroundColor}
                 isGlass={displayUser?.isGlass || displayUser?.IsGlass}
                 monitorImageUrl={displayUser?.monitorImageUrl || displayUser?.MonitorImageUrl}
+                monitorBackgroundColor={displayUser?.monitorBackgroundColor || displayUser?.MonitorBackgroundColor}
+                monitorIsGlass={displayUser?.monitorIsGlass !== undefined ? displayUser?.monitorIsGlass : displayUser?.MonitorIsGlass}
                 // Override with preview values if editing (and isMe)
                 previewThemeColor={isMe && showEditProfile ? profileData?.previewThemeColor : null}
                 previewTextColor={isMe && showEditProfile ? profileData?.previewTextColor : null}
                 previewBackgroundColor={isMe && showEditProfile ? profileData?.previewBackgroundColor : null}
                 previewIsGlass={isMe && showEditProfile ? profileData?.previewIsGlass : null}
                 previewMonitorImageUrl={isMe && showEditProfile ? profileData?.previewMonitorImageUrl : null}
+                previewMonitorBackgroundColor={isMe && showEditProfile ? profileData?.previewMonitorBackgroundColor : null}
+                previewMonitorIsGlass={isMe && showEditProfile ? profileData?.previewMonitorIsGlass : null}
                 playlists={profilePlaylists}
                 uid={effectiveId}
                 onPlayTrack={onPlayTrack}
@@ -2298,7 +2312,9 @@ export const ProfileView = React.memo(({
                                                 previewTextColor: colors.textColor,
                                                 previewBackgroundColor: colors.backgroundColor,
                                                 previewIsGlass: colors.isGlass,
-                                                previewMonitorImageUrl: colors.previewMonitorImageUrl
+                                                previewMonitorImageUrl: colors.previewMonitorImageUrl,
+                                                previewMonitorBackgroundColor: colors.monitorBackgroundColor,
+                                                previewMonitorIsGlass: colors.monitorIsGlass
                                             }));
                                         }}
                                     />
@@ -2409,6 +2425,8 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
     const [textColor, setTextColor] = useState(user?.textColor || user?.TextColor || '#ffffff');
     const [backgroundColor, setBackgroundColor] = useState(user?.backgroundColor || user?.BackgroundColor || '#000000');
     const [isGlass, setIsGlass] = useState(user?.isGlass || user?.IsGlass || false);
+    const [monitorBackgroundColor, setMonitorBackgroundColor] = useState(user?.monitorBackgroundColor || user?.MonitorBackgroundColor || '#000000');
+    const [monitorIsGlass, setMonitorIsGlass] = useState(user?.monitorIsGlass || user?.MonitorIsGlass || false);
 
     // Sync state with user prop updates
     React.useEffect(() => {
@@ -2422,6 +2440,8 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             setTextColor(user.textColor || user.TextColor || '#ffffff');
             setBackgroundColor(user.backgroundColor || user.BackgroundColor || '#000000');
             setIsGlass(user.isGlass || user.IsGlass || false);
+            setMonitorBackgroundColor(user.monitorBackgroundColor || user.MonitorBackgroundColor || '#000000');
+            setMonitorIsGlass(user.monitorIsGlass || user.MonitorIsGlass || false);
         }
     }, [user]);
 
@@ -2431,8 +2451,16 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
         if (monitorImageFile) {
             previewMonitorImageUrl = URL.createObjectURL(monitorImageFile);
         }
-        if (onColorPreview) onColorPreview({ themeColor, textColor, backgroundColor, isGlass, previewMonitorImageUrl });
-    }, [themeColor, textColor, backgroundColor, isGlass, monitorImageFile]);
+        if (onColorPreview) onColorPreview({ 
+            themeColor, 
+            textColor, 
+            backgroundColor, 
+            isGlass, 
+            previewMonitorImageUrl,
+            monitorBackgroundColor,
+            monitorIsGlass
+        });
+    }, [themeColor, textColor, backgroundColor, isGlass, monitorImageFile, monitorBackgroundColor, monitorIsGlass]);
 
     // Sort and filter tracks
     const processedTracks = React.useMemo(() => {
@@ -2480,6 +2508,8 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             formData.append('TextColor', textColor);
             formData.append('BackgroundColor', backgroundColor);
             formData.append('IsGlass', isGlass);
+            formData.append('MonitorBackgroundColor', monitorBackgroundColor);
+            formData.append('MonitorIsGlass', monitorIsGlass);
 
             await onSubmit(formData);
         } catch (error) {
@@ -2751,127 +2781,101 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                         })()}
                     </div>
 
-                    {/* Theme Color */}
-                    <div className="grid grid-cols-2 gap-8">
-                        {/* Theme Color */}
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest">INTERFACE_HUE</label>
-                            <div className="flex items-center gap-4 p-4 border border-[var(--text-color)]/10 bg-black group hover:border-[var(--theme-color)] transition-all relative">
-                                <input
-                                    type="color"
-                                    value={themeColor}
-                                    onChange={e => setThemeColor(e.target.value)}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50"
-                                />
-                                <div className="relative w-10 h-10 rounded-full overflow-hidden border border-[var(--text-color)]/20 hover:border-[var(--text-color)] transition-all shadow-lg shadow-[var(--theme-color)]/20 pointer-events-none">
-                                    <div className="absolute inset-0" style={{ backgroundColor: themeColor }} />
-                                    <Palette size={14} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[var(--text-color)] drop-shadow-md mix-blend-difference" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[9px] text-[var(--text-color)]/40 uppercase tracking-widest">HEX_CODE</span>
-                                    <span className="text-xs font-bold text-[var(--theme-color)] mono">{themeColor}</span>
-                                </div>
+                    {/* Theme Calibration Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* TERMINAL_STYLING */}
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-[var(--text-color)]/10">
+                                <Layout size={14} className="text-[var(--theme-color)]" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-color)]/80">TERMINAL_STYLING</span>
                             </div>
-                        </div>
 
-                        {/* Text Color */}
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest">DATA_COLOR</label>
-                            <div className="flex items-center gap-4 p-4 border border-[var(--text-color)]/10 bg-black group hover:border-[var(--text-color)] transition-all relative">
-                                <input
-                                    type="color"
-                                    value={textColor}
-                                    onChange={e => setTextColor(e.target.value)}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50"
-                                />
-                                <div className="relative w-10 h-10 rounded-full overflow-hidden border border-[var(--text-color)]/20 hover:border-[var(--text-color)] transition-all shadow-lg shadow-[var(--text-color)]/20 pointer-events-none">
-                                    <div className="absolute inset-0" style={{ backgroundColor: textColor }} />
-                                    <Type size={14} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-black drop-shadow-md mix-blend-difference" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[9px] text-[var(--text-color)]/40 uppercase tracking-widest">HEX_CODE</span>
-                                    <span className="text-xs font-bold text-[var(--text-color)] mono">{textColor}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Background Color & Glass Toggle */}
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest">PANEL_BG</label>
-                            <div className="flex gap-4">
-                                <div className="flex-1 flex items-center gap-4 p-4 border border-[var(--text-color)]/10 bg-black group hover:border-[var(--text-color)] transition-all relative">
-                                    <input
-                                        type="color"
-                                        value={backgroundColor}
-                                        onChange={e => setBackgroundColor(e.target.value)}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50"
-                                    />
-                                    <div className="relative w-10 h-10 rounded-full overflow-hidden border border-[var(--text-color)]/20 hover:border-[var(--text-color)] transition-all shadow-lg shadow-[var(--text-color)]/20 pointer-events-none">
-                                        <div className="absolute inset-0" style={{ backgroundColor: backgroundColor }} />
-                                        <Layout size={14} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white drop-shadow-md mix-blend-difference" />
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-[9px] text-[var(--text-color)]/40 uppercase tracking-widest">HEX_CODE</span>
-                                        <span className="text-xs font-bold text-[var(--text-color)] mono">{backgroundColor}</span>
-                                    </div>
-                                </div>
-
-                                {/* Glass Toggle */}
-                                <button
-                                    type="button"
-                                    onClick={() => setIsGlass(!isGlass)}
-                                    className={`w-24 border flex flex-col items-center justify-center gap-2 transition-all ${isGlass ? 'bg-[var(--text-color)]/10 border-[var(--text-color)] text-[var(--text-color)]' : 'bg-black border-[var(--text-color)]/10 text-[var(--text-color)]/40 hover:border-[var(--text-color)] hover:text-[var(--text-color)]'}`}
-                                >
-                                    <div className={`w-8 h-4 rounded-full border relative transition-all ${isGlass ? 'border-[var(--text-color)] bg-[var(--text-color)]' : 'border-[var(--text-color)]/40'}`}>
-                                        <div className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-all ${isGlass ? 'left-[calc(100%-12px)]' : 'left-0.5'}`} />
-                                    </div>
-                                    <span className="text-[8px] font-bold uppercase tracking-widest">GLASS_FX</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Monitor Background Upload */}
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest">MONITOR_BG</label>
-                            <div className="relative group cursor-pointer border border-dashed border-[var(--text-color)]/20 hover:border-[var(--text-color)] transition-all bg-black hover:bg-white/5 h-full min-h-[64px] flex items-center justify-center">
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={e => {
-                                        if (e.target.files[0]) setMonitorImageFile(e.target.files[0]);
-                                    }}
-                                    className="absolute inset-0 opacity-0 cursor-pointer z-20"
-                                />
-                                <div className="flex items-center gap-3 w-full px-4 justify-between pointer-events-none">
-                                    <div className="flex items-center gap-3">
-                                        <Camera size={14} className="text-[var(--text-color)]/60" />
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] text-[var(--text-color)]/40 uppercase tracking-widest">SIGNAL_IMAGE</span>
-                                            <span className="text-xs font-bold text-[var(--text-color)] truncate max-w-[100px]">
-                                                {monitorImageFile ? monitorImageFile.name : (user?.monitorImageUrl ? 'UPLOADED' : 'SELECT_FILE')}
-                                            </span>
+                            <div className="space-y-4">
+                                {/* Theme & Text Color */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-3">
+                                        <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">HUE</label>
+                                        <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--theme-color)] transition-all">
+                                            <input type="color" value={themeColor} onChange={e => setThemeColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
+                                            <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20" style={{ backgroundColor: themeColor }} />
+                                            <span className="text-[10px] font-bold text-[var(--theme-color)] mono">{themeColor}</span>
                                         </div>
                                     </div>
-                                    {monitorImageFile ? (
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-[var(--text-color)] animate-pulse shadow-[0_0_8px_currentColor]" />
-                                            <button 
-                                                type="button"
-                                                onClick={(e) => { e.stopPropagation(); setMonitorImageFile(null); }}
-                                                className="p-1 hover:bg-white/10 text-[var(--text-color)]/40 hover:text-red-500 transition-all pointer-events-auto"
-                                            >
-                                                <X size={12} />
-                                            </button>
+                                    <div className="space-y-3">
+                                        <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">DATA</label>
+                                        <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--text-color)] transition-all">
+                                            <input type="color" value={textColor} onChange={e => setTextColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
+                                            <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20" style={{ backgroundColor: textColor }} />
+                                            <span className="text-[10px] font-bold text-[var(--text-color)] mono">{textColor}</span>
                                         </div>
-                                    ) : (user?.monitorImageUrl || user?.MonitorImageUrl) ? (
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
-                                            <span className="text-[7px] text-green-500/60 mono font-bold">SAVED</span>
+                                    </div>
+                                </div>
+
+                                {/* Backdrop & Glass */}
+                                <div className="space-y-3">
+                                    <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">BACKDROP</label>
+                                    <div className="flex gap-4">
+                                        <div className="flex-1 flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--text-color)] transition-all">
+                                            <input type="color" value={backgroundColor} onChange={e => setBackgroundColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
+                                            <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20" style={{ backgroundColor: backgroundColor }} />
+                                            <span className="text-[10px] font-bold text-[var(--text-color)] mono">{backgroundColor}</span>
                                         </div>
-                                    ) : null}
+                                        <button type="button" onClick={() => setIsGlass(!isGlass)} className={`w-24 px-4 py-3 border flex items-center justify-center transition-all ${isGlass ? 'bg-[var(--text-color)]/10 border-[var(--text-color)] text-[var(--text-color)]' : 'bg-black border-[var(--text-color)]/10 text-[var(--text-color)]/40'}`}>
+                                            <span className="text-[8px] font-black uppercase tracking-widest">GLASS</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        {/* MONITOR_STYLING */}
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-[var(--text-color)]/10">
+                                <Monitor size={14} className="text-cyan-400" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-color)]/80">MONITOR_STYLING</span>
+                            </div>
+
+                            <div className="space-y-4">
+                                {/* Monitor BG & Glass */}
+                                <div className="space-y-3">
+                                    <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">BASE_BACKDROP</label>
+                                    <div className="flex gap-4">
+                                        <div className="flex-1 flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--text-color)] transition-all">
+                                            <input type="color" value={monitorBackgroundColor} onChange={e => setMonitorBackgroundColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
+                                            <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20" style={{ backgroundColor: monitorBackgroundColor }} />
+                                            <span className="text-[10px] font-bold text-[var(--text-color)] mono">{monitorBackgroundColor}</span>
+                                        </div>
+                                        <button type="button" onClick={() => setMonitorIsGlass(!monitorIsGlass)} className={`w-24 px-4 py-3 border flex items-center justify-center transition-all ${monitorIsGlass ? 'bg-cyan-400/10 border-cyan-400 text-cyan-400' : 'bg-black border-[var(--text-color)]/10 text-[var(--text-color)]/40'}`}>
+                                            <span className="text-[8px] font-black uppercase tracking-widest">GLASS</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Monitor Image Signal */}
+                                <div className="space-y-3">
+                                    <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">SIGNAL_IMAGE</label>
+                                    <div className="relative group cursor-pointer border border-dashed border-[var(--text-color)]/20 hover:border-[var(--text-color)] transition-all bg-black hover:bg-white/5 h-[52px] flex items-center justify-center p-3">
+                                        <input type="file" accept="image/*" onChange={e => { if (e.target.files[0]) setMonitorImageFile(e.target.files[0]); }} className="absolute inset-0 opacity-0 cursor-pointer z-20" />
+                                        <div className="flex items-center justify-between w-full pointer-events-none">
+                                            <div className="flex items-center gap-3">
+                                                <Camera size={14} className="text-[var(--text-color)]/60" />
+                                                <span className="text-xs font-bold text-[var(--text-color)] truncate max-w-[120px]">
+                                                    {monitorImageFile ? monitorImageFile.name : (user?.monitorImageUrl ? 'UPLOADED' : 'SELECT_FILE')}
+                                                </span>
+                                            </div>
+                                            {monitorImageFile ? (
+                                                <button type="button" onClick={(e) => { e.stopPropagation(); setMonitorImageFile(null); }} className="p-1 hover:bg-white/10 text-red-500 transition-all pointer-events-auto">
+                                                    <X size={12} />
+                                                </button>
+                                            ) : user?.monitorImageUrl ? (
+                                                <div className="w-2 h-2 rounded-full bg-green-500" />
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     </div>
                 </div>
             )}

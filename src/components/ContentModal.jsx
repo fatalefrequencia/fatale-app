@@ -4,7 +4,7 @@ import { X, Book, Camera, Video, Share2, Download, ExternalLink } from 'lucide-r
 import { API_BASE_URL, getMediaUrl } from '../constants';
 import { useNotification } from '../contexts/NotificationContext';
 
-const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true, themeColor = '#9d00ff', backgroundColor = '#000000', isGlass = false, monitorImageUrl = null }) => {
+const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true, themeColor = '#9d00ff', backgroundColor = '#000000', isGlass = false, monitorImageUrl = null, monitorBackgroundColor = '#000000', monitorIsGlass = false }) => {
     const { showNotification } = useNotification();
     if (!content) return null;
     const normalizedType = (type || '').toUpperCase();
@@ -52,10 +52,10 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
                 transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
                 style={{ 
-                    backgroundColor: isGlass ? hexToRgba(backgroundColor, 0.4) : hexToRgba(backgroundColor, 0.8),
+                    backgroundColor: monitorIsGlass ? hexToRgba(monitorBackgroundColor, 0.4) : hexToRgba(monitorBackgroundColor, 0.8),
                     borderColor: hexToRgba(activeTheme, 0.3),
                     boxShadow: `0 0 80px ${hexToRgba(activeTheme, 0.15)}`,
-                    backdropFilter: isGlass ? 'blur(20px)' : 'blur(12px)',
+                    backdropFilter: monitorIsGlass ? 'blur(20px)' : 'blur(12px)',
                     backgroundImage: monitorImageUrl ? `url(${getMediaUrl(monitorImageUrl)})` : 'none',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
