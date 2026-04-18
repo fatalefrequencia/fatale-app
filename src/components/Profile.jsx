@@ -2457,6 +2457,8 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
         if (monitorMode === 'image') {
             if (monitorImageFile) previewMonitorImageUrl = URL.createObjectURL(monitorImageFile);
             else if (user?.monitorImageUrl) previewMonitorImageUrl = user.monitorImageUrl;
+        } else {
+            previewMonitorImageUrl = 'none';
         }
 
         if (onColorPreview) onColorPreview({ 
@@ -2465,7 +2467,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             backgroundColor, 
             isGlass, 
             previewMonitorImageUrl,
-            monitorBackgroundColor: monitorMode === 'color' ? monitorBackgroundColor : '#000000',
+            monitorBackgroundColor: monitorMode === 'color' ? monitorBackgroundColor : (user?.monitorImageUrl ? '#000000' : monitorBackgroundColor),
             monitorIsGlass
         });
     }, [themeColor, textColor, backgroundColor, isGlass, monitorImageFile, monitorBackgroundColor, monitorIsGlass, monitorMode]);
@@ -2511,16 +2513,19 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             if (file) formData.append('ProfilePicture', file);
             if (bannerFile) formData.append('Banner', bannerFile);
             if (wallpaperVideoFile) formData.append('WallpaperVideo', wallpaperVideoFile);
-            if (monitorImageFile) formData.append('MonitorImage', monitorImageFile);
+            
+            if (monitorMode === 'image') {
+                if (monitorImageFile) formData.append('MonitorImage', monitorImageFile);
+            } else {
+                formData.append('ClearMonitorImage', 'true');
+            }
+
             formData.append('ThemeColor', themeColor);
             formData.append('TextColor', textColor);
             formData.append('BackgroundColor', backgroundColor);
             formData.append('IsGlass', isGlass);
             formData.append('MonitorBackgroundColor', monitorBackgroundColor);
             formData.append('MonitorIsGlass', monitorIsGlass);
-            if (monitorMode === 'color') {
-                formData.append('ClearMonitorImage', true);
-            }
 
             await onSubmit(formData);
         } catch (error) {
@@ -2849,7 +2854,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                 <div className="flex gap-1">
                                     <button 
                                         type="button" 
-                                        onClick={() => setMonitorMode('color')}
+                                        onClick={() => { setMonitorMode('color'); setMonitorImageFile(null); }}
                                         className={`px-2 py-0.5 text-[7px] font-bold border transition-all ${monitorMode === 'color' ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400' : 'border-white/10 text-white/30 hover:border-white/20'}`}
                                     >
                                         SOLID_COLOR
