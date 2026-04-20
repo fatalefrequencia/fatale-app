@@ -2066,14 +2066,54 @@ export const ProfileView = React.memo(({
                                                     if (!p) return null;
                                                     return (
                                                         <div className="flex flex-col sm:flex-row gap-6">
-                                                            {/* Cover */}
-                                                            <div className="w-36 h-36 shrink-0 border border-[var(--text-color)]/20 bg-black overflow-hidden relative shadow-[0_0_40px_rgba(0,0,0,0.6)]">
+                                                            {/* Cover — clickable to upload if owner */}
+                                                            <div className="w-36 h-36 shrink-0 border border-[var(--text-color)]/20 bg-black overflow-hidden relative shadow-[0_0_40px_rgba(0,0,0,0.6)] group/cover">
                                                                 {p.imageUrl ? (
                                                                     <img src={getMediaUrl(p.imageUrl)} className="w-full h-full object-cover grayscale-[50%]" />
                                                                 ) : (
                                                                     <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/10"><Database size={40} /></div>
                                                                 )}
                                                                 <div className="absolute top-0 left-0 bg-[var(--text-color)] text-black text-[7px] font-bold px-1.5 py-0.5 mono">#{String(p.id).padStart(3, '0')}</div>
+                                                                {isMe && (
+                                                                    <>
+                                                                        <label
+                                                                            htmlFor={`playlist-cover-upload-${p.id}`}
+                                                                            className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 opacity-0 group-hover/cover:opacity-100 transition-opacity cursor-pointer"
+                                                                        >
+                                                                            <Upload size={18} className="text-[var(--text-color)] mb-1" />
+                                                                            <span className="text-[7px] mono font-bold uppercase tracking-widest text-[var(--text-color)]">UPLOAD_COVER</span>
+                                                                        </label>
+                                                                        <input
+                                                                            id={`playlist-cover-upload-${p.id}`}
+                                                                            type="file"
+                                                                            accept="image/*"
+                                                                            className="hidden"
+                                                                            onChange={async (e) => {
+                                                                                const file = e.target.files?.[0];
+                                                                                if (!file) return;
+                                                                                const formData = new FormData();
+                                                                                formData.append('file', file);
+                                                                                try {
+                                                                                    const API = await import('../services/api').then(mod => mod.default);
+                                                                                    const res = await API.Playlists.uploadCover(p.id, formData);
+                                                                                    const newUrl = res.data?.imageUrl;
+                                                                                    if (newUrl) {
+                                                                                        setMonitorPlaylistDetails(prev => {
+                                                                                            const pl = prev?.Playlist || prev?.playlist || {};
+                                                                                            return { ...prev, Playlist: { ...pl, imageUrl: newUrl, ImageUrl: newUrl } };
+                                                                                        });
+                                                                                        setProfilePlaylists(prev => prev.map(pl => String(pl.id) === String(p.id) ? { ...pl, imageUrl: newUrl, ImageUrl: newUrl } : pl));
+                                                                                        showNotification("COVER_UPDATED", "SIGNAL_COVER_ESTABLISHED", "success");
+                                                                                    }
+                                                                                } catch (err) {
+                                                                                    console.error("Cover upload failed", err);
+                                                                                    showNotification("UPLOAD_FAILED", "Cover upload error. Check console.", "error");
+                                                                                }
+                                                                                e.target.value = '';
+                                                                            }}
+                                                                        />
+                                                                    </>
+                                                                )}
                                                             </div>
 
                                                             {/* Meta + Actions */}
@@ -3516,6 +3556,7 @@ const StatItem = ({ label, value }) => (
 
 const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, onRemoveTrack, onPlayAll, playlists = [], myLikes = [], onQueueTrack, onRefreshPlaylists }) => {
     const [isEditing, setIsEditing] = useState(false);
+    const [localImageUrl, setLocalImageUrl] = useState(playlist?.imageUrl || '');
 
     // Edit State
     const [name, setName] = useState(playlist.name);
@@ -3527,6 +3568,7 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
         setName(playlist.name);
         setIsPublic(playlist.isPublic);
         setDescription(playlist.description || '');
+        setLocalImageUrl(playlist?.imageUrl || '');
     }, [playlist]);
 
     const handleSave = () => {
@@ -3590,9 +3632,9 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
             {/* Sidebar / Info */}
             <div className="w-full md:w-80 bg-black/40 border-r border-[var(--text-color)]/20 p-8 flex flex-col gap-8 shrink-0 overflow-y-auto custom-scrollbar">
                 <div className="aspect-square border border-[var(--text-color)]/30 p-1 relative group shadow-[0_0_40px_rgba(0,0,0,0.5)]">
-                    <div className="w-full h-full relative overflow-hidden">
-                        {playlist.imageUrl ? (
-                            <img src={getMediaUrl(playlist.imageUrl)} className="w-full h-full object-cover grayscale mix-blend-screen opacity-60 group-hover:opacity-100 transition-opacity" />
+                    <div className="w-full h-full relative overflow-hidden group/cover">
+                        {(localImageUrl || playlist.imageUrl) ? (
+                            <img src={getMediaUrl(localImageUrl || playlist.imageUrl)} className="w-full h-full object-cover grayscale mix-blend-screen opacity-60 group-hover:opacity-100 transition-opacity" />
                         ) : (
                             <div className="w-full h-full bg-[var(--text-color)]/5 flex items-center justify-center">
                                 <Database size={64} className="text-[var(--text-color)]/10" />
@@ -3601,6 +3643,38 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
                         <div className="absolute top-2 left-2 px-2 py-0.5 bg-black border border-[var(--text-color)]/30 text-[9px] font-bold text-[var(--text-color)] z-10 mono uppercase">
                             PL_{String(playlist.id).padStart(4, '0')}
                         </div>
+                        {isOwner && (
+                            <>
+                                <label
+                                    htmlFor={`playlist-popup-cover-${playlist.id}`}
+                                    className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 opacity-0 group-hover/cover:opacity-100 transition-opacity cursor-pointer z-20"
+                                >
+                                    <Upload size={22} className="text-[var(--text-color)] mb-1" />
+                                    <span className="text-[8px] mono font-bold uppercase tracking-widest text-[var(--text-color)]">UPLOAD_COVER</span>
+                                </label>
+                                <input
+                                    id={`playlist-popup-cover-${playlist.id}`}
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+                                        const formData = new FormData();
+                                        formData.append('file', file);
+                                        try {
+                                            const API = await import('../services/api').then(mod => mod.default);
+                                            const res = await API.Playlists.uploadCover(playlist.id, formData);
+                                            const newUrl = res.data?.imageUrl;
+                                            if (newUrl) setLocalImageUrl(newUrl);
+                                        } catch (err) {
+                                            console.error('Playlist cover upload failed', err);
+                                        }
+                                        e.target.value = '';
+                                    }}
+                                />
+                            </>
+                        )}
                     </div>
                 </div>
 

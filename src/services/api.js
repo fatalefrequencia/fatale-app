@@ -188,7 +188,11 @@ const API = {
         update: (id, data) => api.put(`Playlists/${id}`, data),
         delete: (id) => api.delete(`Playlists/${id}`),
         togglePin: (id) => api.post(`Playlists/${id}/toggle-pin`),
-        togglePost: (id) => api.post(`Playlists/${id}/toggle-post`)
+        togglePost: (id) => api.post(`Playlists/${id}/toggle-post`),
+        uploadCover: (id, formData) => api.post(`Playlists/${id}/upload-cover`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 60000
+        })
     },
     Wallet: {
         getTransactions: (type, limit = 20, offset = 0) => api.get(`Wallet/transactions?type=${type || ''}&limit=${limit}&offset=${offset}`),
