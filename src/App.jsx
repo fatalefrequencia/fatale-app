@@ -23,6 +23,7 @@ import API from './services/api';
 import { IPodPlayer } from './components/IPodPlayer';
 import { MessagesView } from './components/MessagesView';
 import DiscoveryMapView from './components/DiscoveryMapView';
+import DiscoveryHUD from './components/DiscoveryHUD';
 import TrackUploadView from './components/UploadTrackView';
 import WalletView from './components/WalletView';
 import ContentModal from './components/ContentModal';
@@ -1920,27 +1921,25 @@ const Dashboard = React.memo(({
         <div className={`flex-1 relative ${activeView === 'discovery' ? 'overflow-hidden' : 'overflow-y-auto no-scrollbar pb-24'}`}>
           <AnimatePresence mode="wait">
             {activeView === 'discovery' && (
-              <DiscoveryMapView
+              <DiscoveryHUD
                 key="discovery"
-                allTracks={libraryTracks}
-                onPlayPlaylist={handlePlayPlaylist}
-                onLike={onLike}
-                onCache={onCache} // PASS CACHE
-                stats={globalStats}
-                user={user}
                 navigateToProfile={navigateToProfile}
-                likedYoutubeIds={likedYoutubeIds}
-                setTracks={setTracks}
-                setCurrentTrackIndex={setCurrentTrackIndex}
-                setRedirectTrigger={setRedirectTrigger}
-                cachedTrackIds={cachedTrackIds} // PASS IDS
-                playlists={playlists}
-                onRefreshPlaylists={onRefreshPlaylists}
-                onQueueTrack={onQueueTrack}
-                favoriteStations={favoriteStations}
-                followedCommunities={followedCommunities}
-                onFollowUpdate={onFollowUpdate}
-                onCommunityUpdate={onRefreshProfile} // REFRESH USER/MAP WHEN JOINING COMM
+                onPlayTrack={(track) => {
+                  const enriched = {
+                    ...track,
+                    source: track.source || track.Source || (track.filePath ? getMediaUrl(track.filePath) : null) || (track.FilePath ? getMediaUrl(track.FilePath) : null),
+                    id: track.id || track.Id,
+                    isOwned: true,
+                    isLocked: false
+                  };
+                  setTracks([enriched]);
+                  setCurrentTrackIndex(0);
+                  setIsPlaying(true);
+                  if (typeof setRedirectTrigger === 'function') {
+                    setRedirectTrigger(Date.now());
+                    setView('player');
+                  }
+                }}
                 isPlayerActive={currentTrackIndex >= 0}
                 onExpandContent={onExpandContent}
               />

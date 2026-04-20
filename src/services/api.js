@@ -180,6 +180,7 @@ const API = {
         getStats: () => api.get('YoutubeCache/stats'),
     },
     Playlists: {
+        getAll: () => api.get('Playlists'),
         getUserPlaylists: (userId) => api.get(`Playlists/user/${userId}`),
         getById: (id) => api.get(`Playlists/${id}`),
         create: (data) => api.post('Playlists', data),

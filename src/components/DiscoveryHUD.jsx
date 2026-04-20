@@ -1,0 +1,358 @@
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Music, Disc, User, Play, Heart, Layers, Radio, BookOpen, Camera, Share2, Activity, Globe } from 'lucide-react';
+import API from '../services/api';
+import { SECTORS, getMediaUrl } from '../constants';
+import { useNotification } from '../contexts/NotificationContext';
+import HUDWidget from './discovery/HUDWidget';
+import InteractiveGlobe from './discovery/InteractiveGlobe';
+
+const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
+    const { showNotification } = useNotification();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [activeSector, setActiveSector] = useState(null);
+    const [loading, setLoading] = useState(true);
+    
+    // Data states for panels
+    const [trendingTracks, setTrendingTracks] = useState([]);
+    const [trendingArtists, setTrendingArtists] = useState([]);
+    const [trendingPlaylists, setTrendingPlaylists] = useState([]);
+    const [visualUploads, setVisualUploads] = useState([]);
+    const [journalEntries, setJournalEntries] = useState([]);
+    const [communities, setCommunities] = useState([]);
+    const [youtubeResults, setYoutubeResults] = useState([]);
+
+    const fetchAll = useCallback(async () => {
+        setLoading(true);
+        try {
+            const [tracksRes, artistsRes, commsRes, playlistsRes, feedRes] = await Promise.all([
+                API.Tracks.getAllTracks({ sort: 'trending' }).catch(() => ({ data: [] })),
+                API.Artists.getAll().catch(() => ({ data: [] })),
+                API.Communities.getAll().catch(() => ({ data: [] })),
+                API.Playlists.getAll().catch(() => ({ data: [] })),
+                API.Feed.getGlobalFeed().catch(() => ({ data: [] })),
+            ]);
+
+            setTrendingTracks(Array.isArray(tracksRes?.data) ? tracksRes.data.slice(0, 10) : []);
+            setTrendingArtists(Array.isArray(artistsRes?.data) ? artistsRes.data.slice(0, 10) : []);
+            setCommunities(Array.isArray(commsRes?.data) ? commsRes.data.slice(0, 8) : []);
+            setTrendingPlaylists(Array.isArray(playlistsRes?.data) ? playlistsRes.data.slice(0, 8) : []);
+            
+            if (Array.isArray(feedRes?.data)) {
+                setVisualUploads(feedRes.data.filter(i => i.type === 'studio').slice(0, 12));
+                setJournalEntries(feedRes.data.filter(i => i.type === 'journal').slice(0, 8));
+            }
+        } catch (err) {
+            console.error("Discovery HUD Fetch Error:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchAll();
+    }, [fetchAll]);
+
+    // YouTube search logic (debounced)
+    useEffect(() => {
+        if (searchQuery.length < 3) {
+            setYoutubeResults([]);
+            return;
+        }
+        const timer = setTimeout(async () => {
+            try {
+                const res = await API.Youtube.getDiscoveryNodes(searchQuery).catch(() => null);
+                setYoutubeResults(Array.isArray(res?.data) ? res.data.slice(0, 10) : []);
+            } catch {}
+        }, 1000);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    // Computed Filtered Lists
+    const filteredTracks = useMemo(() => {
+        if (!searchQuery) return trendingTracks.slice(0, 8);
+        return trendingTracks.filter(t => 
+            t.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+            t.artist?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [trendingTracks, searchQuery]);
+
+    const filteredArtists = useMemo(() => {
+        if (!searchQuery) return trendingArtists.slice(0, 6);
+        return trendingArtists.filter(a => 
+            a.name?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [trendingArtists, searchQuery]);
+
+    const filteredPlaylists = useMemo(() => {
+        if (!searchQuery) return trendingPlaylists.slice(0, 4);
+        return trendingPlaylists.filter(p => 
+            p.name?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [trendingPlaylists, searchQuery]);
+
+    const filteredCommunities = useMemo(() => {
+        if (!searchQuery) return communities.slice(0, 4);
+        return communities.filter(c => 
+            c.name?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [communities, searchQuery]);
+
+    const filteredVisuals = useMemo(() => {
+        if (!searchQuery) return visualUploads.slice(0, 9);
+        return visualUploads.filter(v => 
+            v.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            v.artist?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [visualUploads, searchQuery]);
+
+    const filteredJournals = useMemo(() => {
+        if (!searchQuery) return journalEntries.slice(0, 6);
+        return journalEntries.filter(j => 
+            j.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            j.content?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [journalEntries, searchQuery]);
+
+    return (
+        <div className="relative w-full h-full overflow-hidden bg-[#020202] text-white font-mono flex flex-col p-4 select-none">
+            {/* Top scanning lines effect */}
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#ff006e]/10 z-[60] shadow-[0_0_20px_#ff006e]" />
+            
+            {/* --- TOP HUD BAR --- */}
+            <div className="z-50 flex items-center justify-between mb-4 px-2">
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <Activity size={14} className="text-[#ff006e] animate-pulse" />
+                        <div className="text-[#ff006e] text-[10px] font-black tracking-widest opacity-70">
+                            KERNEL_PULSE: <span className="text-green-500">SYNC_OK</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* CENTRAL SEARCH */}
+                <div className="relative group w-[450px]">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-[#ff006e]/0 via-[#ff006e]/20 to-[#ff006e]/0 rounded-lg blur opacity-0 group-focus-within:opacity-100 transition duration-1000 group-focus-within:duration-200"></div>
+                    <div className="relative flex items-center">
+                        <div className="absolute left-3 flex items-center pointer-events-none">
+                            <Search size={16} className="text-[#ff006e] opacity-40 group-focus-within:opacity-100 transition-opacity" />
+                        </div>
+                        <input 
+                            type="text"
+                            placeholder="SEARCH_SIGNAL_DATABASE..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full bg-black/60 border border-[#ff006e]/30 rounded px-10 py-2.5 text-xs tracking-[0.2em] focus:outline-none focus:border-[#ff006e] focus:ring-1 focus:ring-[#ff006e]/20 transition-all placeholder:text-[#ff006e]/20 text-white"
+                        />
+                        {searchQuery && (
+                            <button 
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-3 text-white/20 hover:text-white transition-colors"
+                            >
+                                <X size={14} />
+                            </button>
+                        )}
+                    </div>
+                    {/* Small frequency indicator below search */}
+                    <div className="absolute -bottom-4 left-0 right-0 flex justify-center gap-[2px]">
+                        {[...Array(20)].map((_, i) => (
+                            <motion.div 
+                                key={i}
+                                animate={{ height: [2, 8, 2, 4, 2] }}
+                                transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.05 }}
+                                className="w-[2px] bg-[#ff006e]/30"
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-6 text-[10px] text-white/40 tracking-tighter">
+                   <div className="hidden xl:flex items-center gap-2">
+                        <span className="opacity-30">LOC:</span>
+                        <span className="text-[#ff006e]/60">SILICON_HEIGHTS</span>
+                   </div>
+                   <div className="w-[1px] h-3 bg-white/10" />
+                   <div className="tabular-nums">{new Date().toISOString().split('T')[0]}</div>
+                </div>
+            </div>
+
+            {/* --- MAIN DASHBOARD GRID --- */}
+            <div className="flex-1 relative grid grid-cols-12 grid-rows-6 gap-4 pointer-events-none mt-4">
+                
+                {/* --- CENTER: THE GLOBE --- */}
+                <div className="col-span-6 row-span-4 col-start-4 row-start-1 pointer-events-auto flex items-center justify-center relative">
+                    <InteractiveGlobe 
+                        searchQuery={searchQuery}
+                        searchResults={[...filteredTracks, ...filteredArtists, ...filteredCommunities]}
+                        onNodeClick={(node) => onPlayTrack(node)}
+                    />
+                    
+                    {/* Floating Overlay for Sector Status */}
+                    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xl border border-white/5 px-8 pt-3 pb-2 rounded-sm flex gap-10 z-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                         {SECTORS.map(s => (
+                             <div key={s.id} className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => setActiveSector(s.id)}>
+                                 <div className="text-[8px] tracking-[0.2em] font-black opacity-30 group-hover:opacity-100 transition-opacity" style={{ color: s.color }}>{s.name.split(' ')[0]}</div>
+                                 <div className={`w-0.5 h-4 transition-all duration-300 ${activeSector === s.id ? 'opacity-100 scale-y-125' : 'opacity-20 translate-y-1'}`} style={{ backgroundColor: s.color, boxShadow: activeSector === s.id ? `0 0 10px ${s.color}` : 'none' }} />
+                             </div>
+                         ))}
+                    </div>
+                </div>
+
+                {/* --- LEFT COLUMN: AUDIO & ARTISTS --- */}
+                <div className="col-span-3 row-span-2 col-start-1 row-start-1 pointer-events-auto">
+                    <HUDWidget title="YT_FREQ_SCAN" icon={<Search size={14}/>} searchQuery={searchQuery}>
+                        <div className="space-y-4">
+                            {youtubeResults.length > 0 ? youtubeResults.map(y => (
+                                <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => onPlayTrack(y)}>
+                                    <div className="w-12 h-12 bg-black overflow-hidden relative border border-white/5 group-hover:border-[#ff006e]/40 shadow-lg">
+                                         <img src={y.thumbnailUrl} alt="" className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" />
+                                         <div className="absolute inset-0 bg-[#ff006e]/10 mix-blend-overlay group-hover:opacity-0" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{y.title}</div>
+                                        <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">{y.author}</div>
+                                    </div>
+                                    <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                            )) : (
+                                <div className="flex flex-col items-center justify-center h-full opacity-20 py-10">
+                                    <Activity size={24} className="mb-2" />
+                                    <div className="text-[10px] tracking-widest uppercase">Waiting for input...</div>
+                                </div>
+                            )}
+                        </div>
+                    </HUDWidget>
+                </div>
+
+                <div className="col-span-3 row-span-2 col-start-1 row-start-3 pointer-events-auto">
+                    <HUDWidget title="PLATFORM_SIGS" icon={<Music size={14}/>} searchQuery={searchQuery}>
+                         <div className="space-y-1">
+                             {filteredTracks.map((t, idx) => (
+                                 <div key={t.id} className="flex items-center gap-4 text-[10px] group cursor-pointer py-2 px-2 hover:bg-white/5 transition-all border-l border-transparent hover:border-[#ff006e]" onClick={() => onPlayTrack(t)}>
+                                     <span className="text-[8px] opacity-20 tabular-nums">0{idx+1}</span>
+                                     <div className="flex-1 truncate">
+                                         <div className="font-bold truncate group-hover:text-[#ff006e] transition-colors uppercase">{t.title}</div>
+                                         <div className="text-[8px] opacity-30 uppercase tracking-widest font-light">{t.artist}</div>
+                                     </div>
+                                 </div>
+                             ))}
+                         </div>
+                    </HUDWidget>
+                </div>
+
+                <div className="col-span-3 row-span-2 col-start-1 row-start-5 pointer-events-auto">
+                    <HUDWidget title="ARTIST_NODES" icon={<User size={14}/>} searchQuery={searchQuery}>
+                         <div className="grid grid-cols-3 gap-y-6 gap-x-2 pt-2">
+                             {filteredArtists.map(a => (
+                                 <div key={a.id} className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => navigateToProfile(a.userId)}>
+                                      <div className="relative w-14 h-14">
+                                          {/* Radar Node Circle */}
+                                          <div className="absolute inset-0 rounded-full border border-[#ff006e]/20 group-hover:border-[#ff006e]/60 transition-colors" />
+                                          <div className="absolute inset-[-4px] rounded-full border border-dashed border-[#ff006e]/10 group-hover:ring-1 group-hover:ring-[#ff006e]/20 group-hover:animate-spin transition-all duration-[3000ms]" />
+                                          
+                                          <div className="absolute inset-[4px] rounded-full overflow-hidden border-2 border-black z-10 bg-black">
+                                              <img src={getMediaUrl(a.imageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all scale-110 group-hover:scale-100" />
+                                          </div>
+                                          
+                                          {/* Scan sweep line */}
+                                          <div className="absolute inset-0 z-20 pointer-events-none rounded-full bg-gradient-to-tr from-[#ff006e]/30 via-transparent to-transparent animate-spin opacity-0 group-hover:opacity-100" style={{ animationDuration: '2s' }} />
+                                      </div>
+                                      <span className="text-[8px] text-center truncate w-full uppercase font-black tracking-widest opacity-40 group-hover:opacity-100 group-hover:text-[#ff006e] transition-all">{a.name}</span>
+                                 </div>
+                             ))}
+                         </div>
+                    </HUDWidget>
+                </div>
+
+                {/* --- RIGHT COLUMN: PLAYLISTS, VISUALS, JOURNALS --- */}
+                <div className="col-span-3 row-span-2 col-start-10 row-start-1 pointer-events-auto">
+                    <HUDWidget title="PUBLIC_COLL" icon={<Layers size={14}/>} searchQuery={searchQuery}>
+                         <div className="grid grid-cols-2 gap-3">
+                             {filteredPlaylists.map(pl => (
+                                 <div key={pl.id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black">
+                                      <img src={getMediaUrl(pl.imageUrl)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                                      {/* Playlist Glitch Frame */}
+                                      <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
+                                      <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5">
+                                          <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight">{pl.name}</div>
+                                          <div className="text-[7px] opacity-40 uppercase font-light tracking-[0.2em]">{pl.trackCount} FILES</div>
+                                      </div>
+                                 </div>
+                             ))}
+                         </div>
+                    </HUDWidget>
+                </div>
+
+                <div className="col-span-3 row-span-2 col-start-10 row-start-3 pointer-events-auto">
+                    <HUDWidget title="STUDIO_TRANS" icon={<Camera size={14}/>} searchQuery={searchQuery}>
+                         <div className="grid grid-cols-3 gap-1.5">
+                             {filteredVisuals.map(v => (
+                                 <div key={v.id} className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-[#ff006e]/60 transition-all shadow-xl">
+                                      <img src={getMediaUrl(v.imageUrl || v.thumbnailUrl)} alt="" className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
+                                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ff006e] scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+                                      {v.mediaType === 'video' && (
+                                          <div className="absolute top-1 right-1">
+                                              <Play size={8} className="text-[#ff006e]" />
+                                          </div>
+                                      )}
+                                 </div>
+                             ))}
+                         </div>
+                    </HUDWidget>
+                </div>
+
+                <div className="col-span-3 row-span-2 col-start-10 row-start-5 pointer-events-auto">
+                    <HUDWidget title="FREQ_JOURNAL" icon={<BookOpen size={14}/>} searchQuery={searchQuery}>
+                        <div className="space-y-4">
+                             {filteredJournals.map(j => (
+                                 <div key={j.id} className="border-l border-[#ff006e]/10 pl-4 py-2 relative group cursor-pointer hover:bg-white/[0.02] transition-all">
+                                     <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-[#ff006e] scale-y-0 group-hover:scale-y-100 transition-transform" />
+                                     <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase mb-1 tracking-tight">{j.title}</div>
+                                     <div className="text-[8px] opacity-30 line-clamp-2 italic font-light leading-relaxed">{j.content?.substring(0, 80)}...</div>
+                                     <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <div className="text-[7px] text-[#ff006e] font-black uppercase">READ_SIGNAL >></div>
+                                     </div>
+                                 </div>
+                             ))}
+                        </div>
+                    </HUDWidget>
+                </div>
+
+                {/* --- BOTTOM CENTER: COMMUNITIES --- */}
+                <div className="col-span-6 row-span-2 col-start-4 row-start-5 pointer-events-auto">
+                    <HUDWidget title="SECTOR_CLANS" icon={<Globe size={14}/>} searchQuery={searchQuery}>
+                         <div className="grid grid-cols-2 gap-4 h-full py-1">
+                             {filteredCommunities.map(c => (
+                                 <div key={c.id} className="relative flex items-center gap-4 p-3 bg-black border border-white/5 hover:border-[#ff006e]/40 transition-all group cursor-pointer overflow-hidden shadow-2xl">
+                                      <div className="w-16 h-16 bg-zinc-900 overflow-hidden relative shrink-0 border border-white/5">
+                                          <img src={getMediaUrl(c.imageUrl)} alt="" className="w-full h-full object-cover opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
+                                          <div className="absolute inset-0 bg-gradient-to-br from-[#ff006e]/10 to-transparent mix-blend-overlay" />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                          <div className="text-[11px] font-black truncate uppercase group-hover:text-[#ff006e] transition-colors tracking-tight">{c.name}</div>
+                                          <div className="text-[8px] opacity-30 uppercase tracking-[0.3em] mt-1 font-bold">SEC_{c.sectorId || '0'} // {SECTORS.find(s => s.id === (c.sectorId || 0))?.name.split(' ')[0]}</div>
+                                          <div className="flex items-center gap-2 mt-3">
+                                              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+                                              <span className="text-[8px] text-green-500/60 font-black uppercase tracking-widest">{c.memberCount} NODES_SYNCED</span>
+                                          </div>
+                                      </div>
+                                      {/* Side active indicator */}
+                                      <div className="absolute right-0 top-0 bottom-0 w-0.5 bg-[#ff006e] scale-y-0 group-hover:scale-y-100 transition-transform duration-500" />
+                                 </div>
+                             ))}
+                         </div>
+                    </HUDWidget>
+                </div>
+
+            </div>
+            
+            {/* --- SCANLINE OVERLAY --- */}
+            <div className="fixed inset-0 pointer-events-none z-[100] opacity-[0.03] select-none overflow-hidden h-screen w-screen">
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]" />
+            </div>
+        </div>
+    );
+};
+
+export default DiscoveryHUD;
