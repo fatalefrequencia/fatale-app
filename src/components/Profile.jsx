@@ -789,10 +789,15 @@ export const ProfileView = React.memo(({
     const [newPlaylistName, setNewPlaylistName] = useState('');
     const [isPlaylistPublic, setIsPlaylistPublic] = useState(true);
 
-    // Selected Playlist State
+    // Selected Playlist State (for wall popup — keeps existing wall behavior)
     const [selectedPlaylistId, setSelectedPlaylistId] = useState(null);
     const [playlistDetails, setPlaylistDetails] = useState(null); // { Playlist, Tracks }
     const [isLoadingPlaylist, setIsLoadingPlaylist] = useState(false);
+
+    // In-Monitor Playlist Detail State (replaces popup for monitor tab)
+    const [monitorPlaylistId, setMonitorPlaylistId] = useState(null);
+    const [monitorPlaylistDetails, setMonitorPlaylistDetails] = useState(null);
+    const [isLoadingMonitorPlaylist, setIsLoadingMonitorPlaylist] = useState(false);
 
 
 
@@ -936,7 +941,7 @@ export const ProfileView = React.memo(({
                     coverImageUrl: t.coverImageUrl || t.CoverImageUrl,
                     source: t.source || t.Source,
                     isLocked: t.isLocked !== undefined ? t.isLocked : (t.IsLocked !== undefined ? t.IsLocked : false),
-                    isOwned: t.isOwned !== undefined ? t.isOwned : (t.IsOwned !== undefined ? t.IsOwned : true) // Default to true for playlist items if not specified
+                    isOwned: t.isOwned !== undefined ? t.isOwned : (t.IsOwned !== undefined ? t.IsOwned : true)
                 }));
                 setPlaylistDetails({ Playlist: normalizedPlaylist, Tracks: normalizedTracks });
             } else {
@@ -946,6 +951,44 @@ export const ProfileView = React.memo(({
             console.error("Failed to fetch playlist details", err);
         } finally {
             setIsLoadingPlaylist(false);
+        }
+    };
+
+    // Fetches details for the in-monitor inline panel
+    const handleOpenMonitorPlaylist = async (playlistId) => {
+        setMonitorPlaylistId(playlistId);
+        setIsLoadingMonitorPlaylist(true);
+        try {
+            const API = await import('../services/api').then(mod => mod.default);
+            const res = await API.Playlists.getById(playlistId);
+            const data = res.data;
+            if (data && data.Playlist) {
+                const normalizedPlaylist = {
+                    ...data.Playlist,
+                    id: data.Playlist.id || data.Playlist.Id,
+                    name: data.Playlist.name || data.Playlist.Name,
+                    imageUrl: data.Playlist.imageUrl || data.Playlist.ImageUrl,
+                    isPublic: data.Playlist.isPublic !== undefined ? data.Playlist.isPublic : data.Playlist.IsPublic,
+                    description: data.Playlist.description || data.Playlist.Description
+                };
+                const normalizedTracks = (data.Tracks || []).map(t => ({
+                    ...t,
+                    id: t.id || t.Id,
+                    title: t.title || t.Title,
+                    artistName: t.artistName || t.ArtistName,
+                    coverImageUrl: t.coverImageUrl || t.CoverImageUrl,
+                    source: t.source || t.Source,
+                    isLocked: t.isLocked !== undefined ? t.isLocked : (t.IsLocked !== undefined ? t.IsLocked : false),
+                    isOwned: t.isOwned !== undefined ? t.isOwned : (t.IsOwned !== undefined ? t.IsOwned : true)
+                }));
+                setMonitorPlaylistDetails({ Playlist: normalizedPlaylist, Tracks: normalizedTracks });
+            } else {
+                setMonitorPlaylistDetails(data);
+            }
+        } catch (err) {
+            console.error("Failed to fetch monitor playlist details", err);
+        } finally {
+            setIsLoadingMonitorPlaylist(false);
         }
     };
 
@@ -1996,92 +2039,226 @@ export const ProfileView = React.memo(({
                                     );
                                 })()}
 
+
                                 {activeTab === 'Playlists' && (
-                                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 max-h-[400px] overflow-y-auto custom-scrollbar pr-2 pb-8">
-                                        {isMe && (
-                                            <button
-                                                onClick={() => setShowCreatePlaylist(true)}
-                                                className="border border-[var(--text-color)]/10 p-4 hover:border-[var(--text-color)]/40 transition-all cursor-pointer group bg-black/20 flex flex-col items-center justify-center gap-4 text-[var(--text-color)]/50 hover:text-[var(--text-color)]"
+                                    <AnimatePresence mode="wait">
+                                        {monitorPlaylistId && monitorPlaylistDetails ? (
+                                            /* ── PLAYLIST DETAIL VIEW (in-panel) ── */
+                                            <motion.div
+                                                key="playlist-detail"
+                                                initial={{ opacity: 0, x: 20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: -20 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="flex flex-col gap-4"
                                             >
-                                                <Plus size={32} />
-                                                <span className="text-[10px] font-bold uppercase tracking-widest">INIT_NEW_PLAYLIST</span>
-                                            </button>
-                                        )}
-                                        {profilePlaylists
-                                            .sort((a, b) => {
-                                                const aPinned = isTruthy(a.isPinned || a.IsPinned) ? 1 : 0;
-                                                const bPinned = isTruthy(b.isPinned || b.IsPinned) ? 1 : 0;
-                                                if (bPinned !== aPinned) return bPinned - aPinned;
+                                                {/* Back button */}
+                                                <button
+                                                    onClick={() => { setMonitorPlaylistId(null); setMonitorPlaylistDetails(null); }}
+                                                    className="flex items-center gap-2 text-[8px] font-bold mono uppercase tracking-[0.2em] text-[var(--text-color)]/60 hover:text-[var(--text-color)] transition-colors w-fit"
+                                                >
+                                                    <ChevronLeft size={12} /> [ BACK_TO_SEQUENCES ]
+                                                </button>
 
-                                                const aPosted = isTruthy(a.isPosted || a.IsPosted) ? 1 : 0;
-                                                const bPosted = isTruthy(b.isPosted || b.IsPosted) ? 1 : 0;
-                                                if (bPosted !== aPosted) return bPosted - aPosted;
-                                                return 0;
-                                            })
-                                            .map(p => (
-                                                <div key={p.id} onClick={() => handleOpenPlaylist(p.id)} className="border border-[var(--text-color)]/5 p-4 hover:border-[var(--text-color)]/40 transition-all cursor-pointer group bg-black/40">
-                                                    <div className="aspect-square bg-black overflow-hidden relative mb-4">
-                                                        {(p.imageUrl || p.ImageUrl) ? (
-                                                            <img src={getMediaUrl(p.imageUrl || p.ImageUrl)} className="w-full h-full object-cover grayscale opacity-40 group-hover:opacity-100 transition-all" />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/10"><Database size={32} /></div>
-                                                        )}
-                                                        <div className="absolute top-0 left-0 bg-[var(--text-color)] text-black text-[8px] font-bold px-1.5 py-0.5 mono">#{String(p.id).padStart(3, '0')}</div>
-                                                        {isMe && (
-                                                            <div className="absolute top-2 left-2 z-30 flex gap-2">
-                                                                <button
-                                                                    onClick={async (e) => {
-                                                                        e.stopPropagation();
-                                                                        try {
-                                                                            const API = await import('../services/api').then(mod => mod.default);
-                                                                            await API.Playlists.togglePin(p.id || p.Id);
-                                                                            const isPinnedNow = !isTruthy(p.isPinned || p.IsPinned);
-                                                                            setProfilePlaylists(prev => prev.map(pl => (String(pl.id) === String(p.id)) ? { ...pl, isPinned: isPinnedNow, IsPinned: isPinnedNow } : pl));
-                                                                            showNotification(isPinnedNow ? "SIGNAL_LOCKED" : "SIGNAL_RELEASED", `PLAYLIST_${isPinnedNow ? 'PINNED_TO' : 'REMOVED_FROM'}_MONITOR`, "success");
-                                                                        } catch (err) { console.error(err); }
-                                                                    }}
-                                                                    className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(p.isPinned || p.IsPinned) ? 'bg-white text-black border-white shadow-[0_0_15px_#fff]' : 'bg-black/60 border-white/20 text-white/40 hover:text-white hover:border-white/40'}`}
-                                                                    title="Pin to Monitor"
-                                                                >
-                                                                    <Star size={10} fill={isTruthy(p.isPinned || p.IsPinned) ? "currentColor" : "none"} />
-                                                                </button>
-
-                                                                <button
-                                                                    onClick={async (e) => {
-                                                                        e.stopPropagation();
-                                                                        try {
-                                                                            const API = await import('../services/api').then(mod => mod.default);
-                                                                            await API.Playlists.togglePost(p.id || p.Id);
-                                                                            const isPostedNow = !isTruthy(p.isPosted || p.IsPosted);
-                                                                            setProfilePlaylists(prev => prev.map(pl => (String(pl.id) === String(p.id)) ? { ...pl, isPosted: isPostedNow, IsPosted: isPostedNow } : pl));
-                                                                            showNotification(isPostedNow ? "SIGNAL_POSTED" : "SIGNAL_RECALLED", `PLAYLIST_${isPostedNow ? 'ATTACHED_TO' : 'RECALLED_FROM'}_WALL`, "success");
-                                                                        } catch (err) { console.error(err); }
-                                                                    }}
-                                                                    className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(p.isPosted || p.IsPosted) ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)] shadow-[0_0_15px_rgba(var(--theme-color-rgb),0.5)]' : 'bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/70 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40'}`}
-                                                                    title="Pin to Wall"
-                                                                >
-                                                                    <Share2 size={10} />
-                                                                </button>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?playlist=${p.id || p.Id}`;
-                                                                        navigator.clipboard.writeText(link);
-                                                                        showNotification("LINK_COPIED", "MAP_ADDRESS_SECURED_TO_CLIPBOARD", "success");
-                                                                    }}
-                                                                    className="p-1.5 border bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/70 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40 backdrop-blur-md transition-all"
-                                                                    title="Copy Sequence Link"
-                                                                >
-                                                                    <Link size={10} />
-                                                                </button>
+                                                {(() => {
+                                                    const p = monitorPlaylistDetails.Playlist || monitorPlaylistDetails.playlist;
+                                                    const pTracks = monitorPlaylistDetails.Tracks || monitorPlaylistDetails.tracks || [];
+                                                    if (!p) return null;
+                                                    return (
+                                                        <div className="flex flex-col sm:flex-row gap-6">
+                                                            {/* Cover */}
+                                                            <div className="w-36 h-36 shrink-0 border border-[var(--text-color)]/20 bg-black overflow-hidden relative shadow-[0_0_40px_rgba(0,0,0,0.6)]">
+                                                                {p.imageUrl ? (
+                                                                    <img src={getMediaUrl(p.imageUrl)} className="w-full h-full object-cover grayscale-[50%]" />
+                                                                ) : (
+                                                                    <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/10"><Database size={40} /></div>
+                                                                )}
+                                                                <div className="absolute top-0 left-0 bg-[var(--text-color)] text-black text-[7px] font-bold px-1.5 py-0.5 mono">#{String(p.id).padStart(3, '0')}</div>
                                                             </div>
-                                                        )}
-                                                    </div>
-                                                    <h4 className="text-[10px] font-bold text-[var(--text-color)] uppercase truncate tracking-widest">{p.name}</h4>
+
+                                                            {/* Meta + Actions */}
+                                                            <div className="flex flex-col gap-3 flex-1 min-w-0">
+                                                                <div>
+                                                                    <div className="text-[7px] mono text-[var(--text-color)]/60 uppercase tracking-[0.4em] mb-1">SEQUENCE_MAP // {pTracks.length} SIGNALS</div>
+                                                                    <h3 className="text-xl font-black uppercase text-[var(--text-color)] tracking-tight leading-tight truncate">{p.name}</h3>
+                                                                    {p.description && <div className="text-[9px] text-white/40 mono mt-1 italic truncate">{p.description}</div>}
+                                                                </div>
+                                                                <div className="flex flex-wrap gap-2 mt-1">
+                                                                    <button
+                                                                        onClick={() => onPlayPlaylist?.(pTracks)}
+                                                                        className="flex items-center gap-2 px-3 py-1.5 bg-[var(--text-color)] text-black text-[8px] font-black uppercase tracking-[0.15em] hover:opacity-80 transition-all"
+                                                                    >
+                                                                        <Play size={10} fill="currentColor" /> [ PLAY_ALL ]
+                                                                    </button>
+                                                                    {isMe && (
+                                                                        <>
+                                                                            <button
+                                                                                onClick={async (e) => {
+                                                                                    e.stopPropagation();
+                                                                                    try {
+                                                                                        const API = await import('../services/api').then(mod => mod.default);
+                                                                                        await API.Playlists.togglePin(p.id);
+                                                                                        const isPinnedNow = !isTruthy(p.isPinned || p.IsPinned);
+                                                                                        setMonitorPlaylistDetails(prev => ({ ...prev, Playlist: { ...prev.Playlist, isPinned: isPinnedNow } }));
+                                                                                        setProfilePlaylists(prev => prev.map(pl => String(pl.id) === String(p.id) ? { ...pl, isPinned: isPinnedNow } : pl));
+                                                                                        showNotification(isPinnedNow ? "SIGNAL_LOCKED" : "SIGNAL_RELEASED", `PLAYLIST_${isPinnedNow ? 'PINNED' : 'UNPINNED'}`, "success");
+                                                                                    } catch (err) { console.error(err); }
+                                                                                }}
+                                                                                className={`flex items-center gap-2 px-3 py-1.5 border text-[8px] font-bold uppercase mono tracking-[0.15em] transition-all ${isTruthy(p.isPinned || p.IsPinned) ? 'bg-white text-black border-white' : 'border-white/20 text-white/60 hover:border-[var(--text-color)] hover:text-[var(--text-color)]'}`}
+                                                                            >
+                                                                                <Star size={10} fill={isTruthy(p.isPinned || p.IsPinned) ? "currentColor" : "none"} /> [ {isTruthy(p.isPinned || p.IsPinned) ? 'PINNED' : 'PIN'} ]
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={async (e) => {
+                                                                                    e.stopPropagation();
+                                                                                    try {
+                                                                                        const API = await import('../services/api').then(mod => mod.default);
+                                                                                        await API.Playlists.togglePost(p.id);
+                                                                                        const isPostedNow = !isTruthy(p.isPosted || p.IsPosted);
+                                                                                        setMonitorPlaylistDetails(prev => ({ ...prev, Playlist: { ...prev.Playlist, isPosted: isPostedNow } }));
+                                                                                        setProfilePlaylists(prev => prev.map(pl => String(pl.id) === String(p.id) ? { ...pl, isPosted: isPostedNow } : pl));
+                                                                                        showNotification(isPostedNow ? "SIGNAL_BROADCAST" : "SIGNAL_REDACTED", `PLAYLIST_${isPostedNow ? 'ON' : 'OFF'}_WALL`, "success");
+                                                                                    } catch (err) { console.error(err); }
+                                                                                }}
+                                                                                className={`flex items-center gap-2 px-3 py-1.5 border text-[8px] font-bold uppercase mono tracking-[0.15em] transition-all ${isTruthy(p.isPosted || p.IsPosted) ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)]' : 'border-[var(--text-color)]/20 text-[var(--text-color)]/60 hover:border-[var(--text-color)] hover:text-[var(--text-color)]'}`}
+                                                                            >
+                                                                                <Share2 size={10} /> [ {isTruthy(p.isPosted || p.IsPosted) ? 'ON_WALL' : 'POST'} ]
+                                                                            </button>
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })()}
+
+                                                {/* Track List */}
+                                                <div className="mt-2 border-t border-[var(--text-color)]/10 pt-4 space-y-1 max-h-[280px] overflow-y-auto custom-scrollbar pr-1">
+                                                    <div className="text-[7px] mono text-[var(--text-color)]/40 uppercase tracking-[0.4em] mb-3">// SIGNAL_INDEX</div>
+                                                    {isLoadingMonitorPlaylist ? (
+                                                        <div className="flex items-center justify-center py-8"><RefreshCw className="animate-spin text-[var(--text-color)]/40" size={18} /></div>
+                                                    ) : (monitorPlaylistDetails.Tracks || monitorPlaylistDetails.tracks || []).length > 0 ? (
+                                                        (monitorPlaylistDetails.Tracks || monitorPlaylistDetails.tracks || []).map((t, idx) => (
+                                                            <div key={t.id || idx} className="flex items-center gap-3 p-2 border border-transparent hover:border-[var(--text-color)]/20 hover:bg-[var(--text-color)]/5 group transition-all">
+                                                                <span className="text-[var(--text-color)]/30 mono text-[9px] w-6 shrink-0">[{String(idx + 1).padStart(2, '0')}]</span>
+                                                                <div className="w-8 h-8 border border-white/10 bg-black overflow-hidden shrink-0">
+                                                                    {t.coverImageUrl ? (
+                                                                        <img src={getMediaUrl(t.coverImageUrl)} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
+                                                                    ) : (
+                                                                        <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/20"><Music size={12} /></div>
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="text-[10px] font-bold text-[var(--text-color)] uppercase truncate tracking-wider group-hover:text-white transition-colors">{t.title}</div>
+                                                                    <div className="text-[8px] mono text-[var(--text-color)]/50 uppercase">{t.artistName || 'UNKNOWN'}</div>
+                                                                </div>
+                                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <button onClick={() => onQueueTrack?.(t)} className="p-1 text-[var(--text-color)]/60 hover:text-[var(--text-color)]" title="Add to Queue"><PlayCircle size={12} /></button>
+                                                                    {isMe && <button onClick={() => handleRemoveTrackFromPlaylist((monitorPlaylistDetails.Playlist || monitorPlaylistDetails.playlist)?.id, t.id)} className="p-1 text-red-500/40 hover:text-red-500" title="Remove"><X size={12} /></button>}
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="text-[8px] mono text-[var(--text-color)]/30 italic py-6 text-center uppercase">&gt; NO_SIGNALS_IN_SEQUENCE</div>
+                                                    )}
                                                 </div>
-                                            ))}
-                                    </div>
+                                            </motion.div>
+                                        ) : (
+                                            /* ── PLAYLIST GRID ── */
+                                            <motion.div
+                                                key="playlist-grid"
+                                                initial={{ opacity: 0, x: -20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: 20 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="grid grid-cols-2 lg:grid-cols-3 gap-6 max-h-[460px] overflow-y-auto custom-scrollbar pr-2 pb-8"
+                                            >
+                                                {isMe && (
+                                                    <button
+                                                        onClick={() => setShowCreatePlaylist(true)}
+                                                        className="border border-[var(--text-color)]/10 p-4 hover:border-[var(--text-color)]/40 transition-all cursor-pointer group bg-black/20 flex flex-col items-center justify-center gap-4 text-[var(--text-color)]/50 hover:text-[var(--text-color)]"
+                                                    >
+                                                        <Plus size={32} />
+                                                        <span className="text-[10px] font-bold uppercase tracking-widest">INIT_NEW_PLAYLIST</span>
+                                                    </button>
+                                                )}
+                                                {profilePlaylists
+                                                    .sort((a, b) => {
+                                                        const aPinned = isTruthy(a.isPinned || a.IsPinned) ? 1 : 0;
+                                                        const bPinned = isTruthy(b.isPinned || b.IsPinned) ? 1 : 0;
+                                                        if (bPinned !== aPinned) return bPinned - aPinned;
+                                                        const aPosted = isTruthy(a.isPosted || a.IsPosted) ? 1 : 0;
+                                                        const bPosted = isTruthy(b.isPosted || b.IsPosted) ? 1 : 0;
+                                                        if (bPosted !== aPosted) return bPosted - aPosted;
+                                                        return 0;
+                                                    })
+                                                    .map(p => (
+                                                        <div key={p.id} onClick={() => handleOpenMonitorPlaylist(p.id)} className="border border-[var(--text-color)]/5 p-4 hover:border-[var(--text-color)]/40 transition-all cursor-pointer group bg-black/40">
+                                                            <div className="aspect-square bg-black overflow-hidden relative mb-4">
+                                                                {(p.imageUrl || p.ImageUrl) ? (
+                                                                    <img src={getMediaUrl(p.imageUrl || p.ImageUrl)} className="w-full h-full object-cover grayscale opacity-40 group-hover:opacity-100 transition-all" />
+                                                                ) : (
+                                                                    <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/10"><Database size={32} /></div>
+                                                                )}
+                                                                <div className="absolute top-0 left-0 bg-[var(--text-color)] text-black text-[8px] font-bold px-1.5 py-0.5 mono">#{String(p.id).padStart(3, '0')}</div>
+                                                                {isMe && (
+                                                                    <div className="absolute top-2 left-2 z-30 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                        <button
+                                                                            onClick={async (e) => {
+                                                                                e.stopPropagation();
+                                                                                try {
+                                                                                    const API = await import('../services/api').then(mod => mod.default);
+                                                                                    await API.Playlists.togglePin(p.id || p.Id);
+                                                                                    const isPinnedNow = !isTruthy(p.isPinned || p.IsPinned);
+                                                                                    setProfilePlaylists(prev => prev.map(pl => (String(pl.id) === String(p.id)) ? { ...pl, isPinned: isPinnedNow, IsPinned: isPinnedNow } : pl));
+                                                                                    showNotification(isPinnedNow ? "SIGNAL_LOCKED" : "SIGNAL_RELEASED", `PLAYLIST_${isPinnedNow ? 'PINNED_TO' : 'REMOVED_FROM'}_MONITOR`, "success");
+                                                                                } catch (err) { console.error(err); }
+                                                                            }}
+                                                                            className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(p.isPinned || p.IsPinned) ? 'bg-white text-black border-white shadow-[0_0_15px_#fff]' : 'bg-black/60 border-white/20 text-white/40 hover:text-white hover:border-white/40'}`}
+                                                                            title="Pin to Monitor"
+                                                                        >
+                                                                            <Star size={10} fill={isTruthy(p.isPinned || p.IsPinned) ? "currentColor" : "none"} />
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={async (e) => {
+                                                                                e.stopPropagation();
+                                                                                try {
+                                                                                    const API = await import('../services/api').then(mod => mod.default);
+                                                                                    await API.Playlists.togglePost(p.id || p.Id);
+                                                                                    const isPostedNow = !isTruthy(p.isPosted || p.IsPosted);
+                                                                                    setProfilePlaylists(prev => prev.map(pl => (String(pl.id) === String(p.id)) ? { ...pl, isPosted: isPostedNow, IsPosted: isPostedNow } : pl));
+                                                                                    showNotification(isPostedNow ? "SIGNAL_POSTED" : "SIGNAL_RECALLED", `PLAYLIST_${isPostedNow ? 'ATTACHED_TO' : 'RECALLED_FROM'}_WALL`, "success");
+                                                                                } catch (err) { console.error(err); }
+                                                                            }}
+                                                                            className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(p.isPosted || p.IsPosted) ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)] shadow-[0_0_15px_rgba(var(--theme-color-rgb),0.5)]' : 'bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/70 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40'}`}
+                                                                            title="Pin to Wall"
+                                                                        >
+                                                                            <Share2 size={10} />
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?playlist=${p.id || p.Id}`;
+                                                                                navigator.clipboard.writeText(link);
+                                                                                showNotification("LINK_COPIED", "MAP_ADDRESS_SECURED_TO_CLIPBOARD", "success");
+                                                                            }}
+                                                                            className="p-1.5 border bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/70 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40 backdrop-blur-md transition-all"
+                                                                            title="Copy Sequence Link"
+                                                                        >
+                                                                            <Link size={10} />
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <h4 className="text-[10px] font-bold text-[var(--text-color)] uppercase truncate tracking-widest">{p.name}</h4>
+                                                        </div>
+                                                    ))}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 )}
+
+
 
                                 {activeTab === 'Studio' && (
                                     <div className="space-y-6 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
