@@ -1822,7 +1822,7 @@ export const ProfileView = React.memo(({
                                                                                 }}
                                                                                 className={`flex items-center gap-2 px-3 py-2 border text-[9px] font-bold uppercase font-mono tracking-[0.2em] transition-all ${isTruthy(selectedRelease.isPosted || selectedRelease.IsPosted) ? 'bg-white text-black border-white' : 'border-white/20 text-white/60 hover:border-[var(--text-color)] hover:text-[var(--text-color)]'}`}
                                                                             >
-                                                                                {isTruthy(selectedRelease.isPosted || selectedRelease.IsPosted) ? '[ PINNED_TO_WALL ]' : '[ PIN_TO_WALL ]'}
+                                                                                {isTruthy(selectedRelease.isPosted || selectedRelease.IsPosted) ? '[ PINNED ]' : '[ PIN_TO_WALL ]'}
                                                                             </button>
                                                                         )}
 
@@ -2110,7 +2110,7 @@ export const ProfileView = React.memo(({
                                                                                 }}
                                                                                 className={`flex items-center gap-2 px-3 py-1.5 border text-[8px] font-bold uppercase mono tracking-[0.15em] transition-all ${isTruthy(p.isPosted || p.IsPosted) ? 'bg-white text-black border-white' : 'border-white/20 text-white/60 hover:border-[var(--text-color)] hover:text-[var(--text-color)]'}`}
                                                                             >
-                                                                                <Star size={10} fill={isTruthy(p.isPosted || p.IsPosted) ? "currentColor" : "none"} /> [ {isTruthy(p.isPosted || p.IsPosted) ? 'PINNED_TO_WALL' : 'PIN_TO_WALL'} ]
+                                                                                <Star size={10} fill={isTruthy(p.isPosted || p.IsPosted) ? "currentColor" : "none"} /> [ {isTruthy(p.isPosted || p.IsPosted) ? 'PINNED' : 'PIN_TO_WALL'} ]
                                                                             </button>
                                                                             {/* Share — Copy link */}
                                                                             <button
