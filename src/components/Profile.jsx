@@ -1622,18 +1622,6 @@ export const ProfileView = React.memo(({
 
                                 {/* Tab Content */}
                                 {activeTab === 'Music' && (() => {
-                                    const GEAR_ICONS = {
-                                        'Synth': '🎹',
-                                        'DAW': '💻',
-                                        'Microphone': '🎙️',
-                                        'Controller': '🎮',
-                                        'Drum Machine': '🥁',
-                                        'Plugin': '🔌',
-                                        'Guitar': '🎸',
-                                        'Bass': '🎸',
-                                        'Sampler': '📼',
-                                        'Other': '🎵',
-                                    };
                                     const filteredTracks = profileTracks
                                         .filter(track => {
                                             if (musicSubTab === 'All') return true;
@@ -1830,7 +1818,6 @@ export const ProfileView = React.memo(({
                                                         profileGear.map((item, i) => {
                                                             const gearId = item.id || item.Id;
                                                             const cat = item.category || item.Category || 'Other';
-                                                            const icon = GEAR_ICONS[cat] || '🎵';
                                                             return (
                                                                 <motion.div
                                                                     key={gearId}
@@ -1839,7 +1826,6 @@ export const ProfileView = React.memo(({
                                                                     transition={{ delay: i * 0.05 }}
                                                                     className="group flex items-start gap-3 p-2.5 border border-[var(--text-color)]/10 bg-black/30 hover:border-[var(--text-color)]/30 transition-all relative"
                                                                 >
-                                                                    <div className="text-base leading-none mt-0.5 shrink-0">{icon}</div>
                                                                     <div className="flex-1 min-w-0">
                                                                         <div className="text-[10px] font-bold text-[var(--text-color)] uppercase truncate tracking-wider">{item.name || item.Name}</div>
                                                                         <div className="text-[7px] mono text-[var(--text-color)]/40 uppercase tracking-[0.2em] mt-0.5">{cat}</div>
