@@ -1714,7 +1714,7 @@ function App() {
           <UploadTrackView
             onClose={() => setShowGlobalUpload(false)}
             onRefreshTracks={async () => {
-              const res = await API.Tracks.getAll();
+              const res = await API.Tracks.getAllTracks();
               setTracks(res.data);
               showNotification("SYNC_COMPLETE", "Tracks verified and updated.", "success");
             }}
