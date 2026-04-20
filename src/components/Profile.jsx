@@ -281,7 +281,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                 journal={journal}
                 playlists={playlists}
                 themeColor={activeTheme}
-                onExpand={handleItemClick}
+                onExpand={onExpandContent}
                 onPlayTrack={onPlayTrack}
                 onPlayPlaylist={onPlayPlaylist}
             />
@@ -1259,7 +1259,7 @@ export const ProfileView = React.memo(({
                 onGoLive={() => setShowGlobalGoLive(true)}
                 onModifyId={() => setShowEditProfile(true)}
                 onLogout={onLogout}
-                onExpandContent={setSelectedContent}
+                onExpandContent={handleItemClick}
                 gallery={profileGallery}
                 tracks={profileTracks}
                 journal={isMe ? profileJournal : profileJournal.filter(j => j.IsPosted || j.isPosted)}
