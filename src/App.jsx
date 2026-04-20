@@ -908,6 +908,11 @@ function App() {
     setCurrentTrackIndex(startIndex);
     setIsPlaying(true);
     if (isYT) setIsYoutubeMode(true);
+
+    if (typeof setRedirectTrigger === 'function') {
+      setRedirectTrigger(Date.now());
+      setView('player');
+    }
   };
 
   // Fetch User Profile & Credits
@@ -1967,6 +1972,23 @@ const Dashboard = React.memo(({
                 navigateToProfile={navigateToProfile}
                 playlists={playlists}
                 onRefreshPlaylists={onRefreshPlaylists}
+                onPlayTrack={(track) => {
+                  // Ensure track is playable even if unmapped
+                  const enriched = {
+                    ...track,
+                    source: track.source || track.Source || (track.filePath ? getMediaUrl(track.filePath) : null) || (track.FilePath ? getMediaUrl(track.FilePath) : null),
+                    id: track.id || track.Id,
+                    isOwned: true,
+                    isLocked: false
+                  };
+                  setTracks([enriched]);
+                  setCurrentTrackIndex(0);
+                  setIsPlaying(true);
+                  if (typeof setRedirectTrigger === 'function') {
+                    setRedirectTrigger(Date.now());
+                    setView('player');
+                  }
+                }}
                 onPlayPlaylist={handlePlayPlaylist}
                 activeStation={activeStation}
                 stationChat={stationChat}
