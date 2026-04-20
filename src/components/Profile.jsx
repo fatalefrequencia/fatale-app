@@ -2092,22 +2092,7 @@ export const ProfileView = React.memo(({
                                                                     </button>
                                                                     {isMe && (
                                                                         <>
-                                                                            <button
-                                                                                onClick={async (e) => {
-                                                                                    e.stopPropagation();
-                                                                                    try {
-                                                                                        const API = await import('../services/api').then(mod => mod.default);
-                                                                                        await API.Playlists.togglePin(p.id);
-                                                                                        const isPinnedNow = !isTruthy(p.isPinned || p.IsPinned);
-                                                                                        setMonitorPlaylistDetails(prev => ({ ...prev, Playlist: { ...prev.Playlist, isPinned: isPinnedNow } }));
-                                                                                        setProfilePlaylists(prev => prev.map(pl => String(pl.id) === String(p.id) ? { ...pl, isPinned: isPinnedNow } : pl));
-                                                                                        showNotification(isPinnedNow ? "SIGNAL_LOCKED" : "SIGNAL_RELEASED", `PLAYLIST_${isPinnedNow ? 'PINNED' : 'UNPINNED'}`, "success");
-                                                                                    } catch (err) { console.error(err); }
-                                                                                }}
-                                                                                className={`flex items-center gap-2 px-3 py-1.5 border text-[8px] font-bold uppercase mono tracking-[0.15em] transition-all ${isTruthy(p.isPinned || p.IsPinned) ? 'bg-white text-black border-white' : 'border-white/20 text-white/60 hover:border-[var(--text-color)] hover:text-[var(--text-color)]'}`}
-                                                                            >
-                                                                                <Star size={10} fill={isTruthy(p.isPinned || p.IsPinned) ? "currentColor" : "none"} /> [ {isTruthy(p.isPinned || p.IsPinned) ? 'PINNED' : 'PIN'} ]
-                                                                            </button>
+                                                                            {/* Pin to Wall — Star icon */}
                                                                             <button
                                                                                 onClick={async (e) => {
                                                                                     e.stopPropagation();
@@ -2115,14 +2100,29 @@ export const ProfileView = React.memo(({
                                                                                         const API = await import('../services/api').then(mod => mod.default);
                                                                                         await API.Playlists.togglePost(p.id);
                                                                                         const isPostedNow = !isTruthy(p.isPosted || p.IsPosted);
-                                                                                        setMonitorPlaylistDetails(prev => ({ ...prev, Playlist: { ...prev.Playlist, isPosted: isPostedNow } }));
-                                                                                        setProfilePlaylists(prev => prev.map(pl => String(pl.id) === String(p.id) ? { ...pl, isPosted: isPostedNow } : pl));
-                                                                                        showNotification(isPostedNow ? "SIGNAL_BROADCAST" : "SIGNAL_REDACTED", `PLAYLIST_${isPostedNow ? 'ON' : 'OFF'}_WALL`, "success");
+                                                                                        setMonitorPlaylistDetails(prev => {
+                                                                                            const pl = prev?.Playlist || prev?.playlist || {};
+                                                                                            return { ...prev, Playlist: { ...pl, isPosted: isPostedNow, IsPosted: isPostedNow } };
+                                                                                        });
+                                                                                        setProfilePlaylists(prev => prev.map(pl => String(pl.id) === String(p.id) ? { ...pl, isPosted: isPostedNow, IsPosted: isPostedNow } : pl));
+                                                                                        showNotification(isPostedNow ? "SIGNAL_BROADCAST" : "SIGNAL_REDACTED", `PLAYLIST_${isPostedNow ? 'PINNED_TO' : 'REMOVED_FROM'}_WALL`, "success");
                                                                                     } catch (err) { console.error(err); }
                                                                                 }}
-                                                                                className={`flex items-center gap-2 px-3 py-1.5 border text-[8px] font-bold uppercase mono tracking-[0.15em] transition-all ${isTruthy(p.isPosted || p.IsPosted) ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)]' : 'border-[var(--text-color)]/20 text-[var(--text-color)]/60 hover:border-[var(--text-color)] hover:text-[var(--text-color)]'}`}
+                                                                                className={`flex items-center gap-2 px-3 py-1.5 border text-[8px] font-bold uppercase mono tracking-[0.15em] transition-all ${isTruthy(p.isPosted || p.IsPosted) ? 'bg-white text-black border-white' : 'border-white/20 text-white/60 hover:border-[var(--text-color)] hover:text-[var(--text-color)]'}`}
                                                                             >
-                                                                                <Share2 size={10} /> [ {isTruthy(p.isPosted || p.IsPosted) ? 'ON_WALL' : 'POST'} ]
+                                                                                <Star size={10} fill={isTruthy(p.isPosted || p.IsPosted) ? "currentColor" : "none"} /> [ {isTruthy(p.isPosted || p.IsPosted) ? 'PINNED_TO_WALL' : 'PIN_TO_WALL'} ]
+                                                                            </button>
+                                                                            {/* Share — Copy link */}
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?playlist=${p.id}`;
+                                                                                    navigator.clipboard.writeText(link);
+                                                                                    showNotification("LINK_COPIED", "SIGNAL_ADDRESS_SECURED", "success");
+                                                                                }}
+                                                                                className="flex items-center gap-2 px-3 py-1.5 border border-white/20 text-white/60 text-[8px] font-bold uppercase mono tracking-[0.15em] hover:border-[var(--text-color)] hover:text-[var(--text-color)] transition-all"
+                                                                            >
+                                                                                <Share2 size={10} /> [ SHARE ]
                                                                             </button>
                                                                         </>
                                                                     )}
