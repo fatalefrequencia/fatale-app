@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const HUDWidget = ({ title, children, icon, searchQuery }) => {
+const HUDWidget = ({ title, children, icon, searchQuery, active }) => {
     const [isRebooting, setIsRebooting] = useState(false);
 
     // Trigger reboot effect when search query changes
@@ -16,22 +16,22 @@ const HUDWidget = ({ title, children, icon, searchQuery }) => {
             {/* Header Area */}
             <div className="flex items-center justify-between mb-1 px-1">
                 <div className="flex items-center gap-2">
-                    <div className="text-[#ff006e] opacity-80 group-hover/widget:opacity-100 transition-opacity">
+                    <div className={`transition-all duration-300 ${active ? 'text-[#00ffff] scale-110 drop-shadow-[0_0_8px_#00ffff]' : 'text-[#ff006e] opacity-80 group-hover/widget:opacity-100'}`}>
                         {icon}
                     </div>
-                    <div className="text-[10px] font-black tracking-[0.2em] text-[#ff006e]/80 uppercase group-hover/widget:text-[#ff006e] transition-colors">
+                    <div className={`text-[10px] font-black tracking-[0.2em] uppercase transition-colors ${active ? 'text-[#00ffff]' : 'text-[#ff006e]/80 group-hover/widget:text-[#ff006e]'}`}>
                         {title}
                     </div>
                 </div>
                 <div className="flex gap-1">
-                    <div className="w-1 h-1 bg-[#ff006e]/20" />
-                    <div className="w-1 h-1 bg-[#ff006e]/40" />
-                    <div className="w-1 h-1 bg-[#ff006e]/60" />
+                    <div className={`w-1 h-1 transition-colors ${active ? 'bg-[#00ffff]/40' : 'bg-[#ff006e]/20'}`} />
+                    <div className={`w-1 h-1 transition-colors ${active ? 'bg-[#00ffff]/60' : 'bg-[#ff006e]/40'}`} />
+                    <div className={`w-1 h-1 transition-colors ${active ? 'bg-[#00ffff]' : 'bg-[#ff006e]/60'}`} />
                 </div>
             </div>
 
             {/* Main Content Container with Glassmorphism */}
-            <div className={`flex-1 relative border border-[#ff006e]/10 bg-black backdrop-blur-md transition-all duration-500 overflow-hidden ${isRebooting ? 'border-[#ff006e]/60 bg-[#ff006e]/5 ring-1 ring-[#ff006e]/20' : ''}`}>
+            <div className={`flex-1 relative border transition-all duration-500 overflow-hidden bg-black backdrop-blur-md ${active ? 'border-[#00ffff]/60 shadow-[0_0_20px_rgba(0,255,255,0.15)] ring-1 ring-[#00ffff]/30' : 'border-[#ff006e]/10'} ${isRebooting ? 'border-[#ff006e]/60 bg-[#ff006e]/5 ring-1 ring-[#ff006e]/20' : ''}`}>
                 
                 {/* Corner Brackets */}
                 <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#ff006e]/30 group-hover/widget:border-[#ff006e]/60 transition-colors" />

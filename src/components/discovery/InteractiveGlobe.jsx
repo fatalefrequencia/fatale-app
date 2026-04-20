@@ -22,7 +22,7 @@ const Pin = ({ position, color, label, onClick }) => {
 };
 
 // Mock "Makeshift Continents" using sectors
-const SectorContinent = ({ sector, index }) => {
+const SectorContinent = ({ sector, index, isActive, onClick }) => {
     const meshRef = useRef();
     const count = 12;
     const radius = 2.5;
@@ -31,11 +31,11 @@ const SectorContinent = ({ sector, index }) => {
     const chunks = useMemo(() => {
         const results = [];
         const phi = (index / SECTORS.length) * Math.PI * 2;
-        const theta = Math.PI / 3 + (Math.random() * Math.PI / 3);
+        const theta = Math.PI / 3; // Keep them around the equator for easier viewing
 
         for (let i = 0; i < count; i++) {
-            const lat = theta + (Math.random() - 0.5) * 0.5;
-            const lon = phi + (Math.random() - 0.5) * 0.5;
+            const lat = theta + (Math.random() - 0.5) * 0.4;
+            const lon = phi + (Math.random() - 0.5) * 0.4;
 
             const x = radius * Math.sin(lat) * Math.cos(lon);
             const y = radius * Math.cos(lat);
@@ -44,23 +44,25 @@ const SectorContinent = ({ sector, index }) => {
             results.push({
                 pos: [x, y, z],
                 scale: [Math.random() * 0.4 + 0.1, Math.random() * 0.4 + 0.1, 0.05],
-                rot: [lat, lon, 0]
+                rot: [lat, lon, 0],
+                phi,
+                theta
             });
         }
         return results;
     }, [index]);
 
     return (
-        <group>
+        <group onClick={(e) => { e.stopPropagation(); onClick(); }}>
             {chunks.map((c, i) => (
                 <mesh key={i} position={c.pos} rotation={c.rot}>
                     <boxGeometry args={c.scale} />
                     <meshStandardMaterial 
                         color={sector.color} 
                         emissive={sector.color} 
-                        emissiveIntensity={0.5} 
+                        emissiveIntensity={isActive ? 2 : 0.4} 
                         transparent 
-                        opacity={0.8} 
+                        opacity={isActive ? 1 : 0.6} 
                     />
                 </mesh>
             ))}
@@ -68,22 +70,32 @@ const SectorContinent = ({ sector, index }) => {
     );
 };
 
-const GlobeCore = ({ searchQuery, searchResults = [] }) => {
+const GlobeCore = ({ searchQuery, searchResults = [], activeSector, onSectorClick }) => {
     const groupRef = useRef();
 
     useFrame((state) => {
-        if (!searchQuery) {
+        if (!searchQuery && !activeSector) {
             groupRef.current.rotation.y += 0.002;
+        }
+
+        // Auto-rotation to active sector
+        if (activeSector !== null) {
+            const targetPhi = (activeSector / SECTORS.length) * Math.PI * 2;
+            // Target rotation is negative phi to face the camera
+            const currentY = groupRef.current.rotation.y;
+            const targetY = -targetPhi + Math.PI / 2;
+            
+            // Smooth lerp for rotation
+            groupRef.current.rotation.y = THREE.MathUtils.lerp(currentY, targetY, 0.05);
         }
     });
 
     // Map search results to spherical coordinates
     const searchPins = useMemo(() => {
         return searchResults.slice(0, 15).map((node, i) => {
-            // Deterministic but random-looking positions based on ID
             const id = node.id || node.Id || i;
             const h = hashStr(id);
-            const lat = ((h % 180) - 90) * (Math.PI / 180);
+            const lat = ((h % 120) - 60) * (Math.PI / 180);
             const lon = (h % 360) * (Math.PI / 180);
             const radius = 2.52;
 
@@ -97,35 +109,27 @@ const GlobeCore = ({ searchQuery, searchResults = [] }) => {
 
     return (
         <group ref={groupRef}>
-            {/* The Invisible Core */}
             <Sphere args={[2.45, 32, 32]}>
-                <meshBasicMaterial color="#000" transparent opacity={0.8} />
+                <meshBasicMaterial color="#000" transparent opacity={0.6} />
             </Sphere>
 
-            {/* Wireframe Grid */}
             <Sphere args={[2.5, 40, 40]}>
-                <meshBasicMaterial color="#ff006e" wireframe transparent opacity={0.08} />
+                <meshBasicMaterial color="#ff006e" wireframe transparent opacity={0.05} />
             </Sphere>
 
-            {/* Continents */}
             {SECTORS.map((s, idx) => (
-                <SectorContinent key={s.id} sector={s} index={idx} />
-            ))}
-
-            {/* Dynamic Search Pins */}
-            {searchPins.map((p, i) => (
-                <Pin 
-                    key={i} 
-                    position={p.pos} 
-                    color={p.color} 
-                    onClick={() => console.log("Pin Click:", p.data)} 
+                <SectorContinent 
+                    key={s.id} 
+                    sector={s} 
+                    index={idx} 
+                    isActive={activeSector === s.id}
+                    onClick={() => onSectorClick(s.id)}
                 />
             ))}
 
-            {/* Stationary Decorative Pins */}
-            <Pin position={[1.5, 1.5, 1.5]} color="#00ffff" label="NEON_STATION_ALPHA" />
-            <Pin position={[-1.8, 0.5, 1.5]} color="#ff006e" label="BASS_LEVEL_Z" />
-            <Pin position={[0, -2.2, 1.0]} color="#9b5de5" label="AMBIENT_VOID_9" />
+            {searchPins.map((p, i) => (
+                <Pin key={i} position={p.pos} color={p.color} />
+            ))}
         </group>
     );
 };
@@ -139,7 +143,7 @@ const hashStr = (s) => {
     return Math.abs(h);
 };
 
-const InteractiveGlobe = ({ searchQuery, searchResults, onNodeClick }) => {
+const InteractiveGlobe = ({ searchQuery, searchResults, activeSector, onSectorClick }) => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
     
     return (
@@ -164,12 +168,16 @@ const InteractiveGlobe = ({ searchQuery, searchResults, onNodeClick }) => {
                 <pointLight position={[-10, -10, -10]} intensity={1.5} color="#00ffff" />
 
                 <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
-                    <GlobeCore searchQuery={searchQuery} searchResults={searchResults} />
+                    <GlobeCore 
+                        searchQuery={searchQuery} 
+                        searchResults={searchResults} 
+                        activeSector={activeSector}
+                        onSectorClick={onSectorClick}
+                    />
                 </Float>
 
                 <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
             </Canvas>
-            
         </div>
     );
 };

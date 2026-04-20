@@ -12,6 +12,7 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeSector, setActiveSector] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isBooting, setIsBooting] = useState(true);
     const [mobileViewMode, setMobileViewMode] = useState('globe'); // 'globe' or 'data'
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 1024);
 
@@ -28,23 +29,26 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
     const [visualUploads, setVisualUploads] = useState([]);
     const [journalEntries, setJournalEntries] = useState([]);
     const [communities, setCommunities] = useState([]);
+    const [stations, setStations] = useState([]);
     const [youtubeResults, setYoutubeResults] = useState([]);
 
     const fetchAll = useCallback(async () => {
         setLoading(true);
         try {
-            const [tracksRes, artistsRes, commsRes, playlistsRes, feedRes] = await Promise.all([
+            const [tracksRes, artistsRes, commsRes, playlistsRes, feedRes, stationsRes] = await Promise.all([
                 API.Tracks.getAllTracks({ sort: 'trending' }).catch(() => ({ data: [] })),
                 API.Artists.getAll().catch(() => ({ data: [] })),
                 API.Communities.getAll().catch(() => ({ data: [] })),
                 API.Playlists.getAll().catch(() => ({ data: [] })),
                 API.Feed.getGlobalFeed().catch(() => ({ data: [] })),
+                API.Stations.getAll().catch(() => ({ data: [] })),
             ]);
 
-            setTrendingTracks(Array.isArray(tracksRes?.data) ? tracksRes.data.slice(0, 10) : []);
-            setTrendingArtists(Array.isArray(artistsRes?.data) ? artistsRes.data.slice(0, 10) : []);
-            setCommunities(Array.isArray(commsRes?.data) ? commsRes.data.slice(0, 8) : []);
-            setTrendingPlaylists(Array.isArray(playlistsRes?.data) ? playlistsRes.data.slice(0, 8) : []);
+            setTrendingTracks(Array.isArray(tracksRes?.data) ? tracksRes.data : []);
+            setTrendingArtists(Array.isArray(artistsRes?.data) ? artistsRes.data : []);
+            setCommunities(Array.isArray(commsRes?.data) ? commsRes.data : []);
+            setTrendingPlaylists(Array.isArray(playlistsRes?.data) ? playlistsRes.data : []);
+            setStations(Array.isArray(stationsRes?.data) ? stationsRes.data : []);
             
             if (Array.isArray(feedRes?.data)) {
                 setVisualUploads(feedRes.data.filter(i => i.type === 'studio').slice(0, 12));
@@ -59,6 +63,9 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
 
     useEffect(() => {
         fetchAll();
+        // Boot sequence
+        const bootTimer = setTimeout(() => setIsBooting(false), 1500);
+        return () => clearTimeout(bootTimer);
     }, [fetchAll]);
 
     // YouTube search logic (debounced)
@@ -76,54 +83,115 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
         return () => clearTimeout(timer);
     }, [searchQuery]);
 
+    // Utility to check if an item matches the active sector
+    const matchesSector = useCallback((item) => {
+        if (!activeSector) return true;
+        const s = SECTORS.find(sec => sec.id === activeSector);
+        if (!s) return true;
+        
+        const genre = (item.genre || item.Genre || "").toLowerCase();
+        // Check main genre or subgenres
+        return s.name.toLowerCase().includes(genre) || 
+               s.subgenres.some(sub => sub.toLowerCase() === genre || genre.includes(sub.toLowerCase()));
+    }, [activeSector]);
+
     // Computed Filtered Lists
     const filteredTracks = useMemo(() => {
-        if (!searchQuery) return trendingTracks.slice(0, 8);
-        return trendingTracks.filter(t => 
+        const base = trendingTracks.filter(matchesSector);
+        if (!searchQuery) return base.slice(0, 8);
+        return base.filter(t => 
             t.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
             t.artist?.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [trendingTracks, searchQuery]);
+    }, [trendingTracks, searchQuery, matchesSector]);
 
     const filteredArtists = useMemo(() => {
-        if (!searchQuery) return trendingArtists.slice(0, 6);
-        return trendingArtists.filter(a => 
+        const base = trendingArtists.filter(matchesSector);
+        if (!searchQuery) return base.slice(0, 6);
+        return base.filter(a => 
             a.name?.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [trendingArtists, searchQuery]);
+    }, [trendingArtists, searchQuery, matchesSector]);
 
     const filteredPlaylists = useMemo(() => {
-        if (!searchQuery) return trendingPlaylists.slice(0, 4);
-        return trendingPlaylists.filter(p => 
+        const base = trendingPlaylists.filter(matchesSector);
+        if (!searchQuery) return base.slice(0, 4);
+        return base.filter(p => 
             p.name?.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [trendingPlaylists, searchQuery]);
+    }, [trendingPlaylists, searchQuery, matchesSector]);
 
     const filteredCommunities = useMemo(() => {
-        if (!searchQuery) return communities.slice(0, 4);
-        return communities.filter(c => 
+        const base = communities.filter(matchesSector);
+        if (!searchQuery) return base.slice(0, 4);
+        return base.filter(c => 
             c.name?.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [communities, searchQuery]);
+    }, [communities, searchQuery, matchesSector]);
+
+    const liveStations = useMemo(() => {
+        const base = stations.filter(s => s.isLive || s.IsLive).filter(matchesSector);
+        if (!searchQuery) return base.slice(0, 6);
+        return base.filter(s => 
+            s.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            s.currentSessionTitle?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [stations, searchQuery, matchesSector]);
 
     const filteredVisuals = useMemo(() => {
-        if (!searchQuery) return visualUploads.slice(0, 9);
-        return visualUploads.filter(v => 
+        const base = visualUploads.filter(matchesSector);
+        if (!searchQuery) return base.slice(0, 9);
+        return base.filter(v => 
             v.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             v.artist?.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [visualUploads, searchQuery]);
+    }, [visualUploads, searchQuery, matchesSector]);
 
     const filteredJournals = useMemo(() => {
-        if (!searchQuery) return journalEntries.slice(0, 6);
-        return journalEntries.filter(j => 
+        const base = journalEntries.filter(matchesSector);
+        if (!searchQuery) return base.slice(0, 6);
+        return base.filter(j => 
             j.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             j.content?.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [journalEntries, searchQuery]);
+    }, [journalEntries, searchQuery, matchesSector]);
 
     return (
         <div className="relative w-full h-full overflow-y-auto lg:overflow-hidden bg-[#020202] text-white font-mono flex flex-col p-4 select-none no-scrollbar">
+            {/* Terminal Boot Sequence Overlay */}
+            <AnimatePresence>
+                {isBooting && (
+                    <motion.div 
+                        initial={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 1, ease: "circIn" }}
+                        className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-10 overflow-hidden"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="max-w-md w-full space-y-4"
+                        >
+                            <div className="text-[10px] text-[#ff006e] font-black tracking-[0.5em] mb-8 animate-pulse">INITIATING_NEURAL_LINK...</div>
+                            <div className="space-y-1 font-mono text-[8px] opacity-40">
+                                <div>[SYS] BOOTING_KERNEL_v4.2.0... OK</div>
+                                <div>[SYS] CALIBRATING_SPATIAL_SENSORS... OK</div>
+                                <div>[SYS] ESTABLISHING_ENCRYPTED_SIGNAL... OK</div>
+                                <div>[SYS] LOADING_DISCOVERY_MAP... OK</div>
+                            </div>
+                            <div className="h-1 w-full bg-[#ff006e]/20 relative overflow-hidden">
+                                <motion.div 
+                                    initial={{ left: '-100%' }}
+                                    animate={{ left: '0%' }}
+                                    transition={{ duration: 1.2, ease: "easeInOut" }}
+                                    className="absolute inset-0 bg-[#ff006e]/80"
+                                />
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Top scanning lines effect */}
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#ff006e]/10 z-[60] shadow-[0_0_20px_#ff006e]" />
             
@@ -216,7 +284,11 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                         <InteractiveGlobe 
                             searchQuery={searchQuery}
                             searchResults={[...filteredTracks, ...filteredArtists, ...filteredCommunities]}
-                            onNodeClick={(node) => onPlayTrack(node)}
+                            activeSector={activeSector}
+                            onSectorClick={(secId) => {
+                                // If already active, toggle off
+                                setActiveSector(activeSector === secId ? null : secId);
+                            }}
                         />
                         
                         {/* Floating Overlay for Sector Status */}
@@ -235,7 +307,7 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                 {(!isMobile || mobileViewMode === 'data') && (
                   <>
                     <div className="col-span-3 row-span-2 col-start-1 row-start-1 pointer-events-auto">
-                    <HUDWidget title="YT_FREQ_SCAN" icon={<Search size={14}/>} searchQuery={searchQuery}>
+                    <HUDWidget title="YT_FREQ_SCAN" icon={<Search size={14}/>} searchQuery={searchQuery} active={activeSector !== null}>
                         <div className="space-y-4">
                             {youtubeResults.length > 0 ? youtubeResults.map(y => (
                                 <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => onPlayTrack(y)}>
@@ -260,7 +332,7 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                 </div>
 
                 <div className="col-span-3 row-span-2 col-start-1 row-start-3 pointer-events-auto">
-                    <HUDWidget title="PLATFORM_SIGS" icon={<Music size={14}/>} searchQuery={searchQuery}>
+                    <HUDWidget title="PLATFORM_SIGS" icon={<Music size={14}/>} searchQuery={searchQuery} active={activeSector !== null}>
                          <div className="space-y-1">
                              {filteredTracks.map((t, idx) => (
                                  <div key={t.id} className="flex items-center gap-4 text-[10px] group cursor-pointer py-2 px-2 hover:bg-white/5 transition-all border-l border-transparent hover:border-[#ff006e]" onClick={() => onPlayTrack(t)}>
@@ -276,7 +348,7 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                 </div>
 
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-1 lg:row-start-5 pointer-events-auto">
-                    <HUDWidget title="ARTIST_NODES" icon={<User size={14}/>} searchQuery={searchQuery}>
+                    <HUDWidget title="ARTIST_NODES" icon={<User size={14}/>} searchQuery={searchQuery} active={activeSector !== null}>
                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-2 pt-2">
                              {filteredArtists.map(a => (
                                  <div key={a.id} className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => navigateToProfile(a.userId)}>
@@ -301,7 +373,7 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
 
                 {/* --- RIGHT COLUMN: PLAYLISTS, VISUALS, JOURNALS --- */}
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-1 pointer-events-auto">
-                    <HUDWidget title="PUBLIC_COLL" icon={<Layers size={14}/>} searchQuery={searchQuery}>
+                    <HUDWidget title="PUBLIC_COLL" icon={<Layers size={14}/>} searchQuery={searchQuery} active={activeSector !== null}>
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                              {filteredPlaylists.map(pl => (
                                  <div key={pl.id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black">
@@ -320,7 +392,7 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                 </div>
 
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-3 pointer-events-auto">
-                    <HUDWidget title="STUDIO_TRANS" icon={<Camera size={14}/>} searchQuery={searchQuery}>
+                    <HUDWidget title="STUDIO_TRANS" icon={<Camera size={14}/>} searchQuery={searchQuery} active={activeSector !== null}>
                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                              {filteredVisuals.map(v => (
                                  <div key={v.id} className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-[#ff006e]/60 transition-all shadow-xl">
@@ -338,7 +410,7 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                 </div>
 
                 <div className="col-span-3 row-span-2 col-start-10 row-start-5 pointer-events-auto">
-                    <HUDWidget title="FREQ_JOURNAL" icon={<BookOpen size={14}/>} searchQuery={searchQuery}>
+                    <HUDWidget title="FREQ_JOURNAL" icon={<BookOpen size={14}/>} searchQuery={searchQuery} active={activeSector !== null}>
                         <div className="space-y-4">
                              {filteredJournals.map(j => (
                                  <div key={j.id} className="border-l border-[#ff006e]/10 pl-4 py-2 relative group cursor-pointer hover:bg-white/[0.02] transition-all">
@@ -354,26 +426,46 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                     </HUDWidget>
                 </div>
 
-                {/* --- BOTTOM CENTER: COMMUNITIES --- */}
-                <div className="flex-none lg:col-span-6 lg:row-span-2 lg:col-start-4 lg:row-start-5 pointer-events-auto">
-                    <HUDWidget title="SECTOR_CLANS" icon={<Globe size={14}/>} searchQuery={searchQuery}>
-                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full py-1">
+                {/* --- BOTTOM CENTER: RADIO & COMMUNITIES --- */}
+                <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-4 lg:row-start-5 pointer-events-auto">
+                    <HUDWidget title="RADAR_SIGNAL" icon={<Radio size={14}/>} searchQuery={searchQuery} active={activeSector !== null}>
+                         <div className="space-y-4">
+                             {liveStations.length > 0 ? liveStations.map(s => (
+                                 <div key={s.id} className="group cursor-pointer">
+                                     <div className="flex items-center justify-between mb-1">
+                                         <div className="text-[10px] font-black group-hover:text-[#00ffff] transition-colors uppercase tracking-tight truncate flex-1">{s.name}</div>
+                                         <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                              <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
+                                              <span className="text-[7px] font-black text-red-600">LIVE</span>
+                                         </div>
+                                     </div>
+                                     <div className="text-[8px] opacity-30 truncate uppercase tracking-widest">{s.currentSessionTitle || "ESTABLISHING_LINK..."}</div>
+                                     <div className="mt-2 h-[1px] w-full bg-white/5 relative overflow-hidden">
+                                          <div className="absolute inset-0 bg-[#00ffff]/20 animate-scanlines" />
+                                     </div>
+                                 </div>
+                             )) : (
+                                 <div className="flex flex-col items-center justify-center py-6 opacity-20">
+                                     <Radio size={16} className="mb-2" />
+                                     <div className="text-[8px] tracking-widest uppercase text-center px-4">No live streams found</div>
+                                 </div>
+                             )}
+                         </div>
+                    </HUDWidget>
+                </div>
+
+                <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-7 lg:row-start-5 pointer-events-auto">
+                    <HUDWidget title="SECTOR_CLANS" icon={<Globe size={14}/>} searchQuery={searchQuery} active={activeSector !== null}>
+                         <div className="space-y-3">
                              {filteredCommunities.map(c => (
-                                 <div key={c.id} className="relative flex items-center gap-4 p-3 bg-black border border-white/5 hover:border-[#ff006e]/40 transition-all group cursor-pointer overflow-hidden shadow-2xl">
-                                      <div className="w-16 h-16 bg-zinc-900 overflow-hidden relative shrink-0 border border-white/5">
-                                          <img src={getMediaUrl(c.imageUrl)} alt="" className="w-full h-full object-cover opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
-                                          <div className="absolute inset-0 bg-gradient-to-br from-[#ff006e]/10 to-transparent mix-blend-overlay" />
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                          <div className="text-[11px] font-black truncate uppercase group-hover:text-[#ff006e] transition-colors tracking-tight">{c.name}</div>
-                                          <div className="text-[8px] opacity-30 uppercase tracking-[0.3em] mt-1 font-bold">SEC_{c.sectorId || '0'} // {SECTORS.find(s => s.id === (c.sectorId || 0))?.name.split(' ')[0]}</div>
-                                          <div className="flex items-center gap-2 mt-3">
-                                              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
-                                              <span className="text-[8px] text-green-500/60 font-black uppercase tracking-widest">{c.memberCount} NODES_SYNCED</span>
-                                          </div>
-                                      </div>
-                                      {/* Side active indicator */}
-                                      <div className="absolute right-0 top-0 bottom-0 w-0.5 bg-[#ff006e] scale-y-0 group-hover:scale-y-100 transition-transform duration-500" />
+                                 <div key={c.id} className="flex items-center gap-3 p-2 hover:bg-white/5 border border-transparent hover:border-white/10 transition-all group cursor-pointer">
+                                     <div className="w-8 h-8 rounded-sm bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center shrink-0">
+                                         <Globe size={12} className="text-[#ff006e] opacity-40 group-hover:opacity-100 transition-opacity" />
+                                     </div>
+                                     <div className="min-w-0 flex-1">
+                                         <div className="text-[9px] font-black truncate group-hover:text-[#00ffff] transition-colors tracking-tight uppercase">{c.name}</div>
+                                         <div className="text-[7px] opacity-30 tracking-[0.2em] font-light uppercase mt-0.5">{c.memberCount || 0} SECTOR_AGENTS</div>
+                                     </div>
                                  </div>
                              ))}
                          </div>
