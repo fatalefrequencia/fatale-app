@@ -1739,9 +1739,9 @@ export const ProfileView = React.memo(({
                                                                         {/* Primary: Play */}
                                                                         <button
                                                                             onClick={() => onPlayTrack(selectedRelease)}
-                                                                            className="flex items-center gap-2 px-4 py-2 bg-[var(--text-color)] text-black text-[9px] font-black uppercase tracking-[0.2em] hover:opacity-80 transition-all"
+                                                                            className="flex items-center gap-2 px-4 py-2 bg-[var(--text-color)] text-black text-[9px] font-black uppercase tracking-[0.2em] hover:opacity-80 transition-all font-mono"
                                                                         >
-                                                                            <Play size={11} fill="currentColor" /> [ PLAY_SIGNAL ]
+                                                                            <Play size={11} fill="currentColor" /> [ PLAY ]
                                                                         </button>
 
                                                                         {/* Post to Wall */}
@@ -1755,13 +1755,12 @@ export const ProfileView = React.memo(({
                                                                                         const updated = { ...selectedRelease, isPosted: isPostedNow, IsPosted: isPostedNow };
                                                                                         setSelectedRelease(updated);
                                                                                         setProfileTracks(prev => prev.map(t => (String(t.id) === String(selectedRelease.id)) ? updated : t));
-                                                                                        showNotification(isPostedNow ? "SIGNAL_BROADCAST" : "SIGNAL_REDACTED", `TRACK_${isPostedNow ? 'ADDED_TO' : 'REMOVED_FROM'}_WALL`, "success");
+                                                                                        showNotification(isPostedNow ? "SIGNAL_BROADCAST" : "SIGNAL_REDACTED", `TRACK_${isPostedNow ? 'PINNED_TO' : 'REMOVED_FROM'}_WALL`, "success");
                                                                                     } catch (err) { console.error(err); }
                                                                                 }}
-                                                                                className={`flex items-center gap-2 px-3 py-2 border text-[9px] font-bold uppercase tracking-[0.2em] transition-all ${isTruthy(selectedRelease.isPosted || selectedRelease.IsPosted) ? 'bg-white text-black border-white' : 'border-white/20 text-white/60 hover:border-[var(--text-color)] hover:text-[var(--text-color)]'}`}
+                                                                                className={`flex items-center gap-2 px-3 py-2 border text-[9px] font-bold uppercase font-mono tracking-[0.2em] transition-all ${isTruthy(selectedRelease.isPosted || selectedRelease.IsPosted) ? 'bg-white text-black border-white' : 'border-white/20 text-white/60 hover:border-[var(--text-color)] hover:text-[var(--text-color)]'}`}
                                                                             >
-                                                                                <Star size={10} fill={isTruthy(selectedRelease.isPosted || selectedRelease.IsPosted) ? 'currentColor' : 'none'} />
-                                                                                {isTruthy(selectedRelease.isPosted || selectedRelease.IsPosted) ? 'BROADCASTED' : 'BROADCAST'}
+                                                                                {isTruthy(selectedRelease.isPosted || selectedRelease.IsPosted) ? '[ PINNED_TO_WALL ]' : '[ PIN_TO_WALL ]'}
                                                                             </button>
                                                                         )}
 
@@ -1772,17 +1771,15 @@ export const ProfileView = React.memo(({
                                                                                 navigator.clipboard.writeText(link);
                                                                                 showNotification("LINK_COPIED", "SIGNAL_ADDRESS_SECURED", "success");
                                                                             }}
-                                                                            className="flex items-center gap-2 px-3 py-2 border border-white/20 text-white/60 text-[9px] font-bold uppercase tracking-[0.2em] hover:border-[var(--text-color)] hover:text-[var(--text-color)] transition-all"
+                                                                            className="flex items-center gap-2 px-3 py-2 border border-white/20 text-white/60 text-[9px] font-bold uppercase font-mono tracking-[0.2em] hover:border-[var(--text-color)] hover:text-[var(--text-color)] transition-all"
                                                                         >
-                                                                            <Share2 size={10} /> SHARE
+                                                                            <Share2 size={10} /> [ SHARE ]
                                                                         </button>
 
                                                                         {/* More Actions */}
-                                                                        {isMe && (
-                                                                            <div className="flex items-center">
-                                                                                <TrackActionsDropdown track={selectedRelease} isOwner={isMe} playlists={currentUserPlaylists} myLikes={myLikes} isLikedInitial={myLikes.some(l => (l.trackId || l.TrackId) === (selectedRelease.id || selectedRelease.Id))} onDelete={() => { handleDeleteTrack(selectedRelease); setSelectedRelease(null); }} />
-                                                                            </div>
-                                                                        )}
+                                                                        <div className="flex items-center">
+                                                                            <TrackActionsDropdown track={selectedRelease} isOwner={isMe} playlists={currentUserPlaylists} myLikes={myLikes} isLikedInitial={myLikes.some(l => (l.trackId || l.TrackId) === (selectedRelease.id || selectedRelease.Id))} onDelete={() => { handleDeleteTrack(selectedRelease); setSelectedRelease(null); }} />
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>

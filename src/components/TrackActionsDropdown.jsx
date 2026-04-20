@@ -239,7 +239,7 @@ const TrackActionsDropdown = ({
         <div className="relative" ref={triggerRef}>
             <button
                 onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); setShowPlaylists(false); }}
-                className={`p-2 rounded-xl transition-all border-2 ${isOpen ? 'border-[#ff006e] bg-[#ff006e]/10 text-[#ff006e] shadow-[0_0_20px_rgba(255,0,110,0.2)]' : 'text-[#ff006e]/60 border-[#ff006e]/10 hover:border-[#ff006e]/40 hover:text-[#ff006e] bg-white/5'}`}
+                className={`p-2 rounded-sm transition-all border-2 ${isOpen ? 'border-[#ff006e] bg-[#ff006e]/10 text-[#ff006e] shadow-[0_0_20px_rgba(255,0,110,0.2)]' : 'text-[#ff006e]/60 border-[#ff006e]/10 hover:border-[#ff006e]/40 hover:text-[#ff006e] bg-white/5'}`}
             >
                 <MoreHorizontal size={20} />
             </button>
@@ -261,17 +261,17 @@ const TrackActionsDropdown = ({
                                 transition={{ duration: 0.15 }}
                                 onClick={(e) => e.stopPropagation()}
                                 style={{ minWidth: '220px' }}
-                                className="bg-[#0d0d0d] border-2 border-[#ff006e]/60 rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_30px_rgba(255,0,110,0.2)] ring-1 ring-white/10"
+                                className="bg-[#0d0d0d] border border-[#ff006e]/60 rounded-sm overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_30px_rgba(255,0,110,0.2)] ring-1 ring-white/10 font-mono"
                             >
                                 <div className="p-2 space-y-1">
                                     {!showPlaylists ? (
                                         <>
-                                            <button className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-xl group/item">
+                                            <button className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-sm group/item">
                                                 <PlayCircle size={16} className="text-[#ff006e]/50 group-hover/item:text-[#ff006e]" /> Add to Queue
                                             </button>
                                             <button
                                                 onClick={() => setShowPlaylists(true)}
-                                                className="w-full flex items-center justify-between px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-xl group/item"
+                                                className="w-full flex items-center justify-between px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-sm group/item"
                                             >
                                                 <div className="flex items-center gap-3">
                                                     <Library size={16} className="text-[#ff006e]/50 group-hover/item:text-[#ff006e]" /> Add to Playlist
@@ -280,7 +280,7 @@ const TrackActionsDropdown = ({
                                             </button>
                                             <button
                                                 onClick={handleToggleLike}
-                                                className={`w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] transition-all rounded-xl group/item ${isLiked ? 'text-[#ff006e] bg-[#ff006e]/5' : 'text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e]'}`}
+                                                className={`w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] transition-all rounded-sm group/item ${isLiked ? 'text-[#ff006e] bg-[#ff006e]/5' : 'text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e]'}`}
                                             >
                                                 <Heart size={16} fill={isLiked ? "currentColor" : "none"} className={isLiked ? "text-[#ff006e]" : "text-[#ff006e]/50 group-hover/item:text-[#ff006e]"} /> {isLiked ? 'Liked' : 'Like'}
                                             </button>
@@ -288,14 +288,14 @@ const TrackActionsDropdown = ({
                                             {(track.price > 0 || track.Price > 0) && (
                                                 <button
                                                     onClick={handlePurchase}
-                                                    className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-xl group/item"
+                                                    className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-sm group/item"
                                                 >
                                                     <Zap size={16} className="text-[#ff006e]/50 group-hover/item:text-[#ff006e]" /> Purchase License
                                                 </button>
                                             )}
 
                                             {isOwner && (
-                                                <button onClick={handleDelete} className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-red-500/80 hover:bg-red-500/10 hover:text-red-500 transition-all rounded-xl group/item">
+                                                <button onClick={handleDelete} className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-red-500/80 hover:bg-red-500/10 hover:text-red-500 transition-all rounded-sm group/item">
                                                     <Trash2 size={16} className="opacity-50 group-hover/item:opacity-100" /> Delete / Delist
                                                 </button>
                                             )}
@@ -317,7 +317,7 @@ const TrackActionsDropdown = ({
                                                         <button
                                                             key={pId}
                                                             onClick={() => handleAddTrackToPlaylist(pId, pName)}
-                                                            className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-white/70 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-xl"
+                                                            className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-white/70 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-sm"
                                                         >
                                                             <div className={`w-1.5 h-1.5 rounded-full ${pPublic ? 'bg-[#ff006e]' : 'bg-white/20'}`} />
                                                             {pName}
