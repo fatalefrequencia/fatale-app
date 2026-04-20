@@ -1574,6 +1574,7 @@ function App() {
                onLogout={handleLogout}
                currentTrackIndex={currentTrackIndex}
                setCurrentTrackIndex={setCurrentTrackIndex}
+               setTracks={setTracks}
                isPlaying={isPlaying}
                setIsPlaying={setIsPlaying}
                user={user}
@@ -1791,6 +1792,7 @@ const Dashboard = React.memo(({
   onLogout, 
   currentTrackIndex, 
   setCurrentTrackIndex, 
+  setTracks,
   isPlaying, 
   setIsPlaying, 
   user, 
@@ -1926,6 +1928,9 @@ const Dashboard = React.memo(({
                 user={user}
                 navigateToProfile={navigateToProfile}
                 likedYoutubeIds={likedYoutubeIds}
+                setTracks={setTracks}
+                setCurrentTrackIndex={setCurrentTrackIndex}
+                setRedirectTrigger={setRedirectTrigger}
                 cachedTrackIds={cachedTrackIds} // PASS IDS
                 playlists={playlists}
                 onRefreshPlaylists={onRefreshPlaylists}
@@ -1964,6 +1969,7 @@ const Dashboard = React.memo(({
                 targetUserId={viewingUserId}
                 user={user}
                 tracks={tracks}
+                setTracks={setTracks}
                 onLogout={onLogout}
                 onAddCredits={onAddCredits}
                 setUser={setUser}
