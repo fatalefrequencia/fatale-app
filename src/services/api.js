@@ -5,7 +5,7 @@ console.log('[API_SERVICE] Initializing with production URL:', BASE_URL);
 
 const api = axios.create({
     baseURL: BASE_URL,
-    timeout: 10000,
+    timeout: 30000,
 });
 
 // Interceptor to inject token and UserID
@@ -84,7 +84,10 @@ const API = {
     Tracks: {
         getAllTracks: (params) => api.get('Tracks', { params }),
         getTrackById: (id) => api.get(`Tracks/${id}`),
-        uploadTrack: (formData) => api.post('Tracks/upload-full', formData),
+        uploadTrack: (formData) => api.post('Tracks/upload-full', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 120000
+        }),
         togglePin: (id) => api.post(`Tracks/${id}/toggle-pin`),
         togglePost: (id) => api.post(`Tracks/${id}/toggle-post`),
         deleteTrack: (id) => api.delete(`Tracks/${id}`),
@@ -205,7 +208,10 @@ const API = {
     Studio: {
         getMyGallery: () => api.get('Studio'),
         getUserGallery: (userId) => api.get(`Studio/user/${userId}`),
-        upload: (formData) => api.post('Studio/upload', formData),
+        upload: (formData) => api.post('Studio/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 120000
+        }),
         delete: (id) => api.delete(`Studio/${id}`),
         togglePin: (id) => api.post(`Studio/toggle-pin/${id}`),
         togglePost: (id) => api.post(`Studio/toggle-post/${id}`),
@@ -253,7 +259,8 @@ const API = {
     },
     Files: {
         upload: (formData) => api.post('File/upload', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
+            headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 120000
         })
     },
     Organic: {
