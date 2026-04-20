@@ -212,7 +212,7 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                 
                 {/* --- CENTER: THE GLOBE --- */}
                 {(!isMobile || mobileViewMode === 'globe') && (
-                    <div className={`${isMobile ? 'flex-1' : 'flex-none h-[350px]'} lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative`}>
+                    <div className={`${isMobile ? 'flex-1' : 'h-[350px] lg:h-full'} lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative`}>
                         <InteractiveGlobe 
                             searchQuery={searchQuery}
                             searchResults={[...filteredTracks, ...filteredArtists, ...filteredCommunities]}
