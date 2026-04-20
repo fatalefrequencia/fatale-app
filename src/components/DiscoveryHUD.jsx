@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Music, Disc, User, Play, Heart, Layers, Radio, BookOpen, Camera, Share2, Activity, Globe } from 'lucide-react';
+import { Search, Music, Disc, User, Play, Heart, Layers, Radio, BookOpen, Camera, Share2, Activity, Globe, X } from 'lucide-react';
 import API from '../services/api';
 import { SECTORS, getMediaUrl } from '../constants';
 import { useNotification } from '../contexts/NotificationContext';
@@ -164,15 +164,17 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
 
                     {/* MOBILE DUAL VIEW TOGGLE */}
                     {isMobile && (
-                        <div className="mt-4 flex bg-black/40 border border-[#ff006e]/20 rounded-sm p-1 gap-1 pointer-events-auto">
+                        <div className="mt-4 flex bg-black/40 border border-[#ff006e]/20 rounded-sm p-1 gap-1 pointer-events-auto relative z-[70]">
                             <button 
-                                onClick={() => setMobileViewMode('globe')}
+                                onTouchStart={(e) => { e.stopPropagation(); setMobileViewMode('globe'); }}
+                                onClick={(e) => { e.stopPropagation(); setMobileViewMode('globe'); }}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'globe' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
                             >
                                 <Globe size={12} /> GLOBE_SENSE
                             </button>
                             <button 
-                                onClick={() => setMobileViewMode('data')}
+                                onTouchStart={(e) => { e.stopPropagation(); setMobileViewMode('data'); }}
+                                onClick={(e) => { e.stopPropagation(); setMobileViewMode('data'); }}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'data' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
                             >
                                 <Activity size={12} /> DATA_STREAM
