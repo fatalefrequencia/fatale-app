@@ -115,13 +115,13 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
     }, [journalEntries, searchQuery]);
 
     return (
-        <div className="relative w-full h-full overflow-hidden bg-[#020202] text-white font-mono flex flex-col p-4 select-none">
+        <div className="relative w-full h-full overflow-y-auto lg:overflow-hidden bg-[#020202] text-white font-mono flex flex-col p-4 select-none no-scrollbar">
             {/* Top scanning lines effect */}
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#ff006e]/10 z-[60] shadow-[0_0_20px_#ff006e]" />
             
             {/* --- TOP HUD BAR --- */}
-            <div className="z-50 flex items-center justify-between mb-4 px-2">
-                <div className="flex items-center gap-4">
+            <div className="z-50 flex flex-col lg:flex-row items-center justify-between gap-4 mb-4 px-2">
+                <div className="flex items-center gap-4 self-start lg:self-auto">
                     <div className="flex items-center gap-2">
                         <Activity size={14} className="text-[#ff006e] animate-pulse" />
                         <div className="text-[#ff006e] text-[10px] font-black tracking-widest opacity-70">
@@ -131,7 +131,7 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                 </div>
 
                 {/* CENTRAL SEARCH */}
-                <div className="relative group w-[450px]">
+                <div className="relative group w-full lg:w-[450px]">
                     <div className="absolute -inset-1 bg-gradient-to-r from-[#ff006e]/0 via-[#ff006e]/20 to-[#ff006e]/0 rounded-lg blur opacity-0 group-focus-within:opacity-100 transition duration-1000 group-focus-within:duration-200"></div>
                     <div className="relative flex items-center">
                         <div className="absolute left-3 flex items-center pointer-events-none">
@@ -166,7 +166,7 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-6 text-[10px] text-white/40 tracking-tighter">
+                <div className="flex items-center gap-6 text-[10px] text-white/40 tracking-tighter self-end lg:self-auto">
                    <div className="hidden xl:flex items-center gap-2">
                         <span className="opacity-30">LOC:</span>
                         <span className="text-[#ff006e]/60">SILICON_HEIGHTS</span>
@@ -177,10 +177,10 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
             </div>
 
             {/* --- MAIN DASHBOARD GRID --- */}
-            <div className="flex-1 relative grid grid-cols-12 grid-rows-6 gap-4 pointer-events-none mt-4">
+            <div className="flex-1 relative flex flex-col lg:grid lg:grid-cols-12 lg:grid-rows-6 gap-6 lg:gap-4 pointer-events-none mt-4 pb-20 lg:pb-0">
                 
                 {/* --- CENTER: THE GLOBE --- */}
-                <div className="col-span-6 row-span-4 col-start-4 row-start-1 pointer-events-auto flex items-center justify-center relative">
+                <div className="flex-none h-[350px] lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative">
                     <InteractiveGlobe 
                         searchQuery={searchQuery}
                         searchResults={[...filteredTracks, ...filteredArtists, ...filteredCommunities]}
@@ -240,9 +240,9 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                     </HUDWidget>
                 </div>
 
-                <div className="col-span-3 row-span-2 col-start-1 row-start-5 pointer-events-auto">
+                <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-1 lg:row-start-5 pointer-events-auto">
                     <HUDWidget title="ARTIST_NODES" icon={<User size={14}/>} searchQuery={searchQuery}>
-                         <div className="grid grid-cols-3 gap-y-6 gap-x-2 pt-2">
+                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-2 pt-2">
                              {filteredArtists.map(a => (
                                  <div key={a.id} className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => navigateToProfile(a.userId)}>
                                       <div className="relative w-14 h-14">
@@ -265,9 +265,9 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                 </div>
 
                 {/* --- RIGHT COLUMN: PLAYLISTS, VISUALS, JOURNALS --- */}
-                <div className="col-span-3 row-span-2 col-start-10 row-start-1 pointer-events-auto">
+                <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-1 pointer-events-auto">
                     <HUDWidget title="PUBLIC_COLL" icon={<Layers size={14}/>} searchQuery={searchQuery}>
-                         <div className="grid grid-cols-2 gap-3">
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                              {filteredPlaylists.map(pl => (
                                  <div key={pl.id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black">
                                       <img src={getMediaUrl(pl.imageUrl)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
@@ -284,9 +284,9 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                     </HUDWidget>
                 </div>
 
-                <div className="col-span-3 row-span-2 col-start-10 row-start-3 pointer-events-auto">
+                <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-3 pointer-events-auto">
                     <HUDWidget title="STUDIO_TRANS" icon={<Camera size={14}/>} searchQuery={searchQuery}>
-                         <div className="grid grid-cols-3 gap-1.5">
+                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                              {filteredVisuals.map(v => (
                                  <div key={v.id} className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-[#ff006e]/60 transition-all shadow-xl">
                                       <img src={getMediaUrl(v.imageUrl || v.thumbnailUrl)} alt="" className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
@@ -320,9 +320,9 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                 </div>
 
                 {/* --- BOTTOM CENTER: COMMUNITIES --- */}
-                <div className="col-span-6 row-span-2 col-start-4 row-start-5 pointer-events-auto">
+                <div className="flex-none lg:col-span-6 lg:row-span-2 lg:col-start-4 lg:row-start-5 pointer-events-auto">
                     <HUDWidget title="SECTOR_CLANS" icon={<Globe size={14}/>} searchQuery={searchQuery}>
-                         <div className="grid grid-cols-2 gap-4 h-full py-1">
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full py-1">
                              {filteredCommunities.map(c => (
                                  <div key={c.id} className="relative flex items-center gap-4 p-3 bg-black border border-white/5 hover:border-[#ff006e]/40 transition-all group cursor-pointer overflow-hidden shadow-2xl">
                                       <div className="w-16 h-16 bg-zinc-900 overflow-hidden relative shrink-0 border border-white/5">

@@ -140,17 +140,23 @@ const hashStr = (s) => {
 };
 
 const InteractiveGlobe = ({ searchQuery, searchResults, onNodeClick }) => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+    
     return (
         <div className="w-full h-full cursor-grab active:cursor-grabbing">
             <Canvas dpr={[1, 2]}>
-                <PerspectiveCamera makeDefault position={[0, 0, 8]} fov={40} />
+                <PerspectiveCamera 
+                    makeDefault 
+                    position={[0, 0, isMobile ? 12 : 8]} 
+                    fov={isMobile ? 30 : 40} 
+                />
                 <OrbitControls 
                     enablePan={false} 
                     enableZoom={true} 
                     minDistance={5} 
-                    maxDistance={12}
+                    maxDistance={15}
                     autoRotate={false}
-                    rotateSpeed={0.8}
+                    rotateSpeed={isMobile ? 1.2 : 0.8}
                 />
                 
                 <ambientLight intensity={0.5} />

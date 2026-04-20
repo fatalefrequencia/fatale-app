@@ -49,11 +49,11 @@ const HUDWidget = ({ title, children, icon, searchQuery }) => {
                 {/* Content Area with Reboot Animation */}
                 <motion.div 
                     animate={isRebooting ? { 
-                        opacity: [1, 0, 1, 0.4, 1],
-                        scale: [1, 1.01, 0.99, 1],
-                        filter: ['brightness(1) contrast(1)', 'brightness(2) contrast(1.5)', 'brightness(0.5) contrast(1)', 'brightness(1) contrast(1)']
+                        opacity: [1, 0.6, 1, 0.8, 1],
+                        scale: [1, 1.005, 0.995, 1],
+                        filter: ['brightness(1)', 'brightness(1.5)', 'brightness(0.9)', 'brightness(1)']
                     } : { opacity: 1 }}
-                    transition={{ duration: 0.6, times: [0, 0.2, 0.4, 0.8, 1] }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
                     className="h-full w-full p-3 custom-scrollbar overflow-y-auto relative z-0"
                 >
                     {children}
