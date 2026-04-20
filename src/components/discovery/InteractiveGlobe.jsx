@@ -170,11 +170,6 @@ const InteractiveGlobe = ({ searchQuery, searchResults, onNodeClick }) => {
                 <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
             </Canvas>
             
-            {/* HUD Overlay for Globe Info */}
-            <div className="absolute top-4 left-4 pointer-events-none border-l-2 border-[#ff006e]/40 pl-3">
-                <div className="text-[10px] text-[#ff006e] font-black uppercase tracking-[0.3em]">spatial_frequency_scanner</div>
-                <div className="text-[8px] opacity-40 uppercase tracking-widest mt-1">AXIS_ROT_SYNC: TRUE // {searchResults?.length || 0}_NODES</div>
-            </div>
         </div>
     );
 };
