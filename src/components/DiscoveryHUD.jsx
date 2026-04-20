@@ -164,16 +164,16 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
 
                     {/* MOBILE DUAL VIEW TOGGLE */}
                     {isMobile && (
-                        <div className="mt-4 flex bg-black/40 border border-[#ff006e]/20 rounded-sm p-1 gap-1">
+                        <div className="mt-4 flex bg-black/40 border border-[#ff006e]/20 rounded-sm p-1 gap-1 pointer-events-auto">
                             <button 
                                 onClick={() => setMobileViewMode('globe')}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'globe' ? 'bg-[#ff006e] text-black shadow-[0_0_15px_#ff006e]' : 'text-[#ff006e]/40 hover:bg-[#ff006e]/10'}`}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'globe' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
                             >
                                 <Globe size={12} /> GLOBE_SENSE
                             </button>
                             <button 
                                 onClick={() => setMobileViewMode('data')}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'data' ? 'bg-[#ff006e] text-black shadow-[0_0_15px_#ff006e]' : 'text-[#ff006e]/40 hover:bg-[#ff006e]/10'}`}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'data' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
                             >
                                 <Activity size={12} /> DATA_STREAM
                             </button>
