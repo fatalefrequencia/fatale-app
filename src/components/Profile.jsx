@@ -848,19 +848,21 @@ export const ProfileView = React.memo(({
         setIsSavingGear(true);
         try {
             const API = await import('../services/api').then(mod => mod.default);
-            await API.Gear.add({
+            const response = await API.Gear.add({
                 name: gearFormData.name.trim(),
                 category: gearFormData.category,
                 notes: gearFormData.notes.trim() || null,
                 displayOrder: profileGear.length
             });
+            console.log('[GEAR_ADD_SUCCESS]', response.data);
             setGearFormData({ name: '', category: 'Synth', notes: '' });
             setShowGearForm(false);
             await fetchGear();
             showNotification('GEAR_ADDED', `${gearFormData.name} added to shelf.`, 'success');
         } catch (err) {
-            console.error('Failed to add gear', err);
-            showNotification('GEAR_ERROR', 'Failed to add gear item.', 'error');
+            console.error('[GEAR_ADD_FAILURE]', err);
+            const errorMsg = err.response?.data?.message || err.response?.data || 'Failed to establish link with gear shelf database.';
+            showNotification('GEAR_ERROR', `ERROR: ${errorMsg}`, 'error');
         } finally {
             setIsSavingGear(false);
         }
