@@ -1584,6 +1584,7 @@ function App() {
                handleNext={handleNext}
                handlePrev={handlePrev}
                handlePlayPlaylist={handlePlayPlaylist}
+               onQueueTrack={(track) => setTracks(prev => [...prev, track])}
                onPurchase={handlePurchase}
                onDownload={handleDownload}
                onLike={handleLike}
@@ -1802,6 +1803,7 @@ const Dashboard = React.memo(({
   handleNext, 
   handlePrev, 
   handlePlayPlaylist, 
+  onQueueTrack,
   onPurchase, 
   onDownload, 
   onLike, 
@@ -1934,6 +1936,7 @@ const Dashboard = React.memo(({
                 cachedTrackIds={cachedTrackIds} // PASS IDS
                 playlists={playlists}
                 onRefreshPlaylists={onRefreshPlaylists}
+                onQueueTrack={onQueueTrack}
                 favoriteStations={favoriteStations}
                 followedCommunities={followedCommunities}
                 onFollowUpdate={onFollowUpdate}
@@ -1978,6 +1981,7 @@ const Dashboard = React.memo(({
                 navigateToProfile={navigateToProfile}
                 playlists={playlists}
                 onRefreshPlaylists={onRefreshPlaylists}
+                onQueueTrack={onQueueTrack}
                 onPlayTrack={(track) => {
                   // Ensure track is playable even if unmapped
                   const enriched = {

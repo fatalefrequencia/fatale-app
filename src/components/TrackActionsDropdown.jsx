@@ -43,7 +43,8 @@ const TrackActionsDropdown = ({
     onLike,
     playlists = [],
     isLikedInitial = false,
-    myLikes = []
+    myLikes = [],
+    onAddToQueue
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showPlaylists, setShowPlaylists] = useState(false);
@@ -56,6 +57,7 @@ const TrackActionsDropdown = ({
         onConfirm: null,
         confirmText: 'Confirm'
     });
+    const [newPlaylistName, setNewPlaylistName] = useState('');
     const triggerRef = useRef(null);
 
     // Sync if initial changes
@@ -144,6 +146,35 @@ const TrackActionsDropdown = ({
                 isOpen: true,
                 title: 'Sync_Error',
                 message: err.response?.data?.message || err.response?.data || "Failed to add track to playlist.",
+                type: 'alert',
+                confirmText: 'Back'
+            });
+        }
+    };
+
+    const handleCreatePlaylist = async () => {
+        if (!newPlaylistName.trim()) return;
+        try {
+            const API = await import('../services/api').then(mod => mod.default);
+            // Create the playlist
+            const createRes = await API.Playlists.create({
+                name: newPlaylistName.trim(),
+                description: '',
+                isPublic: true,
+                imageUrl: ''
+            });
+            const newPlaylist = createRes.data;
+            const newPlaylistId = newPlaylist.id || newPlaylist.Id;
+
+            // Route the track to the new playlist directly
+            await handleAddTrackToPlaylist(newPlaylistId, newPlaylistName);
+            setNewPlaylistName('');
+        } catch (err) {
+            console.error("Failed to create playlist:", err);
+            setModalConfig({
+                isOpen: true,
+                title: 'Creation_Error',
+                message: err.response?.data?.message || err.response?.data || "Failed to initialize new playlist.",
                 type: 'alert',
                 confirmText: 'Back'
             });
@@ -261,12 +292,18 @@ const TrackActionsDropdown = ({
                                 transition={{ duration: 0.15 }}
                                 onClick={(e) => e.stopPropagation()}
                                 style={{ minWidth: '220px' }}
-                                className="bg-[#0d0d0d] border border-[#ff006e]/60 rounded-sm overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_30px_rgba(255,0,110,0.2)] ring-1 ring-white/10 font-mono"
+                                className="bg-[#000000] border border-[#ff006e]/60 rounded-sm overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_30px_rgba(255,0,110,0.2)] ring-1 ring-white/10 font-mono"
                             >
                                 <div className="p-2 space-y-1">
                                     {!showPlaylists ? (
                                         <>
-                                            <button className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-sm group/item">
+                                            <button 
+                                                onClick={() => {
+                                                    onAddToQueue?.(track);
+                                                    setIsOpen(false);
+                                                }}
+                                                className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-sm group/item"
+                                            >
                                                 <PlayCircle size={16} className="text-[#ff006e]/50 group-hover/item:text-[#ff006e]" /> Add to Queue
                                             </button>
                                             <button
@@ -326,6 +363,25 @@ const TrackActionsDropdown = ({
                                                 }) : (
                                                     <div className="px-4 py-8 text-center text-[9px] font-black uppercase text-white/20 tracking-tighter">No Playlists Detected</div>
                                                 )}
+                                                
+                                                <div className="p-3 border-t border-white/10 mt-2">
+                                                    <div className="flex gap-2">
+                                                        <input 
+                                                            type="text" 
+                                                            value={newPlaylistName}
+                                                            onChange={(e) => setNewPlaylistName(e.target.value)}
+                                                            placeholder="NEW_PLAYLIST_NAME" 
+                                                            className="flex-1 bg-white/5 border border-white/10 text-[9px] text-white uppercase px-2 py-1 outline-none focus:border-[#ff006e]"
+                                                        />
+                                                        <button 
+                                                            disabled={!newPlaylistName.trim()}
+                                                            onClick={handleCreatePlaylist}
+                                                            className="px-2 py-1 bg-[#ff006e]/20 text-[#ff006e] border border-[#ff006e]/30 text-[9px] uppercase font-bold hover:bg-[#ff006e] hover:text-white transition-all disabled:opacity-30"
+                                                        >
+                                                            Create
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </>
                                     )}

@@ -569,6 +569,7 @@ export const ProfileView = React.memo(({
     navigateToProfile,
     onPlayPlaylist,
     onPlayTrack,
+    onQueueTrack,
     playlists: currentUserPlaylists = [], // Prop from App (current user's playlists)
     initialModal,
     onClearInitialModal,
@@ -1778,7 +1779,7 @@ export const ProfileView = React.memo(({
 
                                                                         {/* More Actions */}
                                                                         <div className="flex items-center">
-                                                                            <TrackActionsDropdown track={selectedRelease} isOwner={isMe} playlists={currentUserPlaylists} myLikes={myLikes} isLikedInitial={myLikes.some(l => (l.trackId || l.TrackId) === (selectedRelease.id || selectedRelease.Id))} onDelete={() => { handleDeleteTrack(selectedRelease); setSelectedRelease(null); }} />
+                                                                            <TrackActionsDropdown track={selectedRelease} isOwner={isMe} playlists={currentUserPlaylists} myLikes={myLikes} isLikedInitial={myLikes.some(l => (l.trackId || l.TrackId) === (selectedRelease.id || selectedRelease.Id))} onDelete={() => { handleDeleteTrack(selectedRelease); setSelectedRelease(null); }} onAddToQueue={onQueueTrack} />
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -3469,6 +3470,7 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
                                     myLikes={myLikes}
                                     isLikedInitial={myLikes.some(l => (l.trackId || l.TrackId) === (t.id || t.Id))}
                                     onDelete={() => onRemoveTrack?.(playlist.id, t.id || t.Id)}
+                                    onAddToQueue={onQueueTrack}
                                 />
                             </div>
                         ))}
