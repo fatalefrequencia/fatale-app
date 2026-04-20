@@ -6,8 +6,6 @@ const HUDWidget = ({ title, children, icon, searchQuery }) => {
 
     // Trigger reboot effect when search query changes
     useEffect(() => {
-        if (!searchQuery) return;
-        
         setIsRebooting(true);
         const timer = setTimeout(() => setIsRebooting(false), 800); // 800ms reboot sequence
         return () => clearTimeout(timer);
@@ -33,7 +31,7 @@ const HUDWidget = ({ title, children, icon, searchQuery }) => {
             </div>
 
             {/* Main Content Container with Glassmorphism */}
-            <div className={`flex-1 relative border border-[#ff006e]/10 bg-black/40 backdrop-blur-md transition-all duration-500 overflow-hidden ${isRebooting ? 'border-[#ff006e]/60 bg-[#ff006e]/5 ring-1 ring-[#ff006e]/20' : ''}`}>
+            <div className={`flex-1 relative border border-[#ff006e]/10 bg-black backdrop-blur-md transition-all duration-500 overflow-hidden ${isRebooting ? 'border-[#ff006e]/60 bg-[#ff006e]/5 ring-1 ring-[#ff006e]/20' : ''}`}>
                 
                 {/* Corner Brackets */}
                 <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#ff006e]/30 group-hover/widget:border-[#ff006e]/60 transition-colors" />
