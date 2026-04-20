@@ -10,7 +10,7 @@ import {
     RefreshCw, Plus, Frown, Globe, Lock, PlayCircle, Edit3, Send, Library, Radio,
     ChevronDown, LogOut, Upload, MessageSquare, MapPin, Calendar, Activity,
     Eye, Cpu as Processor, Zap, Search, Palette, Type, Layout, Maximize2, Monitor,
-    Camera, Video, Book, ChevronLeft, Star, Share2, Link
+    Camera, Video, Book, ChevronLeft, Star, Share2, Link, FileText
 } from 'lucide-react';
 import { useNotification } from '../contexts/NotificationContext';
 import { API_BASE_URL, getMediaUrl } from '../constants';
@@ -216,7 +216,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/20"><Cpu size={32} /></div>
+                                    <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/50"><Cpu size={32} /></div>
                                 )}
                             </div>
                         </div>
@@ -246,7 +246,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                             )}
 
                             <div className="text-[10px] mono text-white/50 mb-2">{biography || ''}</div>
-                            <div className="flex justify-center gap-4 text-[7px] mono text-[var(--text-color)]/40 uppercase tracking-widest">
+                            <div className="flex justify-center gap-4 text-[7px] mono text-[var(--text-color)]/70 uppercase tracking-widest">
                                 <span>Lat: 34.0522</span>
                                 <span>Lng: -118.2437</span>
                                 <span>Freq: 104.2MHz</span>
@@ -429,7 +429,7 @@ const Sector = ({ id, label, items, onExpand, onPlayTrack, onPlayPlaylist }) => 
                                     className={item.type === 'PLAYLIST' ? 'grayscale opacity-60' : ''}
                                 />
                             ) : (
-                                <div className="w-full h-full flex flex-col items-center justify-center bg-[#050505] text-[var(--text-color)]/20 p-2 text-center group">
+                                <div className="w-full h-full flex flex-col items-center justify-center bg-[#050505] text-[var(--text-color)]/50 p-2 text-center group">
                                     {item.type === 'JOURNAL' ? <Book size={20} className="group-hover:text-[var(--text-color)] transition-colors" /> :
                                         item.type === 'PLAYLIST' ? <Database size={20} className="group-hover:text-[var(--text-color)] transition-colors" /> :
                                             <Music size={20} />}
@@ -593,6 +593,7 @@ export const ProfileView = React.memo(({
     const [activeTab, setActiveTab] = useState('Music');
     const [studioSubTab, setStudioSubTab] = useState('All');
     const [musicSubTab, setMusicSubTab] = useState('All');
+    const [selectedRelease, setSelectedRelease] = useState(null);
     const [profileGear, setProfileGear] = useState([]);
     const [isLoadingGear, setIsLoadingGear] = useState(false);
     const [showGearForm, setShowGearForm] = useState(false);
@@ -1280,21 +1281,21 @@ export const ProfileView = React.memo(({
                 leftContent={
                     <div className="space-y-8">
                         <div className="space-y-4">
-                            <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// BIOMETRIC_ID</div>
+                            <div className="text-[9px] font-bold text-[var(--text-color)]/70 tracking-[0.3em]">// BIOMETRIC_ID</div>
                             <div className="aspect-square border border-[var(--text-color)]/30 p-1 relative group bg-black overflow-hidden">
                                 {(() => {
                                     const pfp = displayUser?.profilePictureUrl || displayUser?.ProfilePictureUrl || displayUser?.profileImageUrl || displayUser?.ProfileImageUrl;
                                     if (pfp) {
                                         return <img src={getMediaUrl(pfp)} className="w-full h-full object-cover" />;
                                     }
-                                    return <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/20"><Cpu size={40} /></div>;
+                                    return <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/50"><Cpu size={40} /></div>;
                                 })()}
                                 <div className="absolute inset-0 bg-[var(--text-color)]/5 pointer-events-none" />
                             </div>
                         </div>
 
                         <div className="space-y-4 pt-4 border-t border-[var(--text-color)]/5">
-                            <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// SYSTEM_STATS</div>
+                            <div className="text-[9px] font-bold text-[var(--text-color)]/70 tracking-[0.3em]">// SYSTEM_STATS</div>
                             <StatItem label="DAT_SIGNALS" value={isMe ? (allTracks?.filter(t => String(t.artistUserId || t.ArtistUserId) === String(currentUser?.id || currentUser?.Id)).length || 0) : profileTracks.length} />
                             <StatItem label="SEQ_MAPS" value={profilePlaylists.length} />
                             <StatItem label="TOTAL_SCANS" value={(isMe ? (allTracks || []).filter(t => !String(t.id).startsWith('mock-') && String(t.artistUserId || t.ArtistUserId) === String(currentUser?.id || currentUser?.Id)) : profileTracks).reduce((acc, t) => acc + (t.playCount || 0), 0).toLocaleString()} />
@@ -1305,7 +1306,7 @@ export const ProfileView = React.memo(({
                                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-color)]" />
                                 <span className="text-[9px] font-bold tracking-[0.3em] uppercase">LINK_ACTIVE</span>
                             </div>
-                            <div className="text-[8px] text-[var(--text-color)]/20 mono break-all">
+                            <div className="text-[8px] text-[var(--text-color)]/50 mono break-all">
                                 ADDR::0x7F21_{displayUser?.id || 'XXXX'}_SIG_OK
                             </div>
                         </div>
@@ -1314,7 +1315,7 @@ export const ProfileView = React.memo(({
                 rightContent={
                     <div className="space-y-8">
                         <div className="space-y-4">
-                            <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// IDENTITY_BIO</div>
+                            <div className="text-[9px] font-bold text-[var(--text-color)]/70 tracking-[0.3em]">// IDENTITY_BIO</div>
                             <div className="text-[10px] text-[var(--text-color)]/80 leading-relaxed mono break-words border-l border-[var(--text-color)]/20 pl-4 py-2">
                                 {displayUser?.biography || displayUser?.bio || '> NO_BIOMETRIC_DATA_AVAILABLE'}
                             </div>
@@ -1322,7 +1323,7 @@ export const ProfileView = React.memo(({
 
                         {isMe && stationData && (
                             <div className="space-y-4">
-                                <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// BROADCAST_PROTOCOL</div>
+                                <div className="text-[9px] font-bold text-[var(--text-color)]/70 tracking-[0.3em]">// BROADCAST_PROTOCOL</div>
                                 {stationData.isLive || stationData.IsLive ? (
                                     <button
                                         onClick={handleEndLive}
@@ -1342,7 +1343,7 @@ export const ProfileView = React.memo(({
                         )}
                         {!isMe && (
                             <div className="space-y-4">
-                                <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// ACTION_PROTOCOL</div>
+                                <div className="text-[9px] font-bold text-[var(--text-color)]/70 tracking-[0.3em]">// ACTION_PROTOCOL</div>
                                 <button
                                     onClick={handleFollow}
                                     className={`w-full py-4 border font-bold text-[10px] uppercase transition-all transform hover:-translate-y-0.5 ${isFollowing
@@ -1367,9 +1368,9 @@ export const ProfileView = React.memo(({
                         )}
 
                         <div className="space-y-4">
-                            <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// STATUS_METADATA</div>
+                            <div className="text-[9px] font-bold text-[var(--text-color)]/70 tracking-[0.3em]">// STATUS_METADATA</div>
                             <div className="bg-black/40 border border-[var(--text-color)]/20 p-4 space-y-2 relative group overflow-hidden">
-                                <div className="flex justify-between items-center text-[7px] mono text-[var(--text-color)]/40 border-b border-[var(--text-color)]/10 pb-2 mb-2">
+                                <div className="flex justify-between items-center text-[7px] mono text-[var(--text-color)]/70 border-b border-[var(--text-color)]/10 pb-2 mb-2">
                                     <div className="flex items-center gap-2">
                                         <div className="w-1.5 h-1.5 rounded-full bg-[var(--text-color)] animate-pulse" />
                                         <span>SIGNAL_HEARTBEAT: OK</span>
@@ -1386,7 +1387,7 @@ export const ProfileView = React.memo(({
                                                 onBlur={handleInlineStatusUpdate}
                                                 onKeyDown={(e) => e.key === 'Enter' && handleInlineStatusUpdate()}
                                                 placeholder="> SET_BROADCAST_SIGNAL..."
-                                                className="w-full bg-transparent border-none outline-none text-[var(--text-color)] placeholder:text-[var(--text-color)]/20 p-0 m-0 focus:ring-0"
+                                                className="w-full bg-transparent border-none outline-none text-[var(--text-color)] placeholder:text-[var(--text-color)]/50 p-0 m-0 focus:ring-0"
                                                 disabled={isSavingStatus}
                                             />
                                             {isSavingStatus && (
@@ -1404,7 +1405,7 @@ export const ProfileView = React.memo(({
 
 
                         <div className="space-y-4 pt-4 border-t border-[var(--text-color)]/5">
-                            <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// PINNED_SIGNALS</div>
+                            <div className="text-[9px] font-bold text-[var(--text-color)]/70 tracking-[0.3em]">// PINNED_SIGNALS</div>
                             <div className="space-y-4">
                                 {[...profileTracks, ...profileGallery, ...profilePlaylists].filter(item => isTruthy(item.isPinned || item.IsPinned))
                                     .slice(0, 3)
@@ -1438,7 +1439,7 @@ export const ProfileView = React.memo(({
                         </div>
 
                         <div className="space-y-4 pt-4 border-t border-[var(--text-color)]/5">
-                            <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// LATEST_TRANSMISSIONS</div>
+                            <div className="text-[9px] font-bold text-[var(--text-color)]/70 tracking-[0.3em]">// LATEST_TRANSMISSIONS</div>
                             <div className="space-y-4">
                                 {[...profileTracks, ...profileGallery, ...profilePlaylists].filter(item => isTruthy(item.isPosted || item.IsPosted))
                                     .sort((a, b) => new Date(b.createdAt || b.CreatedAt || b.UploadDate || 0) - new Date(a.createdAt || a.CreatedAt || a.UploadDate || 0))
@@ -1458,7 +1459,7 @@ export const ProfileView = React.memo(({
                                                         loading="lazy"
                                                     />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/40">
+                                                    <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/70">
                                                         {(item.type || item.Type) === 'VIDEO' ? <Video size={14} /> : <Music size={14} />}
                                                     </div>
                                                 )}
@@ -1470,7 +1471,7 @@ export const ProfileView = React.memo(({
                                         </div>
                                     ))}
                                 {profileTracks.length === 0 && profileGallery.length === 0 && (
-                                    <div className="text-[8px] mono text-white/20 uppercase italic">
+                                    <div className="text-[8px] mono text-white/50 uppercase italic">
                                         &gt; NO_RECENT_TRANSMISSIONS
                                     </div>
                                 )}
@@ -1507,13 +1508,13 @@ export const ProfileView = React.memo(({
                                     <div className="flex lg:hidden mb-4 border-b border-[var(--text-color)]/20">
                                         <button
                                             onClick={() => setBroadcasterTab('requests')}
-                                            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${broadcasterTab === 'requests' ? 'text-[var(--text-color)] border-b-2 border-[var(--text-color)]' : 'text-[var(--text-color)]/40'}`}
+                                            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${broadcasterTab === 'requests' ? 'text-[var(--text-color)] border-b-2 border-[var(--text-color)]' : 'text-[var(--text-color)]/70'}`}
                                         >
                                             REQUESTS
                                         </button>
                                         <button
                                             onClick={() => setBroadcasterTab('chat')}
-                                            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${broadcasterTab === 'chat' ? 'text-[var(--text-color)] border-b-2 border-[var(--text-color)]' : 'text-[var(--text-color)]/40'}`}
+                                            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${broadcasterTab === 'chat' ? 'text-[var(--text-color)] border-b-2 border-[var(--text-color)]' : 'text-[var(--text-color)]/70'}`}
                                         >
                                             COMM_LINK
                                         </button>
@@ -1582,27 +1583,27 @@ export const ProfileView = React.memo(({
                                     <div className="flex gap-2 lg:gap-4 flex-wrap justify-center">
                                         <button
                                             onClick={() => setActiveTab('Music')}
-                                            className={`text-[9px] lg:text-[10px] font-bold tracking-[0.2em] lg:tracking-[0.4em] uppercase transition-all ${activeTab === 'Music' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
+                                            className={`text-[9px] lg:text-[10px] font-bold tracking-[0.2em] lg:tracking-[0.4em] uppercase transition-all ${activeTab === 'Music' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/50 hover:text-[var(--text-color)]'}`}
                                         >
                                             [ MUSIC ]
                                         </button>
                                         <button
                                             onClick={() => setActiveTab('Playlists')}
-                                            className={`text-[9px] lg:text-[10px] font-bold tracking-[0.2em] lg:tracking-[0.4em] uppercase transition-all ${activeTab === 'Playlists' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
+                                            className={`text-[9px] lg:text-[10px] font-bold tracking-[0.2em] lg:tracking-[0.4em] uppercase transition-all ${activeTab === 'Playlists' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/50 hover:text-[var(--text-color)]'}`}
                                         >
                                             [ PLAYLISTS ]
                                         </button>
                                         {isMe && stationData && (stationData.isLive || stationData.IsLive) && (
                                             <button
                                                 onClick={() => setActiveTab('Broadcast')}
-                                                className={`text-[9px] lg:text-[10px] font-bold tracking-[0.2em] lg:tracking-[0.4em] uppercase transition-all ${activeTab === 'Broadcast' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
+                                                className={`text-[9px] lg:text-[10px] font-bold tracking-[0.2em] lg:tracking-[0.4em] uppercase transition-all ${activeTab === 'Broadcast' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/50 hover:text-[var(--text-color)]'}`}
                                             >
                                                 [ BROADCAST ]
                                             </button>
                                         )}
                                         <button
                                             onClick={() => setActiveTab('Studio')}
-                                            className={`text-[9px] lg:text-[10px] font-bold tracking-[0.2em] lg:tracking-[0.4em] uppercase transition-all ${activeTab === 'Studio' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]'}`}
+                                            className={`text-[9px] lg:text-[10px] font-bold tracking-[0.2em] lg:tracking-[0.4em] uppercase transition-all ${activeTab === 'Studio' ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/50 hover:text-[var(--text-color)]'}`}
                                         >
                                             [ JOURNAL ]
                                         </button>
@@ -1648,8 +1649,8 @@ export const ProfileView = React.memo(({
                                                         {['All', 'albums', 'singles/eps'].map(tab => (
                                                             <button
                                                                 key={tab}
-                                                                onClick={() => setMusicSubTab(tab)}
-                                                                className={`flex items-center gap-1.5 text-[8px] mono font-bold tracking-widest transition-all ${musicSubTab === tab ? 'text-[var(--text-color)] border-b border-[var(--text-color)]' : 'text-white/20 hover:text-white/60'}`}
+                                                                onClick={() => { setMusicSubTab(tab); setSelectedRelease(null); }}
+                                                                className={`flex items-center gap-1.5 text-[8px] mono font-bold tracking-widest transition-all ${musicSubTab === tab ? 'text-[var(--text-color)] border-b border-[var(--text-color)]' : 'text-white/80 hover:text-white'}`}
                                                             >
                                                                 {tab === 'All' && <Hash size={10} />}
                                                                 [{tab.toUpperCase()}]
@@ -1667,87 +1668,209 @@ export const ProfileView = React.memo(({
                                                     )}
                                                 </div>
 
-                                                {/* Track List */}
-                                                {filteredTracks.length > 0 ? (
-                                                    <div className="space-y-0.5 max-h-[420px] overflow-y-auto custom-scrollbar pr-1">
-                                                        {filteredTracks.map((track, idx) => (
-                                                            <motion.div
-                                                                key={track.id || `track-${idx}`}
-                                                                initial={{ opacity: 0, x: -20 }}
-                                                                animate={{ opacity: 1, x: 0 }}
-                                                                transition={{ delay: idx * 0.04 }}
-                                                                className="flex items-center justify-between p-3 bg-transparent border-b border-white/5 hover:border-[var(--text-color)]/30 transition-all group cursor-pointer"
-                                                                onClick={() => onPlayTrack(track)}
+                                                {/* Release Detail Panel OR Carousel */}
+                                                <AnimatePresence mode="wait">
+                                                    {selectedRelease ? (
+                                                        /* ── RELEASE DETAIL VIEW ── */
+                                                        <motion.div
+                                                            key="release-detail"
+                                                            initial={{ opacity: 0, x: 20 }}
+                                                            animate={{ opacity: 1, x: 0 }}
+                                                            exit={{ opacity: 0, x: -20 }}
+                                                            transition={{ duration: 0.2 }}
+                                                            className="flex flex-col gap-6"
+                                                        >
+                                                            {/* Back */}
+                                                            <button
+                                                                onClick={() => setSelectedRelease(null)}
+                                                                className="flex items-center gap-2 text-[8px] font-bold mono uppercase tracking-[0.2em] text-[var(--text-color)]/60 hover:text-[var(--text-color)] transition-colors w-fit"
                                                             >
-                                                                <div className="flex items-center gap-4">
-                                                                    <span className="text-[9px] text-[var(--text-color)]/20 font-bold mono w-7 shrink-0">[{String(idx + 1).padStart(2, '0')}]</span>
-                                                                    <div className="w-8 h-8 border border-white/10 bg-black overflow-hidden shrink-0 grayscale group-hover:grayscale-0 transition-all">
-                                                                        {track.cover ? (
-                                                                            <img src={track.cover} className="w-full h-full object-cover" />
-                                                                        ) : (
-                                                                            <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/20"><Music size={12} /></div>
+                                                                <ChevronLeft size={12} /> [ BACK_TO_LIBRARY ]
+                                                            </button>
+
+                                                            <div className="flex flex-col sm:flex-row gap-6">
+                                                                {/* Cover Art */}
+                                                                <div className="w-40 h-40 shrink-0 border border-white/10 bg-black overflow-hidden relative shadow-[0_0_40px_rgba(0,0,0,0.6)]">
+                                                                    {selectedRelease.cover ? (
+                                                                        <img src={selectedRelease.cover} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/20">
+                                                                            <Music size={40} />
+                                                                        </div>
+                                                                    )}
+                                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+                                                                </div>
+
+                                                                {/* Metadata + Actions */}
+                                                                <div className="flex flex-col gap-3 flex-1 min-w-0">
+                                                                    {/* Title & Genre */}
+                                                                    <div>
+                                                                        <div className="text-[7px] font-mono text-[var(--text-color)]/80 uppercase tracking-[0.4em] mb-1">
+                                                                            {selectedRelease.genre || 'AUDIO_SIGNAL'} // {selectedRelease.albumTitle || selectedRelease.AlbumTitle || 'SINGLE'}
+                                                                        </div>
+                                                                        <h3 className="text-xl font-black uppercase text-[var(--text-color)] tracking-tight leading-tight">
+                                                                            {selectedRelease.title || selectedRelease.Title}
+                                                                        </h3>
+                                                                        <div className="text-[8px] mono text-[var(--text-color)]/80 mt-1">
+                                                                            by {displayUser?.username || displayUser?.Username || 'ARTIST'}
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Stats Row */}
+                                                                    <div className="flex gap-4 text-[7px] font-mono text-[var(--text-color)]/80 uppercase tracking-[0.2em]">
+                                                                        <span>{selectedRelease.playCount || 0} PLAYS</span>
+                                                                        {(selectedRelease.createdAt || selectedRelease.CreatedAt) && (
+                                                                            <>
+                                                                                <span className="opacity-30">|</span>
+                                                                                <span>{new Date(selectedRelease.createdAt || selectedRelease.CreatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                                                                            </>
                                                                         )}
                                                                     </div>
-                                                                    <div>
-                                                                        <div className="text-[11px] font-bold text-[var(--text-color)] uppercase tracking-wide">{track.title}</div>
-                                                                        <div className="text-[8px] text-[var(--text-color)]/30 uppercase mt-0.5">{track.genre || 'CORE'} // {track.playCount || 0} PLAYS</div>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex items-center gap-2">
-                                                                    {isMe && (
-                                                                        <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
+
+                                                                    {/* Notes / Description */}
+                                                                    {(selectedRelease.notes || selectedRelease.Notes || selectedRelease.description || selectedRelease.Description) && (
+                                                                        <p className="text-[9px] mono text-[var(--text-color)]/70 leading-relaxed border-l border-[var(--text-color)]/20 pl-3 italic">
+                                                                            {selectedRelease.notes || selectedRelease.Notes || selectedRelease.description || selectedRelease.Description}
+                                                                        </p>
+                                                                    )}
+
+                                                                    {/* Action Row */}
+                                                                    <div className="flex flex-wrap gap-2 mt-auto pt-2">
+                                                                        {/* Primary: Play */}
+                                                                        <button
+                                                                            onClick={() => onPlayTrack(selectedRelease)}
+                                                                            className="flex items-center gap-2 px-4 py-2 bg-[var(--text-color)] text-black text-[9px] font-black uppercase tracking-[0.2em] hover:opacity-80 transition-all"
+                                                                        >
+                                                                            <Play size={11} fill="currentColor" /> [ PLAY_SIGNAL ]
+                                                                        </button>
+
+                                                                        {/* Post to Wall */}
+                                                                        {isMe && (
                                                                             <button
-                                                                                onClick={async (e) => {
-                                                                                    e.stopPropagation();
+                                                                                onClick={async () => {
                                                                                     try {
                                                                                         const API = await import('../services/api').then(mod => mod.default);
-                                                                                        await API.Tracks.togglePost(track.id || track.Id);
-                                                                                        const isPostedNow = !isTruthy(track.isPosted || track.IsPosted);
-                                                                                        setProfileTracks(prev => prev.map(t => (String(t.id) === String(track.id)) ? { ...t, isPosted: isPostedNow, IsPosted: isPostedNow } : t));
+                                                                                        await API.Tracks.togglePost(selectedRelease.id || selectedRelease.Id);
+                                                                                        const isPostedNow = !isTruthy(selectedRelease.isPosted || selectedRelease.IsPosted);
+                                                                                        const updated = { ...selectedRelease, isPosted: isPostedNow, IsPosted: isPostedNow };
+                                                                                        setSelectedRelease(updated);
+                                                                                        setProfileTracks(prev => prev.map(t => (String(t.id) === String(selectedRelease.id)) ? updated : t));
                                                                                         showNotification(isPostedNow ? "SIGNAL_BROADCAST" : "SIGNAL_REDACTED", `TRACK_${isPostedNow ? 'ADDED_TO' : 'REMOVED_FROM'}_WALL`, "success");
                                                                                     } catch (err) { console.error(err); }
                                                                                 }}
-                                                                                className={`p-1.5 border transition-all ${isTruthy(track.isPosted || track.IsPosted) ? 'bg-white text-black border-white shadow-[0_0_10px_#fff]' : 'border-white/10 text-white/40 hover:text-white hover:border-white/30'}`}
-                                                                                title="Post to Wall"
+                                                                                className={`flex items-center gap-2 px-3 py-2 border text-[9px] font-bold uppercase tracking-[0.2em] transition-all ${isTruthy(selectedRelease.isPosted || selectedRelease.IsPosted) ? 'bg-white text-black border-white' : 'border-white/20 text-white/60 hover:border-[var(--text-color)] hover:text-[var(--text-color)]'}`}
                                                                             >
-                                                                                <Star size={10} fill={isTruthy(track.isPosted || track.IsPosted) ? "currentColor" : "none"} />
+                                                                                <Star size={10} fill={isTruthy(selectedRelease.isPosted || selectedRelease.IsPosted) ? 'currentColor' : 'none'} />
+                                                                                {isTruthy(selectedRelease.isPosted || selectedRelease.IsPosted) ? 'BROADCASTED' : 'BROADCAST'}
                                                                             </button>
-                                                                            <button
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?track=${track.id || track.Id}`;
-                                                                                    navigator.clipboard.writeText(link);
-                                                                                    showNotification("LINK_COPIED", "SIGNAL_ADDRESS_SECURED_TO_CLIPBOARD", "success");
-                                                                                }}
-                                                                                className="p-1.5 border border-white/10 text-white/40 hover:text-white hover:border-white/30 transition-all"
-                                                                                title="Copy Signal Link"
-                                                                            >
-                                                                                <Share2 size={10} />
-                                                                            </button>
-                                                                        </div>
-                                                                    )}
-                                                                    <TrackActionsDropdown track={track} isOwner={isMe} playlists={currentUserPlaylists} myLikes={myLikes} isLikedInitial={myLikes.some(l => (l.trackId || l.TrackId) === (track.id || track.Id))} onDelete={() => handleDeleteTrack(track)} />
+                                                                        )}
+
+                                                                        {/* Share / Copy Link */}
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?track=${selectedRelease.id || selectedRelease.Id}`;
+                                                                                navigator.clipboard.writeText(link);
+                                                                                showNotification("LINK_COPIED", "SIGNAL_ADDRESS_SECURED", "success");
+                                                                            }}
+                                                                            className="flex items-center gap-2 px-3 py-2 border border-white/20 text-white/60 text-[9px] font-bold uppercase tracking-[0.2em] hover:border-[var(--text-color)] hover:text-[var(--text-color)] transition-all"
+                                                                        >
+                                                                            <Share2 size={10} /> SHARE
+                                                                        </button>
+
+                                                                        {/* More Actions */}
+                                                                        {isMe && (
+                                                                            <div className="flex items-center">
+                                                                                <TrackActionsDropdown track={selectedRelease} isOwner={isMe} playlists={currentUserPlaylists} myLikes={myLikes} isLikedInitial={myLikes.some(l => (l.trackId || l.TrackId) === (selectedRelease.id || selectedRelease.Id))} onDelete={() => { handleDeleteTrack(selectedRelease); setSelectedRelease(null); }} />
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
-                                                            </motion.div>
-                                                        ))}
-                                                    </div>
-                                                ) : !isLoadingTracks ? (
-                                                    <div className="flex-1 flex flex-col items-center justify-center opacity-30 text-[10px] font-mono uppercase text-[var(--text-color)] text-center py-12">
-                                                        <Database size={22} className="mb-3 opacity-50 block mx-auto" />
-                                                        NO_SIGNALS_DETECTED_IN_CORE
-                                                    </div>
-                                                ) : null}
+                                                            </div>
+
+                                                            {/* Signal Data Footer */}
+                                                            <div className="border-t border-white/5 pt-4">
+                                                                <div className="text-[7px] font-mono text-[var(--text-color)]/40 uppercase tracking-[0.4em] mb-3">// SIGNAL_DATA</div>
+                                                                <div className="grid grid-cols-2 gap-4 text-[8px] font-mono">
+                                                                    {[
+                                                                        ['FORMAT', selectedRelease.genre || selectedRelease.Genre || 'AUDIO'],
+                                                                        ['SCAN_COUNT', String(selectedRelease.playCount || 0) + ' PLAYS'],
+                                                                        ['RELEASE_ID', `0x${String(selectedRelease.id || selectedRelease.Id || '').slice(-6).toUpperCase().padStart(6, '0')}`],
+                                                                        ['ENC_STATUS', isTruthy(selectedRelease.isPosted || selectedRelease.IsPosted) ? 'PUBLIC_STREAM' : 'ENCRYPTED_PRIVATE'],
+                                                                    ].map(([label, val]) => (
+                                                                        <div key={label} className="flex gap-2">
+                                                                            <span className="text-[var(--text-color)]/40 shrink-0">{label}:</span>
+                                                                            <span className="text-[var(--text-color)]/80 truncate">{val}</span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </motion.div>
+                                                    ) : (
+                                                        /* ── CAROUSEL VIEW ── */
+                                                        <div className="flex-1 min-h-0 flex flex-col">
+                                                            {filteredTracks.length > 0 ? (
+                                                                <div className="flex gap-4 overflow-x-auto custom-scrollbar pb-6 -mx-2 px-2 scroll-smooth">
+                                                                    {filteredTracks.map((track, idx) => (
+                                                                        <motion.div
+                                                                            key={track.id || `track-${idx}`}
+                                                                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                                            transition={{ delay: idx * 0.05 }}
+                                                                            className="w-44 shrink-0 flex flex-col group cursor-pointer"
+                                                                            onClick={() => setSelectedRelease(track)}
+                                                                        >
+                                                                            {/* Card Cover */}
+                                                                            <div className="aspect-square relative border border-white/10 bg-black overflow-hidden group-hover:border-[var(--text-color)]/50 transition-all mb-3 shadow-lg">
+                                                                                {track.cover ? (
+                                                                                    <img src={track.cover} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 scale-100 group-hover:scale-110" />
+                                                                                ) : (
+                                                                                    <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/20"><Music size={24} /></div>
+                                                                                )}
+
+                                                                                {/* Hover Overlay - View Details */}
+                                                                                <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
+                                                                                    <FileText size={16} className="text-[var(--text-color)]" />
+                                                                                    <span className="text-[7px] font-mono uppercase tracking-[0.2em] text-[var(--text-color)]">VIEW_SIGNAL</span>
+                                                                                </div>
+
+                                                                                {/* Posted Badge */}
+                                                                                {isTruthy(track.isPosted || track.IsPosted) && (
+                                                                                    <div className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full bg-[var(--text-color)] shadow-[0_0_6px_var(--text-color)]" title="Broadcasted" />
+                                                                                )}
+                                                                            </div>
+
+                                                                            {/* Metadata */}
+                                                                            <div className="space-y-1">
+                                                                                <div className="text-[10px] font-bold text-[var(--text-color)] uppercase tracking-wider truncate group-hover:text-white transition-colors">{track.title}</div>
+                                                                                <div className="flex items-center gap-2 text-[7px] text-[var(--text-color)]/80 font-mono">
+                                                                                    <span className="uppercase">{track.genre || 'CORE'}</span>
+                                                                                    <span className="opacity-30">//</span>
+                                                                                    <span>{track.playCount || 0} PLAYS</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </motion.div>
+                                                                    ))}
+                                                                </div>
+                                                            ) : !isLoadingTracks ? (
+                                                                <div className="flex-1 flex flex-col items-center justify-center py-20 opacity-40">
+                                                                    <Database size={32} className="mb-4 text-[var(--text-color)] animate-pulse" />
+                                                                    <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--text-color)]">NO_SIGNALS_DETECTED_IN_CORE</div>
+                                                                </div>
+                                                            ) : null}
+                                                        </div>
+                                                    )}
+                                                </AnimatePresence>
                                             </div>
 
                                             {/* RIGHT: Gear Shelf */}
                                             <div className="w-full lg:w-64 xl:w-72 shrink-0 border-l border-[var(--text-color)]/10 lg:pl-6 flex flex-col">
                                                 {/* Header */}
                                                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--text-color)]/10">
-                                                    <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// GEAR_SHELF</div>
+                                                    <div className="text-[9px] font-bold text-[var(--text-color)]/70 tracking-[0.3em]">// GEAR_SHELF</div>
                                                     {isMe && (
                                                         <button
                                                             onClick={() => setShowGearForm(v => !v)}
-                                                            className="p-1 border border-[var(--text-color)]/20 text-[var(--text-color)]/40 hover:text-[var(--text-color)] hover:border-[var(--text-color)] transition-all"
+                                                            className="p-1 border border-[var(--text-color)]/20 text-[var(--text-color)]/70 hover:text-[var(--text-color)] hover:border-[var(--text-color)] transition-all"
                                                             title="Add Gear"
                                                         >
                                                             <Plus size={10} />
@@ -1770,7 +1893,7 @@ export const ProfileView = React.memo(({
                                                                 placeholder="> GEAR_NAME..."
                                                                 value={gearFormData.name}
                                                                 onChange={e => setGearFormData(p => ({ ...p, name: e.target.value }))}
-                                                                className="w-full bg-black/60 border border-[var(--text-color)]/20 text-[var(--text-color)] text-[9px] mono px-2 py-1.5 outline-none focus:border-[var(--text-color)]/60 placeholder:text-[var(--text-color)]/20"
+                                                                className="w-full bg-black/60 border border-[var(--text-color)]/20 text-[var(--text-color)] text-[9px] mono px-2 py-1.5 outline-none focus:border-[var(--text-color)]/60 placeholder:text-[var(--text-color)]/50"
                                                                 maxLength={60}
                                                             />
                                                             <select
@@ -1787,7 +1910,7 @@ export const ProfileView = React.memo(({
                                                                 placeholder="> NOTES (optional)..."
                                                                 value={gearFormData.notes}
                                                                 onChange={e => setGearFormData(p => ({ ...p, notes: e.target.value }))}
-                                                                className="w-full bg-black/60 border border-[var(--text-color)]/20 text-[var(--text-color)] text-[9px] mono px-2 py-1.5 outline-none focus:border-[var(--text-color)]/60 placeholder:text-[var(--text-color)]/20"
+                                                                className="w-full bg-black/60 border border-[var(--text-color)]/20 text-[var(--text-color)] text-[9px] mono px-2 py-1.5 outline-none focus:border-[var(--text-color)]/60 placeholder:text-[var(--text-color)]/50"
                                                                 maxLength={80}
                                                             />
                                                             <div className="flex gap-2">
@@ -1801,7 +1924,7 @@ export const ProfileView = React.memo(({
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => setShowGearForm(false)}
-                                                                    className="px-3 py-1.5 border border-[var(--text-color)]/20 text-[var(--text-color)]/40 text-[8px] font-bold uppercase transition-all hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40"
+                                                                    className="px-3 py-1.5 border border-[var(--text-color)]/20 text-[var(--text-color)]/70 text-[8px] font-bold uppercase transition-all hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40"
                                                                 >
                                                                     [ X ]
                                                                 </button>
@@ -1811,9 +1934,9 @@ export const ProfileView = React.memo(({
                                                 </AnimatePresence>
 
                                                 {/* Gear Items */}
-                                                <div className="space-y-2 overflow-y-auto custom-scrollbar max-h-[380px]">
+                                                <div className="space-y-2 overflow-y-auto custom-scrollbar max-h-[480px]">
                                                     {isLoadingGear ? (
-                                                        <div className="text-[8px] mono text-[var(--text-color)]/30 animate-pulse">&gt; LOADING_SHELF...</div>
+                                                        <div className="text-[8px] mono text-[var(--text-color)]/60 animate-pulse">&gt; LOADING_SHELF...</div>
                                                     ) : profileGear.length > 0 ? (
                                                         profileGear.map((item, i) => {
                                                             const gearId = item.id || item.Id;
@@ -1828,15 +1951,15 @@ export const ProfileView = React.memo(({
                                                                 >
                                                                     <div className="flex-1 min-w-0">
                                                                         <div className="text-[10px] font-bold text-[var(--text-color)] uppercase truncate tracking-wider">{item.name || item.Name}</div>
-                                                                        <div className="text-[7px] mono text-[var(--text-color)]/40 uppercase tracking-[0.2em] mt-0.5">{cat}</div>
+                                                                        <div className="text-[7px] mono text-[var(--text-color)]/80 uppercase tracking-[0.2em] mt-0.5">{cat}</div>
                                                                         {(item.notes || item.Notes) && (
-                                                                            <div className="text-[8px] mono text-[var(--text-color)]/30 mt-1 truncate italic">{item.notes || item.Notes}</div>
+                                                                            <div className="text-[8px] mono text-[var(--text-color)]/80 mt-1 truncate italic">{item.notes || item.Notes}</div>
                                                                         )}
                                                                     </div>
                                                                     {isMe && (
                                                                         <button
                                                                             onClick={() => handleRemoveGear(gearId)}
-                                                                            className="absolute top-1.5 right-1.5 p-0.5 text-[var(--text-color)]/0 group-hover:text-[var(--text-color)]/30 hover:!text-red-400 transition-all"
+                                                                            className="absolute top-1.5 right-1.5 p-0.5 text-[var(--text-color)]/0 group-hover:text-[var(--text-color)]/60 hover:!text-red-400 transition-all"
                                                                             title="Remove"
                                                                         >
                                                                             <X size={10} />
@@ -1846,9 +1969,9 @@ export const ProfileView = React.memo(({
                                                             );
                                                         })
                                                     ) : (
-                                                        <div className="text-[8px] mono text-[var(--text-color)]/20 uppercase italic py-4 text-center">
+                                                        <div className="text-[8px] mono text-[var(--text-color)]/80 uppercase italic py-4 text-center">
                                                             &gt; NO_GEAR_REGISTERED
-                                                            {isMe && <div className="mt-2 text-[7px] text-[var(--text-color)]/15">CLICK [+] TO ADD</div>}
+                                                            {isMe && <div className="mt-2 text-[7px] text-[var(--text-color)]/30">CLICK [+] TO ADD</div>}
                                                         </div>
                                                     )}
                                                 </div>
@@ -1862,7 +1985,7 @@ export const ProfileView = React.memo(({
                                         {isMe && (
                                             <button
                                                 onClick={() => setShowCreatePlaylist(true)}
-                                                className="border border-[var(--text-color)]/10 p-4 hover:border-[var(--text-color)]/40 transition-all cursor-pointer group bg-black/20 flex flex-col items-center justify-center gap-4 text-[var(--text-color)]/20 hover:text-[var(--text-color)]"
+                                                className="border border-[var(--text-color)]/10 p-4 hover:border-[var(--text-color)]/40 transition-all cursor-pointer group bg-black/20 flex flex-col items-center justify-center gap-4 text-[var(--text-color)]/50 hover:text-[var(--text-color)]"
                                             >
                                                 <Plus size={32} />
                                                 <span className="text-[10px] font-bold uppercase tracking-widest">INIT_NEW_PLAYLIST</span>
@@ -1918,7 +2041,7 @@ export const ProfileView = React.memo(({
                                                                             showNotification(isPostedNow ? "SIGNAL_POSTED" : "SIGNAL_RECALLED", `PLAYLIST_${isPostedNow ? 'ATTACHED_TO' : 'RECALLED_FROM'}_WALL`, "success");
                                                                         } catch (err) { console.error(err); }
                                                                     }}
-                                                                    className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(p.isPosted || p.IsPosted) ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)] shadow-[0_0_15px_rgba(var(--theme-color-rgb),0.5)]' : 'bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/40 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40'}`}
+                                                                    className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(p.isPosted || p.IsPosted) ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)] shadow-[0_0_15px_rgba(var(--theme-color-rgb),0.5)]' : 'bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/70 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40'}`}
                                                                     title="Pin to Wall"
                                                                 >
                                                                     <Share2 size={10} />
@@ -1930,7 +2053,7 @@ export const ProfileView = React.memo(({
                                                                         navigator.clipboard.writeText(link);
                                                                         showNotification("LINK_COPIED", "MAP_ADDRESS_SECURED_TO_CLIPBOARD", "success");
                                                                     }}
-                                                                    className="p-1.5 border bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/40 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40 backdrop-blur-md transition-all"
+                                                                    className="p-1.5 border bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/70 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40 backdrop-blur-md transition-all"
                                                                     title="Copy Sequence Link"
                                                                 >
                                                                     <Link size={10} />
@@ -1958,13 +2081,13 @@ export const ProfileView = React.memo(({
                                                         <button
                                                             key={tab}
                                                             onClick={() => setStudioSubTab(tab)}
-                                                            className={`flex items-center gap-2 text-[8px] mono font-bold tracking-widest uppercase transition-all ${studioSubTab === tab ? 'text-[var(--text-color)]' : 'text-white/20 hover:text-white/60'}`}
+                                                            className={`flex items-center gap-2 text-[8px] mono font-bold tracking-widest uppercase transition-all ${studioSubTab === tab ? 'text-[var(--text-color)]' : 'text-white/80 hover:text-white'}`}
                                                         >
                                                             {tab === 'Photos' && <Camera size={12} />}
                                                             {tab === 'Video' && <Video size={12} />}
                                                             {tab === 'Journal' && <Book size={12} />}
                                                             {tab === 'All' && <Hash size={12} />}
-                                                            [{tab}] <span className="text-[var(--text-color)]/40">{count}</span>
+                                                            [{tab}] <span className="text-[var(--text-color)]/70">{count}</span>
                                                         </button>
                                                     );
                                                 })}
@@ -2138,7 +2261,7 @@ export const ProfileView = React.memo(({
                                                                                             showNotification(isPostedNow ? "SIGNAL_BROADCAST" : "SIGNAL_REDACTED", `CONTENT_${isPostedNow ? 'ADDED_TO' : 'REMOVED_FROM'}_WALL`, "success");
                                                                                         } catch (err) { console.error(err); }
                                                                                     }}
-                                                                                    className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(content.IsPosted || content.isPosted) ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)] shadow-[0_0_15px_rgba(var(--theme-color-rgb),0.5)]' : 'bg-black/60 text-[var(--text-color)]/40 border-[var(--text-color)]/20 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40'}`}
+                                                                                    className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(content.IsPosted || content.isPosted) ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)] shadow-[0_0_15px_rgba(var(--theme-color-rgb),0.5)]' : 'bg-black/60 text-[var(--text-color)]/70 border-[var(--text-color)]/20 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40'}`}
                                                                                     title="Pin to Wall"
                                                                                 >
                                                                                     <Share2 size={10} />
@@ -2162,7 +2285,7 @@ export const ProfileView = React.memo(({
                                                                                             const input = document.getElementById(`thumb-upload-${content.id || content.Id}`);
                                                                                             if (input) input.click();
                                                                                         }}
-                                                                                        className="p-1.5 border bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/40 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40 backdrop-blur-md transition-all"
+                                                                                        className="p-1.5 border bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/70 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40 backdrop-blur-md transition-all"
                                                                                         title="Set Cover Image"
                                                                                     >
                                                                                         <Camera size={10} />
@@ -2228,8 +2351,8 @@ export const ProfileView = React.memo(({
                                                                                     />
                                                                                 ) : (
                                                                                     <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 space-y-2">
-                                                                                        <Video size={16} className="text-[var(--text-color)]/40" />
-                                                                                        <div className="text-[6px] mono text-white/20 uppercase">DECODING_SIGNAL...</div>
+                                                                                        <Video size={16} className="text-[var(--text-color)]/70" />
+                                                                                        <div className="text-[6px] mono text-white/50 uppercase">DECODING_SIGNAL...</div>
                                                                                     </div>
                                                                                 )}
                                                                                 {(content.thumbnailUrl || content.ThumbnailUrl) && (
@@ -2440,7 +2563,7 @@ export const ProfileView = React.memo(({
                                                                                             showNotification(isPostedNow ? "PINNED_TO_WALL" : "REMOVED_FROM_WALL", `ENTRY_${isPostedNow ? 'ATTACHED_TO' : 'DETACHED_FROM'}_PROFILE_SURFACE`, "success");
                                                                                         } catch (err) { console.error(err); }
                                                                                     }}
-                                                                                    className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(entry.IsPosted || entry.isPosted) ? 'bg-[var(--text-color)] text-black border-[var(--text-color)] shadow-[0_0_15px_rgba(255,0,110,0.5)]' : 'bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/40 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40'}`}
+                                                                                    className={`p-1.5 border backdrop-blur-md transition-all ${isTruthy(entry.IsPosted || entry.isPosted) ? 'bg-[var(--text-color)] text-black border-[var(--text-color)] shadow-[0_0_15px_rgba(255,0,110,0.5)]' : 'bg-black/60 border-[var(--text-color)]/20 text-[var(--text-color)]/70 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40'}`}
                                                                                     title="Pin to Wall"
                                                                                 >
                                                                                     <Share2 size={10} />
@@ -2465,7 +2588,7 @@ export const ProfileView = React.memo(({
                                                                                             setProfileJournal(res.data || []);
                                                                                         } catch (err) { console.error(err); }
                                                                                     }}
-                                                                                    className="px-3 py-1 border border-white/5 text-white/20 hover:text-red-500 hover:border-red-500/30 transition-all text-[7px] mono"
+                                                                                    className="px-3 py-1 border border-white/5 text-white/50 hover:text-red-500 hover:border-red-500/30 transition-all text-[7px] mono"
                                                                                 >
                                                                                     [ DELETE ]
                                                                                 </button>
@@ -2615,7 +2738,7 @@ export const ProfileView = React.memo(({
 const ProfileTabIcon = ({ label, active, onClick }) => (
     <button
         onClick={onClick}
-        className={`px-8 py-2 relative transition-all duration-300 mono text-[10px] font-bold tracking-[0.4em] ${active ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/20 hover:text-[var(--text-color)]/60'}`}
+        className={`px-8 py-2 relative transition-all duration-300 mono text-[10px] font-bold tracking-[0.4em] ${active ? 'text-[var(--text-color)]' : 'text-[var(--text-color)]/50 hover:text-[var(--text-color)]/60'}`}
     >
         {active ? `[ ${label} ]` : label}
     </button>
@@ -2793,14 +2916,14 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                 <button
                     type="button"
                     onClick={() => setActiveTab('identity')}
-                    className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] border transition-all ${activeTab === 'identity' ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)]' : 'bg-black text-[var(--text-color)]/40 border-[var(--text-color)]/10 hover:border-[var(--text-color)]/30 hover:text-[var(--text-color)]'}`}
+                    className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] border transition-all ${activeTab === 'identity' ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)]' : 'bg-black text-[var(--text-color)]/70 border-[var(--text-color)]/10 hover:border-[var(--text-color)]/30 hover:text-[var(--text-color)]'}`}
                 >
                     [ IDENTITY_CORE ]
                 </button>
                 <button
                     type="button"
                     onClick={() => setActiveTab('interface')}
-                    className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] border transition-all ${activeTab === 'interface' ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)]' : 'bg-black text-[var(--text-color)]/40 border-[var(--text-color)]/10 hover:border-[var(--text-color)]/30 hover:text-[var(--text-color)]'}`}
+                    className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] border transition-all ${activeTab === 'interface' ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)]' : 'bg-black text-[var(--text-color)]/70 border-[var(--text-color)]/10 hover:border-[var(--text-color)]/30 hover:text-[var(--text-color)]'}`}
                 >
                     [ INTERFACE_CALIBRATION ]
                 </button>
@@ -2816,7 +2939,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                             ) : user?.profileImageUrl ? (
                                 <img src={getMediaUrl(user.profileImageUrl)} className="w-full h-full object-cover" />
                             ) : (
-                                <div className="text-[var(--text-color)]/20"><Cpu size={48} /></div>
+                                <div className="text-[var(--text-color)]/50"><Cpu size={48} /></div>
                             )}
                             <input
                                 type="file"
@@ -2881,10 +3004,10 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                     className={`w-full bg-black/40 border p-4 flex items-center justify-between cursor-pointer transition-all ${isDropdownOpen ? 'border-[var(--theme-color)]' : 'border-white/10 hover:border-white/30'}`}
                                 >
-                                    <span className={`text-xs font-bold uppercase tracking-widest truncate ${featuredTrackId == -1 ? 'text-white/20' : 'text-white'}`}>
+                                    <span className={`text-xs font-bold uppercase tracking-widest truncate ${featuredTrackId == -1 ? 'text-white/50' : 'text-white'}`}>
                                         {featuredTrackId == -1 ? 'None Selected' : (selectedTrack?.title || 'Unknown Track').toUpperCase()}
                                     </span>
-                                    <ChevronDown size={14} className={`transition-transform duration-300 ${isDropdownOpen ? 'rotate-180 text-[var(--theme-color)]' : 'text-white/20'}`} />
+                                    <ChevronDown size={14} className={`transition-transform duration-300 ${isDropdownOpen ? 'rotate-180 text-[var(--theme-color)]' : 'text-white/50'}`} />
                                 </div>
 
                                 <AnimatePresence>
@@ -2897,7 +3020,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                         >
                                             <div className="p-3 border-b border-white/5 bg-black/20">
                                                 <div className="relative flex items-center">
-                                                    <Search size={14} className="absolute left-3 text-white/20" />
+                                                    <Search size={14} className="absolute left-3 text-white/50" />
                                                     <input
                                                         autoFocus
                                                         type="text"
@@ -2912,7 +3035,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                             <div className="flex-1 overflow-y-auto custom-scrollbar">
                                                 <div
                                                     onClick={() => { setFeaturedTrackId(-1); setIsDropdownOpen(false); }}
-                                                    className={`p-4 text-[10px] font-black uppercase tracking-widest cursor-pointer border-b border-[var(--text-color)]/5 transition-all ${featuredTrackId == -1 ? 'bg-[var(--theme-color)]/10 text-[var(--theme-color)]' : 'text-[var(--text-color)]/40 hover:bg-white/5 hover:text-[var(--text-color)]'}`}
+                                                    className={`p-4 text-[10px] font-black uppercase tracking-widest cursor-pointer border-b border-[var(--text-color)]/5 transition-all ${featuredTrackId == -1 ? 'bg-[var(--theme-color)]/10 text-[var(--theme-color)]' : 'text-[var(--text-color)]/70 hover:bg-white/5 hover:text-[var(--text-color)]'}`}
                                                 >
                                                     [ QUIET_MODE ]
                                                 </div>
@@ -2932,7 +3055,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                                         );
                                                     })
                                                 ) : searchTerm ? (
-                                                    <div className="p-8 text-center text-[9px] text-[var(--text-color)]/20 uppercase font-black tracking-widest italic">
+                                                    <div className="p-8 text-center text-[9px] text-[var(--text-color)]/50 uppercase font-black tracking-widest italic">
                                                         NO_MATCHING_SIGNALS_FOUND
                                                     </div>
                                                 ) : null}
@@ -2949,7 +3072,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                 onClick={() => setIsLive(!isLive)}
                                 className={`flex items-center justify-between p-4 border cursor-pointer transition-all ${isLive ? 'border-[var(--theme-color)] bg-[var(--theme-color)]/5' : 'border-[var(--text-color)]/10 bg-black'}`}
                             >
-                                <span className={`text-[10px] font-bold uppercase tracking-widest ${isLive ? 'text-[var(--theme-color)]' : 'text-[var(--text-color)]/40'}`}>
+                                <span className={`text-[10px] font-bold uppercase tracking-widest ${isLive ? 'text-[var(--theme-color)]' : 'text-[var(--text-color)]/70'}`}>
                                     {isLive ? 'SIGNAL_LIVE' : 'STANDBY'}
                                 </span>
                                 <div className={`w-10 h-5 border transition-all relative ${isLive ? 'border-[var(--theme-color)]' : 'border-[var(--text-color)]/20'}`}>
@@ -3109,14 +3232,14 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                     <button 
                                         type="button" 
                                         onClick={() => { setMonitorMode('color'); setMonitorImageFile(null); }}
-                                        className={`px-2 py-0.5 text-[7px] font-bold border transition-all ${monitorMode === 'color' ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400' : 'border-white/10 text-white/30 hover:border-white/20'}`}
+                                        className={`px-2 py-0.5 text-[7px] font-bold border transition-all ${monitorMode === 'color' ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400' : 'border-white/10 text-white/60 hover:border-white/20'}`}
                                     >
                                         SOLID_COLOR
                                     </button>
                                     <button 
                                         type="button" 
                                         onClick={() => setMonitorMode('image')}
-                                        className={`px-2 py-0.5 text-[7px] font-bold border transition-all ${monitorMode === 'image' ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400' : 'border-white/10 text-white/30 hover:border-white/20'}`}
+                                        className={`px-2 py-0.5 text-[7px] font-bold border transition-all ${monitorMode === 'image' ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400' : 'border-white/10 text-white/60 hover:border-white/20'}`}
                                     >
                                         IMAGE_FEED
                                     </button>
@@ -3309,7 +3432,7 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
                         <button onClick={() => setIsEditing(true)} className="w-full py-3 bg-black border border-white/10 hover:border-[var(--text-color)] text-white/60 hover:text-[var(--text-color)] font-bold uppercase tracking-widest text-[9px] transition-all flex items-center justify-center gap-2">
                             <Edit3 size={12} /> MODIFY_METADATA
                         </button>
-                        <button className="w-full py-3 bg-black border border-white/10 hover:border-white/40 text-white/30 hover:text-white font-bold uppercase tracking-widest text-[9px] transition-all flex items-center justify-center gap-2">
+                        <button className="w-full py-3 bg-black border border-white/10 hover:border-white/40 text-white/60 hover:text-white font-bold uppercase tracking-widest text-[9px] transition-all flex items-center justify-center gap-2">
                             <Send size={12} /> FORWARD_SIGNAL
                         </button>
                     </div>
@@ -3337,7 +3460,7 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
                                 </div>
                                 <div className="flex-1 min-w-0 pr-10">
                                     <div className="text-white font-bold text-sm truncate uppercase tracking-wider group-hover:text-[var(--text-color)] transition-colors">{t.title}</div>
-                                    <div className="text-white/30 text-[9px] font-bold uppercase tracking-widest mt-1">SIG_ADDR: {t.artistName || 'UNKNOWN'}</div>
+                                    <div className="text-white/60 text-[9px] font-bold uppercase tracking-widest mt-1">SIG_ADDR: {t.artistName || 'UNKNOWN'}</div>
                                 </div>
                                 <div className="hidden md:block mr-4">
                                     <div className="text-[8px] font-bold border border-[var(--text-color)]/20 text-[var(--text-color)]/40 px-2 py-0.5 uppercase group-hover:border-[var(--text-color)] group-hover:text-[var(--text-color)] transition-all">VERIFIED</div>
