@@ -147,7 +147,7 @@ const InteractiveGlobe = ({ searchQuery, searchResults, onNodeClick }) => {
             <Canvas dpr={[1, 2]}>
                 <PerspectiveCamera 
                     makeDefault 
-                    position={[0, 0, isMobile ? 12 : 6]} 
+                    position={[0, 0, isMobile ? 12 : 8]} 
                     fov={isMobile ? 30 : 40} 
                 />
                 <OrbitControls 
