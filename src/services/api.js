@@ -271,6 +271,12 @@ const API = {
             api.get(`community-chat/${communityId}${afterId != null ? `?afterId=${afterId}` : ''}`),
         sendMessage: (communityId, content) =>
             api.post(`community-chat/${communityId}`, { content })
+    },
+    Gear: {
+        getByUser: (userId) => api.get(`Gear/user/${userId}`),
+        add: (data) => api.post('Gear', data),
+        update: (id, data) => api.put(`Gear/${id}`, data),
+        remove: (id) => api.delete(`Gear/${id}`),
     }
 };
 

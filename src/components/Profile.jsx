@@ -593,6 +593,11 @@ export const ProfileView = React.memo(({
     const [activeTab, setActiveTab] = useState('Music');
     const [studioSubTab, setStudioSubTab] = useState('All');
     const [musicSubTab, setMusicSubTab] = useState('All');
+    const [profileGear, setProfileGear] = useState([]);
+    const [isLoadingGear, setIsLoadingGear] = useState(false);
+    const [showGearForm, setShowGearForm] = useState(false);
+    const [gearFormData, setGearFormData] = useState({ name: '', category: 'Synth', notes: '' });
+    const [isSavingGear, setIsSavingGear] = useState(false);
 
     // Profile Data State
     const [profileData, setProfileData] = useState(null);
@@ -815,6 +820,62 @@ export const ProfileView = React.memo(({
     React.useEffect(() => {
         fetchPlaylists();
     }, [fetchPlaylists]);
+
+    // Fetch Gear
+    const fetchGear = React.useCallback(async () => {
+        setIsLoadingGear(true);
+        try {
+            const API = await import('../services/api').then(mod => mod.default);
+            const targetId = isMe ? (currentUser?.id || currentUser?.Id) : targetUserId;
+            if (targetId) {
+                const res = await API.Gear.getByUser(targetId);
+                setProfileGear(Array.isArray(res.data) ? res.data : []);
+            }
+        } catch (err) {
+            console.error('Failed to fetch gear', err);
+        } finally {
+            setIsLoadingGear(false);
+        }
+    }, [isMe, currentUser, targetUserId]);
+
+    React.useEffect(() => {
+        fetchGear();
+    }, [fetchGear]);
+
+    const handleAddGear = async (e) => {
+        e.preventDefault();
+        if (!gearFormData.name.trim()) return;
+        setIsSavingGear(true);
+        try {
+            const API = await import('../services/api').then(mod => mod.default);
+            await API.Gear.add({
+                name: gearFormData.name.trim(),
+                category: gearFormData.category,
+                notes: gearFormData.notes.trim() || null,
+                displayOrder: profileGear.length
+            });
+            setGearFormData({ name: '', category: 'Synth', notes: '' });
+            setShowGearForm(false);
+            await fetchGear();
+            showNotification('GEAR_ADDED', `${gearFormData.name} added to shelf.`, 'success');
+        } catch (err) {
+            console.error('Failed to add gear', err);
+            showNotification('GEAR_ERROR', 'Failed to add gear item.', 'error');
+        } finally {
+            setIsSavingGear(false);
+        }
+    };
+
+    const handleRemoveGear = async (id) => {
+        try {
+            const API = await import('../services/api').then(mod => mod.default);
+            await API.Gear.remove(id);
+            setProfileGear(prev => prev.filter(g => (g.id || g.Id) !== id));
+            showNotification('GEAR_REMOVED', 'Item removed from shelf.', 'success');
+        } catch (err) {
+            console.error('Failed to remove gear', err);
+        }
+    };
 
     const handleCreatePlaylist = async (_e) => {
         _e.preventDefault();
@@ -1558,126 +1619,255 @@ export const ProfileView = React.memo(({
                                 </div>
 
                                 {/* Tab Content */}
-                                {activeTab === 'Music' && (
-                                    <div className="flex-1 min-h-0 flex flex-col">
-                                        {/* Music Sub-tabs + Upload Signal Header */}
-                                        <div className="flex flex-col lg:flex-row justify-between items-center mb-6 pb-4 border-b border-white/5 gap-4">
-                                            <div className="flex gap-4">
-                                                {['All', 'albums', 'singles/ep5'].map(tab => (
-                                                    <button
-                                                        key={tab}
-                                                        onClick={() => setMusicSubTab(tab)}
-                                                        className={`flex items-center gap-2 text-[8px] mono font-bold tracking-widest transition-all ${musicSubTab === tab ? 'text-[var(--text-color)]' : 'text-white/20 hover:text-white/60'}`}
-                                                    >
-                                                        {tab === 'All' && <Hash size={12} />}
-                                                        [{tab.toUpperCase()}]
-                                                    </button>
-                                                ))}
+                                {activeTab === 'Music' && (() => {
+                                    const GEAR_ICONS = {
+                                        'Synth': '🎹',
+                                        'DAW': '💻',
+                                        'Microphone': '🎙️',
+                                        'Controller': '🎮',
+                                        'Drum Machine': '🥁',
+                                        'Plugin': '🔌',
+                                        'Guitar': '🎸',
+                                        'Bass': '🎸',
+                                        'Sampler': '📼',
+                                        'Other': '🎵',
+                                    };
+                                    const filteredTracks = profileTracks
+                                        .filter(track => {
+                                            if (musicSubTab === 'All') return true;
+                                            const genre = (track.genre || track.Genre || '').toLowerCase();
+                                            const albumTitle = (track.albumTitle || track.AlbumTitle || '').toLowerCase();
+                                            if (musicSubTab === 'albums') return genre === 'album' || genre === 'lp' || albumTitle.includes('album');
+                                            if (musicSubTab === 'singles/eps') return genre === 'single' || genre === 'ep' || albumTitle === 'singles' || albumTitle.includes('ep');
+                                            return true;
+                                        })
+                                        .sort((a, b) => {
+                                            const aPosted = isTruthy(a.IsPosted || a.isPosted) ? 1 : 0;
+                                            const bPosted = isTruthy(b.IsPosted || b.isPosted) ? 1 : 0;
+                                            if (bPosted !== aPosted) return bPosted - aPosted;
+                                            return new Date(b.CreatedAt || b.createdAt || 0) - new Date(a.CreatedAt || a.createdAt || 0);
+                                        });
+
+                                    return (
+                                        <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-6">
+                                            {/* LEFT: Music Library */}
+                                            <div className="flex-1 min-h-0 flex flex-col">
+                                                {/* Sub-tabs + Upload */}
+                                                <div className="flex flex-col lg:flex-row justify-between items-center mb-4 pb-3 border-b border-white/5 gap-3">
+                                                    <div className="flex gap-3">
+                                                        {['All', 'albums', 'singles/eps'].map(tab => (
+                                                            <button
+                                                                key={tab}
+                                                                onClick={() => setMusicSubTab(tab)}
+                                                                className={`flex items-center gap-1.5 text-[8px] mono font-bold tracking-widest transition-all ${musicSubTab === tab ? 'text-[var(--text-color)] border-b border-[var(--text-color)]' : 'text-white/20 hover:text-white/60'}`}
+                                                            >
+                                                                {tab === 'All' && <Hash size={10} />}
+                                                                [{tab.toUpperCase()}]
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    {isMe && (
+                                                        <button
+                                                            onClick={() => setShowGlobalUpload(true)}
+                                                            className="px-3 py-1 bg-[var(--text-color)]/10 border border-[var(--text-color)]/40 text-[var(--text-color)] text-[8px] font-bold uppercase tracking-[0.2em] hover:bg-[var(--text-color)] hover:text-black transition-all flex items-center gap-1.5"
+                                                            title="Upload Signal"
+                                                        >
+                                                            <Plus size={10} /> [ UPLOAD_SIGNAL ]
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                {/* Track List */}
+                                                {filteredTracks.length > 0 ? (
+                                                    <div className="space-y-0.5 max-h-[420px] overflow-y-auto custom-scrollbar pr-1">
+                                                        {filteredTracks.map((track, idx) => (
+                                                            <motion.div
+                                                                key={track.id || `track-${idx}`}
+                                                                initial={{ opacity: 0, x: -20 }}
+                                                                animate={{ opacity: 1, x: 0 }}
+                                                                transition={{ delay: idx * 0.04 }}
+                                                                className="flex items-center justify-between p-3 bg-transparent border-b border-white/5 hover:border-[var(--text-color)]/30 transition-all group cursor-pointer"
+                                                                onClick={() => onPlayTrack(track)}
+                                                            >
+                                                                <div className="flex items-center gap-4">
+                                                                    <span className="text-[9px] text-[var(--text-color)]/20 font-bold mono w-7 shrink-0">[{String(idx + 1).padStart(2, '0')}]</span>
+                                                                    <div className="w-8 h-8 border border-white/10 bg-black overflow-hidden shrink-0 grayscale group-hover:grayscale-0 transition-all">
+                                                                        {track.cover ? (
+                                                                            <img src={track.cover} className="w-full h-full object-cover" />
+                                                                        ) : (
+                                                                            <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/20"><Music size={12} /></div>
+                                                                        )}
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="text-[11px] font-bold text-[var(--text-color)] uppercase tracking-wide">{track.title}</div>
+                                                                        <div className="text-[8px] text-[var(--text-color)]/30 uppercase mt-0.5">{track.genre || 'CORE'} // {track.playCount || 0} PLAYS</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    {isMe && (
+                                                                        <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
+                                                                            <button
+                                                                                onClick={async (e) => {
+                                                                                    e.stopPropagation();
+                                                                                    try {
+                                                                                        const API = await import('../services/api').then(mod => mod.default);
+                                                                                        await API.Tracks.togglePost(track.id || track.Id);
+                                                                                        const isPostedNow = !isTruthy(track.isPosted || track.IsPosted);
+                                                                                        setProfileTracks(prev => prev.map(t => (String(t.id) === String(track.id)) ? { ...t, isPosted: isPostedNow, IsPosted: isPostedNow } : t));
+                                                                                        showNotification(isPostedNow ? "SIGNAL_BROADCAST" : "SIGNAL_REDACTED", `TRACK_${isPostedNow ? 'ADDED_TO' : 'REMOVED_FROM'}_WALL`, "success");
+                                                                                    } catch (err) { console.error(err); }
+                                                                                }}
+                                                                                className={`p-1.5 border transition-all ${isTruthy(track.isPosted || track.IsPosted) ? 'bg-white text-black border-white shadow-[0_0_10px_#fff]' : 'border-white/10 text-white/40 hover:text-white hover:border-white/30'}`}
+                                                                                title="Post to Wall"
+                                                                            >
+                                                                                <Star size={10} fill={isTruthy(track.isPosted || track.IsPosted) ? "currentColor" : "none"} />
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?track=${track.id || track.Id}`;
+                                                                                    navigator.clipboard.writeText(link);
+                                                                                    showNotification("LINK_COPIED", "SIGNAL_ADDRESS_SECURED_TO_CLIPBOARD", "success");
+                                                                                }}
+                                                                                className="p-1.5 border border-white/10 text-white/40 hover:text-white hover:border-white/30 transition-all"
+                                                                                title="Copy Signal Link"
+                                                                            >
+                                                                                <Share2 size={10} />
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+                                                                    <TrackActionsDropdown track={track} isOwner={isMe} playlists={currentUserPlaylists} myLikes={myLikes} isLikedInitial={myLikes.some(l => (l.trackId || l.TrackId) === (track.id || track.Id))} onDelete={() => handleDeleteTrack(track)} />
+                                                                </div>
+                                                            </motion.div>
+                                                        ))}
+                                                    </div>
+                                                ) : !isLoadingTracks ? (
+                                                    <div className="flex-1 flex flex-col items-center justify-center opacity-30 text-[10px] font-mono uppercase text-[var(--text-color)] text-center py-12">
+                                                        <Database size={22} className="mb-3 opacity-50 block mx-auto" />
+                                                        NO_SIGNALS_DETECTED_IN_CORE
+                                                    </div>
+                                                ) : null}
                                             </div>
 
-                                            {isMe && (
-                                                <button
-                                                    onClick={() => setShowGlobalUpload(true)}
-                                                    className="px-3 lg:px-4 py-1.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/40 text-[var(--text-color)] text-[8px] lg:text-[9px] font-bold uppercase tracking-[0.1em] lg:tracking-[0.2em] hover:bg-[var(--text-color)] hover:text-black transition-all flex items-center gap-2 rounded-sm"
-                                                    title="Upload Signal"
-                                                >
-                                                    <Plus size={12} /> [ UPLOAD_SIGNAL ]
-                                                </button>
-                                            )}
-                                        </div>
+                                            {/* RIGHT: Gear Shelf */}
+                                            <div className="w-full lg:w-64 xl:w-72 shrink-0 border-l border-[var(--text-color)]/10 lg:pl-6 flex flex-col">
+                                                {/* Header */}
+                                                <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--text-color)]/10">
+                                                    <div className="text-[9px] font-bold text-[var(--text-color)]/40 tracking-[0.3em]">// GEAR_SHELF</div>
+                                                    {isMe && (
+                                                        <button
+                                                            onClick={() => setShowGearForm(v => !v)}
+                                                            className="p-1 border border-[var(--text-color)]/20 text-[var(--text-color)]/40 hover:text-[var(--text-color)] hover:border-[var(--text-color)] transition-all"
+                                                            title="Add Gear"
+                                                        >
+                                                            <Plus size={10} />
+                                                        </button>
+                                                    )}
+                                                </div>
 
-                                        {profileTracks.length > 0 ? (
-                                        <div className="space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
-                                            {profileTracks
-                                                .filter(track => {
-                                                    if (musicSubTab === 'All') return true;
-                                                    const type = (track.type || track.Type || '').toLowerCase();
-                                                    const genre = (track.genre || track.Genre || '').toLowerCase();
-                                                    if (musicSubTab === 'albums') return type === 'album' || genre === 'album' || genre === 'lp';
-                                                    if (musicSubTab === 'singles/ep5') return type === 'single' || type === 'ep' || genre === 'single' || genre === 'ep';
-                                                    return true;
-                                                })
-                                                .sort((a, b) => {
-                                                    const aPosted = isTruthy(a.IsPosted || a.isPosted) ? 1 : 0;
-                                                    const bPosted = isTruthy(b.IsPosted || b.isPosted) ? 1 : 0;
-                                                    if (bPosted !== aPosted) return bPosted - aPosted;
+                                                {/* Add Gear Form */}
+                                                <AnimatePresence>
+                                                    {isMe && showGearForm && (
+                                                        <motion.form
+                                                            initial={{ opacity: 0, height: 0 }}
+                                                            animate={{ opacity: 1, height: 'auto' }}
+                                                            exit={{ opacity: 0, height: 0 }}
+                                                            onSubmit={handleAddGear}
+                                                            className="mb-4 space-y-2 overflow-hidden"
+                                                        >
+                                                            <input
+                                                                type="text"
+                                                                placeholder="> GEAR_NAME..."
+                                                                value={gearFormData.name}
+                                                                onChange={e => setGearFormData(p => ({ ...p, name: e.target.value }))}
+                                                                className="w-full bg-black/60 border border-[var(--text-color)]/20 text-[var(--text-color)] text-[9px] mono px-2 py-1.5 outline-none focus:border-[var(--text-color)]/60 placeholder:text-[var(--text-color)]/20"
+                                                                maxLength={60}
+                                                            />
+                                                            <select
+                                                                value={gearFormData.category}
+                                                                onChange={e => setGearFormData(p => ({ ...p, category: e.target.value }))}
+                                                                className="w-full bg-black/60 border border-[var(--text-color)]/20 text-[var(--text-color)] text-[9px] mono px-2 py-1.5 outline-none"
+                                                            >
+                                                                {['Synth', 'DAW', 'Microphone', 'Controller', 'Drum Machine', 'Plugin', 'Guitar', 'Bass', 'Sampler', 'Other'].map(cat => (
+                                                                    <option key={cat} value={cat}>{cat}</option>
+                                                                ))}
+                                                            </select>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="> NOTES (optional)..."
+                                                                value={gearFormData.notes}
+                                                                onChange={e => setGearFormData(p => ({ ...p, notes: e.target.value }))}
+                                                                className="w-full bg-black/60 border border-[var(--text-color)]/20 text-[var(--text-color)] text-[9px] mono px-2 py-1.5 outline-none focus:border-[var(--text-color)]/60 placeholder:text-[var(--text-color)]/20"
+                                                                maxLength={80}
+                                                            />
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    type="submit"
+                                                                    disabled={isSavingGear || !gearFormData.name.trim()}
+                                                                    className="flex-1 py-1.5 bg-[var(--text-color)] text-black text-[8px] font-bold uppercase tracking-widest transition-all hover:opacity-80 disabled:opacity-30"
+                                                                >
+                                                                    {isSavingGear ? '...' : '[ ADD ]'}
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setShowGearForm(false)}
+                                                                    className="px-3 py-1.5 border border-[var(--text-color)]/20 text-[var(--text-color)]/40 text-[8px] font-bold uppercase transition-all hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40"
+                                                                >
+                                                                    [ X ]
+                                                                </button>
+                                                            </div>
+                                                        </motion.form>
+                                                    )}
+                                                </AnimatePresence>
 
-                                                    const dateA = new Date(a.CreatedAt || a.createdAt || 0).getTime();
-                                                    const dateB = new Date(b.CreatedAt || b.createdAt || 0).getTime();
-                                                    return dateB - dateA;
-                                                })
-                                                .map((track, idx) => (
-                                                    <motion.div
-                                                        key={track.id || `track-${idx}`}
-                                                        initial={{ opacity: 0, x: -20 }}
-                                                        animate={{ opacity: 1, x: 0 }}
-                                                        transition={{ delay: idx * 0.05 }}
-                                                        className="flex items-center justify-between p-4 bg-transparent border-b border-white/5 hover:border-[var(--text-color)]/30 transition-all group backdrop-blur-[2px] cursor-pointer"
-                                                        onClick={() => onPlayTrack(track)}
-                                                    >
-                                                        <div className="flex items-center gap-6">
-                                                            <div className="w-10">
-                                                                <span className="text-[10px] text-[var(--text-color)]/20 font-bold mono">[{String(idx + 1).padStart(2, '0')}]</span>
-                                                            </div>
-                                                            <div className="w-8 h-8 border border-white/10 bg-black overflow-hidden relative grayscale group-hover:grayscale-0 transition-all">
-                                                                {track.cover ? (
-                                                                    <img src={track.cover} className="w-full h-full object-cover" />
-                                                                ) : (
-                                                                    <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/20"><Music size={14} /></div>
-                                                                )}
-                                                            </div>
-                                                            <div>
-                                                                <div className="text-sm font-bold text-[var(--text-color)] uppercase tracking-wider group-hover:text-[var(--text-color)]">{track.title}</div>
-                                                                <div className="text-[9px] text-[var(--text-color)]/30 uppercase mt-1">SIG_TYPE: {track.genre || 'CORE'} // {track.playCount || 0} READS</div>
-                                                            </div>
+                                                {/* Gear Items */}
+                                                <div className="space-y-2 overflow-y-auto custom-scrollbar max-h-[380px]">
+                                                    {isLoadingGear ? (
+                                                        <div className="text-[8px] mono text-[var(--text-color)]/30 animate-pulse">&gt; LOADING_SHELF...</div>
+                                                    ) : profileGear.length > 0 ? (
+                                                        profileGear.map((item, i) => {
+                                                            const gearId = item.id || item.Id;
+                                                            const cat = item.category || item.Category || 'Other';
+                                                            const icon = GEAR_ICONS[cat] || '🎵';
+                                                            return (
+                                                                <motion.div
+                                                                    key={gearId}
+                                                                    initial={{ opacity: 0, x: 20 }}
+                                                                    animate={{ opacity: 1, x: 0 }}
+                                                                    transition={{ delay: i * 0.05 }}
+                                                                    className="group flex items-start gap-3 p-2.5 border border-[var(--text-color)]/10 bg-black/30 hover:border-[var(--text-color)]/30 transition-all relative"
+                                                                >
+                                                                    <div className="text-base leading-none mt-0.5 shrink-0">{icon}</div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="text-[10px] font-bold text-[var(--text-color)] uppercase truncate tracking-wider">{item.name || item.Name}</div>
+                                                                        <div className="text-[7px] mono text-[var(--text-color)]/40 uppercase tracking-[0.2em] mt-0.5">{cat}</div>
+                                                                        {(item.notes || item.Notes) && (
+                                                                            <div className="text-[8px] mono text-[var(--text-color)]/30 mt-1 truncate italic">{item.notes || item.Notes}</div>
+                                                                        )}
+                                                                    </div>
+                                                                    {isMe && (
+                                                                        <button
+                                                                            onClick={() => handleRemoveGear(gearId)}
+                                                                            className="absolute top-1.5 right-1.5 p-0.5 text-[var(--text-color)]/0 group-hover:text-[var(--text-color)]/30 hover:!text-red-400 transition-all"
+                                                                            title="Remove"
+                                                                        >
+                                                                            <X size={10} />
+                                                                        </button>
+                                                                    )}
+                                                                </motion.div>
+                                                            );
+                                                        })
+                                                    ) : (
+                                                        <div className="text-[8px] mono text-[var(--text-color)]/20 uppercase italic py-4 text-center">
+                                                            &gt; NO_GEAR_REGISTERED
+                                                            {isMe && <div className="mt-2 text-[7px] text-[var(--text-color)]/15">CLICK [+] TO ADD</div>}
                                                         </div>
-                                                        <div className="flex items-center gap-4">
-                                                            {isMe && (
-                                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                                                    <button
-                                                                        onClick={async (e) => {
-                                                                            e.stopPropagation();
-                                                                            try {
-                                                                                const API = await import('../services/api').then(mod => mod.default);
-                                                                                await API.Tracks.togglePost(track.id || track.Id);
-                                                                                const isPostedNow = !isTruthy(track.isPosted || track.IsPosted);
-                                                                                // Optimistic Update
-                                                                                setProfileTracks(prev => prev.map(t => (String(t.id) === String(track.id)) ? { ...t, isPosted: isPostedNow, IsPosted: isPostedNow } : t));
-                                                                                showNotification(isPostedNow ? "SIGNAL_BROADCAST" : "SIGNAL_REDACTED", `TRACK_${isPostedNow ? 'ADDED_TO' : 'REMOVED_FROM'}_WALL`, "success");
-                                                                            } catch (err) { console.error(err); }
-                                                                        }}
-                                                                        className={`p-2 border transition-all ${isTruthy(track.isPosted || track.IsPosted) ? 'bg-white text-black border-white shadow-[0_0_15px_#fff]' : 'border-white/10 text-white/40 hover:text-white hover:border-white/30'}`}
-                                                                        title="Pin to Wall"
-                                                                    >
-                                                                        <Star size={12} fill={isTruthy(track.isPosted || track.IsPosted) ? "currentColor" : "none"} />
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            const link = `${window.location.origin}/profile/${targetUserId || currentUser?.id || currentUser?.Id}?track=${track.id || track.Id}`;
-                                                                            navigator.clipboard.writeText(link);
-                                                                            showNotification("LINK_COPIED", "SIGNAL_ADDRESS_SECURED_TO_CLIPBOARD", "success");
-                                                                        }}
-                                                                        className="p-2 border border-white/10 text-white/40 hover:text-white hover:border-white/30 transition-all"
-                                                                        title="Copy Signal Link"
-                                                                    >
-                                                                        <Share2 size={12} />
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                            <TrackActionsDropdown track={track} isOwner={isMe} playlists={currentUserPlaylists} myLikes={myLikes} isLikedInitial={myLikes.some(l => (l.trackId || l.TrackId) === (track.id || track.Id))} onDelete={() => handleDeleteTrack(track)} />
-                                                        </div>
-                                                    </motion.div>
-                                                ))}
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
-                                    ) : !isLoadingTracks ? (
-                                        <div className="h-full flex flex-col items-center justify-center opacity-30 text-[10px] font-mono uppercase text-[var(--text-color)] text-center p-8">
-                                            <Database size={24} className="mb-4 opacity-50 block mx-auto" />
-                                            NO_SIGNALS_DETECTED_IN_CORE
-                                        </div>
-                                    ) : null}
-                                    </div>
-                                )}
+                                    );
+                                })()}
 
                                 {activeTab === 'Playlists' && (
                                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 max-h-[400px] overflow-y-auto custom-scrollbar pr-2 pb-8">
