@@ -281,7 +281,7 @@ const SpatialRoomLayout = ({ children, leftContent, rightContent, monitorTitle, 
                 journal={journal}
                 playlists={playlists}
                 themeColor={activeTheme}
-                onExpand={onExpandContent}
+                onExpand={handleItemClick}
                 onPlayTrack={onPlayTrack}
                 onPlayPlaylist={onPlayPlaylist}
             />
@@ -585,6 +585,7 @@ export const ProfileView = React.memo(({
     setShowGlobalUpload,
     setShowGlobalIngest,
     onExpandContent,
+    onRefreshPlaylists,
     hasMiniPlayer
 }) => {
     const effectiveId = targetUserId || currentUser?.id || currentUser?.Id;
@@ -889,10 +890,12 @@ export const ProfileView = React.memo(({
                 Name: newPlaylistName,
                 IsPublic: isPlaylistPublic,
                 Description: ''
-            }); // DTO expects PascalCase keys or matching properties
+            }); 
             setShowCreatePlaylist(false);
             setNewPlaylistName('');
-            // Refresh
+            onRefreshPlaylists?.(); // Refresh global state
+            
+            // Local Refresh for ProfileView playlists if they are local
             const targetId = currentUser?.id || currentUser?.Id;
             const res = await API.Playlists.getUserPlaylists(targetId);
             const normalized = (res.data || []).map(p => ({
@@ -943,6 +946,16 @@ export const ProfileView = React.memo(({
             console.error("Failed to fetch playlist details", err);
         } finally {
             setIsLoadingPlaylist(false);
+        }
+    };
+
+    // Routes wall/monitor item clicks: playlists get local details panel, everything else goes to global expand
+    const handleItemClick = (item, type) => {
+        const resolvedType = type || item?.type || item?.Type;
+        if (resolvedType === 'PLAYLIST') {
+            handleOpenPlaylist(item.id || item.Id);
+        } else {
+            onExpandContent?.(item, resolvedType);
         }
     };
 
@@ -1413,8 +1426,8 @@ export const ProfileView = React.memo(({
                                     .map((item, i) => (
                                         <div key={`pinned_${i}`} className="flex gap-3 items-center group cursor-pointer" onClick={() => {
                                             const type = item.type || item.Type || (item.name ? 'PLAYLIST' : 'TRACK');
+                                            if (type === 'PLAYLIST') { handleOpenPlaylist(item.id || item.Id); return; }
                                             if (type === 'TRACK') onPlayTrack?.(item);
-                                            else if (type === 'PLAYLIST') onPlayPlaylist?.(item.tracks || [], 0);
                                             else setSelectedContent?.({ ...item, type });
                                         }}>
                                             <div className="w-10 h-10 border border-white text-black bg-white flex-shrink-0 overflow-hidden shadow-[0_0_10px_#fff]">
@@ -1448,6 +1461,11 @@ export const ProfileView = React.memo(({
                                     .map((item, i) => (
                                         <div key={i} className="flex gap-3 items-center group cursor-pointer" onClick={() => {
                                             const type = item.type || item.Type || (item.name ? 'PLAYLIST' : 'TRACK');
+                                            if (type === 'PLAYLIST') {
+                                                handleOpenPlaylist(item.id || item.Id);
+                                                return;
+                                            }
+                                            const isTrack = type === 'TRACK' || (!type && item.title);
                                             if (type === 'TRACK') onPlayTrack?.(item);
                                             else if (type === 'PLAYLIST') onPlayPlaylist?.(item.tracks || [], 0);
                                             else setSelectedContent?.({ ...item, type });
@@ -1779,7 +1797,7 @@ export const ProfileView = React.memo(({
 
                                                                         {/* More Actions */}
                                                                         <div className="flex items-center">
-                                                                            <TrackActionsDropdown track={selectedRelease} isOwner={isMe} playlists={currentUserPlaylists} myLikes={myLikes} isLikedInitial={myLikes.some(l => (l.trackId || l.TrackId) === (selectedRelease.id || selectedRelease.Id))} onDelete={() => { handleDeleteTrack(selectedRelease); setSelectedRelease(null); }} onAddToQueue={onQueueTrack} />
+                                                                            <TrackActionsDropdown track={selectedRelease} isOwner={isMe} playlists={currentUserPlaylists} myLikes={myLikes} isLikedInitial={myLikes.some(l => (l.trackId || l.TrackId) === (selectedRelease.id || selectedRelease.Id))} onDelete={() => { handleDeleteTrack(selectedRelease); setSelectedRelease(null); }} onAddToQueue={onQueueTrack} onRefreshPlaylists={onRefreshPlaylists} />
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -2703,6 +2721,8 @@ export const ProfileView = React.memo(({
                                         onPlayAll={(tracks) => onPlayPlaylist?.(tracks)}
                                         playlists={currentUserPlaylists}
                                         myLikes={myLikes}
+                                        onQueueTrack={onQueueTrack}
+                                        onRefreshPlaylists={onRefreshPlaylists}
                                     />
                                 )}
                             </div>
@@ -3317,7 +3337,7 @@ const StatItem = ({ label, value }) => (
     </div>
 );
 
-const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, onRemoveTrack, onPlayAll, playlists = [], myLikes = [] }) => {
+const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, onRemoveTrack, onPlayAll, playlists = [], myLikes = [], onQueueTrack, onRefreshPlaylists }) => {
     const [isEditing, setIsEditing] = useState(false);
 
     // Edit State
@@ -3471,6 +3491,7 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
                                     isLikedInitial={myLikes.some(l => (l.trackId || l.TrackId) === (t.id || t.Id))}
                                     onDelete={() => onRemoveTrack?.(playlist.id, t.id || t.Id)}
                                     onAddToQueue={onQueueTrack}
+                                    onRefreshPlaylists={onRefreshPlaylists}
                                 />
                             </div>
                         ))}

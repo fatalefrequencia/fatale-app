@@ -44,7 +44,8 @@ const TrackActionsDropdown = ({
     playlists = [],
     isLikedInitial = false,
     myLikes = [],
-    onAddToQueue
+    onAddToQueue,
+    onRefreshPlaylists
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showPlaylists, setShowPlaylists] = useState(false);
@@ -169,6 +170,7 @@ const TrackActionsDropdown = ({
             // Route the track to the new playlist directly
             await handleAddTrackToPlaylist(newPlaylistId, newPlaylistName);
             setNewPlaylistName('');
+            onRefreshPlaylists?.(); // Refresh global playlist state
         } catch (err) {
             console.error("Failed to create playlist:", err);
             setModalConfig({
