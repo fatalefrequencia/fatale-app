@@ -12,6 +12,14 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeSector, setActiveSector] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [mobileViewMode, setMobileViewMode] = useState('globe'); // 'globe' or 'data'
+    const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 1024);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
     
     // Data states for panels
     const [trendingTracks, setTrendingTracks] = useState([]);
@@ -153,17 +161,38 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                             </button>
                         )}
                     </div>
-                    {/* Small frequency indicator below search */}
-                    <div className="absolute -bottom-4 left-0 right-0 flex justify-center gap-[2px]">
-                        {[...Array(20)].map((_, i) => (
-                            <motion.div 
-                                key={i}
-                                animate={{ height: [2, 8, 2, 4, 2] }}
-                                transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.05 }}
-                                className="w-[2px] bg-[#ff006e]/30"
-                            />
-                        ))}
-                    </div>
+
+                    {/* MOBILE DUAL VIEW TOGGLE */}
+                    {isMobile && (
+                        <div className="mt-4 flex bg-black/40 border border-[#ff006e]/20 rounded-sm p-1 gap-1">
+                            <button 
+                                onClick={() => setMobileViewMode('globe')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'globe' ? 'bg-[#ff006e] text-black shadow-[0_0_15px_#ff006e]' : 'text-[#ff006e]/40 hover:bg-[#ff006e]/10'}`}
+                            >
+                                <Globe size={12} /> GLOBE_SENSE
+                            </button>
+                            <button 
+                                onClick={() => setMobileViewMode('data')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'data' ? 'bg-[#ff006e] text-black shadow-[0_0_15px_#ff006e]' : 'text-[#ff006e]/40 hover:bg-[#ff006e]/10'}`}
+                            >
+                                <Activity size={12} /> DATA_STREAM
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Small frequency indicator below switch/search */}
+                    {!isMobile && (
+                        <div className="absolute -bottom-4 left-0 right-0 flex justify-center gap-[2px]">
+                            {[...Array(20)].map((_, i) => (
+                                <motion.div 
+                                    key={i}
+                                    animate={{ height: [2, 8, 2, 4, 2] }}
+                                    transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.05 }}
+                                    className="w-[2px] bg-[#ff006e]/30"
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-6 text-[10px] text-white/40 tracking-tighter self-end lg:self-auto">
@@ -177,29 +206,33 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
             </div>
 
             {/* --- MAIN DASHBOARD GRID --- */}
-            <div className="flex-1 relative flex flex-col lg:grid lg:grid-cols-12 lg:grid-rows-6 gap-6 lg:gap-4 pointer-events-none mt-4 pb-20 lg:pb-0">
+            <div className="flex-1 relative flex flex-col lg:grid lg:grid-cols-12 lg:grid-rows-6 gap-6 lg:gap-4 pointer-events-none mt-4 pb-20 lg:pb-0 min-h-0">
                 
                 {/* --- CENTER: THE GLOBE --- */}
-                <div className="flex-none h-[350px] lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative">
-                    <InteractiveGlobe 
-                        searchQuery={searchQuery}
-                        searchResults={[...filteredTracks, ...filteredArtists, ...filteredCommunities]}
-                        onNodeClick={(node) => onPlayTrack(node)}
-                    />
-                    
-                    {/* Floating Overlay for Sector Status */}
-                    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xl border border-white/5 px-8 pt-3 pb-2 rounded-sm flex gap-10 z-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-                         {SECTORS.map(s => (
-                             <div key={s.id} className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => setActiveSector(s.id)}>
-                                 <div className="text-[8px] tracking-[0.2em] font-black opacity-30 group-hover:opacity-100 transition-opacity" style={{ color: s.color }}>{s.name.split(' ')[0]}</div>
-                                 <div className={`w-0.5 h-4 transition-all duration-300 ${activeSector === s.id ? 'opacity-100 scale-y-125' : 'opacity-20 translate-y-1'}`} style={{ backgroundColor: s.color, boxShadow: activeSector === s.id ? `0 0 10px ${s.color}` : 'none' }} />
-                             </div>
-                         ))}
+                {(!isMobile || mobileViewMode === 'globe') && (
+                    <div className={`${isMobile ? 'flex-1' : 'flex-none h-[350px]'} lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative`}>
+                        <InteractiveGlobe 
+                            searchQuery={searchQuery}
+                            searchResults={[...filteredTracks, ...filteredArtists, ...filteredCommunities]}
+                            onNodeClick={(node) => onPlayTrack(node)}
+                        />
+                        
+                        {/* Floating Overlay for Sector Status */}
+                        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xl border border-white/5 px-8 pt-3 pb-2 rounded-sm flex gap-10 z-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] scale-75 lg:scale-100">
+                             {SECTORS.map(s => (
+                                 <div key={s.id} className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => setActiveSector(s.id)}>
+                                     <div className="text-[8px] tracking-[0.2em] font-black opacity-30 group-hover:opacity-100 transition-opacity" style={{ color: s.color }}>{s.name.split(' ')[0]}</div>
+                                     <div className={`w-0.5 h-4 transition-all duration-300 ${activeSector === s.id ? 'opacity-100 scale-y-125' : 'opacity-20 translate-y-1'}`} style={{ backgroundColor: s.color, boxShadow: activeSector === s.id ? `0 0 10px ${s.color}` : 'none' }} />
+                                 </div>
+                             ))}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* --- LEFT COLUMN: AUDIO & ARTISTS --- */}
-                <div className="col-span-3 row-span-2 col-start-1 row-start-1 pointer-events-auto">
+                {(!isMobile || mobileViewMode === 'data') && (
+                  <>
+                    <div className="col-span-3 row-span-2 col-start-1 row-start-1 pointer-events-auto">
                     <HUDWidget title="YT_FREQ_SCAN" icon={<Search size={14}/>} searchQuery={searchQuery}>
                         <div className="space-y-4">
                             {youtubeResults.length > 0 ? youtubeResults.map(y => (
@@ -344,7 +377,8 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                          </div>
                     </HUDWidget>
                 </div>
-
+                  </>
+                )}
             </div>
             
             {/* --- SCANLINE OVERLAY --- */}
