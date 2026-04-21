@@ -407,14 +407,16 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 
                 {/* --- CENTER: THE GLOBE OR COMMUNITY TERMINAL --- */}
                 {(!isMobile || mobileViewMode === 'globe') && (
-                    <div className={`${isMobile ? 'flex-1' : 'h-[400px] lg:h-full'} lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative`}>
+                    <div className={`${isMobile ? 'flex-1' : 'h-[400px] lg:h-full'} lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative transition-all duration-300`}>
                         <AnimatePresence mode="wait">
                             {!activeTerminalCommunity ? (
                                 <motion.div 
                                     key="globe-view"
+                                    layout
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.8 }}
+                                    transition={{ duration: 0.3 }}
                                     className="w-full h-full flex items-center justify-center px-4 lg:px-8 py-4"
                                 >
                                     <InteractiveGlobe 
@@ -429,9 +431,11 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                             ) : (
                                 <motion.div 
                                     key={`terminal-${activeTerminalCommunity.id}`}
+                                    layout
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.3 }}
                                     className="max-w-2xl w-full h-[540px] overflow-hidden rounded-sm border border-white/5 relative bg-black/60 shadow-2xl"
                                 >
                                     <CommunityTerminal 

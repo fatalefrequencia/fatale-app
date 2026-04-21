@@ -1906,7 +1906,7 @@ const Dashboard = React.memo(({
       </aside>
 
       {/* ÁREA DE CONTENIDO DINÁMICO */}
-      <main className="flex-1 flex flex-col h-full bg-transparent relative overflow-hidden z-10">
+      <main className="flex-1 flex flex-col h-full bg-transparent relative overflow-hidden z-10 transition-all duration-300">
         {/* TOP NAV (Móvil) */}
         <header className="lg:hidden flex items-center justify-center p-4 border-b border-[#ff006e]/10 bg-black/90 backdrop-blur-md z-40 relative">
           <div className="flex gap-2">
