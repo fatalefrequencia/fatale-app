@@ -344,7 +344,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.8 }}
-                                    className="w-full h-full flex items-center justify-center"
+                                    className="w-full h-full flex items-center justify-center px-4 lg:px-8 py-4"
                                 >
                                     <InteractiveGlobe 
                                         searchQuery={searchQuery}
