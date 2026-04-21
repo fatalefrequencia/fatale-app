@@ -403,7 +403,12 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
             </div>
 
             {/* --- MAIN DASHBOARD GRID --- */}
-            <div className="flex-1 relative flex flex-col lg:grid lg:grid-cols-12 lg:grid-rows-6 gap-6 lg:gap-4 pointer-events-none mt-4 pb-20 lg:pb-0 min-h-0" style={{ gridTemplateRows: 'repeat(6, 1fr)' }}>
+            <motion.div 
+                layout
+                transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+                className="flex-1 relative flex flex-col lg:grid lg:grid-cols-12 lg:grid-rows-6 gap-6 lg:gap-4 pointer-events-none mt-4 pb-20 lg:pb-0 min-h-0" 
+                style={{ gridTemplateRows: 'repeat(6, 1fr)' }}
+            >
                 
                 {/* --- CENTER: THE GLOBE OR COMMUNITY TERMINAL --- */}
                 {(!isMobile || mobileViewMode === 'globe') && (
@@ -723,12 +728,12 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                       );
                                   })}
                               </div>
-                          </div>
-                     </HUDWidget>
-                </div>
-                  </>
+                           </div>
+                      </HUDWidget>
+                 </div>
+                   </>
                 )}
-            </div>
+            </motion.div>
             
             {/* --- SCANLINE OVERLAY --- */}
             <div className="fixed inset-0 pointer-events-none z-[100] opacity-[0.03] select-none overflow-hidden h-screen w-screen">

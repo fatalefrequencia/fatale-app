@@ -1874,7 +1874,11 @@ const Dashboard = React.memo(({
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-0" />
 
       {/* SIDEBAR (Escritorio) */}
-      <aside className={`hidden lg:flex flex-col border-r border-white/5 bg-black/20 backdrop-blur-2xl transition-all duration-300 z-30 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.4)] ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}>
+      <motion.aside 
+        layout
+        transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+        className={`hidden lg:flex flex-col border-r border-white/5 bg-black/20 backdrop-blur-2xl z-30 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.4)] ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}
+      >
         <div
           className={`cursor-pointer flex flex-col justify-center items-center transition-all group ${isSidebarCollapsed ? 'p-4' : 'p-6'}`}
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
@@ -1903,10 +1907,14 @@ const Dashboard = React.memo(({
             {isSidebarCollapsed ? <LogOut size={20} /> : 'Log_Out_System'}
           </button>
         </div>
-      </aside>
+      </motion.aside>
 
       {/* ÁREA DE CONTENIDO DINÁMICO */}
-      <main className="flex-1 flex flex-col h-full bg-transparent relative overflow-hidden z-10 transition-all duration-300">
+      <motion.main 
+        layout
+        transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+        className="flex-1 flex flex-col h-full bg-transparent relative overflow-hidden z-10"
+      >
         {/* TOP NAV (Móvil) */}
         <header className="lg:hidden flex items-center justify-center p-4 border-b border-[#ff006e]/10 bg-black/90 backdrop-blur-md z-40 relative">
           <div className="flex gap-2">
@@ -2068,7 +2076,7 @@ const Dashboard = React.memo(({
             )}
           </AnimatePresence>
         </div>
-      </main>
+      </motion.main>
 
 
 
