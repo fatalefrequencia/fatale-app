@@ -219,7 +219,6 @@ export const IPodPlayer = ({
     };
 
     const isLocked = currentTrack.isLocked && !currentTrack.isOwned;
-创新
 
     // Use total track duration in seconds (fallback to 180 if 0)
     const trackDurationSec = duration || 180;
