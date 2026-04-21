@@ -1943,6 +1943,15 @@ const Dashboard = React.memo(({
                 }}
                 isPlayerActive={currentTrackIndex >= 0}
                 onExpandContent={onExpandContent}
+                onPlayStation={(station) => {
+                  setActiveStation(station);
+                  joinStation(station.id || station.Id);
+                  showNotification({ 
+                    title: 'RADIO_LINK_ESTABLISHED', 
+                    message: `SIGNAL_LOCKED: ${station.name}`, 
+                    type: 'success' 
+                  });
+                }}
               />
             )}
             {activeView === 'wallet' && <WalletView user={user} onRefreshProfile={onRefreshProfile} />}

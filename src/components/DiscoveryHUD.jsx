@@ -8,7 +8,7 @@ import HUDWidget from './discovery/HUDWidget';
 import InteractiveGlobe from './discovery/InteractiveGlobe';
 import CommunityTerminal from './discovery/CommunityTerminal';
 
-const DiscoveryHUD = ({ user, navigateToProfile, onPlayTrack, isPlayerActive, onExpandContent }) => {
+const DiscoveryHUD = ({ user, navigateToProfile, onPlayTrack, isPlayerActive, onExpandContent, onPlayStation }) => {
     const { showNotification } = useNotification();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeSector, setActiveSector] = useState(null);
@@ -471,7 +471,7 @@ const DiscoveryHUD = ({ user, navigateToProfile, onPlayTrack, isPlayerActive, on
                     <HUDWidget title="PUBLIC_COLL" icon={<Layers size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                              {filteredPlaylists.map(pl => (
-                                 <div key={pl.id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black">
+                                 <div key={pl.id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => onExpandContent(pl, 'playlist')}>
                                       <img src={getMediaUrl(pl.imageUrl)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
                                       <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
                                       {/* Playlist Glitch Frame */}
@@ -490,7 +490,7 @@ const DiscoveryHUD = ({ user, navigateToProfile, onPlayTrack, isPlayerActive, on
                     <HUDWidget title="STUDIO_TRANS" icon={<Camera size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                              {filteredVisuals.map(v => (
-                                 <div key={v.id} className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-[#ff006e]/60 transition-all shadow-xl">
+                                 <div key={v.id} className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-[#ff006e]/60 transition-all shadow-xl" onClick={() => onExpandContent(v, 'studio')}>
                                       <img src={getMediaUrl(v.imageUrl || v.thumbnailUrl)} alt="" className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
                                       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ff006e] scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
                                       {v.mediaType === 'video' && (
@@ -508,7 +508,7 @@ const DiscoveryHUD = ({ user, navigateToProfile, onPlayTrack, isPlayerActive, on
                     <HUDWidget title="FREQ_JOURNAL" icon={<BookOpen size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                         <div className="space-y-4">
                              {filteredJournals.map(j => (
-                                 <div key={j.id} className="border-l border-[#ff006e]/10 pl-4 py-2 relative group cursor-pointer hover:bg-white/[0.02] transition-all">
+                                 <div key={j.id} className="border-l border-[#ff006e]/10 pl-4 py-2 relative group cursor-pointer hover:bg-white/[0.02] transition-all" onClick={() => onExpandContent(j, 'journal')}>
                                      <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-[#ff006e] scale-y-0 group-hover:scale-y-100 transition-transform" />
                                      <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase mb-1 tracking-tight">{j.title}</div>
                                      <div className="text-[8px] opacity-30 line-clamp-2 italic font-light leading-relaxed">{j.content?.substring(0, 80)}...</div>
@@ -526,7 +526,7 @@ const DiscoveryHUD = ({ user, navigateToProfile, onPlayTrack, isPlayerActive, on
                     <HUDWidget title="RADAR_SIGNAL" icon={<Radio size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="space-y-4">
                              {liveStations.length > 0 ? liveStations.map(s => (
-                                 <div key={s.id} className="group cursor-pointer">
+                                 <div key={s.id} className="group cursor-pointer" onClick={() => onPlayStation(s)}>
                                      <div className="flex items-center justify-between mb-1">
                                          <div className="text-[10px] font-black group-hover:text-[#00ffff] transition-colors uppercase tracking-tight truncate flex-1">{s.name}</div>
                                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
@@ -556,8 +556,12 @@ const DiscoveryHUD = ({ user, navigateToProfile, onPlayTrack, isPlayerActive, on
                                  const isJoined = (user?.communityId || user?.CommunityId) === c.id;
                                  return (
                                      <div key={c.id} className="flex items-center gap-3 p-2 hover:bg-white/5 border border-transparent hover:border-white/10 transition-all group cursor-pointer" onClick={() => setActiveTerminalCommunity(c)}>
-                                         <div className="w-8 h-8 rounded-sm bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center shrink-0 relative">
-                                             <Globe size={12} className="text-[#ff006e] opacity-40 group-hover:opacity-100 transition-opacity" />
+                                         <div className="w-8 h-8 rounded-sm bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center shrink-0 relative overflow-hidden">
+                                             {c.imageUrl ? (
+                                                <img src={getMediaUrl(c.imageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
+                                             ) : (
+                                                <Globe size={12} className="text-[#ff006e] opacity-40 group-hover:opacity-100 transition-opacity" />
+                                             )}
                                              {isJoined && (
                                                 <div className="absolute -top-1 -right-1">
                                                     <Star size={10} className="text-yellow-400 fill-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]" />
