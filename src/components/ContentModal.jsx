@@ -165,7 +165,8 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
                         </button>
                         <button
                             onClick={onClose}
-                            className="bg-[#9d00ff]/80 text-black font-black px-6 py-2 uppercase transition-all hover:bg-[#9d00ff] hover:shadow-[0_0_20px_#9d00ff60]"
+                            className="text-black font-black px-6 py-2 uppercase transition-all hover:shadow-[0_0_20px_rgba(255,0,110,0.4)]"
+                            style={{ backgroundColor: activeTheme }}
                         >
                             CLOSE_FEED
                         </button>

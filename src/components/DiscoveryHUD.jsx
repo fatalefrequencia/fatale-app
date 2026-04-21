@@ -493,11 +493,15 @@ const DiscoveryHUD = ({ user, navigateToProfile, onPlayTrack, isPlayerActive, on
                                  <div 
                                     key={v.id} 
                                     className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-[#ff006e]/60 transition-all shadow-xl" 
-                                    onClick={() => onExpandContent(v, v.mediaType === 'video' ? 'video' : 'photo', { themeColor: activeSectorColor, backgroundColor: '#000000' })}
+                                    onClick={() => onExpandContent(
+                                        v, 
+                                        (v.mediaType || '').toLowerCase() === 'video' ? 'video' : 'photo', 
+                                        { themeColor: activeSectorColor, backgroundColor: '#000000' }
+                                    )}
                                  >
                                       <img src={getMediaUrl(v.imageUrl || v.thumbnailUrl)} alt="" className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
                                       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ff006e] scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
-                                      {v.mediaType === 'video' && (
+                                      {(v.mediaType || '').toLowerCase() === 'video' && (
                                           <div className="absolute top-1 right-1">
                                               <Play size={8} className="text-[#ff006e]" />
                                           </div>
