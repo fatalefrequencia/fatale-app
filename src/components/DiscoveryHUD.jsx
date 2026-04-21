@@ -206,7 +206,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 description: newClanDesc,
                 sectorId: newClanSector !== null ? newClanSector : (activeSector !== null ? activeSector : 0)
             });
-            showNotification("COMMUNITY_FOUNDED", `Sector link established for ${newClanName}.`, "success");
+            showNotification("CLIQUE_ESTABLISHED", `Neural link locked for ${newClanName}.`, "success");
             setIsFounding(false);
             setNewClanName('');
             setNewClanDesc('');
@@ -591,9 +591,9 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 </div>
 
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-7 lg:row-start-5 pointer-events-auto">
-                     <HUDWidget title="SECTOR_CLANS" icon={<Globe size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                     <HUDWidget title="SECTOR_CLIQUE$" icon={<Globe size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                           <div className="space-y-4">
-                              {/* Create Clan Trigger */}
+                              {/* Create Clique Trigger */}
                               <div 
                                 onClick={() => {
                                     setIsFounding(!isFounding);
@@ -602,7 +602,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                 className="flex items-center gap-2 p-2 border border-dashed border-white/10 hover:border-white/30 cursor-pointer group transition-all"
                               >
                                   <Zap size={10} className="text-[#ff006e] group-hover:animate-pulse" />
-                                  <span className="text-[9px] font-black tracking-[0.2em] opacity-40 group-hover:opacity-100">JOIN_NEURAL_FOUNDRY [+]</span>
+                                  <span className="text-[9px] font-black tracking-[0.2em] opacity-40 group-hover:opacity-100">FOUND_CLIQUE [+]</span>
                               </div>
 
                               {isFounding && (
@@ -661,7 +661,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                       {c.name}
                                                       {isJoined && <span className="text-[7px] text-yellow-400/60 mono font-normal border border-yellow-400/20 px-1">HOME</span>}
                                                   </div>
-                                                  <div className="text-[7px] opacity-30 tracking-[0.2em] font-light uppercase mt-0.5">{c.memberCount || 0} SECTOR_AGENTS</div>
+                                                  <div className="text-[7px] opacity-30 tracking-[0.2em] font-light uppercase mt-0.5">{c.memberCount || 0} CLIQUE_AGENTS</div>
                                               </div>
                                           </div>
                                       );

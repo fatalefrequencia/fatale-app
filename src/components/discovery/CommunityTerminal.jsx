@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Users, Zap, Globe, Shield, Star, MoveLeft, MessageSquare } from 'lucide-react';
+import { X, Send, Users, Zap, Globe, Shield, Star, MoveLeft, MessageSquare, ImagePlus } from 'lucide-react';
 import API from '../../services/api';
 import { SECTORS, getMediaUrl } from '../../constants';
 import { useNotification } from '../../contexts/NotificationContext';
@@ -12,7 +12,9 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
     const [sending, setSending] = useState(false);
     const lastTickRef = useRef(0);
     const chatEndRef = useRef(null);
+    const fileInputRef = useRef(null);
     const pollRef = useRef(null);
+    const [displayImageUrl, setDisplayImageUrl] = useState(community.imageUrl || community.ImageUrl);
 
     const isJoined = (user?.communityId || user?.CommunityId) === community.id;
     const color = sectorColor || community.color || '#ff006e';
@@ -99,14 +101,40 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
     };
 
     const handleDelete = async () => {
-        if (!window.confirm("CRITICAL_ACTION: This will permanently erase the community signal. Continue?")) return;
+        if (!window.confirm("CRITICAL_ACTION: This will permanently erase the clique signal. Continue?")) return;
         try {
             setSending(true);
             await API.Communities.delete(community.id);
-            showNotification("SIGNAL_ERASED", "Community termination sequence complete.", "success");
+            showNotification("SIGNAL_ERASED", "Clique termination sequence complete.", "success");
             onBack();
         } catch (e) {
             console.error('[DELETE_ERROR]', e);
+        } finally {
+            setSending(false);
+        }
+    };
+
+    const handleIconUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        
+        try {
+            setSending(true);
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const uploadRes = await API.Files.upload(formData);
+            const newUrl = uploadRes.data.url || uploadRes.data.imageUrl || uploadRes.data.FilePath;
+            
+            if (newUrl) {
+                await API.Communities.updateImageUrl(community.id, newUrl);
+                setDisplayImageUrl(newUrl);
+                showNotification("LINK_UPDATED", "Clique imagery successfully recalibrated.", "success");
+                if (onFollowUpdate) onFollowUpdate();
+            }
+        } catch (e) {
+            console.error('[ICON_UPLOAD_ERROR]', e);
+            showNotification("UPLOAD_FAILURE", "Failed to upload clique imagery.", "error");
         } finally {
             setSending(false);
         }
@@ -143,7 +171,29 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
                     BACK_TO_ORBIT
                 </button>
                 <div className="flex items-center gap-3">
-                    <div className="text-[10px] font-black text-white uppercase tracking-tight truncate max-w-[150px] text-right">{community.name}</div>
+                    <div className="relative group/icon">
+                        <div className="w-8 h-8 rounded-sm bg-white/5 border border-white/10 flex items-center justify-center shrink-0 relative overflow-hidden">
+                            {displayImageUrl ? (
+                                <img src={getMediaUrl(displayImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover/icon:opacity-100 transition-all" />
+                            ) : (
+                                <Globe size={14} className="text-white opacity-20" />
+                            )}
+                            
+                            {isFounder && (
+                                <button 
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="absolute inset-0 bg-[#ff006e]/60 opacity-0 group-hover/icon:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
+                                    title="RECALIBRATE_ICON"
+                                >
+                                    <ImagePlus size={14} className="text-white" />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                    <div className="flex flex-col items-end">
+                        <div className="text-[10px] font-black text-white uppercase tracking-tight truncate max-w-[150px] text-right">{community.name}</div>
+                        <div className="text-[7px] opacity-30 mono tracking-widest">SIGNAL_STRENGTH: 98%</div>
+                    </div>
                     <button 
                         onClick={handleToggleFollow}
                         className={`transition-all hover:scale-125 ${isJoined ? 'pointer-events-none' : 'cursor-pointer'}`}
@@ -163,7 +213,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
                     <span>SEC: {community.sectorId}</span>
                     {isFounder && (
                         <button onClick={handleDelete} className="text-red-500 hover:text-red-400 font-black cursor-pointer bg-red-500/10 px-2 flex items-center gap-1 border border-red-500/20">
-                            <Zap size={8} /> DELETE_CLAN
+                            <Zap size={8} /> DELETE_CLIQUE
                         </button>
                     )}
                  </div>
@@ -173,14 +223,14 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
                             onClick={handleJoin}
                             className="bg-white/10 hover:bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded-sm transition-all flex items-center gap-1 hover:scale-105"
                         >
-                            JOIN_CLAN
+                            JOIN_CLIQUE
                         </button>
                     ) : (
                         <button 
                             onClick={handleLeave}
                             className="text-[#ff006e]/60 hover:text-[#ff006e] border border-[#ff006e]/20 px-2 py-0.5 rounded-sm transition-all"
                         >
-                            LEAVE_CLAN
+                            LEAVE_CLIQUE
                         </button>
                     )}
                     <div className="w-[1px] h-3 bg-white/10 mx-1" />
@@ -194,9 +244,13 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
             {/* Chat Area */}
             <div 
                 className="flex-1 overflow-y-auto p-4 relative no-scrollbar" 
-                style={{ scrollbarWidth: 'none', overflowAnchor: 'none' }}
+                style={{ 
+                    scrollbarWidth: 'none', 
+                    overflowAnchor: 'none',
+                    scrollbarGutter: 'stable'
+                }}
             >
-                <div className="space-y-4 min-h-full flex flex-col justify-end">
+                <div className="space-y-4 h-full flex flex-col justify-end">
                     {messages.length === 0 ? (
                         <div className="flex-1 flex flex-col items-center justify-center opacity-20 text-center space-y-2 py-20">
                             <MessageSquare size={24} />
@@ -244,6 +298,15 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
 
             {/* Scanning Overlay Effect */}
             <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-scanlines mix-blend-overlay animate-scanlines" />
+
+            {/* Hidden Founder Tools */}
+            <input 
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleIconUpload}
+            />
         </div>
     );
 };
