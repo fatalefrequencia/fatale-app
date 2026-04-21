@@ -1948,6 +1948,7 @@ const Dashboard = React.memo(({
                 }}
                 isPlayerActive={currentTrackIndex >= 0}
                 onExpandContent={onExpandContent}
+                setUser={setUser}
                 onPlayStation={(station) => {
                   setActiveStation(station);
                   joinStation(station.id || station.Id);

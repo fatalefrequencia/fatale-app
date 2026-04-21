@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Users, Zap, Globe, Shield, Star, MoveLeft, MessageSquare } from 'lucide-react';
 import API from '../../services/api';
 import { SECTORS, getMediaUrl } from '../../constants';
+import { useNotification } from '../../contexts/NotificationContext';
 
-const CommunityTerminal = ({ community, user, followedCommunities = [], onFollowUpdate, onBack, sectorColor }) => {
+const CommunityTerminal = ({ community, user, followedCommunities = [], onFollowUpdate, setUser, onBack, sectorColor }) => {
+    const { showNotification } = useNotification();
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [sending, setSending] = useState(false);
@@ -48,7 +50,8 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
     }, [messages]);
 
     const isFollowed = followedCommunities.includes(community.id);
-    const canFavorite = !isJoined; // They already have it starred if joined
+    const isMember = (user?.communityId || user?.CommunityId) === community.id;
+    const isFounder = (user?.id || user?.Id) === (community.founderUserId || community.FounderUserId);
 
     const handleToggleFollow = async (e) => {
         e.stopPropagation();
@@ -61,6 +64,51 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
             if (onFollowUpdate) onFollowUpdate();
         } catch (e) {
             console.error('[FOLLOW_TOGGLE_ERROR]', e);
+        }
+    };
+
+    const handleJoin = async () => {
+        try {
+            setSending(true);
+            await API.Communities.join(community.id);
+            if (setUser) {
+                setUser(prev => ({ ...prev, communityId: community.id, CommunityId: community.id }));
+            }
+            showNotification("NEURAL_SYNC_ESTABLISHED", `Welcome to ${community.name}. Faction link verified.`, "success");
+        } catch (e) {
+            console.error('[JOIN_ERROR]', e);
+            showNotification("SYNC_FAILURE", "Failed to establish clan membership link.", "error");
+        } finally {
+            setSending(false);
+        }
+    };
+
+    const handleLeave = async () => {
+        try {
+            setSending(true);
+            await API.Communities.leave();
+            if (setUser) {
+                setUser(prev => ({ ...prev, communityId: null, CommunityId: null }));
+            }
+            showNotification("LINK_TERMINATED", "Clan membership revoked. Signal returned to solo status.", "success");
+        } catch (e) {
+            console.error('[LEAVE_ERROR]', e);
+        } finally {
+            setSending(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!window.confirm("CRITICAL_ACTION: This will permanently erase the community signal. Continue?")) return;
+        try {
+            setSending(true);
+            await API.Communities.delete(community.id);
+            showNotification("SIGNAL_ERASED", "Community termination sequence complete.", "success");
+            onBack();
+        } catch (e) {
+            console.error('[DELETE_ERROR]', e);
+        } finally {
+            setSending(false);
         }
     };
 
@@ -83,13 +131,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
     };
 
     return (
-        <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="w-full h-full flex flex-col bg-black/40 border border-white/10 relative overflow-hidden backdrop-blur-xl"
-            style={{ borderColor: `${color}30` }}
-        >
+        <div className="w-full h-full flex flex-col bg-black/40 border border-white/10 relative overflow-hidden backdrop-blur-xl" style={{ borderColor: `${color}30` }}>
             {/* Header / Nav Section */}
             <div className="flex-none flex items-center justify-between p-4 border-b border-white/5 bg-white/5">
                 <button 
@@ -119,10 +161,33 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
                  <div className="flex items-center gap-4">
                     <span>ID: {community.id?.toString(16).toUpperCase()}</span>
                     <span>SEC: {community.sectorId}</span>
+                    {isFounder && (
+                        <button onClick={handleDelete} className="text-red-500 hover:text-red-400 font-black cursor-pointer bg-red-500/10 px-2 flex items-center gap-1 border border-red-500/20">
+                            <Zap size={8} /> DELETE_CLAN
+                        </button>
+                    )}
                  </div>
-                 <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: color }} />
-                    <span style={{ color }}>LINK_STABLE</span>
+                 <div className="flex items-center gap-3">
+                    {!isMember ? (
+                        <button 
+                            onClick={handleJoin}
+                            className="bg-white/10 hover:bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded-sm transition-all flex items-center gap-1 hover:scale-105"
+                        >
+                            JOIN_CLAN
+                        </button>
+                    ) : (
+                        <button 
+                            onClick={handleLeave}
+                            className="text-[#ff006e]/60 hover:text-[#ff006e] border border-[#ff006e]/20 px-2 py-0.5 rounded-sm transition-all"
+                        >
+                            LEAVE_CLAN
+                        </button>
+                    )}
+                    <div className="w-[1px] h-3 bg-white/10 mx-1" />
+                    <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: color }} />
+                        <span style={{ color }}>LINK_STABLE</span>
+                    </div>
                  </div>
             </div>
 
@@ -174,7 +239,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
 
             {/* Scanning Overlay Effect */}
             <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-scanlines mix-blend-overlay animate-scanlines" />
-        </motion.div>
+        </div>
     );
 };
 

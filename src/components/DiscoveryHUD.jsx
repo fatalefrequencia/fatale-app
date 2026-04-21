@@ -8,7 +8,7 @@ import HUDWidget from './discovery/HUDWidget';
 import InteractiveGlobe from './discovery/InteractiveGlobe';
 import CommunityTerminal from './discovery/CommunityTerminal';
 
-const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, navigateToProfile, onPlayTrack, isPlayerActive, onExpandContent, onPlayStation }) => {
+const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, isPlayerActive, onExpandContent, onPlayStation }) => {
     const { showNotification } = useNotification();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeSector, setActiveSector] = useState(null);
@@ -368,6 +368,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, navigate
                                         user={user}
                                         followedCommunities={followedCommunities}
                                         onFollowUpdate={onFollowUpdate}
+                                        setUser={setUser}
                                         onBack={() => setActiveTerminalCommunity(null)}
                                         sectorColor={activeSectorColor}
                                     />
@@ -577,7 +578,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, navigate
                                                 <Globe size={12} className="text-[#ff006e] opacity-40 group-hover:opacity-100 transition-opacity" />
                                              )}
                                              {(isJoined || followedCommunities.includes(c.id)) && (
-                                                <div className="absolute -top-1 -right-1">
+                                                <div className="absolute top-0.5 right-0.5">
                                                     <Star size={10} className="text-yellow-400 fill-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]" />
                                                 </div>
                                              )}

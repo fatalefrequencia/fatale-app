@@ -260,6 +260,7 @@ const API = {
             return Promise.resolve({ data: { success: true } });
         },
         getFollowed: () => JSON.parse(localStorage.getItem('followed_communities') || '[]'),
+        delete: (id) => api.delete(`Communities/${id}`),
         updateImageUrl: (id, imageUrl) => api.post(`Communities/${id}/image`, { imageUrl })
     },
     Files: {
