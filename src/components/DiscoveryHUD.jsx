@@ -357,7 +357,7 @@ const DiscoveryHUD = ({ user, navigateToProfile, onPlayTrack, isPlayerActive, on
                                 </motion.div>
                             ) : (
                                 <motion.div 
-                                    key="terminal-view"
+                                    key={`terminal-${activeTerminalCommunity.id}`}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: 20 }}
@@ -373,26 +373,28 @@ const DiscoveryHUD = ({ user, navigateToProfile, onPlayTrack, isPlayerActive, on
                             )}
                         </AnimatePresence>
                         
-                        {/* Floating Overlay for Sector Status */}
-                        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xl border border-white/5 px-8 pt-3 pb-2 rounded-sm flex gap-10 z-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] scale-75 lg:scale-100">
-                             {SECTORS.map(s => (
-                                 <div key={s.id} className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => setActiveSector(activeSector === s.id ? null : s.id)}>
-                                     <div 
-                                         className="text-[8px] tracking-[0.2em] font-black opacity-30 group-hover:opacity-100 transition-opacity" 
-                                         style={{ color: activeSector === s.id ? (s.id === 0 ? "#ff33aa" : s.color) : s.color }}
-                                     >
-                                         {s.name.split(' ')[0]}
-                                     </div>
-                                     <div 
-                                         className={`w-0.5 h-4 transition-all duration-300 ${activeSector === s.id ? 'opacity-100 scale-y-125' : 'opacity-20 translate-y-1'}`} 
-                                         style={{ 
-                                             backgroundColor: s.id === 0 && activeSector === 0 ? "#ff33aa" : s.color, 
-                                             boxShadow: activeSector === s.id ? `0 0 10px ${s.id === 0 ? "#ff33aa" : s.color}` : 'none' 
-                                         }} 
-                                     />
-                                 </div>
-                             ))}
-                        </div>
+                        {/* Floating Overlay for Sector Status - Hide when terminal is active */}
+                        {!activeTerminalCommunity && (
+                            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xl border border-white/5 px-8 pt-3 pb-2 rounded-sm flex gap-10 z-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] scale-75 lg:scale-100">
+                                {SECTORS.map(s => (
+                                    <div key={s.id} className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => setActiveSector(activeSector === s.id ? null : s.id)}>
+                                        <div 
+                                            className="text-[8px] tracking-[0.2em] font-black opacity-30 group-hover:opacity-100 transition-opacity" 
+                                            style={{ color: activeSector === s.id ? (s.id === 0 ? "#ff33aa" : s.color) : s.color }}
+                                        >
+                                            {s.name.split(' ')[0]}
+                                        </div>
+                                        <div 
+                                            className={`w-0.5 h-4 transition-all duration-300 ${activeSector === s.id ? 'opacity-100 scale-y-125' : 'opacity-20 translate-y-1'}`} 
+                                            style={{ 
+                                                backgroundColor: s.id === 0 && activeSector === 0 ? "#ff33aa" : s.color, 
+                                                boxShadow: activeSector === s.id ? `0 0 10px ${s.id === 0 ? "#ff33aa" : s.color}` : 'none' 
+                                            }} 
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 
