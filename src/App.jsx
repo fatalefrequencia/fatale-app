@@ -58,12 +58,30 @@ const DISCOVERY_GRID = [
 ];
 
 
+// --- UTILS ---
 const hashStr = (s) => {
   if (!s) return 0;
   let h = 0;
   const str = s.toString();
   for (let i = 0; i < str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
   return Math.abs(h);
+};
+
+// Unified YouTube Detection
+const getGlobalYoutubeId = (t) => {
+  if (!t) return null;
+  const rawSource = t.source || t.Source || t.filePath || t.FilePath || "";
+  const id = t.youtubeId || t.YoutubeId || t.videoId || t.VideoId || t.id || t.Id;
+  
+  if (typeof rawSource === 'string' && rawSource.startsWith('youtube:')) return rawSource.split(':')[1];
+  
+  if (typeof rawSource === 'string') {
+    if (rawSource.includes('youtube.com/watch?v=')) return rawSource.split('v=')[1]?.split('&')[0];
+    if (rawSource.includes('youtu.be/')) return rawSource.split('youtu.be/')[1]?.split('?')[0];
+  }
+
+  if (typeof id === 'string' && id.length === 11) return id;
+  return null;
 };
 
 // --- COMPONENTE PRINCIPAL ---
@@ -515,18 +533,12 @@ function App() {
         return title ? `${artist} - ${title}` : null;
       };
 
-      if (tracksRes.data && tracksRes.data.length > 0) {
-        tracksRes.data.forEach((t) => {
-          const trackId = String(t.id || t.Id || "");
-          if (!trackId || trackId === "undefined") return;
-
           const artistUserId = t.artistUserId || t.ArtistUserId || t.album?.artist?.userId || t.Album?.Artist?.UserId;
           const isMine = artistUserId && String(artistUserId) === String(uid);
 
-          const rawSource = t.source || t.Source || t.filePath || t.FilePath || "";
-          const yId = t.youtubeId || t.YoutubeId || (rawSource.includes('youtube.com/watch?v=') ? rawSource.split('v=')[1]?.split('&')[0] : (rawSource.startsWith('youtube:') ? rawSource.split(':')[1] : null));
-          
+          const yId = getGlobalYoutubeId(t);
           const isYT = !!yId;
+          const rawSource = t.source || t.Source || t.filePath || t.FilePath || "";
           const resolvedSource = isYT ? `youtube:${yId}` : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null);
 
           if (!resolvedSource || resolvedSource === API_BASE_URL || resolvedSource === `${API_BASE_URL}/`) return;
@@ -535,7 +547,7 @@ function App() {
           if (artistName === 'The Archive') return;
 
           const isLiked = likedTrackIds.has(trackId);
-          if (isYT && isLiked) likedYoutubeIds.add(yId); // Cross-sync likes from tracks library
+          if (isYT && isLiked) likedYoutubeIds.add(yId); // Reconcile liked signals
 
           const mappedTrack = {
             ...t,
@@ -563,9 +575,7 @@ function App() {
 
       if (likes.length > 0) {
         likes.forEach(lik => {
-          const rawSource = lik.source || lik.Source || "";
-          const yId = lik.youtubeId || lik.YoutubeId || (rawSource.includes('youtube.com/watch?v=') ? rawSource.split('v=')[1]?.split('&')[0] : (rawSource.startsWith('youtube:') ? rawSource.split(':')[1] : null));
-          
+          const yId = getGlobalYoutubeId(lik);
           if (yId) {
             likedYoutubeIds.add(yId);
             const sourceKey = `youtube:${yId}`;
@@ -588,8 +598,9 @@ function App() {
             uniqueTracksMap.set(sourceKey, mappedYt);
           }
         });
-        setLikedYoutubeIds(new Set(likedYoutubeIds));
       }
+      
+      setLikedYoutubeIds(new Set(likedYoutubeIds)); // Final Atomic Update
 
       const allTracks = Array.from(uniqueTracksMap.values());
       const finalTracks = allTracks.length > 0 ? allTracks : (uid ? [] : TRACKS);
@@ -1969,11 +1980,11 @@ const Dashboard = React.memo(({
                 navigateToProfile={navigateToProfile}
                 onPlayTrack={(track) => {
                   const tId = track.id || track.Id;
-                  const rawSource = track.source || track.Source || track.filePath || track.FilePath;
-                  const isYoutube = (typeof tId === 'string' && tId.length === 11 && !rawSource) || (rawSource && rawSource.startsWith('youtube:'));
+                  const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
                   
-                  // YouTube Resolution
-                  const pureYtId = isYoutube ? (rawSource?.startsWith('youtube:') ? rawSource.split(':')[1] : String(tId)) : null;
+                  // Unified YouTube Resolution
+                  const pureYtId = getGlobalYoutubeId(track);
+                  const isYoutube = !!pureYtId;
                   const sourceStr = isYoutube ? `youtube:${pureYtId}` : (rawSource || "");
 
                   // --- DEEP RECONCILIATION: Inherit State from Library ---
@@ -1986,7 +1997,7 @@ const Dashboard = React.memo(({
                     ? likedYoutubeIds.has(pureYtId) 
                     : (libraryMatch ? libraryMatch.isLiked : (track.isLiked || track.IsLiked));
                   
-                  const isOwned = (libraryMatch ? libraryMatch.isOwned : track.isOwned) || true; // Discovery usually yields playable nodes
+                  const isOwned = (libraryMatch ? libraryMatch.isOwned : track.isOwned) || true;
 
                   const rawCover = track.coverImageUrl || track.CoverImageUrl || track.imageUrl || track.ImageUrl || track.thumbnailUrl || track.ThumbnailUrl || track.cover || track.Cover || libraryMatch?.cover;
 
