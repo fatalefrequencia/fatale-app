@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Music, Disc, User, Play, Heart, Layers, Radio, BookOpen, Camera, Zap, Share2, Activity, Globe, X, Star } from 'lucide-react';
+import { Search, Music, Disc, User, Play, Heart, Layers, Radio, BookOpen, Camera, Zap, Share2, Activity, Globe, X, Star, ChevronLeft } from 'lucide-react';
 import API from '../services/api';
 import { SECTORS, getMediaUrl } from '../constants';
 import { useNotification } from '../contexts/NotificationContext';
@@ -69,6 +69,9 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     const [communities, setCommunities] = useState([]);
     const [stations, setStations] = useState([]);
     const [youtubeResults, setYoutubeResults] = useState([]);
+    const [selectedPlaylist, setSelectedPlaylist] = useState(null);
+    const [playlistTracks, setPlaylistTracks] = useState([]);
+    const [loadingPlaylist, setLoadingPlaylist] = useState(false);
 
     const fetchAll = useCallback(async () => {
         setLoading(true);
@@ -134,6 +137,22 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
         return s.name.toLowerCase().includes(genre) || 
                s.subgenres.some(sub => sub.toLowerCase() === genre || genre.includes(sub.toLowerCase()));
     }, [activeSector]);
+
+    const handlePlaylistClick = async (pl) => {
+        setSelectedPlaylist(pl);
+        setLoadingPlaylist(true);
+        try {
+            const res = await API.Playlists.getById(pl.id);
+            // res.data now contains { Playlist, Tracks } as per PlaylistsController.cs
+            setPlaylistTracks(res.data.Tracks || []);
+        } catch (err) {
+            console.error("Failed to fetch playlist tracks:", err);
+            showNotification("FETCH_ERROR", "Could not load playlist contents.", "error");
+            setSelectedPlaylist(null);
+        } finally {
+            setLoadingPlaylist(false);
+        }
+    };
 
     const filteredTracks = useMemo(() => {
         let base = trendingTracks;
@@ -555,21 +574,67 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
 
                 {/* --- RIGHT COLUMN: PLAYLISTS, VISUALS, JOURNALS --- */}
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-1 pointer-events-auto">
-                    <HUDWidget title="PUBLIC_COLL" icon={<Layers size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
-                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                             {filteredPlaylists.map(pl => (
-                                 <div key={pl.id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => navigateToProfile(pl.userId)}>
-                                      <img src={getMediaUrl(pl.imageUrl)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                                      {/* Playlist Glitch Frame */}
-                                      <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
-                                      <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5">
-                                          <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight">{pl.name}</div>
-                                          <div className="text-[7px] opacity-40 uppercase font-light tracking-[0.2em]">{pl.trackCount} FILES</div>
-                                      </div>
+                    <HUDWidget 
+                        title={selectedPlaylist ? `DESC_PL: ${selectedPlaylist.name.toUpperCase()}` : "PUBLIC_COLL"} 
+                        icon={selectedPlaylist ? <ChevronLeft size={14} className="cursor-pointer hover:text-white transition-colors" onClick={() => setSelectedPlaylist(null)} /> : <Layers size={14}/>} 
+                        searchQuery={searchQuery} 
+                        activeColor={activeSectorColor}
+                    >
+                         {selectedPlaylist ? (
+                             <div className="space-y-4">
+                                 <div className="flex items-center justify-between border-b border-white/5 pb-2 mb-2">
+                                     <div className="flex flex-col">
+                                         <div className="text-[10px] font-black group-hover:text-[#ff006e] uppercase tracking-tight truncate max-w-[150px]">{selectedPlaylist.name}</div>
+                                         <div 
+                                            className="text-[7px] text-[#ff006e] opacity-60 hover:opacity-100 cursor-pointer uppercase font-bold tracking-[0.2em] mt-0.5"
+                                            onClick={() => navigateToProfile(selectedPlaylist.userId)}
+                                         >
+                                             BY_{selectedPlaylist.authorName || 'ANONYMOUS'}
+                                         </div>
+                                     </div>
+                                     <button 
+                                        onClick={() => setSelectedPlaylist(null)}
+                                        className="text-[7px] border border-white/10 px-2 py-1 hover:bg-white/5 uppercase mono tracking-widest"
+                                     >
+                                         [BACK_SIG]
+                                     </button>
                                  </div>
-                             ))}
-                         </div>
+
+                                 {loadingPlaylist ? (
+                                     <div className="flex items-center justify-center py-10 opacity-20 animate-pulse">
+                                         <Activity size={16} />
+                                     </div>
+                                 ) : (
+                                     <div className="space-y-1">
+                                         {playlistTracks.map((t, idx) => (
+                                             <div key={t.id} className="flex items-center gap-3 text-[9px] group cursor-pointer py-1.5 px-2 hover:bg-white/5 transition-all border-l border-transparent hover:border-[#ff006e]" onClick={() => onPlayTrack(t)}>
+                                                  <span className="text-[7px] opacity-20 tabular-nums">{String(idx + 1).padStart(2, '0')}</span>
+                                                  <div className="flex-1 min-w-0">
+                                                      <div className="font-bold truncate group-hover:text-[#ff006e] transition-colors uppercase">{t.title}</div>
+                                                  </div>
+                                             </div>
+                                         ))}
+                                         {playlistTracks.length === 0 && (
+                                             <div className="text-[8px] opacity-20 text-center py-4 uppercase italic">No signals found in collection</div>
+                                         )}
+                                     </div>
+                                 )}
+                             </div>
+                         ) : (
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in duration-500">
+                                 {filteredPlaylists.map(pl => (
+                                     <div key={pl.id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => handlePlaylistClick(pl)}>
+                                          <img src={getMediaUrl(pl.imageUrl)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
+                                          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                                          <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
+                                          <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5">
+                                              <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight">{pl.name}</div>
+                                              <div className="text-[7px] opacity-40 uppercase font-light tracking-[0.2em]">{pl.trackCount} FILES</div>
+                                          </div>
+                                     </div>
+                                 ))}
+                             </div>
+                         )}
                     </HUDWidget>
                 </div>
 
