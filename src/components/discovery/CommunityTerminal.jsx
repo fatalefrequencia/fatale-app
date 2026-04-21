@@ -172,14 +172,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
     return (
         <div className="w-full h-full flex flex-col bg-black/40 border border-white/10 relative overflow-hidden backdrop-blur-xl" style={{ borderColor: `${color}30` }}>
             {/* Header / Nav Section */}
-            <div 
-                className="flex-none flex items-center justify-between px-4 h-14 border-b border-white/5 bg-white/5 backdrop-blur-md relative"
-                style={{ 
-                    backgroundColor: `${color}10`,
-                    borderTop: `2px solid ${color}`,
-                    boxShadow: `0 -10px 20px -10px ${color}30`
-                }}
-            >
+            <div className="flex-none flex items-center justify-between px-4 h-14 border-b border-white/5 bg-white/5 backdrop-blur-md relative">
                 <button 
                     onClick={onBack}
                     className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] transition-all hover:scale-105"
