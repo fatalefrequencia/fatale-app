@@ -30,12 +30,12 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
         }
     };
 
-    const activeTheme = themeColor || '#9d00ff';
+    const activeTheme = themeColor || '#ff006e';
     const hexToRgba = (hex, alpha) => {
-        const r = parseInt(hex.slice(1, 3), 16) || 157;
-        const g = parseInt(hex.slice(3, 5), 16) || 0;
-        const b = parseInt(hex.slice(5, 7), 16) || 255;
-        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${isNaN(r) ? 157 : r}, ${isNaN(g) ? 0 : g}, ${isNaN(b) ? 255 : b}, ${alpha})`;
     };
 
     return (
@@ -87,7 +87,7 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
                             <span className="mono text-[10px] font-black tracking-[0.3em] uppercase">
                                 {['JOURNAL', 'TEXT'].includes(normalizedType) ? 'ARCHIVED_LOG_ENTRY' : ['PHOTO', 'IMAGE', 'PICTURE'].includes(normalizedType) ? 'VISUAL_DATA_FRAGMENT' : 'SIGNAL_FEED_RECORDING'}
                             </span>
-                            <span className="text-[7px] text-[#9d00ff]/40 mono uppercase">:: ACCESS_PROTOCOL_SECURED ::</span>
+                            <span className="text-[7px] text-[#ff006e]/40 mono uppercase">:: ACCESS_PROTOCOL_SECURED ::</span>
                         </div>
                     </div>
                 </div>
@@ -100,7 +100,7 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
                                 <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter italic leading-tight">
                                     {content.Title || content.title || '// UNTITLED_LOG'}
                                 </h2>
-                                <div className="w-24 h-1 bg-gradient-to-r from-[#9d00ff] to-transparent"></div>
+                                <div className="w-24 h-1 bg-gradient-to-r from-[#ff006e] to-transparent"></div>
                                 <div className="prose prose-invert max-w-none">
                                     <p className="text-sm md:text-base text-white/80 leading-relaxed font-mono whitespace-pre-wrap tracking-wide">
                                         {content.Content || content.content || content.Text || content.text}
@@ -112,7 +112,7 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
                         {['PHOTO', 'IMAGE', 'PICTURE'].includes(normalizedType) && (
                             <div className="flex flex-col items-center justify-center min-h-[400px]">
                                 <div className="relative group">
-                                    <div className="absolute inset-0 bg-[#9d00ff]/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <div className="absolute inset-0 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `${activeTheme}1A` }} />
                                     <img
                                         src={getMediaUrl(content.Url || content.url || content.imageUrl || content.ImageUrl || content.thumbnailUrl || content.ThumbnailUrl || content.source || content.Source)}
                                         alt="Expanded Visual"
@@ -135,8 +135,8 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
                                     autoPlay
                                     className="max-w-full max-h-[65vh] border border-white/10 shadow-2xl relative z-10"
                                 />
-                                <div className="mt-6 flex items-center gap-4 text-[10px] mono text-[#9d00ff] uppercase tracking-[0.3em] font-black">
-                                    <div className="w-2 h-2 rounded-full bg-[#9d00ff] animate-ping" />
+                                <div className="mt-6 flex items-center gap-4 text-[10px] mono uppercase tracking-[0.3em] font-black" style={{ color: activeTheme }}>
+                                    <div className="w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: activeTheme }} />
                                     SIGNAL_LIVE_DECODING_ACTIVE
                                 </div>
                             </div>
