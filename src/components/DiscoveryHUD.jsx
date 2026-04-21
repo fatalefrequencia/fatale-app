@@ -496,7 +496,7 @@ const DiscoveryHUD = ({ user, navigateToProfile, onPlayTrack, isPlayerActive, on
                                     onClick={() => onExpandContent(
                                         v, 
                                         (v.mediaType || '').toLowerCase() === 'video' ? 'video' : 'photo', 
-                                        { themeColor: activeSectorColor, backgroundColor: '#000000' }
+                                        { themeColor: '#9d00ff', backgroundColor: '#000000' }
                                     )}
                                  >
                                       <img src={getMediaUrl(v.imageUrl || v.thumbnailUrl)} alt="" className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
@@ -519,7 +519,7 @@ const DiscoveryHUD = ({ user, navigateToProfile, onPlayTrack, isPlayerActive, on
                                  <div 
                                     key={j.id} 
                                     className="border-l border-[#ff006e]/10 pl-4 py-2 relative group cursor-pointer hover:bg-white/[0.02] transition-all" 
-                                    onClick={() => onExpandContent(j, 'journal', { themeColor: activeSectorColor, backgroundColor: '#000000' })}
+                                    onClick={() => onExpandContent(j, 'journal', { themeColor: '#9d00ff', backgroundColor: '#000000' })}
                                  >
                                      <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-[#ff006e] scale-y-0 group-hover:scale-y-100 transition-transform" />
                                      <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase mb-1 tracking-tight">{j.title}</div>

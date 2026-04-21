@@ -4,7 +4,7 @@ import { X, Book, Camera, Video, Share2, Download, ExternalLink } from 'lucide-r
 import { API_BASE_URL, getMediaUrl } from '../constants';
 import { useNotification } from '../contexts/NotificationContext';
 
-const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true, themeColor = '#ff006e', backgroundColor = '#000000', isGlass = false, monitorImageUrl = null, monitorBackgroundColor = '#000000', monitorIsGlass = false }) => {
+const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true, themeColor = '#9d00ff', backgroundColor = '#000000', isGlass = false, monitorImageUrl = null, monitorBackgroundColor = '#000000', monitorIsGlass = false }) => {
     const { showNotification } = useNotification();
     if (!content) return null;
     const normalizedType = (type || '').toUpperCase();
@@ -30,7 +30,7 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
         }
     };
 
-    const activeTheme = themeColor || '#ff006e';
+    const activeTheme = themeColor || '#9d00ff';
     const hexToRgba = (hex, alpha) => {
         const r = parseInt(hex.slice(1, 3), 16);
         const g = parseInt(hex.slice(3, 5), 16);
@@ -130,9 +130,11 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
                         {['VIDEO', 'MEDIA'].includes(normalizedType) && (
                             <div className="flex flex-col items-center justify-center min-h-[400px]">
                                 <video
-                                    src={getMediaUrl(content.Url || content.url || content.videoUrl || content.VideoUrl || content.mediaUrl || content.MediaUrl || content.source || content.Source)}
+                                    src={getMediaUrl(content.url || content.Url || content.videoUrl || content.VideoUrl || content.mediaUrl || content.MediaUrl || content.source || content.Source || content.filePath || content.FilePath || content.ImageUrl || content.imageUrl)}
                                     controls
                                     autoPlay
+                                    muted
+                                    playsInline
                                     className="max-w-full max-h-[65vh] border border-white/10 shadow-2xl relative z-10"
                                 />
                                 <div className="mt-6 flex items-center gap-4 text-[10px] mono uppercase tracking-[0.3em] font-black" style={{ color: activeTheme }}>
@@ -165,7 +167,7 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
                         </button>
                         <button
                             onClick={onClose}
-                            className="text-black font-black px-6 py-2 uppercase transition-all hover:shadow-[0_0_20px_rgba(255,0,110,0.4)]"
+                            className="text-black font-black px-6 py-2 uppercase transition-all hover:shadow-[0_0_20px_rgba(157,0,255,0.4)]"
                             style={{ backgroundColor: activeTheme }}
                         >
                             CLOSE_FEED
