@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Music, Disc, User, Play, Heart, Layers, Radio, BookOpen, Camera, Share2, Activity, Globe, X, Star } from 'lucide-react';
+import { Search, Music, Disc, User, Play, Heart, Layers, Radio, BookOpen, Camera, Zap, Share2, Activity, Globe, X, Star } from 'lucide-react';
 import API from '../services/api';
 import { SECTORS, getMediaUrl } from '../constants';
 import { useNotification } from '../contexts/NotificationContext';
