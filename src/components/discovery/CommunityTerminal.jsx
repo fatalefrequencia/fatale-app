@@ -51,7 +51,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
 
     const isFollowed = followedCommunities.includes(community.id);
     const isMember = (user?.communityId || user?.CommunityId) === community.id;
-    const isFounder = (user?.id || user?.Id) === (community.founderUserId || community.FounderUserId);
+    const isFounder = (user?.id || user?.Id) === (community.founderId || community.founderUserId || community.FounderUserId);
 
     const handleToggleFollow = async (e) => {
         e.stopPropagation();
@@ -192,31 +192,36 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 overflow-y-auto p-4 relative no-scrollbar" style={{ scrollbarWidth: 'none' }}>
-                <div className="space-y-4">
+            <div 
+                className="flex-1 overflow-y-auto p-4 relative no-scrollbar" 
+                style={{ scrollbarWidth: 'none', overflowAnchor: 'none' }}
+            >
+                <div className="space-y-4 min-h-full flex flex-col justify-end">
                     {messages.length === 0 ? (
-                        <div className="min-h-[250px] flex flex-col items-center justify-center opacity-20 text-center space-y-2">
+                        <div className="flex-1 flex flex-col items-center justify-center opacity-20 text-center space-y-2 py-20">
                             <MessageSquare size={24} />
                             <div className="text-[8px] uppercase tracking-[0.3em]">No incoming transmissions</div>
                         </div>
                     ) : (
-                        messages.map((m, i) => (
-                            <div key={m.id || i} className={`flex flex-col ${m.userId === (user?.id || user?.Id) ? 'items-end' : 'items-start'}`}>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-[8px] font-black uppercase tracking-tight" style={{ color: m.themeColor || color }}>{m.username}</span>
-                                    <span className="text-[7px] opacity-20 mono">{new Date(m.sentAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        <div className="flex-1 flex flex-col justify-end space-y-4">
+                            {messages.map((m, i) => (
+                                <div key={m.id || i} className={`flex flex-col ${m.userId === (user?.id || user?.Id) ? 'items-end' : 'items-start'}`}>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-[8px] font-black uppercase tracking-tight" style={{ color: m.themeColor || color }}>{m.username}</span>
+                                        <span className="text-[7px] opacity-20 mono">{new Date(m.sentAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                    </div>
+                                    <div 
+                                        className="px-3 py-2 text-[10px] bg-white/[0.03] border border-white/5 rounded-sm max-w-[90%] leading-relaxed"
+                                        style={{ borderLeftColor: m.themeColor || color, borderLeftWidth: '2px' }}
+                                    >
+                                        {m.content}
+                                    </div>
                                 </div>
-                                <div 
-                                    className="px-3 py-2 text-[10px] bg-white/[0.03] border border-white/5 rounded-sm max-w-[90%] leading-relaxed"
-                                    style={{ borderLeftColor: m.themeColor || color, borderLeftWidth: '2px' }}
-                                >
-                                    {m.content}
-                                </div>
-                            </div>
-                        ))
+                            ))}
+                        </div>
                     )}
+                    <div ref={chatEndRef} className="h-4 flex-none" />
                 </div>
-                <div ref={chatEndRef} className="h-4" />
             </div>
 
             {/* Input Overlay */}

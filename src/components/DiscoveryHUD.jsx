@@ -12,6 +12,10 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     const { showNotification } = useNotification();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeSector, setActiveSector] = useState(null);
+    const [isFounding, setIsFounding] = useState(false);
+    const [newClanName, setNewClanName] = useState('');
+    const [newClanDesc, setNewClanDesc] = useState('');
+    const [newClanSector, setNewClanSector] = useState(null);
     const [activeTerminalCommunity, setActiveTerminalCommunity] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isBooting, setIsBooting] = useState(true);
@@ -192,6 +196,28 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
         if (s.id === 0) return "#ff33aa"; 
         return s.color;
     }, [activeSector]);
+
+    const handleFoundCommunity = async (e) => {
+        e.preventDefault();
+        if (!newClanName.trim()) return;
+        try {
+            const res = await API.Communities.create({
+                name: newClanName,
+                description: newClanDesc,
+                sectorId: newClanSector !== null ? newClanSector : (activeSector !== null ? activeSector : 0)
+            });
+            showNotification("COMMUNITY_FOUNDED", `Sector link established for ${newClanName}.`, "success");
+            setIsFounding(false);
+            setNewClanName('');
+            setNewClanDesc('');
+            // Trigger a refresh of the discovery data
+            if (onFollowUpdate) onFollowUpdate(); 
+            // In a real app, we'd refetch all communities here. For now, we'll wait for the next periodic sync or event.
+        } catch (e) {
+            console.error('[FOUND_COMMUNITY_ERROR]', e);
+            showNotification("FOUND_FAILURE", "Failed to establish community signal.", "error");
+        }
+    };
 
     return (
         <div className="relative w-full h-full overflow-y-auto lg:overflow-hidden bg-[#020202] text-white font-mono flex flex-col p-4 select-none no-scrollbar">
@@ -565,36 +591,84 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 </div>
 
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-7 lg:row-start-5 pointer-events-auto">
-                    <HUDWidget title="SECTOR_CLANS" icon={<Globe size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
-                         <div className="space-y-3">
-                             {filteredCommunities.map(c => {
-                                 const isJoined = (user?.communityId || user?.CommunityId) === c.id;
-                                 return (
-                                     <div key={c.id} className="flex items-center gap-3 p-2 hover:bg-white/5 border border-transparent hover:border-white/10 transition-all group cursor-pointer" onClick={() => setActiveTerminalCommunity(c)}>
-                                         <div className="w-8 h-8 rounded-sm bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center shrink-0 relative overflow-hidden">
-                                             {c.imageUrl ? (
-                                                <img src={getMediaUrl(c.imageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
-                                             ) : (
-                                                <Globe size={12} className="text-[#ff006e] opacity-40 group-hover:opacity-100 transition-opacity" />
-                                             )}
-                                             {(isJoined || followedCommunities.includes(c.id)) && (
-                                                <div className="absolute top-0.5 right-0.5">
-                                                    <Star size={10} className="text-yellow-400 fill-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]" />
-                                                </div>
-                                             )}
-                                         </div>
-                                         <div className="min-w-0 flex-1">
-                                             <div className="text-[10px] font-black group-hover:text-[#ff006e] transition-colors uppercase tracking-tight truncate flex items-center gap-2">
-                                                 {c.name}
-                                                 {isJoined && <span className="text-[7px] text-yellow-400/60 mono font-normal border border-yellow-400/20 px-1">HOME</span>}
-                                             </div>
-                                             <div className="text-[7px] opacity-30 tracking-[0.2em] font-light uppercase mt-0.5">{c.memberCount || 0} SECTOR_AGENTS</div>
-                                         </div>
-                                     </div>
-                                 );
-                             })}
-                         </div>
-                    </HUDWidget>
+                     <HUDWidget title="SECTOR_CLANS" icon={<Globe size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                          <div className="space-y-4">
+                              {/* Create Clan Trigger */}
+                              <div 
+                                onClick={() => {
+                                    setIsFounding(!isFounding);
+                                    setNewClanSector(activeSector);
+                                }}
+                                className="flex items-center gap-2 p-2 border border-dashed border-white/10 hover:border-white/30 cursor-pointer group transition-all"
+                              >
+                                  <Zap size={10} className="text-[#ff006e] group-hover:animate-pulse" />
+                                  <span className="text-[9px] font-black tracking-[0.2em] opacity-40 group-hover:opacity-100">JOIN_NEURAL_FOUNDRY [+]</span>
+                              </div>
+
+                              {isFounding && (
+                                  <form onSubmit={handleFoundCommunity} className="p-3 bg-white/5 border border-white/10 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                      <div className="space-y-1">
+                                          <div className="text-[7px] opacity-40 mono">NAME_REQUIRED</div>
+                                          <input 
+                                            value={newClanName}
+                                            onChange={(e) => setNewClanName(e.target.value)}
+                                            placeholder="..."
+                                            className="w-full bg-black/40 border border-white/10 p-1.5 text-[9px] mono outline-none focus:border-[#ff006e]/50"
+                                            autoFocus
+                                          />
+                                      </div>
+                                      <div className="space-y-1">
+                                          <div className="text-[7px] opacity-40 mono">SECTOR_ALLOCATION</div>
+                                          <select 
+                                            value={newClanSector !== null ? newClanSector : (activeSector !== null ? activeSector : 0)}
+                                            onChange={(e) => setNewClanSector(parseInt(e.target.value))}
+                                            className="w-full bg-black/40 border border-white/10 p-1.5 text-[9px] mono outline-none"
+                                          >
+                                              {SECTORS.map(s => (
+                                                  <option key={s.id} value={s.id} className="bg-black text-[9px]">{s.name}</option>
+                                              ))}
+                                          </select>
+                                      </div>
+                                      <button 
+                                        type="submit"
+                                        disabled={!newClanName.trim()}
+                                        className="w-full bg-[#ff006e]/80 hover:bg-[#ff006e] text-white text-[8px] font-black py-1.5 rounded-sm transition-all disabled:opacity-20"
+                                      >
+                                          ESTABLISH_SIGNAL
+                                      </button>
+                                  </form>
+                              )}
+
+                              <div className="space-y-3">
+                                  {filteredCommunities.map(c => {
+                                      const isJoined = (user?.communityId || user?.CommunityId) === c.id;
+                                      return (
+                                          <div key={c.id} className="flex items-center gap-3 p-2 hover:bg-white/5 border border-transparent hover:border-white/10 transition-all group cursor-pointer" onClick={() => setActiveTerminalCommunity(c)}>
+                                              <div className="w-8 h-8 rounded-sm bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center shrink-0 relative overflow-hidden">
+                                                  {c.imageUrl ? (
+                                                     <img src={getMediaUrl(c.imageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
+                                                  ) : (
+                                                     <Globe size={12} className="text-[#ff006e] opacity-40 group-hover:opacity-100 transition-opacity" />
+                                                  )}
+                                                  {(isJoined || followedCommunities.includes(c.id)) && (
+                                                     <div className="absolute top-0.5 right-0.5">
+                                                         <Star size={10} className="text-yellow-400 fill-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]" />
+                                                     </div>
+                                                  )}
+                                              </div>
+                                              <div className="min-w-0 flex-1">
+                                                  <div className="text-[10px] font-black group-hover:text-[#ff006e] transition-colors uppercase tracking-tight truncate flex items-center gap-2">
+                                                      {c.name}
+                                                      {isJoined && <span className="text-[7px] text-yellow-400/60 mono font-normal border border-yellow-400/20 px-1">HOME</span>}
+                                                  </div>
+                                                  <div className="text-[7px] opacity-30 tracking-[0.2em] font-light uppercase mt-0.5">{c.memberCount || 0} SECTOR_AGENTS</div>
+                                              </div>
+                                          </div>
+                                      );
+                                  })}
+                              </div>
+                          </div>
+                     </HUDWidget>
                 </div>
                   </>
                 )}
