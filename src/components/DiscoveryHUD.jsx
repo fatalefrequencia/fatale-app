@@ -22,14 +22,34 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     const [mobileViewMode, setMobileViewMode] = useState('globe'); // 'globe', 'stats', 'communities'
 
     const resolveThumbnail = (vis) => {
-        if (vis.imageUrl || vis.thumbnailUrl) return getMediaUrl(vis.imageUrl || vis.thumbnailUrl);
+        // Handle PascalCase and camelCase variants from backend
+        const thumb = vis.thumbnailUrl || vis.ThumbnailUrl || vis.coverImageUrl || vis.CoverImageUrl;
+        const img = vis.imageUrl || vis.ImageUrl;
         
-        const videoUrl = vis.videoUrl || vis.VideoUrl;
-        if (videoUrl && videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
-            const match = videoUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
-            const id = (match && match[2].length === 11) ? match[2] : null;
+        // If we have a dedicated thumbnail, ALWAYS use it first (especially for videos)
+        if (thumb) return getMediaUrl(thumb);
+        
+        // If it's a photo, the main image URL is the thumbnail
+        if (img && (vis.mediaType || vis.MediaType || '').toLowerCase() !== 'video') {
+            return getMediaUrl(img);
+        }
+
+        // Try to resolve from video source (YouTube detection)
+        const videoUrl = vis.videoUrl || vis.VideoUrl || vis.source || vis.Source;
+        if (videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') || videoUrl.startsWith('youtube:'))) {
+            let id = null;
+            if (videoUrl.startsWith('youtube:')) {
+                id = videoUrl.split(':')[1];
+            } else {
+                const match = videoUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+                id = (match && match[2].length === 11) ? match[2] : null;
+            }
             if (id) return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
         }
+        
+        // If it's a photo and we somehow missed it above
+        if (img) return getMediaUrl(img);
+
         return null;
     };
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 1024);
@@ -383,7 +403,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
             </div>
 
             {/* --- MAIN DASHBOARD GRID --- */}
-            <div className="flex-1 relative flex flex-col lg:grid lg:grid-cols-12 lg:grid-rows-6 gap-6 lg:gap-4 pointer-events-none mt-4 pb-20 lg:pb-0 min-h-0">
+            <div className="flex-1 relative flex flex-col lg:grid lg:grid-cols-12 lg:grid-rows-6 gap-6 lg:gap-4 pointer-events-none mt-4 pb-20 lg:pb-0 min-h-0" style={{ gridTemplateRows: 'repeat(6, 1fr)' }}>
                 
                 {/* --- CENTER: THE GLOBE OR COMMUNITY TERMINAL --- */}
                 {(!isMobile || mobileViewMode === 'globe') && (
@@ -461,7 +481,11 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                             {youtubeResults.length > 0 ? youtubeResults.map(y => (
                                 <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => onPlayTrack(y)}>
                                     <div className="w-12 h-12 bg-black overflow-hidden relative border border-white/5 group-hover:border-[#ff006e]/40 shadow-lg">
-                                         <img src={y.thumbnailUrl} alt="" className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" />
+                                         <img 
+                                            src={y.thumbnailUrl || y.ThumbnailUrl || y.coverImageUrl || y.CoverImageUrl || (y.id ? `https://img.youtube.com/vi/${y.id}/hqdefault.jpg` : null)} 
+                                            alt="" 
+                                            className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" 
+                                          />
                                          <div className="absolute inset-0 bg-[#ff006e]/10 mix-blend-overlay group-hover:opacity-0" />
                                     </div>
                                     <div className="flex-1 min-w-0">

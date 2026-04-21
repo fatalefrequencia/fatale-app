@@ -51,7 +51,13 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
 
     useEffect(() => {
         if (isAtBottom) {
-            chatEndRef.current?.scrollIntoView({ behavior: 'auto' });
+            const container = chatContainerRef.current;
+            if (container) {
+                // Use requestAnimationFrame to ensure DOM has updated and avoid jitter
+                requestAnimationFrame(() => {
+                    container.scrollTop = container.scrollHeight;
+                });
+            }
         }
     }, [messages, isAtBottom]);
 
@@ -164,7 +170,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
             console.error('[TERMINAL_SEND_ERROR]', e);
             setNewMessage(text);
         } finally {
-            setSending(true);
+            // Keep sending true for a short cooldown to prevent doubles, then clear
             setTimeout(() => setSending(false), 500);
         }
     };
@@ -256,11 +262,12 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
             <div 
                 ref={chatContainerRef}
                 onScroll={handleScroll}
-                className="flex-1 overflow-y-auto p-4 relative" 
+                className="flex-1 overflow-y-auto p-4 relative no-scrollbar" 
                 style={{ 
-                    overflowAnchor: 'none',
+                    overflowAnchor: 'auto',
                     scrollbarGutter: 'stable',
-                    contain: 'content'
+                    contain: 'size layout style',
+                    height: '100%'
                 }}
             >
                 <div className="min-h-full flex flex-col relative">

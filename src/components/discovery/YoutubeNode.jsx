@@ -8,11 +8,16 @@ const YoutubeNode = ({ data }) => {
         title,
         author,
         thumbnailUrl,
+        ThumbnailUrl,
+        CoverImageUrl,
+        coverImageUrl,
         id,
         sectorColor = '#ff006e',
         onPlay,
         zoom = 1,
     } = data;
+    const finalThumb = thumbnailUrl || ThumbnailUrl || coverImageUrl || CoverImageUrl || (id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null);
+
     const showLabel = zoom > 0.55;
     return (
         <div
@@ -40,9 +45,9 @@ const YoutubeNode = ({ data }) => {
             <Handle type="source" position={Position.Right} style={{ opacity: 0, pointerEvents: 'none' }} />
 
             {/* Thumbnail */}
-            {thumbnailUrl ? (
+            {finalThumb ? (
                 <img
-                    src={thumbnailUrl}
+                    src={finalThumb}
                     alt={title}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 />
