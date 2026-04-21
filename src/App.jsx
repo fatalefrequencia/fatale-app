@@ -523,14 +523,19 @@ function App() {
           const artistUserId = t.artistUserId || t.ArtistUserId || t.album?.artist?.userId || t.Album?.Artist?.UserId;
           const isMine = artistUserId && String(artistUserId) === String(uid);
 
-          const trackSource = t.source || t.Source || t.filePath || t.FilePath;
-          const isYT = trackSource?.startsWith('youtube:');
-          const resolvedSource = isYT ? trackSource : getMediaUrl(trackSource);
+          const rawSource = t.source || t.Source || t.filePath || t.FilePath || "";
+          const yId = t.youtubeId || t.YoutubeId || (rawSource.includes('youtube.com/watch?v=') ? rawSource.split('v=')[1]?.split('&')[0] : (rawSource.startsWith('youtube:') ? rawSource.split(':')[1] : null));
+          
+          const isYT = !!yId;
+          const resolvedSource = isYT ? `youtube:${yId}` : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null);
 
           if (!resolvedSource || resolvedSource === API_BASE_URL || resolvedSource === `${API_BASE_URL}/`) return;
 
           const artistName = t.album?.artist?.name || t.Album?.Artist?.Name || '';
           if (artistName === 'The Archive') return;
+
+          const isLiked = likedTrackIds.has(trackId);
+          if (isYT && isLiked) likedYoutubeIds.add(yId); // Cross-sync likes from tracks library
 
           const mappedTrack = {
             ...t,
@@ -539,10 +544,10 @@ function App() {
             artist: artistName || 'Unknown Artist',
             album: t.album?.title || t.Album?.Title || 'Unknown Album',
             duration: t.duration || t.Duration || '3:00',
-            cover: getMediaUrl(t.coverImageUrl || t.CoverImageUrl),
+            cover: isYT ? (t.thumbnailUrl || t.ThumbnailUrl || `https://img.youtube.com/vi/${yId}/hqdefault.jpg`) : getMediaUrl(t.coverImageUrl || t.CoverImageUrl),
             source: resolvedSource,
             isOwned: ownedTrackIds.has(trackId) || isMine,
-            isLiked: likedTrackIds.has(trackId),
+            isLiked: isLiked,
             isCached: cachedIds.has(Number(trackId)) || cachedIds.has(trackId),
           };
 
@@ -557,30 +562,33 @@ function App() {
       }
 
       if (likes.length > 0) {
-        const ytLikesSet = new Set();
-        likes.filter(yt => (yt.source || yt.Source)?.startsWith('youtube:')).forEach(yt => {
-          const yId = (yt.source || yt.Source).split(':')[1];
-          ytLikesSet.add(yId);
-          const sourceKey = `youtube:${yId}`;
-          if (uniqueTracksMap.has(sourceKey)) {
-            const existing = uniqueTracksMap.get(sourceKey);
-            uniqueTracksMap.set(sourceKey, { ...existing, isLiked: true });
-            return;
+        likes.forEach(lik => {
+          const rawSource = lik.source || lik.Source || "";
+          const yId = lik.youtubeId || lik.YoutubeId || (rawSource.includes('youtube.com/watch?v=') ? rawSource.split('v=')[1]?.split('&')[0] : (rawSource.startsWith('youtube:') ? rawSource.split(':')[1] : null));
+          
+          if (yId) {
+            likedYoutubeIds.add(yId);
+            const sourceKey = `youtube:${yId}`;
+            if (uniqueTracksMap.has(sourceKey)) {
+              const existing = uniqueTracksMap.get(sourceKey);
+              uniqueTracksMap.set(sourceKey, { ...existing, isLiked: true });
+              return;
+            }
+            const mappedYt = {
+              id: String(lik.id || lik.Id || `yt-${yId}`),
+              videoId: yId,
+              title: lik.title || lik.Title,
+              artist: lik.channelTitle || lik.artist || "Unknown Artist",
+              source: sourceKey,
+              isLiked: true,
+              isOwned: false,
+              isLocked: false,
+              isCached: cachedIds.has(lik.id) || cachedIds.has(lik.Id)
+            };
+            uniqueTracksMap.set(sourceKey, mappedYt);
           }
-          const mappedYt = {
-            id: String(yt.id || yt.Id || `yt-${yId}`),
-            videoId: yId,
-            title: yt.title || yt.Title,
-            artist: yt.channelTitle || "Unknown Artist",
-            source: sourceKey,
-            isLiked: true,
-            isOwned: false,
-            isLocked: false,
-            isCached: cachedIds.has(yt.id)
-          };
-          uniqueTracksMap.set(sourceKey, mappedYt);
         });
-        setLikedYoutubeIds(ytLikesSet);
+        setLikedYoutubeIds(new Set(likedYoutubeIds));
       }
 
       const allTracks = Array.from(uniqueTracksMap.values());

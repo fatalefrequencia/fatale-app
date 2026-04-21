@@ -213,11 +213,13 @@ export const IPodPlayer = ({
         artist: rawTrack.artist || rawTrack.ArtistName || 'Unknown Artist',
         source: rawTrack.source || rawTrack.Source,
         cover: rawTrack.cover || rawTrack.coverImageUrl || rawTrack.CoverImageUrl,
+        isLiked: rawTrack.isLiked !== undefined ? rawTrack.isLiked : (rawTrack.IsLiked !== undefined ? rawTrack.IsLiked : false),
         isLocked: rawTrack.isLocked !== undefined ? rawTrack.isLocked : (rawTrack.IsLocked !== undefined ? rawTrack.IsLocked : false),
         isOwned: rawTrack.isOwned !== undefined ? rawTrack.isOwned : (rawTrack.IsOwned !== undefined ? rawTrack.IsOwned : true)
     };
 
     const isLocked = currentTrack.isLocked && !currentTrack.isOwned;
+创新
 
     // Use total track duration in seconds (fallback to 180 if 0)
     const trackDurationSec = duration || 180;
