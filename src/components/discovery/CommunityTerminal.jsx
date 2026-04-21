@@ -74,7 +74,7 @@ const CommunityTerminal = ({ community, user, onBack, sectorColor }) => {
             style={{ borderColor: `${color}30` }}
         >
             {/* Header / Nav Section */}
-            <div className="flex items-center justify-between p-4 border-b border-white/5 bg-white/5">
+            <div className="flex-none flex items-center justify-between p-4 border-b border-white/5 bg-white/5">
                 <button 
                     onClick={onBack}
                     className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] transition-all hover:scale-105"
@@ -84,13 +84,13 @@ const CommunityTerminal = ({ community, user, onBack, sectorColor }) => {
                     BACK_TO_ORBIT
                 </button>
                 <div className="flex items-center gap-2">
-                    <div className="text-[10px] font-black text-white uppercase tracking-tight truncate max-w-[120px]">{community.name}</div>
+                    <div className="text-[10px] font-black text-white uppercase tracking-tight truncate max-w-[120px] text-right">{community.name}</div>
                     {isJoined && <Star size={10} className="text-yellow-400 fill-yellow-400" />}
                 </div>
             </div>
 
             {/* Matrix Data Strip */}
-            <div className="bg-black/60 px-4 py-2 border-b border-white/5 flex items-center justify-between text-[8px] mono text-white/30 uppercase tracking-[0.2em]">
+            <div className="flex-none bg-black/60 px-4 py-2 border-b border-white/5 flex items-center justify-between text-[8px] mono text-white/30 uppercase tracking-[0.2em]">
                  <div className="flex items-center gap-4">
                     <span>ID: {community.id?.toString(16).toUpperCase()}</span>
                     <span>SEC: {community.sectorId}</span>
@@ -128,7 +128,7 @@ const CommunityTerminal = ({ community, user, onBack, sectorColor }) => {
             </div>
 
             {/* Input Overlay */}
-            <form onSubmit={handleSend} className="p-4 bg-black/80 border-t border-white/10 flex items-center gap-3">
+            <form onSubmit={handleSend} className="flex-none p-4 bg-black/80 border-t border-white/10 flex items-center gap-3">
                 <input 
                     type="text"
                     value={newMessage}
