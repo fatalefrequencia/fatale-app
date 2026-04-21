@@ -85,11 +85,13 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
 
     // Utility to check if an item matches the active sector
     const matchesSector = useCallback((item) => {
-        if (!activeSector) return true;
+        if (activeSector === null) return true;
         const s = SECTORS.find(sec => sec.id === activeSector);
         if (!s) return true;
         
         const genre = (item.genre || item.Genre || "").toLowerCase();
+        if (!genre) return false;
+        
         // Check main genre or subgenres
         return s.name.toLowerCase().includes(genre) || 
                s.subgenres.some(sub => sub.toLowerCase() === genre || genre.includes(sub.toLowerCase()));
@@ -248,10 +250,11 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                             placeholder="SEARCH_SIGNAL_DATABASE..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-black/60 border rounded px-10 py-2.5 text-xs tracking-[0.2em] focus:outline-none focus:ring-1 transition-all placeholder:text-[#ff006e]/20 text-white"
+                            className="w-full bg-black/60 border rounded px-10 py-2.5 text-xs tracking-[0.2em] focus:outline-none focus:ring-1 transition-all placeholder:text-[#ff006e]/20"
                             style={{ 
                                 borderColor: activeSectorColor ? `${activeSectorColor}99` : 'rgba(255,0,110,0.3)', 
                                 focusBorderColor: activeSectorColor || '#ff006e',
+                                color: activeSectorColor || 'white',
                                 '--tw-ring-color': activeSectorColor ? `${activeSectorColor}33` : 'rgba(255,0,110,0.2)'
                             }}
                         />
@@ -293,7 +296,8 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                                     key={i}
                                     animate={{ height: [2, 8, 2, 4, 2] }}
                                     transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.05 }}
-                                    className="w-[2px] bg-[#ff006e]/30"
+                                    className="w-[2px] transition-colors duration-500"
+                                    style={{ backgroundColor: activeSectorColor ? `${activeSectorColor}66` : 'rgba(255, 0, 110, 0.3)' }}
                                 />
                             ))}
                         </div>
