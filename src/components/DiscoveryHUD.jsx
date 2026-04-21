@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Music, Disc, User, Play, Heart, Layers, Radio, BookOpen, Camera, Share2, Activity, Globe, X } from 'lucide-react';
+import { Search, Music, Disc, User, Play, Heart, Layers, Radio, BookOpen, Camera, Share2, Activity, Globe, X, Star } from 'lucide-react';
 import API from '../services/api';
 import { SECTORS, getMediaUrl } from '../constants';
 import { useNotification } from '../contexts/NotificationContext';
 import HUDWidget from './discovery/HUDWidget';
 import InteractiveGlobe from './discovery/InteractiveGlobe';
+import CommunityTerminal from './discovery/CommunityTerminal';
 
-const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
+const DiscoveryHUD = ({ user, navigateToProfile, onPlayTrack, isPlayerActive, onExpandContent }) => {
     const { showNotification } = useNotification();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeSector, setActiveSector] = useState(null);
+    const [activeTerminalCommunity, setActiveTerminalCommunity] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isBooting, setIsBooting] = useState(true);
     const [mobileViewMode, setMobileViewMode] = useState('globe'); // 'globe' or 'data'
@@ -132,11 +134,21 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
         let base = communities;
         if (activeSector !== null) base = base.filter(matchesSector);
 
-        if (!searchQuery) return base.slice(0, 4);
+        // Sort Joined community to top (Formal Membership)
+        const userCommunityId = user?.communityId || user?.CommunityId;
+        if (userCommunityId) {
+            base = [...base].sort((a, b) => {
+                if (String(a.id) === String(userCommunityId)) return -1;
+                if (String(b.id) === String(userCommunityId)) return 1;
+                return 0;
+            });
+        }
+
+        if (!searchQuery) return base.slice(0, 5);
         return base.filter(c => 
             c.name?.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [communities, searchQuery, matchesSector, activeSector]);
+    }, [communities, searchQuery, matchesSector, activeSector, user]);
 
     const liveStations = useMemo(() => {
         let base = stations.filter(s => s.isLive || s.IsLive);
@@ -322,18 +334,44 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
             {/* --- MAIN DASHBOARD GRID --- */}
             <div className="flex-1 relative flex flex-col lg:grid lg:grid-cols-12 lg:grid-rows-6 gap-6 lg:gap-4 pointer-events-none mt-4 pb-20 lg:pb-0 min-h-0">
                 
-                {/* --- CENTER: THE GLOBE --- */}
+                {/* --- CENTER: THE GLOBE OR COMMUNITY TERMINAL --- */}
                 {(!isMobile || mobileViewMode === 'globe') && (
-                    <div className={`${isMobile ? 'flex-1' : 'h-[350px] lg:h-full'} lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative`}>
-                        <InteractiveGlobe 
-                            searchQuery={searchQuery}
-                            searchResults={[...filteredTracks, ...filteredArtists, ...filteredCommunities]}
-                            activeSector={activeSector}
-                            onSectorClick={(secId) => {
-                                // If already active, toggle off
-                                setActiveSector(activeSector === secId ? null : secId);
-                            }}
-                        />
+                    <div className={`${isMobile ? 'flex-1' : 'h-[400px] lg:h-full'} lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative`}>
+                        <AnimatePresence mode="wait">
+                            {!activeTerminalCommunity ? (
+                                <motion.div 
+                                    key="globe-view"
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.8 }}
+                                    className="w-full h-full flex items-center justify-center"
+                                >
+                                    <InteractiveGlobe 
+                                        searchQuery={searchQuery}
+                                        searchResults={[...filteredTracks, ...filteredArtists, ...filteredCommunities]}
+                                        activeSector={activeSector}
+                                        onSectorClick={(secId) => {
+                                            setActiveSector(activeSector === secId ? null : secId);
+                                        }}
+                                    />
+                                </motion.div>
+                            ) : (
+                                <motion.div 
+                                    key="terminal-view"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 20 }}
+                                    className="w-full h-full max-w-2xl px-4 lg:px-8 py-4"
+                                >
+                                    <CommunityTerminal 
+                                        community={activeTerminalCommunity}
+                                        user={user}
+                                        onBack={() => setActiveTerminalCommunity(null)}
+                                        sectorColor={activeSectorColor}
+                                    />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                         
                         {/* Floating Overlay for Sector Status */}
                         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xl border border-white/5 px-8 pt-3 pb-2 rounded-sm flex gap-10 z-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] scale-75 lg:scale-100">
@@ -512,17 +550,28 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-7 lg:row-start-5 pointer-events-auto">
                     <HUDWidget title="SECTOR_CLANS" icon={<Globe size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="space-y-3">
-                             {filteredCommunities.map(c => (
-                                 <div key={c.id} className="flex items-center gap-3 p-2 hover:bg-white/5 border border-transparent hover:border-white/10 transition-all group cursor-pointer">
-                                     <div className="w-8 h-8 rounded-sm bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center shrink-0">
-                                         <Globe size={12} className="text-[#ff006e] opacity-40 group-hover:opacity-100 transition-opacity" />
+                             {filteredCommunities.map(c => {
+                                 const isJoined = (user?.communityId || user?.CommunityId) === c.id;
+                                 return (
+                                     <div key={c.id} className="flex items-center gap-3 p-2 hover:bg-white/5 border border-transparent hover:border-white/10 transition-all group cursor-pointer" onClick={() => setActiveTerminalCommunity(c)}>
+                                         <div className="w-8 h-8 rounded-sm bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center shrink-0 relative">
+                                             <Globe size={12} className="text-[#ff006e] opacity-40 group-hover:opacity-100 transition-opacity" />
+                                             {isJoined && (
+                                                <div className="absolute -top-1 -right-1">
+                                                    <Star size={10} className="text-yellow-400 fill-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]" />
+                                                </div>
+                                             )}
+                                         </div>
+                                         <div className="min-w-0 flex-1">
+                                             <div className="text-[10px] font-black group-hover:text-[#ff006e] transition-colors uppercase tracking-tight truncate flex items-center gap-2">
+                                                 {c.name}
+                                                 {isJoined && <span className="text-[7px] text-yellow-400/60 mono font-normal border border-yellow-400/20 px-1">HOME</span>}
+                                             </div>
+                                             <div className="text-[7px] opacity-30 tracking-[0.2em] font-light uppercase mt-0.5">{c.memberCount || 0} SECTOR_AGENTS</div>
+                                         </div>
                                      </div>
-                                     <div className="min-w-0 flex-1">
-                                         <div className="text-[9px] font-black truncate group-hover:text-[#00ffff] transition-colors tracking-tight uppercase">{c.name}</div>
-                                         <div className="text-[7px] opacity-30 tracking-[0.2em] font-light uppercase mt-0.5">{c.memberCount || 0} SECTOR_AGENTS</div>
-                                     </div>
-                                 </div>
-                             ))}
+                                 );
+                             })}
                          </div>
                     </HUDWidget>
                 </div>

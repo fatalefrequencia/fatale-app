@@ -1923,6 +1923,7 @@ const Dashboard = React.memo(({
             {activeView === 'discovery' && (
               <DiscoveryHUD
                 key="discovery"
+                user={user}
                 navigateToProfile={navigateToProfile}
                 onPlayTrack={(track) => {
                   const enriched = {
