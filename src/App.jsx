@@ -866,7 +866,7 @@ function App() {
   const togglePlay = () => setIsPlaying(!isPlaying);
 
   // Modified to use main library tracks for correct Like status
-  const handlePlayPlaylist = (playlistTracksRaw, startIndex = 0) => {
+  const handlePlayPlaylist = (playlistTracksRaw, startIndex = 0, shouldRedirect = true) => {
     // 1. Create a lookup map of all known tracks
     const libraryMap = new Map();
     libraryTracks.forEach(t => {
@@ -910,7 +910,7 @@ function App() {
     setIsPlaying(true);
     if (isYT) setIsYoutubeMode(true);
 
-    if (typeof setRedirectTrigger === 'function') {
+    if (shouldRedirect && typeof setRedirectTrigger === 'function') {
       setRedirectTrigger(Date.now());
       setView('player');
     }
@@ -1939,23 +1939,28 @@ const Dashboard = React.memo(({
                 }}
                 navigateToProfile={navigateToProfile}
                 onPlayTrack={(track) => {
+                  const tId = track.id || track.Id;
+                  const rawSource = track.source || track.Source || track.filePath || track.FilePath;
+                  
+                  // YouTube Resolution: If it's a search result with id but no source, or already has youtube protocol
+                  const isYoutube = (typeof tId === 'string' && tId.length === 11 && !rawSource) || (rawSource && rawSource.startsWith('youtube:'));
+                  
                   const enriched = {
                     ...track,
-                    source: track.source || track.Source || (track.filePath ? getMediaUrl(track.filePath) : null) || (track.FilePath ? getMediaUrl(track.FilePath) : null),
-                    id: track.id || track.Id,
+                    id: tId,
+                    source: isYoutube ? (rawSource?.startsWith('youtube:') ? rawSource : `youtube:${tId}`) : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null),
+                    cover: track.coverImageUrl || track.CoverImageUrl || track.thumbnailUrl || track.ThumbnailUrl || (isYoutube ? `https://img.youtube.com/vi/${tId}/hqdefault.jpg` : null),
                     isOwned: true,
                     isLocked: false
                   };
+                  
                   setTracks([enriched]);
                   setCurrentTrackIndex(0);
                   setIsPlaying(true);
-                  if (typeof setRedirectTrigger === 'function') {
-                    setRedirectTrigger(Date.now());
-                    setView('player');
-                  }
+                  if (isYoutube) setIsYoutubeMode(true);
+                  // We stay on discovery, no setView('player')
                 }}
-                onPlayPlaylist={handlePlayPlaylist}
-                isPlayerActive={currentTrackIndex >= 0}
+                onPlayPlaylist={(list, startIdx = 0) => handlePlayPlaylist(list, startIdx, false)}
                 onExpandContent={onExpandContent}
                 setUser={setUser}
                 onPlayStation={(station) => {
