@@ -656,7 +656,10 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                   {filteredCommunities.map(c => {
                                       const isJoined = (user?.communityId || user?.CommunityId) === c.id;
                                       return (
-                                          <div key={c.id} className="flex items-center gap-3 p-2 hover:bg-white/5 border border-transparent hover:border-white/10 transition-all group cursor-pointer" onClick={() => setActiveTerminalCommunity(c)}>
+                                          <div key={c.id} className="flex items-center gap-3 p-2 hover:bg-white/5 border border-transparent hover:border-white/10 transition-all group cursor-pointer" onClick={() => {
+                                              setActiveTerminalCommunity(c);
+                                              if (isMobile) setMobileViewMode('globe');
+                                          }}>
                                               <div className="w-8 h-8 rounded-sm bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center shrink-0 relative overflow-hidden">
                                                   {c.imageUrl ? (
                                                      <img src={getMediaUrl(c.imageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
