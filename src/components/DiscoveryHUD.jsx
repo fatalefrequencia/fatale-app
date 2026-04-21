@@ -140,11 +140,13 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
 
     const handlePlaylistClick = async (pl) => {
         setSelectedPlaylist(pl);
+        setPlaylistTracks([]);
         setLoadingPlaylist(true);
         try {
             const res = await API.Playlists.getById(pl.id);
-            // res.data now contains { Playlist, Tracks } as per PlaylistsController.cs
-            setPlaylistTracks(res.data.Tracks || []);
+            // res.data now contains { Playlist, Tracks } - checking both cases for safety
+            const tracks = res.data.Tracks || res.data.tracks || [];
+            setPlaylistTracks(tracks);
         } catch (err) {
             console.error("Failed to fetch playlist tracks:", err);
             showNotification("FETCH_ERROR", "Could not load playlist contents.", "error");
@@ -587,17 +589,11 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                          <div className="text-[10px] font-black group-hover:text-[#ff006e] uppercase tracking-tight truncate max-w-[150px]">{selectedPlaylist.name}</div>
                                          <div 
                                             className="text-[7px] text-[#ff006e] opacity-60 hover:opacity-100 cursor-pointer uppercase font-bold tracking-[0.2em] mt-0.5"
-                                            onClick={() => navigateToProfile(selectedPlaylist.userId)}
+                                            onClick={(e) => { e.stopPropagation(); navigateToProfile(selectedPlaylist.userId); }}
                                          >
-                                             BY_{selectedPlaylist.authorName || 'ANONYMOUS'}
+                                             BY_{selectedPlaylist.authorName || 'RETSGEN'}
                                          </div>
                                      </div>
-                                     <button 
-                                        onClick={() => setSelectedPlaylist(null)}
-                                        className="text-[7px] border border-white/10 px-2 py-1 hover:bg-white/5 uppercase mono tracking-widest"
-                                     >
-                                         [BACK_SIG]
-                                     </button>
                                  </div>
 
                                  {loadingPlaylist ? (
