@@ -1924,6 +1924,11 @@ const Dashboard = React.memo(({
               <DiscoveryHUD
                 key="discovery"
                 user={user}
+                followedCommunities={followedCommunities}
+                onFollowUpdate={() => {
+                  const updated = API.Communities.getFollowed();
+                  setFollowedCommunities(updated);
+                }}
                 navigateToProfile={navigateToProfile}
                 onPlayTrack={(track) => {
                   const enriched = {
