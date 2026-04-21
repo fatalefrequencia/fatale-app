@@ -172,7 +172,14 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
     return (
         <div className="w-full h-full flex flex-col bg-black/40 border border-white/10 relative overflow-hidden backdrop-blur-xl" style={{ borderColor: `${color}30` }}>
             {/* Header / Nav Section */}
-            <div className="flex-none flex items-center justify-between p-4 border-b border-white/5 bg-white/5">
+            <div 
+                className="flex-none flex items-center justify-between px-4 h-14 border-b border-white/5 bg-white/5 backdrop-blur-md relative"
+                style={{ 
+                    backgroundColor: `${color}10`,
+                    borderTop: `2px solid ${color}`,
+                    boxShadow: `0 -10px 20px -10px ${color}30`
+                }}
+            >
                 <button 
                     onClick={onBack}
                     className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] transition-all hover:scale-105"
@@ -263,32 +270,31 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
                     contain: 'content'
                 }}
             >
-                <div className="space-y-4 flex flex-col">
-                    {messages.length === 0 ? (
-                        <div className="flex-1 flex flex-col items-center justify-center opacity-20 text-center space-y-2 py-20">
+                <div className="min-h-full flex flex-col relative">
+                    {messages.length === 0 && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center opacity-20 text-center space-y-2 pointer-events-none">
                             <MessageSquare size={24} />
                             <div className="text-[8px] uppercase tracking-[0.3em]">No incoming transmissions</div>
                         </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {messages.map((m, i) => (
-                                <div key={m.id || i} className={`flex flex-col ${m.userId === (user?.id || user?.Id) ? 'items-end' : 'items-start'}`}>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-[8px] font-black uppercase tracking-tight" style={{ color: m.themeColor || color }}>{m.username}</span>
-                                        <span className="text-[7px] opacity-20 mono">{new Date(m.sentAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                                    </div>
-                                    <div 
-                                        className="px-3 py-2 text-[10px] bg-white/[0.03] border border-white/5 rounded-sm max-w-[90%] leading-relaxed"
-                                        style={{ borderLeftColor: m.themeColor || color, borderLeftWidth: '2px' }}
-                                    >
-                                        {m.content}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
                     )}
-                    <div ref={chatEndRef} className="h-4 flex-none" />
+                    <div className="space-y-4">
+                        {messages.map((m, i) => (
+                            <div key={m.id || i} className={`flex flex-col ${m.userId === (user?.id || user?.Id) ? 'items-end' : 'items-start'}`}>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-[8px] font-black uppercase tracking-tight" style={{ color: m.themeColor || color }}>{m.username}</span>
+                                    <span className="text-[7px] opacity-20 mono">{new Date(m.sentAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                </div>
+                                <div 
+                                    className="px-3 py-2 text-[10px] bg-white/[0.03] border border-white/5 rounded-sm max-w-[90%] leading-relaxed"
+                                    style={{ borderLeftColor: m.themeColor || color, borderLeftWidth: '2px' }}
+                                >
+                                    {m.content}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
+                <div ref={chatEndRef} className="h-4 flex-none" />
             </div>
 
             <style dangerouslySetInnerHTML={{ __html: `
