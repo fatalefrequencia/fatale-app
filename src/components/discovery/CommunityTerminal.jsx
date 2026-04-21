@@ -7,14 +7,16 @@ import { useNotification } from '../../contexts/NotificationContext';
 
 const CommunityTerminal = ({ community, user, followedCommunities = [], onFollowUpdate, setUser, onBack, sectorColor }) => {
     const { showNotification } = useNotification();
-    const [messages, setMessages] = useState([]);
-    const [newMessage, setNewMessage] = useState('');
-    const [sending, setSending] = useState(false);
     const lastTickRef = useRef(0);
     const chatEndRef = useRef(null);
+    const chatContainerRef = useRef(null);
     const fileInputRef = useRef(null);
     const pollRef = useRef(null);
     const [displayImageUrl, setDisplayImageUrl] = useState(community.imageUrl || community.ImageUrl);
+    const [newMessage, setNewMessage] = useState('');
+    const [sending, setSending] = useState(false);
+    const [messages, setMessages] = useState([]);
+    const [isAtBottom, setIsAtBottom] = useState(true);
 
     const isJoined = (user?.communityId || user?.CommunityId) === community.id;
     const color = sectorColor || community.color || '#ff006e';
@@ -48,8 +50,17 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
     }, [fetchMessages]);
 
     useEffect(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+        if (isAtBottom) {
+            chatEndRef.current?.scrollIntoView({ behavior: 'auto' });
+        }
+    }, [messages, isAtBottom]);
+
+    const handleScroll = () => {
+        if (!chatContainerRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+        const atBottom = scrollHeight - scrollTop - clientHeight < 50;
+        setIsAtBottom(atBottom);
+    };
 
     const isFollowed = followedCommunities.includes(community.id);
     const isMember = (user?.communityId || user?.CommunityId) === community.id;
@@ -243,21 +254,23 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
 
             {/* Chat Area */}
             <div 
-                className="flex-1 overflow-y-auto p-4 relative no-scrollbar" 
+                ref={chatContainerRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto p-4 relative custom-terminal-scrollbar" 
                 style={{ 
-                    scrollbarWidth: 'none', 
                     overflowAnchor: 'none',
-                    scrollbarGutter: 'stable'
+                    scrollbarGutter: 'stable',
+                    contain: 'content'
                 }}
             >
-                <div className="space-y-4 h-full flex flex-col justify-end">
+                <div className="space-y-4 flex flex-col">
                     {messages.length === 0 ? (
                         <div className="flex-1 flex flex-col items-center justify-center opacity-20 text-center space-y-2 py-20">
                             <MessageSquare size={24} />
                             <div className="text-[8px] uppercase tracking-[0.3em]">No incoming transmissions</div>
                         </div>
                     ) : (
-                        <div className="flex-1 flex flex-col justify-end space-y-4">
+                        <div className="space-y-4">
                             {messages.map((m, i) => (
                                 <div key={m.id || i} className={`flex flex-col ${m.userId === (user?.id || user?.Id) ? 'items-end' : 'items-start'}`}>
                                     <div className="flex items-center gap-2 mb-1">
@@ -277,6 +290,22 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
                     <div ref={chatEndRef} className="h-4 flex-none" />
                 </div>
             </div>
+
+            <style dangerouslySetInnerHTML={{ __html: `
+                .custom-terminal-scrollbar::-webkit-scrollbar {
+                    width: 3px;
+                }
+                .custom-terminal-scrollbar::-webkit-scrollbar-track {
+                    background: rgba(0,0,0,0.2);
+                }
+                .custom-terminal-scrollbar::-webkit-scrollbar-thumb {
+                    background: ${color}40;
+                    border-radius: 2px;
+                }
+                .custom-terminal-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: ${color}80;
+                }
+            `}} />
 
             {/* Input Overlay */}
             <form onSubmit={handleSend} className="flex-none p-4 bg-black/80 border-t border-white/10 flex items-center gap-3">

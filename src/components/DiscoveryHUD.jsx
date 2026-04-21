@@ -384,9 +384,9 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                             ) : (
                                 <motion.div 
                                     key={`terminal-${activeTerminalCommunity.id}`}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: 20 }}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
                                     className="w-full h-full max-w-2xl px-4 lg:px-8 py-4"
                                 >
                                     <CommunityTerminal 
