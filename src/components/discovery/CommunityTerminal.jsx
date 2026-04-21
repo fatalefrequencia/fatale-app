@@ -256,7 +256,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
             <div 
                 ref={chatContainerRef}
                 onScroll={handleScroll}
-                className="flex-1 overflow-y-auto p-4 relative custom-terminal-scrollbar" 
+                className="flex-1 overflow-y-auto p-4 relative" 
                 style={{ 
                     overflowAnchor: 'none',
                     scrollbarGutter: 'stable',
@@ -289,22 +289,6 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
                 </div>
                 <div ref={chatEndRef} className="h-4 flex-none" />
             </div>
-
-            <style dangerouslySetInnerHTML={{ __html: `
-                .custom-terminal-scrollbar::-webkit-scrollbar {
-                    width: 3px;
-                }
-                .custom-terminal-scrollbar::-webkit-scrollbar-track {
-                    background: rgba(0,0,0,0.2);
-                }
-                .custom-terminal-scrollbar::-webkit-scrollbar-thumb {
-                    background: ${color}40;
-                    border-radius: 2px;
-                }
-                .custom-terminal-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: ${color}80;
-                }
-            `}} />
 
             {/* Input Overlay */}
             <form onSubmit={handleSend} className="flex-none p-4 bg-black/80 border-t border-white/10 flex items-center gap-3">

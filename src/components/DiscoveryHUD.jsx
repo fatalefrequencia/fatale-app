@@ -221,6 +221,19 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
 
     return (
         <div className="relative w-full h-full overflow-y-auto lg:overflow-hidden bg-[#020202] text-white font-mono flex flex-col p-4 select-none no-scrollbar">
+            {/* Global Style Inject for Total Scrollbar Invisibility */}
+            <style dangerouslySetInnerHTML={{ __html: `
+                * {
+                    scrollbar-width: none !important;
+                    -ms-overflow-style: none !important;
+                }
+                *::-webkit-scrollbar {
+                    display: none !important;
+                    width: 0 !important;
+                    height: 0 !important;
+                }
+            `}} />
+
             {/* Terminal Boot Sequence Overlay */}
             <AnimatePresence>
                 {isBooting && (
@@ -362,7 +375,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 
                 {/* --- CENTER: THE GLOBE OR COMMUNITY TERMINAL --- */}
                 {(!isMobile || mobileViewMode === 'globe') && (
-                    <div className={`${isMobile ? 'flex-1' : 'h-[400px] lg:h-full'} lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative`}>
+                    <div className={`${isMobile ? 'flex-1' : 'h-[520px]'} lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative`}>
                         <AnimatePresence mode="wait">
                             {!activeTerminalCommunity ? (
                                 <motion.div 
@@ -387,7 +400,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="w-full h-full max-w-2xl px-4 lg:px-8 py-4"
+                                    className="w-full h-full"
                                 >
                                     <CommunityTerminal 
                                         community={activeTerminalCommunity}
