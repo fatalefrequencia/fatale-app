@@ -19,7 +19,19 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     const [activeTerminalCommunity, setActiveTerminalCommunity] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isBooting, setIsBooting] = useState(true);
-    const [mobileViewMode, setMobileViewMode] = useState('globe'); // 'globe' or 'data'
+    const [mobileViewMode, setMobileViewMode] = useState('globe'); // 'globe', 'stats', 'communities'
+
+    const resolveThumbnail = (vis) => {
+        if (vis.imageUrl || vis.thumbnailUrl) return getMediaUrl(vis.imageUrl || vis.thumbnailUrl);
+        
+        const videoUrl = vis.videoUrl || vis.VideoUrl;
+        if (videoUrl && videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+            const match = videoUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+            const id = (match && match[2].length === 11) ? match[2] : null;
+            if (id) return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+        }
+        return null;
+    };
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 1024);
 
     useEffect(() => {
@@ -531,19 +543,19 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-3 pointer-events-auto">
                     <HUDWidget title="STUDIO_TRANS" icon={<Camera size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                             {filteredVisuals.map(v => (
+                             {filteredVisuals.map(vis => (
                                  <div 
-                                    key={v.id} 
+                                    key={vis.id} 
                                     className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-[#ff006e]/60 transition-all shadow-xl" 
                                     onClick={() => onExpandContent(
-                                        v, 
-                                        (v.mediaType || '').toLowerCase() === 'video' ? 'video' : 'photo', 
+                                        vis, 
+                                        (vis.mediaType || '').toLowerCase() === 'video' ? 'video' : 'photo', 
                                         { themeColor: '#9d00ff', backgroundColor: '#000000' }
                                     )}
                                  >
-                                      <img src={getMediaUrl(v.imageUrl || v.thumbnailUrl)} alt="" className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
+                                      <img src={resolveThumbnail(vis)} alt="" className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
                                       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ff006e] scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
-                                      {(v.mediaType || '').toLowerCase() === 'video' && (
+                                      {(vis.mediaType || '').toLowerCase() === 'video' && (
                                           <div className="absolute top-1 right-1">
                                               <Play size={8} className="text-[#ff006e]" />
                                           </div>
