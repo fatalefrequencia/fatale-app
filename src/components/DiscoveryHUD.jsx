@@ -471,7 +471,7 @@ const DiscoveryHUD = ({ user, navigateToProfile, onPlayTrack, isPlayerActive, on
                     <HUDWidget title="PUBLIC_COLL" icon={<Layers size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                              {filteredPlaylists.map(pl => (
-                                 <div key={pl.id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => onExpandContent(pl, 'playlist')}>
+                                 <div key={pl.id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => navigateToProfile(pl.userId)}>
                                       <img src={getMediaUrl(pl.imageUrl)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
                                       <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
                                       {/* Playlist Glitch Frame */}
@@ -490,7 +490,11 @@ const DiscoveryHUD = ({ user, navigateToProfile, onPlayTrack, isPlayerActive, on
                     <HUDWidget title="STUDIO_TRANS" icon={<Camera size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                              {filteredVisuals.map(v => (
-                                 <div key={v.id} className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-[#ff006e]/60 transition-all shadow-xl" onClick={() => onExpandContent(v, 'studio')}>
+                                 <div 
+                                    key={v.id} 
+                                    className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-[#ff006e]/60 transition-all shadow-xl" 
+                                    onClick={() => onExpandContent(v, v.mediaType === 'video' ? 'video' : 'photo', { themeColor: activeSectorColor, backgroundColor: '#000000' })}
+                                 >
                                       <img src={getMediaUrl(v.imageUrl || v.thumbnailUrl)} alt="" className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
                                       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ff006e] scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
                                       {v.mediaType === 'video' && (
@@ -508,7 +512,11 @@ const DiscoveryHUD = ({ user, navigateToProfile, onPlayTrack, isPlayerActive, on
                     <HUDWidget title="FREQ_JOURNAL" icon={<BookOpen size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                         <div className="space-y-4">
                              {filteredJournals.map(j => (
-                                 <div key={j.id} className="border-l border-[#ff006e]/10 pl-4 py-2 relative group cursor-pointer hover:bg-white/[0.02] transition-all" onClick={() => onExpandContent(j, 'journal')}>
+                                 <div 
+                                    key={j.id} 
+                                    className="border-l border-[#ff006e]/10 pl-4 py-2 relative group cursor-pointer hover:bg-white/[0.02] transition-all" 
+                                    onClick={() => onExpandContent(j, 'journal', { themeColor: activeSectorColor, backgroundColor: '#000000' })}
+                                 >
                                      <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-[#ff006e] scale-y-0 group-hover:scale-y-100 transition-transform" />
                                      <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase mb-1 tracking-tight">{j.title}</div>
                                      <div className="text-[8px] opacity-30 line-clamp-2 italic font-light leading-relaxed">{j.content?.substring(0, 80)}...</div>

@@ -4,7 +4,7 @@ import { X, Book, Camera, Video, Share2, Download, ExternalLink } from 'lucide-r
 import { API_BASE_URL, getMediaUrl } from '../constants';
 import { useNotification } from '../contexts/NotificationContext';
 
-const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true, themeColor = '#9d00ff', backgroundColor = '#000000', isGlass = false, monitorImageUrl = null, monitorBackgroundColor = '#000000', monitorIsGlass = false }) => {
+const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true, themeColor = '#ff006e', backgroundColor = '#000000', isGlass = false, monitorImageUrl = null, monitorBackgroundColor = '#000000', monitorIsGlass = false }) => {
     const { showNotification } = useNotification();
     if (!content) return null;
     const normalizedType = (type || '').toUpperCase();

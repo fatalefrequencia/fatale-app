@@ -1649,8 +1649,8 @@ function App() {
             onClose={() => { setGlobalExpandedContent(null); setGlobalExpandedTheme(null); }}
             type={globalExpandedType}
             hasMiniPlayer={currentTrackIndex >= 0 && activeView !== 'player'}
-            themeColor={globalExpandedTheme?.themeColor}
-            backgroundColor={globalExpandedTheme?.backgroundColor}
+            themeColor={globalExpandedTheme?.themeColor || '#ff006e'}
+            monitorBackgroundColor={globalExpandedTheme?.backgroundColor || '#000000'}
             isGlass={globalExpandedTheme?.isGlass}
             monitorImageUrl={globalExpandedTheme?.monitorImageUrl}
           />
