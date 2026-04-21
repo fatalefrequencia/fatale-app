@@ -95,66 +95,79 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                s.subgenres.some(sub => sub.toLowerCase() === genre || genre.includes(sub.toLowerCase()));
     }, [activeSector]);
 
-    // Computed Filtered Lists
     const filteredTracks = useMemo(() => {
-        const base = trendingTracks.filter(matchesSector);
+        let base = trendingTracks;
+        if (activeSector !== null) base = base.filter(matchesSector);
+        
         if (!searchQuery) return base.slice(0, 8);
         return base.filter(t => 
             t.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
             t.artist?.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [trendingTracks, searchQuery, matchesSector]);
+    }, [trendingTracks, searchQuery, matchesSector, activeSector]);
 
     const filteredArtists = useMemo(() => {
-        const base = trendingArtists.filter(matchesSector);
+        let base = trendingArtists;
+        if (activeSector !== null) base = base.filter(matchesSector);
+
         if (!searchQuery) return base.slice(0, 6);
         return base.filter(a => 
             a.name?.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [trendingArtists, searchQuery, matchesSector]);
+    }, [trendingArtists, searchQuery, matchesSector, activeSector]);
 
     const filteredPlaylists = useMemo(() => {
-        const base = trendingPlaylists.filter(matchesSector);
+        let base = trendingPlaylists;
+        if (activeSector !== null) base = base.filter(matchesSector);
+
         if (!searchQuery) return base.slice(0, 4);
         return base.filter(p => 
             p.name?.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [trendingPlaylists, searchQuery, matchesSector]);
+    }, [trendingPlaylists, searchQuery, matchesSector, activeSector]);
 
     const filteredCommunities = useMemo(() => {
-        const base = communities.filter(matchesSector);
+        let base = communities;
+        if (activeSector !== null) base = base.filter(matchesSector);
+
         if (!searchQuery) return base.slice(0, 4);
         return base.filter(c => 
             c.name?.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [communities, searchQuery, matchesSector]);
+    }, [communities, searchQuery, matchesSector, activeSector]);
 
     const liveStations = useMemo(() => {
-        const base = stations.filter(s => s.isLive || s.IsLive).filter(matchesSector);
+        let base = stations.filter(s => s.isLive || s.IsLive);
+        if (activeSector !== null) base = base.filter(matchesSector);
+
         if (!searchQuery) return base.slice(0, 6);
         return base.filter(s => 
             s.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             s.currentSessionTitle?.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [stations, searchQuery, matchesSector]);
+    }, [stations, searchQuery, matchesSector, activeSector]);
 
     const filteredVisuals = useMemo(() => {
-        const base = visualUploads.filter(matchesSector);
+        let base = visualUploads;
+        if (activeSector !== null) base = base.filter(matchesSector);
+
         if (!searchQuery) return base.slice(0, 9);
         return base.filter(v => 
             v.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             v.artist?.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [visualUploads, searchQuery, matchesSector]);
+    }, [visualUploads, searchQuery, matchesSector, activeSector]);
 
     const filteredJournals = useMemo(() => {
-        const base = journalEntries.filter(matchesSector);
+        let base = journalEntries;
+        if (activeSector !== null) base = base.filter(matchesSector);
+
         if (!searchQuery) return base.slice(0, 6);
         return base.filter(j => 
             j.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             j.content?.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [journalEntries, searchQuery, matchesSector]);
+    }, [journalEntries, searchQuery, matchesSector, activeSector]);
 
     // Calculate dynamic theme color based on active sector
     const activeSectorColor = useMemo(() => {
@@ -288,12 +301,17 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                 </div>
 
                 <div className="flex items-center gap-6 text-[10px] text-white/40 tracking-tighter self-end lg:self-auto">
-                   <div className="hidden xl:flex items-center gap-2">
-                        <span className="opacity-30">LOC:</span>
-                        <span className="text-[#ff006e]/60">SILICON_HEIGHTS</span>
-                   </div>
-                   <div className="w-[1px] h-3 bg-white/10" />
-                   <div className="tabular-nums">{new Date().toISOString().split('T')[0]}</div>
+                    <div className="hidden xl:flex items-center gap-2">
+                            <span className="opacity-30">LOC:</span>
+                            <span 
+                                className="transition-all duration-500 font-black tracking-widest"
+                                style={{ color: activeSectorColor || '#ff006e' }}
+                            >
+                                {activeSector !== null ? SECTORS.find(s => s.id === activeSector)?.name : 'GLOBAL_SIGNAL'}
+                            </span>
+                    </div>
+                    <div className="w-[1px] h-3 bg-white/10" />
+                    <div className="tabular-nums">{new Date().toISOString().split('T')[0]}</div>
                 </div>
             </div>
 

@@ -22,7 +22,7 @@ const Pin = ({ position, color, label, onClick }) => {
 };
 
 // Mock "Makeshift Continents" using sectors
-const SectorContinent = ({ sector, index, isActive, onClick }) => {
+const SectorContinent = ({ sector, index, isActive, onClick, isHidden }) => {
     const meshRef = useRef();
     const count = 12;
     const radius = 2.5;
@@ -30,16 +30,17 @@ const SectorContinent = ({ sector, index, isActive, onClick }) => {
     // Generate random clusters around a central point for the sector
     const chunks = useMemo(() => {
         const results = [];
-        const phi = (index / SECTORS.length) * Math.PI * 2;
+        // Spread phi (longitude) more aggressively
+        const phiBase = (index / SECTORS.length) * Math.PI * 2;
+        const phi = phiBase + (index % 2 === 0 ? 0.3 : -0.3);
         
-        // Spread theta (latitude) based on index to avoid straight line
-        // We range from roughly 45 degrees north to 45 degrees south
-        const thetaOffsets = [0.6, 1.2, 0.9, 1.5, 0.7, 1.3];
+        // Wider Theta (latitude) spread
+        const thetaOffsets = [0.5, 1.6, 0.8, 2.2, 1.1, 1.8];
         const theta = thetaOffsets[index % thetaOffsets.length];
 
         for (let i = 0; i < count; i++) {
-            const lat = theta + (Math.random() - 0.5) * 0.4;
-            const lon = phi + (Math.random() - 0.5) * 0.4;
+            const lat = theta + (Math.random() - 0.5) * 0.5;
+            const lon = phi + (Math.random() - 0.5) * 0.5;
 
             const x = radius * Math.sin(lat) * Math.cos(lon);
             const y = radius * Math.cos(lat);
@@ -53,6 +54,8 @@ const SectorContinent = ({ sector, index, isActive, onClick }) => {
         }
         return results;
     }, [index]);
+
+    if (isHidden) return null;
 
     return (
         <group onClick={(e) => { e.stopPropagation(); onClick(); }}>
@@ -75,27 +78,27 @@ const SectorContinent = ({ sector, index, isActive, onClick }) => {
 const GlobeCore = ({ searchQuery, searchResults = [], activeSector, onSectorClick }) => {
     const groupRef = useRef();
 
+    const activeSectorColor = useMemo(() => {
+        if (activeSector === null) return null;
+        const s = SECTORS.find(sec => sec.id === activeSector);
+        if (!s) return null;
+        if (s.id === 0) return "#ff33aa"; 
+        return s.color;
+    }, [activeSector]);
+
     useFrame((state) => {
         if (!searchQuery && activeSector === null) {
             groupRef.current.rotation.y += 0.002;
         }
 
-        // Auto-rotation to active sector
         if (activeSector !== null) {
             const targetPhi = (activeSector / SECTORS.length) * Math.PI * 2;
-            // Align the phi longitude directly with the camera's front (Z+)
-            // Our coordinate math used x = sin*cos(phi), z = sin*sin(phi)
-            // So phi=0 is at X=r, Z=0. To bring this to Z+, we rotate 90 deg counter-clockwise.
-            // target rotation alpha = -targetPhi - PI/2 if P is rotated.
             const targetY = -targetPhi + Math.PI / 2;
-            
-            // Smooth lerp for rotation
             const currentY = groupRef.current.rotation.y;
             groupRef.current.rotation.y = THREE.MathUtils.lerp(currentY, targetY, 0.08);
         }
     });
 
-    // Map search results to spherical coordinates
     const searchPins = useMemo(() => {
         return searchResults.slice(0, 15).map((node, i) => {
             const id = node.id || node.Id || i;
@@ -119,7 +122,13 @@ const GlobeCore = ({ searchQuery, searchResults = [], activeSector, onSectorClic
             </Sphere>
 
             <Sphere args={[2.5, 40, 40]}>
-                <meshBasicMaterial color="#ff006e" wireframe transparent opacity={0.05} />
+                <meshBasicMaterial 
+                    color={activeSectorColor || "#ff006e"} 
+                    wireframe 
+                    transparent 
+                    opacity={activeSector !== null ? 0.15 : 0.05} 
+                    transition="color 0.5s ease"
+                />
             </Sphere>
 
             {SECTORS.map((s, idx) => (
@@ -128,12 +137,13 @@ const GlobeCore = ({ searchQuery, searchResults = [], activeSector, onSectorClic
                     sector={s} 
                     index={idx} 
                     isActive={activeSector === s.id}
+                    isHidden={activeSector !== null && activeSector !== s.id}
                     onClick={() => onSectorClick(s.id)}
                 />
             ))}
 
             {searchPins.map((p, i) => (
-                <Pin key={i} position={p.pos} color={p.color} />
+                <Pin key={i} position={p.pos} color={activeSectorColor || p.color} />
             ))}
         </group>
     );
