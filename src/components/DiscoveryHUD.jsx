@@ -375,7 +375,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 
                 {/* --- CENTER: THE GLOBE OR COMMUNITY TERMINAL --- */}
                 {(!isMobile || mobileViewMode === 'globe') && (
-                    <div className={`${isMobile ? 'flex-1' : 'h-[520px]'} lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative`}>
+                    <div className={`${isMobile ? 'flex-1' : 'h-[400px] lg:h-full'} lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative`}>
                         <AnimatePresence mode="wait">
                             {!activeTerminalCommunity ? (
                                 <motion.div 
@@ -400,7 +400,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="w-full h-full"
+                                    className="max-w-2xl w-full h-[540px] overflow-hidden rounded-sm border border-white/5 relative bg-black/60 shadow-2xl"
                                 >
                                     <CommunityTerminal 
                                         community={activeTerminalCommunity}

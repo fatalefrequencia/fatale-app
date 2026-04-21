@@ -291,7 +291,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
             </div>
 
             {/* Input Overlay */}
-            <form onSubmit={handleSend} className="flex-none p-4 bg-black/80 border-t border-white/10 flex items-center gap-3">
+            <form onSubmit={handleSend} className="flex-none h-16 px-4 bg-black/80 border-t border-white/10 flex items-center gap-3">
                 <input 
                     type="text"
                     value={newMessage}
@@ -299,13 +299,15 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
                     placeholder="TRANSMIT_SIGNAL..."
                     className="flex-1 bg-transparent border-none text-[10px] mono text-white outline-none placeholder:text-white/10"
                 />
-                <button 
-                    disabled={!newMessage.trim() || sending}
-                    className="p-2 transition-all hover:scale-110 disabled:opacity-20"
-                    style={{ color }}
-                >
-                    {sending ? <Zap size={14} className="animate-spin" /> : <Send size={14} />}
-                </button>
+                <div className="w-10 flex items-center justify-center">
+                    <button 
+                        disabled={!newMessage.trim() || sending}
+                        className="p-2 transition-all hover:scale-110 disabled:opacity-20"
+                        style={{ color }}
+                    >
+                        {sending ? <Zap size={14} className="animate-spin" /> : <Send size={14} />}
+                    </button>
+                </div>
             </form>
 
             {/* Scanning Overlay Effect */}
