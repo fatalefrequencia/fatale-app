@@ -31,7 +31,11 @@ const SectorContinent = ({ sector, index, isActive, onClick }) => {
     const chunks = useMemo(() => {
         const results = [];
         const phi = (index / SECTORS.length) * Math.PI * 2;
-        const theta = Math.PI / 3; // Keep them around the equator for easier viewing
+        
+        // Spread theta (latitude) based on index to avoid straight line
+        // We range from roughly 45 degrees north to 45 degrees south
+        const thetaOffsets = [0.6, 1.2, 0.9, 1.5, 0.7, 1.3];
+        const theta = thetaOffsets[index % thetaOffsets.length];
 
         for (let i = 0; i < count; i++) {
             const lat = theta + (Math.random() - 0.5) * 0.4;
@@ -45,8 +49,6 @@ const SectorContinent = ({ sector, index, isActive, onClick }) => {
                 pos: [x, y, z],
                 scale: [Math.random() * 0.4 + 0.1, Math.random() * 0.4 + 0.1, 0.05],
                 rot: [lat, lon, 0],
-                phi,
-                theta
             });
         }
         return results;
@@ -74,19 +76,22 @@ const GlobeCore = ({ searchQuery, searchResults = [], activeSector, onSectorClic
     const groupRef = useRef();
 
     useFrame((state) => {
-        if (!searchQuery && !activeSector) {
+        if (!searchQuery && activeSector === null) {
             groupRef.current.rotation.y += 0.002;
         }
 
         // Auto-rotation to active sector
         if (activeSector !== null) {
             const targetPhi = (activeSector / SECTORS.length) * Math.PI * 2;
-            // Target rotation is negative phi to face the camera
-            const currentY = groupRef.current.rotation.y;
+            // Align the phi longitude directly with the camera's front (Z+)
+            // Our coordinate math used x = sin*cos(phi), z = sin*sin(phi)
+            // So phi=0 is at X=r, Z=0. To bring this to Z+, we rotate 90 deg counter-clockwise.
+            // target rotation alpha = -targetPhi - PI/2 if P is rotated.
             const targetY = -targetPhi + Math.PI / 2;
             
             // Smooth lerp for rotation
-            groupRef.current.rotation.y = THREE.MathUtils.lerp(currentY, targetY, 0.05);
+            const currentY = groupRef.current.rotation.y;
+            groupRef.current.rotation.y = THREE.MathUtils.lerp(currentY, targetY, 0.08);
         }
     });
 
@@ -167,7 +172,11 @@ const InteractiveGlobe = ({ searchQuery, searchResults, activeSector, onSectorCl
                 <pointLight position={[10, 10, 10]} intensity={1.5} color="#ff006e" />
                 <pointLight position={[-10, -10, -10]} intensity={1.5} color="#00ffff" />
 
-                <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
+                <Float 
+                    speed={activeSector !== null ? 0.5 : 1.5} 
+                    rotationIntensity={activeSector !== null ? 0.1 : 0.5} 
+                    floatIntensity={activeSector !== null ? 0.1 : 0.5}
+                >
                     <GlobeCore 
                         searchQuery={searchQuery} 
                         searchResults={searchResults} 

@@ -218,17 +218,29 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
 
                 {/* CENTRAL SEARCH */}
                 <div className="relative group w-full lg:w-[450px]">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-[#ff006e]/0 via-[#ff006e]/20 to-[#ff006e]/0 rounded-lg blur opacity-0 group-focus-within:opacity-100 transition duration-1000 group-focus-within:duration-200"></div>
+                    <div 
+                        className="absolute -inset-1 rounded-lg blur opacity-0 group-focus-within:opacity-100 transition duration-1000 group-focus-within:duration-200"
+                        style={{ backgroundColor: activeSectorColor || '#ff006e', opacity: activeSectorColor ? 0.3 : 0 }}
+                    ></div>
                     <div className="relative flex items-center">
                         <div className="absolute left-3 flex items-center pointer-events-none">
-                            <Search size={16} className="text-[#ff006e] opacity-40 group-focus-within:opacity-100 transition-opacity" />
+                            <Search 
+                                size={16} 
+                                className="group-focus-within:opacity-100 transition-opacity" 
+                                style={{ color: activeSectorColor || '#ff006e', opacity: activeSector ? 1 : 0.4 }}
+                            />
                         </div>
                         <input 
                             type="text"
                             placeholder="SEARCH_SIGNAL_DATABASE..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-black/60 border border-[#ff006e]/30 rounded px-10 py-2.5 text-xs tracking-[0.2em] focus:outline-none focus:border-[#ff006e] focus:ring-1 focus:ring-[#ff006e]/20 transition-all placeholder:text-[#ff006e]/20 text-white"
+                            className="w-full bg-black/60 border rounded px-10 py-2.5 text-xs tracking-[0.2em] focus:outline-none focus:ring-1 transition-all placeholder:text-[#ff006e]/20 text-white"
+                            style={{ 
+                                borderColor: activeSectorColor ? `${activeSectorColor}99` : 'rgba(255,0,110,0.3)', 
+                                focusBorderColor: activeSectorColor || '#ff006e',
+                                '--tw-ring-color': activeSectorColor ? `${activeSectorColor}33` : 'rgba(255,0,110,0.2)'
+                            }}
                         />
                         {searchQuery && (
                             <button 
