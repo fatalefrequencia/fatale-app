@@ -599,20 +599,20 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                          <div className="flex gap-2">
                                              <button 
                                                 onClick={() => onPlayPlaylist(playlistTracks)}
-                                                className="p-1.5 bg-white/5 border border-white/10 hover:border-[#ff006e]/40 hover:bg-[#ff006e]/10 group/btn transition-all rounded-sm"
+                                                className="p-1.5 bg-black border border-white/10 hover:border-[#ff006e]/40 hover:bg-[#ff006e]/10 group/btn transition-all rounded-sm shadow-lg overflow-hidden relative"
                                                 title="PLAY_ALL_SIGNALS"
                                              >
-                                                 <Play size={10} className="text-white/40 group-hover/btn:text-[#ff006e] fill-transparent group-hover/btn:fill-[#ff006e]/20" />
+                                                 <Play size={10} className="text-white/40 group-hover/btn:text-[#ff006e] fill-transparent group-hover/btn:fill-[#ff006e]/20 relative z-10" />
                                              </button>
                                              <button 
                                                 onClick={() => {
                                                     const shuffled = [...playlistTracks].sort(() => Math.random() - 0.5);
                                                     onPlayPlaylist(shuffled);
                                                 }}
-                                                className="p-1.5 bg-white/5 border border-white/10 hover:border-[#ff006e]/40 hover:bg-[#ff006e]/10 group/btn transition-all rounded-sm"
+                                                className="p-1.5 bg-black border border-white/10 hover:border-[#ff006e]/40 hover:bg-[#ff006e]/10 group/btn transition-all rounded-sm shadow-lg overflow-hidden relative"
                                                 title="SHUFFLE_SIGNALS"
                                              >
-                                                 <Shuffle size={10} className="text-white/40 group-hover/btn:text-[#ff006e]" />
+                                                 <Shuffle size={10} className="text-white/40 group-hover/btn:text-[#ff006e] relative z-10" />
                                              </button>
                                          </div>
                                      )}
