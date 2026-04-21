@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Music, Disc, User, Play, Heart, Layers, Radio, BookOpen, Camera, Zap, Share2, Activity, Globe, X, Star, ChevronLeft } from 'lucide-react';
+import { Search, Music, Disc, User, Play, Heart, Layers, Radio, BookOpen, Camera, Zap, Share2, Activity, Globe, X, Star, ChevronLeft, Shuffle } from 'lucide-react';
 import API from '../services/api';
 import { SECTORS, getMediaUrl } from '../constants';
 import { useNotification } from '../contexts/NotificationContext';
@@ -8,7 +8,7 @@ import HUDWidget from './discovery/HUDWidget';
 import InteractiveGlobe from './discovery/InteractiveGlobe';
 import CommunityTerminal from './discovery/CommunityTerminal';
 
-const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, isPlayerActive, onExpandContent, onPlayStation }) => {
+const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, onPlayPlaylist, isPlayerActive, onExpandContent, onPlayStation }) => {
     const { showNotification } = useNotification();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeSector, setActiveSector] = useState(null);
@@ -594,6 +594,28 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                              BY_{selectedPlaylist.authorName || 'RETSGEN'}
                                          </div>
                                      </div>
+                                     
+                                     {!loadingPlaylist && playlistTracks.length > 0 && (
+                                         <div className="flex gap-2">
+                                             <button 
+                                                onClick={() => onPlayPlaylist(playlistTracks)}
+                                                className="p-1.5 bg-white/5 border border-white/10 hover:border-[#ff006e]/40 hover:bg-[#ff006e]/10 group/btn transition-all rounded-sm"
+                                                title="PLAY_ALL_SIGNALS"
+                                             >
+                                                 <Play size={10} className="text-white/40 group-hover/btn:text-[#ff006e] fill-transparent group-hover/btn:fill-[#ff006e]/20" />
+                                             </button>
+                                             <button 
+                                                onClick={() => {
+                                                    const shuffled = [...playlistTracks].sort(() => Math.random() - 0.5);
+                                                    onPlayPlaylist(shuffled);
+                                                }}
+                                                className="p-1.5 bg-white/5 border border-white/10 hover:border-[#ff006e]/40 hover:bg-[#ff006e]/10 group/btn transition-all rounded-sm"
+                                                title="SHUFFLE_SIGNALS"
+                                             >
+                                                 <Shuffle size={10} className="text-white/40 group-hover/btn:text-[#ff006e]" />
+                                             </button>
+                                         </div>
+                                     )}
                                  </div>
 
                                  {loadingPlaylist ? (

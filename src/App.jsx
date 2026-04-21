@@ -1954,6 +1954,7 @@ const Dashboard = React.memo(({
                     setView('player');
                   }
                 }}
+                onPlayPlaylist={handlePlayPlaylist}
                 isPlayerActive={currentTrackIndex >= 0}
                 onExpandContent={onExpandContent}
                 setUser={setUser}
