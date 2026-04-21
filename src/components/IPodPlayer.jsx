@@ -523,24 +523,27 @@ export const IPodPlayer = ({
                 setSelectedIndex(0);
             } else if (item.id === 'PLAY_ALL_FILTERED') {
                 if (item.tracks.length > 0) {
-                    setCurrentTrackIndex(item.tracks[0].originalIndex);
-                    setIsPlaying(true);
+                    onPlayPlaylist && onPlayPlaylist(item.tracks.map(t => t.originalTrack || t), 0);
                     setScreen('NOW_PLAYING');
                 }
             } else if (item.id === 'SHUFFLE_ALL_FILTERED') {
                 if (item.tracks.length > 0) {
-                    const rand = Math.floor(Math.random() * item.tracks.length);
-                    setCurrentTrackIndex(item.tracks[rand].originalIndex);
-                    setIsPlaying(true);
+                    const shuffled = [...item.tracks].sort(() => Math.random() - 0.5);
+                    onPlayPlaylist && onPlayPlaylist(shuffled.map(t => t.originalTrack || t), 0);
                     setScreen('NOW_PLAYING');
                 }
             } else if (typeof item.id === 'number') {
-                setCurrentTrackIndex(item.id);
-                setScreen('NOW_PLAYING');
-                const targetTrack = tracks[item.id];
-                if (!targetTrack?.isLocked || targetTrack?.isOwned) {
+                const sourceList = item.isFromSearch && item.searchContext ? item.searchContext : (libraryTracks.length > 0 ? libraryTracks : tracks);
+                const filtered = getCurrentItems().filter(i => i.originalTrack).map(i => i.originalTrack);
+                const clickedIdxInFiltered = filtered.findIndex(t => (t.id || t.Id) === (item.originalTrack?.id || item.originalTrack?.Id));
+
+                if (onPlayPlaylist) {
+                    onPlayPlaylist(filtered, clickedIdxInFiltered !== -1 ? clickedIdxInFiltered : 0);
+                } else {
+                    setCurrentTrackIndex(item.id);
                     setIsPlaying(true);
                 }
+                setScreen('NOW_PLAYING');
             }
             return;
         }

@@ -557,8 +557,10 @@ function App() {
       }
 
       if (likes.length > 0) {
+        const ytLikesSet = new Set();
         likes.filter(yt => (yt.source || yt.Source)?.startsWith('youtube:')).forEach(yt => {
           const yId = (yt.source || yt.Source).split(':')[1];
+          ytLikesSet.add(yId);
           const sourceKey = `youtube:${yId}`;
           if (uniqueTracksMap.has(sourceKey)) {
             const existing = uniqueTracksMap.get(sourceKey);
@@ -578,6 +580,7 @@ function App() {
           };
           uniqueTracksMap.set(sourceKey, mappedYt);
         });
+        setLikedYoutubeIds(ytLikesSet);
       }
 
       const allTracks = Array.from(uniqueTracksMap.values());
@@ -1961,19 +1964,31 @@ const Dashboard = React.memo(({
                   const rawSource = track.source || track.Source || track.filePath || track.FilePath;
                   const isYoutube = (typeof tId === 'string' && tId.length === 11 && !rawSource) || (rawSource && rawSource.startsWith('youtube:'));
                   
-                  // Resolve like status
+                  // YouTube Resolution
                   const pureYtId = isYoutube ? (rawSource?.startsWith('youtube:') ? rawSource.split(':')[1] : String(tId)) : null;
-                  const isLiked = isYoutube ? likedYoutubeIds.has(pureYtId) : (track.isLiked || track.IsLiked);
+                  const sourceStr = isYoutube ? `youtube:${pureYtId}` : (rawSource || "");
 
-                  const rawCover = track.coverImageUrl || track.CoverImageUrl || track.imageUrl || track.ImageUrl || track.thumbnailUrl || track.ThumbnailUrl || track.cover || track.Cover;
+                  // --- DEEP RECONCILIATION: Inherit State from Library ---
+                  const libraryMatch = libraryTracks.find(lt => 
+                    String(lt.id || lt.Id) === String(tId) || 
+                    (lt.source && lt.source === sourceStr)
+                  );
+
+                  const isLiked = isYoutube 
+                    ? likedYoutubeIds.has(pureYtId) 
+                    : (libraryMatch ? libraryMatch.isLiked : (track.isLiked || track.IsLiked));
+                  
+                  const isOwned = (libraryMatch ? libraryMatch.isOwned : track.isOwned) || true; // Discovery usually yields playable nodes
+
+                  const rawCover = track.coverImageUrl || track.CoverImageUrl || track.imageUrl || track.ImageUrl || track.thumbnailUrl || track.ThumbnailUrl || track.cover || track.Cover || libraryMatch?.cover;
 
                   const enriched = {
                     ...track,
                     id: tId,
-                    source: isYoutube ? (rawSource?.startsWith('youtube:') ? rawSource : `youtube:${tId}`) : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null),
-                    cover: isYoutube ? (rawCover || `https://img.youtube.com/vi/${tId}/hqdefault.jpg`) : (rawCover ? (rawCover.startsWith('http') ? rawCover : getMediaUrl(rawCover)) : null),
+                    source: isYoutube ? sourceStr : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null),
+                    cover: isYoutube ? (rawCover || `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg`) : (rawCover ? (rawCover.startsWith('http') ? rawCover : getMediaUrl(rawCover)) : null),
                     isLiked,
-                    isOwned: true,
+                    isOwned,
                     isLocked: false
                   };
                   
