@@ -156,6 +156,16 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
         );
     }, [journalEntries, searchQuery, matchesSector]);
 
+    // Calculate dynamic theme color based on active sector
+    const activeSectorColor = useMemo(() => {
+        if (activeSector === null) return null;
+        const s = SECTORS.find(sec => sec.id === activeSector);
+        if (!s) return null;
+        // Special case: Club (id: 0) gets a brighter pink to differentiate from the base theme
+        if (s.id === 0) return "#ff33aa"; 
+        return s.color;
+    }, [activeSector]);
+
     return (
         <div className="relative w-full h-full overflow-y-auto lg:overflow-hidden bg-[#020202] text-white font-mono flex flex-col p-4 select-none no-scrollbar">
             {/* Terminal Boot Sequence Overlay */}
@@ -294,9 +304,20 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                         {/* Floating Overlay for Sector Status */}
                         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xl border border-white/5 px-8 pt-3 pb-2 rounded-sm flex gap-10 z-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] scale-75 lg:scale-100">
                              {SECTORS.map(s => (
-                                 <div key={s.id} className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => setActiveSector(s.id)}>
-                                     <div className="text-[8px] tracking-[0.2em] font-black opacity-30 group-hover:opacity-100 transition-opacity" style={{ color: s.color }}>{s.name.split(' ')[0]}</div>
-                                     <div className={`w-0.5 h-4 transition-all duration-300 ${activeSector === s.id ? 'opacity-100 scale-y-125' : 'opacity-20 translate-y-1'}`} style={{ backgroundColor: s.color, boxShadow: activeSector === s.id ? `0 0 10px ${s.color}` : 'none' }} />
+                                 <div key={s.id} className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => setActiveSector(activeSector === s.id ? null : s.id)}>
+                                     <div 
+                                         className="text-[8px] tracking-[0.2em] font-black opacity-30 group-hover:opacity-100 transition-opacity" 
+                                         style={{ color: activeSector === s.id ? (s.id === 0 ? "#ff33aa" : s.color) : s.color }}
+                                     >
+                                         {s.name.split(' ')[0]}
+                                     </div>
+                                     <div 
+                                         className={`w-0.5 h-4 transition-all duration-300 ${activeSector === s.id ? 'opacity-100 scale-y-125' : 'opacity-20 translate-y-1'}`} 
+                                         style={{ 
+                                             backgroundColor: s.id === 0 && activeSector === 0 ? "#ff33aa" : s.color, 
+                                             boxShadow: activeSector === s.id ? `0 0 10px ${s.id === 0 ? "#ff33aa" : s.color}` : 'none' 
+                                         }} 
+                                     />
                                  </div>
                              ))}
                         </div>
@@ -307,7 +328,7 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                 {(!isMobile || mobileViewMode === 'data') && (
                   <>
                     <div className="col-span-3 row-span-2 col-start-1 row-start-1 pointer-events-auto">
-                    <HUDWidget title="YT_FREQ_SCAN" icon={<Search size={14}/>} searchQuery={searchQuery} active={activeSector !== null}>
+                    <HUDWidget title="YT_FREQ_SCAN" icon={<Search size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                         <div className="space-y-4">
                             {youtubeResults.length > 0 ? youtubeResults.map(y => (
                                 <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => onPlayTrack(y)}>
@@ -332,7 +353,7 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                 </div>
 
                 <div className="col-span-3 row-span-2 col-start-1 row-start-3 pointer-events-auto">
-                    <HUDWidget title="PLATFORM_SIGS" icon={<Music size={14}/>} searchQuery={searchQuery} active={activeSector !== null}>
+                    <HUDWidget title="PLATFORM_SIGS" icon={<Music size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="space-y-1">
                              {filteredTracks.map((t, idx) => (
                                  <div key={t.id} className="flex items-center gap-4 text-[10px] group cursor-pointer py-2 px-2 hover:bg-white/5 transition-all border-l border-transparent hover:border-[#ff006e]" onClick={() => onPlayTrack(t)}>
@@ -348,7 +369,7 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                 </div>
 
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-1 lg:row-start-5 pointer-events-auto">
-                    <HUDWidget title="ARTIST_NODES" icon={<User size={14}/>} searchQuery={searchQuery} active={activeSector !== null}>
+                    <HUDWidget title="ARTIST_NODES" icon={<User size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-2 pt-2">
                              {filteredArtists.map(a => (
                                  <div key={a.id} className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => navigateToProfile(a.userId)}>
@@ -373,7 +394,7 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
 
                 {/* --- RIGHT COLUMN: PLAYLISTS, VISUALS, JOURNALS --- */}
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-1 pointer-events-auto">
-                    <HUDWidget title="PUBLIC_COLL" icon={<Layers size={14}/>} searchQuery={searchQuery} active={activeSector !== null}>
+                    <HUDWidget title="PUBLIC_COLL" icon={<Layers size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                              {filteredPlaylists.map(pl => (
                                  <div key={pl.id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black">
@@ -392,7 +413,7 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                 </div>
 
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-3 pointer-events-auto">
-                    <HUDWidget title="STUDIO_TRANS" icon={<Camera size={14}/>} searchQuery={searchQuery} active={activeSector !== null}>
+                    <HUDWidget title="STUDIO_TRANS" icon={<Camera size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                              {filteredVisuals.map(v => (
                                  <div key={v.id} className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-[#ff006e]/60 transition-all shadow-xl">
@@ -410,7 +431,7 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                 </div>
 
                 <div className="col-span-3 row-span-2 col-start-10 row-start-5 pointer-events-auto">
-                    <HUDWidget title="FREQ_JOURNAL" icon={<BookOpen size={14}/>} searchQuery={searchQuery} active={activeSector !== null}>
+                    <HUDWidget title="FREQ_JOURNAL" icon={<BookOpen size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                         <div className="space-y-4">
                              {filteredJournals.map(j => (
                                  <div key={j.id} className="border-l border-[#ff006e]/10 pl-4 py-2 relative group cursor-pointer hover:bg-white/[0.02] transition-all">
@@ -428,7 +449,7 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
 
                 {/* --- BOTTOM CENTER: RADIO & COMMUNITIES --- */}
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-4 lg:row-start-5 pointer-events-auto">
-                    <HUDWidget title="RADAR_SIGNAL" icon={<Radio size={14}/>} searchQuery={searchQuery} active={activeSector !== null}>
+                    <HUDWidget title="RADAR_SIGNAL" icon={<Radio size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="space-y-4">
                              {liveStations.length > 0 ? liveStations.map(s => (
                                  <div key={s.id} className="group cursor-pointer">
@@ -455,7 +476,7 @@ const DiscoveryHUD = ({ navigateToProfile, onPlayTrack, isPlayerActive }) => {
                 </div>
 
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-7 lg:row-start-5 pointer-events-auto">
-                    <HUDWidget title="SECTOR_CLANS" icon={<Globe size={14}/>} searchQuery={searchQuery} active={activeSector !== null}>
+                    <HUDWidget title="SECTOR_CLANS" icon={<Globe size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="space-y-3">
                              {filteredCommunities.map(c => (
                                  <div key={c.id} className="flex items-center gap-3 p-2 hover:bg-white/5 border border-transparent hover:border-white/10 transition-all group cursor-pointer">

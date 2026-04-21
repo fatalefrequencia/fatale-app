@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const HUDWidget = ({ title, children, icon, searchQuery, active }) => {
+const HUDWidget = ({ title, children, icon, searchQuery, activeColor }) => {
     const [isRebooting, setIsRebooting] = useState(false);
 
     // Trigger reboot effect when search query changes
@@ -16,23 +16,44 @@ const HUDWidget = ({ title, children, icon, searchQuery, active }) => {
             {/* Header Area */}
             <div className="flex items-center justify-between mb-1 px-1">
                 <div className="flex items-center gap-2">
-                    <div className={`transition-all duration-300 ${active ? 'text-[#00ffff] scale-110 drop-shadow-[0_0_8px_#00ffff]' : 'text-[#ff006e] opacity-80 group-hover/widget:opacity-100'}`}>
+                    <div 
+                        className={`transition-all duration-300 ${activeColor ? 'scale-110 drop-shadow-[0_0_8px_var(--widget-accent)]' : 'text-[#ff006e] opacity-80 group-hover/widget:opacity-100'}`}
+                        style={activeColor ? { color: activeColor, '--widget-accent': activeColor } : {}}
+                    >
                         {icon}
                     </div>
-                    <div className={`text-[10px] font-black tracking-[0.2em] uppercase transition-colors ${active ? 'text-[#00ffff]' : 'text-[#ff006e]/80 group-hover/widget:text-[#ff006e]'}`}>
+                    <div 
+                        className={`text-[10px] font-black tracking-[0.2em] uppercase transition-colors ${activeColor ? '' : 'text-[#ff006e]/80 group-hover/widget:text-[#ff006e]'}`}
+                        style={activeColor ? { color: activeColor } : {}}
+                    >
                         {title}
                     </div>
                 </div>
                 <div className="flex gap-1">
-                    <div className={`w-1 h-1 transition-colors ${active ? 'bg-[#00ffff]/40' : 'bg-[#ff006e]/20'}`} />
-                    <div className={`w-1 h-1 transition-colors ${active ? 'bg-[#00ffff]/60' : 'bg-[#ff006e]/40'}`} />
-                    <div className={`w-1 h-1 transition-colors ${active ? 'bg-[#00ffff]' : 'bg-[#ff006e]/60'}`} />
+                    <div className="w-1 h-1 transition-colors" style={{ backgroundColor: activeColor ? `${activeColor}66` : 'rgba(255,0,110,0.2)' }} />
+                    <div className="w-1 h-1 transition-colors" style={{ backgroundColor: activeColor ? `${activeColor}AA` : 'rgba(255,0,110,0.4)' }} />
+                    <div className="w-1 h-1 transition-colors" style={{ backgroundColor: activeColor ? activeColor : 'rgba(255,0,110,0.6)' }} />
                 </div>
             </div>
 
             {/* Main Content Container with Glassmorphism */}
-            <div className={`flex-1 relative border transition-all duration-500 overflow-hidden bg-black backdrop-blur-md ${active ? 'border-[#00ffff]/60 shadow-[0_0_20px_rgba(0,255,255,0.15)] ring-1 ring-[#00ffff]/30' : 'border-[#ff006e]/10'} ${isRebooting ? 'border-[#ff006e]/60 bg-[#ff006e]/5 ring-1 ring-[#ff006e]/20' : ''}`}>
+            <div 
+                className={`flex-1 relative border transition-all duration-500 overflow-hidden bg-black backdrop-blur-md ${isRebooting ? 'border-[#ff006e]/60 bg-[#ff006e]/5 ring-1 ring-[#ff006e]/20' : ''}`}
+                style={activeColor ? { 
+                    borderColor: `${activeColor}99`, 
+                    boxShadow: `0 0 20px ${activeColor}26`,
+                    outline: `1px solid ${activeColor}4D`
+                } : { borderColor: 'rgba(255,0,110,0.1)' }}
+            >
                 
+                {/* Top Content Labeling */}
+                {activeColor && (
+                    <div className="absolute top-2 right-2 flex items-center gap-1.5 z-20">
+                        <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: activeColor }} />
+                        <span className="text-[7px] font-black tracking-widest uppercase opacity-60" style={{ color: activeColor }}>SIGNAL_LOCKED</span>
+                    </div>
+                )}
+
                 {/* Corner Brackets */}
                 <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#ff006e]/30 group-hover/widget:border-[#ff006e]/60 transition-colors" />
                 <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#ff006e]/30 group-hover/widget:border-[#ff006e]/60 transition-colors" />

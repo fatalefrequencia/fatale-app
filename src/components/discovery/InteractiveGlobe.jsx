@@ -58,8 +58,8 @@ const SectorContinent = ({ sector, index, isActive, onClick }) => {
                 <mesh key={i} position={c.pos} rotation={c.rot}>
                     <boxGeometry args={c.scale} />
                     <meshStandardMaterial 
-                        color={sector.color} 
-                        emissive={sector.color} 
+                        color={isActive && index === 0 ? "#ff33aa" : sector.color} 
+                        emissive={isActive && index === 0 ? "#ff33aa" : sector.color} 
                         emissiveIntensity={isActive ? 2 : 0.4} 
                         transparent 
                         opacity={isActive ? 1 : 0.6} 
