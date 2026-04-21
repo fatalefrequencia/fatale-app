@@ -882,21 +882,39 @@ function App() {
       let found = libraryMap.get(pSource);
       if (!found) found = libraryMap.get(pId);
 
-      if (found) {
-        // PRIORITY: If pTrack (from Discovery) has an absolute URL (http...) or YT protocol, use it.
-        // Otherwise fallback to library version (found).
-        const isDiscoveryAbsolute = (pTrack.source || pTrack.Source || "").startsWith('http') || (pTrack.source || pTrack.Source || "").startsWith('youtube:');
+      const isDiscoveryAbsolute = (pTrack.source || pTrack.Source || "").startsWith('http') || (pTrack.source || pTrack.Source || "").startsWith('youtube:');
+      const isYoutube = isDiscoveryAbsolute && (pTrack.source || pTrack.Source || "").startsWith('youtube:');
 
+      // Resolve Like Status
+      const pureYtId = isYoutube ? (pTrack.source || pTrack.Source).split(':')[1] : null;
+      const isLiked = isYoutube ? likedYoutubeIds.has(pureYtId) : (pTrack.isLiked || pTrack.IsLiked || found?.isLiked || found?.IsLiked);
+
+      // Resolve Cover
+      const rawCover = pTrack.cover || pTrack.CoverImageUrl || pTrack.coverImageUrl || pTrack.imageUrl || pTrack.ImageUrl || found?.cover || found?.CoverImageUrl || found?.imageUrl;
+      const resolvedCover = isYoutube 
+        ? (rawCover || `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg`)
+        : (rawCover ? (rawCover.startsWith('http') ? rawCover : getMediaUrl(rawCover)) : null);
+
+      if (found) {
         return {
           ...found,
           id: pId || found.id || found.Id,
           source: isDiscoveryAbsolute ? (pTrack.source || pTrack.Source) : (found.source || found.Source || pTrack.source || pTrack.Source),
-          cover: isDiscoveryAbsolute ? (pTrack.cover || pTrack.CoverImageUrl || pTrack.Cover) : (found.cover || found.CoverImageUrl || found.Cover || pTrack.cover || pTrack.CoverImageUrl || pTrack.Cover),
+          cover: resolvedCover,
+          isLiked,
           isOwned: true,
           isLocked: false
         };
       }
-      return pTrack;
+      return {
+        ...pTrack,
+        id: pId,
+        source: pTrack.source || pTrack.Source,
+        cover: resolvedCover,
+        isLiked,
+        isOwned: true,
+        isLocked: false
+      };
     });
 
     console.log("[App] Playing Playlist via Enriched Queue. Count:", enrichedQueue.length);
@@ -1941,15 +1959,20 @@ const Dashboard = React.memo(({
                 onPlayTrack={(track) => {
                   const tId = track.id || track.Id;
                   const rawSource = track.source || track.Source || track.filePath || track.FilePath;
-                  
-                  // YouTube Resolution: If it's a search result with id but no source, or already has youtube protocol
                   const isYoutube = (typeof tId === 'string' && tId.length === 11 && !rawSource) || (rawSource && rawSource.startsWith('youtube:'));
                   
+                  // Resolve like status
+                  const pureYtId = isYoutube ? (rawSource?.startsWith('youtube:') ? rawSource.split(':')[1] : String(tId)) : null;
+                  const isLiked = isYoutube ? likedYoutubeIds.has(pureYtId) : (track.isLiked || track.IsLiked);
+
+                  const rawCover = track.coverImageUrl || track.CoverImageUrl || track.imageUrl || track.ImageUrl || track.thumbnailUrl || track.ThumbnailUrl || track.cover || track.Cover;
+
                   const enriched = {
                     ...track,
                     id: tId,
                     source: isYoutube ? (rawSource?.startsWith('youtube:') ? rawSource : `youtube:${tId}`) : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null),
-                    cover: track.coverImageUrl || track.CoverImageUrl || track.thumbnailUrl || track.ThumbnailUrl || (isYoutube ? `https://img.youtube.com/vi/${tId}/hqdefault.jpg` : null),
+                    cover: isYoutube ? (rawCover || `https://img.youtube.com/vi/${tId}/hqdefault.jpg`) : (rawCover ? (rawCover.startsWith('http') ? rawCover : getMediaUrl(rawCover)) : null),
+                    isLiked,
                     isOwned: true,
                     isLocked: false
                   };
@@ -1958,7 +1981,6 @@ const Dashboard = React.memo(({
                   setCurrentTrackIndex(0);
                   setIsPlaying(true);
                   if (isYoutube) setIsYoutubeMode(true);
-                  // We stay on discovery, no setView('player')
                 }}
                 onPlayPlaylist={(list, startIdx = 0) => handlePlayPlaylist(list, startIdx, false)}
                 onExpandContent={onExpandContent}
