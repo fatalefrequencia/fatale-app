@@ -172,25 +172,16 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     const filteredArtists = useMemo(() => {
         let base = trendingArtists.filter(a => {
             const name = a.name || a.Name;
-            // Ignore obvious placeholders or empty names
             return name && !name.toLowerCase().includes('placeholder') && name.length > 1;
         });
         if (activeSector !== null) base = base.filter(matchesSector);
-
-        if (!searchQuery) return base.slice(0, 6);
-        return base.filter(a => 
-            (a.name || a.Name)?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+        return base;
     }, [trendingArtists, searchQuery, matchesSector, activeSector]);
 
     const filteredPlaylists = useMemo(() => {
         let base = trendingPlaylists;
         if (activeSector !== null) base = base.filter(matchesSector);
-
-        if (!searchQuery) return base.slice(0, 4);
-        return base.filter(p => 
-            p.name?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+        return base;
     }, [trendingPlaylists, searchQuery, matchesSector, activeSector]);
 
     const filteredCommunities = useMemo(() => {
@@ -211,21 +202,14 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
             });
         }
 
-        if (!searchQuery) return base.slice(0, 5);
-        return base.filter(c => 
-            (c.name || c.Name)?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+        if (activeSector !== null) base = base.filter(matchesSector);
+        return base;
     }, [communities, searchQuery, matchesSector, activeSector, user]);
 
     const liveStations = useMemo(() => {
         let base = stations.filter(s => s.isLive || s.IsLive);
         if (activeSector !== null) base = base.filter(matchesSector);
-
-        if (!searchQuery) return base.slice(0, 6);
-        return base.filter(s => 
-            s.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            s.currentSessionTitle?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+        return base;
     }, [stations, searchQuery, matchesSector, activeSector]);
 
     const filteredVisuals = useMemo(() => {
@@ -460,6 +444,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                         communities={filteredCommunities}
                                         artists={filteredArtists}
                                         stations={liveStations}
+                                        tracks={trendingTracks}
                                         activeSector={activeSector}
                                         onSectorClick={(secId) => {
                                             setActiveSector(activeSector === secId ? null : secId);

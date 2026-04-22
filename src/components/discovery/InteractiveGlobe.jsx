@@ -68,10 +68,15 @@ const CommunityBuilding = ({ id, color, memberCount = 0, isActive }) => {
 };
 
 // 2. ARTIST NODES (Sleek Shards)
-const ArtistNode = ({ id, color, parentLatLon, isLive }) => {
+const ArtistNode = ({ id, color, parentLatLon, isLive, cameraDist }) => {
     const meshRef = useRef();
     const materialRef = useRef();
     const { pos } = useMemo(() => getSphericalPos(id, 2.5, 0.18, parentLatLon), [id, parentLatLon]);
+    
+    // Apple-style LOD Threshholds
+    const importance = isLive ? 1.0 : 0.6;
+    const isVisible = cameraDist < (12 + importance * 3);
+    const opacityFactor = THREE.MathUtils.clamp((14 - cameraDist) / 4, 0, 1) * (isLive ? 1 : 0.9);
 
     useFrame((state) => {
         const t = state.clock.getElapsedTime();
@@ -88,7 +93,7 @@ const ArtistNode = ({ id, color, parentLatLon, isLive }) => {
                 materialRef.current.emissiveIntensity = 4.5 + pulse * 8;
             }
         } else {
-            meshRef.current.scale.setScalar(1);
+            meshRef.current.scale.setScalar(isVisible ? 1 : 0);
             if (materialRef.current) {
                 materialRef.current.emissiveIntensity = 4.5;
             }
@@ -96,16 +101,51 @@ const ArtistNode = ({ id, color, parentLatLon, isLive }) => {
     });
 
     return (
-        <mesh position={pos} ref={meshRef}>
-            {/* Shrunken shards for better density management */}
-            <octahedronGeometry args={[0.04, 0]} />
+        <group position={pos}>
+            <mesh ref={meshRef}>
+                <octahedronGeometry args={[0.04, 0]} />
+                <meshStandardMaterial 
+                    ref={materialRef}
+                    color="#fff" 
+                    emissive={isLive ? "#00ffff" : color} 
+                    emissiveIntensity={4.5} 
+                    transparent
+                    opacity={opacityFactor}
+                />
+            </mesh>
+            {/* Apple-style "Pin" Glow (Anchor) */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
+                <circleGeometry args={[0.02, 16]} />
+                <meshBasicMaterial color={color} transparent opacity={opacityFactor * 0.3} />
+            </mesh>
+        </group>
+    );
+};
+
+// 3. TRACK NODES (Neural Signal Sparks)
+const TrackNode = ({ id, color, cameraDist }) => {
+    const meshRef = useRef();
+    const { pos } = useMemo(() => getSphericalPos(id, 2.5, 0.12), [id]);
+    
+    // Tracks only emerge when very close (Apple Maps detail logic)
+    const opacityFactor = THREE.MathUtils.clamp((9 - cameraDist) / 3, 0, 1);
+
+    useFrame((state) => {
+        const t = state.clock.getElapsedTime();
+        // High frequency jitter for tracks
+        meshRef.current.position.x += Math.sin(t * 3 + hashStr(id)) * 0.0001;
+        meshRef.current.position.z += Math.cos(t * 3 + hashStr(id)) * 0.0001;
+    });
+
+    return (
+        <mesh position={pos} ref={meshRef} visible={opacityFactor > 0}>
+            <sphereGeometry args={[0.015, 8, 8]} />
             <meshStandardMaterial 
-                ref={materialRef}
-                color="#fff" 
-                emissive={isLive ? "#00ffff" : color} // Cyan pulse if live, otherwise sector color
-                emissiveIntensity={4.5} 
-                transparent
-                opacity={0.9}
+                color={color} 
+                emissive={color} 
+                emissiveIntensity={6} 
+                transparent 
+                opacity={opacityFactor * 0.8} 
             />
         </mesh>
     );
@@ -117,28 +157,16 @@ const GlobeCore = ({
     activeSector, 
     communities = [], 
     artists = [], 
-    stations = []
+    stations = [],
+    tracks = []
 }) => {
     const groupRef = useRef();
-
-    // DIAGNOSTIC LOGGING
-    useEffect(() => {
-        const buildId = 'GLOBE_CORE_v2.0.260422_HARDENED';
-        console.group(`[${buildId}]`);
-        console.log('COMMUNITIES:', communities.length);
-        console.log('ARTISTS:', artists.length);
-        console.log('STATIONS:', stations.length);
-        console.groupEnd();
-    }, [communities.length, artists.length, stations.length]);
-
-    const activeSectorColor = useMemo(() => {
-        if (activeSector === null) return null;
-        const s = SECTORS.find(sec => sec.id === activeSector);
-        if (!s) return null;
-        return s.id === 0 ? "#ff33aa" : s.color;
-    }, [activeSector]);
+    const [cameraDist, setCameraDist] = React.useState(10);
 
     useFrame((state) => {
+        const dist = state.camera.position.length();
+        setCameraDist(dist);
+
         if (activeSector === null) {
             groupRef.current.rotation.y += 0.0012;
         } else {
@@ -147,6 +175,23 @@ const GlobeCore = ({
             groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetY, 0.04);
         }
     });
+
+    const activeSectorColor = useMemo(() => {
+        if (activeSector === null) return null;
+        const s = SECTORS.find(sec => sec.id === activeSector);
+        if (!s) return null;
+        return s.id === 0 ? "#ff33aa" : s.color;
+    }, [activeSector]);
+
+    // Diagnostic Group remains for telemetry
+    useEffect(() => {
+        const buildId = 'GLOBE_CORE_v2.1_APPLE_LOD';
+        console.group(`[${buildId}]`);
+        console.log('COMMUNITIES:', communities.length);
+        console.log('ARTISTS:', artists.length);
+        console.log('TRACKS:', tracks.length);
+        console.groupEnd();
+    }, [communities.length, artists.length, tracks.length]);
 
     return (
         <group ref={groupRef}>
@@ -188,7 +233,6 @@ const GlobeCore = ({
                     }
                 }
 
-                // Check if artist is live (either via their prop or the stations array)
                 const isLive = (a.isLive || a.IsLive) || stations.some(s => 
                     (s.artistId || s.ArtistId) === (a.id || a.Id) && (s.isLive || s.IsLive)
                 );
@@ -200,9 +244,19 @@ const GlobeCore = ({
                         color={SECTORS.find(s => s.id === (a.sectorId || a.SectorId || 0))?.color || "#ff006e"}
                         parentLatLon={parentLatLon}
                         isLive={isLive}
+                        cameraDist={cameraDist}
                     />
                 );
             })}
+
+            {tracks.filter(t => t && (t.id || t.Id)).map(t => (
+                <TrackNode 
+                    key={`track-${t.id || t.Id}`} 
+                    id={t.id || t.Id}
+                    color={SECTORS.find(s => s.id === (t.sectorId || t.SectorId || 0))?.color || "#00ffff"}
+                    cameraDist={cameraDist}
+                />
+            ))}
         </group>
     );
 };
@@ -212,7 +266,8 @@ const InteractiveGlobe = ({
     onSectorClick, 
     communities = [], 
     artists = [], 
-    stations = []
+    stations = [],
+    tracks = []
 }) => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
     
@@ -241,6 +296,7 @@ const InteractiveGlobe = ({
                         communities={communities}
                         artists={artists}
                         stations={stations}
+                        tracks={tracks}
                     />
                 </Float>
 
