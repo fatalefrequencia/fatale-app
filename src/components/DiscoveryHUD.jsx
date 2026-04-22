@@ -707,7 +707,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                      <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase mb-1 tracking-tight">{j.title}</div>
                                      <div className="text-[8px] opacity-30 line-clamp-2 italic font-light leading-relaxed">{j.content?.substring(0, 80)}...</div>
                                      <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                          <div className="text-[7px] text-[#ff006e] font-black uppercase">READ_SIGNAL >></div>
+                                          <div className="text-[7px] text-[#ff006e] font-black uppercase">READ_SIGNAL {">"}{">"}</div>
                                      </div>
                                  </div>
                              ))}

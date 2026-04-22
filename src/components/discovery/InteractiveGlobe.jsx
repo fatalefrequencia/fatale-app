@@ -13,12 +13,24 @@ const hashStr = (s) => {
     return Math.abs(h);
 };
 
-const getSphericalPos = (id, radius = 2.5, offset = 0) => {
+const getSphericalPos = (id, radius = 2.5, offset = 0, parentLatLon = null) => {
     const h = hashStr(id);
-    const lat = ((h % 120) - 60) * (Math.PI / 180);
-    const lon = (h % 360) * (Math.PI / 180);
-    const r = radius + offset;
+    let lat, lon;
 
+    if (parentLatLon) {
+        // Cluster around parent: applies a deterministic orbital offset
+        const orbitRadius = 0.08 + (h % 5) * 0.02; // Small variation in distance from center
+        const orbitAngle = (h % 360) * (Math.PI / 180);
+        
+        lat = parentLatLon.lat + Math.cos(orbitAngle) * orbitRadius;
+        lon = parentLatLon.lon + Math.sin(orbitAngle) * orbitRadius;
+    } else {
+        // Standard global distribution
+        lat = ((h % 120) - 60) * (Math.PI / 180);
+        lon = (h % 360) * (Math.PI / 180);
+    }
+
+    const r = radius + offset;
     const x = r * Math.cos(lat) * Math.cos(lon);
     const y = r * Math.sin(lat);
     const z = r * Math.cos(lat) * Math.sin(lon);
@@ -56,26 +68,26 @@ const CommunityBuilding = ({ id, color, memberCount = 0, isActive }) => {
 };
 
 // 2. ARTIST NODES (Sleek Shards)
-const ArtistNode = ({ id, color }) => {
+const ArtistNode = ({ id, color, parentLatLon }) => {
     const meshRef = useRef();
-    const { pos } = useMemo(() => getSphericalPos(id, 2.5, 0.15), [id]);
+    const { pos } = useMemo(() => getSphericalPos(id, 2.5, 0.18, parentLatLon), [id, parentLatLon]);
 
     useFrame((state) => {
         const t = state.clock.getElapsedTime();
         meshRef.current.rotation.y += 0.012;
         meshRef.current.rotation.z += 0.005;
         // Subtle drift animation
-        meshRef.current.position.y += Math.sin(t * 1.5 + hashStr(id)) * 0.0003;
+        meshRef.current.position.y += Math.sin(t * 1.5 + hashStr(id)) * 0.0002;
     });
 
     return (
         <mesh position={pos} ref={meshRef}>
-            {/* Larger shards for better visibility */}
-            <octahedronGeometry args={[0.08, 0]} />
+            {/* Shrunken shards for better density management */}
+            <octahedronGeometry args={[0.04, 0]} />
             <meshStandardMaterial 
                 color="#fff" 
                 emissive={color} 
-                emissiveIntensity={4.0} // High intensity glow
+                emissiveIntensity={4.5} 
                 transparent
                 opacity={0.9}
             />
@@ -174,13 +186,28 @@ const GlobeCore = ({
                 />
             ))}
 
-            {artists.filter(a => a && (a.id || a.Id)).map(a => (
-                <ArtistNode 
-                    key={`artist-${a.id || a.Id}`} 
-                    id={a.id || a.Id}
-                    color={SECTORS.find(s => s.id === (a.sectorId || a.SectorId || 0))?.color || "#ff006e"}
-                />
-            ))}
+            {artists.filter(a => a && (a.id || a.Id)).map(a => {
+                const commId = a.communityId || a.CommunityId;
+                let parentLatLon = null;
+                
+                if (commId) {
+                    const parent = communities.find(c => String(c.id || c.Id) === String(commId));
+                    if (parent) {
+                        // Pre-calculate parent's lat/lon to pass to child
+                        const parentSpherical = getSphericalPos(parent.id || parent.Id, 2.5);
+                        parentLatLon = { lat: parentSpherical.lat, lon: parentSpherical.lon };
+                    }
+                }
+
+                return (
+                    <ArtistNode 
+                        key={`artist-${a.id || a.Id}`} 
+                        id={a.id || a.Id}
+                        color={SECTORS.find(s => s.id === (a.sectorId || a.SectorId || 0))?.color || "#ff006e"}
+                        parentLatLon={parentLatLon}
+                    />
+                );
+            })}
 
             {stations.filter(st => st && (st.id || st.Id) && (st.isLive || st.IsLive)).map(s => (
                 <StationNode key={`station-${s.id || s.Id}`} id={s.id || s.Id} />
