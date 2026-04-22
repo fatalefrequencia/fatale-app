@@ -449,6 +449,9 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                         onSectorClick={(secId) => {
                                             setActiveSector(activeSector === secId ? null : secId);
                                         }}
+                                        onArtistClick={(artist) => navigateToProfile(artist.userId || artist.UserId)}
+                                        onCommunityClick={(comm) => setActiveTerminalCommunity(comm)}
+                                        onTrackClick={(track) => onPlayTrack(track)}
                                     />
                                 </motion.div>
                             ) : (

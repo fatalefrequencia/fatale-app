@@ -1,6 +1,6 @@
 import React, { useRef, useMemo, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Float, Stars, Sphere } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Float, Stars, Sphere, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { SECTORS } from '../../constants';
 
@@ -41,34 +41,64 @@ const getSphericalPos = (id, radius = 2.5, offset = 0, parentLatLon = null) => {
 // --- COMPONENTS ---
 
 // 1. COMMUNITY BUILDINGS (High-Density Monoliths)
-const CommunityBuilding = ({ id, color, memberCount = 0, isActive }) => {
+const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, onClick, cameraDist }) => {
     const meshRef = useRef();
     const { pos, lat, lon } = useMemo(() => getSphericalPos(id, 2.5), [id]);
     
     // Scale height by population density (memberCount)
-    // Adjust scaling factor to make them distinct but not intrusive
     const h = Math.min(0.15 + (memberCount * 0.1), 2.0);
 
+    // Label visibility logic
+    const showLabel = cameraDist < 10;
+    const labelOpacity = THREE.MathUtils.clamp((10 - cameraDist) / 3, 0, 1);
+
     return (
-        <mesh 
-            position={pos} 
-            ref={meshRef}
-            rotation={[0, -lon, lat]} 
-        >
-            <boxGeometry args={[0.06, 0.06, h]} />
-            <meshStandardMaterial 
-                color={color} 
-                emissive={color} 
-                emissiveIntensity={isActive ? 3.0 : 0.8} 
-                transparent 
-                opacity={0.85} 
-            />
-        </mesh>
+        <group position={pos}>
+            <mesh 
+                ref={meshRef}
+                rotation={[0, -lon, lat]} 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onClick();
+                }}
+            >
+                <boxGeometry args={[0.06, 0.06, h]} />
+                <meshStandardMaterial 
+                    color={color} 
+                    emissive={color} 
+                    emissiveIntensity={isActive ? 3.0 : 0.8} 
+                    transparent 
+                    opacity={0.85} 
+                />
+            </mesh>
+
+            {showLabel && (
+                <Html distanceFactor={10} position={[0, h/2 + 0.1, 0]}>
+                    <div 
+                        className="pointer-events-none select-none transition-all duration-300"
+                        style={{ 
+                            opacity: labelOpacity,
+                            transform: `scale(${1 + (10 - cameraDist) * 0.1})`
+                        }}
+                    >
+                        <div className="flex flex-col items-center">
+                            <div 
+                                className="px-2 py-0.5 bg-black/80 border border-[#ff006e]/40 whitespace-nowrap text-[8px] font-black tracking-widest uppercase"
+                                style={{ color: color, borderColor: `${color}66` }}
+                            >
+                                {name}
+                            </div>
+                            <div className="w-[1px] h-4 bg-gradient-to-b from-[#ff006e]/60 to-transparent" style={{ backgroundColor: color }} />
+                        </div>
+                    </div>
+                </Html>
+            )}
+        </group>
     );
 };
 
 // 2. ARTIST NODES (Sleek Shards)
-const ArtistNode = ({ id, color, parentLatLon, isLive, cameraDist }) => {
+const ArtistNode = ({ id, name, color, parentLatLon, isLive, cameraDist, onClick }) => {
     const meshRef = useRef();
     const materialRef = useRef();
     const { pos } = useMemo(() => getSphericalPos(id, 2.5, 0.18, parentLatLon), [id, parentLatLon]);
@@ -101,7 +131,13 @@ const ArtistNode = ({ id, color, parentLatLon, isLive, cameraDist }) => {
     });
 
     return (
-        <group position={pos}>
+        <group 
+            position={pos}
+            onClick={(e) => {
+                e.stopPropagation();
+                onClick();
+            }}
+        >
             <mesh ref={meshRef}>
                 <octahedronGeometry args={[0.04, 0]} />
                 <meshStandardMaterial 
@@ -118,12 +154,31 @@ const ArtistNode = ({ id, color, parentLatLon, isLive, cameraDist }) => {
                 <circleGeometry args={[0.02, 16]} />
                 <meshBasicMaterial color={color} transparent opacity={opacityFactor * 0.3} />
             </mesh>
+
+            {/* Label reveals as we approach */}
+            {cameraDist < 8 && (
+                <Html distanceFactor={8} position={[0, 0.15, 0]}>
+                    <div 
+                        className="pointer-events-none select-none"
+                        style={{ 
+                            opacity: THREE.MathUtils.clamp((8 - cameraDist) / 2, 0, 1),
+                            transform: `scale(${1 + (8 - cameraDist) * 0.15})`
+                        }}
+                    >
+                        <div className="flex flex-col items-center">
+                            <div className="px-2 py-0.5 bg-black/90 border border-white/10 text-[9px] font-bold text-white uppercase tracking-tighter whitespace-nowrap shadow-2xl">
+                                {name} {isLive && <span className="text-[#00ffff] ml-1 animate-pulse">●</span>}
+                            </div>
+                        </div>
+                    </div>
+                </Html>
+            )}
         </group>
     );
 };
 
 // 3. TRACK NODES (Neural Signal Sparks)
-const TrackNode = ({ id, color, cameraDist }) => {
+const TrackNode = ({ id, title, artist, color, cameraDist, onClick }) => {
     const meshRef = useRef();
     const { pos } = useMemo(() => getSphericalPos(id, 2.5, 0.12), [id]);
     
@@ -138,16 +193,42 @@ const TrackNode = ({ id, color, cameraDist }) => {
     });
 
     return (
-        <mesh position={pos} ref={meshRef} visible={opacityFactor > 0}>
-            <sphereGeometry args={[0.015, 8, 8]} />
-            <meshStandardMaterial 
-                color={color} 
-                emissive={color} 
-                emissiveIntensity={6} 
-                transparent 
-                opacity={opacityFactor * 0.8} 
-            />
-        </mesh>
+        <group 
+            position={pos}
+            onClick={(e) => {
+                e.stopPropagation();
+                onClick();
+            }}
+        >
+            <mesh ref={meshRef} visible={opacityFactor > 0}>
+                <sphereGeometry args={[0.015, 8, 8]} />
+                <meshStandardMaterial 
+                    color={color} 
+                    emissive={color} 
+                    emissiveIntensity={6} 
+                    transparent 
+                    opacity={opacityFactor * 0.8} 
+                />
+            </mesh>
+
+            {/* High Zoom Track Detail Card */}
+            {cameraDist < 5.5 && (
+                <Html distanceFactor={5.5} position={[0, 0.08, 0]}>
+                    <div 
+                        className="pointer-events-none select-none transition-all"
+                        style={{ 
+                            opacity: THREE.MathUtils.clamp((5.5 - cameraDist) * 2, 0, 1),
+                            transform: `scale(${0.8 + (5.5 - cameraDist) * 0.2})`
+                        }}
+                    >
+                        <div className="p-1 px-2 bg-black/95 border-l-2 border-[#00ffff] backdrop-blur-md flex flex-col min-w-[80px] shadow-2xl">
+                             <div className="text-[7px] text-[#00ffff] font-black uppercase tracking-tight truncate leading-none">{title}</div>
+                             <div className="text-[6px] text-white/50 uppercase tracking-widest mt-0.5 truncate">{artist}</div>
+                        </div>
+                    </div>
+                </Html>
+            )}
+        </group>
     );
 };
 
@@ -158,7 +239,10 @@ const GlobeCore = ({
     communities = [], 
     artists = [], 
     stations = [],
-    tracks = []
+    tracks = [],
+    onArtistClick,
+    onCommunityClick,
+    onTrackClick
 }) => {
     const groupRef = useRef();
     const [cameraDist, setCameraDist] = React.useState(10);
@@ -215,9 +299,12 @@ const GlobeCore = ({
                 <CommunityBuilding 
                     key={`comm-${c.id || c.Id}`} 
                     id={c.id || c.Id}
+                    name={c.name || c.Name}
                     memberCount={c.memberCount || c.MemberCount || 0}
                     color={SECTORS.find(s => s.id === (c.sectorId || c.SectorId || 0))?.color || "#ff006e"}
                     isActive={activeSector === (c.sectorId || c.SectorId)}
+                    cameraDist={cameraDist}
+                    onClick={() => onCommunityClick?.(c)}
                 />
             ))}
 
@@ -241,10 +328,12 @@ const GlobeCore = ({
                     <ArtistNode 
                         key={`artist-${a.id || a.Id}`} 
                         id={a.id || a.Id}
+                        name={a.name || a.Name}
                         color={SECTORS.find(s => s.id === (a.sectorId || a.SectorId || 0))?.color || "#ff006e"}
                         parentLatLon={parentLatLon}
                         isLive={isLive}
                         cameraDist={cameraDist}
+                        onClick={() => onArtistClick?.(a)}
                     />
                 );
             })}
@@ -253,8 +342,11 @@ const GlobeCore = ({
                 <TrackNode 
                     key={`track-${t.id || t.Id}`} 
                     id={t.id || t.Id}
+                    title={t.title || t.Title}
+                    artist={t.artist || t.Artist}
                     color={SECTORS.find(s => s.id === (t.sectorId || t.SectorId || 0))?.color || "#00ffff"}
                     cameraDist={cameraDist}
+                    onClick={() => onTrackClick?.(t)}
                 />
             ))}
         </group>
@@ -267,7 +359,10 @@ const InteractiveGlobe = ({
     communities = [], 
     artists = [], 
     stations = [],
-    tracks = []
+    tracks = [],
+    onArtistClick,
+    onCommunityClick,
+    onTrackClick
 }) => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
     
@@ -277,9 +372,10 @@ const InteractiveGlobe = ({
                 <OrbitControls 
                     enablePan={false} 
                     enableZoom={true} 
-                    minDistance={5} 
+                    minDistance={3.5} 
                     maxDistance={15}
-                    autoRotate={false}
+                    autoRotate={activeSector === null}
+                    autoRotateSpeed={0.5}
                 />
                 
                 <ambientLight intensity={0.5} />
@@ -297,6 +393,9 @@ const InteractiveGlobe = ({
                         artists={artists}
                         stations={stations}
                         tracks={tracks}
+                        onArtistClick={onArtistClick}
+                        onCommunityClick={onCommunityClick}
+                        onTrackClick={onTrackClick}
                     />
                 </Float>
 
