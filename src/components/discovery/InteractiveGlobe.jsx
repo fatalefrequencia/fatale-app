@@ -1,155 +1,10 @@
-import React, { useRef, useMemo, useState } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Float, Stars, Sphere, MeshDistortMaterial } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Float, Stars, Sphere } from '@react-three/drei';
 import * as THREE from 'three';
 import { SECTORS } from '../../constants';
 
-const Pin = ({ position, color, label, onClick }) => {
-    const meshRef = useRef();
-    
-    useFrame((state) => {
-        const t = state.clock.getElapsedTime();
-        meshRef.current.scale.setScalar(1 + Math.sin(t * 10) * 0.2);
-    });
-
-    return (
-        <mesh position={position} ref={meshRef} onClick={onClick}>
-            <sphereGeometry args={[0.08, 16, 16]} />
-            <meshBasicMaterial color={color} toneMapped={false} />
-            <pointLight distance={1} intensity={2} color={color} />
-        </mesh>
-    );
-};
-
-// Mock "Makeshift Continents" using sectors
-const SectorContinent = ({ sector, index, isActive, onClick, isHidden }) => {
-    const meshRef = useRef();
-    const count = 12;
-    const radius = 2.5;
-
-    // Generate random clusters around a central point for the sector
-    const chunks = useMemo(() => {
-        const results = [];
-        // Spread phi (longitude) more aggressively
-        const phiBase = (index / SECTORS.length) * Math.PI * 2;
-        const phi = phiBase + (index % 2 === 0 ? 0.3 : -0.3);
-        
-        // Wider Theta (latitude) spread
-        const thetaOffsets = [0.5, 1.6, 0.8, 2.2, 1.1, 1.8];
-        const theta = thetaOffsets[index % thetaOffsets.length];
-
-        for (let i = 0; i < count; i++) {
-            const lat = theta + (Math.random() - 0.5) * 0.5;
-            const lon = phi + (Math.random() - 0.5) * 0.5;
-
-            const x = radius * Math.sin(lat) * Math.cos(lon);
-            const y = radius * Math.cos(lat);
-            const z = radius * Math.sin(lat) * Math.sin(lon);
-            
-            results.push({
-                pos: [x, y, z],
-                scale: [Math.random() * 0.4 + 0.1, Math.random() * 0.4 + 0.1, 0.05],
-                rot: [lat, lon, 0],
-            });
-        }
-        return results;
-    }, [index]);
-
-    if (isHidden) return null;
-
-    return (
-        <group onClick={(e) => { e.stopPropagation(); onClick(); }}>
-            {chunks.map((c, i) => (
-                <mesh key={i} position={c.pos} rotation={c.rot}>
-                    <boxGeometry args={c.scale} />
-                    <meshStandardMaterial 
-                        color={isActive && index === 0 ? "#ff33aa" : sector.color} 
-                        emissive={isActive && index === 0 ? "#ff33aa" : sector.color} 
-                        emissiveIntensity={isActive ? 2 : 0.4} 
-                        transparent 
-                        opacity={isActive ? 1 : 0.6} 
-                    />
-                </mesh>
-            ))}
-        </group>
-    );
-};
-
-const GlobeCore = ({ searchQuery, searchResults = [], activeSector, onSectorClick }) => {
-    const groupRef = useRef();
-
-    const activeSectorColor = useMemo(() => {
-        if (activeSector === null) return null;
-        const s = SECTORS.find(sec => sec.id === activeSector);
-        if (!s) return null;
-        if (s.id === 0) return "#ff33aa"; 
-        return s.color;
-    }, [activeSector]);
-
-    useFrame((state) => {
-        if (!searchQuery && activeSector === null) {
-            groupRef.current.rotation.y += 0.002;
-        }
-
-        if (activeSector !== null) {
-            const targetPhi = (activeSector / SECTORS.length) * Math.PI * 2;
-            const targetY = -targetPhi + Math.PI / 2;
-            const currentY = groupRef.current.rotation.y;
-            groupRef.current.rotation.y = THREE.MathUtils.lerp(currentY, targetY, 0.08);
-        }
-    });
-
-    const searchPins = useMemo(() => {
-        return searchResults.slice(0, 15).map((node, i) => {
-            const id = node.id || node.Id || i;
-            const h = hashStr(id);
-            const lat = ((h % 120) - 60) * (Math.PI / 180);
-            const lon = (h % 360) * (Math.PI / 180);
-            const radius = 2.52;
-
-            const x = radius * Math.cos(lat) * Math.cos(lon);
-            const y = radius * Math.sin(lat);
-            const z = radius * Math.cos(lat) * Math.sin(lon);
-
-            return { pos: [x, y, z], data: node, color: '#ffffff' };
-        });
-    }, [searchResults]);
-
-    return (
-        <group ref={groupRef}>
-            <Sphere args={[2.45, 32, 32]}>
-                <meshBasicMaterial color="#000" transparent opacity={0.6} />
-            </Sphere>
-
-            <Sphere args={[2.5, 40, 40]}>
-                <meshBasicMaterial 
-                    color={activeSectorColor || "#ff006e"} 
-                    wireframe 
-                    transparent 
-                    opacity={activeSector !== null ? 0.15 : 0.05} 
-                    transition="color 0.5s ease"
-                />
-            </Sphere>
-
-            {SECTORS.map((s, idx) => (
-                <SectorContinent 
-                    key={s.id} 
-                    sector={s} 
-                    index={idx} 
-                    isActive={activeSector === s.id}
-                    isHidden={activeSector !== null && activeSector !== s.id}
-                    onClick={() => onSectorClick(s.id)}
-                />
-            ))}
-
-            {searchPins.map((p, i) => (
-                <Pin key={i} position={p.pos} color={activeSectorColor || p.color} />
-            ))}
-        </group>
-    );
-};
-
-// Simple hash for positioning
+// --- UTILS ---
 const hashStr = (s) => {
     if (!s) return 0;
     let h = 0;
@@ -158,7 +13,202 @@ const hashStr = (s) => {
     return Math.abs(h);
 };
 
-const InteractiveGlobe = ({ searchQuery, searchResults, activeSector, onSectorClick }) => {
+// Unified Spherical Projection
+const getSphericalPos = (id, radius = 2.5, offset = 0) => {
+    const h = hashStr(id);
+    const lat = ((h % 120) - 60) * (Math.PI / 180);
+    const lon = (h % 360) * (Math.PI / 180);
+    const r = radius + offset;
+
+    const x = r * Math.cos(lat) * Math.cos(lon);
+    const y = r * Math.sin(lat);
+    const z = r * Math.cos(lat) * Math.sin(lon);
+
+    return { pos: [x, y, z], lat, lon };
+};
+
+// --- COMPONENTS ---
+
+// 1. COMMUNITY BUILDINGS (Monoliths)
+const CommunityBuilding = ({ id, color, memberCount = 0, isActive }) => {
+    const meshRef = useRef();
+    const { pos, lat, lon } = useMemo(() => getSphericalPos(id, 2.5), [id]);
+    
+    // Scale height by population density (memberCount)
+    // 0 members = 0.1 height base, max ~1.5 height
+    const h = Math.min(0.1 + (memberCount * 0.08), 1.5);
+
+    return (
+        <mesh 
+            position={pos} 
+            ref={meshRef}
+            rotation={[0, -lon, lat]} // Rotate to face outward
+        >
+            <boxGeometry args={[0.08, 0.08, h]} />
+            <meshStandardMaterial 
+                color={color} 
+                emissive={color} 
+                emissiveIntensity={isActive ? 2 : 0.5} 
+                transparent 
+                opacity={0.9} 
+            />
+        </mesh>
+    );
+};
+
+// 2. ARTIST NODES (Floating Diamonds)
+const ArtistNode = ({ id, color }) => {
+    const meshRef = useRef();
+    const { pos } = useMemo(() => getSphericalPos(id, 2.5, 0.12), [id]); // Slightly closer to surface
+
+    useFrame((state) => {
+        const t = state.clock.getElapsedTime();
+        meshRef.current.rotation.y += 0.015;
+        meshRef.current.position.y += Math.sin(t * 2 + hashStr(id)) * 0.0005;
+    });
+
+    return (
+        <mesh position={pos} ref={meshRef}>
+            <octahedronGeometry args={[0.04, 0]} />
+            <meshStandardMaterial 
+                color="#fff" 
+                emissive={color} 
+                emissiveIntensity={2} 
+                transparent
+                opacity={0.8}
+            />
+        </mesh>
+    );
+};
+
+// 3. LIVE STATION NODES (Blinking Signals)
+const StationNode = ({ id }) => {
+    const meshRef = useRef();
+    const materialRef = useRef();
+    const { pos } = useMemo(() => getSphericalPos(id, 2.5, 0.05), [id]);
+
+    useFrame((state) => {
+        const t = state.clock.getElapsedTime();
+        const pulse = Math.abs(Math.sin(t * 4));
+        meshRef.current.scale.setScalar(0.8 + pulse * 0.4);
+        if (materialRef.current) {
+            materialRef.current.emissiveIntensity = 1 + pulse * 4;
+        }
+    });
+
+    return (
+        <mesh position={pos} ref={meshRef}>
+            <sphereGeometry args={[0.05, 16, 16]} />
+            <meshStandardMaterial 
+                ref={materialRef}
+                color="#00ffff" 
+                emissive="#00ffff" 
+                emissiveIntensity={2} 
+            />
+            <pointLight distance={1} intensity={2} color="#00ffff" />
+        </mesh>
+    );
+};
+
+// 4. SEARCH PINS (Legacy points)
+const Pin = ({ position, color }) => {
+    const meshRef = useRef();
+    useFrame((state) => {
+        const t = state.clock.getElapsedTime();
+        meshRef.current.scale.setScalar(1 + Math.sin(t * 10) * 0.2);
+    });
+
+    return (
+        <mesh position={position} ref={meshRef}>
+            <sphereGeometry args={[0.04, 8, 8]} />
+            <meshBasicMaterial color={color} toneMapped={false} />
+        </mesh>
+    );
+};
+
+const GlobeCore = ({ 
+    activeSector, 
+    communities = [], 
+    artists = [], 
+    stations = [], 
+    searchResults = [] 
+}) => {
+    const groupRef = useRef();
+
+    const activeSectorColor = useMemo(() => {
+        if (activeSector === null) return null;
+        const s = SECTORS.find(sec => sec.id === activeSector);
+        if (!s) return null;
+        return s.id === 0 ? "#ff33aa" : s.color;
+    }, [activeSector]);
+
+    useFrame((state) => {
+        if (activeSector === null) {
+            groupRef.current.rotation.y += 0.0015;
+        } else {
+            const targetPhi = (activeSector / SECTORS.length) * Math.PI * 2;
+            const targetY = -targetPhi + Math.PI / 2;
+            groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetY, 0.05);
+        }
+    });
+
+    return (
+        <group ref={groupRef}>
+            {/* Inner Core */}
+            <Sphere args={[2.45, 32, 32]}>
+                <meshBasicMaterial color="#000" transparent opacity={0.6} />
+            </Sphere>
+
+            {/* Atmosphere/Grid */}
+            <Sphere args={[2.5, 40, 40]}>
+                <meshBasicMaterial 
+                    color={activeSectorColor || "#ff006e"} 
+                    wireframe 
+                    transparent 
+                    opacity={activeSector !== null ? 0.1 : 0.03} 
+                />
+            </Sphere>
+
+            {/* REAL DATA NODES */}
+            {communities.map(c => (
+                <CommunityBuilding 
+                    key={c.id} 
+                    id={c.id}
+                    memberCount={c.memberCount || 0}
+                    color={SECTORS.find(s => s.id === (c.sectorId || 0))?.color || "#ff006e"}
+                    isActive={activeSector === c.sectorId}
+                />
+            ))}
+
+            {artists.map(a => (
+                <ArtistNode 
+                    key={a.id} 
+                    id={a.id}
+                    color={SECTORS.find(s => s.id === (a.sectorId || 0))?.color || "#ff006e"}
+                />
+            ))}
+
+            {stations.map(s => (
+                <StationNode key={s.id} id={s.id} />
+            ))}
+
+            {/* Search result markers */}
+            {searchResults.length > 0 && searchResults.slice(0, 10).map((node, i) => {
+                const { pos } = getSphericalPos(node.id || i, 2.52);
+                return <Pin key={i} position={pos} color="#fff" />;
+            })}
+        </group>
+    );
+};
+
+const InteractiveGlobe = ({ 
+    activeSector, 
+    onSectorClick, 
+    communities = [], 
+    artists = [], 
+    stations = [], 
+    searchResults = [] 
+}) => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
     
     return (
@@ -166,7 +216,7 @@ const InteractiveGlobe = ({ searchQuery, searchResults, activeSector, onSectorCl
             <Canvas dpr={[1, 2]}>
                 <PerspectiveCamera 
                     makeDefault 
-                    position={[0, 0, isMobile ? 12 : 11]} 
+                    position={[0, 0, isMobile ? 12 : 10.5]} 
                     fov={isMobile ? 30 : 40} 
                 />
                 <OrbitControls 
@@ -175,27 +225,27 @@ const InteractiveGlobe = ({ searchQuery, searchResults, activeSector, onSectorCl
                     minDistance={5} 
                     maxDistance={15}
                     autoRotate={false}
-                    rotateSpeed={isMobile ? 1.2 : 0.8}
                 />
                 
-                <ambientLight intensity={0.5} />
+                <ambientLight intensity={0.4} />
                 <pointLight position={[10, 10, 10]} intensity={1.5} color="#ff006e" />
-                <pointLight position={[-10, -10, -10]} intensity={1.5} color="#00ffff" />
+                <pointLight position={[-10, -10, -10]} intensity={1.2} color="#00ffff" />
 
                 <Float 
-                    speed={activeSector !== null ? 0.5 : 1.5} 
-                    rotationIntensity={activeSector !== null ? 0.1 : 0.5} 
-                    floatIntensity={activeSector !== null ? 0.1 : 0.5}
+                    speed={activeSector !== null ? 0.3 : 1.2} 
+                    rotationIntensity={activeSector !== null ? 0.05 : 0.4} 
+                    floatIntensity={0.3}
                 >
                     <GlobeCore 
-                        searchQuery={searchQuery} 
-                        searchResults={searchResults} 
                         activeSector={activeSector}
-                        onSectorClick={onSectorClick}
+                        communities={communities}
+                        artists={artists}
+                        stations={stations}
+                        searchResults={searchResults}
                     />
                 </Float>
 
-                <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+                <Stars radius={100} depth={50} count={3000} factor={4} saturation={0} fade speed={1} />
             </Canvas>
         </div>
     );

@@ -448,6 +448,9 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                     <InteractiveGlobe 
                                         searchQuery={searchQuery}
                                         searchResults={[...filteredTracks, ...filteredArtists, ...filteredCommunities]}
+                                        communities={filteredCommunities}
+                                        artists={filteredArtists}
+                                        stations={liveStations}
                                         activeSector={activeSector}
                                         onSectorClick={(secId) => {
                                             setActiveSector(activeSector === secId ? null : secId);
