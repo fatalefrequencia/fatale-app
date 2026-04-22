@@ -505,12 +505,11 @@ function App() {
 
       setSubscription(subRes.data);
 
-      const ytIds = new Set(likes
+      const localLikedYtIds = new Set(likes
         .filter(t => t && (t.source || t.Source)?.startsWith('youtube:'))
         .map(t => (t.source || t.Source).split(':')[1])
         .filter(Boolean)
       );
-      setLikedYoutubeIds(ytIds);
 
       const cachedIds = new Set(cachedTracks.map(t => t.youtubeTrackId || t.YoutubeTrackId));
       setCachedTrackIds(cachedIds);
@@ -547,7 +546,7 @@ function App() {
           if (artistName === 'The Archive') return;
 
           const isLiked = likedTrackIds.has(trackId);
-          if (isYT && isLiked) likedYoutubeIds.add(yId); // Reconcile liked signals
+          if (isYT && isLiked) localLikedYtIds.add(yId); // Reconcile liked signals
 
           const mappedTrack = {
             ...t,
@@ -577,7 +576,7 @@ function App() {
         likes.forEach(lik => {
           const yId = getGlobalYoutubeId(lik);
           if (yId) {
-            likedYoutubeIds.add(yId);
+            localLikedYtIds.add(yId);
             const sourceKey = `youtube:${yId}`;
             if (uniqueTracksMap.has(sourceKey)) {
               const existing = uniqueTracksMap.get(sourceKey);
@@ -600,7 +599,7 @@ function App() {
         });
       }
       
-      setLikedYoutubeIds(new Set(likedYoutubeIds)); // Final Atomic Update
+      setLikedYoutubeIds(localLikedYtIds); // Atomic State Update
 
       const allTracks = Array.from(uniqueTracksMap.values());
       const finalTracks = allTracks.length > 0 ? allTracks : (uid ? [] : TRACKS);
@@ -1225,7 +1224,8 @@ function App() {
 
     try {
       if (isYoutube) {
-        let dbId = typeof trackId === 'number' ? trackId : null;
+        // Identify if we already have a numeric Database ID (even if stringified from iPod/Search)
+        let dbId = Number.isInteger(Number(trackId)) ? Number(trackId) : null;
 
         // 1. Ensure track exists in DB if we only have string ID
         if (!dbId) {
