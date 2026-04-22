@@ -73,22 +73,22 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, onClick
             </mesh>
 
             {showLabel && (
-                <Html distanceFactor={10} position={[0, h/2 + 0.1, 0]}>
+                <Html distanceFactor={15} position={[0, h/2 + 0.1, 0]} center>
                     <div 
-                        className="pointer-events-none select-none transition-all duration-300"
+                        className="pointer-events-none select-none transition-all duration-500"
                         style={{ 
                             opacity: labelOpacity,
-                            transform: `scale(${1 + (10 - cameraDist) * 0.1})`
+                            transform: `scale(${0.6 + (10 - cameraDist) * 0.05})`
                         }}
                     >
                         <div className="flex flex-col items-center">
                             <div 
-                                className="px-2 py-0.5 bg-black/80 border border-[#ff006e]/40 whitespace-nowrap text-[8px] font-black tracking-widest uppercase"
-                                style={{ color: color, borderColor: `${color}66` }}
+                                className="px-1.5 py-0.5 bg-black/60 border-l-2 text-[6px] font-black tracking-[0.2em] uppercase whitespace-nowrap"
+                                style={{ borderLeftColor: color, color: color }}
                             >
                                 {name}
                             </div>
-                            <div className="w-[1px] h-4 bg-gradient-to-b from-[#ff006e]/60 to-transparent" style={{ backgroundColor: color }} />
+                            <div className="w-[1px] h-3 bg-gradient-to-b from-white/20 to-transparent" />
                         </div>
                     </div>
                 </Html>
@@ -157,17 +157,17 @@ const ArtistNode = ({ id, name, color, parentLatLon, isLive, cameraDist, onClick
 
             {/* Label reveals as we approach */}
             {cameraDist < 8 && (
-                <Html distanceFactor={8} position={[0, 0.15, 0]}>
+                <Html distanceFactor={12} position={[0, 0.12, 0]} center>
                     <div 
                         className="pointer-events-none select-none"
                         style={{ 
                             opacity: THREE.MathUtils.clamp((8 - cameraDist) / 2, 0, 1),
-                            transform: `scale(${1 + (8 - cameraDist) * 0.15})`
+                            transform: `scale(${0.7 + (8 - cameraDist) * 0.04})`
                         }}
                     >
                         <div className="flex flex-col items-center">
-                            <div className="px-2 py-0.5 bg-black/90 border border-white/10 text-[9px] font-bold text-white uppercase tracking-tighter whitespace-nowrap shadow-2xl">
-                                {name} {isLive && <span className="text-[#00ffff] ml-1 animate-pulse">●</span>}
+                            <div className="text-[7px] font-bold text-white uppercase tracking-wider whitespace-nowrap drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                                {name} {isLive && <span className="text-[#00ffff] ml-1 animate-pulse text-[5px]">●</span>}
                             </div>
                         </div>
                     </div>
@@ -213,17 +213,20 @@ const TrackNode = ({ id, title, artist, color, cameraDist, onClick }) => {
 
             {/* High Zoom Track Detail Card */}
             {cameraDist < 5.5 && (
-                <Html distanceFactor={5.5} position={[0, 0.08, 0]}>
+                <Html distanceFactor={10} position={[0, 0.05, 0]} center>
                     <div 
                         className="pointer-events-none select-none transition-all"
                         style={{ 
                             opacity: THREE.MathUtils.clamp((5.5 - cameraDist) * 2, 0, 1),
-                            transform: `scale(${0.8 + (5.5 - cameraDist) * 0.2})`
+                            transform: `scale(${0.6 + (5.5 - cameraDist) * 0.05})`
                         }}
                     >
-                        <div className="p-1 px-2 bg-black/95 border-l-2 border-[#00ffff] backdrop-blur-md flex flex-col min-w-[80px] shadow-2xl">
-                             <div className="text-[7px] text-[#00ffff] font-black uppercase tracking-tight truncate leading-none">{title}</div>
-                             <div className="text-[6px] text-white/50 uppercase tracking-widest mt-0.5 truncate">{artist}</div>
+                        <div className="flex items-center gap-1.5 opacity-80">
+                             <div className="w-[1px] h-3 bg-[#00ffff]" />
+                             <div className="flex flex-col">
+                                 <div className="text-[6px] text-[#00ffff] font-black uppercase tracking-tight truncate leading-none">{title}</div>
+                                 <div className="text-[5px] text-white/50 uppercase tracking-widest truncate">{artist}</div>
+                             </div>
                         </div>
                     </div>
                 </Html>
