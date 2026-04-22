@@ -67,12 +67,7 @@ export const IPodPlayer = ({
     const [loadingStations, setLoadingStations] = useState(false);
     const fileInputRef = useRef(null);
     const listRef = useRef(null);
-    const [favorites, setFavorites] = useState(() => {
-        try {
-            const saved = localStorage.getItem('pod_favorites');
-            return saved ? JSON.parse(saved) : [];
-        } catch (e) { return []; }
-    });
+
 
     const [isVertical, setIsVertical] = useState(() =>
         typeof window !== 'undefined' ? (window.innerHeight > window.innerWidth || window.innerWidth <= 768) : false
@@ -87,9 +82,7 @@ export const IPodPlayer = ({
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    useEffect(() => {
-        localStorage.setItem('pod_favorites', JSON.stringify(favorites));
-    }, [favorites]);
+
 
     // Debug logging
     console.log("[IPodPlayer] Render. Screen:", screen, "Force:", forceNowPlaying, "Initial:", initialScreen);
@@ -159,6 +152,11 @@ export const IPodPlayer = ({
                             cover: thumb,
                             isLocked: false,
                             isOwned: true,
+                            isLiked: libraryTracks.some(lt => {
+                                const ltId = lt.id || lt.Id;
+                                const ltSource = lt.source || lt.Source;
+                                return (ltSource === `youtube:${videoId}`) || (String(ltId) === videoId) || (lt.videoId === videoId);
+                            }),
                             category: 'YouTube'
                         }
                     };
@@ -259,9 +257,7 @@ export const IPodPlayer = ({
             const getFiltered = () => {
                 const sourceList = libraryTracks.length > 0 ? libraryTracks : tracks;
                 if (screen === 'SONGS_LIKED') {
-                    const sysLiked = sourceList.map((t, i) => ({ ...t, originalIndex: i })).filter(t => t.isLiked);
-                    const favs = favorites.map(f => ({ ...f, type: 'YOUTUBE_SIGNAL', isFromLocal: true }));
-                    return [...sysLiked, ...favs];
+                    return sourceList.map((t, i) => ({ ...t, originalIndex: i })).filter(t => t.isLiked);
                 }
                 if (screen === 'SONGS_PURCHASED') return sourceList.map((t, i) => ({ ...t, originalIndex: i })).filter(t => t.isCached);
                 return sourceList.map((t, i) => ({ ...t, originalIndex: i }));
@@ -1073,22 +1069,13 @@ export const IPodPlayer = ({
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    if (currentTrack.source?.startsWith('youtube:')) {
-                                                        const isFav = favorites.some(f => f.id === currentTrack.id);
-                                                        if (isFav) {
-                                                            setFavorites(prev => prev.filter(f => f.id !== currentTrack.id));
-                                                        } else {
-                                                            setFavorites(prev => [...prev, currentTrack]);
-                                                        }
-                                                    } else {
-                                                        onLike && onLike(currentTrack);
-                                                    }
+                                                    onLike && onLike(currentTrack);
                                                 }}
                                                 className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1"
                                             >
                                                 <Heart
                                                     size={18}
-                                                    fill={(currentTrack.isLiked || favorites.some(f => f.id === currentTrack.id)) ? "#f00060" : "transparent"}
+                                                    fill={currentTrack.isLiked ? "#f00060" : "transparent"}
                                                     strokeWidth={3}
                                                 />
                                             </button>

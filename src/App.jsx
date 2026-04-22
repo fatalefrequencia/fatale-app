@@ -1257,8 +1257,8 @@ function App() {
       }
       console.log(`Track ${trackId} ${isLiking ? 'liked' : 'unliked'} and persisted.`);
 
-      // Refresh likes from server to ensure Set is perfectly in sync with DB
-      await fetchLikes();
+      // Refresh library tracks from server to ensure everything is perfectly in sync with DB
+      await fetchTracks();
 
       // Also update tracks state to ensure hearts stay filled/unfilled
       setTracks(prev => prev.map(t => {
