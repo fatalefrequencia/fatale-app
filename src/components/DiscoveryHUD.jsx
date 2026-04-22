@@ -105,6 +105,8 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     useEffect(() => {
         fetchAll();
         // Boot sequence
+        const buildId = 'TELEMETRY_SIGNAL_v2.0.260422_HARDENED';
+        console.log(`[HUD] Established Signal: ${buildId}`);
         const bootTimer = setTimeout(() => setIsBooting(false), 1500);
         return () => clearTimeout(bootTimer);
     }, [fetchAll]);
@@ -168,12 +170,16 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     }, [trendingTracks, searchQuery, matchesSector, activeSector]);
 
     const filteredArtists = useMemo(() => {
-        let base = trendingArtists;
+        let base = trendingArtists.filter(a => {
+            const name = a.name || a.Name;
+            // Ignore obvious placeholders or empty names
+            return name && !name.toLowerCase().includes('placeholder') && name.length > 1;
+        });
         if (activeSector !== null) base = base.filter(matchesSector);
 
         if (!searchQuery) return base.slice(0, 6);
         return base.filter(a => 
-            a.name?.toLowerCase().includes(searchQuery.toLowerCase())
+            (a.name || a.Name)?.toLowerCase().includes(searchQuery.toLowerCase())
         );
     }, [trendingArtists, searchQuery, matchesSector, activeSector]);
 
@@ -188,22 +194,26 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     }, [trendingPlaylists, searchQuery, matchesSector, activeSector]);
 
     const filteredCommunities = useMemo(() => {
-        let base = communities;
+        let base = communities.filter(c => {
+            const name = c.name || c.Name;
+            // Strict check for real communities
+            return name && !name.toLowerCase().includes('placeholder') && name.length > 2;
+        });
         if (activeSector !== null) base = base.filter(matchesSector);
 
         // Sort Joined community to top (Formal Membership)
         const userCommunityId = user?.communityId || user?.CommunityId;
         if (userCommunityId) {
             base = [...base].sort((a, b) => {
-                if (String(a.id) === String(userCommunityId)) return -1;
-                if (String(b.id) === String(userCommunityId)) return 1;
+                if (String(a.id || a.Id) === String(userCommunityId)) return -1;
+                if (String(b.id || b.Id) === String(userCommunityId)) return 1;
                 return 0;
             });
         }
 
         if (!searchQuery) return base.slice(0, 5);
         return base.filter(c => 
-            c.name?.toLowerCase().includes(searchQuery.toLowerCase())
+            (c.name || c.Name)?.toLowerCase().includes(searchQuery.toLowerCase())
         );
     }, [communities, searchQuery, matchesSector, activeSector, user]);
 

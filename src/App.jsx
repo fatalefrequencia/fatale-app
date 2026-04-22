@@ -490,7 +490,6 @@ function App() {
       if (!uid) return;
       console.log("[App] Fetching tracks for user:", uid);
 
-      // Parallel Fetch for efficiency and avoiding race conditions
       const [tracksRes, purchasesRes, likesRes, subRes, cachedRes] = await Promise.all([
         API.Tracks.getAllTracks().catch(e => { console.error("[App] Tracks fetch failed:", e); return { data: [] }; }),
         API.Purchases.getMyPurchases().catch(e => { console.error("[App] Purchases fetch failed:", e); return { data: [] }; }),
@@ -532,6 +531,9 @@ function App() {
         return title ? `${artist} - ${title}` : null;
       };
 
+      if (tracksRes.data && Array.isArray(tracksRes.data)) {
+        tracksRes.data.forEach(t => {
+          const trackId = String(t.trackId || t.TrackId || t.id || t.Id);
           const artistUserId = t.artistUserId || t.ArtistUserId || t.album?.artist?.userId || t.Album?.Artist?.UserId;
           const isMine = artistUserId && String(artistUserId) === String(uid);
 
@@ -546,7 +548,7 @@ function App() {
           if (artistName === 'The Archive') return;
 
           const isLiked = likedTrackIds.has(trackId);
-          if (isYT && isLiked) localLikedYtIds.add(yId); // Reconcile liked signals
+          if (isYT && isLiked) localLikedYtIds.add(yId);
 
           const mappedTrack = {
             ...t,
@@ -599,7 +601,7 @@ function App() {
         });
       }
       
-      setLikedYoutubeIds(localLikedYtIds); // Atomic State Update
+      setLikedYoutubeIds(localLikedYtIds);
 
       const allTracks = Array.from(uniqueTracksMap.values());
       const finalTracks = allTracks.length > 0 ? allTracks : (uid ? [] : TRACKS);

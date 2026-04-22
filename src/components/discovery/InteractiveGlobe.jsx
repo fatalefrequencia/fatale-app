@@ -121,10 +121,11 @@ const GlobeCore = ({
 
     // DIAGNOSTIC LOGGING
     useEffect(() => {
-        console.group('[GLOBE_DIAGNOSTIC]');
-        console.log('COMMUNITIES_LOADED:', communities.length);
-        console.log('ARTISTS_LOADED:', artists.length);
-        console.log('LIVE_STATIONS_LOADED:', stations.length);
+        const buildId = 'GLOBE_CORE_v2.0.260422_HARDENED';
+        console.group(`[${buildId}]`);
+        console.log('COMMUNITIES:', communities.length);
+        console.log('ARTISTS:', artists.length);
+        console.log('STATIONS:', stations.length);
         console.groupEnd();
     }, [communities.length, artists.length, stations.length]);
 
@@ -162,10 +163,10 @@ const GlobeCore = ({
                 />
             </Sphere>
 
-            {/* DATA-DRIVEN RENDERERS */}
-            {communities.map(c => (
+            {/* DATA-DRIVEN RENDERERS (Strict Validation) */}
+            {communities.filter(c => c && (c.id || c.Id)).map(c => (
                 <CommunityBuilding 
-                    key={c.id || c.Id} 
+                    key={`comm-${c.id || c.Id}`} 
                     id={c.id || c.Id}
                     memberCount={c.memberCount || c.MemberCount || 0}
                     color={SECTORS.find(s => s.id === (c.sectorId || c.SectorId || 0))?.color || "#ff006e"}
@@ -173,16 +174,16 @@ const GlobeCore = ({
                 />
             ))}
 
-            {artists.map(a => (
+            {artists.filter(a => a && (a.id || a.Id)).map(a => (
                 <ArtistNode 
-                    key={a.id || a.Id} 
+                    key={`artist-${a.id || a.Id}`} 
                     id={a.id || a.Id}
                     color={SECTORS.find(s => s.id === (a.sectorId || a.SectorId || 0))?.color || "#ff006e"}
                 />
             ))}
 
-            {stations.map(s => (
-                <StationNode key={s.id || s.Id} id={s.id || s.Id} />
+            {stations.filter(st => st && (st.id || st.Id) && (st.isLive || st.IsLive)).map(s => (
+                <StationNode key={`station-${s.id || s.Id}`} id={s.id || s.Id} />
             ))}
         </group>
     );
