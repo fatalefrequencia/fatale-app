@@ -68,16 +68,31 @@ const CommunityBuilding = ({ id, color, memberCount = 0, isActive }) => {
 };
 
 // 2. ARTIST NODES (Sleek Shards)
-const ArtistNode = ({ id, color, parentLatLon }) => {
+const ArtistNode = ({ id, color, parentLatLon, isLive }) => {
     const meshRef = useRef();
+    const materialRef = useRef();
     const { pos } = useMemo(() => getSphericalPos(id, 2.5, 0.18, parentLatLon), [id, parentLatLon]);
 
     useFrame((state) => {
         const t = state.clock.getElapsedTime();
         meshRef.current.rotation.y += 0.012;
         meshRef.current.rotation.z += 0.005;
+
         // Subtle drift animation
         meshRef.current.position.y += Math.sin(t * 1.5 + hashStr(id)) * 0.0002;
+
+        if (isLive) {
+            const pulse = (Math.sin(t * 4) + 1) / 2; // 0 to 1 pulse
+            meshRef.current.scale.setScalar(1 + pulse * 0.4);
+            if (materialRef.current) {
+                materialRef.current.emissiveIntensity = 4.5 + pulse * 8;
+            }
+        } else {
+            meshRef.current.scale.setScalar(1);
+            if (materialRef.current) {
+                materialRef.current.emissiveIntensity = 4.5;
+            }
+        }
     });
 
     return (
@@ -85,8 +100,9 @@ const ArtistNode = ({ id, color, parentLatLon }) => {
             {/* Shrunken shards for better density management */}
             <octahedronGeometry args={[0.04, 0]} />
             <meshStandardMaterial 
+                ref={materialRef}
                 color="#fff" 
-                emissive={color} 
+                emissive={isLive ? "#00ffff" : color} // Cyan pulse if live, otherwise sector color
                 emissiveIntensity={4.5} 
                 transparent
                 opacity={0.9}
@@ -95,33 +111,7 @@ const ArtistNode = ({ id, color, parentLatLon }) => {
     );
 };
 
-// 3. LIVE STATION NODES (Signal Beacons)
-const StationNode = ({ id }) => {
-    const meshRef = useRef();
-    const materialRef = useRef();
-    const { pos } = useMemo(() => getSphericalPos(id, 2.5, 0.08), [id]);
-
-    useFrame((state) => {
-        const t = state.clock.getElapsedTime();
-        const pulse = Math.abs(Math.sin(t * 3)); // Slightly slower, more deliberate pulse
-        meshRef.current.scale.setScalar(0.9 + pulse * 0.5);
-        if (materialRef.current) {
-            materialRef.current.emissiveIntensity = 2 + pulse * 6;
-        }
-    });
-
-    return (
-        <mesh position={pos} ref={meshRef}>
-            <sphereGeometry args={[0.06, 20, 20]} />
-            <meshStandardMaterial 
-                ref={materialRef}
-                color="#00ffff" 
-                emissive="#00ffff" 
-                emissiveIntensity={3} 
-            />
-        </mesh>
-    );
-};
+// StationNode removed - visualization now integrated into ArtistNode
 
 const GlobeCore = ({ 
     activeSector, 
@@ -193,11 +183,15 @@ const GlobeCore = ({
                 if (commId) {
                     const parent = communities.find(c => String(c.id || c.Id) === String(commId));
                     if (parent) {
-                        // Pre-calculate parent's lat/lon to pass to child
                         const parentSpherical = getSphericalPos(parent.id || parent.Id, 2.5);
                         parentLatLon = { lat: parentSpherical.lat, lon: parentSpherical.lon };
                     }
                 }
+
+                // Check if artist is live (either via their prop or the stations array)
+                const isLive = (a.isLive || a.IsLive) || stations.some(s => 
+                    (s.artistId || s.ArtistId) === (a.id || a.Id) && (s.isLive || s.IsLive)
+                );
 
                 return (
                     <ArtistNode 
@@ -205,13 +199,10 @@ const GlobeCore = ({
                         id={a.id || a.Id}
                         color={SECTORS.find(s => s.id === (a.sectorId || a.SectorId || 0))?.color || "#ff006e"}
                         parentLatLon={parentLatLon}
+                        isLive={isLive}
                     />
                 );
             })}
-
-            {stations.filter(st => st && (st.id || st.Id) && (st.isLive || st.IsLive)).map(s => (
-                <StationNode key={`station-${s.id || s.Id}`} id={s.id || s.Id} />
-            ))}
         </group>
     );
 };
