@@ -14,25 +14,34 @@ const hashStr = (s) => {
 };
 
 const getSphericalPos = (id, radius = 2.5, offset = 0, parentId = null) => {
-    // If we have a parent, we base our position on the parent's hash then offset
-    const baseH = hashStr(parentId || id);
     const samples = 200; 
-    const i = baseH % samples;
+    const baseH = hashStr(parentId || id);
+    
+    // 1. BASE COORDINATE CALCULATION
+    // If not a community (offset > 0 or has parent), we shift the index to fall in the 'gaps'
+    const isBaseMonolith = !parentId && offset === 0;
+    const i = (baseH % samples) + (isBaseMonolith ? 0 : 0.5);
+    
     const phi = Math.acos(1 - 2 * (i + 0.5) / samples);
     const theta = Math.PI * (1 + Math.sqrt(5)) * (i + 0.5);
     
     let lat = phi - Math.PI / 2;
     let lon = theta % (Math.PI * 2);
 
+    // 2. ORBITAL AVOIDANCE LOGIC
     if (parentId) {
-        // Add orbital displacement for artists in a community
+        // Ensure affiliated artists orbit AT A DISTANCE, never hovering over the monolith
         const h = hashStr(id);
-        const rOffset = 0.04 + (h % 10) * 0.008;
-        const angle = (h % 1000) / 1000 * Math.PI * 2;
+        // Min clearance of 0.18 rad (approx 0.45 units) is safe for a 0.06 wide monolith
+        const minClearance = 0.18; 
+        const rOffset = minClearance + (h % 8) * 0.02;
+        const angle = (h % 360) * (Math.PI / 180);
+        
         lat += Math.cos(angle) * rOffset;
         lon += Math.sin(angle) * rOffset;
     }
 
+    // 3. SPATIAL RESOLUTION
     const r = radius + offset;
     const x = r * Math.cos(lat) * Math.cos(lon);
     const y = r * Math.sin(lat);
