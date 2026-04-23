@@ -507,16 +507,35 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                 transition={{ type: "spring", damping: 30, stiffness: 300 }}
                                                 className="absolute bottom-4 left-4 right-4 z-50 pointer-events-auto"
                                             >
-                                                <div className="bg-black/95 p-6 relative group max-w-5xl mx-auto border-x border-[#ff006e]/20">
-                                                    {/* Cyber HUD Corner Brackets */}
-                                                    <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.5)]" />
-                                                    <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.5)]" />
-                                                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.5)]" />
-                                                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.5)]" />
+                                                <div className="bg-black/95 p-6 relative group max-w-5xl mx-auto">
+                                                    {/* Double Perimeter Border */}
+                                                    <div className="absolute inset-0 border border-[#ff006e]/10 pointer-events-none" />
+                                                    <div className="absolute inset-1 border border-[#ff006e]/20 pointer-events-none" />
+                                                    
+                                                    {/* Structural Corner HUD Brackets */}
+                                                    <div className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-[#ff006e] shadow-[0_0_20px_rgba(255,0,110,0.4)]" />
+                                                    <div className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-[#ff006e] shadow-[0_0_20px_rgba(255,0,110,0.4)]" />
+                                                    <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-[#ff006e] shadow-[0_0_20px_rgba(255,0,110,0.4)]" />
+                                                    <div className="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-[#ff006e] shadow-[0_0_20px_rgba(255,0,110,0.4)]" />
 
-                                                    {/* Structural Accent Lines */}
-                                                    <div className="absolute top-2 left-10 right-10 h-[1px] bg-[#ff006e]/20" />
-                                                    <div className="absolute bottom-2 left-10 right-10 h-[1px] bg-[#ff006e]/20" />
+                                                    {/* Perimeter Tech-Bits (Circuit nodes) */}
+                                                    <div className="absolute top-0 left-1/4 w-4 h-1 bg-[#ff006e]/40 shadow-[0_0_10px_#ff006e]" />
+                                                    <div className="absolute top-0 right-1/4 w-8 h-1 bg-[#ff006e]/60 shadow-[0_0_10px_#ff006e]" />
+                                                    <div className="absolute bottom-0 left-1/3 w-10 h-1 bg-[#ff006e]/40 shadow-[0_0_10px_#ff006e]" />
+                                                    <div className="absolute bottom-0 right-1/3 w-6 h-1 bg-[#ff006e]/60 shadow-[0_0_10px_#ff006e]" />
+                                                    
+                                                    {/* Cooling Vents (Side bars) */}
+                                                    <div className="absolute -left-1 top-1/2 -translate-y-1/2 flex flex-col gap-1">
+                                                        {[1,2,3,4].map(v => <div key={v} className="w-1 h-3 bg-[#ff006e]/20" />)}
+                                                    </div>
+                                                    <div className="absolute -right-1 top-1/2 -translate-y-1/2 flex flex-col gap-1">
+                                                        {[1,2,3,4].map(v => <div key={v} className="w-1 h-3 bg-[#ff006e]/20" />)}
+                                                    </div>
+
+                                                    {/* Top Center Status Bar */}
+                                                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-48 h-2 bg-black border-x border-[#ff006e] flex items-center px-1 overflow-hidden">
+                                                        <div className="w-1/2 h-full bg-[#ff006e]/40 animate-pulse" />
+                                                    </div>
 
                                                     <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center pt-2">
                                                         {/* Header Section */}

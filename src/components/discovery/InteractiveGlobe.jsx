@@ -155,8 +155,8 @@ const ArtistNode = ({ id, name, color, isLive, isSelected, communityId, cameraDi
                     opacity={opacityFactor}
                 />
             </mesh>
-            {/* Node Click Target - MAXIMUM PRIORITY (15x scale) */}
-            <mesh visible={false} scale={15} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+            {/* Node Click Target - BALANCED PRIORITY (8x scale) */}
+            <mesh visible={false} scale={8} onClick={(e) => { e.stopPropagation(); onClick(); }}>
                 <sphereGeometry args={[0.02, 8, 8]} />
             </mesh>
 
@@ -233,8 +233,8 @@ const TrackNode = ({ id, title, artist, color, isSelected, cameraDist, onClick }
                 <sphereGeometry args={[0.015, 8, 8]} />
                 <meshBasicMaterial color={color || "#fff"} transparent opacity={opacityFactor * 0.15} />
             </mesh>
-            {/* Track Hit Target - MAXIMUM PRIORITY (15x scale) */}
-            <mesh visible={false} scale={15} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+            {/* Track Hit Target - BALANCED PRIORITY (10x scale) */}
+            <mesh visible={false} scale={10} onClick={(e) => { e.stopPropagation(); onClick(); }}>
                 <sphereGeometry args={[0.015, 8, 8]} />
             </mesh>
             {isSelected && (
