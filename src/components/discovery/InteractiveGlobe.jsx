@@ -13,15 +13,14 @@ const hashStr = (s) => {
     return Math.abs(h);
 };
 
-const getSphericalPos = (id, radius = 2.5, offset = 0, parentId = null) => {
+const getSphericalPos = (id, radius = 2.5, offset = 0, parentId = null, type = 'default') => {
     const samples = 200; 
     const baseH = hashStr(parentId || id);
     
     // 1. BASE COORDINATE CALCULATION
-    // Monoliths and their children must share the same base index for relative offsetting.
-    // Independent nodes shift by 0.5 to fall in spatial gaps.
-    const isBaseMonolith = !parentId && offset === 0;
-    const i = (baseH % samples) + (isBaseMonolith || parentId ? 0 : 0.5);
+    // Triple-tier fractional indexing to ensure geometric separation
+    const typeOffset = type === 'track' ? 0.70 : (type === 'artist' ? 0.35 : 0.0);
+    const i = (baseH % samples) + (parentId ? 0 : typeOffset);
     
     const phi = Math.acos(1 - 2 * (i + 0.5) / samples);
     const theta = Math.PI * (1 + Math.sqrt(5)) * (i + 0.5);
@@ -59,7 +58,7 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelec
     const h = Math.min(0.20 + (memberCount * 0.12), 2.0);
 
     // Calculate position with offset so base is on surface
-    const { pos, lat, lon } = useMemo(() => getSphericalPos(id, 2.5, h/2), [id, h]);
+    const { pos, lat, lon } = useMemo(() => getSphericalPos(id, 2.5, h/2, null, 'community'), [id, h]);
 
     // Label visibility logic
     const showLabel = cameraDist < 10;
@@ -110,7 +109,7 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelec
 const ArtistNode = ({ id, name, color, isLive, isSelected, communityId, cameraDist, isGlobeSpinning, onClick }) => {
     const meshRef = useRef();
     const materialRef = useRef();
-    const { pos } = useMemo(() => getSphericalPos(id, 2.48, 0.05, communityId), [id, communityId]);
+    const { pos } = useMemo(() => getSphericalPos(id, 2.48, 0.05, communityId, 'artist'), [id, communityId]);
     
     // Apple-style LOD Threshholds
     const importance = isLive ? 1.0 : 0.6;
@@ -213,8 +212,8 @@ const SignalBeacon = ({ pos, color }) => {
 // 3. TRACK NODES (Neural Signal Sparks)
 const TrackNode = ({ id, title, artist, color, isSelected, cameraDist, onClick }) => {
     const meshRef = useRef();
-    // Push tracks further out (0.3 offset) to clear community buildings
-    const { pos } = useMemo(() => getSphericalPos(id, 2.48, 0.3), [id]);
+    // Tracks land in a distinct spatial tier (0.70 offset)
+    const { pos } = useMemo(() => getSphericalPos(id, 2.48, 0.3, null, 'track'), [id]);
     
     const opacityFactor = THREE.MathUtils.clamp((9 - cameraDist) / 3, 0, 1);
 
