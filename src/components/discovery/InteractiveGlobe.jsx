@@ -18,9 +18,10 @@ const getSphericalPos = (id, radius = 2.5, offset = 0, parentId = null) => {
     const baseH = hashStr(parentId || id);
     
     // 1. BASE COORDINATE CALCULATION
-    // If not a community (offset > 0 or has parent), we shift the index to fall in the 'gaps'
+    // Monoliths and their children must share the same base index for relative offsetting.
+    // Independent nodes shift by 0.5 to fall in spatial gaps.
     const isBaseMonolith = !parentId && offset === 0;
-    const i = (baseH % samples) + (isBaseMonolith ? 0 : 0.5);
+    const i = (baseH % samples) + (isBaseMonolith || parentId ? 0 : 0.5);
     
     const phi = Math.acos(1 - 2 * (i + 0.5) / samples);
     const theta = Math.PI * (1 + Math.sqrt(5)) * (i + 0.5);
@@ -30,11 +31,10 @@ const getSphericalPos = (id, radius = 2.5, offset = 0, parentId = null) => {
 
     // 2. ORBITAL AVOIDANCE LOGIC
     if (parentId) {
-        // Ensure affiliated artists orbit AT A DISTANCE, never hovering over the monolith
+        // Strict orbital clustering: hugged around parent monolith
         const h = hashStr(id);
-        // Min clearance of 0.18 rad (approx 0.45 units) is safe for a 0.06 wide monolith
-        const minClearance = 0.18; 
-        const rOffset = minClearance + (h % 8) * 0.02;
+        const minClearance = 0.08; 
+        const rOffset = minClearance + (h % 5) * 0.015;
         const angle = (h % 360) * (Math.PI / 180);
         
         lat += Math.cos(angle) * rOffset;
