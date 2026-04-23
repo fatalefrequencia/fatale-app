@@ -261,35 +261,6 @@ const GlobeCore = ({
         return s.id === 0 ? "#ff33aa" : s.color;
     }, [activeSector]);
 
-    // Diagnostic Group remains for telemetry
-    useEffect(() => {
-        const buildId = 'GLOBE_CORE_v2.1_APPLE_LOD';
-        console.group(`[${buildId}]`);
-        console.log('COMMUNITIES:', communities.length);
-        console.log('ARTISTS:', artists.length);
-        console.log('TRACKS:', tracks.length);
-        console.groupEnd();
-    }, [communities.length, artists.length, tracks.length]);
-
-    return (
-        <group ref={groupRef}>
-            {/* Core Surface (Hidden/Dark) */}
-            <Sphere args={[2.45, 32, 32]}>
-                <meshBasicMaterial color="#000" />
-            </Sphere>
-
-            {/* Atmosphere/Grid Overlay */}
-            <Sphere args={[2.52, 40, 40]}>
-                <meshStandardMaterial 
-                    color={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (activeSectorColor || "#ff006e")} 
-                    wireframe 
-                    transparent 
-                    opacity={activeView === 'CLIQUE_VALENCE' ? 0.2 : (activeSector !== null ? 0.08 : 0.02)} 
-                    emissive={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (activeSectorColor || "#ff006e")}
-                    emissiveIntensity={activeView === 'CORE_PULSE' ? 0.5 : 0.1}
-                />
-            </Sphere>
-
     const filteredCommunities = useMemo(() => {
         if (activeView === 'LIVE_SIGNAL_HUB') return [];
         if (activeView === 'FREQ_PEAKS') return communities.filter(c => (c.memberCount || 0) > 1);
@@ -302,13 +273,27 @@ const GlobeCore = ({
     }, [artists, activeView]);
 
     const filteredTracks = useMemo(() => {
-        if (activeView === 'LIVE_SIGNAL_HUB') return tracks.slice(0, 5); // Just a few trending ones
+        if (activeView === 'LIVE_SIGNAL_HUB') return tracks.slice(0, 5);
         if (activeView === 'CLIQUE_VALENCE') return [];
         return tracks;
     }, [tracks, activeView]);
 
     return (
         <group ref={groupRef}>
+            <Sphere args={[2.45, 32, 32]}>
+                <meshBasicMaterial color="#000" />
+            </Sphere>
+
+            <Sphere args={[2.52, 40, 40]}>
+                <meshStandardMaterial 
+                    color={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (activeSectorColor || "#ff006e")} 
+                    wireframe 
+                    transparent 
+                    opacity={activeView === 'CLIQUE_VALENCE' ? 0.2 : (activeSector !== null ? 0.08 : 0.02)} 
+                    emissive={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (activeSectorColor || "#ff006e")}
+                    emissiveIntensity={activeView === 'CORE_PULSE' ? 0.5 : 0.1}
+                />
+            </Sphere>
             <Sphere args={[2.45, 32, 32]}>
                 <meshBasicMaterial color="#000" />
             </Sphere>
