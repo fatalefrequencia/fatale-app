@@ -2420,27 +2420,45 @@ const FeedContent = React.memo(({
     fetchFeed();
   }, []);
 
-  const handleTrackPlay = (trackId) => {
+  const handleTrackPlay = (feedItemId) => {
+    // 1. Identify all track items in the feed for playlist continuity
     const trackFeedItems = feed.filter(item => item.Type === 'track');
+    
     const playlist = trackFeedItems.map(item => {
-      const source = item.ImageUrl && item.ImageUrl.startsWith('/uploads')
-        ? getMediaUrl(item.ImageUrl)
-        : item.ImageUrl; // Fallback source logic
+      const tId = item.trackId || item.TrackId;
+      const rawSource = item.source || item.Source;
+      const pureYtId = getGlobalYoutubeId(item); // Inherited from App scope
+      const isYoutube = !!pureYtId;
+
+      // Deep reconciliation with library state
+      const libMatch = libraryTracks.find(lt => String(lt.id) === String(tId));
 
       return {
         ...item,
-        id: item.trackId || item.TrackId,
+        id: tId,
+        dbId: tId,
         title: item.Title,
         artist: item.Artist,
-        source: item.source || item.Source,
-        cover: getMediaUrl(item.ImageUrl),
-        dbId: item.trackId || item.TrackId
+        source: isYoutube ? `youtube:${pureYtId}` : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null),
+        cover: isYoutube ? `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg` : getMediaUrl(item.ImageUrl),
+        isLiked: libMatch ? libMatch.isLiked : item.IsLiked,
+        isOwned: libMatch ? libMatch.isOwned : true, // Content in feed is usually unlocked or previewable
+        isLocked: false
       };
-    });
+    }).filter(t => t.source);
 
-    const startIndex = playlist.findIndex(t => String(t.dbId) === String(trackId));
+    // 2. Resolve the starting index using the original feed item's ID (which might be 'track-123' or 'repost-track-456')
+    const clickedItem = feed.find(f => String(f.Id) === String(feedItemId));
+    if (!clickedItem) return;
+
+    const targetTrackId = clickedItem.trackId || clickedItem.TrackId;
+    const startIndex = playlist.findIndex(t => String(t.dbId) === String(targetTrackId));
+
     if (startIndex !== -1 && onPlayPlaylist) {
       onPlayPlaylist(playlist, startIndex);
+      if (playlist[startIndex].source.startsWith('youtube:')) {
+        setIsYoutubeMode(true);
+      }
     }
   };
 
