@@ -2922,6 +2922,13 @@ const FeedContent = React.memo(({
 
       {/* Centro: Terminal Log */}
       <div className="flex-1 flex flex-col h-full bg-[#05050a]/40 relative">
+        {/* High-Visibility Header */}
+        <div className="bg-[#ff006e]/5 border-b border-[#ff006e]/20 p-2 text-center">
+          <span className="text-[7px] font-black text-[#ff006e] tracking-[0.5em] uppercase animate-pulse">
+            SIGNAL_SYSTEM_STABILIZED_v3_ACTIVE
+          </span>
+        </div>
+
         {loading && (
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#ff006e]/20 z-50 overflow-hidden">
             <motion.div
