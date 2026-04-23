@@ -81,7 +81,8 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     const [playlistTracks, setPlaylistTracks] = useState([]);
     const [loadingPlaylist, setLoadingPlaylist] = useState(false);
     const [selectedGlobeItem, setSelectedGlobeItem] = useState(null);
-    const [activeGlobeView, setActiveGlobeView] = useState('CORE_PULSE'); // 'CORE_PULSE', 'NEURAL_STREAMS', 'CLIQUE_VALENCE', 'FREQ_PEAKS', 'ARCHIVE_SCAN'
+    const [activeGlobeView, setActiveGlobeView] = useState('CORE_PULSE'); 
+    const [isGlobeSpinning, setIsGlobeSpinning] = useState(false);
 
     const fetchAll = useCallback(async () => {
         setLoading(true);
@@ -452,12 +453,13 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                     <InteractiveGlobe 
                                         searchQuery={searchQuery}
                                         communities={communities}
-                                        artists={trendingArtists} // Pass full list for globe
-                                        stations={stations} // Pass full list for globe
+                                        artists={trendingArtists} 
+                                        stations={stations} 
                                         tracks={trendingTracks}
                                         activeSector={activeSector}
                                         selectedId={selectedGlobeItem ? `${selectedGlobeItem.type}-${selectedGlobeItem.id || selectedGlobeItem.Id}` : null}
                                         activeView={activeGlobeView}
+                                        isGlobeSpinning={isGlobeSpinning}
                                         onSectorClick={(secId) => {
                                             setActiveSector(activeSector === secId ? null : secId);
                                         }}
@@ -566,7 +568,9 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                                     visualUploads.filter(v => {
                                                                         const artistId = selectedGlobeItem.userId || selectedGlobeItem.UserId || selectedGlobeItem.id || selectedGlobeItem.Id;
                                                                         const uploadArtistId = v.userId || v.UserId || v.artistId || v.ArtistId;
-                                                                        return String(uploadArtistId) === String(artistId);
+                                                                        const artistName = (selectedGlobeItem.name || selectedGlobeItem.Name || '').toLowerCase();
+                                                                        const uploadArtistName = (v.artist || v.Artist || '').toLowerCase();
+                                                                        return (String(uploadArtistId) === String(artistId)) || (artistName && artistName === uploadArtistName);
                                                                     }).slice(0, 5).map((v, i) => (
                                                                         <div key={i} className="w-32 h-20 bg-black border border-white/10 shrink-0 relative group/img overflow-hidden rounded-sm">
                                                                             <img src={resolveThumbnail(v)} alt="" className="w-full h-full object-cover opacity-60 group-hover/img:opacity-100 transition-opacity" />
@@ -593,6 +597,14 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
 
                                     {/* World View Switcher - Premium Toggle */}
                                     <div className="absolute top-10 right-4 flex flex-col gap-3 z-50 scale-75 lg:scale-100">
+                                        <button 
+                                            onClick={() => setIsGlobeSpinning(!isGlobeSpinning)}
+                                            className={`flex items-center gap-3 px-3 py-2 rounded-sm border transition-all duration-300 ${isGlobeSpinning ? 'bg-[#00ffff]/10 border-[#00ffff] text-[#00ffff]' : 'bg-black/40 border-white/5 text-white/40'}`}
+                                        >
+                                            {isGlobeSpinning ? <Pause size={12} /> : <Play size={12} />}
+                                            <span className="text-[8px] font-black tracking-[0.2em] uppercase">SPIN_PROTOCOL</span>
+                                        </button>
+
                                         {[
                                             { id: 'CORE_PULSE', icon: <Activity size={12} />, label: 'CORE_PULSE', desc: 'Realtime Activity' },
                                             { id: 'LIVE_SIGNAL_HUB', icon: <Radio size={12} />, label: 'LIVE_SIGNAL_HUB', desc: 'Active Transmissions' },
@@ -722,7 +734,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                           <div className="absolute inset-[-4px] rounded-full border border-dashed border-[#ff006e]/10 group-hover:ring-1 group-hover:ring-[#ff006e]/20 group-hover:animate-spin transition-all duration-[3000ms]" />
                                           
                                           <div className="absolute inset-[4px] rounded-full overflow-hidden border-2 border-black z-10 bg-black">
-                                              <img src={getMediaUrl(a.imageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all scale-110 group-hover:scale-100" />
+                                              <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all scale-110 group-hover:scale-100" />
                                           </div>
                                           
                                           {/* Scan sweep line */}
@@ -950,11 +962,11 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                               if (isMobile) setMobileViewMode('globe');
                                           }}>
                                               <div className="w-8 h-8 rounded-sm bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center shrink-0 relative overflow-hidden">
-                                                  {c.imageUrl ? (
-                                                     <img src={getMediaUrl(c.imageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
-                                                  ) : (
-                                                     <Globe size={12} className="text-[#ff006e] opacity-40 group-hover:opacity-100 transition-opacity" />
-                                                  )}
+                                                  { (c.imageUrl || c.ImageUrl || c.profilePicture || c.ProfilePicture) ? (
+                                                      <img src={getMediaUrl(c.imageUrl || c.ImageUrl || c.profilePicture || c.ProfilePicture)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
+                                                   ) : (
+                                                      <Globe size={12} className="text-[#ff006e] opacity-40 group-hover:opacity-100 transition-opacity" />
+                                                   )}
                                                   {(isJoined || followedCommunities.includes(c.id)) && (
                                                      <div className="absolute top-0.5 right-0.5">
                                                          <Star size={10} className="text-yellow-400 fill-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]" />

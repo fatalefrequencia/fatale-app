@@ -361,15 +361,16 @@ const GlobeCore = ({
 
 const InteractiveGlobe = ({ 
     activeSector, 
-    onSectorClick, 
+    onSectorClick,
     communities = [], 
     artists = [], 
-    stations = [],
+    stations = [], 
+    selectedId, 
+    activeView, 
     tracks = [],
-    selectedId,
-    activeView = 'CORE_PULSE',
-    onArtistClick,
-    onCommunityClick,
+    isGlobeSpinning = false,
+    onArtistClick, 
+    onCommunityClick, 
     onTrackClick,
     onSelectItem
 }) => {
@@ -381,14 +382,13 @@ const InteractiveGlobe = ({
                 dpr={[1, 2]} 
                 gl={{ logarithmicDepthBuffer: true, antialias: true }}
                 camera={{ position: [0, 0, isMobile ? 12 : 10.5], fov: isMobile ? 30 : 40 }}
-                onPointerMissed={() => onSelectItem?.(null)}
             >
                 <OrbitControls 
                     enablePan={false} 
                     enableZoom={true} 
                     minDistance={2.8} 
                     maxDistance={25}
-                    autoRotate={!selectedId}
+                    autoRotate={isGlobeSpinning && !selectedId}
                     autoRotateSpeed={0.5}
                     dampingFactor={0.5} // High damping for immediate stop
                     enableDamping={true}
