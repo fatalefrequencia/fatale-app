@@ -67,51 +67,21 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelec
     return (
         <group position={pos}>
             <group rotation={[0, -lon, lat]}>
-                {/* 1. HOLOGRAPHIC VOLUME (Semi-transparent hull) */}
-                <mesh onClick={(e) => { e.stopPropagation(); onClick(); }}>
-                    <boxGeometry args={[0.07, 0.07, h]} />
-                    <meshStandardMaterial 
-                        color={color} 
-                        emissive={color} 
-                        emissiveIntensity={isActive ? 2.0 : 0.5} 
-                        transparent 
-                        opacity={0.15} 
-                        side={THREE.DoubleSide}
-                    />
-                </mesh>
-
-                {/* 2. NEON WIREFRAME EDGES (Cyber-city style) */}
-                <lineSegments>
+                {/* NEON WIREFRAME ONLY (Cyber-skeleton style) */}
+                <lineSegments onClick={(e) => { e.stopPropagation(); onClick(); }}>
                     <edgesGeometry args={[new THREE.BoxGeometry(0.07, 0.07, h)]} />
                     <lineBasicMaterial 
                         color={color} 
                         transparent 
-                        opacity={isActive ? 1.0 : 0.6} 
-                        linewidth={2}
+                        opacity={isActive ? 1.0 : 0.3} 
+                        linewidth={isActive ? 2 : 1}
                     />
                 </lineSegments>
 
-                {/* 3. CENTRAL DATA CORE (Glow beam) */}
-                <mesh position={[0, 0, 0]}>
-                    <boxGeometry args={[0.015, 0.015, h * 1.1]} />
-                    <meshStandardMaterial 
-                        color="#fff" 
-                        emissive={color} 
-                        emissiveIntensity={isActive ? 5.0 : 2.0} 
-                        transparent 
-                        opacity={0.8}
-                    />
-                </mesh>
-
-                {/* 4. BASE SIGNAL PULSE (Floor glow) */}
-                <mesh position={[0, 0, -h/2]} rotation={[Math.PI/2, 0, 0]}>
-                    <ringGeometry args={[0, 0.12, 16]} />
-                    <meshBasicMaterial 
-                        color={color} 
-                        transparent 
-                        opacity={0.2} 
-                        side={THREE.DoubleSide}
-                    />
+                {/* Subtle base marker */}
+                <mesh position={[0, 0, -h/2]}>
+                    <planeGeometry args={[0.02, 0.02]} />
+                    <meshBasicMaterial color={color} transparent opacity={0.1} />
                 </mesh>
             </group>
             {/* Precision Click Boundary - Tight fit to monolith */}
