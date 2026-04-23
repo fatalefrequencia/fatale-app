@@ -397,7 +397,7 @@ const InteractiveGlobe = ({
                     maxDistance={25}
                     autoRotate={isGlobeSpinning && !selectedId}
                     autoRotateSpeed={isGlobeSpinning ? 0.5 : 0}
-                    dampingFactor={0.5} // High damping for immediate stop
+                    dampingFactor={0.1} // Lower damping for smoother manual but explicit auto-stop
                     enableDamping={true}
                     rotateSpeed={selectedId ? 0 : 0.5}
                 />
@@ -407,9 +407,9 @@ const InteractiveGlobe = ({
                 <pointLight position={[-10, -10, -10]} intensity={1.5} color="#00ffff" />
 
                 <Float 
-                    speed={selectedId ? 0 : (activeSector !== null ? 0.2 : 1.0)} 
-                    rotationIntensity={selectedId ? 0 : (activeSector !== null ? 0.02 : 0.3)} 
-                    floatIntensity={selectedId ? 0 : 0.2}
+                    speed={isGlobeSpinning && !selectedId ? (activeSector !== null ? 0.2 : 1.0) : 0} 
+                    rotationIntensity={isGlobeSpinning && !selectedId ? (activeSector !== null ? 0.02 : 0.3) : 0} 
+                    floatIntensity={isGlobeSpinning && !selectedId ? 0.2 : 0}
                 >
                     <GlobeCore 
                         activeSector={activeSector}

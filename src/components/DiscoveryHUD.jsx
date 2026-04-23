@@ -186,6 +186,9 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
             return name && !name.toLowerCase().includes('placeholder') && name.length > 1;
         });
         if (activeSector !== null) base = base.filter(matchesSector);
+        if (searchQuery) {
+            base = base.filter(a => (a.name || a.Name || '').toLowerCase().includes(searchQuery.toLowerCase()));
+        }
         return base;
     }, [trendingArtists, searchQuery, matchesSector, activeSector]);
 
@@ -214,6 +217,9 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
         }
 
         if (activeSector !== null) base = base.filter(matchesSector);
+        if (searchQuery) {
+            base = base.filter(c => (c.name || c.Name || '').toLowerCase().includes(searchQuery.toLowerCase()));
+        }
         return base;
     }, [communities, searchQuery, matchesSector, activeSector, user]);
 
@@ -599,10 +605,10 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                     <div className="absolute top-10 left-4 z-50 scale-75 lg:scale-100">
                                         <button 
                                             onClick={() => setIsGlobeSpinning(!isGlobeSpinning)}
-                                            className={`flex items-center gap-3 px-3 py-2 rounded-sm border transition-all duration-300 ${isGlobeSpinning ? 'bg-[#00ffff]/10 border-[#00ffff] text-[#00ffff]' : 'bg-black/40 border-white/5 text-white/40'}`}
+                                            className={`flex items-center justify-center w-10 h-10 rounded-sm border transition-all duration-300 ${isGlobeSpinning ? 'bg-[#00ffff]/10 border-[#00ffff] text-[#00ffff]' : 'bg-black/40 border-white/5 text-white/40'}`}
+                                            title={isGlobeSpinning ? "PAUSE_SPIN" : "START_SPIN"}
                                         >
-                                            {isGlobeSpinning ? <Pause size={12} /> : <Play size={12} />}
-                                            <span className="text-[8px] font-black tracking-[0.2em] uppercase">SPIN</span>
+                                            {isGlobeSpinning ? <Pause size={14} /> : <Play size={14} />}
                                         </button>
                                     </div>
 
@@ -715,7 +721,9 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                          <div className="space-y-1">
                              {filteredTracks.map((t, idx) => (
                                  <div key={t.id} className="flex items-center gap-4 text-[10px] group cursor-pointer py-2 px-2 hover:bg-white/5 transition-all border-l border-transparent hover:border-[#ff006e]" onClick={() => onPlayTrack(t)}>
-                                     <span className="text-[8px] opacity-20 tabular-nums">0{idx+1}</span>
+                                     <div className="w-8 h-8 rounded-sm bg-black border border-white/10 shrink-0 overflow-hidden relative">
+                                         <img src={getMediaUrl(t.imageUrl || t.ImageUrl || t.coverImageUrl || t.CoverImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
+                                     </div>
                                      <div className="flex-1 truncate">
                                          <div className="font-bold truncate group-hover:text-[#ff006e] transition-colors uppercase">{t.title}</div>
                                          <div className="text-[8px] opacity-30 uppercase tracking-widest font-light">{t.artist}</div>
