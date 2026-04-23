@@ -74,9 +74,9 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelec
                     opacity={0.85} 
                 />
             </mesh>
-            {/* Extended Click Boundary */}
-            <mesh visible={false} scale={[2, 2, 2]} position={[0, 0, 0]} onClick={(e) => { e.stopPropagation(); onClick(); }}>
-                <boxGeometry args={[0.2, 0.2, h + 0.2]} />
+            {/* Precision Click Boundary - Tight fit to monolith */}
+            <mesh visible={false} position={[0, 0, 0]} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+                <boxGeometry args={[0.08, 0.08, h + 0.1]} />
             </mesh>
 
             {/* Single Selection Pin - Premium Style */}
@@ -282,10 +282,13 @@ const GlobeCore = ({
     const filteredArtists = useMemo(() => {
         if (activeView === 'LIVE_SIGNAL_HUB') {
             return artists.filter(a => {
-                const live = (a.isLive || a.IsLive) || stations.some(s => 
-                    (String(s.artistId || s.ArtistId) === String(a.id || a.Id)) && (s.isLive || s.IsLive)
+                const isArtistLive = a.isLive || a.IsLive;
+                const hasLiveStation = stations.some(s => 
+                    (String(s.artistId || s.ArtistId || s.userId || s.UserId) === String(a.id || a.Id || a.userId || a.UserId)) && (s.isLive || s.IsLive)
                 );
-                return live;
+                // Also show if they have tracks assigned (fallback for manual hub population)
+                const hasTracks = tracks.some(t => String(t.artistId || t.ArtistId) === String(a.id || a.Id));
+                return isArtistLive || hasLiveStation || (hasTracks && activeView === 'LIVE_SIGNAL_HUB');
             });
         }
         return artists;

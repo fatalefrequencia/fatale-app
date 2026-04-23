@@ -515,17 +515,17 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                         {/* Header Section */}
                                                         <div className="md:col-span-4 border-r border-white/5 pr-8">
                                                             <div className="flex justify-between items-start mb-4">
-                                                                <div>
-                                                                    <div className="flex items-center gap-4">
-                                                                        <div className="w-12 h-12 rounded-sm bg-black border border-white/10 overflow-hidden shrink-0">
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="flex items-center gap-4 mb-1">
+                                                                        <div className="w-12 h-12 rounded-sm bg-black border border-white/10 overflow-hidden shrink-0 shadow-2xl">
                                                                             <img 
                                                                                 src={getMediaUrl(selectedGlobeItem.profilePicture || selectedGlobeItem.ProfilePicture || selectedGlobeItem.imageUrl || selectedGlobeItem.ImageUrl || selectedGlobeItem.coverImageUrl || selectedGlobeItem.CoverImageUrl)} 
                                                                                 alt="" 
                                                                                 className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all"
                                                                             />
                                                                         </div>
-                                                                        <div>
-                                                                            <div className="text-[18px] font-black tracking-tight text-white uppercase leading-tight">
+                                                                        <div className="truncate">
+                                                                            <div className="text-[18px] font-black tracking-tight text-white uppercase leading-tight truncate">
                                                                                 {selectedGlobeItem.name || selectedGlobeItem.title}
                                                                             </div>
                                                                             <div className="text-[10px] text-[#ff006e] font-bold tracking-[0.3em] uppercase mt-1 flex items-center gap-2">
