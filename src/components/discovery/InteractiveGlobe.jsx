@@ -13,22 +13,19 @@ const hashStr = (s) => {
     return Math.abs(h);
 };
 
-const getSphericalPos = (id, radius = 2.5, offset = 0, parentLatLon = null) => {
-    const h = hashStr(id);
+const getSphericalPos = (id, radius = 2.5, offset = 0, name = "") => {
+    // Salt the hash with the name to ensure unique placement for shared IDs
+    const h = hashStr(id.toString() + name);
     let lat, lon;
 
-    if (parentLatLon) {
-        // Cluster around parent: applies a deterministic orbital offset
-        const orbitRadius = 0.08 + (h % 5) * 0.02; // Small variation in distance from center
-        const orbitAngle = (h % 360) * (Math.PI / 180);
-        
-        lat = parentLatLon.lat + Math.cos(orbitAngle) * orbitRadius;
-        lon = parentLatLon.lon + Math.sin(orbitAngle) * orbitRadius;
-    } else {
-        // Standard global distribution
-        lat = ((h % 120) - 60) * (Math.PI / 180);
-        lon = (h % 360) * (Math.PI / 180);
-    }
+    // Deterministic spread using Fibonacci Sphere algorithm
+    const samples = 200; 
+    const i = h % samples;
+    const phi = Math.acos(1 - 2 * (i + 0.5) / samples);
+    const theta = Math.PI * (1 + Math.sqrt(5)) * (i + 0.5);
+    
+    lat = phi - Math.PI / 2;
+    lon = theta % (Math.PI * 2);
 
     const r = radius + offset;
     const x = r * Math.cos(lat) * Math.cos(lon);
@@ -43,7 +40,7 @@ const getSphericalPos = (id, radius = 2.5, offset = 0, parentLatLon = null) => {
 // 1. COMMUNITY BUILDINGS (High-Density Monoliths)
 const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelected, onClick, cameraDist }) => {
     const meshRef = useRef();
-    const { pos, lat, lon } = useMemo(() => getSphericalPos(id, 2.5), [id]);
+    const { pos, lat, lon } = useMemo(() => getSphericalPos(id, 2.5, 0, name), [id, name]);
     
     // Scale height by population density (memberCount)
     const h = Math.min(0.15 + (memberCount * 0.1), 2.0);
@@ -88,10 +85,10 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelec
 };
 
 // 2. ARTIST NODES (Discrete Shards)
-const ArtistNode = ({ id, name, color, parentLatLon, isLive, isSelected, cameraDist, onClick }) => {
+const ArtistNode = ({ id, name, color, isLive, isSelected, cameraDist, onClick }) => {
     const meshRef = useRef();
     const materialRef = useRef();
-    const { pos } = useMemo(() => getSphericalPos(id, 2.5, 0.18, parentLatLon), [id, parentLatLon]);
+    const { pos } = useMemo(() => getSphericalPos(id, 2.48, 0.05, name), [id, name]);
     
     // Apple-style LOD Threshholds
     const importance = isLive ? 1.0 : 0.6;
@@ -99,6 +96,8 @@ const ArtistNode = ({ id, name, color, parentLatLon, isLive, isSelected, cameraD
     const opacityFactor = THREE.MathUtils.clamp((14 - cameraDist) / 4, 0, 1) * (isLive ? 1 : 0.9);
 
     useFrame((state) => {
+        if (isSelected) return; // Full stabilization halt
+
         const t = state.clock.getElapsedTime();
         meshRef.current.rotation.y += 0.012;
         meshRef.current.rotation.z += 0.005;
@@ -107,15 +106,15 @@ const ArtistNode = ({ id, name, color, parentLatLon, isLive, isSelected, cameraD
         meshRef.current.position.y += Math.sin(t * 1.5 + hashStr(id)) * 0.0002;
 
         if (isLive) {
-            const pulse = (Math.sin(t * 4) + 1) / 2; // 0 to 1 pulse
-            meshRef.current.scale.setScalar(1 + pulse * 0.4);
+            const pulse = (Math.sin(t * 4) + 1) / 2;
+            meshRef.current.scale.setScalar(0.7 + pulse * 0.2);
             if (materialRef.current) {
                 materialRef.current.emissiveIntensity = 4.5 + pulse * 8;
             }
         } else {
-            meshRef.current.scale.setScalar(isVisible ? 1 : 0);
+            meshRef.current.scale.setScalar(isVisible ? 0.6 : 0);
             if (materialRef.current) {
-                materialRef.current.emissiveIntensity = 4.5;
+                materialRef.current.emissiveIntensity = 3.0;
             }
         }
     });
@@ -123,45 +122,35 @@ const ArtistNode = ({ id, name, color, parentLatLon, isLive, isSelected, cameraD
     return (
         <group 
             position={pos}
-            onClick={(e) => {
-                e.stopPropagation();
-                onClick();
-            }}
-            scale={isSelected ? 1.5 : 1}
+            onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
         >
             <mesh ref={meshRef}>
-                <octahedronGeometry args={[0.035, 0]} />
+                <octahedronGeometry args={[0.02, 0]} />
                 <meshStandardMaterial 
                     ref={materialRef}
                     color="#fff" 
                     emissive={isLive ? "#00ffff" : (isSelected ? "#fff" : color)} 
-                    emissiveIntensity={isSelected ? 10 : 4.5} 
+                    emissiveIntensity={isSelected ? 10 : 3.5} 
                     transparent
                     opacity={opacityFactor}
                 />
             </mesh>
-            {/* Pulsing ring for selected state */}
-            {isSelected && (
-                <mesh rotation={[-Math.PI / 2, 0, 0]}>
-                    <ringGeometry args={[0.05, 0.055, 32]} />
-                    <meshBasicMaterial color="#fff" transparent opacity={0.8} />
-                </mesh>
-            )}
-            {/* Apple-style "Pin" Glow (Anchor) */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
-                <circleGeometry args={[0.02, 16]} />
-                <meshBasicMaterial color={color} transparent opacity={opacityFactor * 0.3} />
-            </mesh>
 
-            {/* Selection Text Anchor */}
+            {/* Selection Visuals */}
             {isSelected && (
-                <Html position={[0, 0.12, 0]} center>
-                    <div className="pointer-events-none select-none flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className="px-1.5 py-0.5 bg-white text-black text-[7px] font-black tracking-widest uppercase shadow-2xl">
-                            {name}
+                <group>
+                    <mesh rotation={[-Math.PI / 2, 0, 0]}>
+                        <ringGeometry args={[0.04, 0.045, 32]} />
+                        <meshBasicMaterial color="#fff" transparent opacity={0.8} />
+                    </mesh>
+                    <Html position={[0, 0.1, 0]} center>
+                        <div className="pointer-events-none select-none flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <div className="px-1.5 py-0.5 bg-white text-black text-[7px] font-black tracking-widest uppercase shadow-2xl">
+                                {name}
+                            </div>
                         </div>
-                    </div>
-                </Html>
+                    </Html>
+                </group>
             )}
         </group>
     );
@@ -198,7 +187,7 @@ const SignalBeacon = ({ pos, color }) => {
 // 3. TRACK NODES (Neural Signal Sparks)
 const TrackNode = ({ id, title, artist, color, isSelected, cameraDist, onClick }) => {
     const meshRef = useRef();
-    const { pos } = useMemo(() => getSphericalPos(id, 2.5, 0.12), [id]);
+    const { pos } = useMemo(() => getSphericalPos(id, 2.48, 0.12, title), [id, title]);
     
     const opacityFactor = THREE.MathUtils.clamp((9 - cameraDist) / 3, 0, 1);
 
@@ -268,9 +257,16 @@ const GlobeCore = ({
     }, [communities, activeView]);
 
     const filteredArtists = useMemo(() => {
-        if (activeView === 'LIVE_SIGNAL_HUB') return artists.filter(a => a.isLive || a.IsLive);
+        if (activeView === 'LIVE_SIGNAL_HUB') {
+            return artists.filter(a => {
+                const live = (a.isLive || a.IsLive) || stations.some(s => 
+                    (String(s.artistId || s.ArtistId) === String(a.id || a.Id)) && (s.isLive || s.IsLive)
+                );
+                return live;
+            });
+        }
         return artists;
-    }, [artists, activeView]);
+    }, [artists, activeView, stations]);
 
     const filteredTracks = useMemo(() => {
         if (activeView === 'LIVE_SIGNAL_HUB') return tracks.slice(0, 5);
@@ -338,7 +334,7 @@ const GlobeCore = ({
                         key={`artist-${a.id || a.Id}`} 
                         id={a.id || a.Id}
                         name={a.name || a.Name}
-                        color={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (SECTORS.find(s => s.id === (a.sectorId || a.SectorId || 0))?.color || "#ff006e")}
+                        color={activeView === 'CLIQUE_VALENCE' ? (a.communityId || a.CommunityId ? "#00ffff" : "#333") : (SECTORS.find(s => s.id === (a.sectorId || a.SectorId || 0))?.color || "#ff006e")}
                         isLive={isLive}
                         isSelected={selectedId === `artist-${a.id || a.Id}`}
                         cameraDist={cameraDist}
@@ -391,11 +387,12 @@ const InteractiveGlobe = ({
                     enablePan={false} 
                     enableZoom={true} 
                     minDistance={2.8} 
-                    maxDistance={20}
-                    autoRotate={activeSector === null && !selectedId}
-                    autoRotateSpeed={selectedId ? 0 : 0.5}
-                    dampingFactor={0.05}
+                    maxDistance={25}
+                    autoRotate={!selectedId}
+                    autoRotateSpeed={0.5}
+                    dampingFactor={0.5} // High damping for immediate stop
                     enableDamping={true}
+                    rotateSpeed={selectedId ? 0 : 0.5}
                 />
                 
                 <ambientLight intensity={0.5} />

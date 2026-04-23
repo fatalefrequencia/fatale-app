@@ -451,9 +451,9 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                 >
                                     <InteractiveGlobe 
                                         searchQuery={searchQuery}
-                                        communities={filteredCommunities}
-                                        artists={filteredArtists}
-                                        stations={liveStations}
+                                        communities={communities}
+                                        artists={trendingArtists} // Pass full list for globe
+                                        stations={stations} // Pass full list for globe
                                         tracks={trendingTracks}
                                         activeSector={activeSector}
                                         selectedId={selectedGlobeItem ? `${selectedGlobeItem.type}-${selectedGlobeItem.id || selectedGlobeItem.Id}` : null}
@@ -556,14 +556,18 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                                     trendingArtists.filter(a => String(a.communityId || a.CommunityId) === String(selectedGlobeItem.id)).slice(0, 8).map((a, i) => (
                                                                         <div key={i} className="flex flex-col items-center gap-2 shrink-0 group/member cursor-pointer" onClick={() => navigateToProfile(a.userId || a.UserId)}>
                                                                             <div className="w-14 h-14 rounded-full border border-white/10 overflow-hidden group-hover/member:border-[#ff006e] transition-colors bg-white/5">
-                                                                                <img src={a.profilePicture || a.ProfilePicture || 'https://via.placeholder.com/100'} alt="" className="w-full h-full object-cover grayscale group-hover/member:grayscale-0 transition-all" />
+                                                                                <img src={getMediaUrl(a.profilePicture || a.ProfilePicture) || 'https://via.placeholder.com/100'} alt="" className="w-full h-full object-cover grayscale group-hover/member:grayscale-0 transition-all" />
                                                                             </div>
                                                                             <span className="text-[7px] font-bold text-white/60 tracking-wider uppercase group-hover/member:text-white">{a.name || a.Name}</span>
                                                                         </div>
                                                                     ))
                                                                 ) : (
                                                                     // ARTIST: Show Signal Previews
-                                                                    visualUploads.filter(v => (v.userId || v.UserId) === (selectedGlobeItem.userId || selectedGlobeItem.UserId)).slice(0, 5).map((v, i) => (
+                                                                    visualUploads.filter(v => {
+                                                                        const artistId = selectedGlobeItem.userId || selectedGlobeItem.UserId || selectedGlobeItem.id || selectedGlobeItem.Id;
+                                                                        const uploadArtistId = v.userId || v.UserId || v.artistId || v.ArtistId;
+                                                                        return String(uploadArtistId) === String(artistId);
+                                                                    }).slice(0, 5).map((v, i) => (
                                                                         <div key={i} className="w-32 h-20 bg-black border border-white/10 shrink-0 relative group/img overflow-hidden rounded-sm">
                                                                             <img src={resolveThumbnail(v)} alt="" className="w-full h-full object-cover opacity-60 group-hover/img:opacity-100 transition-opacity" />
                                                                             <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60" />
