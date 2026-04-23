@@ -85,9 +85,9 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelec
                     <meshBasicMaterial color={color} transparent opacity={0.1} />
                 </mesh>
             </group>
-            {/* Precision Click Boundary - FLAT PLATE ONLY (Zero vertical occlusion) */}
-            <mesh visible={false} position={[0, 0, -h/2]} onClick={(e) => { e.stopPropagation(); onClick(); }}>
-                <boxGeometry args={[0.12, 0.12, 0.01]} />
+            {/* Full Tower Click Boundary (Whole skyscraper is now clickable) */}
+            <mesh visible={false} position={[0, 0, 0]} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+                <boxGeometry args={[0.08, 0.08, h]} />
             </mesh>
 
             {/* Single Selection Pin - Premium Style */}
