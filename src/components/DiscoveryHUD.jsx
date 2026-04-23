@@ -508,14 +508,25 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                         <div className="md:col-span-4 border-r border-white/5 pr-8">
                                                             <div className="flex justify-between items-start mb-4">
                                                                 <div>
-                                                                    <div className="text-[18px] font-black tracking-tight text-white uppercase leading-tight">
-                                                                        {selectedGlobeItem.name || selectedGlobeItem.title}
-                                                                    </div>
-                                                                    <div className="text-[10px] text-[#ff006e] font-bold tracking-[0.3em] uppercase mt-1 flex items-center gap-2">
-                                                                        <Activity size={10} /> 
-                                                                        {selectedGlobeItem.type === 'track' ? 'SIGNAL_BROADCAST' : 
-                                                                         selectedGlobeItem.type === 'community' ? 'NEURAL_CLUSTER' : 
-                                                                         'ARTIST_IDENTITY'}
+                                                                    <div className="flex items-center gap-4">
+                                                                        <div className="w-12 h-12 rounded-sm bg-black border border-white/10 overflow-hidden shrink-0">
+                                                                            <img 
+                                                                                src={getMediaUrl(selectedGlobeItem.profilePicture || selectedGlobeItem.ProfilePicture || selectedGlobeItem.imageUrl || selectedGlobeItem.ImageUrl || selectedGlobeItem.coverImageUrl || selectedGlobeItem.CoverImageUrl)} 
+                                                                                alt="" 
+                                                                                className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all"
+                                                                            />
+                                                                        </div>
+                                                                        <div>
+                                                                            <div className="text-[18px] font-black tracking-tight text-white uppercase leading-tight">
+                                                                                {selectedGlobeItem.name || selectedGlobeItem.title}
+                                                                            </div>
+                                                                            <div className="text-[10px] text-[#ff006e] font-bold tracking-[0.3em] uppercase mt-1 flex items-center gap-2">
+                                                                                <Activity size={10} /> 
+                                                                                {selectedGlobeItem.type === 'track' ? 'SIGNAL_BROADCAST' : 
+                                                                                 selectedGlobeItem.type === 'community' ? 'NEURAL_CLUSTER' : 
+                                                                                 'ARTIST_IDENTITY'}
+                                                                            </div>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                                 <button 

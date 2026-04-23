@@ -74,6 +74,10 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelec
                     opacity={0.85} 
                 />
             </mesh>
+            {/* Extended Click Boundary */}
+            <mesh visible={false} scale={[2, 2, 2]} position={[0, 0, 0]} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+                <boxGeometry args={[0.2, 0.2, h + 0.2]} />
+            </mesh>
 
             {/* Single Selection Pin - Premium Style */}
             {isSelected && (
@@ -134,12 +138,16 @@ const ArtistNode = ({ id, name, color, isLive, isSelected, communityId, cameraDi
                 <octahedronGeometry args={[0.02, 0]} />
                 <meshStandardMaterial 
                     ref={materialRef}
-                    color="#fff" 
-                    emissive={isLive ? "#00ffff" : (isSelected ? "#fff" : color)} 
-                    emissiveIntensity={isSelected ? 10 : 3.5} 
-                    transparent
+                    color={color} 
+                    emissive={color} 
+                    emissiveIntensity={isSelected ? 5 : (isLive ? 3 : 1)} 
+                    transparent 
                     opacity={opacityFactor}
                 />
+            </mesh>
+            {/* Node Click Target */}
+            <mesh visible={false} scale={5} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+                <sphereGeometry args={[0.02, 8, 8]} />
             </mesh>
 
             {/* Selection Visuals */}
@@ -197,17 +205,22 @@ const TrackNode = ({ id, title, artist, color, isSelected, cameraDist, onClick }
     
     const opacityFactor = THREE.MathUtils.clamp((9 - cameraDist) / 3, 0, 1);
 
-    useFrame((state) => {
-        const t = state.clock.getElapsedTime();
-        meshRef.current.position.x += Math.sin(t * 3 + hashStr(id)) * 0.0001;
-        meshRef.current.position.z += Math.cos(t * 3 + hashStr(id)) * 0.0001;
-    });
-
     return (
-        <group position={pos} onPointerDown={(e) => { e.stopPropagation(); onClick(); }}>
-            <mesh ref={meshRef} visible={opacityFactor > 0}>
-                <sphereGeometry args={[0.015, 8, 8]} />
-                <meshStandardMaterial color={color} emissive={color} emissiveIntensity={6} transparent opacity={opacityFactor * 0.8} />
+        <group position={pos}>
+            <mesh ref={meshRef} onClick={onClick}>
+                <tetrahedronGeometry args={[0.015, 0]} />
+                <meshStandardMaterial 
+                    color="#fff" 
+                    emissive="#fff" 
+                    emissiveIntensity={isSelected ? 4 : 2} 
+                    transparent 
+                    opacity={opacityFactor * 0.8}
+                />
+            </mesh>
+            {/* Glow Aura */}
+            <mesh scale={2}>
+                <sphereGeometry args={[0.01, 8, 8]} />
+                <meshBasicMaterial color="#fff" transparent opacity={opacityFactor * 0.1} />
             </mesh>
             {isSelected && (
                 <Html position={[0, 0.08, 0]} center>
@@ -278,10 +291,17 @@ const GlobeCore = ({
     }, [artists, activeView, stations]);
 
     const filteredTracks = useMemo(() => {
-        if (activeView === 'LIVE_SIGNAL_HUB') return tracks.slice(0, 5);
-        if (activeView === 'CLIQUE_VALENCE') return [];
-        return tracks;
-    }, [tracks, activeView]);
+        if (activeView === 'LIVE_SIGNAL_HUB') {
+            // Show tracks from anyone live
+            return tracks.filter(t => {
+                const artistId = t.artistId || t.ArtistId;
+                const isArtistLive = artists.some(a => String(a.id || a.Id) === String(artistId) && (a.isLive || a.IsLive));
+                const isStationLive = stations.some(s => String(s.artistId || s.ArtistId) === String(artistId) && (s.isLive || s.IsLive));
+                return isArtistLive || isStationLive;
+            });
+        }
+        return tracks.slice(0, 50);
+    }, [tracks, activeView, stations, artists]);
 
     return (
         <group ref={groupRef}>
