@@ -507,12 +507,18 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                 transition={{ type: "spring", damping: 30, stiffness: 300 }}
                                                 className="absolute bottom-4 left-4 right-4 z-50 pointer-events-auto"
                                             >
-                                                <div className="bg-black/95 border border-[#ff006e]/30 p-6 shadow-[0_0_50px_rgba(0,0,0,0.9),0_0_20px_rgba(255,0,110,0.05)] overflow-hidden relative group max-w-5xl mx-auto">
-                                                    {/* Cyber Wireframe Accent */}
-                                                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#ff006e]" />
-                                                    <div className="absolute top-0 bottom-0 left-0 w-[1px] bg-gradient-to-b from-[#ff006e] to-transparent opacity-20" />
-                                                    
-                                                    <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                                                <div className="bg-black/95 p-6 relative group max-w-5xl mx-auto border-x border-[#ff006e]/20">
+                                                    {/* Cyber HUD Corner Brackets */}
+                                                    <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.5)]" />
+                                                    <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.5)]" />
+                                                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.5)]" />
+                                                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.5)]" />
+
+                                                    {/* Structural Accent Lines */}
+                                                    <div className="absolute top-2 left-10 right-10 h-[1px] bg-[#ff006e]/20" />
+                                                    <div className="absolute bottom-2 left-10 right-10 h-[1px] bg-[#ff006e]/20" />
+
+                                                    <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center pt-2">
                                                         {/* Header Section */}
                                                         <div className="md:col-span-4 border-r border-white/5 pr-8">
                                                             <div className="flex justify-between items-start mb-4">
@@ -552,23 +558,27 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                                 {selectedGlobeItem.type === 'artist' && (
                                                                     <button 
                                                                         onClick={() => navigateToProfile(selectedGlobeItem.userId || selectedGlobeItem.UserId)}
-                                                                        className="w-full bg-white text-black py-3 text-[10px] font-black tracking-[0.2em] uppercase transition-all hover:bg-[#ff006e] hover:text-white"
+                                                                        className="w-full bg-transparent border border-white/40 text-white/60 hover:border-[#ff006e] hover:text-[#ff006e] py-3 text-[10px] font-black tracking-[0.2em] uppercase transition-all shadow-lg overflow-hidden relative group/btn"
                                                                     >
+                                                                        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-current opacity-0 group-hover/btn:opacity-100" />
+                                                                        <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-current opacity-0 group-hover/btn:opacity-100" />
                                                                         VISIT_IDENTITY
                                                                     </button>
                                                                 )}
                                                                 {selectedGlobeItem.type === 'community' && (
                                                                     <button 
                                                                         onClick={() => setActiveTerminalCommunity(selectedGlobeItem)}
-                                                                        className="w-full bg-white/5 border border-white/10 hover:border-[#ff006e] py-3 text-[10px] font-black tracking-[0.2em] uppercase transition-all"
+                                                                        className="w-full bg-transparent border border-white/20 text-white/40 hover:border-[#ff006e] hover:text-white py-3 text-[10px] font-black tracking-[0.2em] uppercase transition-all shadow-lg relative group/btn"
                                                                     >
+                                                                        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-current opacity-0 group-hover/btn:opacity-100" />
+                                                                        <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-current opacity-0 group-hover/btn:opacity-100" />
                                                                         ENTER_PORTAL
                                                                     </button>
                                                                 )}
                                                                 {selectedGlobeItem.type === 'track' && (
                                                                     <button 
                                                                         onClick={() => { onPlayTrack(selectedGlobeItem); setSelectedGlobeItem(null); }}
-                                                                        className="w-full bg-[#ff006e] py-3 text-[10px] font-black tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2"
+                                                                        className="w-full bg-transparent border border-[#ff006e] text-[#ff006e] py-3 text-[10px] font-black tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(255,0,110,0.1)] hover:bg-[#ff006e] hover:text-white"
                                                                     >
                                                                         <Play size={12} fill="currentColor" /> PLAY_TRACK
                                                                     </button>

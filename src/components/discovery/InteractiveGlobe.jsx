@@ -67,8 +67,8 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelec
     return (
         <group position={pos}>
             <group rotation={[0, -lon, lat]}>
-                {/* NEON WIREFRAME ONLY (Cyber-skeleton style) */}
-                <lineSegments onClick={(e) => { e.stopPropagation(); onClick(); }}>
+                {/* DECORATIVE VISUALS ONLY (No Raycast) */}
+                <lineSegments>
                     <edgesGeometry args={[new THREE.BoxGeometry(0.07, 0.07, h)]} />
                     <lineBasicMaterial 
                         color={color} 
@@ -84,9 +84,9 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelec
                     <meshBasicMaterial color={color} transparent opacity={0.1} />
                 </mesh>
             </group>
-            {/* Precision Click Boundary - BASE ONLY (Prevent shard occlusion) */}
-            <mesh visible={false} position={[0, 0, -h/2 + 0.05]} onClick={(e) => { e.stopPropagation(); onClick(); }}>
-                <boxGeometry args={[0.1, 0.1, 0.1]} />
+            {/* Precision Click Boundary - FLAT PLATE ONLY (Zero vertical occlusion) */}
+            <mesh visible={false} position={[0, 0, -h/2]} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+                <boxGeometry args={[0.12, 0.12, 0.01]} />
             </mesh>
 
             {/* Single Selection Pin - Premium Style */}
@@ -155,8 +155,8 @@ const ArtistNode = ({ id, name, color, isLive, isSelected, communityId, cameraDi
                     opacity={opacityFactor}
                 />
             </mesh>
-            {/* Node Click Target - ENHANCED PRIORITY */}
-            <mesh visible={false} scale={10} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+            {/* Node Click Target - MAXIMUM PRIORITY (15x scale) */}
+            <mesh visible={false} scale={15} onClick={(e) => { e.stopPropagation(); onClick(); }}>
                 <sphereGeometry args={[0.02, 8, 8]} />
             </mesh>
 
@@ -233,8 +233,8 @@ const TrackNode = ({ id, title, artist, color, isSelected, cameraDist, onClick }
                 <sphereGeometry args={[0.015, 8, 8]} />
                 <meshBasicMaterial color={color || "#fff"} transparent opacity={opacityFactor * 0.15} />
             </mesh>
-            {/* Track Hit Target */}
-            <mesh visible={false} scale={12} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+            {/* Track Hit Target - MAXIMUM PRIORITY (15x scale) */}
+            <mesh visible={false} scale={15} onClick={(e) => { e.stopPropagation(); onClick(); }}>
                 <sphereGeometry args={[0.015, 8, 8]} />
             </mesh>
             {isSelected && (
