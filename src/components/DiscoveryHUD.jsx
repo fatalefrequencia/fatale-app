@@ -520,7 +520,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                                         onClick={() => navigateToProfile(selectedGlobeItem.userId || selectedGlobeItem.UserId)}
                                                                         className="w-full bg-white text-black py-3 text-[10px] font-black tracking-[0.2em] uppercase transition-all hover:bg-[#ff006e] hover:text-white"
                                                                     >
-                                                                        VISIT_PROFILE
+                                                                        VISIT_IDENTITY
                                                                     </button>
                                                                 )}
                                                                 {selectedGlobeItem.type === 'community' && (
@@ -528,7 +528,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                                         onClick={() => setActiveTerminalCommunity(selectedGlobeItem)}
                                                                         className="w-full bg-white/5 border border-white/10 hover:border-[#ff006e] py-3 text-[10px] font-black tracking-[0.2em] uppercase transition-all"
                                                                     >
-                                                                        ACCESS_TERMINAL
+                                                                        ENTER_PORTAL
                                                                     </button>
                                                                 )}
                                                                 {selectedGlobeItem.type === 'track' && (
@@ -536,7 +536,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                                         onClick={() => { onPlayTrack(selectedGlobeItem); setSelectedGlobeItem(null); }}
                                                                         className="w-full bg-[#ff006e] py-3 text-[10px] font-black tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2"
                                                                     >
-                                                                        <Play size={12} fill="currentColor" /> INJECT_SIGNAL
+                                                                        <Play size={12} fill="currentColor" /> PLAY_TRACK
                                                                     </button>
                                                                 )}
                                                             </div>
@@ -595,15 +595,18 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                         )}
                                     </AnimatePresence>
 
-                                    {/* World View Switcher - Premium Toggle */}
-                                    <div className="absolute top-10 right-4 flex flex-col gap-3 z-50 scale-75 lg:scale-100">
+                                    {/* Globe Controls - Premium Mirror Layout */}
+                                    <div className="absolute top-10 left-4 z-50 scale-75 lg:scale-100">
                                         <button 
                                             onClick={() => setIsGlobeSpinning(!isGlobeSpinning)}
                                             className={`flex items-center gap-3 px-3 py-2 rounded-sm border transition-all duration-300 ${isGlobeSpinning ? 'bg-[#00ffff]/10 border-[#00ffff] text-[#00ffff]' : 'bg-black/40 border-white/5 text-white/40'}`}
                                         >
                                             {isGlobeSpinning ? <Pause size={12} /> : <Play size={12} />}
-                                            <span className="text-[8px] font-black tracking-[0.2em] uppercase">SPIN_PROTOCOL</span>
+                                            <span className="text-[8px] font-black tracking-[0.2em] uppercase">SPIN</span>
                                         </button>
+                                    </div>
+
+                                    <div className="absolute top-10 right-4 flex flex-col gap-3 z-50 scale-75 lg:scale-100">
 
                                         {[
                                             { id: 'CORE_PULSE', icon: <Activity size={12} />, label: 'CORE_PULSE', desc: 'Realtime Activity' },

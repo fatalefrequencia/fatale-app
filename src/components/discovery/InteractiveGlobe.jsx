@@ -13,19 +13,25 @@ const hashStr = (s) => {
     return Math.abs(h);
 };
 
-const getSphericalPos = (id, radius = 2.5, offset = 0, name = "") => {
-    // Salt the hash with the name to ensure unique placement for shared IDs
-    const h = hashStr(id.toString() + name);
-    let lat, lon;
-
-    // Deterministic spread using Fibonacci Sphere algorithm
+const getSphericalPos = (id, radius = 2.5, offset = 0, parentId = null) => {
+    // If we have a parent, we base our position on the parent's hash then offset
+    const baseH = hashStr(parentId || id);
     const samples = 200; 
-    const i = h % samples;
+    const i = baseH % samples;
     const phi = Math.acos(1 - 2 * (i + 0.5) / samples);
     const theta = Math.PI * (1 + Math.sqrt(5)) * (i + 0.5);
     
-    lat = phi - Math.PI / 2;
-    lon = theta % (Math.PI * 2);
+    let lat = phi - Math.PI / 2;
+    let lon = theta % (Math.PI * 2);
+
+    if (parentId) {
+        // Add orbital displacement for artists in a community
+        const h = hashStr(id);
+        const rOffset = 0.04 + (h % 10) * 0.008;
+        const angle = (h % 1000) / 1000 * Math.PI * 2;
+        lat += Math.cos(angle) * rOffset;
+        lon += Math.sin(angle) * rOffset;
+    }
 
     const r = radius + offset;
     const x = r * Math.cos(lat) * Math.cos(lon);
@@ -40,7 +46,7 @@ const getSphericalPos = (id, radius = 2.5, offset = 0, name = "") => {
 // 1. COMMUNITY BUILDINGS (High-Density Monoliths)
 const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelected, onClick, cameraDist }) => {
     const meshRef = useRef();
-    const { pos, lat, lon } = useMemo(() => getSphericalPos(id, 2.5, 0, name), [id, name]);
+    const { pos, lat, lon } = useMemo(() => getSphericalPos(id, 2.5, 0), [id]);
     
     // Scale height by population density (memberCount)
     const h = Math.min(0.15 + (memberCount * 0.1), 2.0);
@@ -85,10 +91,10 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelec
 };
 
 // 2. ARTIST NODES (Discrete Shards)
-const ArtistNode = ({ id, name, color, isLive, isSelected, cameraDist, onClick }) => {
+const ArtistNode = ({ id, name, color, isLive, isSelected, communityId, cameraDist, onClick }) => {
     const meshRef = useRef();
     const materialRef = useRef();
-    const { pos } = useMemo(() => getSphericalPos(id, 2.48, 0.05, name), [id, name]);
+    const { pos } = useMemo(() => getSphericalPos(id, 2.48, 0.05, communityId), [id, communityId]);
     
     // Apple-style LOD Threshholds
     const importance = isLive ? 1.0 : 0.6;
@@ -187,7 +193,7 @@ const SignalBeacon = ({ pos, color }) => {
 // 3. TRACK NODES (Neural Signal Sparks)
 const TrackNode = ({ id, title, artist, color, isSelected, cameraDist, onClick }) => {
     const meshRef = useRef();
-    const { pos } = useMemo(() => getSphericalPos(id, 2.48, 0.12, title), [id, title]);
+    const { pos } = useMemo(() => getSphericalPos(id, 2.48, 0.12), [id]);
     
     const opacityFactor = THREE.MathUtils.clamp((9 - cameraDist) / 3, 0, 1);
 
@@ -336,6 +342,7 @@ const GlobeCore = ({
                         name={a.name || a.Name}
                         color={activeView === 'CLIQUE_VALENCE' ? (a.communityId || a.CommunityId ? "#00ffff" : "#333") : (SECTORS.find(s => s.id === (a.sectorId || a.SectorId || 0))?.color || "#ff006e")}
                         isLive={isLive}
+                        communityId={a.communityId || a.CommunityId}
                         isSelected={selectedId === `artist-${a.id || a.Id}`}
                         cameraDist={cameraDist}
                         onClick={() => onArtistClick?.(a)}
@@ -389,7 +396,7 @@ const InteractiveGlobe = ({
                     minDistance={2.8} 
                     maxDistance={25}
                     autoRotate={isGlobeSpinning && !selectedId}
-                    autoRotateSpeed={0.5}
+                    autoRotateSpeed={isGlobeSpinning ? 0.5 : 0}
                     dampingFactor={0.5} // High damping for immediate stop
                     enableDamping={true}
                     rotateSpeed={selectedId ? 0 : 0.5}
