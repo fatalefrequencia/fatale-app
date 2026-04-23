@@ -1,4 +1,4 @@
-// Deployment Trigger: 2026-03-19T01:45:00-04:00
+// Deployment Trigger: 2026-04-23T11:28:45-04:00
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -2423,6 +2423,7 @@ const FeedContent = React.memo(({
   }, []);
 
   const handleTrackPlay = (clickedItem) => {
+    console.log("[FEED_SIGNAL] INTERCEPTED_TRACK_PLAY_REQUEST:", clickedItem?.Id || clickedItem?.id || clickedItem?.Title || "UNKNOWN");
     if (!clickedItem) return;
 
     // 1. Identify all track items in the feed for playlist continuity
