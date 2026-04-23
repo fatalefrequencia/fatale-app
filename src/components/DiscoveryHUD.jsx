@@ -261,8 +261,6 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
         if (!searchQuery) return base.slice(0, 6);
         return base.filter(j => 
             j.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            j.content?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
     }, [journalEntries, searchQuery, matchesSector, activeSector]);
 
     // Calculate dynamic theme color based on active sector
@@ -507,10 +505,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                 transition={{ type: "spring", damping: 30, stiffness: 300 }}
                                                 className="absolute bottom-4 left-4 right-4 z-50 pointer-events-auto"
                                             >
-                                                <div className="bg-black backdrop-blur-3xl border border-white/5 p-8 shadow-[0_0_80px_rgba(0,0,0,0.9)] overflow-hidden relative group max-w-5xl mx-auto">
-                                                    {/* Double Layer Inset */}
-                                                    <div className="absolute inset-1 border border-white/5 pointer-events-none" />
-                                                    
+                                                <div className="bg-black/95 backdrop-blur-3xl border border-white/10 p-8 shadow-[0_0_80px_rgba(0,0,0,0.9)] overflow-hidden relative group max-w-5xl mx-auto">
                                                     {/* Corner Brackets */}
                                                     <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
                                                     <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />

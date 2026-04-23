@@ -55,10 +55,11 @@ const getSphericalPos = (id, radius = 2.5, offset = 0, parentId = null) => {
 // 1. COMMUNITY BUILDINGS (High-Density Monoliths)
 const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelected, onClick, cameraDist }) => {
     const meshRef = useRef();
-    const { pos, lat, lon } = useMemo(() => getSphericalPos(id, 2.5, 0), [id]);
-    
     // Scale height by population density (memberCount)
-    const h = Math.min(0.15 + (memberCount * 0.1), 2.0);
+    const h = Math.min(0.20 + (memberCount * 0.12), 2.0);
+
+    // Calculate position with offset so base is on surface
+    const { pos, lat, lon } = useMemo(() => getSphericalPos(id, 2.5, h/2), [id, h]);
 
     // Label visibility logic
     const showLabel = cameraDist < 10;
