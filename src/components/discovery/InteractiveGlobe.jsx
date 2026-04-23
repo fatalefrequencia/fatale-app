@@ -41,7 +41,7 @@ const getSphericalPos = (id, radius = 2.5, offset = 0, parentLatLon = null) => {
 // --- COMPONENTS ---
 
 // 1. COMMUNITY BUILDINGS (High-Density Monoliths)
-const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, onClick, cameraDist }) => {
+const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelected, onClick, cameraDist }) => {
     const meshRef = useRef();
     const { pos, lat, lon } = useMemo(() => getSphericalPos(id, 2.5), [id]);
     
@@ -72,24 +72,14 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, onClick
                 />
             </mesh>
 
-            {showLabel && (
-                <Html distanceFactor={15} position={[0, h/2 + 0.1, 0]} center>
-                    <div 
-                        className="pointer-events-none select-none transition-all duration-500"
-                        style={{ 
-                            opacity: labelOpacity,
-                            transform: `scale(${0.6 + (10 - cameraDist) * 0.05})`
-                        }}
-                    >
-                        <div className="flex flex-col items-center">
-                            <div 
-                                className="px-1.5 py-0.5 bg-black/60 border-l-2 text-[6px] font-black tracking-[0.2em] uppercase whitespace-nowrap"
-                                style={{ borderLeftColor: color, color: color }}
-                            >
-                                {name}
-                            </div>
-                            <div className="w-[1px] h-3 bg-gradient-to-b from-white/20 to-transparent" />
+            {/* Single Selection Pin - Premium Style */}
+            {isSelected && (
+                <Html distanceFactor={12} position={[0, h/2 + 0.2, 0]} center>
+                    <div className="pointer-events-none select-none flex flex-col items-center animate-in fade-in zoom-in duration-300">
+                        <div className="px-3 py-1 bg-black/80 backdrop-blur-md border border-white/20 text-[9px] font-black tracking-widest text-white uppercase shadow-2xl">
+                            {name}
                         </div>
+                        <div className="w-[1px] h-6 bg-gradient-to-b from-white to-transparent" />
                     </div>
                 </Html>
             )}
@@ -97,8 +87,8 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, onClick
     );
 };
 
-// 2. ARTIST NODES (Sleek Shards)
-const ArtistNode = ({ id, name, color, parentLatLon, isLive, cameraDist, onClick }) => {
+// 2. ARTIST NODES (Discrete Shards)
+const ArtistNode = ({ id, name, color, parentLatLon, isLive, isSelected, cameraDist, onClick }) => {
     const meshRef = useRef();
     const materialRef = useRef();
     const { pos } = useMemo(() => getSphericalPos(id, 2.5, 0.18, parentLatLon), [id, parentLatLon]);
@@ -137,38 +127,38 @@ const ArtistNode = ({ id, name, color, parentLatLon, isLive, cameraDist, onClick
                 e.stopPropagation();
                 onClick();
             }}
+            scale={isSelected ? 1.5 : 1}
         >
             <mesh ref={meshRef}>
-                <octahedronGeometry args={[0.04, 0]} />
+                <octahedronGeometry args={[0.035, 0]} />
                 <meshStandardMaterial 
                     ref={materialRef}
                     color="#fff" 
-                    emissive={isLive ? "#00ffff" : color} 
-                    emissiveIntensity={4.5} 
+                    emissive={isLive ? "#00ffff" : (isSelected ? "#fff" : color)} 
+                    emissiveIntensity={isSelected ? 10 : 4.5} 
                     transparent
                     opacity={opacityFactor}
                 />
             </mesh>
+            {/* Pulsing ring for selected state */}
+            {isSelected && (
+                <mesh rotation={[-Math.PI / 2, 0, 0]}>
+                    <ringGeometry args={[0.05, 0.055, 32]} />
+                    <meshBasicMaterial color="#fff" transparent opacity={0.8} />
+                </mesh>
+            )}
             {/* Apple-style "Pin" Glow (Anchor) */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
                 <circleGeometry args={[0.02, 16]} />
                 <meshBasicMaterial color={color} transparent opacity={opacityFactor * 0.3} />
             </mesh>
 
-            {/* Label reveals as we approach */}
-            {cameraDist < 8 && (
-                <Html distanceFactor={12} position={[0, 0.12, 0]} center>
-                    <div 
-                        className="pointer-events-none select-none"
-                        style={{ 
-                            opacity: THREE.MathUtils.clamp((8 - cameraDist) / 2, 0, 1),
-                            transform: `scale(${0.7 + (8 - cameraDist) * 0.04})`
-                        }}
-                    >
-                        <div className="flex flex-col items-center">
-                            <div className="text-[7px] font-bold text-white uppercase tracking-wider whitespace-nowrap drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-                                {name} {isLive && <span className="text-[#00ffff] ml-1 animate-pulse text-[5px]">●</span>}
-                            </div>
+            {/* Selection Text Anchor */}
+            {isSelected && (
+                <Html distanceFactor={10} position={[0, 0.15, 0]} center>
+                    <div className="pointer-events-none select-none flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="px-2 py-0.5 bg-white text-black text-[8px] font-black tracking-widest uppercase shadow-2xl">
+                            {name}
                         </div>
                     </div>
                 </Html>
@@ -178,7 +168,7 @@ const ArtistNode = ({ id, name, color, parentLatLon, isLive, cameraDist, onClick
 };
 
 // 3. TRACK NODES (Neural Signal Sparks)
-const TrackNode = ({ id, title, artist, color, cameraDist, onClick }) => {
+const TrackNode = ({ id, title, artist, color, isSelected, cameraDist, onClick }) => {
     const meshRef = useRef();
     const { pos } = useMemo(() => getSphericalPos(id, 2.5, 0.12), [id]);
     
@@ -211,23 +201,12 @@ const TrackNode = ({ id, title, artist, color, cameraDist, onClick }) => {
                 />
             </mesh>
 
-            {/* High Zoom Track Detail Card */}
-            {cameraDist < 5.5 && (
-                <Html distanceFactor={10} position={[0, 0.05, 0]} center>
-                    <div 
-                        className="pointer-events-none select-none transition-all"
-                        style={{ 
-                            opacity: THREE.MathUtils.clamp((5.5 - cameraDist) * 2, 0, 1),
-                            transform: `scale(${0.6 + (5.5 - cameraDist) * 0.05})`
-                        }}
-                    >
-                        <div className="flex items-center gap-1.5 opacity-80">
-                             <div className="w-[1px] h-3 bg-[#00ffff]" />
-                             <div className="flex flex-col">
-                                 <div className="text-[6px] text-[#00ffff] font-black uppercase tracking-tight truncate leading-none">{title}</div>
-                                 <div className="text-[5px] text-white/50 uppercase tracking-widest truncate">{artist}</div>
-                             </div>
-                        </div>
+            {/* High Zoom Track Detail Card - ONLY WHEN SELECTED */}
+            {isSelected && (
+                <Html distanceFactor={8} position={[0, 0.1, 0]} center>
+                    <div className="pointer-events-none select-none px-3 py-1 bg-black/90 border-l border-[#00ffff] backdrop-blur-xl animate-in fade-in zoom-in duration-300 shadow-2xl">
+                        <div className="text-[8px] text-[#00ffff] font-black uppercase tracking-widest">{title}</div>
+                        <div className="text-[6px] text-white/40 uppercase tracking-widest mt-0.5">{artist}</div>
                     </div>
                 </Html>
             )}
@@ -235,7 +214,31 @@ const TrackNode = ({ id, title, artist, color, cameraDist, onClick }) => {
     );
 };
 
-// StationNode removed - visualization now integrated into ArtistNode
+// 4. NEURAL STREAMS (Arc Connections)
+const NeuralStream = ({ start, end, color }) => {
+    const curve = useMemo(() => {
+        const startVec = new THREE.Vector3(...start);
+        const endVec = new THREE.Vector3(...end);
+        const mid = startVec.clone().lerp(endVec, 0.5).normalize().multiplyScalar(3.0);
+        return new THREE.QuadraticBezierCurve3(startVec, mid, endVec);
+    }, [start, end]);
+
+    const points = useMemo(() => curve.getPoints(50), [curve]);
+    const lineGeometry = useMemo(() => new THREE.BufferGeometry().setFromPoints(points), [points]);
+
+    const shaderRef = useRef();
+    useFrame((state) => {
+        if (shaderRef.current) {
+            shaderRef.current.uniforms.dashOffset.value -= 0.01;
+        }
+    });
+
+    return (
+        <line geometry={lineGeometry}>
+            <lineBasicMaterial color={color} transparent opacity={0.3} />
+        </line>
+    );
+};
 
 const GlobeCore = ({ 
     activeSector, 
@@ -243,6 +246,8 @@ const GlobeCore = ({
     artists = [], 
     stations = [],
     tracks = [],
+    selectedId,
+    activeView = 'CORE_PULSE',
     onArtistClick,
     onCommunityClick,
     onTrackClick
@@ -288,24 +293,37 @@ const GlobeCore = ({
             </Sphere>
 
             {/* Atmosphere/Grid Overlay */}
-            <Sphere args={[2.5, 36, 36]}>
+            <Sphere args={[2.52, 40, 40]}>
                 <meshBasicMaterial 
-                    color={activeSectorColor || "#ff006e"} 
+                    color={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (activeSectorColor || "#ff006e")} 
                     wireframe 
                     transparent 
-                    opacity={activeSector !== null ? 0.08 : 0.02} 
+                    opacity={activeView === 'CLIQUE_VALENCE' ? 0.15 : (activeSector !== null ? 0.08 : 0.02)} 
                 />
             </Sphere>
 
-            {/* DATA-DRIVEN RENDERERS (Strict Validation) */}
+            {/* Neural Streams Layer */}
+            {activeView === 'NEURAL_STREAMS' && communities.length > 1 && (
+                <group opacity={0.5}>
+                    {communities.slice(0, 5).map((c, i) => {
+                        const start = getSphericalPos(c.id || c.Id, 2.5).pos;
+                        const nextComm = communities[(i + 1) % communities.length];
+                        const end = getSphericalPos(nextComm.id || nextComm.Id, 2.5).pos;
+                        return <NeuralStream key={`stream-${i}`} start={start} end={end} color="#ff006e" />;
+                    })}
+                </group>
+            )}
+
+            {/* DATA-DRIVEN RENDERERS */}
             {communities.filter(c => c && (c.id || c.Id)).map(c => (
                 <CommunityBuilding 
                     key={`comm-${c.id || c.Id}`} 
                     id={c.id || c.Id}
                     name={c.name || c.Name}
-                    memberCount={c.memberCount || c.MemberCount || 0}
+                    memberCount={activeView === 'FREQ_PEAKS' ? (c.memberCount || 0) * 2 : (c.memberCount || 0)}
                     color={SECTORS.find(s => s.id === (c.sectorId || c.SectorId || 0))?.color || "#ff006e"}
                     isActive={activeSector === (c.sectorId || c.SectorId)}
+                    isSelected={selectedId === (c.id || c.Id)}
                     cameraDist={cameraDist}
                     onClick={() => onCommunityClick?.(c)}
                 />
@@ -332,9 +350,10 @@ const GlobeCore = ({
                         key={`artist-${a.id || a.Id}`} 
                         id={a.id || a.Id}
                         name={a.name || a.Name}
-                        color={SECTORS.find(s => s.id === (a.sectorId || a.SectorId || 0))?.color || "#ff006e"}
+                        color={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (SECTORS.find(s => s.id === (a.sectorId || a.SectorId || 0))?.color || "#ff006e")}
                         parentLatLon={parentLatLon}
                         isLive={isLive}
+                        isSelected={selectedId === (a.id || a.Id)}
                         cameraDist={cameraDist}
                         onClick={() => onArtistClick?.(a)}
                     />
@@ -347,7 +366,8 @@ const GlobeCore = ({
                     id={t.id || t.Id}
                     title={t.title || t.Title}
                     artist={t.artist || t.Artist}
-                    color={SECTORS.find(s => s.id === (t.sectorId || t.SectorId || 0))?.color || "#00ffff"}
+                    color={activeView === 'NEURAL_STREAMS' ? "#ff006e" : (SECTORS.find(s => s.id === (t.sectorId || t.SectorId || 0))?.color || "#00ffff")}
+                    isSelected={selectedId === (t.id || t.Id)}
                     cameraDist={cameraDist}
                     onClick={() => onTrackClick?.(t)}
                 />
@@ -363,22 +383,31 @@ const InteractiveGlobe = ({
     artists = [], 
     stations = [],
     tracks = [],
+    selectedId,
+    activeView = 'CORE_PULSE',
     onArtistClick,
     onCommunityClick,
-    onTrackClick
+    onTrackClick,
+    onSelectItem
 }) => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
     
     return (
         <div className="w-full h-full cursor-grab active:cursor-grabbing">
-            <Canvas dpr={[1, 2]} camera={{ position: [0, 0, isMobile ? 12 : 10.5], fov: isMobile ? 30 : 40 }}>
+            <Canvas 
+                dpr={[1, 2]} 
+                gl={{ logarithmicDepthBuffer: true, antialias: true }}
+                camera={{ position: [0, 0, isMobile ? 12 : 10.5], fov: isMobile ? 30 : 40 }}
+                onPointerMissed={() => onSelectItem?.(null)}
+            >
                 <OrbitControls 
                     enablePan={false} 
                     enableZoom={true} 
-                    minDistance={3.5} 
-                    maxDistance={15}
-                    autoRotate={activeSector === null}
+                    minDistance={2.8} 
+                    maxDistance={20}
+                    autoRotate={activeSector === null && !selectedId}
                     autoRotateSpeed={0.5}
+                    dampingFactor={0.05}
                 />
                 
                 <ambientLight intensity={0.5} />
@@ -396,6 +425,8 @@ const InteractiveGlobe = ({
                         artists={artists}
                         stations={stations}
                         tracks={tracks}
+                        selectedId={selectedId}
+                        activeView={activeView}
                         onArtistClick={onArtistClick}
                         onCommunityClick={onCommunityClick}
                         onTrackClick={onTrackClick}

@@ -8,6 +8,14 @@ import HUDWidget from './discovery/HUDWidget';
 import InteractiveGlobe from './discovery/InteractiveGlobe';
 import CommunityTerminal from './discovery/CommunityTerminal';
 
+const hashStr = (s) => {
+    if (!s) return 0;
+    let h = 0;
+    const str = s.toString();
+    for (let i = 0; i < str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+    return Math.abs(h);
+};
+
 const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, onPlayPlaylist, isPlayerActive, onExpandContent, onPlayStation }) => {
     const { showNotification } = useNotification();
     const [searchQuery, setSearchQuery] = useState('');
@@ -72,6 +80,8 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     const [selectedPlaylist, setSelectedPlaylist] = useState(null);
     const [playlistTracks, setPlaylistTracks] = useState([]);
     const [loadingPlaylist, setLoadingPlaylist] = useState(false);
+    const [selectedGlobeItem, setSelectedGlobeItem] = useState(null);
+    const [activeGlobeView, setActiveGlobeView] = useState('CORE_PULSE'); // 'CORE_PULSE', 'NEURAL_STREAMS', 'CLIQUE_VALENCE', 'FREQ_PEAKS', 'ARCHIVE_SCAN'
 
     const fetchAll = useCallback(async () => {
         setLoading(true);
@@ -446,13 +456,123 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                         stations={liveStations}
                                         tracks={trendingTracks}
                                         activeSector={activeSector}
+                                        selectedId={selectedGlobeItem?.id}
+                                        activeView={activeGlobeView}
                                         onSectorClick={(secId) => {
                                             setActiveSector(activeSector === secId ? null : secId);
                                         }}
-                                        onArtistClick={(artist) => navigateToProfile(artist.userId || artist.UserId)}
-                                        onCommunityClick={(comm) => setActiveTerminalCommunity(comm)}
-                                        onTrackClick={(track) => onPlayTrack(track)}
+                                        onArtistClick={(artist) => {
+                                            setSelectedGlobeItem({ ...artist, type: 'artist' });
+                                        }}
+                                        onCommunityClick={(comm) => {
+                                            setSelectedGlobeItem({ ...comm, type: 'community' });
+                                        }}
+                                        onTrackClick={(track) => {
+                                            setSelectedGlobeItem({ ...track, type: 'track' });
+                                        }}
+                                        onSelectItem={(id) => {
+                                            if (id === null) setSelectedGlobeItem(null);
+                                        }}
                                     />
+
+                                    {/* Globe Detail Card - Premium Glassmorphism */}
+                                    <AnimatePresence>
+                                        {selectedGlobeItem && (
+                                            <motion.div 
+                                                initial={{ opacity: 0, y: 100, scale: 0.95 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                exit={{ opacity: 0, y: 100, scale: 0.95 }}
+                                                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                                                className="absolute bottom-1/4 left-1/2 -translate-x-1/2 w-[280px] z-50 pointer-events-auto"
+                                            >
+                                                <div className="bg-black/60 backdrop-blur-3xl border border-white/10 rounded-sm p-4 shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden relative group">
+                                                    {/* Background Glow */}
+                                                    <div className="absolute -inset-20 bg-gradient-to-tr from-[#ff006e]/10 via-transparent to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-1000" />
+                                                    
+                                                    <div className="relative z-10 flex flex-col gap-3">
+                                                        <div className="flex justify-between items-start">
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="text-[14px] font-black tracking-tight text-white uppercase truncate">
+                                                                    {selectedGlobeItem.name || selectedGlobeItem.title}
+                                                                </div>
+                                                                <div className="text-[9px] text-[#ff006e] font-bold tracking-[0.2em] uppercase mt-1">
+                                                                    {selectedGlobeItem.type === 'track' ? selectedGlobeItem.artist : 
+                                                                     selectedGlobeItem.type === 'community' ? `CLIQUE_${selectedGlobeItem.memberCount || 0}` : 
+                                                                     'ARTIST_IDENTITY'}
+                                                                </div>
+                                                            </div>
+                                                            <button 
+                                                                onClick={() => setSelectedGlobeItem(null)}
+                                                                className="p-1 text-white/20 hover:text-white transition-colors"
+                                                            >
+                                                                <X size={14} />
+                                                            </button>
+                                                        </div>
+
+                                                        {selectedGlobeItem.type === 'artist' && (
+                                                            <button 
+                                                                onClick={() => navigateToProfile(selectedGlobeItem.userId || selectedGlobeItem.UserId)}
+                                                                className="w-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#ff006e]/50 py-2.5 text-[9px] font-black tracking-[0.2em] uppercase transition-all"
+                                                            >
+                                                                ESTABLISH_NEURAL_LINK
+                                                            </button>
+                                                        )}
+
+                                                        {selectedGlobeItem.type === 'community' && (
+                                                            <div className="flex gap-2">
+                                                                <button 
+                                                                    onClick={() => setActiveTerminalCommunity(selectedGlobeItem)}
+                                                                    className="flex-1 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-[#ff006e]/50 py-2.5 text-[9px] font-black tracking-[0.2em] uppercase transition-all"
+                                                                >
+                                                                    ACCESS_TERMINAL
+                                                                </button>
+                                                            </div>
+                                                        )}
+
+                                                        {selectedGlobeItem.type === 'track' && (
+                                                            <button 
+                                                                onClick={() => {
+                                                                    onPlayTrack(selectedGlobeItem);
+                                                                    setSelectedGlobeItem(null);
+                                                                }}
+                                                                className="w-full bg-[#ff006e] hover:bg-[#ff006e]/80 py-2.5 text-[9px] font-black tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2"
+                                                            >
+                                                                <Play size={10} fill="currentColor" /> INJECT_SIGNAL
+                                                            </button>
+                                                        )}
+
+                                                        <div className="flex items-center justify-between mt-1 h-[1px] bg-white/5">
+                                                            <div className="h-full bg-[#ff006e] w-1/3 shadow-[0_0_10px_#ff006e]" />
+                                                        </div>
+
+                                                        <div className="flex justify-between items-center text-[7px] text-white/30 font-bold tracking-widest uppercase">
+                                                            <span>LAT: {hashStr(selectedGlobeItem.id) % 180 - 90}</span>
+                                                            <span>LON: {hashStr(selectedGlobeItem.id) % 360 - 180}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+
+                                    {/* World View Switcher */}
+                                    <div className="absolute top-10 right-4 flex flex-col gap-2 z-50 scale-75 lg:scale-100">
+                                        {[
+                                            { id: 'CORE_PULSE', icon: <Activity size={12} />, label: 'CORE_PULSE' },
+                                            { id: 'NEURAL_STREAMS', icon: <Zap size={12} />, label: 'NEURAL_STREAMS' },
+                                            { id: 'CLIQUE_VALENCE', icon: <Layers size={12} />, label: 'CLIQUE_VALENCE' },
+                                            { id: 'FREQ_PEAKS', icon: <Activity size={12} />, label: 'FREQ_PEAK_DATA' }
+                                        ].map(v => (
+                                            <button 
+                                                key={v.id}
+                                                onClick={() => setActiveGlobeView(v.id)}
+                                                className={`flex items-center gap-3 px-3 py-2 rounded-sm border transition-all duration-300 group ${activeGlobeView === v.id ? 'bg-[#ff006e]/10 border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.2)]' : 'bg-black/40 border-white/5 text-white/40 hover:border-white/20 hover:text-white'}`}
+                                            >
+                                                {v.icon}
+                                                <span className={`text-[8px] font-black tracking-[0.2em] transition-all ${activeGlobeView === v.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto overflow-hidden'}`}>{v.label}</span>
+                                            </button>
+                                        ))}
+                                    </div>
                                 </motion.div>
                             ) : (
                                 <motion.div 
