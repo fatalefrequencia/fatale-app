@@ -468,7 +468,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.8 }}
                                     transition={{ duration: 0.3 }}
-                                    className="w-full h-full flex items-center justify-center px-4 lg:px-8 py-4"
+                                    className="w-full h-full flex items-center justify-center p-4"
                                 >
                                     <InteractiveGlobe 
                                         searchQuery={searchQuery}
@@ -507,9 +507,10 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                 transition={{ type: "spring", damping: 30, stiffness: 300 }}
                                                 className="absolute bottom-4 left-4 right-4 z-50 pointer-events-auto"
                                             >
-                                                <div className="bg-black/80 backdrop-blur-3xl border border-white/10 rounded-lg p-6 shadow-[0_-20px_80px_rgba(0,0,0,0.9)] overflow-hidden relative group max-w-5xl mx-auto">
-                                                    {/* Premium Background Glow */}
-                                                    <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#ff006e]/50 to-transparent" />
+                                                <div className="bg-black/95 border border-[#ff006e]/30 p-6 shadow-[0_0_50px_rgba(0,0,0,0.9),0_0_20px_rgba(255,0,110,0.05)] overflow-hidden relative group max-w-5xl mx-auto">
+                                                    {/* Cyber Wireframe Accent */}
+                                                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#ff006e]" />
+                                                    <div className="absolute top-0 bottom-0 left-0 w-[1px] bg-gradient-to-b from-[#ff006e] to-transparent opacity-20" />
                                                     
                                                     <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
                                                         {/* Header Section */}
@@ -524,15 +525,17 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                                                 className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all"
                                                                             />
                                                                         </div>
-                                                                        <div className="truncate">
-                                                                            <div className="text-[18px] font-black tracking-tight text-white uppercase leading-tight truncate">
+                                                                        <div className="truncate flex flex-col justify-center">
+                                                                            <div className="text-[18px] font-black tracking-tight text-white uppercase leading-none truncate">
                                                                                 {selectedGlobeItem.name || selectedGlobeItem.title}
                                                                             </div>
-                                                                            <div className="text-[10px] text-[#ff006e] font-bold tracking-[0.3em] uppercase mt-1 flex items-center gap-2">
+                                                                            <div className="text-[9px] text-[#ff006e] font-bold tracking-[0.3em] uppercase mt-2 flex items-center gap-2 whitespace-nowrap">
                                                                                 <Activity size={10} /> 
-                                                                                {selectedGlobeItem.type === 'track' ? 'SIGNAL_BROADCAST' : 
-                                                                                 selectedGlobeItem.type === 'community' ? 'NEURAL_CLUSTER' : 
-                                                                                 'ARTIST_IDENTITY'}
+                                                                                <span className="leading-none py-0.5">
+                                                                                    {selectedGlobeItem.type === 'track' ? 'SIGNAL_BROADCAST' : 
+                                                                                     selectedGlobeItem.type === 'community' ? 'NEURAL_CLUSTER' : 
+                                                                                     'ARTIST_IDENTITY'}
+                                                                                </span>
                                                                             </div>
                                                                         </div>
                                                                     </div>
