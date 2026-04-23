@@ -66,23 +66,54 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelec
 
     return (
         <group position={pos}>
-            <mesh 
-                ref={meshRef}
-                rotation={[0, -lon, lat]} 
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onClick();
-                }}
-            >
-                <boxGeometry args={[0.06, 0.06, h]} />
-                <meshStandardMaterial 
-                    color={color} 
-                    emissive={color} 
-                    emissiveIntensity={isActive ? 3.0 : 0.8} 
-                    transparent 
-                    opacity={0.85} 
-                />
-            </mesh>
+            <group rotation={[0, -lon, lat]}>
+                {/* 1. HOLOGRAPHIC VOLUME (Semi-transparent hull) */}
+                <mesh onClick={(e) => { e.stopPropagation(); onClick(); }}>
+                    <boxGeometry args={[0.07, 0.07, h]} />
+                    <meshStandardMaterial 
+                        color={color} 
+                        emissive={color} 
+                        emissiveIntensity={isActive ? 2.0 : 0.5} 
+                        transparent 
+                        opacity={0.15} 
+                        side={THREE.DoubleSide}
+                    />
+                </mesh>
+
+                {/* 2. NEON WIREFRAME EDGES (Cyber-city style) */}
+                <lineSegments>
+                    <edgesGeometry args={[new THREE.BoxGeometry(0.07, 0.07, h)]} />
+                    <lineBasicMaterial 
+                        color={color} 
+                        transparent 
+                        opacity={isActive ? 1.0 : 0.6} 
+                        linewidth={2}
+                    />
+                </lineSegments>
+
+                {/* 3. CENTRAL DATA CORE (Glow beam) */}
+                <mesh position={[0, 0, 0]}>
+                    <boxGeometry args={[0.015, 0.015, h * 1.1]} />
+                    <meshStandardMaterial 
+                        color="#fff" 
+                        emissive={color} 
+                        emissiveIntensity={isActive ? 5.0 : 2.0} 
+                        transparent 
+                        opacity={0.8}
+                    />
+                </mesh>
+
+                {/* 4. BASE SIGNAL PULSE (Floor glow) */}
+                <mesh position={[0, 0, -h/2]} rotation={[Math.PI/2, 0, 0]}>
+                    <ringGeometry args={[0, 0.12, 16]} />
+                    <meshBasicMaterial 
+                        color={color} 
+                        transparent 
+                        opacity={0.2} 
+                        side={THREE.DoubleSide}
+                    />
+                </mesh>
+            </group>
             {/* Precision Click Boundary - Tight fit to monolith */}
             <mesh visible={false} position={[0, 0, 0]} onClick={(e) => { e.stopPropagation(); onClick(); }}>
                 <boxGeometry args={[0.08, 0.08, h + 0.1]} />
