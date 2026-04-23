@@ -2370,6 +2370,8 @@ const FeedContent = React.memo(({
   stationChat, 
   stationQueue, 
   followedCommunities, 
+  setShowGlobalGoLive,
+  setShowGlobalUpload,
   setShowGlobalIngest,
   onExpandContent
 }) => {
@@ -2456,9 +2458,6 @@ const FeedContent = React.memo(({
 
     if (startIndex !== -1 && onPlayPlaylist) {
       onPlayPlaylist(playlist, startIndex);
-      if (playlist[startIndex].source.startsWith('youtube:')) {
-        setIsYoutubeMode(true);
-      }
     }
   };
 
