@@ -2422,42 +2422,68 @@ const FeedContent = React.memo(({
     fetchFeed();
   }, []);
 
-  const handleTrackPlay = (feedItemId) => {
+  const handleTrackPlay = (clickedItem) => {
+    if (!clickedItem) return;
+
     // 1. Identify all track items in the feed for playlist continuity
-    const trackFeedItems = feed.filter(item => item.Type === 'track');
+    const trackFeedItems = feed.filter(item => (item.Type || item.type || "").toLowerCase() === 'track');
     
+    const resolveSource = (t) => {
+      const raw = t.source || t.Source || t.filePath || t.FilePath || "";
+      const pureYtId = getGlobalYoutubeId(t);
+      if (pureYtId) return `youtube:${pureYtId}`;
+      if (raw) return raw.startsWith('http') ? raw : getMediaUrl(raw);
+      return null;
+    };
+
     const playlist = trackFeedItems.map(item => {
-      const tId = item.trackId || item.TrackId;
-      const rawSource = item.source || item.Source;
-      const pureYtId = getGlobalYoutubeId(item); // Inherited from App scope
-      const isYoutube = !!pureYtId;
+      const tId = item.trackId || item.TrackId || item.ItemId || item.itemId;
+      const resolvedSrc = resolveSource(item);
+      const isYoutube = resolvedSrc?.startsWith('youtube:');
+      const pureYtId = isYoutube ? resolvedSrc.split(':')[1] : null;
 
       // Deep reconciliation with library state
-      const libMatch = libraryTracks.find(lt => String(lt.id) === String(tId));
+      const libMatch = libraryTracks.find(lt => String(lt.id || lt.Id) === String(tId));
 
       return {
         ...item,
         id: tId,
         dbId: tId,
-        title: item.Title,
-        artist: item.Artist,
-        source: isYoutube ? `youtube:${pureYtId}` : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null),
-        cover: isYoutube ? `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg` : getMediaUrl(item.ImageUrl),
-        isLiked: libMatch ? libMatch.isLiked : item.IsLiked,
-        isOwned: libMatch ? libMatch.isOwned : true, // Content in feed is usually unlocked or previewable
+        title: item.Title || item.title,
+        artist: item.Artist || item.artist,
+        source: resolvedSrc,
+        cover: isYoutube 
+          ? (item.imageUrl || item.ImageUrl || `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg`) 
+          : getMediaUrl(item.ImageUrl || item.imageUrl),
+        isLiked: libMatch ? libMatch.isLiked : (item.IsLiked || item.isLiked),
+        isOwned: libMatch ? libMatch.isOwned : true,
         isLocked: false
       };
     }).filter(t => t.source);
 
-    // 2. Resolve the starting index using the original feed item's ID (which might be 'track-123' or 'repost-track-456')
-    const clickedItem = feed.find(f => String(f.Id) === String(feedItemId));
-    if (!clickedItem) return;
-
-    const targetTrackId = clickedItem.trackId || clickedItem.TrackId;
-    const startIndex = playlist.findIndex(t => String(t.dbId) === String(targetTrackId));
+    // 2. Find starting index
+    const targetTrackId = clickedItem.trackId || clickedItem.TrackId || clickedItem.ItemId || clickedItem.itemId;
+    let startIndex = playlist.findIndex(t => String(t.dbId) === String(targetTrackId));
 
     if (startIndex !== -1 && onPlayPlaylist) {
       onPlayPlaylist(playlist, startIndex);
+    } else {
+      // Fallback: Just play this one track if playlist logic fails
+      const resolvedSrc = resolveSource(clickedItem);
+      if (resolvedSrc && onPlayPlaylist) {
+        const singleTrack = {
+          ...clickedItem,
+          id: targetTrackId,
+          dbId: targetTrackId,
+          title: clickedItem.Title || clickedItem.title,
+          artist: clickedItem.Artist || clickedItem.artist,
+          source: resolvedSrc,
+          cover: getMediaUrl(clickedItem.ImageUrl || clickedItem.imageUrl),
+          isOwned: true,
+          isLocked: false
+        };
+        onPlayPlaylist([singleTrack], 0);
+      }
     }
   };
 
@@ -3089,7 +3115,7 @@ const FeedContent = React.memo(({
                         <div className="ml-0 sm:ml-40 mt-3 space-y-4">
                           {type === 'track' && (
                             <div
-                              onClick={() => handleTrackPlay(item.Id)}
+                              onClick={() => handleTrackPlay(item)}
                               className="bg-black/90 border border-[#ff006e]/30 p-4 flex items-center gap-4 hover:border-[#ff006e]/60 transition-all group/track cursor-pointer max-w-md shadow-xl"
                             >
                               <div className="w-12 h-12 bg-black border border-[#ff006e]/20 overflow-hidden shrink-0 flex items-center justify-center">
