@@ -507,56 +507,37 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                 transition={{ type: "spring", damping: 30, stiffness: 300 }}
                                                 className="absolute bottom-4 left-4 right-4 z-50 pointer-events-auto"
                                             >
-                                                <div className="bg-black/95 p-6 relative group max-w-5xl mx-auto">
-                                                    {/* Double Perimeter Border */}
-                                                    <div className="absolute inset-0 border border-[#ff006e]/10 pointer-events-none" />
-                                                    <div className="absolute inset-1 border border-[#ff006e]/20 pointer-events-none" />
+                                                <div className="bg-black backdrop-blur-3xl border border-white/5 p-8 shadow-[0_0_80px_rgba(0,0,0,0.9)] overflow-hidden relative group max-w-5xl mx-auto">
+                                                    {/* Double Layer Inset */}
+                                                    <div className="absolute inset-1 border border-white/5 pointer-events-none" />
                                                     
-                                                    {/* Structural Corner HUD Brackets */}
-                                                    <div className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-[#ff006e] shadow-[0_0_20px_rgba(255,0,110,0.4)]" />
-                                                    <div className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-[#ff006e] shadow-[0_0_20px_rgba(255,0,110,0.4)]" />
-                                                    <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-[#ff006e] shadow-[0_0_20px_rgba(255,0,110,0.4)]" />
-                                                    <div className="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-[#ff006e] shadow-[0_0_20px_rgba(255,0,110,0.4)]" />
+                                                    {/* Corner Brackets */}
+                                                    <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
+                                                    <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
+                                                    <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
+                                                    <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
 
-                                                    {/* Perimeter Tech-Bits (Circuit nodes) */}
-                                                    <div className="absolute top-0 left-1/4 w-4 h-1 bg-[#ff006e]/40 shadow-[0_0_10px_#ff006e]" />
-                                                    <div className="absolute top-0 right-1/4 w-8 h-1 bg-[#ff006e]/60 shadow-[0_0_10px_#ff006e]" />
-                                                    <div className="absolute bottom-0 left-1/3 w-10 h-1 bg-[#ff006e]/40 shadow-[0_0_10px_#ff006e]" />
-                                                    <div className="absolute bottom-0 right-1/3 w-6 h-1 bg-[#ff006e]/60 shadow-[0_0_10px_#ff006e]" />
-                                                    
-                                                    {/* Cooling Vents (Side bars) */}
-                                                    <div className="absolute -left-1 top-1/2 -translate-y-1/2 flex flex-col gap-1">
-                                                        {[1,2,3,4].map(v => <div key={v} className="w-1 h-3 bg-[#ff006e]/20" />)}
-                                                    </div>
-                                                    <div className="absolute -right-1 top-1/2 -translate-y-1/2 flex flex-col gap-1">
-                                                        {[1,2,3,4].map(v => <div key={v} className="w-1 h-3 bg-[#ff006e]/20" />)}
-                                                    </div>
-
-                                                    {/* Top Center Status Bar */}
-                                                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-48 h-2 bg-black border-x border-[#ff006e] flex items-center px-1 overflow-hidden">
-                                                        <div className="w-1/2 h-full bg-[#ff006e]/40 animate-pulse" />
-                                                    </div>
-
-                                                    <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center pt-2">
+                                                    <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-10 items-center">
                                                         {/* Header Section */}
-                                                        <div className="md:col-span-4 border-r border-white/5 pr-8">
-                                                            <div className="flex justify-between items-start mb-4">
+                                                        <div className="md:col-span-5 border-r border-white/5 pr-10">
+                                                            <div className="flex justify-between items-start mb-6">
                                                                 <div className="flex-1 min-w-0">
-                                                                    <div className="flex items-center gap-4 mb-1">
-                                                                        <div className="w-12 h-12 rounded-sm bg-black border border-white/10 overflow-hidden shrink-0 shadow-2xl">
+                                                                    <div className="flex items-center gap-5">
+                                                                        <div className="w-14 h-14 rounded-sm bg-black border border-white/10 overflow-hidden shrink-0 shadow-2xl relative">
                                                                             <img 
                                                                                 src={getMediaUrl(selectedGlobeItem.profilePicture || selectedGlobeItem.ProfilePicture || selectedGlobeItem.imageUrl || selectedGlobeItem.ImageUrl || selectedGlobeItem.coverImageUrl || selectedGlobeItem.CoverImageUrl)} 
                                                                                 alt="" 
                                                                                 className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all"
                                                                             />
+                                                                            <div className="absolute inset-0 border border-white/5 pointer-events-none" />
                                                                         </div>
                                                                         <div className="truncate flex flex-col justify-center">
-                                                                            <div className="text-[18px] font-black tracking-tight text-white uppercase leading-none truncate">
+                                                                            <div className="text-[20px] font-black tracking-tight text-white uppercase leading-none truncate">
                                                                                 {selectedGlobeItem.name || selectedGlobeItem.title}
                                                                             </div>
-                                                                            <div className="text-[9px] text-[#ff006e] font-bold tracking-[0.3em] uppercase mt-2 flex items-center gap-2 whitespace-nowrap">
+                                                                            <div className="text-[9px] text-[#ff006e] font-bold tracking-[0.4em] uppercase mt-3 flex items-center gap-2 whitespace-nowrap">
                                                                                 <Activity size={10} /> 
-                                                                                <span className="leading-none py-0.5">
+                                                                                <span className="leading-none">
                                                                                     {selectedGlobeItem.type === 'track' ? 'SIGNAL_BROADCAST' : 
                                                                                      selectedGlobeItem.type === 'community' ? 'NEURAL_CLUSTER' : 
                                                                                      'ARTIST_IDENTITY'}
@@ -567,38 +548,37 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                                 </div>
                                                                 <button 
                                                                     onClick={() => setSelectedGlobeItem(null)}
-                                                                    className="p-2 bg-white/5 rounded-full text-white/20 hover:text-white hover:bg-white/10 transition-all"
+                                                                    className="p-2 text-white/20 hover:text-white transition-all scale-125"
                                                                 >
                                                                     <X size={16} />
                                                                 </button>
                                                             </div>
                                                             
-                                                            <div className="flex flex-col gap-3">
+                                                            <div className="flex flex-col gap-4">
                                                                 {selectedGlobeItem.type === 'artist' && (
                                                                     <button 
                                                                         onClick={() => navigateToProfile(selectedGlobeItem.userId || selectedGlobeItem.UserId)}
-                                                                        className="w-full bg-transparent border border-white/40 text-white/60 hover:border-[#ff006e] hover:text-[#ff006e] py-3 text-[10px] font-black tracking-[0.2em] uppercase transition-all shadow-lg overflow-hidden relative group/btn"
+                                                                        className="w-full bg-transparent border border-white/20 text-white/80 hover:border-white hover:text-white py-4 text-[10px] font-black tracking-[0.3em] uppercase transition-all relative group/btn"
                                                                     >
-                                                                        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-current opacity-0 group-hover/btn:opacity-100" />
-                                                                        <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-current opacity-0 group-hover/btn:opacity-100" />
+                                                                        <div className="absolute inset-0 border border-white/5 transform scale-95 group-hover/btn:scale-100 transition-transform pointer-events-none" />
                                                                         VISIT_IDENTITY
                                                                     </button>
                                                                 )}
                                                                 {selectedGlobeItem.type === 'community' && (
                                                                     <button 
                                                                         onClick={() => setActiveTerminalCommunity(selectedGlobeItem)}
-                                                                        className="w-full bg-transparent border border-white/20 text-white/40 hover:border-[#ff006e] hover:text-white py-3 text-[10px] font-black tracking-[0.2em] uppercase transition-all shadow-lg relative group/btn"
+                                                                        className="w-full bg-transparent border border-white/20 text-white/80 hover:border-white hover:text-white py-4 text-[10px] font-black tracking-[0.3em] uppercase transition-all relative group/btn"
                                                                     >
-                                                                        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-current opacity-0 group-hover/btn:opacity-100" />
-                                                                        <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-current opacity-0 group-hover/btn:opacity-100" />
+                                                                        <div className="absolute inset-0 border border-white/5 transform scale-95 group-hover/btn:scale-100 transition-transform pointer-events-none" />
                                                                         ENTER_PORTAL
                                                                     </button>
                                                                 )}
                                                                 {selectedGlobeItem.type === 'track' && (
                                                                     <button 
                                                                         onClick={() => { onPlayTrack(selectedGlobeItem); setSelectedGlobeItem(null); }}
-                                                                        className="w-full bg-transparent border border-[#ff006e] text-[#ff006e] py-3 text-[10px] font-black tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(255,0,110,0.1)] hover:bg-[#ff006e] hover:text-white"
+                                                                        className="w-full bg-transparent border border-[#ff006e]/60 text-[#ff006e] hover:bg-[#ff006e]/10 py-4 text-[10px] font-black tracking-[0.3em] uppercase transition-all flex items-center justify-center gap-3 relative group/btn"
                                                                     >
+                                                                        <div className="absolute inset-0 border border-[#ff006e]/20 transform scale-95 group-hover/btn:scale-100 transition-transform pointer-events-none" />
                                                                         <Play size={12} fill="currentColor" /> PLAY_TRACK
                                                                     </button>
                                                                 )}
@@ -606,7 +586,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                         </div>
 
                                                         {/* Dynamic Membership / Signal Section */}
-                                                        <div className="md:col-span-8">
+                                                        <div className="md:col-span-7">
                                                             <div className="text-[8px] text-white/40 font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
                                                                 {selectedGlobeItem.type === 'community' ? (
                                                                     <><Users size={10} /> ARTIST_MEMBERS / CLIQUE_ROSTER</>
