@@ -212,8 +212,8 @@ const SignalBeacon = ({ pos, color }) => {
 // 3. TRACK NODES (Neural Signal Sparks)
 const TrackNode = ({ id, title, artist, color, isSelected, cameraDist, onClick }) => {
     const meshRef = useRef();
-    // Tracks land in a distinct spatial tier (0.70 offset)
-    const { pos } = useMemo(() => getSphericalPos(id, 2.48, 0.3, null, 'track'), [id]);
+    // Docked to surface (2.48 + 0.05) to match artists and clear buildings
+    const { pos } = useMemo(() => getSphericalPos(id, 2.48, 0.05, null, 'track'), [id]);
     
     const opacityFactor = THREE.MathUtils.clamp((9 - cameraDist) / 3, 0, 1);
 
