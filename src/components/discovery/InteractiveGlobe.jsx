@@ -74,12 +74,12 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelec
 
             {/* Single Selection Pin - Premium Style */}
             {isSelected && (
-                <Html distanceFactor={12} position={[0, h/2 + 0.2, 0]} center>
+                <Html distanceFactor={15} position={[0, h/2 + 0.1, 0]} center>
                     <div className="pointer-events-none select-none flex flex-col items-center animate-in fade-in zoom-in duration-300">
-                        <div className="px-3 py-1 bg-black/80 backdrop-blur-md border border-white/20 text-[9px] font-black tracking-widest text-white uppercase shadow-2xl">
+                        <div className="px-2 py-0.5 bg-black/80 backdrop-blur-md border border-white/20 text-[7px] font-black tracking-[0.2em] text-white uppercase shadow-2xl">
                             {name}
                         </div>
-                        <div className="w-[1px] h-6 bg-gradient-to-b from-white to-transparent" />
+                        <div className="w-[1px] h-4 bg-gradient-to-b from-white to-transparent" />
                     </div>
                 </Html>
             )}
@@ -155,9 +155,9 @@ const ArtistNode = ({ id, name, color, parentLatLon, isLive, isSelected, cameraD
 
             {/* Selection Text Anchor */}
             {isSelected && (
-                <Html distanceFactor={10} position={[0, 0.15, 0]} center>
+                <Html distanceFactor={12} position={[0, 0.12, 0]} center>
                     <div className="pointer-events-none select-none flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className="px-2 py-0.5 bg-white text-black text-[8px] font-black tracking-widest uppercase shadow-2xl">
+                        <div className="px-1.5 py-0.5 bg-white text-black text-[7px] font-black tracking-widest uppercase shadow-2xl">
                             {name}
                         </div>
                     </div>
@@ -203,10 +203,10 @@ const TrackNode = ({ id, title, artist, color, isSelected, cameraDist, onClick }
 
             {/* High Zoom Track Detail Card - ONLY WHEN SELECTED */}
             {isSelected && (
-                <Html distanceFactor={8} position={[0, 0.1, 0]} center>
-                    <div className="pointer-events-none select-none px-3 py-1 bg-black/90 border-l border-[#00ffff] backdrop-blur-xl animate-in fade-in zoom-in duration-300 shadow-2xl">
-                        <div className="text-[8px] text-[#00ffff] font-black uppercase tracking-widest">{title}</div>
-                        <div className="text-[6px] text-white/40 uppercase tracking-widest mt-0.5">{artist}</div>
+                <Html distanceFactor={10} position={[0, 0.08, 0]} center>
+                    <div className="pointer-events-none select-none px-2 py-0.5 bg-black/90 border-l border-[#00ffff] backdrop-blur-xl animate-in fade-in zoom-in duration-300 shadow-2xl">
+                        <div className="text-[7px] text-[#00ffff] font-black uppercase tracking-widest">{title}</div>
+                        <div className="text-[5px] text-white/40 uppercase tracking-widest mt-0.5">{artist}</div>
                     </div>
                 </Html>
             )}
@@ -214,29 +214,43 @@ const TrackNode = ({ id, title, artist, color, isSelected, cameraDist, onClick }
     );
 };
 
-// 4. NEURAL STREAMS (Arc Connections)
+// 4. NEURAL STREAMS (Arc Connections with Signal Particles)
+const SignalParticle = ({ curve, color }) => {
+    const meshRef = useRef();
+    
+    useFrame((state) => {
+        const t = (state.clock.getElapsedTime() * 0.5) % 1;
+        const pos = curve.getPointAt(t);
+        meshRef.current.position.copy(pos);
+    });
+
+    return (
+        <mesh ref={meshRef}>
+            <sphereGeometry args={[0.015, 8, 8]} />
+            <meshBasicMaterial color={color} />
+        </mesh>
+    );
+};
+
 const NeuralStream = ({ start, end, color }) => {
     const curve = useMemo(() => {
         const startVec = new THREE.Vector3(...start);
         const endVec = new THREE.Vector3(...end);
-        const mid = startVec.clone().lerp(endVec, 0.5).normalize().multiplyScalar(3.0);
+        const l = startVec.distanceTo(endVec);
+        const mid = startVec.clone().lerp(endVec, 0.5).normalize().multiplyScalar(2.5 + l * 0.2);
         return new THREE.QuadraticBezierCurve3(startVec, mid, endVec);
     }, [start, end]);
 
     const points = useMemo(() => curve.getPoints(50), [curve]);
     const lineGeometry = useMemo(() => new THREE.BufferGeometry().setFromPoints(points), [points]);
 
-    const shaderRef = useRef();
-    useFrame((state) => {
-        if (shaderRef.current) {
-            shaderRef.current.uniforms.dashOffset.value -= 0.01;
-        }
-    });
-
     return (
-        <line geometry={lineGeometry}>
-            <lineBasicMaterial color={color} transparent opacity={0.3} />
-        </line>
+        <group>
+            <line geometry={lineGeometry}>
+                <lineBasicMaterial color={color} transparent opacity={0.15} />
+            </line>
+            <SignalParticle curve={curve} color={color} />
+        </group>
     );
 };
 
@@ -294,11 +308,13 @@ const GlobeCore = ({
 
             {/* Atmosphere/Grid Overlay */}
             <Sphere args={[2.52, 40, 40]}>
-                <meshBasicMaterial 
+                <meshStandardMaterial 
                     color={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (activeSectorColor || "#ff006e")} 
                     wireframe 
                     transparent 
-                    opacity={activeView === 'CLIQUE_VALENCE' ? 0.15 : (activeSector !== null ? 0.08 : 0.02)} 
+                    opacity={activeView === 'CLIQUE_VALENCE' ? 0.2 : (activeSector !== null ? 0.08 : 0.02)} 
+                    emissive={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (activeSectorColor || "#ff006e")}
+                    emissiveIntensity={activeView === 'CORE_PULSE' ? 0.5 : 0.1}
                 />
             </Sphere>
 
