@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useEffect, useState } from 'react';
+import React, { useRef, useMemo, useEffect, useState, memo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Float, Stars, Sphere, Html } from '@react-three/drei';
 import * as THREE from 'three';
@@ -327,7 +327,7 @@ const TrackNode = ({ id, title, artist, color, isSelected, cameraDist, onClick }
     );
 };
 
-const GlobeCore = ({ activeSector, communities = [], artists = [], stations = [], tracks = [], selectedId, activeView, onArtistClick, onCommunityClick, onTrackClick, isGlobeSpinning }) => {
+const GlobeCore = memo(({ activeSector, communities = [], artists = [], stations = [], tracks = [], selectedId, activeView, onArtistClick, onCommunityClick, onTrackClick, isGlobeSpinning }) => {
     const groupRef = useRef();
     const { camera } = useThree();
     const [cameraDist, setCameraDist] = useState(10);
@@ -450,9 +450,10 @@ const GlobeCore = ({ activeSector, communities = [], artists = [], stations = []
             ))}
         </group>
     );
-};
+});
+;
 
-const InteractiveGlobe = ({ 
+const InteractiveGlobe = memo(({ 
     activeSector, 
     onSectorClick,
     communities = [], 
@@ -516,6 +517,6 @@ const InteractiveGlobe = ({
             </Canvas>
         </div>
     );
-};
+});
 
 export default InteractiveGlobe;

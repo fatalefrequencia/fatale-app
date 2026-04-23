@@ -457,43 +457,51 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 {/* --- CENTER: THE GLOBE OR COMMUNITY TERMINAL --- */}
                 {(!isMobile || mobileViewMode === 'globe') && (
                     <div className={`${isMobile ? 'flex-1' : 'h-[400px] lg:h-full'} lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative transition-all duration-300`}>
+                        <div className={`w-full h-full ${activeTerminalCommunity ? 'hidden' : 'flex'} items-center justify-center p-4 transition-all duration-300`}>
+                            <InteractiveGlobe 
+                                searchQuery={searchQuery}
+                                communities={communities}
+                                artists={trendingArtists} 
+                                stations={stations} 
+                                tracks={tracksWithColor}
+                                activeSector={activeSector}
+                                selectedId={selectedGlobeItem ? `${selectedGlobeItem.type}-${selectedGlobeItem.id || selectedGlobeItem.Id}` : null}
+                                activeView={activeGlobeView}
+                                isGlobeSpinning={isGlobeSpinning}
+                                onSectorClick={(secId) => {
+                                    setActiveSector(activeSector === secId ? null : secId);
+                                }}
+                                onArtistClick={(artist) => {
+                                    setSelectedGlobeItem({ ...artist, type: 'artist' });
+                                }}
+                                onCommunityClick={(comm) => {
+                                    setSelectedGlobeItem({ ...comm, type: 'community' });
+                                }}
+                                onTrackClick={(track) => {
+                                    setSelectedGlobeItem({ ...track, type: 'track' });
+                                }}
+                                onSelectItem={(id) => {
+                                    if (id === null) setSelectedGlobeItem(null);
+                                }}
+                            />
+                        </div>
+
                         <AnimatePresence mode="wait">
-                            {!activeTerminalCommunity ? (
+                            {activeTerminalCommunity && (
                                 <motion.div 
-                                    key="globe-view"
-                                    layout
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.8 }}
-                                    transition={{ duration: 0.3 }}
-                                    className="w-full h-full flex items-center justify-center p-4"
+                                    key="terminal-view"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 20 }}
+                                    className="absolute inset-0 z-10"
                                 >
-                                    <InteractiveGlobe 
-                                        searchQuery={searchQuery}
-                                        communities={communities}
-                                        artists={trendingArtists} 
-                                        stations={stations} 
-                                        tracks={tracksWithColor}
-                                        activeSector={activeSector}
-                                        selectedId={selectedGlobeItem ? `${selectedGlobeItem.type}-${selectedGlobeItem.id || selectedGlobeItem.Id}` : null}
-                                        activeView={activeGlobeView}
-                                        isGlobeSpinning={isGlobeSpinning}
-                                        onSectorClick={(secId) => {
-                                            setActiveSector(activeSector === secId ? null : secId);
-                                        }}
-                                        onArtistClick={(artist) => {
-                                            setSelectedGlobeItem({ ...artist, type: 'artist' });
-                                        }}
-                                        onCommunityClick={(comm) => {
-                                            setSelectedGlobeItem({ ...comm, type: 'community' });
-                                        }}
-                                        onTrackClick={(track) => {
-                                            setSelectedGlobeItem({ ...track, type: 'track' });
-                                        }}
-                                        onSelectItem={(id) => {
-                                            if (id === null) setSelectedGlobeItem(null);
-                                        }}
+                                    <CommunityTerminal 
+                                        community={activeTerminalCommunity} 
+                                        onBack={() => setActiveTerminalCommunity(null)} 
                                     />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                                     {/* Globe Detail Card - Premium Glassmorphism */}
                                     <AnimatePresence>
