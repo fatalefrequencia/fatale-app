@@ -14,7 +14,8 @@ const hashStr = (s) => {
 };
 
 const getSphericalPos = (id, radius = 2.5, offset = 0, parentId = null, type = 'default') => {
-    const samples = 200; 
+    const samples = 1000; 
+    const baseH = hashStr(parentId || id);
     // 1. BASE COORDINATE CALCULATION
     // Synchronized tiering (0.35) for both Artists and Tracks for consistent spatial gaps
     const typeOffset = (type === 'track' || type === 'artist') ? 0.35 : 0.0;
