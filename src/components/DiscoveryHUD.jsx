@@ -499,18 +499,29 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                     <AnimatePresence>
                                         {selectedGlobeItem && (
                                             <motion.div 
-                                                initial={{ y: 300, opacity: 0 }}
-                                                animate={{ y: 0, opacity: 1 }}
-                                                exit={{ y: 300, opacity: 0 }}
+                                                initial={isMobile ? { y: "100%" } : { y: 300, opacity: 0 }}
+                                                animate={isMobile ? { y: 0 } : { y: 0, opacity: 1 }}
+                                                exit={isMobile ? { y: "100%" } : { y: 300, opacity: 0 }}
                                                 transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                                                className="absolute bottom-4 left-4 right-4 z-50 pointer-events-auto"
+                                                className={`absolute z-50 pointer-events-auto ${isMobile ? 'bottom-0 left-0 right-0' : 'bottom-4 left-4 right-4'}`}
                                             >
-                                                <div className="bg-black/95 backdrop-blur-3xl border border-white/10 p-8 shadow-[0_0_80px_rgba(0,0,0,0.9)] overflow-hidden relative group max-w-5xl mx-auto">
-                                                    {/* Corner Brackets */}
-                                                    <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
-                                                    <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
-                                                    <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
-                                                    <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
+                                                <div className={`bg-black/95 backdrop-blur-3xl border-t border-x border-white/10 shadow-[0_-20px_80px_rgba(0,0,0,0.9)] overflow-hidden relative group mx-auto ${isMobile ? 'rounded-t-[32px] p-6 pb-12' : 'border p-8 max-w-5xl shadow-[0_0_80px_rgba(0,0,0,0.9)]'}`}>
+                                                    {/* Mobile Swipe Handle */}
+                                                    {isMobile && (
+                                                        <div className="flex justify-center mb-6">
+                                                            <div className="w-12 h-1 bg-white/10 rounded-full" />
+                                                        </div>
+                                                    )}
+                                                    
+                                                    {/* Corner Brackets (Desktop Only for clarity) */}
+                                                    {!isMobile && (
+                                                        <>
+                                                            <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
+                                                            <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
+                                                            <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
+                                                            <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
+                                                        </>
+                                                    )}
 
                                                     <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-10 items-center">
                                                         {/* Header Section */}

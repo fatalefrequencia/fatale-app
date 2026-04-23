@@ -1,5 +1,5 @@
-import React, { useRef, useMemo, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import React, { useRef, useMemo, useEffect, useState } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Float, Stars, Sphere, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { SECTORS } from '../../constants';
@@ -50,6 +50,26 @@ const getSphericalPos = (id, radius = 2.5, offset = 0, parentId = null, type = '
 
 // --- COMPONENTS ---
 
+// 2. DATA FLOW TRAIL (Subtle Vertical Crawl)
+const DataFlowTrail = ({ h, color, isActive }) => {
+    const meshRef = useRef();
+    useFrame((state) => {
+        if (!meshRef.current) return;
+        const t = state.clock.getElapsedTime();
+        // Subtle vertical crawl along the height
+        const speed = 0.4;
+        meshRef.current.position.z = -h/2 + ((t * speed) % h);
+    });
+
+    return (
+        <mesh ref={meshRef}>
+            <sphereGeometry args={[0.008, 8, 8]} />
+            <meshBasicMaterial color={color} transparent opacity={isActive ? 0.8 : 0.2} />
+            <pointLight distance={0.2} intensity={2} color={color} />
+        </mesh>
+    );
+};
+
 // 1. COMMUNITY BUILDINGS (High-Density Monoliths)
 const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelected, onClick, cameraDist }) => {
     const meshRef = useRef();
@@ -82,6 +102,15 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelec
                     <planeGeometry args={[0.02, 0.02]} />
                     <meshBasicMaterial color={color} transparent opacity={0.1} />
                 </mesh>
+
+                {/* Vertical Data Crawl - Subtly moving light bits */}
+                <DataFlowTrail h={h} color={color} isActive={isActive} />
+                <group position={[0.035, 0.035, 0]}>
+                    <DataFlowTrail h={h} color={color} isActive={isActive} />
+                </group>
+                <group position={[-0.035, -0.035, 0]}>
+                    <DataFlowTrail h={h} color={color} isActive={isActive} />
+                </group>
 
                 {/* Full Tower Click Boundary - MATCHES VISUAL (0.07) */}
                 <mesh visible={false} position={[0, 0, 0]} onClick={(e) => { e.stopPropagation(); onClick(); }}>
@@ -208,6 +237,55 @@ const SignalBeacon = ({ pos, color }) => {
     );
 };
 
+// 5. NEURAL CONSTELLATION (Connection Lines)
+const NeuralConstellation = ({ communities, artists, activeView }) => {
+    const lines = useMemo(() => {
+        const segments = [];
+        
+        // Connect artists to their communities
+        artists.forEach(a => {
+            if (!a.communityId) return;
+            const comm = communities.find(c => String(c.id || c.Id) === String(a.communityId));
+            if (!comm) return;
+
+            const aPos = getSphericalPos(a.id, 2.48, 0.05, a.communityId, 'artist').pos;
+            // Community base is at radius 2.5
+            const cPos = getSphericalPos(comm.id, 2.5, 0, null, 'community').pos;
+
+            segments.push(new THREE.Vector3(...aPos), new THREE.Vector3(...cPos));
+        });
+
+        // Connect major artists in same sector if in valence mode
+        if (activeView === 'CLIQUE_VALENCE') {
+            const sectorGroups = {};
+            artists.slice(0, 40).forEach(a => {
+                const s = a.sectorId || 0;
+                if (!sectorGroups[s]) sectorGroups[s] = [];
+                sectorGroups[s].push(a);
+            });
+
+            Object.values(sectorGroups).forEach(group => {
+                for (let i = 0; i < group.length - 1; i++) {
+                    const p1 = getSphericalPos(group[i].id, 2.48, 0.05, group[i].communityId, 'artist').pos;
+                    const p2 = getSphericalPos(group[(i+1)%group.length].id, 2.48, 0.05, group[(i+1)%group.length].communityId, 'artist').pos;
+                    segments.push(new THREE.Vector3(...p1), new THREE.Vector3(...p2));
+                }
+            });
+        }
+
+        return segments;
+    }, [communities, artists, activeView]);
+
+    if (lines.length === 0) return null;
+
+    return (
+        <lineSegments>
+            <bufferGeometry attach="geometry" onUpdate={self => self.setFromPoints(lines)} />
+            <lineBasicMaterial attach="material" color="#ff006e" transparent opacity={0.05} />
+        </lineSegments>
+    );
+};
+
 // 3. TRACK NODES (Neural Signal Sparks)
 const TrackNode = ({ id, title, artist, color, isSelected, cameraDist, onClick }) => {
     const meshRef = useRef();
@@ -249,68 +327,45 @@ const TrackNode = ({ id, title, artist, color, isSelected, cameraDist, onClick }
     );
 };
 
-const GlobeCore = ({ 
-    activeSector, 
-    communities = [], 
-    artists = [], 
-    stations = [],
-    tracks = [],
-    selectedId,
-    activeView = 'CORE_PULSE',
-    isGlobeSpinning,
-    onArtistClick,
-    onCommunityClick,
-    onTrackClick
-}) => {
+const GlobeCore = ({ activeSector, communities = [], artists = [], stations = [], tracks = [], selectedId, activeView, onArtistClick, onCommunityClick, onTrackClick, isGlobeSpinning }) => {
     const groupRef = useRef();
-    const [cameraDist, setCameraDist] = React.useState(10);
+    const { camera } = useThree();
+    const [cameraDist, setCameraDist] = useState(10);
 
-    useFrame((state) => {
-        const dist = state.camera.position.length();
-        setCameraDist(dist);
-
-        if (activeSector === null) {
-            if (isGlobeSpinning && !selectedId) {
-                groupRef.current.rotation.y += 0.0012;
-            }
-        } else {
-            const targetPhi = (activeSector / SECTORS.length) * Math.PI * 2;
-            const targetY = -targetPhi + Math.PI / 2;
-            groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetY, 0.04);
-        }
+    useFrame(() => {
+        setCameraDist(camera.position.length());
     });
 
     const activeSectorColor = useMemo(() => {
-        if (activeSector === null) return null;
-        const s = SECTORS.find(sec => sec.id === activeSector);
-        if (!s) return null;
-        return s.id === 0 ? "#ff33aa" : s.color;
+        return SECTORS.find(s => s.id === activeSector)?.color;
     }, [activeSector]);
 
     const filteredCommunities = useMemo(() => {
-        if (activeView === 'LIVE_SIGNAL_HUB') return [];
-        if (activeView === 'FREQ_PEAKS') return communities.filter(c => (c.memberCount || 0) > 1);
+        if (activeSector !== null) {
+            return communities.filter(c => (c.sectorId || c.SectorId) === activeSector);
+        }
         return communities;
-    }, [communities, activeView]);
+    }, [communities, activeSector]);
 
     const filteredArtists = useMemo(() => {
+        if (activeSector !== null) {
+            return artists.filter(a => (a.sectorId || a.SectorId) === activeSector);
+        }
         if (activeView === 'LIVE_SIGNAL_HUB') {
             return artists.filter(a => {
                 const isArtistLive = a.isLive || a.IsLive;
                 const hasLiveStation = stations.some(s => 
                     (String(s.artistId || s.ArtistId || s.userId || s.UserId) === String(a.id || a.Id || a.userId || a.UserId)) && (s.isLive || s.IsLive)
                 );
-                // Also show if they have tracks assigned (fallback for manual hub population)
                 const hasTracks = tracks.some(t => String(t.artistId || t.ArtistId) === String(a.id || a.Id));
                 return isArtistLive || hasLiveStation || (hasTracks && activeView === 'LIVE_SIGNAL_HUB');
             });
         }
         return artists;
-    }, [artists, activeView, stations]);
+    }, [artists, activeView, stations, tracks]);
 
     const filteredTracks = useMemo(() => {
         if (activeView === 'LIVE_SIGNAL_HUB') {
-            // Show tracks from anyone live
             return tracks.filter(t => {
                 const artistId = t.artistId || t.ArtistId;
                 const isArtistLive = artists.some(a => String(a.id || a.Id) === String(artistId) && (a.isLive || a.IsLive));
@@ -323,20 +378,6 @@ const GlobeCore = ({
 
     return (
         <group ref={groupRef}>
-            <Sphere args={[2.45, 32, 32]}>
-                <meshBasicMaterial color="#000" />
-            </Sphere>
-
-            <Sphere args={[2.52, 40, 40]}>
-                <meshStandardMaterial 
-                    color={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (activeSectorColor || "#ff006e")} 
-                    wireframe 
-                    transparent 
-                    opacity={activeView === 'CLIQUE_VALENCE' ? 0.2 : (activeSector !== null ? 0.08 : 0.02)} 
-                    emissive={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (activeSectorColor || "#ff006e")}
-                    emissiveIntensity={activeView === 'CORE_PULSE' ? 0.5 : 0.1}
-                />
-            </Sphere>
             <Sphere args={[2.45, 32, 32]}>
                 <meshBasicMaterial color="#000" />
             </Sphere>
@@ -391,6 +432,9 @@ const GlobeCore = ({
                     />
                 );
             })}
+
+            {/* Neural Constellation Beams */}
+            <NeuralConstellation communities={communities} artists={artists} activeView={activeView} />
 
             {filteredTracks.map(t => (
                 <TrackNode 
