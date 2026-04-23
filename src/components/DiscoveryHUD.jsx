@@ -456,7 +456,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                         stations={liveStations}
                                         tracks={trendingTracks}
                                         activeSector={activeSector}
-                                        selectedId={selectedGlobeItem?.id}
+                                        selectedId={selectedGlobeItem ? `${selectedGlobeItem.type}-${selectedGlobeItem.id || selectedGlobeItem.Id}` : null}
                                         activeView={activeGlobeView}
                                         onSectorClick={(secId) => {
                                             setActiveSector(activeSector === secId ? null : secId);
@@ -478,13 +478,6 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                     {/* Globe Detail Card - Premium Glassmorphism */}
                                     <AnimatePresence>
                                         {selectedGlobeItem && (
-                                            <motion.div 
-                                                initial={{ opacity: 0, y: 100, scale: 0.95 }}
-                                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                exit={{ opacity: 0, y: 100, scale: 0.95 }}
-                                                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                                                className="absolute bottom-1/4 left-1/2 -translate-x-1/2 w-[280px] z-50 pointer-events-auto"
-                                            >
                                             <motion.div 
                                                 initial={{ y: 300, opacity: 0 }}
                                                 animate={{ y: 0, opacity: 1 }}
@@ -590,7 +583,6 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </motion.div>
                                             </motion.div>
                                         )}
                                     </AnimatePresence>

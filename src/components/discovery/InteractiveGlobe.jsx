@@ -74,7 +74,7 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelec
 
             {/* Single Selection Pin - Premium Style */}
             {isSelected && (
-                <Html distanceFactor={15} position={[0, h/2 + 0.1, 0]} center>
+                <Html position={[0, h/2 + 0.1, 0]} center>
                     <div className="pointer-events-none select-none flex flex-col items-center animate-in fade-in zoom-in duration-300">
                         <div className="px-2 py-0.5 bg-black/80 backdrop-blur-md border border-white/20 text-[7px] font-black tracking-[0.2em] text-white uppercase shadow-2xl">
                             {name}
@@ -155,7 +155,7 @@ const ArtistNode = ({ id, name, color, parentLatLon, isLive, isSelected, cameraD
 
             {/* Selection Text Anchor */}
             {isSelected && (
-                <Html distanceFactor={12} position={[0, 0.12, 0]} center>
+                <Html position={[0, 0.12, 0]} center>
                     <div className="pointer-events-none select-none flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <div className="px-1.5 py-0.5 bg-white text-black text-[7px] font-black tracking-widest uppercase shadow-2xl">
                             {name}
@@ -215,7 +215,7 @@ const TrackNode = ({ id, title, artist, color, isSelected, cameraDist, onClick }
                 <meshStandardMaterial color={color} emissive={color} emissiveIntensity={6} transparent opacity={opacityFactor * 0.8} />
             </mesh>
             {isSelected && (
-                <Html distanceFactor={10} position={[0, 0.08, 0]} center>
+                <Html position={[0, 0.08, 0]} center>
                     <div className="pointer-events-none select-none px-2 py-0.5 bg-black/90 border-l border-[#00ffff] backdrop-blur-xl animate-in fade-in zoom-in duration-300 shadow-2xl font-mono">
                         <div className="text-[7px] text-[#00ffff] font-black uppercase tracking-widest">{title}</div>
                         <div className="text-[5px] text-white/40 uppercase tracking-widest mt-0.5">{artist}</div>
@@ -322,7 +322,7 @@ const GlobeCore = ({
                     memberCount={activeView === 'FREQ_PEAKS' ? (c.memberCount || 0) * 3 : (c.memberCount || 0)}
                     color={SECTORS.find(s => s.id === (c.sectorId || c.SectorId || 0))?.color || "#ff006e"}
                     isActive={activeSector === (c.sectorId || c.SectorId)}
-                    isSelected={selectedId === (c.id || c.Id)}
+                    isSelected={selectedId === `community-${c.id || c.Id}`}
                     cameraDist={cameraDist}
                     onClick={() => onCommunityClick?.(c)}
                 />
@@ -340,7 +340,7 @@ const GlobeCore = ({
                         name={a.name || a.Name}
                         color={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (SECTORS.find(s => s.id === (a.sectorId || a.SectorId || 0))?.color || "#ff006e")}
                         isLive={isLive}
-                        isSelected={selectedId === (a.id || a.Id)}
+                        isSelected={selectedId === `artist-${a.id || a.Id}`}
                         cameraDist={cameraDist}
                         onClick={() => onArtistClick?.(a)}
                     />
@@ -354,7 +354,7 @@ const GlobeCore = ({
                     title={t.title || t.Title}
                     artist={t.artist || t.Artist}
                     color={activeView === 'LIVE_SIGNAL_HUB' ? "#00ffff" : (SECTORS.find(s => s.id === (t.sectorId || t.SectorId || 0))?.color || "#00ffff")}
-                    isSelected={selectedId === (t.id || t.Id)}
+                    isSelected={selectedId === `track-${t.id || t.Id}`}
                     cameraDist={cameraDist}
                     onClick={() => onTrackClick?.(t)}
                 />
