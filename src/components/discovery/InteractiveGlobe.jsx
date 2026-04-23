@@ -116,10 +116,10 @@ const ArtistNode = ({ id, name, color, isLive, isSelected, communityId, cameraDi
         meshRef.current.position.y += Math.sin(t * 1.5 + hashStr(id)) * 0.0002;
 
         if (isLive) {
-            const pulse = (Math.sin(t * 4) + 1) / 2;
-            meshRef.current.scale.setScalar(0.7 + pulse * 0.2);
+            const pulse = (Math.sin(t * 6) + 1) / 2;
+            meshRef.current.scale.setScalar(0.8 + pulse * 0.4);
             if (materialRef.current) {
-                materialRef.current.emissiveIntensity = 4.5 + pulse * 8;
+                materialRef.current.emissiveIntensity = 6 + pulse * 12;
             }
         } else {
             meshRef.current.scale.setScalar(isVisible ? 0.6 : 0);
@@ -201,31 +201,32 @@ const SignalBeacon = ({ pos, color }) => {
 // 3. TRACK NODES (Neural Signal Sparks)
 const TrackNode = ({ id, title, artist, color, isSelected, cameraDist, onClick }) => {
     const meshRef = useRef();
-    const { pos } = useMemo(() => getSphericalPos(id, 2.48, 0.12), [id]);
+    // Push tracks further out (0.3 offset) to clear community buildings
+    const { pos } = useMemo(() => getSphericalPos(id, 2.48, 0.3), [id]);
     
     const opacityFactor = THREE.MathUtils.clamp((9 - cameraDist) / 3, 0, 1);
 
     return (
         <group position={pos}>
             <mesh ref={meshRef} onClick={onClick}>
-                <tetrahedronGeometry args={[0.015, 0]} />
+                <sphereGeometry args={[0.015, 12, 12]} />
                 <meshStandardMaterial 
-                    color="#fff" 
-                    emissive="#fff" 
-                    emissiveIntensity={isSelected ? 4 : 2} 
+                    color={color || "#fff"} 
+                    emissive={color || "#fff"} 
+                    emissiveIntensity={isSelected ? 10 : 4} 
                     transparent 
-                    opacity={opacityFactor * 0.8}
+                    opacity={opacityFactor * 0.9}
                 />
             </mesh>
-            {/* Glow Aura */}
-            <mesh scale={2}>
-                <sphereGeometry args={[0.01, 8, 8]} />
-                <meshBasicMaterial color="#fff" transparent opacity={opacityFactor * 0.1} />
+            {/* Steady Glow Aura */}
+            <mesh scale={2.5}>
+                <sphereGeometry args={[0.015, 8, 8]} />
+                <meshBasicMaterial color={color || "#fff"} transparent opacity={opacityFactor * 0.15} />
             </mesh>
             {isSelected && (
                 <Html position={[0, 0.08, 0]} center>
-                    <div className="pointer-events-none select-none px-2 py-0.5 bg-black/90 border-l border-[#00ffff] backdrop-blur-xl animate-in fade-in zoom-in duration-300 shadow-2xl font-mono">
-                        <div className="text-[7px] text-[#00ffff] font-black uppercase tracking-widest">{title}</div>
+                    <div className="pointer-events-none select-none px-2 py-0.5 bg-black/90 border-l border-[#ff006e] backdrop-blur-xl animate-in fade-in zoom-in duration-300 shadow-2xl font-mono">
+                        <div className="text-[7px] text-[#ff006e] font-black uppercase tracking-widest">{title}</div>
                         <div className="text-[5px] text-white/40 uppercase tracking-widest mt-0.5">{artist}</div>
                     </div>
                 </Html>

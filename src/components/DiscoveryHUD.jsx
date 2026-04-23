@@ -226,6 +226,14 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
         return base;
     }, [communities, searchQuery, matchesSector, activeSector, user]);
 
+    const tracksWithColor = useMemo(() => {
+        return trendingTracks.map(t => {
+            const artist = trendingArtists.find(a => String(a.id || a.Id) === String(t.artistId || t.ArtistId));
+            const sector = artist ? SECTORS.find(s => s.id === (artist.sectorId || artist.SectorId)) : null;
+            return { ...t, color: sector ? sector.color : "#ffffff" };
+        });
+    }, [trendingTracks, trendingArtists]);
+
     const liveStations = useMemo(() => {
         let base = stations.filter(s => s.isLive || s.IsLive);
         if (activeSector !== null) base = base.filter(matchesSector);
@@ -467,7 +475,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                         communities={communities}
                                         artists={trendingArtists} 
                                         stations={stations} 
-                                        tracks={trendingTracks}
+                                        tracks={tracksWithColor}
                                         activeSector={activeSector}
                                         selectedId={selectedGlobeItem ? `${selectedGlobeItem.type}-${selectedGlobeItem.id || selectedGlobeItem.Id}` : null}
                                         activeView={activeGlobeView}
@@ -581,7 +589,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                                     trendingArtists.filter(a => String(a.communityId || a.CommunityId) === String(selectedGlobeItem.id)).slice(0, 8).map((a, i) => (
                                                                         <div key={i} className="flex flex-col items-center gap-2 shrink-0 group/member cursor-pointer" onClick={() => navigateToProfile(a.userId || a.UserId)}>
                                                                             <div className="w-14 h-14 rounded-full border border-white/10 overflow-hidden group-hover/member:border-[#ff006e] transition-colors bg-white/5">
-                                                                                <img src={getMediaUrl(a.profilePicture || a.ProfilePicture) || 'https://via.placeholder.com/100'} alt="" className="w-full h-full object-cover grayscale group-hover/member:grayscale-0 transition-all" />
+                                                                                <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale group-hover/member:grayscale-0 transition-all" />
                                                                             </div>
                                                                             <span className="text-[7px] font-bold text-white/60 tracking-wider uppercase group-hover/member:text-white">{a.name || a.Name}</span>
                                                                         </div>
