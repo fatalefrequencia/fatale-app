@@ -167,89 +167,61 @@ const ArtistNode = ({ id, name, color, parentLatLon, isLive, isSelected, cameraD
     );
 };
 
+// 4. SIGNAL BEACONS (For LIVE_SIGNAL_HUB)
+const SignalBeacon = ({ pos, color }) => {
+    const meshRef = useRef();
+    useFrame((state) => {
+        const t = state.clock.getElapsedTime();
+        meshRef.current.scale.y = 1 + Math.sin(t * 2) * 0.2;
+    });
+
+    return (
+        <group position={pos}>
+            <mesh ref={meshRef} position={[0, 0.5, 0]}>
+                <cylinderGeometry args={[0.01, 0.04, 1.0, 8]} />
+                <meshStandardMaterial 
+                    color={color} 
+                    emissive={color} 
+                    emissiveIntensity={10} 
+                    transparent 
+                    opacity={0.3} 
+                />
+            </mesh>
+            <mesh position={[0, 0, 0]} rotation={[-Math.PI/2, 0, 0]}>
+                <ringGeometry args={[0.05, 0.1, 16]} />
+                <meshBasicMaterial color={color} transparent opacity={0.2} />
+            </mesh>
+        </group>
+    );
+};
+
 // 3. TRACK NODES (Neural Signal Sparks)
 const TrackNode = ({ id, title, artist, color, isSelected, cameraDist, onClick }) => {
     const meshRef = useRef();
     const { pos } = useMemo(() => getSphericalPos(id, 2.5, 0.12), [id]);
     
-    // Tracks only emerge when very close (Apple Maps detail logic)
     const opacityFactor = THREE.MathUtils.clamp((9 - cameraDist) / 3, 0, 1);
 
     useFrame((state) => {
         const t = state.clock.getElapsedTime();
-        // High frequency jitter for tracks
         meshRef.current.position.x += Math.sin(t * 3 + hashStr(id)) * 0.0001;
         meshRef.current.position.z += Math.cos(t * 3 + hashStr(id)) * 0.0001;
     });
 
     return (
-        <group 
-            position={pos}
-            onClick={(e) => {
-                e.stopPropagation();
-                onClick();
-            }}
-        >
+        <group position={pos} onPointerDown={(e) => { e.stopPropagation(); onClick(); }}>
             <mesh ref={meshRef} visible={opacityFactor > 0}>
                 <sphereGeometry args={[0.015, 8, 8]} />
-                <meshStandardMaterial 
-                    color={color} 
-                    emissive={color} 
-                    emissiveIntensity={6} 
-                    transparent 
-                    opacity={opacityFactor * 0.8} 
-                />
+                <meshStandardMaterial color={color} emissive={color} emissiveIntensity={6} transparent opacity={opacityFactor * 0.8} />
             </mesh>
-
-            {/* High Zoom Track Detail Card - ONLY WHEN SELECTED */}
             {isSelected && (
                 <Html distanceFactor={10} position={[0, 0.08, 0]} center>
-                    <div className="pointer-events-none select-none px-2 py-0.5 bg-black/90 border-l border-[#00ffff] backdrop-blur-xl animate-in fade-in zoom-in duration-300 shadow-2xl">
+                    <div className="pointer-events-none select-none px-2 py-0.5 bg-black/90 border-l border-[#00ffff] backdrop-blur-xl animate-in fade-in zoom-in duration-300 shadow-2xl font-mono">
                         <div className="text-[7px] text-[#00ffff] font-black uppercase tracking-widest">{title}</div>
                         <div className="text-[5px] text-white/40 uppercase tracking-widest mt-0.5">{artist}</div>
                     </div>
                 </Html>
             )}
-        </group>
-    );
-};
-
-// 4. NEURAL STREAMS (Arc Connections with Signal Particles)
-const SignalParticle = ({ curve, color }) => {
-    const meshRef = useRef();
-    
-    useFrame((state) => {
-        const t = (state.clock.getElapsedTime() * 0.5) % 1;
-        const pos = curve.getPointAt(t);
-        meshRef.current.position.copy(pos);
-    });
-
-    return (
-        <mesh ref={meshRef}>
-            <sphereGeometry args={[0.015, 8, 8]} />
-            <meshBasicMaterial color={color} />
-        </mesh>
-    );
-};
-
-const NeuralStream = ({ start, end, color }) => {
-    const curve = useMemo(() => {
-        const startVec = new THREE.Vector3(...start);
-        const endVec = new THREE.Vector3(...end);
-        const l = startVec.distanceTo(endVec);
-        const mid = startVec.clone().lerp(endVec, 0.5).normalize().multiplyScalar(2.5 + l * 0.2);
-        return new THREE.QuadraticBezierCurve3(startVec, mid, endVec);
-    }, [start, end]);
-
-    const points = useMemo(() => curve.getPoints(50), [curve]);
-    const lineGeometry = useMemo(() => new THREE.BufferGeometry().setFromPoints(points), [points]);
-
-    return (
-        <group>
-            <line geometry={lineGeometry}>
-                <lineBasicMaterial color={color} transparent opacity={0.15} />
-            </line>
-            <SignalParticle curve={curve} color={color} />
         </group>
     );
 };
@@ -318,25 +290,51 @@ const GlobeCore = ({
                 />
             </Sphere>
 
-            {/* Neural Streams Layer */}
-            {activeView === 'NEURAL_STREAMS' && communities.length > 1 && (
-                <group opacity={0.5}>
-                    {communities.slice(0, 5).map((c, i) => {
-                        const start = getSphericalPos(c.id || c.Id, 2.5).pos;
-                        const nextComm = communities[(i + 1) % communities.length];
-                        const end = getSphericalPos(nextComm.id || nextComm.Id, 2.5).pos;
-                        return <NeuralStream key={`stream-${i}`} start={start} end={end} color="#ff006e" />;
-                    })}
-                </group>
-            )}
+    const filteredCommunities = useMemo(() => {
+        if (activeView === 'LIVE_SIGNAL_HUB') return [];
+        if (activeView === 'FREQ_PEAKS') return communities.filter(c => (c.memberCount || 0) > 1);
+        return communities;
+    }, [communities, activeView]);
 
-            {/* DATA-DRIVEN RENDERERS */}
-            {communities.filter(c => c && (c.id || c.Id)).map(c => (
+    const filteredArtists = useMemo(() => {
+        if (activeView === 'LIVE_SIGNAL_HUB') return artists.filter(a => a.isLive || a.IsLive);
+        return artists;
+    }, [artists, activeView]);
+
+    const filteredTracks = useMemo(() => {
+        if (activeView === 'LIVE_SIGNAL_HUB') return tracks.slice(0, 5); // Just a few trending ones
+        if (activeView === 'CLIQUE_VALENCE') return [];
+        return tracks;
+    }, [tracks, activeView]);
+
+    return (
+        <group ref={groupRef}>
+            <Sphere args={[2.45, 32, 32]}>
+                <meshBasicMaterial color="#000" />
+            </Sphere>
+
+            <Sphere args={[2.52, 40, 40]}>
+                <meshStandardMaterial 
+                    color={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (activeSectorColor || "#ff006e")} 
+                    wireframe 
+                    transparent 
+                    opacity={activeView === 'CLIQUE_VALENCE' ? 0.2 : (activeSector !== null ? 0.08 : 0.02)} 
+                    emissive={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (activeSectorColor || "#ff006e")}
+                    emissiveIntensity={activeView === 'CORE_PULSE' ? 0.5 : 0.1}
+                />
+            </Sphere>
+
+            {/* LIVE_SIGNAL_HUB Beacons */}
+            {activeView === 'LIVE_SIGNAL_HUB' && filteredArtists.map(a => (
+                <SignalBeacon key={`beacon-${a.id}`} pos={getSphericalPos(a.id, 2.5).pos} color="#00ffff" />
+            ))}
+
+            {filteredCommunities.map(c => (
                 <CommunityBuilding 
                     key={`comm-${c.id || c.Id}`} 
                     id={c.id || c.Id}
                     name={c.name || c.Name}
-                    memberCount={activeView === 'FREQ_PEAKS' ? (c.memberCount || 0) * 2 : (c.memberCount || 0)}
+                    memberCount={activeView === 'FREQ_PEAKS' ? (c.memberCount || 0) * 3 : (c.memberCount || 0)}
                     color={SECTORS.find(s => s.id === (c.sectorId || c.SectorId || 0))?.color || "#ff006e"}
                     isActive={activeSector === (c.sectorId || c.SectorId)}
                     isSelected={selectedId === (c.id || c.Id)}
@@ -345,18 +343,7 @@ const GlobeCore = ({
                 />
             ))}
 
-            {artists.filter(a => a && (a.id || a.Id)).map(a => {
-                const commId = a.communityId || a.CommunityId;
-                let parentLatLon = null;
-                
-                if (commId) {
-                    const parent = communities.find(c => String(c.id || c.Id) === String(commId));
-                    if (parent) {
-                        const parentSpherical = getSphericalPos(parent.id || parent.Id, 2.5);
-                        parentLatLon = { lat: parentSpherical.lat, lon: parentSpherical.lon };
-                    }
-                }
-
+            {filteredArtists.map(a => {
                 const isLive = (a.isLive || a.IsLive) || stations.some(s => 
                     (s.artistId || s.ArtistId) === (a.id || a.Id) && (s.isLive || s.IsLive)
                 );
@@ -367,7 +354,6 @@ const GlobeCore = ({
                         id={a.id || a.Id}
                         name={a.name || a.Name}
                         color={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (SECTORS.find(s => s.id === (a.sectorId || a.SectorId || 0))?.color || "#ff006e")}
-                        parentLatLon={parentLatLon}
                         isLive={isLive}
                         isSelected={selectedId === (a.id || a.Id)}
                         cameraDist={cameraDist}
@@ -376,13 +362,13 @@ const GlobeCore = ({
                 );
             })}
 
-            {tracks.filter(t => t && (t.id || t.Id)).map(t => (
+            {filteredTracks.map(t => (
                 <TrackNode 
                     key={`track-${t.id || t.Id}`} 
                     id={t.id || t.Id}
                     title={t.title || t.Title}
                     artist={t.artist || t.Artist}
-                    color={activeView === 'NEURAL_STREAMS' ? "#ff006e" : (SECTORS.find(s => s.id === (t.sectorId || t.SectorId || 0))?.color || "#00ffff")}
+                    color={activeView === 'LIVE_SIGNAL_HUB' ? "#00ffff" : (SECTORS.find(s => s.id === (t.sectorId || t.SectorId || 0))?.color || "#00ffff")}
                     isSelected={selectedId === (t.id || t.Id)}
                     cameraDist={cameraDist}
                     onClick={() => onTrackClick?.(t)}
@@ -422,8 +408,9 @@ const InteractiveGlobe = ({
                     minDistance={2.8} 
                     maxDistance={20}
                     autoRotate={activeSector === null && !selectedId}
-                    autoRotateSpeed={0.5}
+                    autoRotateSpeed={selectedId ? 0 : 0.5}
                     dampingFactor={0.05}
+                    enableDamping={true}
                 />
                 
                 <ambientLight intensity={0.5} />
@@ -431,9 +418,9 @@ const InteractiveGlobe = ({
                 <pointLight position={[-10, -10, -10]} intensity={1.5} color="#00ffff" />
 
                 <Float 
-                    speed={activeSector !== null ? 0.2 : 1.0} 
-                    rotationIntensity={activeSector !== null ? 0.02 : 0.3} 
-                    floatIntensity={0.2}
+                    speed={selectedId ? 0 : (activeSector !== null ? 0.2 : 1.0)} 
+                    rotationIntensity={selectedId ? 0 : (activeSector !== null ? 0.02 : 0.3)} 
+                    floatIntensity={selectedId ? 0 : 0.2}
                 >
                     <GlobeCore 
                         activeSector={activeSector}
