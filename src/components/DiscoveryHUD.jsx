@@ -195,6 +195,9 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     const filteredPlaylists = useMemo(() => {
         let base = trendingPlaylists;
         if (activeSector !== null) base = base.filter(matchesSector);
+        if (searchQuery) {
+            base = base.filter(p => (p.name || p.Name || '').toLowerCase().includes(searchQuery.toLowerCase()));
+        }
         return base;
     }, [trendingPlaylists, searchQuery, matchesSector, activeSector]);
 
@@ -226,6 +229,9 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     const liveStations = useMemo(() => {
         let base = stations.filter(s => s.isLive || s.IsLive);
         if (activeSector !== null) base = base.filter(matchesSector);
+        if (searchQuery) {
+            base = base.filter(s => (s.name || s.Name || '').toLowerCase().includes(searchQuery.toLowerCase()));
+        }
         return base;
     }, [stations, searchQuery, matchesSector, activeSector]);
 
@@ -576,6 +582,10 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                                         const uploadArtistId = v.userId || v.UserId || v.artistId || v.ArtistId;
                                                                         const artistName = (selectedGlobeItem.name || selectedGlobeItem.Name || '').toLowerCase();
                                                                         const uploadArtistName = (v.artist || v.Artist || '').toLowerCase();
+                                                                        
+                                                                        // Strict matching: If names are present and different, don't show, even if IDs match (shared User account)
+                                                                        if (artistName && uploadArtistName && artistName !== uploadArtistName) return false;
+                                                                        
                                                                         return (String(uploadArtistId) === String(artistId)) || (artistName && artistName === uploadArtistName);
                                                                     }).slice(0, 5).map((v, i) => (
                                                                         <div key={i} className="w-32 h-20 bg-black border border-white/10 shrink-0 relative group/img overflow-hidden rounded-sm">

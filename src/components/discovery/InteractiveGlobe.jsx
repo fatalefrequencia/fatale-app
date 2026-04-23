@@ -91,7 +91,7 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelec
 };
 
 // 2. ARTIST NODES (Discrete Shards)
-const ArtistNode = ({ id, name, color, isLive, isSelected, communityId, cameraDist, onClick }) => {
+const ArtistNode = ({ id, name, color, isLive, isSelected, communityId, cameraDist, isGlobeSpinning, onClick }) => {
     const meshRef = useRef();
     const materialRef = useRef();
     const { pos } = useMemo(() => getSphericalPos(id, 2.48, 0.05, communityId), [id, communityId]);
@@ -102,7 +102,7 @@ const ArtistNode = ({ id, name, color, isLive, isSelected, communityId, cameraDi
     const opacityFactor = THREE.MathUtils.clamp((14 - cameraDist) / 4, 0, 1) * (isLive ? 1 : 0.9);
 
     useFrame((state) => {
-        if (isSelected) return; // Full stabilization halt
+        if (isSelected || !isGlobeSpinning) return; // Full stabilization halt
 
         const t = state.clock.getElapsedTime();
         meshRef.current.rotation.y += 0.012;
@@ -229,6 +229,7 @@ const GlobeCore = ({
     tracks = [],
     selectedId,
     activeView = 'CORE_PULSE',
+    isGlobeSpinning,
     onArtistClick,
     onCommunityClick,
     onTrackClick
@@ -241,7 +242,9 @@ const GlobeCore = ({
         setCameraDist(dist);
 
         if (activeSector === null) {
-            groupRef.current.rotation.y += 0.0012;
+            if (isGlobeSpinning && !selectedId) {
+                groupRef.current.rotation.y += 0.0012;
+            }
         } else {
             const targetPhi = (activeSector / SECTORS.length) * Math.PI * 2;
             const targetY = -targetPhi + Math.PI / 2;
@@ -345,6 +348,7 @@ const GlobeCore = ({
                         communityId={a.communityId || a.CommunityId}
                         isSelected={selectedId === `artist-${a.id || a.Id}`}
                         cameraDist={cameraDist}
+                        isGlobeSpinning={isGlobeSpinning}
                         onClick={() => onArtistClick?.(a)}
                     />
                 );
@@ -422,10 +426,11 @@ const InteractiveGlobe = ({
                         onArtistClick={onArtistClick}
                         onCommunityClick={onCommunityClick}
                         onTrackClick={onTrackClick}
+                        isGlobeSpinning={isGlobeSpinning}
                     />
                 </Float>
 
-                <Stars radius={100} depth={50} count={2000} factor={4} saturation={0} fade speed={1} />
+                <Stars radius={100} depth={50} count={2000} factor={4} saturation={0} fade speed={isGlobeSpinning ? 1 : 0} />
             </Canvas>
         </div>
     );
