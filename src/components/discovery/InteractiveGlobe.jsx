@@ -85,9 +85,9 @@ const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelec
                     <meshBasicMaterial color={color} transparent opacity={0.1} />
                 </mesh>
 
-                {/* Full Tower Click Boundary - NOW CORRECTLY ORIENTED */}
+                {/* Full Tower Click Boundary - MATCHES VISUAL (0.07) */}
                 <mesh visible={false} position={[0, 0, 0]} onClick={(e) => { e.stopPropagation(); onClick(); }}>
-                    <boxGeometry args={[0.1, 0.1, h]} />
+                    <boxGeometry args={[0.07, 0.07, h]} />
                 </mesh>
             </group>
 
@@ -157,9 +157,9 @@ const ArtistNode = ({ id, name, color, isLive, isSelected, communityId, cameraDi
                     opacity={opacityFactor}
                 />
             </mesh>
-            {/* Node Click Target - BALANCED PRIORITY (8x scale) */}
-            <mesh visible={false} scale={8} onClick={(e) => { e.stopPropagation(); onClick(); }}>
-                <sphereGeometry args={[0.02, 8, 8]} />
+            {/* Node Click Target - EXACT VISUAL SCALE */}
+            <mesh visible={false} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+                <octahedronGeometry args={[0.022, 0]} />
             </mesh>
 
             {/* Selection Visuals */}
@@ -235,9 +235,9 @@ const TrackNode = ({ id, title, artist, color, isSelected, cameraDist, onClick }
                 <sphereGeometry args={[0.015, 8, 8]} />
                 <meshBasicMaterial color={color || "#fff"} transparent opacity={opacityFactor * 0.15} />
             </mesh>
-            {/* Track Hit Target - BALANCED PRIORITY (10x scale) */}
-            <mesh visible={false} scale={10} onClick={(e) => { e.stopPropagation(); onClick(); }}>
-                <sphereGeometry args={[0.015, 8, 8]} />
+            {/* Track Hit Target - EXACT VISUAL SCALE */}
+            <mesh visible={false} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+                <sphereGeometry args={[0.016, 8, 8]} />
             </mesh>
             {isSelected && (
                 <Html position={[0, 0.08, 0]} center>
