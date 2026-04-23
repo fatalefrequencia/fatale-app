@@ -2980,7 +2980,7 @@ const FeedContent = React.memo(({
           </div>
 
           <div className="hidden lg:flex items-center gap-2">
-            <span className="text-[9px] text-white/20 font-black uppercase tracking-[0.2em]">{`TERMINAL_FEED_STREAM`}</span>
+            <span className="text-[9px] text-white/20 font-black uppercase tracking-[0.2em]">{`TERMINAL_FEED_STREAM_V3`}</span>
             <div className="w-24 h-px bg-[#ff006e]/10 border-t border-dashed border-[#ff006e]/20" />
           </div>
 
@@ -3116,8 +3116,13 @@ const FeedContent = React.memo(({
                         <div className="ml-0 sm:ml-40 mt-3 space-y-4">
                           {type === 'track' && (
                             <div
-                              onClick={() => handleTrackPlay(item)}
-                              className="bg-black/90 border border-[#ff006e]/30 p-4 flex items-center gap-4 hover:border-[#ff006e]/60 transition-all group/track cursor-pointer max-w-md shadow-xl"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log("!!! SIGNAL_DETECTION_TRIGGERED !!!", item.Id || item.id);
+                                handleTrackPlay(item);
+                              }}
+                              style={{ border: '1px solid #ff006e', cursor: 'crosshair' }}
+                              className="bg-black/90 p-4 flex items-center gap-4 hover:border-[#ff006e]/60 transition-all group/track cursor-pointer max-w-md shadow-xl"
                             >
                               <div className="w-12 h-12 bg-black border border-[#ff006e]/20 overflow-hidden shrink-0 flex items-center justify-center">
                                 {imageUrl ? (
