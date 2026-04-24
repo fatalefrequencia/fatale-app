@@ -666,7 +666,24 @@ function App() {
       setLibraryTracks(finalTracks);
       setTracks(prev => {
         const isMock = prev.length > 0 && String(prev[0].id).startsWith('mock-');
-        return (prev.length === 0 || isMock) ? finalTracks : prev;
+        if (prev.length === 0 || isMock) return finalTracks;
+        
+        // --- DEEP RE-SYNC: Ensure current queue reflects latest social state ---
+        return prev.map(t => {
+          const tId = String(t.trackId || t.TrackId || t.id || t.Id);
+          const yId = getGlobalYoutubeId(t);
+          
+          let isLiked = yId ? localLikedYtIds.has(yId) : likedTrackIds.has(tId);
+          // If not found by primary keys, try matching libraryTracks meta (fallthrough)
+          if (!isLiked) {
+             const matched = finalTracks.find(ft => ft.id === tId || (yId && getGlobalYoutubeId(ft) === yId));
+             if (matched) isLiked = matched.isLiked;
+          }
+
+          const isOwned = ownedTrackIds.has(tId) || t.isOwned || t.IsOwned || (uid && String(t.artistUserId) === String(uid));
+          
+          return { ...t, isLiked, isOwned };
+        });
       });
     } catch (error) {
       console.error("Failed to fetch tracks", error);
@@ -863,6 +880,7 @@ function App() {
             source: rec.trackType === 'youtube' ? `youtube:${rec.trackId}` : rec.trackId,
             cover: rec.thumbnailUrl,
             tags: rec.tags,
+            isLiked: rec.trackType === 'youtube' ? likedYoutubeIds.has(rec.trackId) : libraryTracks.some(lt => String(lt.id || lt.Id) === String(rec.trackId) && lt.isLiked),
             isOwned: true,
             isLocked: false
           };
@@ -1268,8 +1286,9 @@ function App() {
 
     // Optimistic Update Tracks State
     setTracks(prev => prev.map(t => {
-      const tId = t.id || t.Id;
-      return String(tId) === String(trackId) || String(tId) === `youtube:${trackId}` || String(tId) === `yt-${trackId}` ? { ...t, isLiked: isLiking } : t;
+      const isMatch = String(t.id || t.Id) === String(trackId) || 
+                      (pureYoutubeId && getGlobalYoutubeId(t) === pureYoutubeId);
+      return isMatch ? { ...t, isLiked: isLiking } : t;
     }));
 
     // Optimistic Update Liked Set for YouTube
@@ -1324,17 +1343,17 @@ function App() {
 
       // Also update tracks state to ensure hearts stay filled/unfilled
       setTracks(prev => prev.map(t => {
-        const tId = t.id || t.Id;
-        const tSource = t.source || t.Source;
-        const isThisTrack = String(tId) === String(trackId) || (tSource === `youtube:${trackId}`);
-        return isThisTrack ? { ...t, isLiked: isLiking } : t;
+        const isMatch = String(t.id || t.Id) === String(trackId) || 
+                        (pureYoutubeId && getGlobalYoutubeId(t) === pureYoutubeId);
+        return isMatch ? { ...t, isLiked: isLiking } : t;
       }));
     } catch (error) {
       console.error("Failed to sync like status:", error);
       // Rollback on error
       setTracks(prev => prev.map(t => {
-        const tId = t.id || t.Id;
-        return String(tId) === String(trackId) ? { ...t, isLiked: !isLiking } : t;
+        const isMatch = String(t.id || t.Id) === String(trackId) || 
+                        (pureYoutubeId && getGlobalYoutubeId(t) === pureYoutubeId);
+        return isMatch ? { ...t, isLiked: !isLiking } : t;
       }));
     }
   };
