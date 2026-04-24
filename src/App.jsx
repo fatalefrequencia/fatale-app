@@ -152,6 +152,7 @@ function App() {
       artist: raw.artist || raw.ArtistName || raw.Artist || 'Unknown Artist',
       source: raw.source || raw.Source,
       cover: raw.cover || raw.coverImageUrl || raw.CoverImageUrl,
+      isLiked: raw.isLiked ?? (raw.IsLiked ?? false),
       isLocked: raw.isLocked ?? (raw.IsLocked ?? false),
       isOwned: raw.isOwned ?? (raw.IsOwned ?? true)
     };
@@ -1268,21 +1269,19 @@ function App() {
       return;
     }
 
-    const isYoutube = track.source?.startsWith('youtube:') || typeof trackId === 'string'; // YouTube IDs are strings
+    // FIX: Use ONLY source-based detection. typeof trackId === 'string' was too broad
+    // because JSON deserializes numeric DB IDs as strings (e.g., "42"), falsely
+    // triggering YouTube logic for local tracks that were saved to DB.
+    const isYoutube = track.source?.startsWith('youtube:');
     const isLiking = !track.isLiked;
 
+    // FIX: Always derive pureYoutubeId from track.source, never from trackId
     let pureYoutubeId = null;
     if (isYoutube) {
-      pureYoutubeId = typeof trackId === 'string' && trackId.includes(':')
-        ? trackId.split(':')[1]
-        : (typeof trackId === 'string' && trackId.startsWith('yt-')
-          ? trackId.replace('yt-', '')
-          : (track.source?.startsWith('youtube:') ? track.source.split(':')[1] : String(trackId)));
-
-      if (typeof trackId === 'string') trackId = pureYoutubeId; // Fix 'youtube:youtube:...' DB bug
+      pureYoutubeId = track.source.split(':')[1];
     }
 
-    console.log(`Attempting to ${isLiking ? 'like' : 'unlike'} ${isYoutube ? 'YouTube' : 'Local'} track: `, trackId);
+    console.log(`[handleLike] ${isLiking ? 'LIKE' : 'UNLIKE'} | Type: ${isYoutube ? 'YouTube' : 'Local'} | trackId: ${trackId} | ytId: ${pureYoutubeId}`);
 
     // Optimistic Update Tracks State
     setTracks(prev => prev.map(t => {
@@ -1304,39 +1303,42 @@ function App() {
     }
 
     try {
-      if (isYoutube) {
-        // Identify if we already have a numeric Database ID (even if stringified from iPod/Search)
-        let dbId = Number.isInteger(Number(trackId)) ? Number(trackId) : null;
+      // Resolve the numeric database ID needed for the Social API
+      let dbId = Number.isInteger(Number(trackId)) ? Number(trackId) : null;
 
-        // 1. Ensure track exists in DB if we only have string ID
-        if (!dbId) {
-          const trackData = {
-            youtubeId: pureYoutubeId,
-            title: track.title,
-            channelTitle: track.artist || track.channelTitle || "Unknown",
-            thumbnailUrl: track.cover || track.thumbnail || "",
-            viewCount: track.viewCount || 0,
-            duration: String(track.duration || "0:00")
-          };
-          const savedTrackRes = await API.Youtube.saveTrack(trackData);
-          dbId = savedTrackRes.data.id || savedTrackRes.data.Id;
-        }
+      if (isYoutube && !dbId) {
+        // YouTube track without a numeric DB ID — save it to DB first
+        const trackData = {
+          youtubeId: pureYoutubeId,
+          title: track.title,
+          channelTitle: track.artist || track.channelTitle || "Unknown",
+          thumbnailUrl: track.cover || track.thumbnail || "",
+          viewCount: track.viewCount || 0,
+          duration: String(track.duration || "0:00")
+        };
+        const savedTrackRes = await API.Youtube.saveTrack(trackData);
+        dbId = savedTrackRes.data.id || savedTrackRes.data.Id;
+        console.log(`[handleLike] YouTube track saved to DB with id: ${dbId}`);
 
-        // Use unified social endpoints
-        if (isLiking) {
-          await API.Social.likeTrack(dbId);
-        } else {
-          await API.Social.unlikeTrack(dbId);
-        }
-      } else {
-        // Local Track
-        if (isLiking) {
-          await API.Social.likeTrack(trackId);
-        } else {
-          await API.Social.unlikeTrack(trackId);
-        }
+        // FIX: Backfill the new DB ID into the queue so future operations use it
+        setTracks(prev => prev.map(t => {
+          if (pureYoutubeId && getGlobalYoutubeId(t) === pureYoutubeId) {
+            return { ...t, id: String(dbId) };
+          }
+          return t;
+        }));
+      } else if (!isYoutube) {
+        // Local track — trackId is already the DB ID
+        dbId = Number(trackId);
       }
-      console.log(`Track ${trackId} ${isLiking ? 'liked' : 'unliked'} and persisted.`);
+
+      // Use unified social endpoints with the numeric DB ID
+      if (isLiking) {
+        await API.Social.likeTrack(dbId);
+      } else {
+        await API.Social.unlikeTrack(dbId);
+      }
+      console.log(`[handleLike] Track ${dbId} ${isLiking ? 'liked' : 'unliked'} and persisted.`);
 
       // Refresh library tracks from server to ensure everything is perfectly in sync with DB
       await fetchTracks();
@@ -1344,11 +1346,12 @@ function App() {
       // Also update tracks state to ensure hearts stay filled/unfilled
       setTracks(prev => prev.map(t => {
         const isMatch = String(t.id || t.Id) === String(trackId) || 
+                        String(t.id || t.Id) === String(dbId) ||
                         (pureYoutubeId && getGlobalYoutubeId(t) === pureYoutubeId);
         return isMatch ? { ...t, isLiked: isLiking } : t;
       }));
     } catch (error) {
-      console.error("Failed to sync like status:", error);
+      console.error("[handleLike] Failed to sync like status:", error);
       // Rollback on error
       setTracks(prev => prev.map(t => {
         const isMatch = String(t.id || t.Id) === String(trackId) || 
