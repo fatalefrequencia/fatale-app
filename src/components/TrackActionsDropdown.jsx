@@ -183,41 +183,10 @@ const TrackActionsDropdown = ({
         }
     };
 
-    const handleToggleLike = async () => {
-        try {
-            const API = await import('../services/api').then(mod => mod.default);
-            let targetTrackId = track.id || track.Id;
-            const isYoutube = track.category === 'YouTube' || track.source?.startsWith('youtube:') || String(track.id).startsWith('youtube:');
-
-            if (isYoutube) {
-                const isNumeric = !isNaN(parseInt(targetTrackId)) && String(targetTrackId).indexOf('-') === -1 && !String(targetTrackId).startsWith('youtube:');
-
-                if (!isNumeric) {
-                    let videoId = targetTrackId;
-                    if (String(videoId).includes(':')) videoId = videoId.split(':').pop();
-                    if (track.source?.includes(':')) videoId = track.source.split(':').pop();
-
-                    const saved = await API.Youtube.saveTrack({
-                        youtubeId: (videoId || "").trim(),
-                        title: track.title || "Unknown Track",
-                        channelTitle: track.artist || track.channelTitle || "Unknown Artist",
-                        thumbnailUrl: track.cover || track.img || track.thumbnail || track.coverImageUrl || ""
-                    });
-                    targetTrackId = saved.data.id || saved.data.Id;
-                }
-            }
-
-            if (isLiked) {
-                await API.Social.unlikeTrack(targetTrackId);
-            } else {
-                await API.Social.likeTrack(targetTrackId);
-            }
-
-            setIsLiked(!isLiked);
-            onLike?.(!isLiked);
-        } catch (err) {
-            console.error("Like toggle failed:", err);
-        }
+    const handleToggleLike = () => {
+        // Delegate to the centralized handler in App.jsx (passed via Profile.jsx)
+        onLike?.(track);
+        setIsLiked(!isLiked);
     };
 
     const handlePurchase = async () => {

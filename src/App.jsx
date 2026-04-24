@@ -70,8 +70,10 @@ const hashStr = (s) => {
 // Unified YouTube Detection
 const getGlobalYoutubeId = (t) => {
   if (!t) return null;
-  const rawSource = t.source || t.Source || t.filePath || t.FilePath || "";
-  const id = t.youtubeId || t.YoutubeId || t.videoId || t.VideoId || t.id || t.Id;
+  // Handle nested track objects if t is a Like or Purchase record
+  const track = t.track || t.Track || t;
+  const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
+  const id = track.youtubeId || track.YoutubeId || track.videoId || track.VideoId || track.id || track.Id;
   
   if (typeof rawSource === 'string' && rawSource.startsWith('youtube:')) return rawSource.split(':')[1];
   
@@ -80,13 +82,18 @@ const getGlobalYoutubeId = (t) => {
     if (rawSource.includes('youtu.be/')) return rawSource.split('youtu.be/')[1]?.split('?')[0];
   }
 
+  // Check if string ID is actually a YouTube ID (11 chars)
   if (typeof id === 'string' && id.length === 11) return id;
+  // Check yt- notation
+  if (typeof id === 'string' && id.startsWith('yt-')) return id.replace('yt-', '');
+  if (typeof id === 'string' && id.startsWith('youtube:')) return id.split(':')[1];
+  
   return null;
 };
 
 // --- COMPONENTE PRINCIPAL ---
 function App() {
-  const [activeView, setViewOriginal] = useState('login');
+  const [activeView, setViewOriginal] = useState(() => localStorage.getItem('activeView') || 'login');
   const [previousView, setPreviousView] = useState('discovery');
   const [viewingUserId, setViewingUserId] = useState(null);
   const [hasNewMessages, setHasNewMessages] = useState(false);
@@ -101,17 +108,25 @@ function App() {
   };
 
   // login, discovery, feed, profile, player
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(-1);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(() => {
+    const val = localStorage.getItem('currentTrackIndex');
+    return val !== null ? parseInt(val) : -1;
+  });
+  const [isPlaying, setIsPlaying] = useState(false); // Never auto-play on load to respect browser policies
   const [redirectTrigger, setRedirectTrigger] = useState(null); // Refactored to fix RefError
   const [user, setUser] = useState(null);
 
   const currentUserId = getUserId(user);
-  const [tracks, setTracks] = useState([]);
+  const [tracks, setTracks] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('tracks') || '[]'); } catch { return []; }
+  });
   const [libraryTracks, setLibraryTracks] = useState([]);
 
   // Real-time Audio State
-  const [currentTime, setCurrentTime] = useState(0);
+  const [currentTime, setCurrentTime] = useState(() => {
+    const val = localStorage.getItem('currentTime');
+    return val !== null ? parseFloat(val) : 0;
+  });
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(1); // 0 to 1
@@ -155,7 +170,13 @@ function App() {
   // Discovery Analytics State
   const [globalStats, setGlobalStats] = useState(null);
   const [likedYoutubeIds, setLikedYoutubeIds] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem('liked_youtube_ids') || '[]')); } catch { return new Set(); }
+    try {
+      const saved = localStorage.getItem('liked_youtube_ids');
+      if (saved) return new Set(JSON.parse(saved));
+    } catch (e) {
+      console.error("[Persistence] Failed to restore likedYouTubeIds", e);
+    }
+    return new Set();
   });
   const [subscription, setSubscription] = useState(null);
   const [cachedTrackIds, setCachedTrackIds] = useState(new Set());
@@ -434,6 +455,43 @@ function App() {
       });
     }
   }, []);
+
+  // --- PERSISTENCE LOOPS ---
+  useEffect(() => {
+    if (activeView && activeView !== 'login') {
+      localStorage.setItem('activeView', activeView);
+    }
+  }, [activeView]);
+
+  useEffect(() => {
+    localStorage.setItem('currentTrackIndex', currentTrackIndex);
+  }, [currentTrackIndex]);
+
+  useEffect(() => {
+    localStorage.setItem('tracks', JSON.stringify(tracks));
+  }, [tracks]);
+
+  useEffect(() => {
+    // Only save time periodically to avoid excessive storage writes
+    const interval = setInterval(() => {
+      if (isPlaying && currentTime > 0) {
+        localStorage.setItem('currentTime', currentTime);
+      }
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [isPlaying, currentTime]);
+
+  useEffect(() => {
+    localStorage.setItem('liked_youtube_ids', JSON.stringify(Array.from(likedYoutubeIds)));
+  }, [likedYoutubeIds]);
+
+  // Restoration Seek Effect
+  useEffect(() => {
+    if (currentTime > 0 && (audioRef.current || youtubePlayer)) {
+      console.log(`[Persistence] Restoring playback to: ${currentTime}s`);
+      handleSeek(currentTime);
+    }
+  }, [currentTrack?.id, !!youtubePlayer]);
 
   // --- HOST BROADCASTING LOGIC ---
   useEffect(() => {
@@ -1220,6 +1278,8 @@ function App() {
         const next = new Set(prev);
         if (isLiking) next.add(pureYoutubeId);
         else next.delete(pureYoutubeId);
+        // Persist immediately
+        localStorage.setItem('liked_youtube_ids', JSON.stringify(Array.from(next)));
         return next;
       });
     }
@@ -1330,13 +1390,19 @@ function App() {
     // 3. Clear session data
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('activeView');
+    localStorage.removeItem('currentTrackIndex');
+    localStorage.removeItem('tracks');
+    localStorage.removeItem('currentTime');
+    localStorage.removeItem('liked_youtube_ids');
 
     // 4. Update UI state
     setUser(null);
     setTracks([]); // Clear tracks to prevent stale keys
     setLibraryTracks([]); // Clear library tracks
+    setLikedYoutubeIds(new Set()); // Clear local likes
     setGlobalStats(null); // Clear stats
-    setView('login');
+    setViewOriginal('login'); // Use raw setter to bypass persistence loop if needed
     setViewingUserId(null);
     setYoutubePlayer(null);
   };
@@ -2065,6 +2131,7 @@ const Dashboard = React.memo(({
                 setUser={setUser}
                 onRefreshProfile={onRefreshProfile}
                 onRefreshTracks={onRefreshTracks}
+                onLike={onLike}
                 navigateToProfile={navigateToProfile}
                 playlists={playlists}
                 onRefreshPlaylists={onRefreshPlaylists}

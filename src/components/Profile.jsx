@@ -586,6 +586,7 @@ export const ProfileView = React.memo(({
     setShowGlobalIngest,
     onExpandContent,
     onRefreshPlaylists,
+    onLike,
     hasMiniPlayer
 }) => {
     const effectiveId = targetUserId || currentUser?.id || currentUser?.Id;
@@ -1840,7 +1841,7 @@ export const ProfileView = React.memo(({
 
                                                                         {/* More Actions */}
                                                                         <div className="flex items-center">
-                                                                            <TrackActionsDropdown track={selectedRelease} isOwner={isMe} playlists={currentUserPlaylists} myLikes={myLikes} isLikedInitial={myLikes.some(l => (l.trackId || l.TrackId) === (selectedRelease.id || selectedRelease.Id))} onDelete={() => { handleDeleteTrack(selectedRelease); setSelectedRelease(null); }} onAddToQueue={onQueueTrack} onRefreshPlaylists={onRefreshPlaylists} />
+                                                                            <TrackActionsDropdown track={selectedRelease} isOwner={isMe} playlists={currentUserPlaylists} myLikes={myLikes} isLikedInitial={myLikes.some(l => (l.trackId || l.TrackId) === (selectedRelease.id || selectedRelease.Id))} onDelete={() => { handleDeleteTrack(selectedRelease); setSelectedRelease(null); }} onAddToQueue={onQueueTrack} onRefreshPlaylists={onRefreshPlaylists} onLike={onLike} />
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -3743,6 +3744,7 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
                                     onDelete={() => onRemoveTrack?.(playlist.id, t.id || t.Id)}
                                     onAddToQueue={onQueueTrack}
                                     onRefreshPlaylists={onRefreshPlaylists}
+                                    onLike={onLike}
                                 />
                             </div>
                         ))}
