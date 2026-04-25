@@ -2327,6 +2327,15 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
       <div className="hidden lg:block absolute bottom-0 left-0 w-3 h-3 border-b border-l border-[#ff006e]/40 pointer-events-none" />
       <div className="hidden lg:block absolute bottom-0 right-0 w-3 h-3 border-b border-r border-[#ff006e]/40 pointer-events-none" />
 
+      {/* --- MINIMIZE TOGGLE (Top Right) --- */}
+      <button 
+        onClick={(e) => { e.stopPropagation(); onToggleMinimize(); }}
+        className="absolute top-1 right-2 z-50 p-1 text-white/20 hover:text-[#ff006e] transition-all group/minitoggle scale-75 lg:scale-100"
+        title="MINIMIZE_PLAYER"
+      >
+        <ChevronDown size={14} className="group-hover/minitoggle:translate-y-0.5 transition-transform" />
+      </button>
+
       {/* Progress Bar - Minimal Pink Glow */}
       <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-white/5 overflow-hidden z-10 group-hover/player:h-[3px] transition-all duration-300">
         <motion.div
@@ -2376,13 +2385,6 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
 
       {/* Extra Actions - Desktop/Side Panel */}
       <div className={`flex items-center gap-5 lg:gap-8 px-4 lg:pl-8 z-10 relative`}>
-        <button 
-          onClick={(e) => { e.stopPropagation(); onToggleMinimize(); }}
-          className="p-2 text-white/30 hover:text-[#ff006e] hover:bg-[#ff006e]/10 rounded-sm transition-all group/minbtn active:scale-95"
-          title="MINIMIZE_PLAYER"
-        >
-          <ChevronDown size={18} className="group-hover/minbtn:-translate-y-0.5 transition-transform" />
-        </button>
         <div className="hidden sm:block absolute left-0 top-1/2 -translate-y-1/2 w-px h-6 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
         
         <button
