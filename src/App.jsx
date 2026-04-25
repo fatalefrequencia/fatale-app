@@ -1766,6 +1766,8 @@ function App() {
                  setGlobalExpandedType(type);
                  setGlobalExpandedTheme(themeData);
                }}
+               volume={volume}
+               setVolume={setVolume}
            />
           </>
         )}
@@ -1977,7 +1979,9 @@ const Dashboard = React.memo(({
   setShowGlobalGoLive,
   setShowGlobalUpload,
   setShowGlobalIngest,
-  onExpandContent
+  onExpandContent,
+  volume,
+  setVolume
 }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
