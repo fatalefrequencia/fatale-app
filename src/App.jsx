@@ -2283,16 +2283,26 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 100, opacity: 0 }}
-      transition={{ type: "spring", stiffness: 400, damping: 30 }}
-      className={`fixed bottom-0 transition-all duration-300 left-0 right-0 ${isSidebarCollapsed ? 'lg:left-20' : 'lg:left-64'} backdrop-blur-3xl border-t p-3 pb-8 lg:pb-3 flex items-center gap-3 z-[100] shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${isMessages
-        ? 'bg-black/95 border-white/10'
-        : 'bg-[#050505]/90 border-[#ff006e]/30 shadow-[0_0_30px_rgba(255,0,110,0.1)]'
-        } `}
+      transition={{ type: "spring", stiffness: 300, damping: 28 }}
+      className={`fixed bottom-0 lg:bottom-4 transition-all duration-500 left-0 right-0 ${isSidebarCollapsed ? 'lg:left-[6rem]' : 'lg:left-[17rem]'} lg:right-4 backdrop-blur-3xl p-3 lg:p-4 pb-8 lg:pb-4 flex items-center gap-3 z-[100] ${isMessages
+        ? 'bg-black/95 border-t border-white/5 lg:border lg:rounded-sm lg:shadow-none'
+        : 'bg-[#020202]/95 border-t border-[#ff006e]/20 lg:border-[#ff006e]/30 lg:rounded-md shadow-[0_-15px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_10px_60px_-15px_rgba(255,0,110,0.2)]'
+        } group/player overflow-hidden`}
     >
-      {/* Progress Bar (Decorative/Subtle) */}
-      <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-white/5 overflow-hidden">
+      {/* Background Texture Overlay */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-fixed mix-blend-screen" />
+      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#ff006e]/5 to-transparent pointer-events-none" />
+
+      {/* Cyberpunk HUD Corner Brackets (Desktop) */}
+      <div className="hidden lg:block absolute top-0 left-0 w-3 h-3 border-t border-l border-[#ff006e]/40 pointer-events-none" />
+      <div className="hidden lg:block absolute top-0 right-0 w-3 h-3 border-t border-r border-[#ff006e]/40 pointer-events-none" />
+      <div className="hidden lg:block absolute bottom-0 left-0 w-3 h-3 border-b border-l border-[#ff006e]/40 pointer-events-none" />
+      <div className="hidden lg:block absolute bottom-0 right-0 w-3 h-3 border-b border-r border-[#ff006e]/40 pointer-events-none" />
+
+      {/* Progress Bar - Glowing Trailing Line */}
+      <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-white/5 overflow-hidden z-10 group-hover/player:h-[3px] transition-all duration-300">
         <motion.div
-          className="h-full bg-[#ff0060] shadow-[0_0_8px_#ff0060]"
+          className="h-full bg-gradient-to-r from-transparent via-[#ff006e] to-[#ffffff] shadow-[0_0_12px_#ff006e]"
           initial={{ width: 0 }}
           animate={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%' }}
           transition={{ duration: 0.5, ease: "linear" }}
@@ -2300,67 +2310,75 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
       </div>
 
       {/* Track Info (Click to expand) */}
-      <div className="flex items-center gap-3 lg:gap-4 flex-1 cursor-pointer group min-w-0" onClick={onExpand}>
-        <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded border flex items-center justify-center relative overflow-hidden shrink-0 ${isMessages ? 'bg-[#111] border-[#333]' : 'bg-[#111] border-[#ff006e]/10'}`}>
+      <div className="flex items-center gap-3 lg:gap-5 flex-1 cursor-pointer group/info min-w-0 z-10 relative" onClick={onExpand}>
+        <div className={`w-11 h-11 lg:w-14 lg:h-14 rounded-sm border flex items-center justify-center relative overflow-hidden shrink-0 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.5)] ${isMessages ? 'bg-black border-white/5' : 'bg-[#0a0a0a] border-[#ff006e]/30 group-hover/info:border-[#ff006e]/80 group-hover/info:shadow-[0_0_20px_rgba(255,0,110,0.4)]'}`}>
+          <div className="absolute inset-0 bg-[#ff006e]/10 animate-pulse pointer-events-none" />
           {track?.cover || track?.thumbnail ? (
-            <img src={track.cover || track.thumbnail} alt="Cover" className="w-full h-full object-cover filter brightness-75 group-hover:brightness-100 transition-all" />
+            <img src={track.cover || track.thumbnail} alt="Cover" className="w-full h-full object-cover filter brightness-[0.7] contrast-[1.2] saturate-[0.8] group-hover/info:filter-none transition-all duration-500 z-10 relative" />
           ) : (
-            <Music size={18} className={`transition-colors ${isMessages ? 'text-[#ff006e]' : 'text-[#ff006e]/30 group-hover:text-[#ff006e]'}`} />
+            <Music size={18} className={`transition-all duration-500 z-10 relative ${isMessages ? 'text-white/50' : 'text-[#ff006e]/40 group-hover/info:text-[#ff006e] group-hover/info:drop-shadow-[0_0_8px_#ff006e]'}`} />
           )}
         </div>
-        <div className="flex-1 min-w-0 overflow-hidden">
-          <h4 className={`text-[10px] lg:text-xs font-black uppercase truncate transition-colors leading-none mb-1 ${isMessages ? 'text-white' : 'text-white group-hover:text-[#ff006e]'}`}>{track?.title || 'No Track'}</h4>
+        <div className="flex-1 min-w-0 overflow-hidden flex flex-col justify-center gap-1.5">
           <div className="flex items-center gap-2">
-            <p className={`text-[8px] lg:text-[9px] font-bold uppercase truncate tracking-widest ${isMessages ? 'text-[#ff006e]' : 'text-[#ff006e]/40'}`}>{track?.artist || 'Unknown'}</p>
-            <div className="w-1 h-1 rounded-full bg-[#ff006e]/20" />
-            <span className="text-[7px] text-white/20 uppercase font-mono">SIGNAL_ON</span>
+            <span className="w-1.5 h-1.5 bg-[#00ff00] animate-pulse shadow-[0_0_8px_#00ff00]" />
+            <span className="text-[7px] lg:text-[8px] text-[#00ff00]/80 font-mono tracking-widest uppercase">SYNC_OK</span>
           </div>
+          <h4 className={`text-[11px] lg:text-[13px] font-black uppercase truncate transition-colors leading-none tracking-wide ${isMessages ? 'text-white' : 'text-white group-hover/info:text-transparent group-hover/info:bg-clip-text group-hover/info:bg-gradient-to-r group-hover/info:from-white group-hover/info:to-[#ff006e]'}`}>{track?.title || 'No Track'}</h4>
+          <p className={`text-[9px] lg:text-[10px] font-bold uppercase truncate tracking-widest leading-none ${isMessages ? 'text-white/40' : 'text-[#ff006e]/50 group-hover/info:text-[#ff006e]/90'}`}>{track?.artist || 'Unknown'}</p>
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex items-center gap-3 lg:gap-6 px-1 lg:px-4 shrink-0">
-        <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="text-white/20 hover:text-white transition-colors">
-          <SkipBack size={16} fill="currentColor" />
+      {/* Controls - Hollow Geometric Grid */}
+      <div className="flex items-center gap-4 lg:gap-8 px-2 lg:px-6 shrink-0 z-10 relative">
+        <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="text-white/30 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
+          <SkipBack size={18} fill="currentColor" />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
-          className={`w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-90 ${isMessages ? 'bg-[#ff006e]/10 text-[#ff006e]' : 'bg-white/5 border border-white/10 text-white hover:bg-[#ff006e] hover:text-black hover:border-transparent'}`}
+          className={`w-12 h-12 lg:w-14 lg:h-14 flex items-center justify-center rounded-sm border transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(0,0,0,0.6)] ${isMessages 
+            ? 'bg-transparent border-white/20 text-white hover:border-white/60' 
+            : 'bg-black/60 border-[#ff006e]/40 text-[#ff006e] hover:bg-[#ff006e]/15 hover:border-[#ff006e] hover:shadow-[0_0_25px_rgba(255,0,110,0.4)]'}`}
         >
           {isPlaying ? (
-            <Pause size={20} fill="currentColor" />
+            <Pause size={22} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
           ) : (
-            <Play size={20} fill="currentColor" className="ml-0.5" />
+            <Play size={22} fill="currentColor" className="ml-1 drop-shadow-[0_0_8px_currentColor]" />
           )}
         </button>
-        <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="text-white/20 hover:text-white transition-colors">
-          <SkipForward size={16} fill="currentColor" />
+        <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="text-white/30 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
+          <SkipForward size={18} fill="currentColor" />
         </button>
       </div>
 
       {/* Extra Actions - Desktop/Side Panel */}
-      <div className={`hidden sm:flex items-center gap-4 lg:gap-6 px-2 border-l pl-4 lg:pl-6 border-white/5`}>
+      <div className={`hidden sm:flex items-center gap-5 lg:gap-8 px-4 pl-6 lg:pl-8 z-10 relative`}>
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-px h-6 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
+        
         <button
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-black border border-white/10 text-white/40 hover:text-[#00ff00] hover:border-[#00ff00] transition-colors font-mono font-bold tracking-widest"
+          className="group/tip relative w-8 h-8 flex items-center justify-center rounded-sm bg-black border border-white/10 hover:border-[#00ff00]/60 transition-all duration-300 font-mono font-black tracking-widest overflow-hidden shadow-lg"
           title="Tip Artist"
           onClick={(e) => { e.stopPropagation(); /* Future Stripe Integration */ alert("Tip functionality initializing..."); }}
         >
-          $
+          <div className="absolute inset-0 bg-[#00ff00]/10 opacity-0 group-hover/tip:opacity-100 transition-opacity" />
+          <span className="text-white/40 group-hover/tip:text-[#00ff00] group-hover/tip:drop-shadow-[0_0_8px_rgba(0,255,0,0.8)] transition-all relative z-10 text-xs">$</span>
         </button>
+
         <Heart
           size={18}
-          className={`cursor-pointer transition-colors ${track?.isLiked ? 'text-[#ff006e] fill-[#ff006e]' : 'text-white/20 hover:text-[#ff006e]'}`}
+          className={`cursor-pointer transition-all duration-300 ${track?.isLiked ? 'text-[#ff006e] fill-[#ff006e] drop-shadow-[0_0_8px_rgba(255,0,110,0.8)]' : 'text-white/20 hover:text-[#ff006e] hover:drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]'}`}
           onClick={(e) => { e.stopPropagation(); onLike && onLike(track); }}
         />
-        <div className="flex items-center gap-2 group/vol pr-2">
+
+        <div className="flex items-center gap-3 group/vol pr-2 relative">
           <div onClick={(e) => { e.stopPropagation(); onToggleMute && onToggleMute(); }} className="cursor-pointer py-2">
             {isMuted || volume === 0 ? (
-              <VolumeX size={18} className="text-[#ff006e]" />
+              <VolumeX size={18} className="text-[#ff006e] drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]" />
             ) : (
-              <Volume2 size={18} className="text-white/20 group-hover/vol:text-[#ff006e] transition-colors" />
+              <Volume2 size={18} className="text-white/30 group-hover/vol:text-[#ff006e] group-hover/vol:drop-shadow-[0_0_8px_rgba(255,0,110,0.6)] transition-all duration-300" />
             )}
           </div>
-          <div className="w-0 overflow-hidden group-hover/vol:w-20 transition-all duration-300 ease-in-out opacity-0 group-hover/vol:opacity-100 flex items-center">
+          <div className="w-0 overflow-hidden group-hover/vol:w-20 transition-all duration-500 ease-in-out opacity-0 group-hover/vol:opacity-100 flex items-center">
             <input
               type="range"
               min="0"
@@ -2374,7 +2392,7 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
                 if (newVol > 0 && isMuted) { onToggleMute && onToggleMute(); } 
               }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full h-1 bg-white/20 rounded-full appearance-none cursor-pointer accent-[#ff006e]"
+              className="w-full h-[3px] bg-white/10 rounded-full appearance-none cursor-pointer accent-[#ff006e] outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]"
             />
           </div>
         </div>
