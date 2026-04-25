@@ -130,6 +130,9 @@ function App() {
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(1); // 0 to 1
+  const [isMiniPlayerMinimized, setIsMiniPlayerMinimized] = useState(() => {
+    return localStorage.getItem('isMiniPlayerMinimized') === 'true';
+  });
 
   // Live Radio State
   const [followingMap, setFollowingMap] = useState({});
@@ -1768,6 +1771,7 @@ function App() {
                }}
                volume={volume}
                setVolume={setVolume}
+               isMiniPlayerMinimized={isMiniPlayerMinimized}
            />
           </>
         )}
@@ -1981,7 +1985,8 @@ const Dashboard = React.memo(({
   setShowGlobalIngest,
   onExpandContent,
   volume,
-  setVolume
+  setVolume,
+  isMiniPlayerMinimized
 }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -2122,6 +2127,7 @@ const Dashboard = React.memo(({
                     type: 'success' 
                   });
                 }}
+                isPlayerActive={currentTrackIndex >= 0 && !isMiniPlayerMinimized}
               />
             )}
             {activeView === 'wallet' && <WalletView user={user} onRefreshProfile={onRefreshProfile} />}
@@ -2267,6 +2273,12 @@ const Dashboard = React.memo(({
               isSidebarCollapsed={isSidebarCollapsed}
               volume={volume}
               setVolume={setVolume}
+              isMinimized={isMiniPlayerMinimized}
+              onToggleMinimize={() => {
+                const newState = !isMiniPlayerMinimized;
+                setIsMiniPlayerMinimized(newState);
+                localStorage.setItem('isMiniPlayerMinimized', newState);
+              }}
             />
           )
         )}
@@ -2276,8 +2288,23 @@ const Dashboard = React.memo(({
 });
 
 // --- MINI PLAYER COMPONENT ---
-const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView, isMuted, onToggleMute, currentTime, duration, isSidebarCollapsed, volume, setVolume }) => {
+const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView, isMuted, onToggleMute, currentTime, duration, isSidebarCollapsed, volume, setVolume, isMinimized, onToggleMinimize }) => {
   const isMessages = activeView === 'messages';
+
+  if (isMinimized) {
+    return (
+      <div 
+        className={`fixed bottom-0 left-0 right-0 h-1.5 bg-[#ff006e]/20 z-[100] cursor-pointer group/min transition-all hover:h-4 ${isSidebarCollapsed ? 'lg:left-20' : 'lg:left-64'}`}
+        onClick={onToggleMinimize}
+        title="EXPAND_PLAYER"
+      >
+        <div className="h-full bg-[#ff006e] shadow-[0_0_15px_#ff006e]" style={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover/min:opacity-100 text-[8px] font-black text-white uppercase tracking-widest whitespace-nowrap bg-[#ff006e] px-2 py-0.5 rounded-sm">
+          EXPAND_PLAYER
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -2348,6 +2375,13 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
 
       {/* Extra Actions - Desktop/Side Panel */}
       <div className={`hidden sm:flex items-center gap-5 lg:gap-8 px-4 pl-6 lg:pl-8 z-10 relative`}>
+        <button 
+          onClick={(e) => { e.stopPropagation(); onToggleMinimize(); }}
+          className="p-2 text-white/30 hover:text-[#ff006e] hover:bg-[#ff006e]/10 rounded-sm transition-all group/minbtn"
+          title="MINIMIZE_PLAYER"
+        >
+          <ChevronDown size={18} className="group-hover/minbtn:-translate-y-0.5 transition-transform" />
+        </button>
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-px h-6 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
         
         <button
