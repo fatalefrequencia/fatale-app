@@ -2374,15 +2374,15 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
       </div>
 
       {/* Extra Actions - Desktop/Side Panel */}
-      <div className={`hidden sm:flex items-center gap-5 lg:gap-8 px-4 pl-6 lg:pl-8 z-10 relative`}>
+      <div className={`flex items-center gap-5 lg:gap-8 px-4 lg:pl-8 z-10 relative`}>
         <button 
           onClick={(e) => { e.stopPropagation(); onToggleMinimize(); }}
-          className="p-2 text-white/30 hover:text-[#ff006e] hover:bg-[#ff006e]/10 rounded-sm transition-all group/minbtn"
+          className="p-2 text-white/30 hover:text-[#ff006e] hover:bg-[#ff006e]/10 rounded-sm transition-all group/minbtn active:scale-95"
           title="MINIMIZE_PLAYER"
         >
-          <ChevronDown size={18} className="group-hover/minbtn:-translate-y-0.5 transition-transform" />
+          <ChevronDown size={isMobile ? 16 : 18} className="group-hover/minbtn:-translate-y-0.5 transition-transform" />
         </button>
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-px h-6 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
+        <div className="hidden sm:block absolute left-0 top-1/2 -translate-y-1/2 w-px h-6 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
         
         <button
           className="group/tip relative w-8 h-8 flex items-center justify-center rounded-sm bg-black border border-white/10 hover:border-[#00ff00]/60 transition-all duration-300 font-mono font-black overflow-hidden shadow-lg"
