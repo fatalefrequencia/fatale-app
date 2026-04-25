@@ -2143,6 +2143,7 @@ const Dashboard = React.memo(({
                  setShowGlobalUpload={setShowGlobalUpload}
                  setShowGlobalIngest={setShowGlobalIngest}
                  onExpandContent={onExpandContent}
+                 libraryTracks={libraryTracks}
                />
              )}
             {activeView === 'profile' && (
@@ -2338,7 +2339,7 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
           {isPlaying ? (
             <Pause size={18} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
           ) : (
-            <Play size={18} fill="currentColor" className="ml-1 drop-shadow-[0_0_8px_currentColor]" />
+            <Play size={18} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
           )}
         </button>
         <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="text-white/30 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
@@ -2351,12 +2352,12 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-px h-6 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
         
         <button
-          className="group/tip relative w-8 h-8 flex items-center justify-center rounded-sm bg-black border border-white/10 hover:border-[#00ff00]/60 transition-all duration-300 font-mono font-black tracking-widest overflow-hidden shadow-lg"
+          className="group/tip relative w-8 h-8 flex items-center justify-center rounded-sm bg-black border border-white/10 hover:border-[#00ff00]/60 transition-all duration-300 font-mono font-black overflow-hidden shadow-lg"
           title="Tip Artist"
           onClick={(e) => { e.stopPropagation(); /* Future Stripe Integration */ alert("Tip functionality initializing..."); }}
         >
           <div className="absolute inset-0 bg-[#00ff00]/10 opacity-0 group-hover/tip:opacity-100 transition-opacity" />
-          <span className="text-white/40 group-hover/tip:text-[#00ff00] group-hover/tip:drop-shadow-[0_0_8px_rgba(0,255,0,0.8)] transition-all relative z-10 text-xs">$</span>
+          <span className="text-white/40 group-hover/tip:text-[#00ff00] group-hover/tip:drop-shadow-[0_0_8px_rgba(0,255,0,0.8)] transition-all relative z-10 text-xs pl-0.5">$</span>
         </button>
 
         <Heart
@@ -2508,7 +2509,8 @@ const FeedContent = React.memo(({
   setShowGlobalGoLive,
   setShowGlobalUpload,
   setShowGlobalIngest,
-  onExpandContent
+  onExpandContent,
+  libraryTracks
 }) => {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -3260,25 +3262,23 @@ const FeedContent = React.memo(({
                             <div
                               onClick={(e) => {
                                 e.stopPropagation();
-                                console.log("!!! SIGNAL_DETECTION_TRIGGERED !!!", item.Id || item.id);
                                 handleTrackPlay(item);
                               }}
-                              style={{ border: '1px solid #ff006e', cursor: 'crosshair' }}
-                              className="bg-black/90 p-4 flex items-center gap-4 hover:border-[#ff006e]/60 transition-all group/track cursor-pointer max-w-md shadow-xl"
+                              className="bg-black/95 p-3 lg:p-4 flex items-center gap-4 rounded-sm border border-white/5 hover:border-white/10 transition-colors group/track cursor-pointer max-w-md shadow-xl"
                             >
-                              <div className="w-12 h-12 bg-black border border-[#ff006e]/20 overflow-hidden shrink-0 flex items-center justify-center">
+                              <div className="w-12 h-12 bg-black border border-white/10 rounded-sm overflow-hidden shrink-0 flex items-center justify-center relative">
                                 {imageUrl ? (
-                                  <img src={imageUrl} className="w-full h-full object-cover opacity-80" alt="" />
+                                  <img src={imageUrl} className="w-full h-full object-cover opacity-80 group-hover/track:opacity-100 transition-opacity" alt="" />
                                 ) : (
                                   <Music size={20} className="text-[#ff006e]/40" />
                                 )}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="text-[10px] text-white font-black uppercase truncate">{title}</div>
-                                <div className="text-[8px] text-[#ff006e]/80 font-bold uppercase mt-1 tracking-widest">BIPHATE_ACTIVE // {playCount || 0} SCANS</div>
+                                <div className="text-[11px] text-white font-black uppercase truncate group-hover/track:text-[#ff006e] transition-colors">{title}</div>
+                                <div className="text-[9px] text-[#ff006e]/60 font-bold uppercase mt-1 tracking-widest leading-none">PULSE // {playCount || 0}</div>
                               </div>
-                              <div className="w-8 h-8 rounded-full border border-[#ff006e]/40 flex items-center justify-center text-[#ff006e] group-hover/track:bg-[#ff006e] group-hover/track:text-black transition-all">
-                                <Play size={14} fill="currentColor" />
+                              <div className="w-8 h-8 rounded border border-white/10 flex items-center justify-center text-white/40 group-hover/track:bg-white/10 group-hover/track:text-white transition-all shadow-md">
+                                <Play size={14} fill="currentColor" className="drop-shadow-[0_0_5px_currentColor]" />
                               </div>
                             </div>
                           )}
