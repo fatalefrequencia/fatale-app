@@ -2292,7 +2292,6 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
     >
       {/* Background Texture Overlay */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-fixed mix-blend-screen" />
-      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#ff006e]/5 to-transparent pointer-events-none" />
 
       {/* Cyberpunk HUD Corner Brackets (Desktop) */}
       <div className="hidden lg:block absolute top-0 left-0 w-3 h-3 border-t border-l border-[#ff006e]/40 pointer-events-none" />
@@ -2300,10 +2299,10 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
       <div className="hidden lg:block absolute bottom-0 left-0 w-3 h-3 border-b border-l border-[#ff006e]/40 pointer-events-none" />
       <div className="hidden lg:block absolute bottom-0 right-0 w-3 h-3 border-b border-r border-[#ff006e]/40 pointer-events-none" />
 
-      {/* Progress Bar - Glowing Trailing Line */}
+      {/* Progress Bar - Minimal Pink Glow */}
       <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-white/5 overflow-hidden z-10 group-hover/player:h-[3px] transition-all duration-300">
         <motion.div
-          className="h-full bg-gradient-to-r from-transparent via-[#ff006e] to-[#ffffff] shadow-[0_0_12px_#ff006e]"
+          className="h-full bg-[#ff006e] shadow-[0_0_10px_#ff006e]"
           initial={{ width: 0 }}
           animate={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%' }}
           transition={{ duration: 0.5, ease: "linear" }}
@@ -3059,10 +3058,10 @@ const FeedContent = React.memo(({
 
       {/* Centro: Terminal Log */}
       <div className="flex-1 flex flex-col h-full bg-[#05050a]/40 relative">
-        {/* High-Visibility Header */}
-        <div className="bg-[#ff006e]/5 border-b border-[#ff006e]/20 p-2 text-center">
-          <span className="text-[7px] font-black text-[#ff006e] tracking-[0.5em] uppercase animate-pulse">
-            SIGNAL_SYSTEM_STABILIZED_v3_ACTIVE
+        {/* High-Visibility Header v4 */}
+        <div className="bg-white/[0.02] border-b border-white/5 p-2 text-center">
+          <span className="text-[7px] font-black text-white/40 tracking-[0.5em] uppercase">
+            TERMINAL_SIGNAL_FEED_V4_STABILIZED
           </span>
         </div>
 
@@ -3690,8 +3689,8 @@ const FeedContent = React.memo(({
               {mobilePanelTab === 'stations' && (
                 <div className="space-y-3">
                   <h3 className="text-[9px] font-black uppercase text-[#ff006e]/60 tracking-[0.4em]">LIVE_STATIONS</h3>
-                  {liveStations && liveStations.length > 0 ? (
-                    liveStations.map(station => (
+                  {liveStations && liveStations.filter(s => s.isLive || s.IsLive).length > 0 ? (
+                    liveStations.filter(s => s.isLive || s.IsLive).map(station => (
                       <div
                         key={`mob-stn-${station.id || station.Id}`}
                         className={`p-4 rounded border ${(station.isLive || station.IsLive)
@@ -3824,8 +3823,8 @@ const FeedContent = React.memo(({
 
         <div className="space-y-4">
           <h3 className="text-[10px] font-black uppercase text-[#ff006e]/60 px-2 tracking-[0.4em]">LIVE_STATIONS</h3>
-          {liveStations && liveStations.length > 0 ? (
-            liveStations.map(station => (
+          {liveStations && liveStations.filter(s => s.isLive || s.IsLive).length > 0 ? (
+            liveStations.filter(s => s.isLive || s.IsLive).map(station => (
               <div key={station.id || station.Id} className={`p-4 rounded border ${(station.isLive || station.IsLive) ? 'bg-[#ff006e]/5 border-[#ff006e]/20 shadow-[0_0_15px_rgba(255,0,110,0.05)]' : 'bg-black/60 border-white/5 opacity-60'} `}>
                 <div className="flex items-center gap-2 mb-2">
                   <div className={`w-1.5 h-1.5 rounded-full ${(station.isLive || station.IsLive) ? 'bg-[#ff006e] blink shadow-[0_0_8px_#ff006e]' : 'bg-gray-600'} `} />
