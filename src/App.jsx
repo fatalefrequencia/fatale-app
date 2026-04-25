@@ -2297,16 +2297,19 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
   if (isMinimized) {
     return (
       <motion.div
-        initial={{ y: 50, opacity: 0 }}
+        initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 50, opacity: 0 }}
+        exit={{ y: 20, opacity: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 28 }}
-        className={`fixed bottom-4 right-4 lg:right-8 w-12 h-12 bg-black/80 backdrop-blur-3xl border border-[#ff006e]/30 group/min rounded-full flex items-center justify-center cursor-pointer shadow-[0_0_20px_rgba(255,0,110,0.2)] z-[100] transition-all hover:bg-[#ff006e]/20`}
+        className={`fixed bottom-0 lg:bottom-4 right-0 lg:right-4 p-4 lg:p-2 cursor-pointer group/min z-[100] transition-all`}
         onClick={onToggleMinimize}
         title="EXPAND_PLAYER"
       >
-        <div className="absolute inset-0 rounded-full border border-[#ff006e] opacity-0 group-hover/min:opacity-100 group-hover/min:scale-110 transition-all duration-300 pointer-events-none" />
-        <Plus size={20} className="text-[#ff006e] group-hover/min:scale-110 transition-transform drop-shadow-[0_0_8px_#ff006e]" />
+        {/* Subtle HUD bracket holding the crosshair */}
+        <div className="absolute bottom-2 right-2 lg:bottom-1 lg:right-1 w-4 h-4 border-b border-r border-[#ff006e]/20 group-hover/min:border-[#ff006e]/60 transition-colors pointer-events-none" />
+        
+        {/* The minimal plus crosshair */}
+        <Plus size={16} strokeWidth={2.5} className="relative z-10 text-[#ff006e]/40 group-hover/min:text-[#ff006e] group-hover/min:drop-shadow-[0_0_8px_#ff006e] transition-all group-active/min:scale-90" />
       </motion.div>
     );
   }
