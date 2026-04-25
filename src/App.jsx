@@ -3268,7 +3268,6 @@ const FeedContent = React.memo(({
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="text-[11px] text-white font-black uppercase truncate group-hover/track:text-[#ff006e] transition-colors">{title}</div>
-                                <div className="text-[9px] text-[#ff006e]/60 font-bold uppercase mt-1 tracking-widest leading-none">PULSE // {playCount || 0}</div>
                               </div>
                               <div className="w-8 h-8 rounded border border-white/10 flex items-center justify-center text-white/40 group-hover/track:bg-white/10 group-hover/track:text-white transition-all shadow-md">
                                 <Play size={14} fill="currentColor" className="drop-shadow-[0_0_5px_currentColor]" />
