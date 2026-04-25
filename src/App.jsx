@@ -9,7 +9,7 @@ import {
   MapPin, Calendar, Users, Edit3, Library,
   ChevronDown, Camera, Video, PenTool, BookOpen,
   MessageSquare, Repeat, MoreHorizontal, RefreshCw,
-  Frown, Star, Volume2, VolumeX, Plus, Globe, Maximize2, Minimize2, LogOut, Wallet,
+  Frown, Star, Volume2, VolumeX, Plus, Minus, Globe, Maximize2, Minimize2, LogOut, Wallet,
 } from 'lucide-react';
 import YouTube from 'react-youtube';
 
@@ -1772,6 +1772,7 @@ function App() {
                volume={volume}
                setVolume={setVolume}
                isMiniPlayerMinimized={isMiniPlayerMinimized}
+               setIsMiniPlayerMinimized={setIsMiniPlayerMinimized}
            />
           </>
         )}
@@ -1986,7 +1987,8 @@ const Dashboard = React.memo(({
   onExpandContent,
   volume,
   setVolume,
-  isMiniPlayerMinimized
+  isMiniPlayerMinimized,
+  setIsMiniPlayerMinimized
 }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -2294,16 +2296,18 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
 
   if (isMinimized) {
     return (
-      <div 
-        className={`fixed bottom-0 left-0 right-0 h-1.5 bg-[#ff006e]/20 z-[100] cursor-pointer group/min transition-all hover:h-4 ${isSidebarCollapsed ? 'lg:left-20' : 'lg:left-64'}`}
+      <motion.div
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 50, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 28 }}
+        className={`fixed bottom-4 right-4 lg:right-8 w-12 h-12 bg-black/80 backdrop-blur-3xl border border-[#ff006e]/30 group/min rounded-full flex items-center justify-center cursor-pointer shadow-[0_0_20px_rgba(255,0,110,0.2)] z-[100] transition-all hover:bg-[#ff006e]/20`}
         onClick={onToggleMinimize}
         title="EXPAND_PLAYER"
       >
-        <div className="h-full bg-[#ff006e] shadow-[0_0_15px_#ff006e]" style={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover/min:opacity-100 text-[8px] font-black text-white uppercase tracking-widest whitespace-nowrap bg-[#ff006e] px-2 py-0.5 rounded-sm">
-          EXPAND_PLAYER
-        </div>
-      </div>
+        <div className="absolute inset-0 rounded-full border border-[#ff006e] opacity-0 group-hover/min:opacity-100 group-hover/min:scale-110 transition-all duration-300 pointer-events-none" />
+        <Plus size={20} className="text-[#ff006e] group-hover/min:scale-110 transition-transform drop-shadow-[0_0_8px_#ff006e]" />
+      </motion.div>
     );
   }
 
@@ -2333,7 +2337,7 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
         className="absolute top-1 right-2 z-50 p-1 text-white/20 hover:text-[#ff006e] transition-all group/minitoggle scale-75 lg:scale-100"
         title="MINIMIZE_PLAYER"
       >
-        <ChevronDown size={14} className="group-hover/minitoggle:translate-y-0.5 transition-transform" />
+        <Minus size={14} className="group-hover/minitoggle:translate-y-0.5 transition-transform" />
       </button>
 
       {/* Progress Bar - Minimal Pink Glow */}
