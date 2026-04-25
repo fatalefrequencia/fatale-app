@@ -3058,12 +3058,6 @@ const FeedContent = React.memo(({
 
       {/* Centro: Terminal Log */}
       <div className="flex-1 flex flex-col h-full bg-[#05050a]/40 relative">
-        {/* High-Visibility Header v4 */}
-        <div className="bg-white/[0.02] border-b border-white/5 p-2 text-center">
-          <span className="text-[7px] font-black text-white/40 tracking-[0.5em] uppercase">
-            TERMINAL_SIGNAL_FEED_V4_STABILIZED
-          </span>
-        </div>
 
         {loading && (
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#ff006e]/20 z-50 overflow-hidden">
