@@ -2250,6 +2250,7 @@ const Dashboard = React.memo(({
           // Hide mini player on mobile if viewing profile to avoid crowding
           !(window.innerWidth < 1024 && activeView === 'profile') && (
             <MiniPlayer
+              key={isMiniPlayerMinimized ? 'minimized' : 'expanded'}
               track={tracks[currentTrackIndex]}
               isPlaying={isPlaying}
               onTogglePlay={togglePlay}
