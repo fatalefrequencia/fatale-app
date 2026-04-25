@@ -95,10 +95,10 @@ const HUDWidget = ({ title, children, icon, searchQuery, activeColor }) => {
 
                 {/* Footer Status */}
                 <div className="absolute bottom-1 right-2 flex items-center gap-2 pointer-events-none">
-                    <div className="text-[7px] text-[#ff006e] opacity-20 uppercase font-light tracking-tighter">
-                        {isRebooting ? "RECALIBRATING_SIGNAL..." : "ENCRYPTED_LINK_ACTIVE"}
+                    <div className="text-[7px] text-[#ff006e] opacity-20 uppercase font-light tracking-tighter transition-opacity duration-300">
+                        {isRebooting ? "RECALIBRATING_SIGNAL..." : ""}
                     </div>
-                    <div className={`w-1 h-1 rounded-full ${isRebooting ? 'bg-amber-500 animate-pulse' : 'bg-[#ff006e]/40'}`} />
+                    <div className={`w-1 h-1 rounded-full ${isRebooting ? 'bg-amber-500 animate-pulse' : 'bg-[#ff006e]/20'}`} />
                 </div>
             </div>
         </div>
