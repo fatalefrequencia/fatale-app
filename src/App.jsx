@@ -2284,9 +2284,9 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 100, opacity: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 28 }}
-      className={`fixed bottom-0 lg:bottom-4 transition-all duration-500 left-0 right-0 ${isSidebarCollapsed ? 'lg:left-[6rem]' : 'lg:left-[17rem]'} lg:right-4 backdrop-blur-3xl p-3 lg:p-4 pb-8 lg:pb-4 flex items-center gap-3 z-[100] ${isMessages
+      className={`fixed bottom-0 lg:bottom-4 transition-all duration-500 left-0 right-0 ${isSidebarCollapsed ? 'lg:left-[6rem]' : 'lg:left-[17rem]'} lg:right-4 backdrop-blur-3xl p-2.5 lg:p-3 pb-6 lg:pb-3 flex items-center gap-3 z-[100] ${isMessages
         ? 'bg-black/95 border-t border-white/5 lg:border lg:rounded-sm lg:shadow-none'
-        : 'bg-[#020202]/95 border-t border-[#ff006e]/20 lg:border-[#ff006e]/30 lg:rounded-md shadow-[0_-15px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_10px_60px_-15px_rgba(255,0,110,0.2)]'
+        : 'bg-[#020202]/95 border-t border-white/5 lg:border-white/5 lg:rounded-md shadow-[0_-15px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_10px_60px_-15px_rgba(255,0,110,0.15)]'
         } group/player overflow-hidden`}
     >
       {/* Background Texture Overlay */}
@@ -2310,20 +2310,15 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
       </div>
 
       {/* Track Info (Click to expand) */}
-      <div className="flex items-center gap-3 lg:gap-5 flex-1 cursor-pointer group/info min-w-0 z-10 relative" onClick={onExpand}>
-        <div className={`w-11 h-11 lg:w-14 lg:h-14 rounded-sm border flex items-center justify-center relative overflow-hidden shrink-0 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.5)] ${isMessages ? 'bg-black border-white/5' : 'bg-[#0a0a0a] border-[#ff006e]/30 group-hover/info:border-[#ff006e]/80 group-hover/info:shadow-[0_0_20px_rgba(255,0,110,0.4)]'}`}>
-          <div className="absolute inset-0 bg-[#ff006e]/10 animate-pulse pointer-events-none" />
+      <div className="flex items-center gap-3 lg:gap-4 flex-1 cursor-pointer group/info min-w-0 z-10 relative" onClick={onExpand}>
+        <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-sm border flex items-center justify-center relative overflow-hidden shrink-0 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.5)] ${isMessages ? 'bg-black border-white/5' : 'bg-[#0a0a0a] border-white/10 group-hover/info:border-[#ff006e]/50 group-hover/info:shadow-[0_0_20px_rgba(255,0,110,0.2)]'}`}>
           {track?.cover || track?.thumbnail ? (
             <img src={track.cover || track.thumbnail} alt="Cover" className="w-full h-full object-cover filter brightness-[0.7] contrast-[1.2] saturate-[0.8] group-hover/info:filter-none transition-all duration-500 z-10 relative" />
           ) : (
             <Music size={18} className={`transition-all duration-500 z-10 relative ${isMessages ? 'text-white/50' : 'text-[#ff006e]/40 group-hover/info:text-[#ff006e] group-hover/info:drop-shadow-[0_0_8px_#ff006e]'}`} />
           )}
         </div>
-        <div className="flex-1 min-w-0 overflow-hidden flex flex-col justify-center gap-1.5">
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-[#00ff00] animate-pulse shadow-[0_0_8px_#00ff00]" />
-            <span className="text-[7px] lg:text-[8px] text-[#00ff00]/80 font-mono tracking-widest uppercase">SYNC_OK</span>
-          </div>
+        <div className="flex-1 min-w-0 overflow-hidden flex flex-col justify-center gap-0.5">
           <h4 className={`text-[11px] lg:text-[13px] font-black uppercase truncate transition-colors leading-none tracking-wide ${isMessages ? 'text-white' : 'text-white group-hover/info:text-transparent group-hover/info:bg-clip-text group-hover/info:bg-gradient-to-r group-hover/info:from-white group-hover/info:to-[#ff006e]'}`}>{track?.title || 'No Track'}</h4>
           <p className={`text-[9px] lg:text-[10px] font-bold uppercase truncate tracking-widest leading-none ${isMessages ? 'text-white/40' : 'text-[#ff006e]/50 group-hover/info:text-[#ff006e]/90'}`}>{track?.artist || 'Unknown'}</p>
         </div>
@@ -2336,14 +2331,14 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
-          className={`w-12 h-12 lg:w-14 lg:h-14 flex items-center justify-center rounded-sm border transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(0,0,0,0.6)] ${isMessages 
+          className={`w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-sm border transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(0,0,0,0.4)] ${isMessages 
             ? 'bg-transparent border-white/20 text-white hover:border-white/60' 
-            : 'bg-black/60 border-[#ff006e]/40 text-[#ff006e] hover:bg-[#ff006e]/15 hover:border-[#ff006e] hover:shadow-[0_0_25px_rgba(255,0,110,0.4)]'}`}
+            : 'bg-black/60 border-white/10 text-[#ff006e] hover:bg-[#ff006e]/10 hover:border-[#ff006e]/50 hover:shadow-[0_0_20px_rgba(255,0,110,0.2)]'}`}
         >
           {isPlaying ? (
-            <Pause size={22} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
+            <Pause size={18} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
           ) : (
-            <Play size={22} fill="currentColor" className="ml-1 drop-shadow-[0_0_8px_currentColor]" />
+            <Play size={18} fill="currentColor" className="ml-1 drop-shadow-[0_0_8px_currentColor]" />
           )}
         </button>
         <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="text-white/30 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
