@@ -267,6 +267,8 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
         if (!searchQuery) return base.slice(0, 6);
         return base.filter(j => 
             j.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            j.artist?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
     }, [journalEntries, searchQuery, matchesSector, activeSector]);
 
     // Calculate dynamic theme color based on active sector
@@ -502,8 +504,13 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                     className="absolute inset-0 z-10"
                                 >
                                     <CommunityTerminal 
-                                        community={activeTerminalCommunity} 
-                                        onBack={() => setActiveTerminalCommunity(null)} 
+                                        community={activeTerminalCommunity}
+                                        user={user}
+                                        followedCommunities={followedCommunities}
+                                        onFollowUpdate={onFollowUpdate}
+                                        setUser={setUser}
+                                        onBack={() => setActiveTerminalCommunity(null)}
+                                        sectorColor={activeSectorColor}
                                     />
                                 </motion.div>
                             )}
@@ -696,29 +703,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                             </button>
                                         ))}
                                     </div>
-                                </motion.div>
-                            ) : (
-                                <motion.div 
-                                    key={`terminal-${activeTerminalCommunity.id}`}
-                                    layout
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.3 }}
-                                    className="max-w-2xl w-full h-[540px] overflow-hidden rounded-sm border border-white/5 relative bg-black/60 shadow-2xl"
-                                >
-                                    <CommunityTerminal 
-                                        community={activeTerminalCommunity}
-                                        user={user}
-                                        followedCommunities={followedCommunities}
-                                        onFollowUpdate={onFollowUpdate}
-                                        setUser={setUser}
-                                        onBack={() => setActiveTerminalCommunity(null)}
-                                        sectorColor={activeSectorColor}
-                                    />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+
                         
                         {/* Floating Overlay for Sector Status - Hide when terminal is active */}
                         {!activeTerminalCommunity && (
