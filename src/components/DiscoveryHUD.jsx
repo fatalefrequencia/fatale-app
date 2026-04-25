@@ -170,7 +170,13 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     };
 
     const filteredTracks = useMemo(() => {
-        let base = trendingTracks;
+        // Filter out YouTube/Archive tracks to keep PLATFORM_SIGS dedicated to user uploads
+        let base = trendingTracks.filter(t => 
+            !(t.source && t.source.startsWith('youtube:')) && 
+            t.artist !== 'The Archive' && 
+            t.artistName !== 'The Archive'
+        );
+        
         if (activeSector !== null) base = base.filter(matchesSector);
         
         if (!searchQuery) return base.slice(0, 8);
