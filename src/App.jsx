@@ -2259,6 +2259,9 @@ const Dashboard = React.memo(({
               onToggleMute={onToggleMute}
               currentTime={currentTime}
               duration={duration}
+              isSidebarCollapsed={isSidebarCollapsed}
+              volume={volume}
+              setVolume={setVolume}
             />
           )
         )}
@@ -2268,7 +2271,7 @@ const Dashboard = React.memo(({
 });
 
 // --- MINI PLAYER COMPONENT ---
-const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView, isMuted, onToggleMute, currentTime, duration }) => {
+const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView, isMuted, onToggleMute, currentTime, duration, isSidebarCollapsed, volume, setVolume }) => {
   const isMessages = activeView === 'messages';
 
   return (
@@ -2277,7 +2280,7 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 100, opacity: 0 }}
       transition={{ type: "spring", stiffness: 400, damping: 30 }}
-      className={`fixed bottom-0 left-0 right-0 backdrop-blur-3xl border-t p-3 pb-8 lg:pb-3 flex items-center gap-3 z-[100] shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${isMessages
+      className={`fixed bottom-0 transition-all duration-300 left-0 right-0 ${isSidebarCollapsed ? 'lg:left-20' : 'lg:left-64'} backdrop-blur-3xl border-t p-3 pb-8 lg:pb-3 flex items-center gap-3 z-[100] shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ${isMessages
         ? 'bg-black/95 border-white/10'
         : 'bg-[#050505]/90 border-[#ff006e]/30 shadow-[0_0_30px_rgba(255,0,110,0.1)]'
         } `}
@@ -2333,17 +2336,43 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
 
       {/* Extra Actions - Desktop/Side Panel */}
       <div className={`hidden sm:flex items-center gap-4 lg:gap-6 px-2 border-l pl-4 lg:pl-6 border-white/5`}>
+        <button
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-black border border-white/10 text-white/40 hover:text-[#00ff00] hover:border-[#00ff00] transition-colors font-mono font-bold tracking-widest"
+          title="Tip Artist"
+          onClick={(e) => { e.stopPropagation(); /* Future Stripe Integration */ alert("Tip functionality initializing..."); }}
+        >
+          $
+        </button>
         <Heart
           size={18}
           className={`cursor-pointer transition-colors ${track?.isLiked ? 'text-[#ff006e] fill-[#ff006e]' : 'text-white/20 hover:text-[#ff006e]'}`}
           onClick={(e) => { e.stopPropagation(); onLike && onLike(track); }}
         />
-        <div onClick={(e) => { e.stopPropagation(); onToggleMute && onToggleMute(); }} className="cursor-pointer">
-          {isMuted ? (
-            <VolumeX size={18} className="text-[#ff006e]" />
-          ) : (
-            <Volume2 size={18} className="text-white/20 hover:text-[#ff006e] transition-colors" />
-          )}
+        <div className="flex items-center gap-2 group/vol pr-2">
+          <div onClick={(e) => { e.stopPropagation(); onToggleMute && onToggleMute(); }} className="cursor-pointer py-2">
+            {isMuted || volume === 0 ? (
+              <VolumeX size={18} className="text-[#ff006e]" />
+            ) : (
+              <Volume2 size={18} className="text-white/20 group-hover/vol:text-[#ff006e] transition-colors" />
+            )}
+          </div>
+          <div className="w-0 overflow-hidden group-hover/vol:w-20 transition-all duration-300 ease-in-out opacity-0 group-hover/vol:opacity-100 flex items-center">
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={isMuted ? 0 : (volume || 0)}
+              onChange={(e) => { 
+                e.stopPropagation(); 
+                const newVol = parseFloat(e.target.value);
+                setVolume && setVolume(newVol); 
+                if (newVol > 0 && isMuted) { onToggleMute && onToggleMute(); } 
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full h-1 bg-white/20 rounded-full appearance-none cursor-pointer accent-[#ff006e]"
+            />
+          </div>
         </div>
       </div>
     </motion.div>
