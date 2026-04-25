@@ -2380,7 +2380,7 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
           className="p-2 text-white/30 hover:text-[#ff006e] hover:bg-[#ff006e]/10 rounded-sm transition-all group/minbtn active:scale-95"
           title="MINIMIZE_PLAYER"
         >
-          <ChevronDown size={isMobile ? 16 : 18} className="group-hover/minbtn:-translate-y-0.5 transition-transform" />
+          <ChevronDown size={18} className="group-hover/minbtn:-translate-y-0.5 transition-transform" />
         </button>
         <div className="hidden sm:block absolute left-0 top-1/2 -translate-y-1/2 w-px h-6 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
         
