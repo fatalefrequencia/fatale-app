@@ -90,28 +90,43 @@ const CyberDust = ({ count = 30 }) => (
 );
 
 const SignalWaveform = ({ isLive, isProfilePlaying }) => {
+    // Number of points to render
+    const points = Array.from({ length: 60 });
+    
     return (
-        <div className="w-full h-8 relative flex items-center justify-center overflow-hidden bg-black/40 border-y border-[var(--subsystem-accent)]/10">
-            <div className="absolute inset-0 opacity-10 flex items-center justify-center">
+        <div className="w-full h-12 relative flex items-center justify-center overflow-hidden bg-black/40 border-y border-[var(--subsystem-accent)]/10">
+            <div className="absolute inset-0 opacity-5 flex items-center justify-center">
                  <div className="w-full h-px bg-[var(--subsystem-accent)]" />
             </div>
             {isLive || isProfilePlaying ? (
-                <div className="flex items-end gap-[2px] h-4">
-                    {Array.from({ length: 48 }).map((_, i) => (
-                        <motion.div
-                            key={i}
-                            className={`w-[2px] ${isLive ? 'bg-red-500' : 'bg-[var(--subsystem-accent)]'}`}
-                            animate={{ 
-                                height: [2, Math.random() * (isLive ? 16 : 10) + 4, 2],
-                                opacity: [0.3, 1, 0.3]
-                            }}
-                            transition={{ 
-                                duration: 0.5 + Math.random() * 0.5, 
-                                repeat: Infinity,
-                                delay: i * 0.02
-                            }}
-                        />
+                <div className="relative w-full h-full flex items-center justify-around px-4">
+                    {points.map((_, i) => (
+                        <div key={i} className="relative h-full flex flex-col justify-center gap-1">
+                            {/* Particle Cloud representation */}
+                            {Array.from({ length: 3 }).map((__, j) => (
+                                <motion.div
+                                    key={j}
+                                    className={`w-[1.5px] h-[1.5px] rounded-full bg-[var(--subsystem-accent)]`}
+                                    animate={{ 
+                                        y: [(Math.random() - 0.5) * 4, (Math.random() - 0.5) * (isLive ? 30 : 20), (Math.random() - 0.5) * 4],
+                                        opacity: [0.2, 0.8, 0.2],
+                                        scale: [1, 1.5, 1]
+                                    }}
+                                    transition={{ 
+                                        duration: 0.6 + Math.random() * 0.8, 
+                                        repeat: Infinity,
+                                        delay: i * 0.01 + j * 0.1
+                                    }}
+                                />
+                            ))}
+                        </div>
                     ))}
+                    {/* Pulsing Core Line */}
+                    <motion.div 
+                        className="absolute left-0 right-0 h-[1px] bg-[var(--subsystem-accent)]/20"
+                        animate={{ opacity: [0.1, 0.4, 0.1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                    />
                 </div>
             ) : (
                 <div className="flex items-center gap-[40px] opacity-30">
@@ -122,16 +137,6 @@ const SignalWaveform = ({ isLive, isProfilePlaying }) => {
                     >
                         SIGNAL_IDLE // HEARTBEAT_STABLE
                     </motion.div>
-                    <div className="relative w-32 h-6 flex items-center">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full h-px bg-[var(--subsystem-accent)]/20" />
-                        </div>
-                        <motion.div
-                            className="absolute h-3 w-3 border border-[var(--subsystem-accent)] rotate-45"
-                            animate={{ x: [0, 128, 0], scale: [1, 1.2, 1] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                        />
-                    </div>
                 </div>
             )}
         </div>
@@ -182,7 +187,7 @@ const ProfileIdentityHeader = ({
                     <div className="w-16 h-16 border border-[var(--subsystem-accent)] overflow-hidden bg-black p-0.5">
                         <div className="w-full h-full border border-[var(--subsystem-accent)]/30 relative group/pfp cursor-pointer">
                             {pfp ? (
-                                <img src={getMediaUrl(pfp)} className="w-full h-full object-cover subsystem-media-filter" />
+                                <img src={getMediaUrl(pfp)} className="w-full h-full object-cover" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-[var(--subsystem-accent)]/50"><Cpu size={24} /></div>
                             )}
@@ -724,6 +729,7 @@ export const ProfileView = React.memo(({
     onExpandContent,
     onRefreshPlaylists,
     onLike,
+    onThemeChange,
     hasMiniPlayer
 }) => {
     const effectiveId = targetUserId || currentUser?.id || currentUser?.Id;
@@ -776,6 +782,12 @@ export const ProfileView = React.memo(({
     });
 
     const toggleWidget = (key) => setWidgetsExpanded(prev => ({ ...prev, [key]: !prev[key] }));
+
+    useEffect(() => {
+        if (onThemeChange) {
+            onThemeChange(profileAccent);
+        }
+    }, [profileAccent, onThemeChange]);
 
     const hasFeaturedTrack = !!(displayUser?.featuredTrackId || displayUser?.FeaturedTrackId);
 
@@ -1488,14 +1500,15 @@ export const ProfileView = React.memo(({
     const [mobileView, setMobileView] = useState('WALL'); // 'WALL' | 'STREAM'
     const [panelsVisible, setPanelsVisible] = useState(true);
 
+    const profileAccent = displayUser?.profileColor || displayUser?.ProfileColor || '#ff3131';
+
     return (
-        <div className="monitor-shell min-h-screen relative bg-transparent">
+        <div className="monitor-shell min-h-screen relative bg-transparent" style={{ '--subsystem-accent': profileAccent }}>
             <div className="relative min-h-screen overflow-y-auto no-scrollbar">
             {/* Ambient Background layer */}
             {(displayUser?.bannerUrl || displayUser?.BannerUrl || (isMe && showEditProfile && profileData?.previewBannerUrl)) && !(displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl || (isMe && showEditProfile && profileData?.previewWallpaperVideoUrl)) && (
                 <div className={`absolute inset-0 z-[-1] transition-opacity duration-1000 ${panelsVisible ? 'opacity-20' : 'opacity-60'}`}>
                         <img src={getMediaUrl(isMe && showEditProfile && profileData?.previewBannerUrl ? profileData.previewBannerUrl : (displayUser?.bannerUrl || displayUser?.BannerUrl))} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/40" />
                 </div>
             )}
             {(displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl || (isMe && showEditProfile && profileData?.previewWallpaperVideoUrl)) && (
@@ -1508,7 +1521,6 @@ export const ProfileView = React.memo(({
                         className="w-full h-full object-cover"
                         src={getMediaUrl(isMe && showEditProfile && profileData?.previewWallpaperVideoUrl ? profileData.previewWallpaperVideoUrl : (displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl))}
                     />
-                        <div className="absolute inset-0 bg-black/40" />
                 </div>
             )}
             

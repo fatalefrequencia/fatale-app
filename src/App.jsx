@@ -2012,10 +2012,7 @@ const Dashboard = React.memo(({
   useEffect(() => {
     const root = document.documentElement;
     if (activeView === 'profile') {
-      root.style.setProperty('--theme-color', '#ff3131');
-      root.style.setProperty('--theme-color-rgb', '255, 49, 49');
-      root.style.setProperty('--text-color', '#ff3131');
-      root.style.setProperty('--text-color-rgb', '255, 49, 49');
+      // Profile handles its own theme via onThemeChange
     } else {
       root.style.setProperty('--theme-color', '#ff006e');
       root.style.setProperty('--theme-color-rgb', '255, 0, 110');
@@ -2023,6 +2020,22 @@ const Dashboard = React.memo(({
       root.style.setProperty('--text-color-rgb', '255, 0, 110');
     }
   }, [activeView]);
+
+  const handleProfileThemeChange = (hex) => {
+    if (activeView !== 'profile') return;
+    const root = document.documentElement;
+    root.style.setProperty('--theme-color', hex);
+    root.style.setProperty('--text-color', hex);
+    
+    // Simple RGB conversion
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    if (!isNaN(r)) {
+      root.style.setProperty('--theme-color-rgb', `${r}, ${g}, ${b}`);
+      root.style.setProperty('--text-color-rgb', `${r}, ${g}, ${b}`);
+    }
+  };
 
   return (
     <div className="flex h-screen w-full overflow-hidden relative bg-black bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-[#1a1a1a] via-[#050505] to-[#000000]">
@@ -2216,6 +2229,7 @@ const Dashboard = React.memo(({
                 setShowGlobalUpload={setShowGlobalUpload}
                 setShowGlobalIngest={setShowGlobalIngest}
                 onExpandContent={onExpandContent}
+                onThemeChange={handleProfileThemeChange}
                 hasMiniPlayer={currentTrackIndex >= 0}
               />
             )}
