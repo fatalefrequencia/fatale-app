@@ -732,23 +732,11 @@ export const ProfileView = React.memo(({
     onThemeChange,
     hasMiniPlayer
 }) => {
-    const effectiveId = targetUserId || currentUser?.id || currentUser?.Id;
-    const isMe = String(effectiveId) === String(currentUser?.id || currentUser?.Id);
-    const displayUser = isMe ? currentUser : profileData;
-
     const { showNotification } = useNotification();
-    const [activeTab, setActiveTab] = useState('Music');
-    const [studioSubTab, setStudioSubTab] = useState('All');
-    const [musicSubTab, setMusicSubTab] = useState('All');
-    const [selectedRelease, setSelectedRelease] = useState(null);
-    const [profileGear, setProfileGear] = useState([]);
-    const [isLoadingGear, setIsLoadingGear] = useState(false);
-    const [showGearForm, setShowGearForm] = useState(false);
-    const [gearFormData, setGearFormData] = useState({ name: '', category: 'Synth', notes: '' });
-    const [isSavingGear, setIsSavingGear] = useState(false);
-
-    // Profile Data State
+    
+    // 1. ALL STATES
     const [profileData, setProfileData] = useState(null);
+    const [activeTab, setActiveTab] = useState('Music');
     const [isFollowing, setIsFollowing] = useState(false);
     const [isLoadingProfile, setIsLoadingProfile] = useState(false);
     const [profileTracks, setProfileTracks] = useState([]);
@@ -758,20 +746,19 @@ export const ProfileView = React.memo(({
     const [profileGallery, setProfileGallery] = useState([]);
     const [isLoadingGallery, setIsLoadingGallery] = useState(false);
     const [myLikes, setMyLikes] = useState([]);
-
     const [isAboutOpen, setIsAboutOpen] = useState(true);
     const [isStatsOpen, setIsStatsOpen] = useState(true);
-
     const [showSettings, setShowSettings] = useState(false);
     const [showEditProfile, setShowEditProfile] = useState(false);
     const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
     const [broadcasterTab, setBroadcasterTab] = useState('requests');
-
     const [leftOpen, setLeftOpen] = useState(false);
     const [rightOpen, setRightOpen] = useState(false);
     const [roomMode, setRoomMode] = useState('room');
     const [isProfileTrackMuted, setIsProfileTrackMuted] = useState(true);
     const [savedPlaybackState, setSavedPlaybackState] = useState(null);
+    const [mobileView, setMobileView] = useState('WALL'); 
+    const [panelsVisible, setPanelsVisible] = useState(true);
     const [widgetsExpanded, setWidgetsExpanded] = useState({
         audio: true,
         sequences: true,
@@ -780,7 +767,26 @@ export const ProfileView = React.memo(({
         archive: true,
         gear: true
     });
+    const [showIngestMenu, setShowIngestMenu] = useState(false);
+    const [selectedContent, setSelectedContent] = useState(null);
+    const [expandedEntries, setExpandedEntries] = useState({});
+    const [showJournalForm, setShowJournalForm] = useState(false);
+    const [stationData, setStationData] = useState(null);
+    const [isStationFavorited, setIsStationFavorited] = useState(false);
+    const [localStatus, setLocalStatus] = useState('');
+    const [isSavingStatus, setIsSavingStatus] = useState(false);
 
+    // 2. DERIVED VARIABLES
+    const effectiveId = targetUserId || currentUser?.id || currentUser?.Id;
+    const isMe = String(effectiveId) === String(currentUser?.id || currentUser?.Id);
+    const displayUser = isMe ? currentUser : profileData;
+    const profileAccent = displayUser?.profileColor || displayUser?.ProfileColor || '#ff3131';
+
+    const sector = SECTORS.find(s => s.id === (displayUser?.residentSectorId || displayUser?.ResidentSectorId || 0));
+    const communityName = (displayUser?.communityName || displayUser?.CommunityName) || (displayUser?.communityId || displayUser?.CommunityId ? 'SYNCING...' : 'N/A');
+    const communityColor = (displayUser?.communityColor || displayUser?.CommunityColor) || sector?.color;
+
+    // 3. EFFECTS & LOGIC
     const toggleWidget = (key) => setWidgetsExpanded(prev => ({ ...prev, [key]: !prev[key] }));
 
     useEffect(() => {
@@ -793,66 +799,30 @@ export const ProfileView = React.memo(({
 
     const toggleProfileMusic = () => {
         if (isProfileTrackMuted) {
-            // UNMUTING
-            // Store current state to return to
             setSavedPlaybackState({
                 track: currentTrack,
                 playing: isPlaying
             });
-            
-            // Find the featured track in our local lists
             const fId = String(displayUser?.featuredTrackId || displayUser?.FeaturedTrackId);
             const profileTrack = profileTracks.find(t => String(t.id || t.Id) === fId);
-            
             if (profileTrack) {
                 onPlayTrack(profileTrack);
-            } else {
-                // If not in registry, attempt to play via ID if available or show error
-                console.warn("[BIO_SYNC] Profile track not found in local registry cache.");
             }
             setIsProfileTrackMuted(false);
         } else {
-            // MUTING
             if (savedPlaybackState?.track) {
                 onPlayTrack(savedPlaybackState.track);
-            } else {
-                // Fallback: stop playback if no previous state
-                // (We don't have a direct pause, so we might just leave it or play something else)
             }
             setIsProfileTrackMuted(true);
         }
     };
-    // Sync profileData with currentUser for "Me" view to ensure instant updates
+
     useEffect(() => {
         if (isMe && currentUser) {
             setProfileData(currentUser);
         }
     }, [currentUser, isMe]);
 
-    // Auto-Room Mode for Mobile
-    useEffect(() => {
-        const isMobile = window.innerWidth < 1024;
-        if (isMobile) {
-            // setRoomMode('room'); // User wants to preserve monitor space on mobile
-        }
-    }, []);
-
-    const [showIngestMenu, setShowIngestMenu] = useState(false);
-    const [selectedContent, setSelectedContent] = useState(null);
-    const [expandedEntries, setExpandedEntries] = useState({});
-    const [showJournalForm, setShowJournalForm] = useState(false);
-    const [stationData, setStationData] = useState(null);
-    const [isStationFavorited, setIsStationFavorited] = useState(false);
-
-
-    const sector = SECTORS.find(s => s.id === (displayUser?.residentSectorId || displayUser?.ResidentSectorId || 0));
-    const communityName = (displayUser?.communityName || displayUser?.CommunityName) || (displayUser?.communityId || displayUser?.CommunityId ? 'SYNCING...' : 'N/A');
-    const communityColor = (displayUser?.communityColor || displayUser?.CommunityColor) || sector?.color;
-
-    const [localStatus, setLocalStatus] = useState(displayUser?.statusMessage || displayUser?.StatusMessage || '');
-    const [isSavingStatus, setIsSavingStatus] = useState(false);
-
-    // Sync local status when display user changes
     useEffect(() => {
         setLocalStatus(displayUser?.statusMessage || displayUser?.StatusMessage || '');
     }, [displayUser?.statusMessage, displayUser?.StatusMessage]);
@@ -1497,10 +1467,6 @@ export const ProfileView = React.memo(({
         }
     };
 
-    const [mobileView, setMobileView] = useState('WALL'); // 'WALL' | 'STREAM'
-    const [panelsVisible, setPanelsVisible] = useState(true);
-
-    const profileAccent = displayUser?.profileColor || displayUser?.ProfileColor || '#ff3131';
 
     return (
         <div className="monitor-shell min-h-screen relative bg-transparent" style={{ '--subsystem-accent': profileAccent }}>
