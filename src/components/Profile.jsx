@@ -790,7 +790,7 @@ export const ProfileView = React.memo(({
     const effectiveId = targetUserId || currentUser?.id || currentUser?.Id;
     const isMe = String(effectiveId) === String(currentUser?.id || currentUser?.Id);
     const displayUser = isMe ? currentUser : profileData;
-    const profileAccent = displayUser?.profileColor || displayUser?.ProfileColor || '#ff3131';
+    const profileAccent = displayUser?.previewThemeColor || displayUser?.themeColor || displayUser?.ThemeColor || displayUser?.profileColor || displayUser?.ProfileColor || '#ff3131';
 
     const sector = SECTORS.find(s => s.id === (displayUser?.residentSectorId || displayUser?.ResidentSectorId || 0));
     const communityName = (displayUser?.communityName || displayUser?.CommunityName) || (displayUser?.communityId || displayUser?.CommunityId ? 'SYNCING...' : 'N/A');
@@ -1483,12 +1483,12 @@ export const ProfileView = React.memo(({
             <div className="relative min-h-screen overflow-y-auto no-scrollbar">
             {/* Ambient Background layer */}
             {(displayUser?.bannerUrl || displayUser?.BannerUrl || (isMe && showEditProfile && profileData?.previewBannerUrl)) && !(displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl || (isMe && showEditProfile && profileData?.previewWallpaperVideoUrl)) && (
-                <div className={`absolute inset-0 z-[-1] transition-opacity duration-1000 ${panelsVisible ? 'opacity-20' : 'opacity-60'}`}>
+                <div className={`absolute inset-0 z-[-1] transition-opacity duration-1000 ${panelsVisible ? 'opacity-50' : 'opacity-100'}`}>
                         <img src={getMediaUrl(isMe && showEditProfile && profileData?.previewBannerUrl ? profileData.previewBannerUrl : (displayUser?.bannerUrl || displayUser?.BannerUrl))} className="w-full h-full object-cover" />
                 </div>
             )}
             {(displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl || (isMe && showEditProfile && profileData?.previewWallpaperVideoUrl)) && (
-                <div className={`absolute inset-0 z-[-1] overflow-hidden transition-opacity duration-1000 ${panelsVisible ? 'opacity-20' : 'opacity-60'}`}>
+                <div className={`absolute inset-0 z-[-1] overflow-hidden transition-opacity duration-1000 ${panelsVisible ? 'opacity-50' : 'opacity-100'}`}>
                     <video 
                         autoPlay 
                         muted 

@@ -23,7 +23,7 @@
     inset: 0;
     pointer-events: none;
     z-index: 50;
-    background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.4) 100%);
+    background: transparent;
 }
 
 .monitor-shell::after {
@@ -32,9 +32,9 @@
     inset: 0;
     pointer-events: none;
     z-index: 51;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 49, 49, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+    background: transparent;
     background-size: 100% 3px, 3px 100%;
-    opacity: 0.2;
+    opacity: 0.1;
 }
 
 @keyframes data-scroll {
