@@ -1032,11 +1032,18 @@ export const IPodPlayer = ({
                                     {/* COVER ART - CENTERED */}
                                     <div className="flex items-center justify-center py-1 flex-shrink-0">
                                         <div className={`${isVertical ? 'w-20 h-20' : 'w-36 h-36'} bg-black border-2 border-[#f00060]/30 shadow-[0_0_40px_rgba(255,0,110,0.15)] flex items-center justify-center relative overflow-hidden rounded-xl group/cover transition-all duration-300`}>
-                                            {currentTrack.cover ? (
-                                                <img src={currentTrack.cover} alt="Cover" className={`w-full h-full object-cover transition-all duration-500 ${isLocked ? 'blur-md grayscale opacity-40 scale-110' : 'group-hover/cover:scale-105'}`} />
-                                            ) : (
-                                                <Zap size={44} className={`text-[#f00060] ${(!currentTrack.title || currentTrack.title === 'Loading...') ? 'animate-pulse' : ''}`} />
-                                            )}
+                                        {currentTrack.cover ? (
+                                            <img src={currentTrack.cover} alt="Cover" className={`w-full h-full object-cover transition-all duration-500 ${isLocked ? 'blur-md grayscale opacity-40 scale-110' : 'group-hover/cover:scale-105'}`} />
+                                        ) : (
+                                            <div 
+                                                className="system-skull w-20 h-20 animate-beat-pulse" 
+                                                style={{ 
+                                                    WebkitMaskImage: `url(${skullImg})`, 
+                                                    maskImage: `url(${skullImg})`,
+                                                    filter: `drop-shadow(0 0 12px var(--theme-color))` 
+                                                }} 
+                                            />
+                                        )}
 
                                             {isLocked && (
                                                 <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/40">

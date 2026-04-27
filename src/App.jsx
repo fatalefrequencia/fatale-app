@@ -2052,11 +2052,13 @@ const Dashboard = React.memo(({
           className={`cursor-pointer flex flex-col justify-center items-center transition-all group ${isSidebarCollapsed ? 'p-4' : 'p-6'}`}
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         >
-          <img
-            src={skullImg}
-            alt="System Kernel"
-            className={`transition-all duration-300 pointer-events-none select-none animate-beat-pulse ${isSidebarCollapsed ? 'w-11 h-11' : 'w-20 h-20'}`}
-            style={{ mixBlendMode: 'screen', filter: `drop-shadow(0 0 ${isSidebarCollapsed ? '8px' : '12px'} var(--theme-color))` }}
+          <div 
+            className={`system-skull transition-all duration-300 pointer-events-none select-none animate-beat-pulse ${isSidebarCollapsed ? 'w-11 h-11' : 'w-20 h-20'}`}
+            style={{ 
+              WebkitMaskImage: `url(${skullImg})`, 
+              maskImage: `url(${skullImg})`,
+              filter: `drop-shadow(0 0 ${isSidebarCollapsed ? '8px' : '12px'} var(--theme-color))` 
+            }}
           />
         </div>
 
