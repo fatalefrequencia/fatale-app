@@ -2058,19 +2058,19 @@ const Dashboard = React.memo(({
               style={{ mixBlendMode: 'screen' }}
             >
               <div 
-                className="w-full h-full flex items-center justify-center"
-                style={{ backgroundColor: 'var(--theme-color)' }}
-              >
-                <img
-                  src={skullImg}
-                  alt="System Kernel"
-                  className="w-full h-full object-contain"
-                  style={{ 
-                    filter: 'grayscale(1) brightness(5) contrast(10)', 
-                    mixBlendMode: 'multiply' 
-                  }}
-                />
-              </div>
+                className="w-full h-full"
+                style={{ 
+                  backgroundColor: 'var(--theme-color)',
+                  maskImage: `url(${skullImg})`,
+                  WebkitMaskImage: `url(${skullImg})`,
+                  maskSize: 'contain',
+                  WebkitMaskSize: 'contain',
+                  maskRepeat: 'no-repeat',
+                  WebkitMaskRepeat: 'no-repeat',
+                  maskPosition: 'center',
+                  WebkitMaskPosition: 'center'
+                }}
+              />
             </div>
             {/* Ambient Glow */}
             <div 
