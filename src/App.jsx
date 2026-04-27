@@ -2052,7 +2052,14 @@ const Dashboard = React.memo(({
           className={`cursor-pointer flex flex-col justify-center items-center transition-all group ${isSidebarCollapsed ? 'p-4' : 'p-6'}`}
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         >
-          <div className="relative w-24 h-24 flex items-center justify-center">
+          <div 
+            className="relative w-24 h-24 flex items-center justify-center transition-all duration-500"
+            style={{ 
+              boxShadow: `inset 0 0 20px rgba(var(--theme-color-rgb), 0.05), 0 0 30px rgba(var(--theme-color-rgb), 0.03)`,
+              borderRadius: '8px',
+              border: `1px solid rgba(var(--theme-color-rgb), 0.05)`
+            }}
+          >
             {/* The Tinted Skull System - Visibility Boosted */}
             <div className={`relative transition-all duration-300 pointer-events-none select-none animate-subsystem-pulse ${isSidebarCollapsed ? 'w-11 h-11' : 'w-20 h-20'} flex items-center justify-center`}>
               <img
