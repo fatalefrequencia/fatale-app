@@ -2055,9 +2055,10 @@ const Dashboard = React.memo(({
           <div 
             className="relative w-24 h-24 flex items-center justify-center transition-all duration-500"
             style={{ 
-              boxShadow: `inset 0 0 20px rgba(var(--theme-color-rgb), 0.05), 0 0 30px rgba(var(--theme-color-rgb), 0.03)`,
-              borderRadius: '8px',
-              border: `1px solid rgba(var(--theme-color-rgb), 0.05)`
+              boxShadow: `0 0 25px rgba(var(--theme-color-rgb), 0.08)`,
+              borderRadius: '6px',
+              border: `1px solid rgba(var(--theme-color-rgb), 0.25)`,
+              background: `rgba(0, 0, 0, 0.2)`
             }}
           >
             {/* The Tinted Skull System - Visibility Boosted */}
