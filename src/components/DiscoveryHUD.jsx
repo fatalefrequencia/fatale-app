@@ -84,6 +84,18 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     const [activeGlobeView, setActiveGlobeView] = useState('CORE_PULSE'); 
     const [isGlobeSpinning, setIsGlobeSpinning] = useState(false);
 
+    // ── Centralized native-track detection (catches ALL casing variants from API) ──
+    const isNativeTrack = useCallback((t) => {
+        const src = (t.source || t.Source || t.filePath || t.FilePath || "").toLowerCase();
+        const artistName = (t.artist || t.artistName || t.ArtistName || t.Artist || "").toLowerCase();
+        const genre = (t.genre || t.Genre || "").toLowerCase();
+        const albumTitle = (t.albumTitle || t.AlbumTitle || "").toLowerCase();
+        
+        const isYt = src.startsWith('youtube:') || src.includes('youtube.com') || src.includes('youtu.be') || genre === 'youtube';
+        const isArchive = artistName === 'the archive' || albumTitle.includes('youtube signals') || t.isArchive || t.IsArchive;
+        
+        return !isYt && !isArchive;
+    }, []);
     const fetchAll = useCallback(async () => {
         setLoading(true);
         try {
@@ -171,25 +183,21 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
 
     const filteredTracks = useMemo(() => {
         // Filter out YouTube/Archive tracks to keep PLATFORM_SIGS dedicated to user uploads
-        let base = trendingTracks.filter(t => 
-            !(t.source && t.source.startsWith('youtube:')) && 
-            t.artist !== 'The Archive' && 
-            t.artistName !== 'The Archive'
-        );
+        let base = trendingTracks.filter(isNativeTrack);
         
         if (activeSector !== null) base = base.filter(matchesSector);
         
         if (!searchQuery) return base.slice(0, 8);
         return base.filter(t => 
-            t.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-            t.artist?.toLowerCase().includes(searchQuery.toLowerCase())
+            (t.title || t.Title || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+            (t.artist || t.artistName || t.ArtistName || '').toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [trendingTracks, searchQuery, matchesSector, activeSector]);
+    }, [trendingTracks, searchQuery, matchesSector, activeSector, isNativeTrack]);
 
     const filteredArtists = useMemo(() => {
         let base = trendingArtists.filter(a => {
-            const name = a.name || a.Name;
-            return name && !name.toLowerCase().includes('placeholder') && name.length > 1;
+            const name = (a.name || a.Name || "").toLowerCase();
+            return name && !name.includes('placeholder') && name.length > 1 && name !== 'the archive' && name !== 'youtube' && !a.isArchive;
         });
         if (activeSector !== null) base = base.filter(matchesSector);
         if (searchQuery) {
@@ -233,15 +241,30 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     }, [communities, searchQuery, matchesSector, activeSector, user]);
 
     const tracksWithColor = useMemo(() => {
-        return trendingTracks.map(t => {
-            const artist = trendingArtists.find(a => String(a.id || a.Id) === String(t.artistId || t.ArtistId));
-            const sector = artist ? SECTORS.find(s => s.id === (artist.sectorId || artist.SectorId)) : null;
-            return { ...t, color: sector ? sector.color : "#ffffff" };
+        return trendingTracks
+            .filter(isNativeTrack)
+            .map(t => {
+                const artist = trendingArtists.find(a => String(a.id || a.Id) === String(t.artistId || t.ArtistId));
+                const sector = artist ? SECTORS.find(s => s.id === (artist.sectorId || artist.SectorId)) : null;
+                return { ...t, color: sector ? sector.color : "#ffffff" };
+            });
+    }, [trendingTracks, trendingArtists, isNativeTrack]);
+
+    const artistsForGlobe = useMemo(() => {
+        return trendingArtists.filter(a => {
+            const name = (a.name || a.Name || "").toLowerCase();
+            return name !== 'the archive' && name !== 'youtube' && !a.isArchive;
         });
-    }, [trendingTracks, trendingArtists]);
+    }, [trendingArtists]);
 
     const liveStations = useMemo(() => {
-        let base = stations.filter(s => s.isLive || s.IsLive);
+        let base = stations.filter(s => {
+            if (!(s.isLive || s.IsLive)) return false;
+            const name = (s.name || s.Name || "").toLowerCase();
+            const artist = (s.artistName || s.ArtistName || "").toLowerCase();
+            const isArchive = name.includes('archive') || artist.includes('archive');
+            return !isArchive;
+        });
         if (activeSector !== null) base = base.filter(matchesSector);
         if (searchQuery) {
             base = base.filter(s => (s.name || s.Name || '').toLowerCase().includes(searchQuery.toLowerCase()));
@@ -250,7 +273,13 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     }, [stations, searchQuery, matchesSector, activeSector]);
 
     const filteredVisuals = useMemo(() => {
-        let base = visualUploads;
+        let base = visualUploads.filter(v => {
+            const src = (v.source || v.Source || v.videoUrl || v.VideoUrl || "").toLowerCase();
+            const artist = (v.artist || v.Artist || "").toLowerCase();
+            const isYt = src.startsWith('youtube:') || src.includes('youtube.com') || src.includes('youtu.be');
+            const isArchive = artist === 'the archive' || v.isArchive || v.IsArchive;
+            return !isYt && !isArchive;
+        });
         if (activeSector !== null) base = base.filter(matchesSector);
 
         if (!searchQuery) return base.slice(0, 9);
@@ -261,7 +290,10 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     }, [visualUploads, searchQuery, matchesSector, activeSector]);
 
     const filteredJournals = useMemo(() => {
-        let base = journalEntries;
+        let base = journalEntries.filter(j => {
+            const artist = (j.artist || j.Artist || "").toLowerCase();
+            return artist !== 'the archive' && !j.isArchive && !j.IsArchive;
+        });
         if (activeSector !== null) base = base.filter(matchesSector);
 
         if (!searchQuery) return base.slice(0, 6);
@@ -469,7 +501,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                             <InteractiveGlobe 
                                 searchQuery={searchQuery}
                                 communities={communities}
-                                artists={trendingArtists} 
+                                artists={artistsForGlobe} 
                                 stations={stations} 
                                 tracks={tracksWithColor}
                                 activeSector={activeSector}
@@ -636,15 +668,22 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                                 ) : (
                                                                     // ARTIST: Show Signal Previews
                                                                     visualUploads.filter(v => {
-                                                                        const artistId = selectedGlobeItem.userId || selectedGlobeItem.UserId || selectedGlobeItem.id || selectedGlobeItem.Id;
+                                                                        const artistId = selectedGlobeItem.type === 'track' 
+                                                                            ? (selectedGlobeItem.artistId || selectedGlobeItem.ArtistId)
+                                                                            : (selectedGlobeItem.userId || selectedGlobeItem.UserId || selectedGlobeItem.id || selectedGlobeItem.Id);
+                                                                        
                                                                         const uploadArtistId = v.userId || v.UserId || v.artistId || v.ArtistId;
-                                                                        const artistName = (selectedGlobeItem.name || selectedGlobeItem.Name || '').toLowerCase();
+                                                                        
+                                                                        const artistName = (selectedGlobeItem.type === 'track' 
+                                                                            ? (selectedGlobeItem.artist || selectedGlobeItem.artistName)
+                                                                            : (selectedGlobeItem.name || selectedGlobeItem.Name)) || '';
+                                                                            
                                                                         const uploadArtistName = (v.artist || v.Artist || '').toLowerCase();
                                                                         
-                                                                        // Strict matching: If names are present and different, don't show, even if IDs match (shared User account)
-                                                                        if (artistName && uploadArtistName && artistName !== uploadArtistName) return false;
+                                                                        // Strict matching: If names are present and different, don't show
+                                                                        if (artistName && uploadArtistName && artistName.toLowerCase() !== uploadArtistName) return false;
                                                                         
-                                                                        return (String(uploadArtistId) === String(artistId)) || (artistName && artistName === uploadArtistName);
+                                                                        return (String(uploadArtistId) === String(artistId)) || (artistName && artistName.toLowerCase() === uploadArtistName);
                                                                     }).slice(0, 5).map((v, i) => (
                                                                         <div key={i} className="w-32 h-20 bg-black border border-white/10 shrink-0 relative group/img overflow-hidden rounded-sm">
                                                                             <img src={resolveThumbnail(v)} alt="" className="w-full h-full object-cover opacity-60 group-hover/img:opacity-100 transition-opacity" />
