@@ -775,6 +775,16 @@ export const ProfileView = React.memo(({
     const [isStationFavorited, setIsStationFavorited] = useState(false);
     const [localStatus, setLocalStatus] = useState('');
     const [isSavingStatus, setIsSavingStatus] = useState(false);
+    
+    // RESTORED GEAR/STUDIO STATES
+    const [profileGear, setProfileGear] = useState([]);
+    const [isLoadingGear, setIsLoadingGear] = useState(false);
+    const [showGearForm, setShowGearForm] = useState(false);
+    const [gearFormData, setGearFormData] = useState({ name: '', category: 'Synth', notes: '' });
+    const [isSavingGear, setIsSavingGear] = useState(false);
+    const [studioSubTab, setStudioSubTab] = useState('All');
+    const [musicSubTab, setMusicSubTab] = useState('All');
+    const [selectedRelease, setSelectedRelease] = useState(null);
 
     // 2. DERIVED VARIABLES
     const effectiveId = targetUserId || currentUser?.id || currentUser?.Id;
