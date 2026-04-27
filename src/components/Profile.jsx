@@ -758,7 +758,7 @@ export const ProfileView = React.memo(({
     const [isProfileTrackMuted, setIsProfileTrackMuted] = useState(true);
     const [savedPlaybackState, setSavedPlaybackState] = useState(null);
     const [mobileView, setMobileView] = useState('WALL'); 
-    const [panelsVisible, setPanelsVisible] = useState(true);
+    const [panelsVisible, setPanelsVisible] = useState(false);
     const [widgetsExpanded, setWidgetsExpanded] = useState({
         audio: true,
         sequences: true,
