@@ -2054,7 +2054,7 @@ const Dashboard = React.memo(({
         >
           <div className="relative w-20 h-20 flex items-center justify-center overflow-hidden">
             <div 
-              className={`transition-all duration-300 pointer-events-none select-none animate-beat-pulse ${isSidebarCollapsed ? 'w-11 h-11' : 'w-20 h-20'} flex items-center justify-center`}
+              className={`transition-all duration-300 pointer-events-none select-none animate-subsystem-pulse ${isSidebarCollapsed ? 'w-11 h-11' : 'w-20 h-20'} flex items-center justify-center`}
               style={{ mixBlendMode: 'screen' }}
             >
               <div 

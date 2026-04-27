@@ -87,8 +87,24 @@
         }
     }
 
+    /* Dynamic Subsystem Pulse - Uses variables */
+    @keyframes subsystem-pulse {
+        0%, 100% {
+            filter: drop-shadow(0 0 4px var(--theme-color)) drop-shadow(0 0 10px rgba(var(--theme-color-rgb), 0.3));
+            transform: scale(1);
+        }
+        50% {
+            filter: drop-shadow(0 0 6px var(--theme-color)) drop-shadow(0 0 14px rgba(var(--theme-color-rgb), 0.5));
+            transform: scale(1.03);
+        }
+    }
+
     .animate-beat-pulse {
         animation: beat-pulse 3s infinite ease-in-out;
+    }
+
+    .animate-subsystem-pulse {
+        animation: subsystem-pulse 3s infinite ease-in-out;
     }
 
 
