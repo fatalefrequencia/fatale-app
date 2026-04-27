@@ -2009,6 +2009,21 @@ const Dashboard = React.memo(({
     }
   };
 
+  useEffect(() => {
+    const root = document.documentElement;
+    if (activeView === 'profile') {
+      root.style.setProperty('--theme-color', '#ff3131');
+      root.style.setProperty('--theme-color-rgb', '255, 49, 49');
+      root.style.setProperty('--text-color', '#ff3131');
+      root.style.setProperty('--text-color-rgb', '255, 49, 49');
+    } else {
+      root.style.setProperty('--theme-color', '#ff006e');
+      root.style.setProperty('--theme-color-rgb', '255, 0, 110');
+      root.style.setProperty('--text-color', '#ff006e');
+      root.style.setProperty('--text-color-rgb', '255, 0, 110');
+    }
+  }, [activeView]);
+
   return (
     <div className="flex h-screen w-full overflow-hidden relative bg-black bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-[#1a1a1a] via-[#050505] to-[#000000]">
       {/* Global Noise Texture */}
@@ -2028,7 +2043,7 @@ const Dashboard = React.memo(({
             src={skullImg}
             alt="System Kernel"
             className={`transition-all duration-300 pointer-events-none select-none animate-beat-pulse ${isSidebarCollapsed ? 'w-11 h-11' : 'w-20 h-20'}`}
-            style={{ mixBlendMode: 'screen', filter: `drop-shadow(0 0 ${isSidebarCollapsed ? '8px' : '12px'} #ff006e)` }}
+            style={{ mixBlendMode: 'screen', filter: `drop-shadow(0 0 ${isSidebarCollapsed ? '8px' : '12px'} var(--theme-color))` }}
           />
         </div>
 
@@ -2044,7 +2059,7 @@ const Dashboard = React.memo(({
         </nav>
 
         <div className={`p-6 ${isSidebarCollapsed ? 'text-center' : 'text-left'}`}>
-          <button onClick={onLogout} className="text-[10px] text-[#ff006e]/30 hover:text-[#ff006e] uppercase tracking-widest font-bold">
+          <button onClick={onLogout} className="text-[10px] text-[var(--theme-color)]/30 hover:text-[var(--theme-color)] uppercase tracking-widest font-bold">
             {isSidebarCollapsed ? <LogOut size={20} /> : 'Log_Out_System'}
           </button>
         </div>
@@ -2057,7 +2072,7 @@ const Dashboard = React.memo(({
         className="flex-1 flex flex-col h-full bg-transparent relative overflow-hidden z-10"
       >
         {/* TOP NAV (Móvil) */}
-        <header className="lg:hidden flex items-center justify-center p-4 border-b border-[#ff006e]/10 bg-black/90 backdrop-blur-md z-40 relative">
+        <header className="lg:hidden flex items-center justify-center p-4 border-b border-[var(--theme-color)]/10 bg-black/90 backdrop-blur-md z-40 relative">
           <div className="flex gap-2">
             <NavButton icon={<Radio size={20} />} active={activeView === 'discovery'} onClick={() => setView('discovery')} />
             <NavButton icon={<Hash size={20} />} active={activeView === 'feed'} onClick={() => setView('feed')} />
@@ -3972,7 +3987,7 @@ const SidebarLink = React.memo(({ icon, label, active, onClick, collapsed, hasNo
   <button
     onClick={onClick}
     className={`w-full flex items-center gap-4 ${collapsed ? 'p-2.5' : 'p-3.5'} rounded-sm group relative overflow-hidden outline-none
-      ${active ? 'text-white' : 'text-white/30 hover:text-[#ff006e]'} 
+      ${active ? 'text-white' : 'text-white/30 hover:text-[var(--theme-color)]'} 
       ${collapsed ? 'justify-center' : ''}`}
     title={collapsed ? label : ''}
   >
@@ -3981,14 +3996,14 @@ const SidebarLink = React.memo(({ icon, label, active, onClick, collapsed, hasNo
 
     {active && (
       <div className="absolute inset-0 pointer-events-none animate-in fade-in duration-500">
-        <div className="hud-bracket-tl text-[#ff006e] opacity-80" />
-        <div className="hud-bracket-tr text-[#ff006e] opacity-80" />
-        <div className="hud-bracket-bl text-[#ff006e] opacity-80" />
-        <div className="hud-bracket-br text-[#ff006e] opacity-80" />
+        <div className="hud-bracket-tl text-[var(--theme-color)] opacity-80" />
+        <div className="hud-bracket-tr text-[var(--theme-color)] opacity-80" />
+        <div className="hud-bracket-bl text-[var(--theme-color)] opacity-80" />
+        <div className="hud-bracket-br text-[var(--theme-color)] opacity-80" />
       </div>
     )}
 
-    <div className={`relative transition-all duration-300 ${active ? 'scale-110 text-[#ff006e]' : 'opacity-60 group-hover:opacity-100 group-hover:scale-110'}`}>
+    <div className={`relative transition-all duration-300 ${active ? 'scale-110 text-[var(--theme-color)]' : 'opacity-60 group-hover:opacity-100 group-hover:scale-110'}`}>
       {icon}
     </div>
     {!collapsed && (
@@ -3997,13 +4012,13 @@ const SidebarLink = React.memo(({ icon, label, active, onClick, collapsed, hasNo
       </span>
     )}
     {hasNotification && !active && (
-      <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#ff006e] rounded-full shadow-[0_0_8px_#ff006e] animate-pulse" />
+      <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-[var(--theme-color)] rounded-full shadow-[0_0_8px_var(--theme-color)] animate-pulse" />
     )}
   </button>
 ));
 
 const NavButton = React.memo(({ icon, active, onClick, hasNotification }) => (
-  <button onClick={onClick} className={`relative p-3.5 outline-none group rounded-sm ${active ? 'text-[#ff006e]' : 'text-white/20 hover:text-[#ff006e]'}`}>
+  <button onClick={onClick} className={`relative p-3.5 outline-none group rounded-sm ${active ? 'text-[var(--theme-color)]' : 'text-white/20 hover:text-[var(--theme-color)]'}`}>
     {/* Active Background Layer */}
     <div className={`absolute inset-0 hud-panel transition-opacity duration-300 pointer-events-none ${active ? 'opacity-100' : 'opacity-0'}`} />
 

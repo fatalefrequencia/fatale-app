@@ -1489,17 +1489,17 @@ export const ProfileView = React.memo(({
     const [panelsVisible, setPanelsVisible] = useState(true);
 
     return (
-        <div className="monitor-shell min-h-screen relative bg-[#050505]">
+        <div className="monitor-shell min-h-screen relative bg-transparent">
             <div className="relative min-h-screen overflow-y-auto no-scrollbar">
             {/* Ambient Background layer */}
             {(displayUser?.bannerUrl || displayUser?.BannerUrl || (isMe && showEditProfile && profileData?.previewBannerUrl)) && !(displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl || (isMe && showEditProfile && profileData?.previewWallpaperVideoUrl)) && (
-                <div className="absolute inset-0 z-[-1] opacity-20">
+                <div className={`absolute inset-0 z-[-1] transition-opacity duration-1000 ${panelsVisible ? 'opacity-20' : 'opacity-60'}`}>
                         <img src={getMediaUrl(isMe && showEditProfile && profileData?.previewBannerUrl ? profileData.previewBannerUrl : (displayUser?.bannerUrl || displayUser?.BannerUrl))} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/40" />
                 </div>
             )}
             {(displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl || (isMe && showEditProfile && profileData?.previewWallpaperVideoUrl)) && (
-                <div className="absolute inset-0 z-[-1] overflow-hidden opacity-20">
+                <div className={`absolute inset-0 z-[-1] overflow-hidden transition-opacity duration-1000 ${panelsVisible ? 'opacity-20' : 'opacity-60'}`}>
                     <video 
                         autoPlay 
                         muted 
