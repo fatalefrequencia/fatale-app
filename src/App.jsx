@@ -2074,11 +2074,12 @@ const Dashboard = React.memo(({
             </div>
             {/* Ambient Glow */}
             <div 
-              className="absolute inset-0 pointer-events-none transition-opacity duration-300"
+              className="absolute inset-0 pointer-events-none transition-all duration-700 rounded-full"
               style={{ 
-                background: `radial-gradient(circle at center, var(--theme-color) 0%, transparent 70%)`,
-                opacity: 0.2,
-                filter: 'blur(10px)'
+                backgroundColor: 'var(--theme-color)',
+                opacity: 0.15,
+                filter: 'blur(20px)',
+                transform: 'scale(1.2)'
               }}
             />
           </div>
@@ -2120,142 +2121,141 @@ const Dashboard = React.memo(({
         </header>
 
         <div className={`flex-1 relative ${activeView === 'discovery' ? 'overflow-hidden' : 'overflow-y-auto no-scrollbar pb-24'}`}>
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait" initial={false}>
             {activeView === 'discovery' && (
-              <DiscoveryHUD
-                key="discovery"
-                user={user}
-                followedCommunities={followedCommunities}
-                onFollowUpdate={() => {
-                  const updated = API.Communities.getFollowed();
-                  setFollowedCommunities(updated);
-                }}
-                navigateToProfile={navigateToProfile}
-                onPlayTrack={(track) => {
-                  const tId = track.id || track.Id;
-                  const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
-                  
-                  // Unified YouTube Resolution
-                  const pureYtId = getGlobalYoutubeId(track);
-                  const isYoutube = !!pureYtId;
-                  const sourceStr = isYoutube ? `youtube:${pureYtId}` : (rawSource || "");
+              <motion.div
+                key="discovery-wrapper"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.6, ease: "easeInOut" }}
+                className="w-full h-full"
+              >
+                <DiscoveryHUD
+                  key="discovery"
+                  user={user}
+                  followedCommunities={followedCommunities}
+                  onFollowUpdate={() => {
+                    const updated = API.Communities.getFollowed();
+                    setFollowedCommunities(updated);
+                  }}
+                  navigateToProfile={navigateToProfile}
+                  onPlayTrack={(track) => {
+                    const tId = track.id || track.Id;
+                    const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
+                    
+                    // Unified YouTube Resolution
+                    const pureYtId = getGlobalYoutubeId(track);
+                    const isYoutube = !!pureYtId;
+                    const sourceStr = isYoutube ? `youtube:${pureYtId}` : (rawSource || "");
 
-                  // --- DEEP RECONCILIATION: Inherit State from Library ---
-                  const libraryMatch = libraryTracks.find(lt => 
-                    String(lt.id || lt.Id) === String(tId) || 
-                    (lt.source && lt.source === sourceStr)
-                  );
+                    // --- DEEP RECONCILIATION: Inherit State from Library ---
+                    const libraryMatch = libraryTracks.find(lt => 
+                      String(lt.id || lt.Id) === String(tId) || 
+                      (lt.source && lt.source === sourceStr)
+                    );
 
-                  const isLiked = isYoutube 
-                    ? likedYoutubeIds.has(pureYtId) 
-                    : (libraryMatch ? libraryMatch.isLiked : (track.isLiked || track.IsLiked));
-                  
-                  const isOwned = (libraryMatch ? libraryMatch.isOwned : track.isOwned) || true;
+                    const isLiked = isYoutube 
+                      ? likedYoutubeIds.has(pureYtId) 
+                      : (libraryMatch ? libraryMatch.isLiked : (track.isLiked || track.IsLiked));
+                    
+                    const isOwned = (libraryMatch ? libraryMatch.isOwned : track.isOwned) || true;
 
-                  const rawCover = track.coverImageUrl || track.CoverImageUrl || track.imageUrl || track.ImageUrl || track.thumbnailUrl || track.ThumbnailUrl || track.cover || track.Cover || libraryMatch?.cover;
+                    const rawCover = track.coverImageUrl || track.CoverImageUrl || track.imageUrl || track.ImageUrl || track.thumbnailUrl || track.ThumbnailUrl || track.cover || track.Cover || libraryMatch?.cover;
 
-                  const enriched = {
-                    ...track,
-                    id: tId,
-                    source: isYoutube ? sourceStr : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null),
-                    cover: isYoutube ? (rawCover || `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg`) : (rawCover ? (rawCover.startsWith('http') ? rawCover : getMediaUrl(rawCover)) : null),
-                    isLiked,
-                    isOwned,
-                    isLocked: false
-                  };
-                  
-                  setTracks([enriched]);
-                  setCurrentTrackIndex(0);
-                  setIsPlaying(true);
-                  if (isYoutube) setIsYoutubeMode(true);
-                }}
-                onPlayPlaylist={(list, startIdx = 0) => handlePlayPlaylist(list, startIdx, false)}
-                onExpandContent={onExpandContent}
-                setUser={setUser}
-                onPlayStation={(station) => {
-                  setActiveStation(station);
-                  joinStation(station.id || station.Id);
-                  showNotification({ 
-                    title: 'RADIO_LINK_ESTABLISHED', 
-                    message: `SIGNAL_LOCKED: ${station.name}`, 
-                    type: 'success' 
-                  });
-                }}
-                isPlayerActive={currentTrackIndex >= 0 && !isMiniPlayerMinimized}
-              />
+                    const enriched = {
+                      ...track,
+                      id: tId,
+                      source: isYoutube ? sourceStr : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null),
+                      cover: isYoutube ? (rawCover || `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg`) : (rawCover ? (rawCover.startsWith('http') ? rawCover : getMediaUrl(rawCover)) : null),
+                      isLiked,
+                      isOwned,
+                      isLocked: false
+                    };
+                    
+                    setTracks([enriched]);
+                    setCurrentTrackIndex(0);
+                    setIsPlaying(true);
+                    if (isYoutube) setIsYoutubeMode(true);
+                  }}
+                  onPlayPlaylist={(list, startIdx = 0) => handlePlayPlaylist(list, startIdx, false)}
+                  onExpandContent={onExpandContent}
+                  setUser={setUser}
+                  onPlayStation={(station) => {
+                    setActiveStation(station);
+                    joinStation(station.id || station.Id);
+                    showNotification({ 
+                      title: 'RADIO_LINK_ESTABLISHED', 
+                      message: `SIGNAL_LOCKED: ${station.name}`, 
+                      type: 'success' 
+                    });
+                  }}
+                  isPlayerActive={currentTrackIndex >= 0 && !isMiniPlayerMinimized}
+                />
+              </motion.div>
             )}
             {activeView === 'wallet' && <WalletView user={user} onRefreshProfile={onRefreshProfile} />}
             {activeView === 'feed' && (
-               <FeedContent 
-                 key="feed" 
-                 setView={setView} 
-                 onPlayPlaylist={handlePlayPlaylist} 
-                 navigateToProfile={navigateToProfile} 
-                 user={user} 
-                 favoriteStations={favoriteStations} 
-                 liveStations={liveStations} 
-                 setActiveStation={setActiveStation} 
-                 activeStation={activeStation} 
-                 stationChat={stationChat} 
-                 stationQueue={stationQueue} 
-                 followedCommunities={followedCommunities} 
-                 setShowGlobalGoLive={setShowGlobalGoLive}
-                 setShowGlobalUpload={setShowGlobalUpload}
-                 setShowGlobalIngest={setShowGlobalIngest}
-                 onExpandContent={onExpandContent}
-                 libraryTracks={libraryTracks}
-               />
+              <motion.div
+                key="feed-wrapper"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.02 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="w-full h-full"
+              >
+                <FeedContent 
+                  key="feed" 
+                  setView={setView} 
+                  onPlayPlaylist={handlePlayPlaylist} 
+                  navigateToProfile={navigateToProfile} 
+                  user={user} 
+                  favoriteStations={favoriteStations} 
+                  liveStations={liveStations} 
+                  setActiveStation={setActiveStation} 
+                  activeStation={activeStation} 
+                  stationChat={stationChat} 
+                  stationQueue={stationQueue} 
+                  followedCommunities={followedCommunities} 
+                  setShowGlobalGoLive={setShowGlobalGoLive}
+                  setShowGlobalUpload={setShowGlobalUpload}
+                  setShowGlobalIngest={setShowGlobalIngest}
+                  onExpandContent={onExpandContent}
+                  libraryTracks={libraryTracks}
+                />
+              </motion.div>
              )}
             {activeView === 'profile' && (
-              <ProfileView
+              <motion.div
                 key={viewingUserId || 'me'}
-                targetUserId={viewingUserId}
-                user={user}
-                tracks={tracks}
-                currentTrack={currentTrack}
-                setTracks={setTracks}
-                onLogout={onLogout}
-                onAddCredits={onAddCredits}
-                setUser={setUser}
-                onRefreshProfile={onRefreshProfile}
-                onRefreshTracks={onRefreshTracks}
-                onLike={onLike}
-                navigateToProfile={navigateToProfile}
-                playlists={playlists}
-                onRefreshPlaylists={onRefreshPlaylists}
-                onQueueTrack={onQueueTrack}
-                onPlayTrack={(track) => {
-                  // Ensure track is playable even if unmapped
-                  const enriched = {
-                    ...track,
-                    source: track.source || track.Source || (track.filePath ? getMediaUrl(track.filePath) : null) || (track.FilePath ? getMediaUrl(track.FilePath) : null),
-                    id: track.id || track.Id,
-                    isOwned: true,
-                    isLocked: false
-                  };
-                  setTracks([enriched]);
-                  setCurrentTrackIndex(0);
-                  setIsPlaying(true);
-                  if (typeof setRedirectTrigger === 'function') {
-                    setRedirectTrigger(Date.now());
-                    setView('player');
-                  }
-                }}
-                onPlayPlaylist={handlePlayPlaylist}
-                activeStation={activeStation}
-                stationChat={stationChat}
-                stationQueue={stationQueue}
-                isPlaying={isPlaying}
-                onExitProfile={onExitProfile}
-                onMessageUser={(u) => { setActiveMessageUser(u); setView('messages'); }}
-                setActiveStation={setActiveStation}
-                setShowGlobalGoLive={setShowGlobalGoLive}
-                setShowGlobalUpload={setShowGlobalUpload}
-                setShowGlobalIngest={setShowGlobalIngest}
-                onExpandContent={onExpandContent}
-                onThemeChange={handleProfileThemeChange}
-                hasMiniPlayer={currentTrackIndex >= 0}
-              />
+                initial={{ opacity: 0, filter: 'blur(8px)' }}
+                animate={{ opacity: 1, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, filter: 'blur(8px)' }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="w-full h-full"
+              >
+                <ProfileView
+                  key={viewingUserId || 'me'}
+                  targetUserId={viewingUserId}
+                  user={user}
+                  tracks={tracks}
+                  currentTrack={currentTrack}
+                  setTracks={setTracks}
+                  onLogout={onLogout}
+                  onAddCredits={onAddCredits}
+                  setUser={setUser}
+                  onRefreshProfile={onRefreshProfile}
+                  onRefreshTracks={onRefreshTracks}
+                  onLike={onLike}
+                  onPurchase={onPurchase}
+                  onDownload={onDownload}
+                  onModifyId={onModifyId}
+                  onGoLive={onGoLive}
+                  onUpload={onUpload}
+                  onExitProfile={() => setView('discovery')}
+                  onThemeChange={handleProfileThemeChange}
+                />
+              </motion.div>
             )}
             {activeView === 'player' && <PlayerContent
               key="player"
