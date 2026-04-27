@@ -67,11 +67,11 @@ const CyberDust = ({ count = 30 }) => (
         {Array.from({ length: count }).map((_, i) => (
             <motion.div
                 key={i}
-                className="absolute w-[1px] h-[1px] bg-[var(--text-color)]/30"
+                className="absolute w-[1px] h-[1px] bg-[var(--subsystem-accent)]/30"
                 style={{
                     left: `${Math.random() * 100}%`,
                     top: `${Math.random() * 100}%`,
-                    boxShadow: '0 0 5px var(--text-color)'
+                    boxShadow: '0 0 5px var(--subsystem-accent)'
                 }}
                 animate={{
                     y: [0, -100, 0],
@@ -88,6 +88,55 @@ const CyberDust = ({ count = 30 }) => (
         ))}
     </div>
 );
+
+const SignalWaveform = ({ isLive }) => {
+    return (
+        <div className="w-full h-8 relative flex items-center justify-center overflow-hidden bg-black/40 border-y border-[var(--subsystem-accent)]/10">
+            <div className="absolute inset-0 opacity-10 flex items-center justify-center">
+                 <div className="w-full h-px bg-[var(--subsystem-accent)]" />
+            </div>
+            {isLive ? (
+                <div className="flex items-end gap-[2px] h-4">
+                    {Array.from({ length: 48 }).map((_, i) => (
+                        <motion.div
+                            key={i}
+                            className="w-[2px] bg-[var(--subsystem-accent)]"
+                            animate={{ 
+                                height: [2, Math.random() * 16 + 4, 2],
+                                opacity: [0.3, 1, 0.3]
+                            }}
+                            transition={{ 
+                                duration: 0.5 + Math.random() * 0.5, 
+                                repeat: Infinity,
+                                delay: i * 0.02
+                            }}
+                        />
+                    ))}
+                </div>
+            ) : (
+                <div className="flex items-center gap-[40px] opacity-30">
+                    <motion.div 
+                        animate={{ opacity: [0.4, 1, 0.4] }} 
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="text-[6px] mono text-[var(--subsystem-accent)] font-bold tracking-[0.5em]"
+                    >
+                        SIGNAL_IDLE // HEARTBEAT_STABLE
+                    </motion.div>
+                    <div className="relative w-32 h-6 flex items-center">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full h-px bg-[var(--subsystem-accent)]/20" />
+                        </div>
+                        <motion.div
+                            className="absolute h-3 w-3 border border-[var(--subsystem-accent)] rotate-45"
+                            animate={{ x: [0, 128, 0], scale: [1, 1.2, 1] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                        />
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 // --- HUD PROFILE COMPONENTS ---
 
@@ -117,115 +166,138 @@ const ProfileIdentityHeader = ({
     displayUser, isMe, isFollowing, localStatus, isSavingStatus,
     setLocalStatus, handleInlineStatusUpdate, handleFollow,
     onModifyId, onGoLive, onUpload, onLogout, onExitProfile,
-    onMessageClick, communityName, communityColor, stationData
+    onMessageClick, communityName, communityColor, stationData,
+    panelsVisible, onTogglePanels
 }) => {
     const pfp = displayUser?.profilePictureUrl || displayUser?.ProfilePictureUrl || displayUser?.profileImageUrl || displayUser?.ProfileImageUrl;
+    const isLive = stationData?.isLive || stationData?.IsLive;
+    
     return (
-        <div className="subsystem-block px-4 py-3 flex flex-col lg:flex-row items-center gap-4 lg:gap-6 relative" data-addr="USR_ID">
-            {/* Neural Link Decoration */}
-            <div className="absolute top-0 right-1/4 h-px w-32 bg-gradient-to-r from-transparent via-[var(--subsystem-accent)]/20 to-transparent" />
-            
-            {/* Profile pic + name */}
-            <div className="flex items-center gap-4 shrink-0">
-                <div className="w-12 h-12 border border-[var(--subsystem-accent)] overflow-hidden bg-black p-0.5">
-                    <div className="w-full h-full border border-[var(--subsystem-accent)]/30 relative group/pfp cursor-pointer">
-                        {pfp ? (
-                            <img src={getMediaUrl(pfp)} className="w-full h-full object-cover subsystem-media-filter" />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[var(--subsystem-accent)]/50"><Cpu size={20} /></div>
-                        )}
-                        <div className="absolute inset-0 bg-[var(--subsystem-accent)]/10 opacity-0 group-hover/pfp:opacity-100 transition-opacity flex items-center justify-center">
-                            <span className="text-[6px] mono font-bold text-[var(--subsystem-accent)]">BIO_SCAN</span>
+        <div className="subsystem-block flex flex-col relative" data-addr="USR_ID">
+            {/* Top Tier: Identity & Primary Controls */}
+            <div className="px-4 py-4 flex flex-col lg:flex-row items-center gap-4 lg:gap-8 border-b border-[var(--subsystem-accent)]/10">
+                {/* Profile pic + name */}
+                <div className="flex items-center gap-6 shrink-0 min-w-[280px]">
+                    <div className="w-16 h-16 border border-[var(--subsystem-accent)] overflow-hidden bg-black p-0.5">
+                        <div className="w-full h-full border border-[var(--subsystem-accent)]/30 relative group/pfp cursor-pointer">
+                            {pfp ? (
+                                <img src={getMediaUrl(pfp)} className="w-full h-full object-cover subsystem-media-filter" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-[var(--subsystem-accent)]/50"><Cpu size={24} /></div>
+                            )}
+                            <div className="absolute inset-0 bg-[var(--subsystem-accent)]/10 opacity-0 group-hover/pfp:opacity-100 transition-opacity flex items-center justify-center">
+                                <span className="text-[7px] mono font-bold text-[var(--subsystem-accent)]">BIO_SCAN</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-[20px] font-black text-[var(--subsystem-accent)] uppercase tracking-[0.2em] leading-tight flex items-center gap-2">
+                            {displayUser?.username || displayUser?.Username || 'GUEST_USER'}
+                            <div className={`w-2 h-2 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)] ${isLive ? 'bg-red-500' : 'bg-green-500'}`} />
+                        </div>
+                        <div className="flex flex-col gap-1 mt-2">
+                            <div className="flex items-center gap-3">
+                                <span className="text-[7px] mono text-[var(--subsystem-accent)]/40">SIGNAL_ID:</span>
+                                <span className="text-[8px] mono text-white/60 tracking-widest">0x{displayUser?.id?.toString().slice(0, 8).toUpperCase() || 'NULL'}</span>
+                            </div>
+                            {communityName && (
+                                <div className="flex items-center gap-3">
+                                    <span className="text-[7px] mono text-[var(--subsystem-accent)]/40">RES_SECTOR:</span>
+                                    <span className="text-[8px] mono font-black tracking-widest uppercase" style={{ color: communityColor || 'var(--subsystem-accent)' }}>
+                                        {communityName}
+                                    </span>
+                                </div>
+                            )}
+                            <div className="flex items-center gap-3">
+                                <span className="text-[7px] mono text-[var(--subsystem-accent)]/40">BIO_SYNC:</span>
+                                <span className="text-[8px] mono text-white/50 tracking-widest">{Math.floor(Math.random() * 40 + 60)}% (OPTIMAL)</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div>
-                    <div className="text-[16px] font-black text-[var(--subsystem-accent)] uppercase tracking-[0.2em] leading-tight flex items-center gap-2">
-                        {displayUser?.username || displayUser?.Username || 'GUEST_USER'}
-                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-                    </div>
-                    {communityName && (
-                        <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[7px] font-bold tracking-[0.2em] uppercase px-1 border border-current" style={{ color: communityColor }}>
-                                SECTOR: {communityName}
-                            </span>
-                        </div>
-                    )}
-                </div>
-            </div>
 
-            {/* Status Stream */}
-            <div className="flex-1 min-w-0 w-full lg:w-auto">
-                <div className="bg-black/80 border border-[var(--subsystem-accent)]/20 p-2 relative overflow-hidden">
-                    <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-[var(--subsystem-accent)]/40" />
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[6px] mono text-[var(--subsystem-accent)]/40">STATUS_FEED</span>
-                        <div className="h-px flex-1 bg-[var(--subsystem-accent)]/10" />
+                {/* Status & Biography Integrated */}
+                <div className="flex-1 min-w-0 w-full flex flex-col gap-3">
+                    <div className="bg-black/60 border border-[var(--subsystem-accent)]/20 p-2 relative">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[6px] mono text-[var(--subsystem-accent)]/40 uppercase tracking-[0.2em]">FREQ_STATUS_SIGNAL</span>
+                            <div className="h-px flex-1 bg-[var(--subsystem-accent)]/10" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[8px] text-[var(--subsystem-accent)]/40 mono">&gt;</span>
+                            {isMe ? (
+                                <input
+                                    type="text"
+                                    value={localStatus}
+                                    onChange={(e) => setLocalStatus(e.target.value)}
+                                    onBlur={handleInlineStatusUpdate}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleInlineStatusUpdate()}
+                                    placeholder="WAITING_FOR_SIGNALS..."
+                                    className="w-full bg-transparent border-none outline-none text-[10px] text-[var(--subsystem-accent)] mono uppercase tracking-widest placeholder:text-[var(--subsystem-accent)]/20 p-0 m-0 focus:ring-0"
+                                    disabled={isSavingStatus}
+                                />
+                            ) : (
+                                <span className="text-[10px] text-[var(--subsystem-accent)]/80 mono uppercase tracking-widest truncate">
+                                    {displayUser?.statusMessage || displayUser?.StatusMessage || 'NO_SIGNAL_BROADCAST'}
+                                </span>
+                            )}
+                        </div>
                     </div>
+                    <div className="text-[9px] mono text-white/40 leading-relaxed max-h-[40px] overflow-hidden">
+                        {displayUser?.biography || displayUser?.Biography || '// NO_BIOGRAPHIC_METADATA_LOADED'}
+                    </div>
+                </div>
+
+                {/* Primary Action Stack */}
+                <div className="flex flex-col gap-2 shrink-0">
                     <div className="flex items-center gap-2">
-                        <span className="text-[8px] text-[var(--subsystem-accent)]/40 mono">&gt;</span>
                         {isMe ? (
-                            <input
-                                type="text"
-                                value={localStatus}
-                                onChange={(e) => setLocalStatus(e.target.value)}
-                                onBlur={handleInlineStatusUpdate}
-                                onKeyDown={(e) => e.key === 'Enter' && handleInlineStatusUpdate()}
-                                placeholder="WAITING_FOR_UPLINK..."
-                                className="w-full bg-transparent border-none outline-none text-[10px] text-[var(--subsystem-accent)] mono uppercase tracking-widest placeholder:text-[var(--subsystem-accent)]/20 p-0 m-0 focus:ring-0"
-                                disabled={isSavingStatus}
-                            />
+                            <>
+                                <button onClick={onModifyId} className="subsystem-command-btn py-1 px-3">
+                                    [ MODIFY_ID ]
+                                </button>
+                                <button onClick={onGoLive} className={`subsystem-command-btn py-1 px-3 ${isLive ? 'border-red-500 text-red-500' : ''}`}>
+                                    <Radio size={10} /> [ {isLive ? 'LIVE' : 'LIVE'} ]
+                                </button>
+                            </>
                         ) : (
-                            <span className="text-[10px] text-[var(--subsystem-accent)]/80 mono uppercase tracking-widest truncate">
-                                {displayUser?.statusMessage || displayUser?.StatusMessage || 'NO_SIGNAL_DETECTED'}
-                            </span>
+                            <>
+                                <button onClick={handleFollow} className={`subsystem-command-btn py-1 px-3 ${isFollowing ? 'bg-[var(--subsystem-accent)]/10 text-[var(--subsystem-accent)] border-[var(--subsystem-accent)]' : ''}`}>
+                                    [ {isFollowing ? 'SYNCED' : 'INITIALIZE_LINK'} ]
+                                </button>
+                                {onMessageClick && (
+                                    <button onClick={onMessageClick} className="subsystem-command-btn py-1 px-3">
+                                        <MessageSquare size={10} /> [ COMMS ]
+                                    </button>
+                                )}
+                            </>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2 justify-end">
+                        <button onClick={onTogglePanels} className="subsystem-command-btn py-1 px-3 text-[var(--subsystem-accent)]/40 hover:text-[var(--subsystem-accent)]">
+                            {panelsVisible ? '[ COLLAPSE_SUBSYSTEMS ]' : '[ SHOW_SUBSYSTEMS ]'}
+                        </button>
+                        {isMe && onLogout ? (
+                            <button onClick={onLogout} className="subsystem-command-btn py-1 px-3 border-red-900/40 text-red-700/60 hover:text-red-500">
+                                <LogOut size={10} /> [ LOGOUT ]
+                            </button>
+                        ) : (
+                            onExitProfile && (
+                                <button onClick={onExitProfile} className="subsystem-command-btn py-1 px-3 text-white/40">
+                                    [ EXIT ]
+                                </button>
+                            )
                         )}
                     </div>
                 </div>
             </div>
 
-            {/* System Controls */}
-            <div className="flex items-center gap-2 flex-wrap justify-center shrink-0">
-                {isMe ? (
-                    <>
-                        {onModifyId && (
-                            <button onClick={onModifyId} className="subsystem-command-btn">
-                                [ MODIFY_ID ]
-                            </button>
-                        )}
-                        {onGoLive && (
-                            <button onClick={onGoLive} className="subsystem-command-btn">
-                                <Radio size={10} /> [ UPLINK ]
-                            </button>
-                        )}
-                        {onExitProfile && (
-                            <button onClick={onExitProfile} className="subsystem-command-btn text-white/60">
-                                <ChevronLeft size={10} /> [ RETURN ]
-                            </button>
-                        )}
-                        {onLogout && (
-                            <button onClick={onLogout} className="subsystem-command-btn border-red-900/40 text-red-500/60 hover:text-red-500 hover:border-red-500">
-                                <LogOut size={10} /> [ SHUTDOWN ]
-                            </button>
-                        )}
-                    </>
-                ) : (
-                    <>
-                        {onExitProfile && (
-                            <button onClick={onExitProfile} className="subsystem-command-btn text-white/60">
-                                <ChevronLeft size={10} /> [ RETURN ]
-                            </button>
-                        )}
-                        <button onClick={handleFollow} className={`subsystem-command-btn ${isFollowing ? 'bg-[var(--subsystem-accent)]/10 text-[var(--subsystem-accent)] border-[var(--subsystem-accent)]' : ''}`}>
-                            [ {isFollowing ? 'LINKED' : 'ESTABLISH_LINK'} ]
-                        </button>
-                        {onMessageClick && (
-                            <button onClick={onMessageClick} className="subsystem-command-btn">
-                                <MessageSquare size={10} /> [ COMMS ]
-                            </button>
-                        )}
-                    </>
-                )}
+            {/* Middle Tier: Waveform */}
+            <SignalWaveform isLive={isLive} />
+            
+            {/* Bottom Tier Decor */}
+            <div className="h-1 bg-gradient-to-r from-transparent via-[var(--subsystem-accent)]/5 to-transparent flex items-center justify-center">
+                 <div className="w-1/4 h-px bg-[var(--subsystem-accent)]/20" />
             </div>
         </div>
     );
@@ -1365,19 +1437,20 @@ export const ProfileView = React.memo(({
     };
 
     const [mobileView, setMobileView] = useState('WALL'); // 'WALL' | 'STREAM'
+    const [panelsVisible, setPanelsVisible] = useState(true);
 
     return (
-        <>
+        <div className="monitor-shell min-h-screen">
             <div className={`relative min-h-screen bg-[#050505] overflow-y-auto no-scrollbar`}>
             {/* Ambient Background layer */}
             {(displayUser?.bannerUrl || displayUser?.BannerUrl || (isMe && showEditProfile && profileData?.previewBannerUrl)) && !(displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl || (isMe && showEditProfile && profileData?.previewWallpaperVideoUrl)) && (
-                <div className="absolute inset-0 z-[-1] opacity-40">
+                <div className="absolute inset-0 z-[-1] opacity-20">
                         <img src={getMediaUrl(isMe && showEditProfile && profileData?.previewBannerUrl ? profileData.previewBannerUrl : (displayUser?.bannerUrl || displayUser?.BannerUrl))} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/20" />
+                        <div className="absolute inset-0 bg-black/40" />
                 </div>
             )}
             {(displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl || (isMe && showEditProfile && profileData?.previewWallpaperVideoUrl)) && (
-                <div className="absolute inset-0 z-[-1] overflow-hidden opacity-40">
+                <div className="absolute inset-0 z-[-1] overflow-hidden opacity-20">
                     <video 
                         autoPlay 
                         muted 
@@ -1386,7 +1459,7 @@ export const ProfileView = React.memo(({
                         className="w-full h-full object-cover"
                         src={getMediaUrl(isMe && showEditProfile && profileData?.previewWallpaperVideoUrl ? profileData.previewWallpaperVideoUrl : (displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl))}
                     />
-                        <div className="absolute inset-0 bg-black/20" />
+                        <div className="absolute inset-0 bg-black/40" />
                 </div>
             )}
             
@@ -1409,6 +1482,8 @@ export const ProfileView = React.memo(({
                     communityName={communityName}
                     communityColor={communityColor}
                     stationData={stationData}
+                    panelsVisible={panelsVisible}
+                    onTogglePanels={() => setPanelsVisible(!panelsVisible)}
                 />
 
                 {/* Mobile Tab Toggle */}
@@ -1419,38 +1494,50 @@ export const ProfileView = React.memo(({
 
                 <div className="flex flex-col lg:flex-row gap-4 flex-1">
                     {/* LEFT COLUMN: AUDIO & JOURNALS */}
-                    <div className={`w-full lg:w-[320px] shrink-0 flex flex-col gap-4 ${mobileView !== 'STREAM' ? 'hidden lg:flex' : 'flex'}`}>
-                        <AudioSignalsWidget
-                            tracks={profileTracks}
-                            isExpanded={widgetsExpanded.audio}
-                            onToggleExpand={() => toggleWidget('audio')}
-                            onPlayTrack={onPlayTrack}
-                            isMe={isMe}
-                            onUpload={() => setShowGlobalUpload(true)}
-                        />
-                        <SequenceMapWidget 
-                            playlists={profilePlaylists}
-                            onPlay={(p) => onPlayPlaylist(p.tracks || [], 0)}
-                            isMe={isMe}
-                            onNew={() => setShowCreatePlaylist(true)}
-                            expand={widgetsExpanded.sequences}
-                            onToggleExpand={() => toggleWidget('sequences')}
-                        />
-                        <JournalWidget 
-                            entries={profileJournal} 
-                            onExpand={handleItemClick} 
-                            isMe={isMe} 
-                            onNew={() => setShowJournalForm(true)} 
-                            expand={widgetsExpanded.journal}
-                            onToggleExpand={() => toggleWidget('journal')}
-                        />
-                    </div>
+                    <AnimatePresence>
+                        {panelsVisible && (
+                            <motion.div 
+                                initial={{ width: 0, opacity: 0, x: -20 }}
+                                animate={{ width: 320, opacity: 1, x: 0 }}
+                                exit={{ width: 0, opacity: 0, x: -20 }}
+                                className={`shrink-0 flex flex-col gap-4 overflow-hidden ${mobileView !== 'STREAM' ? 'hidden lg:flex' : 'flex'}`}
+                            >
+                                <AudioSignalsWidget
+                                    tracks={profileTracks}
+                                    isExpanded={widgetsExpanded.audio}
+                                    onToggleExpand={() => toggleWidget('audio')}
+                                    onPlayTrack={onPlayTrack}
+                                    isMe={isMe}
+                                    onUpload={() => setShowGlobalUpload(true)}
+                                />
+                                <SequenceMapWidget 
+                                    playlists={profilePlaylists}
+                                    onPlay={(p) => onPlayPlaylist(p.tracks || [], 0)}
+                                    isMe={isMe}
+                                    onNew={() => setShowCreatePlaylist(true)}
+                                    expand={widgetsExpanded.sequences}
+                                    onToggleExpand={() => toggleWidget('sequences')}
+                                />
+                                <JournalWidget 
+                                    entries={profileJournal} 
+                                    onExpand={handleItemClick} 
+                                    isMe={isMe} 
+                                    onNew={() => setShowJournalForm(true)} 
+                                    expand={widgetsExpanded.journal}
+                                    onToggleExpand={() => toggleWidget('journal')}
+                                />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     {/* CENTER COLUMN: DISPLAY WALL */}
                     <div className={`flex-1 min-w-0 flex flex-col gap-4 ${mobileView !== 'WALL' ? 'hidden lg:flex' : 'flex'}`}>
-                        <div className="border border-[var(--text-color)]/20 p-4 bg-black/40 backdrop-blur-md min-h-[600px] relative">
-                            <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[var(--text-color)]/30 -translate-x-1 -translate-y-1" />
-                            <div className="text-[10px] mono text-[var(--text-color)]/60 uppercase tracking-[0.4em] mb-4 pb-2 border-b border-[var(--text-color)]/10 font-bold flex justify-between items-center">
+                        <div className="border border-[var(--subsystem-accent)]/20 p-4 bg-black/60 backdrop-blur-md min-h-[600px] relative">
+                             <div className="absolute top-0 right-0 p-1">
+                                <span className="text-[6px] mono text-[var(--subsystem-accent)]/20 uppercase tracking-[0.4em]">ADDR: GRID_0x{effectiveId?.toString().slice(-4)}</span>
+                             </div>
+                            <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[var(--subsystem-accent)]/30 -translate-x-1 -translate-y-1" />
+                            <div className="text-[10px] mono text-[var(--subsystem-accent)]/60 uppercase tracking-[0.4em] mb-4 pb-2 border-b border-[var(--subsystem-accent)]/10 font-bold flex justify-between items-center">
                                 <span>// CORE_DISPLAY_GRID</span>
                                 <span className="text-[8px] opacity-40">Z-AXIS::ENABLED</span>
                             </div>
@@ -1467,35 +1554,37 @@ export const ProfileView = React.memo(({
                         </div>
                     </div>
 
-                    {/* RIGHT COLUMN: METADATA & ARCHIVE */}
-                    <div className={`w-full lg:w-[320px] shrink-0 flex flex-col gap-4 ${mobileView !== 'STREAM' ? 'hidden lg:flex' : 'flex'}`}>
-                        <EntityMetadataWidget 
-                            user={displayUser} 
-                            sectorName={communityName} 
-                            sectorColor={communityColor} 
-                            expand={widgetsExpanded.metadata}
-                            onToggleExpand={() => toggleWidget('metadata')}
-                        />
-                        <VisualArchiveWidget 
-                            gallery={profileGallery} 
-                            onExpand={handleItemClick} 
-                            isMe={isMe} 
-                            onIngest={() => setShowGlobalIngest(true)} 
-                            expand={widgetsExpanded.archive}
-                            onToggleExpand={() => toggleWidget('archive')}
-                        />
-                        <GearRackWidget 
-                            gear={profileGear} 
-                            isMe={isMe} 
-                            onAdd={() => {
-                                setGearFormData({ name: '', category: 'Synth', notes: '' });
-                                setShowGearForm(true);
-                            }} 
-                            onDelete={handleDeleteGear}
-                            expand={widgetsExpanded.gear}
-                            onToggleExpand={() => toggleWidget('gear')}
-                        />
-                    </div>
+                    {/* RIGHT COLUMN: ARCHIVE */}
+                    <AnimatePresence>
+                        {panelsVisible && (
+                            <motion.div 
+                                initial={{ width: 0, opacity: 0, x: 20 }}
+                                animate={{ width: 320, opacity: 1, x: 0 }}
+                                exit={{ width: 0, opacity: 0, x: 20 }}
+                                className={`shrink-0 flex flex-col gap-4 overflow-hidden ${mobileView !== 'STREAM' ? 'hidden lg:flex' : 'flex'}`}
+                            >
+                                <VisualArchiveWidget 
+                                    gallery={profileGallery} 
+                                    onExpand={handleItemClick} 
+                                    isMe={isMe} 
+                                    onIngest={() => setShowGlobalIngest(true)} 
+                                    expand={widgetsExpanded.archive}
+                                    onToggleExpand={() => toggleWidget('archive')}
+                                />
+                                <GearRackWidget 
+                                    gear={profileGear} 
+                                    isMe={isMe} 
+                                    onAdd={() => {
+                                        setGearFormData({ name: '', category: 'Synth', notes: '' });
+                                        setShowGearForm(true);
+                                    }} 
+                                    onDelete={handleDeleteGear}
+                                    expand={widgetsExpanded.gear}
+                                    onToggleExpand={() => toggleWidget('gear')}
+                                />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
         </div>
