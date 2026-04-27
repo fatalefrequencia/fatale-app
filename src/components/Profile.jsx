@@ -175,11 +175,6 @@ const ProfileIdentityHeader = ({
 
             {/* Actions */}
             <div className="flex items-center gap-1.5 flex-wrap justify-center shrink-0">
-                {onExitProfile && (
-                    <button onClick={onExitProfile} className="px-2 py-1 bg-black/60 border border-white/20 text-white/60 hover:text-white hover:border-white/40 transition-all text-[7px] font-bold mono uppercase tracking-widest flex items-center gap-1">
-                        <LogOut size={9} /> EXIT
-                    </button>
-                )}
                 {isMe ? (
                     <>
                         {onModifyId && (
@@ -192,19 +187,24 @@ const ProfileIdentityHeader = ({
                                 <Radio size={9} /> LIVE
                             </button>
                         )}
-                        {onUpload && (
-                            <button onClick={onUpload} className="px-2 py-1 bg-black/60 border border-white/20 text-white/60 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40 transition-all text-[7px] font-bold mono uppercase tracking-widest flex items-center gap-1">
-                                <Upload size={9} /> UPLOAD
+                        {onExitProfile && (
+                            <button onClick={onExitProfile} className="px-2 py-1 bg-black/60 border border-white/20 text-white/60 hover:text-white hover:border-white/40 transition-all text-[7px] font-bold mono uppercase tracking-widest flex items-center gap-1">
+                                <ChevronLeft size={9} /> BACK
                             </button>
                         )}
                         {onLogout && (
-                            <button onClick={onLogout} className="px-2 py-1 bg-black/60 border border-white/10 text-white/40 hover:text-white hover:border-white/30 transition-all text-[7px] font-bold mono uppercase tracking-widest flex items-center gap-1">
-                                <LogOut size={9} /> EXIT_SYS
+                            <button onClick={onLogout} className="px-2 py-1 bg-black/60 border border-[#ff3b3b]/20 text-[#ff3b3b]/60 hover:text-[#ff3b3b] hover:border-[#ff3b3b]/40 transition-all text-[7px] font-bold mono uppercase tracking-widest flex items-center gap-1">
+                                <LogOut size={9} /> LOGOUT
                             </button>
                         )}
                     </>
                 ) : (
                     <>
+                        {onExitProfile && (
+                            <button onClick={onExitProfile} className="px-2 py-1 bg-black/60 border border-white/20 text-white/60 hover:text-white hover:border-white/40 transition-all text-[7px] font-bold mono uppercase tracking-widest flex items-center gap-1">
+                                <ChevronLeft size={9} /> BACK
+                            </button>
+                        )}
                         <button onClick={handleFollow} className={`px-2 py-1 border text-[7px] font-bold mono uppercase tracking-widest transition-all flex items-center gap-1 ${isFollowing ? 'bg-[var(--text-color)]/10 text-[var(--text-color)] border-[var(--text-color)]' : 'bg-black/60 text-white/60 border-white/20 hover:border-[var(--text-color)] hover:text-[var(--text-color)]'}`}>
                             {isFollowing ? 'LINKED' : 'LINK'}
                         </button>
@@ -337,8 +337,10 @@ const DisplayWallGrid = ({ tracks, gallery, journal, playlists, uid, onExpand, o
     if (Array.isArray(gallery)) {
         gallery.filter(c => String(c.UserId || c.userId) === String(uid)).forEach(c => {
             if (isTruthy(c.IsPosted || c.isPosted)) {
-                const thumb = c.thumbnailUrl || c.ThumbnailUrl || c.coverImageUrl || c.CoverImageUrl || c.url || c.Url;
-                items.push({ id: c.id || c.Id, type: c.type || c.Type, title: c.title || c.Title, url: thumb, original: c });
+                const type = (c.type || c.Type || '').toUpperCase();
+                const isVideo = type === 'VIDEO';
+                const thumb = c.thumbnailUrl || c.ThumbnailUrl || c.coverImageUrl || c.CoverImageUrl || (isVideo ? null : (c.url || c.Url));
+                items.push({ id: c.id || c.Id, type, title: c.title || c.Title, url: thumb, original: c });
             }
         });
     }
@@ -369,7 +371,7 @@ const DisplayWallGrid = ({ tracks, gallery, journal, playlists, uid, onExpand, o
                     className="aspect-square relative overflow-hidden border border-white/5 hover:border-[var(--text-color)]/50 bg-black/40 cursor-pointer group transition-all"
                     onClick={() => onExpand({ ...item.original, type: item.type }, item.type)}
                 >
-                    {item.url && (item.type === 'VIDEO' || item.type === 'PHOTO' || item.type === 'TRACK' || item.type === 'PLAYLIST') ? (
+                    {item.url && (item.url.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/) || !item.url.toLowerCase().match(/\.(mp4|webm|avi)$/)) ? (
                         <img src={getMediaUrl(item.url)} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" />
                     ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center bg-black/80">
@@ -403,8 +405,8 @@ const DisplayWallGrid = ({ tracks, gallery, journal, playlists, uid, onExpand, o
     );
 };
 
-const SequenceMapWidget = ({ playlists, onPlay, isMe, onNew }) => (
-    <HUDWidget title="SEQUENCE_MAPS" icon={Database}>
+const SequenceMapWidget = ({ playlists, onPlay, isMe, onNew, expand, onToggleExpand }) => (
+    <HUDWidget title="SEQUENCE_MAPS" icon={Database} expand={expand} onToggleExpand={onToggleExpand}>
         <div className="space-y-1">
             {isMe && (
                 <button onClick={onNew} className="w-full py-2 mb-2 border border-dashed border-cyan-400/20 text-cyan-400/40 hover:text-cyan-400 hover:border-cyan-400/40 transition-all text-[8px] mono uppercase tracking-[.3em]">
@@ -441,8 +443,8 @@ const SequenceMapWidget = ({ playlists, onPlay, isMe, onNew }) => (
     </HUDWidget>
 );
 
-const EntityMetadataWidget = ({ user, sectorName, sectorColor }) => (
-    <HUDWidget title="ENTITY_METADATA" icon={Cpu}>
+const EntityMetadataWidget = ({ user, sectorName, sectorColor, expand, onToggleExpand }) => (
+    <HUDWidget title="ENTITY_METADATA" icon={Cpu} expand={expand} onToggleExpand={onToggleExpand}>
         <div className="space-y-4">
             <div className="p-3 border border-white/5 bg-black/40 relative">
                  <div className="absolute top-0 right-0 p-1">
@@ -469,8 +471,8 @@ const EntityMetadataWidget = ({ user, sectorName, sectorColor }) => (
     </HUDWidget>
 );
 
-const JournalWidget = ({ entries, onExpand, isMe, onNew }) => (
-    <HUDWidget title="FREQ_JOURNAL" icon={Book}>
+const JournalWidget = ({ entries, onExpand, isMe, onNew, expand, onToggleExpand }) => (
+    <HUDWidget title="FREQ_JOURNAL" icon={Book} expand={expand} onToggleExpand={onToggleExpand}>
         <div className="space-y-1">
             {isMe && (
                 <button onClick={onNew} className="w-full py-2 mb-2 border border-dashed border-[var(--text-color)]/20 text-[var(--text-color)]/40 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40 transition-all text-[8px] mono uppercase tracking-[.3em]">
@@ -499,8 +501,8 @@ const JournalWidget = ({ entries, onExpand, isMe, onNew }) => (
     </HUDWidget>
 );
 
-const VisualArchiveWidget = ({ gallery, onExpand, isMe, onIngest }) => (
-    <HUDWidget title="VISUAL_ARCHIVE" icon={Camera}>
+const VisualArchiveWidget = ({ gallery, onExpand, isMe, onIngest, expand, onToggleExpand }) => (
+    <HUDWidget title="VISUAL_ARCHIVE" icon={Camera} expand={expand} onToggleExpand={onToggleExpand}>
         <div className="grid grid-cols-2 gap-1.5">
             {(gallery || []).slice(0, 7).map((item, i) => (
                 <div 
@@ -524,8 +526,8 @@ const VisualArchiveWidget = ({ gallery, onExpand, isMe, onIngest }) => (
     </HUDWidget>
 );
 
-const GearRackWidget = ({ gear, isMe, onAdd }) => (
-    <HUDWidget title="GEAR_RACK" icon={Zap}>
+const GearRackWidget = ({ gear, isMe, onAdd, onDelete, expand, onToggleExpand }) => (
+    <HUDWidget title="GEAR_RACK" icon={Zap} expand={expand} onToggleExpand={onToggleExpand}>
         <div className="space-y-1">
             {isMe && (
                 <button onClick={onAdd} className="w-full py-2 mb-2 border border-dashed border-white/10 text-white/20 hover:text-[var(--theme-color)] hover:border-[var(--theme-color)]/30 transition-all text-[8px] mono uppercase tracking-[.3em]">
@@ -537,10 +539,15 @@ const GearRackWidget = ({ gear, isMe, onAdd }) => (
                     <div className="w-7 h-7 rounded bg-white/5 flex items-center justify-center text-white/20 group-hover:bg-[var(--theme-color)]/10 group-hover:text-[var(--theme-color)] transition-all">
                         <Processor size={12} />
                     </div>
-                    <div>
+                    <div className="flex-1">
                         <div className="text-[9px] font-black text-white/70 uppercase tracking-wider">{item.name}</div>
                         <div className="text-[6px] mono text-[var(--theme-color)]/60 uppercase">{item.category}</div>
                     </div>
+                    {isMe && (
+                        <button onClick={() => onDelete(item.id || item.Id)} className="text-white/10 hover:text-red-500">
+                            <X size={10} />
+                        </button>
+                    )}
                 </div>
             )) : (
                 <div className="text-[8px] mono text-white/20 italic p-2 text-center">// NO_GEAR_DETECTED</div>
@@ -613,6 +620,16 @@ export const ProfileView = React.memo(({
     const [leftOpen, setLeftOpen] = useState(false);
     const [rightOpen, setRightOpen] = useState(false);
     const [roomMode, setRoomMode] = useState('room');
+    const [widgetsExpanded, setWidgetsExpanded] = useState({
+        audio: true,
+        sequences: true,
+        journal: true,
+        metadata: true,
+        archive: true,
+        gear: true
+    });
+
+    const toggleWidget = (key) => setWidgetsExpanded(prev => ({ ...prev, [key]: !prev[key] }));
 
 
     // Sync profileData with currentUser for "Me" view to ensure instant updates
@@ -640,7 +657,7 @@ export const ProfileView = React.memo(({
     const displayUser = isMe ? currentUser : profileData;
 
     const sector = SECTORS.find(s => s.id === (displayUser?.residentSectorId || displayUser?.ResidentSectorId || 0));
-    const communityName = (displayUser?.communityName || displayUser?.CommunityName) || 'N/A';
+    const communityName = (displayUser?.communityName || displayUser?.CommunityName) || (displayUser?.communityId || displayUser?.CommunityId ? 'SYNCING...' : 'N/A');
     const communityColor = (displayUser?.communityColor || displayUser?.CommunityColor) || sector?.color;
 
     const [localStatus, setLocalStatus] = useState(displayUser?.statusMessage || displayUser?.StatusMessage || '');
@@ -868,7 +885,7 @@ export const ProfileView = React.memo(({
         }
     };
 
-    const handleRemoveGear = async (id) => {
+    const handleDeleteGear = async (id) => {
         try {
             const API = await import('../services/api').then(mod => mod.default);
             await API.Gear.remove(id);
@@ -1080,6 +1097,10 @@ export const ProfileView = React.memo(({
                     textColor: rawData.textColor || rawData.TextColor || currentUser.textColor,
                     backgroundColor: rawData.backgroundColor || rawData.BackgroundColor || currentUser.backgroundColor,
                     isGlass: rawData.isGlass !== undefined ? rawData.isGlass : (rawData.IsGlass !== undefined ? rawData.IsGlass : currentUser.isGlass),
+                    statusMessage: rawData.statusMessage || rawData.StatusMessage || currentUser.statusMessage,
+                    StatusMessage: rawData.statusMessage || rawData.StatusMessage || currentUser.StatusMessage,
+                    communityName: rawData.communityName || rawData.CommunityName || currentUser.communityName,
+                    communityId: rawData.communityId || rawData.CommunityId || currentUser.communityId,
                     monitorImageUrl: rawData.hasOwnProperty('monitorImageUrl') || rawData.hasOwnProperty('MonitorImageUrl') 
                         ? getMediaUrl(rawData.monitorImageUrl || rawData.MonitorImageUrl) 
                         : currentUser.monitorImageUrl,
@@ -1090,6 +1111,7 @@ export const ProfileView = React.memo(({
                     try { localStorage.setItem('user', JSON.stringify(updated)); } catch (e) { }
                     return updated;
                 });
+                setProfileData(updated);
             } else {
                 onRefreshProfile?.();
             }
@@ -1119,12 +1141,14 @@ export const ProfileView = React.memo(({
                 const updated = {
                     ...currentUser,
                     statusMessage: rawData.statusMessage || rawData.StatusMessage || localStatus,
-                    StatusMessage: rawData.statusMessage || rawData.StatusMessage || localStatus
+                    StatusMessage: rawData.statusMessage || rawData.StatusMessage || localStatus,
+                    communityName: rawData.communityName || rawData.CommunityName || currentUser.communityName
                 };
                 setUser(prev => {
                     try { localStorage.setItem('user', JSON.stringify(updated)); } catch (e) { }
                     return updated;
                 });
+                setProfileData(updated);
             }
             
             showNotification("SIGNAL_BROADCAST", "Frequency status updated successfully.", "success");
@@ -1289,25 +1313,29 @@ export const ProfileView = React.memo(({
     return (
         <>
             <div className={`relative min-h-screen bg-[#050505] overflow-y-auto no-scrollbar`}>
-            {/* Background Media */}
-            <div className="fixed inset-0 z-0 pointer-events-none">
-                {displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl ? (
-                    <video
-                        src={getMediaUrl(displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl)}
-                        className="w-full h-full object-cover opacity-30"
-                        autoPlay loop muted playsInline
+            {/* Ambient Background layer */}
+            {(displayUser?.bannerUrl || displayUser?.BannerUrl || (isMe && showEditProfile && profileData?.previewBannerUrl)) && !(displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl || (isMe && showEditProfile && profileData?.previewWallpaperVideoUrl)) && (
+                <div className="absolute inset-0 z-[-1] opacity-40">
+                        <img src={getMediaUrl(isMe && showEditProfile && profileData?.previewBannerUrl ? profileData.previewBannerUrl : (displayUser?.bannerUrl || displayUser?.BannerUrl))} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/20" />
+                </div>
+            )}
+            {(displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl || (isMe && showEditProfile && profileData?.previewWallpaperVideoUrl)) && (
+                <div className="absolute inset-0 z-[-1] overflow-hidden opacity-40">
+                    <video 
+                        autoPlay 
+                        muted 
+                        loop 
+                        playsInline 
+                        className="w-full h-full object-cover"
+                        src={getMediaUrl(isMe && showEditProfile && profileData?.previewWallpaperVideoUrl ? profileData.previewWallpaperVideoUrl : (displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl))}
                     />
-                ) : (displayUser?.bannerUrl || displayUser?.BannerUrl) ? (
-                    <img
-                        src={getMediaUrl(displayUser?.bannerUrl || displayUser?.BannerUrl)}
-                        className="w-full h-full object-cover opacity-20"
-                    />
-                ) : null}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/80 to-[#050505] mix-blend-multiply" />
-            </div>
-
-            {/* Profile Content */}
-            <div className={`relative z-10 max-w-[1600px] mx-auto min-h-screen flex flex-col pt-20 px-4 pb-32 lg:pb-10 gap-4 mb-[200px] safe-area-padding ${isPlaying || hasMiniPlayer ? 'has-mini-player' : ''}`}>
+                        <div className="absolute inset-0 bg-black/20" />
+                </div>
+            )}
+            
+            {/* HUD Grid Layout */}
+            <div className="relative z-10 w-full max-w-[1920px] mx-auto min-h-screen flex flex-col p-4 lg:p-8 gap-6 pt-24 lg:pt-32">
                 <ProfileIdentityHeader
                     displayUser={displayUser}
                     isMe={isMe}
@@ -1319,7 +1347,6 @@ export const ProfileView = React.memo(({
                     handleFollow={handleFollow}
                     onModifyId={() => setShowEditProfile(true)}
                     onGoLive={() => setShowGlobalGoLive(true)}
-                    onUpload={() => setShowGlobalUpload(true)}
                     onLogout={onLogout}
                     onExitProfile={onExitProfile}
                     onMessageClick={onMessageUser}
@@ -1339,8 +1366,8 @@ export const ProfileView = React.memo(({
                     <div className={`w-full lg:w-[320px] shrink-0 flex flex-col gap-4 ${mobileView !== 'STREAM' ? 'hidden lg:flex' : 'flex'}`}>
                         <AudioSignalsWidget
                             tracks={profileTracks}
-                            isExpanded={true}
-                            onToggleExpand={null}
+                            isExpanded={widgetsExpanded.audio}
+                            onToggleExpand={() => toggleWidget('audio')}
                             onPlayTrack={onPlayTrack}
                             isMe={isMe}
                             onUpload={() => setShowGlobalUpload(true)}
@@ -1350,12 +1377,16 @@ export const ProfileView = React.memo(({
                             onPlay={(p) => onPlayPlaylist(p.tracks || [], 0)}
                             isMe={isMe}
                             onNew={() => setShowCreatePlaylist(true)}
+                            expand={widgetsExpanded.sequences}
+                            onToggleExpand={() => toggleWidget('sequences')}
                         />
                         <JournalWidget 
                             entries={profileJournal} 
                             onExpand={handleItemClick} 
                             isMe={isMe} 
                             onNew={() => setShowJournalForm(true)} 
+                            expand={widgetsExpanded.journal}
+                            onToggleExpand={() => toggleWidget('journal')}
                         />
                     </div>
 
@@ -1386,17 +1417,27 @@ export const ProfileView = React.memo(({
                             user={displayUser} 
                             sectorName={communityName} 
                             sectorColor={communityColor} 
+                            expand={widgetsExpanded.metadata}
+                            onToggleExpand={() => toggleWidget('metadata')}
                         />
                         <VisualArchiveWidget 
                             gallery={profileGallery} 
                             onExpand={handleItemClick} 
                             isMe={isMe} 
                             onIngest={() => setShowGlobalIngest(true)} 
+                            expand={widgetsExpanded.archive}
+                            onToggleExpand={() => toggleWidget('archive')}
                         />
                         <GearRackWidget 
                             gear={profileGear} 
                             isMe={isMe} 
-                            onAdd={() => setShowGearForm(true)} 
+                            onAdd={() => {
+                                setGearFormData({ name: '', category: 'Synth', notes: '' });
+                                setShowGearForm(true);
+                            }} 
+                            onDelete={handleDeleteGear}
+                            expand={widgetsExpanded.gear}
+                            onToggleExpand={() => toggleWidget('gear')}
                         />
                     </div>
                 </div>
