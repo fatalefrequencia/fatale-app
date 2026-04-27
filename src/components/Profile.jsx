@@ -728,6 +728,7 @@ export const ProfileView = React.memo(({
 }) => {
     const effectiveId = targetUserId || currentUser?.id || currentUser?.Id;
     const isMe = String(effectiveId) === String(currentUser?.id || currentUser?.Id);
+    const displayUser = isMe ? currentUser : profileData;
 
     const { showNotification } = useNotification();
     const [activeTab, setActiveTab] = useState('Music');
@@ -831,7 +832,6 @@ export const ProfileView = React.memo(({
     const [stationData, setStationData] = useState(null);
     const [isStationFavorited, setIsStationFavorited] = useState(false);
 
-    const displayUser = isMe ? currentUser : profileData;
 
     const sector = SECTORS.find(s => s.id === (displayUser?.residentSectorId || displayUser?.ResidentSectorId || 0));
     const communityName = (displayUser?.communityName || displayUser?.CommunityName) || (displayUser?.communityId || displayUser?.CommunityId ? 'SYNCING...' : 'N/A');
