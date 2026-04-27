@@ -91,27 +91,27 @@ const CyberDust = ({ count = 30 }) => (
 
 // --- HUD PROFILE COMPONENTS ---
 
-const HUDWidget = ({ title, icon: Icon, children, className = "", expand, onToggleExpand }) => (
-    <div className={`border border-white/10 bg-black/80 backdrop-blur-sm relative group/widget ${className}`}>
-        {/* Corner brackets */}
-        <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-[var(--text-color)]/30" />
-        <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-[var(--text-color)]/30" />
-        <div className="flex items-center justify-between px-3 py-2 border-b border-white/5">
-            <div className="flex items-center gap-2 text-[8px] text-[var(--text-color)]/60 font-bold uppercase tracking-[0.2em]">
-                {Icon && <Icon size={10} />}
-                {title}
+const SubsystemBlock = ({ title, icon: Icon, children, className = "", expand, onToggleExpand, address = "A1-D4" }) => (
+    <div className={`subsystem-block group/widget ${className}`} data-addr={address}>
+        <div className="subsystem-header">
+            <div className="flex items-center gap-2">
+                <div className="subsystem-status" />
+                <span className="subsystem-title">{title}</span>
+                {Icon && <Icon size={10} className="text-[var(--subsystem-accent)]/40" />}
             </div>
             {onToggleExpand && (
-                <button onClick={onToggleExpand} className="text-[var(--text-color)]/40 hover:text-[var(--text-color)] transition-colors">
+                <button onClick={onToggleExpand} className="text-[var(--subsystem-accent)]/40 hover:text-[var(--subsystem-accent)] transition-colors">
                     <ChevronDown size={12} className={`transition-transform duration-300 ${expand ? 'rotate-180' : ''}`} />
                 </button>
             )}
         </div>
-        <div className="p-3">
+        <div className="subsystem-content">
             {children}
         </div>
     </div>
 );
+
+const HUDWidget = SubsystemBlock; // Aliasing for compatibility if needed, but we should use SubsystemBlock
 
 const ProfileIdentityHeader = ({
     displayUser, isMe, isFollowing, localStatus, isSavingStatus,
@@ -121,96 +121,107 @@ const ProfileIdentityHeader = ({
 }) => {
     const pfp = displayUser?.profilePictureUrl || displayUser?.ProfilePictureUrl || displayUser?.profileImageUrl || displayUser?.ProfileImageUrl;
     return (
-        <div className="border border-white/10 bg-black/80 backdrop-blur-sm px-4 py-3 flex flex-col lg:flex-row items-center gap-3 lg:gap-4 relative">
-            {/* Corner brackets */}
-            <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-[var(--text-color)]/30" />
-            <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[var(--text-color)]/30" />
-
+        <div className="subsystem-block px-4 py-3 flex flex-col lg:flex-row items-center gap-4 lg:gap-6 relative" data-addr="USR_ID">
+            {/* Neural Link Decoration */}
+            <div className="absolute top-0 right-1/4 h-px w-32 bg-gradient-to-r from-transparent via-[var(--subsystem-accent)]/20 to-transparent" />
+            
             {/* Profile pic + name */}
-            <div className="flex items-center gap-3 shrink-0">
-                <div className="w-10 h-10 rounded-full border border-[var(--text-color)]/40 overflow-hidden bg-black shadow-[0_0_15px_rgba(var(--text-color-rgb),0.2)]">
-                    {pfp ? (
-                        <img src={getMediaUrl(pfp)} className="w-full h-full object-cover" />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/50"><Cpu size={18} /></div>
-                    )}
+            <div className="flex items-center gap-4 shrink-0">
+                <div className="w-12 h-12 border border-[var(--subsystem-accent)] overflow-hidden bg-black p-0.5">
+                    <div className="w-full h-full border border-[var(--subsystem-accent)]/30 relative group/pfp cursor-pointer">
+                        {pfp ? (
+                            <img src={getMediaUrl(pfp)} className="w-full h-full object-cover subsystem-media-filter" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[var(--subsystem-accent)]/50"><Cpu size={20} /></div>
+                        )}
+                        <div className="absolute inset-0 bg-[var(--subsystem-accent)]/10 opacity-0 group-hover/pfp:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="text-[6px] mono font-bold text-[var(--subsystem-accent)]">BIO_SCAN</span>
+                        </div>
+                    </div>
                 </div>
                 <div>
-                    <div className="text-[14px] font-black text-white uppercase tracking-[0.15em] leading-tight">
+                    <div className="text-[16px] font-black text-[var(--subsystem-accent)] uppercase tracking-[0.2em] leading-tight flex items-center gap-2">
                         {displayUser?.username || displayUser?.Username || 'GUEST_USER'}
+                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
                     </div>
                     {communityName && (
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                            <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: communityColor }} />
-                            <span className="text-[7px] font-bold tracking-[0.15em] uppercase" style={{ color: communityColor }}>
-                                {communityName}
+                        <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[7px] font-bold tracking-[0.2em] uppercase px-1 border border-current" style={{ color: communityColor }}>
+                                SECTOR: {communityName}
                             </span>
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* Status */}
+            {/* Status Stream */}
             <div className="flex-1 min-w-0 w-full lg:w-auto">
-                <div className="bg-black/40 border border-white/5 px-3 py-1.5 flex items-center gap-2">
-                    <div className="w-1 h-1 rounded-full bg-[var(--text-color)] animate-pulse shrink-0" />
-                    {isMe ? (
-                        <input
-                            type="text"
-                            value={localStatus}
-                            onChange={(e) => setLocalStatus(e.target.value)}
-                            onBlur={handleInlineStatusUpdate}
-                            onKeyDown={(e) => e.key === 'Enter' && handleInlineStatusUpdate()}
-                            placeholder="> SET_BROADCAST_SIGNAL..."
-                            className="w-full bg-transparent border-none outline-none text-[9px] text-[var(--text-color)] mono uppercase tracking-widest placeholder:text-[var(--text-color)]/30 p-0 m-0 focus:ring-0"
-                            disabled={isSavingStatus}
-                        />
-                    ) : (
-                        <span className="text-[9px] text-[var(--text-color)]/70 mono uppercase tracking-widest truncate">
-                            {displayUser?.statusMessage || displayUser?.StatusMessage || '> NO_STATUS_SIGNAL...'}
-                        </span>
-                    )}
+                <div className="bg-black/80 border border-[var(--subsystem-accent)]/20 p-2 relative overflow-hidden">
+                    <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-[var(--subsystem-accent)]/40" />
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[6px] mono text-[var(--subsystem-accent)]/40">STATUS_FEED</span>
+                        <div className="h-px flex-1 bg-[var(--subsystem-accent)]/10" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[8px] text-[var(--subsystem-accent)]/40 mono">&gt;</span>
+                        {isMe ? (
+                            <input
+                                type="text"
+                                value={localStatus}
+                                onChange={(e) => setLocalStatus(e.target.value)}
+                                onBlur={handleInlineStatusUpdate}
+                                onKeyDown={(e) => e.key === 'Enter' && handleInlineStatusUpdate()}
+                                placeholder="WAITING_FOR_UPLINK..."
+                                className="w-full bg-transparent border-none outline-none text-[10px] text-[var(--subsystem-accent)] mono uppercase tracking-widest placeholder:text-[var(--subsystem-accent)]/20 p-0 m-0 focus:ring-0"
+                                disabled={isSavingStatus}
+                            />
+                        ) : (
+                            <span className="text-[10px] text-[var(--subsystem-accent)]/80 mono uppercase tracking-widest truncate">
+                                {displayUser?.statusMessage || displayUser?.StatusMessage || 'NO_SIGNAL_DETECTED'}
+                            </span>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-1.5 flex-wrap justify-center shrink-0">
+            {/* System Controls */}
+            <div className="flex items-center gap-2 flex-wrap justify-center shrink-0">
                 {isMe ? (
                     <>
                         {onModifyId && (
-                            <button onClick={onModifyId} className="px-2 py-1 bg-[var(--text-color)]/10 border border-[var(--text-color)]/40 text-[var(--text-color)] hover:bg-[var(--text-color)] hover:text-black transition-all text-[7px] font-bold mono uppercase tracking-widest">
-                                MODIFY_ID
+                            <button onClick={onModifyId} className="subsystem-command-btn">
+                                [ MODIFY_ID ]
                             </button>
                         )}
                         {onGoLive && (
-                            <button onClick={onGoLive} className="px-2 py-1 bg-black/60 border border-[var(--text-color)]/30 text-[var(--text-color)]/70 hover:text-[var(--text-color)] hover:border-[var(--text-color)] transition-all text-[7px] font-bold mono uppercase tracking-widest flex items-center gap-1">
-                                <Radio size={9} /> LIVE
+                            <button onClick={onGoLive} className="subsystem-command-btn">
+                                <Radio size={10} /> [ UPLINK ]
                             </button>
                         )}
                         {onExitProfile && (
-                            <button onClick={onExitProfile} className="px-2 py-1 bg-black/60 border border-white/20 text-white/60 hover:text-white hover:border-white/40 transition-all text-[7px] font-bold mono uppercase tracking-widest flex items-center gap-1">
-                                <ChevronLeft size={9} /> BACK
+                            <button onClick={onExitProfile} className="subsystem-command-btn text-white/60">
+                                <ChevronLeft size={10} /> [ RETURN ]
                             </button>
                         )}
                         {onLogout && (
-                            <button onClick={onLogout} className="px-2 py-1 bg-black/60 border border-[#ff3b3b]/20 text-[#ff3b3b]/60 hover:text-[#ff3b3b] hover:border-[#ff3b3b]/40 transition-all text-[7px] font-bold mono uppercase tracking-widest flex items-center gap-1">
-                                <LogOut size={9} /> LOGOUT
+                            <button onClick={onLogout} className="subsystem-command-btn border-red-900/40 text-red-500/60 hover:text-red-500 hover:border-red-500">
+                                <LogOut size={10} /> [ SHUTDOWN ]
                             </button>
                         )}
                     </>
                 ) : (
                     <>
                         {onExitProfile && (
-                            <button onClick={onExitProfile} className="px-2 py-1 bg-black/60 border border-white/20 text-white/60 hover:text-white hover:border-white/40 transition-all text-[7px] font-bold mono uppercase tracking-widest flex items-center gap-1">
-                                <ChevronLeft size={9} /> BACK
+                            <button onClick={onExitProfile} className="subsystem-command-btn text-white/60">
+                                <ChevronLeft size={10} /> [ RETURN ]
                             </button>
                         )}
-                        <button onClick={handleFollow} className={`px-2 py-1 border text-[7px] font-bold mono uppercase tracking-widest transition-all flex items-center gap-1 ${isFollowing ? 'bg-[var(--text-color)]/10 text-[var(--text-color)] border-[var(--text-color)]' : 'bg-black/60 text-white/60 border-white/20 hover:border-[var(--text-color)] hover:text-[var(--text-color)]'}`}>
-                            {isFollowing ? 'LINKED' : 'LINK'}
+                        <button onClick={handleFollow} className={`subsystem-command-btn ${isFollowing ? 'bg-[var(--subsystem-accent)]/10 text-[var(--subsystem-accent)] border-[var(--subsystem-accent)]' : ''}`}>
+                            [ {isFollowing ? 'LINKED' : 'ESTABLISH_LINK'} ]
                         </button>
                         {onMessageClick && (
-                            <button onClick={onMessageClick} className="px-2 py-1 bg-black/60 border border-white/20 text-white/60 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40 transition-all text-[7px] font-bold mono uppercase tracking-widest flex items-center gap-1">
-                                <MessageSquare size={9} /> MSG
+                            <button onClick={onMessageClick} className="subsystem-command-btn">
+                                <MessageSquare size={10} /> [ COMMS ]
                             </button>
                         )}
                     </>
@@ -232,79 +243,95 @@ const AudioSignalsWidget = ({ tracks, isExpanded, onToggleExpand, onPlayTrack, i
         allItems.filter(i => i._type === 'track');
 
     return (
-        <HUDWidget title="AUDIO_SIGNALS" icon={Music} expand={isExpanded} onToggleExpand={onToggleExpand}>
+        <SubsystemBlock title="AUDIO_REGISTRY" icon={Music} expand={isExpanded} onToggleExpand={onToggleExpand} address="FRQ-01">
             <AnimatePresence mode="wait">
                 {!isExpanded ? (
-                    <motion.div key="collapsed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-0.5 max-h-[280px] overflow-y-auto no-scrollbar">
+                    <motion.div key="collapsed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-1 max-h-[280px] overflow-y-auto no-scrollbar">
                         {allItems.length > 0 ? allItems.slice(0, 8).map((item, i) => (
                             <div
                                 key={`${item._type}-${item.id || i}`}
-                                className="flex items-center gap-2 py-1 px-1 hover:bg-white/5 cursor-pointer group transition-colors"
+                                className="flex items-center gap-3 py-1.5 px-2 bg-black/40 border border-white/5 hover:border-[var(--subsystem-accent)]/30 cursor-pointer group transition-all"
                                 onClick={() => item._type === 'track' ? onPlayTrack?.(item) : onPlayPlaylist?.(item)}
                             >
-                                <span className="text-[var(--text-color)]/30 text-[7px]">â™ª</span>
-                                <span className="text-[8px] mono text-white/70 uppercase tracking-wider truncate flex-1 group-hover:text-[var(--text-color)] transition-colors">
+                                <div className="text-[var(--subsystem-accent)]/20 group-hover:text-[var(--subsystem-accent)] transition-colors mono text-[8px]">[{i.toString(16).toUpperCase().padStart(2, '0')}]</div>
+                                <span className="text-[10px] mono text-white/70 uppercase tracking-widest truncate flex-1 group-hover:text-[var(--subsystem-accent)] transition-colors">
                                     {item.title || item.Title || item.name || item.Name}
                                 </span>
-                                <Play size={8} className="text-[var(--text-color)]/0 group-hover:text-[var(--text-color)]/60 transition-colors shrink-0" />
+                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="w-12 h-1 bg-[var(--subsystem-accent)]/10 relative overflow-hidden">
+                                        <motion.div 
+                                            initial={{ x: '-100%' }}
+                                            animate={{ x: '100%' }}
+                                            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                                            className="absolute inset-0 bg-[var(--subsystem-accent)]/40" 
+                                        />
+                                    </div>
+                                    <Play size={10} className="text-[var(--subsystem-accent)]" />
+                                </div>
                             </div>
                         )) : (
-                            <div className="text-[8px] mono text-white/30 uppercase py-2 italic">&gt; NO_SIGNALS</div>
+                            <div className="text-[8px] mono text-[var(--subsystem-accent)]/20 uppercase py-2 italic text-center">// NO_SIGNALS_DETECTED</div>
                         )}
                     </motion.div>
                 ) : (
                     <motion.div key="expanded" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                         {/* Sub-tabs */}
-                        <div className="flex gap-1 mb-2">
+                        <div className="flex gap-1 mb-3">
                             {['All', 'albums', 'singles/eps'].map(tab => (
                                 <button
                                     key={tab}
                                     onClick={() => setSubTab(tab)}
-                                    className={`px-2 py-0.5 text-[7px] font-bold uppercase tracking-widest border transition-all ${subTab === tab ? 'border-[var(--text-color)]/40 bg-[var(--text-color)]/10 text-[var(--text-color)]' : 'border-white/5 text-white/40 hover:text-white/60'}`}
+                                    className={`px-3 py-1 text-[8px] font-bold uppercase tracking-widest border transition-all ${subTab === tab ? 'border-[var(--subsystem-accent)]/60 bg-[var(--subsystem-accent)]/10 text-[var(--subsystem-accent)]' : 'border-white/5 text-white/20 hover:text-white/40'}`}
                                 >
                                     [{tab.toUpperCase()}]
                                 </button>
                             ))}
                         </div>
                         {isMe && (
-                            <button onClick={onUpload} className="w-full mb-2 py-1 border border-dashed border-[var(--text-color)]/20 text-[7px] mono text-[var(--text-color)]/50 uppercase tracking-widest hover:border-[var(--text-color)]/40 hover:text-[var(--text-color)] transition-all flex items-center justify-center gap-1">
-                                <Plus size={8} /> UPLOAD_SIGNAL
+                            <button onClick={onUpload} className="w-full mb-3 py-1.5 border border-dashed border-[var(--subsystem-accent)]/20 text-[8px] mono text-[var(--subsystem-accent)]/50 uppercase tracking-[0.3em] hover:border-[var(--subsystem-accent)]/40 hover:text-[var(--subsystem-accent)] transition-all flex items-center justify-center gap-2">
+                                <Plus size={10} /> [ INJECT_SIGNAL ]
                             </button>
                         )}
-                        <div className="space-y-1 max-h-[350px] overflow-y-auto no-scrollbar">
+                        <div className="space-y-1 max-h-[400px] overflow-y-auto no-scrollbar">
                             {filtered.length > 0 ? filtered.map((item, i) => (
                                 <div
                                     key={`${item._type}-${item.id || i}`}
-                                    className="flex items-center gap-2 py-1.5 px-1 hover:bg-white/5 cursor-pointer group transition-colors border-b border-white/5 last:border-none"
+                                    className="flex items-center gap-3 py-2 px-2 bg-black/20 border border-white/5 hover:border-[var(--subsystem-accent)]/40 cursor-pointer group transition-all"
                                     onClick={() => item._type === 'track' ? onPlayTrack?.(item) : onPlayPlaylist?.(item)}
                                 >
-                                    <div className="w-7 h-7 border border-white/10 bg-black overflow-hidden shrink-0">
+                                    <div className="w-8 h-8 border border-[var(--subsystem-accent)]/20 bg-black p-0.5 shrink-0">
                                         {(item.cover || item.coverImageUrl || item.CoverImageUrl || item.imageUrl || item.ImageUrl) ? (
-                                            <img src={getMediaUrl(item.cover || item.coverImageUrl || item.CoverImageUrl || item.imageUrl || item.ImageUrl)} className="w-full h-full object-cover" />
+                                            <img src={getMediaUrl(item.cover || item.coverImageUrl || item.CoverImageUrl || item.imageUrl || item.ImageUrl)} className="w-full h-full object-cover subsystem-media-filter" />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-[var(--text-color)]/20">
-                                                {item._type === 'playlist' ? <Database size={10} /> : <Music size={10} />}
+                                            <div className="w-full h-full flex items-center justify-center text-[var(--subsystem-accent)]/20">
+                                                {item._type === 'playlist' ? <Database size={12} /> : <Music size={12} />}
                                             </div>
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="text-[8px] mono text-white/70 uppercase tracking-wider truncate group-hover:text-[var(--text-color)] transition-colors">
+                                        <div className="text-[10px] mono text-white/80 uppercase tracking-widest truncate group-hover:text-[var(--subsystem-accent)] transition-colors">
                                             {item.title || item.Title || item.name || item.Name}
                                         </div>
-                                        <div className="text-[6px] mono text-white/30 uppercase tracking-wider">
-                                            {item._type === 'playlist' ? 'ALBUM' : 'SINGLE'} {item.playCount ? `// ${item.playCount} PLAYS` : ''}
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <span className="text-[6px] mono text-[var(--subsystem-accent)]/40 uppercase tracking-widest">
+                                                {item._type === 'playlist' ? 'CLUSTER' : 'SIGNAL'} // {item.playCount || 0} SCANS
+                                            </span>
+                                            <div className="h-0.5 flex-1 bg-[var(--subsystem-accent)]/5" />
+                                            <span className="text-[6px] mono text-[var(--subsystem-accent)]/30 uppercase">UPLINK_OK</span>
                                         </div>
                                     </div>
-                                    <Play size={10} className="text-[var(--text-color)]/0 group-hover:text-[var(--text-color)]/60 transition-colors shrink-0" />
+                                    <div className="text-right">
+                                        <Play size={12} className="text-[var(--subsystem-accent)]/0 group-hover:text-[var(--subsystem-accent)] transition-all" />
+                                    </div>
                                 </div>
                             )) : (
-                                <div className="text-[8px] mono text-white/30 uppercase py-4 text-center italic">&gt; NO_SIGNALS_IN_CATEGORY</div>
+                                <div className="text-[8px] mono text-[var(--subsystem-accent)]/20 uppercase py-6 text-center italic">// SECTOR_CLEAN</div>
                             )}
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
-        </HUDWidget>
+        </SubsystemBlock>
     );
 };
 
@@ -356,47 +383,54 @@ const DisplayWallGrid = ({ tracks, gallery, journal, playlists, uid, onExpand, o
 
     if (items.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 text-center opacity-20">
-                <Globe size={32} className="mb-3 text-[var(--text-color)]" />
-                <span className="mono text-[9px] uppercase tracking-[0.2em]">NO_POSTED_SIGNALS</span>
+            <div className="flex flex-col items-center justify-center py-24 text-center opacity-20 border border-dashed border-[var(--subsystem-accent)]/20">
+                <Globe size={32} className="mb-4 text-[var(--subsystem-accent)]" />
+                <span className="mono text-[10px] uppercase tracking-[0.4em]">MATRIX_DEVOID_OF_SIGNAL</span>
             </div>
         );
     }
 
     return (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {items.map((item, i) => (
                 <div
                     key={`${item.type}_${item.id}_${i}`}
-                    className="aspect-square relative overflow-hidden border border-white/5 hover:border-[var(--text-color)]/50 bg-black/40 cursor-pointer group transition-all"
+                    className="aspect-square subsystem-grid-item cursor-pointer group"
                     onClick={() => onExpand({ ...item.original, type: item.type }, item.type)}
                 >
+                    <div className="subsystem-media-info">
+                        <span className="subsystem-tag">UID:{item.id.toString().slice(-4)}</span>
+                        <span className="subsystem-tag">TYP:{item.type}</span>
+                    </div>
+
                     {item.url && (item.url.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/) || !item.url.toLowerCase().match(/\.(mp4|webm|avi)$/)) ? (
-                        <img src={getMediaUrl(item.url)} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" />
+                        <img src={getMediaUrl(item.url)} alt="" className="w-full h-full object-cover subsystem-media-filter group-hover:scale-105 transition-all duration-700" />
                     ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center bg-black/80">
-                            {item.type === 'VIDEO' ? <Video size={28} strokeWidth={1} className="text-cyan-400/60" /> : <Music size={28} className="text-[var(--text-color)]/20" />}
+                            {item.type === 'VIDEO' ? <Video size={32} strokeWidth={1} className="text-[var(--subsystem-accent)]/40 group-hover:text-[var(--subsystem-accent)]" /> : <Music size={32} className="text-[var(--subsystem-accent)]/20 group-hover:text-[var(--subsystem-accent)]" />}
                         </div>
                     )}
 
                     {/* Play overlay for tracks/playlists */}
                     {(item.type === 'TRACK' || item.type === 'PLAYLIST') && (
                         <button
-                            className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10"
+                            className="absolute inset-0 bg-[var(--subsystem-accent)]/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 if (item.type === 'TRACK') onPlayTrack(item.original);
                                 else if (item.type === 'PLAYLIST') onPlayPlaylist(item.original.tracks || [], 0);
                             }}
                         >
-                            <Play size={20} fill="currentColor" className="text-[var(--text-color)] drop-shadow-[0_0_10px_rgba(var(--text-color-rgb),0.5)]" />
+                            <div className="w-12 h-12 border border-[var(--subsystem-accent)] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                                <Play size={20} className="text-[var(--subsystem-accent)]" fill="currentColor" />
+                            </div>
                         </button>
                     )}
 
                     {/* Label */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-1.5 pt-4">
-                        <div className="text-[6px] mono text-[var(--text-color)]/60 uppercase tracking-widest truncate">
-                            {item.type}_{String(item.title || 'UNTITLED').toUpperCase().replace(/\s+/g, '_').slice(0, 20)}
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/80 border-t border-[var(--subsystem-accent)]/20 p-2 transform translate-y-full group-hover:translate-y-0 transition-transform">
+                        <div className="text-[7px] mono text-[var(--subsystem-accent)] uppercase tracking-widest truncate">
+                            {String(item.title || 'UNTITLED').toUpperCase().replace(/\s+/g, '_')}
                         </div>
                     </div>
                 </div>
@@ -406,154 +440,176 @@ const DisplayWallGrid = ({ tracks, gallery, journal, playlists, uid, onExpand, o
 };
 
 const SequenceMapWidget = ({ playlists, onPlay, isMe, onNew, expand, onToggleExpand }) => (
-    <HUDWidget title="SEQUENCE_MAPS" icon={Database} expand={expand} onToggleExpand={onToggleExpand}>
+    <SubsystemBlock title="SEQUENCE_MAPS" icon={Database} expand={expand} onToggleExpand={onToggleExpand} address="MEM-09">
         <div className="space-y-1">
             {isMe && (
-                <button onClick={onNew} className="w-full py-2 mb-2 border border-dashed border-cyan-400/20 text-cyan-400/40 hover:text-cyan-400 hover:border-cyan-400/40 transition-all text-[8px] mono uppercase tracking-[.3em]">
-                    + NEW_SEQUENCE
+                <button onClick={onNew} className="w-full py-2 mb-3 border border-dashed border-[var(--subsystem-accent)]/20 text-[var(--subsystem-accent)]/40 hover:text-[var(--subsystem-accent)] hover:border-[var(--subsystem-accent)]/40 transition-all text-[8px] mono uppercase tracking-[.3em]">
+                    + INITIALIZE_SEQUENCE
                 </button>
             )}
             {playlists.length > 0 ? playlists.map((p, idx) => (
                 <div 
                     key={p.id || idx} 
-                    className="group border border-white/5 bg-black/40 p-2 hover:border-cyan-400/30 transition-all cursor-pointer flex items-center gap-3"
+                    className="group border border-white/5 bg-black/40 p-2 hover:border-[var(--subsystem-accent)]/30 transition-all cursor-pointer flex items-center gap-3"
                     onClick={() => onPlay(p)}
                 >
-                    <div className="w-8 h-8 bg-black border border-white/10 overflow-hidden shrink-0">
+                    <div className="w-10 h-10 bg-black border border-[var(--subsystem-accent)]/20 overflow-hidden shrink-0">
                         {p.imageUrl || p.ImageUrl ? (
-                            <img src={getMediaUrl(p.imageUrl || p.ImageUrl)} className="w-full h-full object-cover" />
+                            <img src={getMediaUrl(p.imageUrl || p.ImageUrl)} className="w-full h-full object-cover subsystem-media-filter" />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center text-white/10"><Music size={14} /></div>
+                            <div className="w-full h-full flex items-center justify-center text-white/10"><Music size={16} /></div>
                         )}
                     </div>
                     <div className="min-w-0 flex-1">
-                        <div className="text-[9px] font-black text-white/80 uppercase tracking-widest truncate group-hover:text-cyan-400 transition-colors">
+                        <div className="text-[10px] font-black text-white/80 uppercase tracking-widest truncate group-hover:text-[var(--subsystem-accent)] transition-colors">
                             {p.name || p.Name || 'UNTITLED_MAP'}
                         </div>
-                        <div className="text-[6px] mono text-white/30 uppercase tracking-widest">
-                            {(p.tracks || p.Tracks || []).length} SIGNALS // SYNC_LOADED
+                        <div className="flex items-center gap-2 mt-1">
+                            <div className="h-0.5 w-8 bg-[var(--subsystem-accent)]/20" />
+                            <div className="text-[6px] mono text-white/30 uppercase tracking-widest">
+                                {(p.tracks || p.Tracks || []).length} SIGNALS // SECTOR_LOADED
+                            </div>
                         </div>
                     </div>
-                    <Play size={10} className="text-white/10 group-hover:text-cyan-400 transition-colors" />
+                    <Play size={12} className="text-white/10 group-hover:text-[var(--subsystem-accent)] transition-colors" />
                 </div>
             )) : (
-                <div className="text-[8px] mono text-white/20 italic p-2 text-center">// NO_SEQUENCES_FOUND</div>
+                <div className="text-[8px] mono text-white/20 italic p-4 text-center border border-white/5 bg-black/20">// NO_SEQUENCES_MOUNTED</div>
             )}
         </div>
-    </HUDWidget>
+    </SubsystemBlock>
 );
 
 const EntityMetadataWidget = ({ user, sectorName, sectorColor, expand, onToggleExpand }) => (
-    <HUDWidget title="ENTITY_METADATA" icon={Cpu} expand={expand} onToggleExpand={onToggleExpand}>
+    <SubsystemBlock title="ENTITY_METADATA" icon={Cpu} expand={expand} onToggleExpand={onToggleExpand} address="BIO-02">
         <div className="space-y-4">
-            <div className="p-3 border border-white/5 bg-black/40 relative">
+            <div className="p-3 border border-[var(--subsystem-accent)]/10 bg-black/60 relative">
                  <div className="absolute top-0 right-0 p-1">
-                    <Database size={8} className="text-[var(--text-color)]/20" />
+                    <Database size={8} className="text-[var(--subsystem-accent)]/20" />
                  </div>
-                <div className="text-[7px] mono text-white/30 uppercase tracking-[0.2em] mb-1">// BIOGRAPHY</div>
-                <div className="text-[10px] text-white/80 leading-relaxed font-medium">
-                    {user?.biography || user?.Biography || 'SIGNAL_DEVOID_OF_METADATA'}
+                <div className="text-[7px] mono text-[var(--subsystem-accent)]/40 uppercase tracking-[0.2em] mb-2">// BIOGRAPHY_BUFFER</div>
+                <div className="text-[10px] text-white/80 leading-relaxed font-medium mono">
+                    {user?.biography || user?.Biography || 'SIGNAL_DEVOID_OF_METADATA_BLOCK'}
                 </div>
+                <div className="mt-3 overflow-hidden h-px bg-gradient-to-r from-[var(--subsystem-accent)]/20 via-transparent to-transparent" />
             </div>
             <div className="grid grid-cols-2 gap-2">
-                <StatItem label="SCANS" value={Math.floor(Math.random() * 10000)} />
-                <StatItem label="FREQ" value={user?.id || user?.Id || '0000'} />
+                <StatItem label="BIO_SYNC" value={`${Math.floor(Math.random() * 100)}%`} />
+                <StatItem label="SIGNAL_ID" value={user?.id?.toString().slice(0, 8).toUpperCase() || 'NULL'} />
             </div>
             {sectorName && (
-                <div className="flex items-center gap-2 p-2 border border-[var(--text-color)]/10 bg-black/60">
-                    <MapPin size={10} style={{ color: sectorColor }} />
-                    <span className="text-[8px] mono uppercase tracking-widest font-black" style={{ color: sectorColor }}>
-                        {sectorName}
-                    </span>
+                <div className="flex items-center gap-3 p-3 border border-[var(--subsystem-accent)]/20 bg-black/40">
+                    <div className="p-1 border border-current" style={{ color: sectorColor }}>
+                        <MapPin size={10} />
+                    </div>
+                    <div className="flex-1">
+                        <div className="text-[6px] mono text-white/20">RESIDENT_SECTOR</div>
+                        <div className="text-[10px] mono uppercase tracking-widest font-black" style={{ color: sectorColor }}>
+                            {sectorName}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
-    </HUDWidget>
+    </SubsystemBlock>
 );
 
 const JournalWidget = ({ entries, onExpand, isMe, onNew, expand, onToggleExpand }) => (
-    <HUDWidget title="FREQ_JOURNAL" icon={Book} expand={expand} onToggleExpand={onToggleExpand}>
+    <SubsystemBlock title="FREQ_JOURNAL" icon={Book} expand={expand} onToggleExpand={onToggleExpand} address="LOG-12">
         <div className="space-y-1">
             {isMe && (
-                <button onClick={onNew} className="w-full py-2 mb-2 border border-dashed border-[var(--text-color)]/20 text-[var(--text-color)]/40 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40 transition-all text-[8px] mono uppercase tracking-[.3em]">
-                    + NEW_LOG_ENTRY
+                <button onClick={onNew} className="w-full py-2 mb-3 border border-dashed border-[var(--subsystem-accent)]/20 text-[var(--subsystem-accent)]/40 hover:text-[var(--subsystem-accent)] hover:border-[var(--subsystem-accent)]/40 transition-all text-[8px] mono uppercase tracking-[.3em]">
+                    + APPEND_LOG_ENTRY
                 </button>
             )}
             {entries.length > 0 ? entries.map((entry, idx) => (
                 <div 
                     key={entry.id || idx} 
                     onClick={() => onExpand({ ...entry, type: 'JOURNAL' }, 'JOURNAL')}
-                    className="group flex flex-col p-2 border border-white/5 hover:border-[var(--text-color)]/20 bg-black/20 cursor-pointer transition-all"
+                    className="group flex flex-col p-2.5 border border-white/5 hover:border-[var(--subsystem-accent)]/30 bg-black/20 cursor-pointer transition-all"
                 >
                     <div className="flex justify-between items-center mb-1">
-                        <span className="text-[9px] font-black text-white/80 uppercase group-hover:text-[var(--text-color)] transition-colors truncate">
+                        <span className="text-[10px] font-black text-white/80 uppercase group-hover:text-[var(--subsystem-accent)] transition-colors truncate mono">
                             {entry.title || entry.Title || 'UNTITLED_LOG'}
                         </span>
-                        <span className="text-[6px] mono text-white/20">
-                            {new Date(entry.createdAt || entry.CreatedAt).toLocaleDateString()}
+                        <span className="text-[7px] mono text-[var(--subsystem-accent)]/20">
+                            ID:0x{idx.toString(16).padStart(2, '0')}
                         </span>
+                    </div>
+                    <div className="text-[6px] mono text-white/20 uppercase tracking-widest flex justify-between">
+                        <span>TIMESTAMP: {new Date(entry.createdAt || entry.CreatedAt).toLocaleDateString()}</span>
+                        <span>[READ_ONLY]</span>
                     </div>
                 </div>
             )) : (
-                <div className="text-[8px] mono text-white/20 italic p-2 text-center">// NO_LOGS_FOUND</div>
+                <div className="text-[8px] mono text-white/20 italic p-4 text-center border border-white/5 bg-black/20">// NO_LOGS_FOUND_IN_SECTOR</div>
             )}
         </div>
-    </HUDWidget>
+    </SubsystemBlock>
 );
 
 const VisualArchiveWidget = ({ gallery, onExpand, isMe, onIngest, expand, onToggleExpand }) => (
-    <HUDWidget title="VISUAL_ARCHIVE" icon={Camera} expand={expand} onToggleExpand={onToggleExpand}>
-        <div className="grid grid-cols-2 gap-1.5">
+    <SubsystemBlock title="VISUAL_BUFFER" icon={Camera} expand={expand} onToggleExpand={onToggleExpand} address="IMG-44">
+        <div className="grid grid-cols-2 gap-2">
             {(gallery || []).slice(0, 7).map((item, i) => (
                 <div 
                     key={item.id || i}
                     onClick={() => onExpand(item, item.type || item.Type || 'PHOTO')}
-                    className="aspect-square border border-white/5 bg-black/40 relative group cursor-pointer overflow-hidden"
+                    className="subsystem-grid-item aspect-square cursor-pointer"
                 >
-                    <img src={getMediaUrl(item.url || item.Url)} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
-                        <Maximize2 size={12} className="text-white" />
+                    <img src={getMediaUrl(item.url || item.Url)} className="w-full h-full object-cover subsystem-media-filter group-hover:scale-110 transition-all duration-700" />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-[var(--subsystem-accent)]/10">
+                        <div className="p-2 border border-[var(--subsystem-accent)] bg-black/40">
+                            <Maximize2 size={12} className="text-[var(--subsystem-accent)]" />
+                        </div>
+                    </div>
+                    <div className="absolute top-1 left-1">
+                        <span className="subsystem-tag">0x{i.toString(16).toUpperCase()}</span>
                     </div>
                 </div>
             ))}
             {isMe && (
-                <button onClick={onIngest} className="aspect-square border border-dashed border-white/10 flex flex-col items-center justify-center gap-1 hover:border-[var(--text-color)]/40 hover:bg-[var(--text-color)]/5 transition-all group">
-                    <Plus size={14} className="text-white/20 group-hover:text-[var(--text-color)]" />
-                    <span className="text-[6px] mono text-white/10 group-hover:text-[var(--text-color)] uppercase tracking-widest">INGEST</span>
+                <button onClick={onIngest} className="aspect-square border border-dashed border-[var(--subsystem-accent)]/20 flex flex-col items-center justify-center gap-2 hover:border-[var(--subsystem-accent)]/40 hover:bg-[var(--subsystem-accent)]/5 transition-all group">
+                    <Plus size={16} className="text-[var(--subsystem-accent)]/20 group-hover:text-[var(--subsystem-accent)]" />
+                    <span className="text-[7px] mono text-[var(--subsystem-accent)]/10 group-hover:text-[var(--subsystem-accent)] uppercase tracking-[0.2em]">INGEST_DATA</span>
                 </button>
             )}
         </div>
-    </HUDWidget>
+    </SubsystemBlock>
 );
 
 const GearRackWidget = ({ gear, isMe, onAdd, onDelete, expand, onToggleExpand }) => (
-    <HUDWidget title="GEAR_RACK" icon={Zap} expand={expand} onToggleExpand={onToggleExpand}>
+    <SubsystemBlock title="HARDWARE_RACK" icon={Zap} expand={expand} onToggleExpand={onToggleExpand} address="HW-99">
         <div className="space-y-1">
             {isMe && (
-                <button onClick={onAdd} className="w-full py-2 mb-2 border border-dashed border-white/10 text-white/20 hover:text-[var(--theme-color)] hover:border-[var(--theme-color)]/30 transition-all text-[8px] mono uppercase tracking-[.3em]">
-                    + REGISTER_HARDWARE
+                <button onClick={onAdd} className="w-full py-2 mb-3 border border-dashed border-[var(--subsystem-accent)]/20 text-[var(--subsystem-accent)]/40 hover:text-[var(--subsystem-accent)] hover:border-[var(--subsystem-accent)]/40 transition-all text-[8px] mono uppercase tracking-[.3em]">
+                    + REGISTER_NEW_HW
                 </button>
             )}
             {(gear || []).length > 0 ? (gear || []).map((item, idx) => (
-                <div key={idx} className="p-2 border border-white/5 bg-black/20 flex gap-3 items-center group">
-                    <div className="w-7 h-7 rounded bg-white/5 flex items-center justify-center text-white/20 group-hover:bg-[var(--theme-color)]/10 group-hover:text-[var(--theme-color)] transition-all">
-                        <Processor size={12} />
+                <div key={idx} className="p-3 border border-white/5 bg-black/20 flex gap-3 items-center group relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-8 h-8 bg-gradient-to-bl from-[var(--subsystem-accent)]/10 to-transparent" />
+                    <div className="w-9 h-9 border border-[var(--subsystem-accent)]/20 flex items-center justify-center text-[var(--subsystem-accent)]/40 group-hover:text-[var(--subsystem-accent)] transition-all bg-black">
+                        <Processor size={16} />
                     </div>
                     <div className="flex-1">
-                        <div className="text-[9px] font-black text-white/70 uppercase tracking-wider">{item.name}</div>
-                        <div className="text-[6px] mono text-[var(--theme-color)]/60 uppercase">{item.category}</div>
+                        <div className="text-[10px] font-black text-white/70 uppercase tracking-widest">{item.name}</div>
+                        <div className="text-[6px] mono text-[var(--subsystem-accent)]/60 uppercase flex items-center gap-2">
+                            <span className="p-0.5 border border-current">{item.category}</span>
+                            <span>READY</span>
+                        </div>
                     </div>
                     {isMe && (
-                        <button onClick={() => onDelete(item.id || item.Id)} className="text-white/10 hover:text-red-500">
-                            <X size={10} />
+                        <button onClick={() => onDelete(item.id || item.Id)} className="text-white/10 hover:text-red-500 transition-colors z-10">
+                            <X size={12} />
                         </button>
                     )}
                 </div>
             )) : (
-                <div className="text-[8px] mono text-white/20 italic p-2 text-center">// NO_GEAR_DETECTED</div>
+                <div className="text-[8px] mono text-white/20 italic p-4 text-center border border-white/5 bg-black/20">// NO_HW_DETECTED_IN_RACK</div>
             )}
         </div>
-    </HUDWidget>
+    </SubsystemBlock>
 );
 
 // --- VISTA: PERFIL ---
