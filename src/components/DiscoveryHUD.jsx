@@ -558,7 +558,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                 transition={{ type: "spring", damping: 30, stiffness: 300 }}
                                                 className={`absolute z-50 pointer-events-auto ${isMobile ? 'bottom-0 left-0 right-0' : 'bottom-4 left-4 right-4'}`}
                                             >
-                                                <div className={`bg-black/95 backdrop-blur-3xl border-t border-x border-white/10 shadow-[0_-20px_80px_rgba(0,0,0,0.9)] overflow-hidden relative group mx-auto ${isMobile ? 'rounded-t-[32px] p-6 pb-12' : 'border p-8 max-w-5xl shadow-[0_0_80px_rgba(0,0,0,0.9)]'}`}>
+                                                <div className={`bg-black/95 backdrop-blur-3xl border-t border-x border-white/10 shadow-[0_-20px_80px_rgba(0,0,0,0.9)] overflow-hidden relative group mx-auto ${isMobile ? 'rounded-t-[32px] p-6 pb-12' : `border p-8 shadow-[0_0_80px_rgba(0,0,0,0.9)] ${selectedGlobeItem.type === 'track' ? 'max-w-md' : 'max-w-5xl'}`}`}>
                                                     {/* Mobile Swipe Handle */}
                                                     {isMobile && (
                                                         <div className="flex justify-center mb-6">
@@ -576,9 +576,9 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                         </>
                                                     )}
 
-                                                    <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-10 items-center">
+                                                    <div className={`relative z-10 grid grid-cols-1 gap-10 items-center ${selectedGlobeItem.type === 'track' ? '' : 'md:grid-cols-12'}`}>
                                                         {/* Header Section */}
-                                                        <div className="md:col-span-5 border-r border-white/5 pr-10">
+                                                        <div className={`${selectedGlobeItem.type === 'track' ? 'md:col-span-1 text-center' : 'md:col-span-5 border-r border-white/5 pr-10'}`}>
                                                             <div className="flex justify-between items-start mb-6">
                                                                 <div className="flex-1 min-w-0">
                                                                     <div className="flex items-center gap-5">
@@ -590,10 +590,15 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                                             />
                                                                             <div className="absolute inset-0 border border-white/5 pointer-events-none" />
                                                                         </div>
-                                                                        <div className="truncate flex flex-col justify-center">
+                                                                        <div className={`truncate flex flex-col justify-center ${selectedGlobeItem.type === 'track' && 'items-center text-center'}`}>
                                                                             <div className="text-[20px] font-black tracking-tight text-white uppercase leading-none truncate">
-                                                                                {selectedGlobeItem.name || selectedGlobeItem.title}
+                                                                                {selectedGlobeItem.name || selectedGlobeItem.title || selectedGlobeItem.Title}
                                                                             </div>
+                                                                            {selectedGlobeItem.type === 'track' && (
+                                                                                <div className="text-[10px] font-bold text-white/40 tracking-[0.2em] uppercase mt-1">
+                                                                                    {selectedGlobeItem.artist || selectedGlobeItem.artistName || selectedGlobeItem.ArtistName || 'UNKNOWN_ARTIST'}
+                                                                                </div>
+                                                                            )}
                                                                             <div className="text-[9px] text-[#ff006e] font-bold tracking-[0.4em] uppercase mt-3 flex items-center gap-2 whitespace-nowrap">
                                                                                 <Activity size={10} /> 
                                                                                 <span className="leading-none">
@@ -644,64 +649,66 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                             </div>
                                                         </div>
 
-                                                        {/* Dynamic Membership / Signal Section */}
-                                                        <div className="md:col-span-7">
-                                                            <div className="text-[8px] text-white/40 font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
-                                                                {selectedGlobeItem.type === 'community' ? (
-                                                                    <><Users size={10} /> ARTIST_MEMBERS / CLIQUE_ROSTER</>
-                                                                ) : (
-                                                                    <><Zap size={10} /> SIGNAL_SHARES / TOP_MEDIA</>
-                                                                )}
-                                                            </div>
-                                                            
-                                                            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-                                                                {selectedGlobeItem.type === 'community' ? (
-                                                                    // COMMUNITY: Show Member Artists
-                                                                    trendingArtists.filter(a => String(a.communityId || a.CommunityId) === String(selectedGlobeItem.id)).slice(0, 8).map((a, i) => (
-                                                                        <div key={i} className="flex flex-col items-center gap-2 shrink-0 group/member cursor-pointer" onClick={() => navigateToProfile(a.userId || a.UserId)}>
-                                                                            <div className="w-14 h-14 rounded-full border border-white/10 overflow-hidden group-hover/member:border-[#ff006e] transition-colors bg-white/5">
-                                                                                <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale group-hover/member:grayscale-0 transition-all" />
+                                                        {/* Dynamic Membership / Signal Section - Only for Hubs and Artists */}
+                                                        {selectedGlobeItem.type !== 'track' && (
+                                                            <div className="md:col-span-7">
+                                                                <div className="text-[8px] text-white/40 font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                                    {selectedGlobeItem.type === 'community' ? (
+                                                                        <><Users size={10} /> ARTIST_MEMBERS / CLIQUE_ROSTER</>
+                                                                    ) : (
+                                                                        <><Zap size={10} /> SIGNAL_SHARES / TOP_MEDIA</>
+                                                                    )}
+                                                                </div>
+                                                                
+                                                                <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+                                                                    {selectedGlobeItem.type === 'community' ? (
+                                                                        // COMMUNITY: Show Member Artists
+                                                                        trendingArtists.filter(a => String(a.communityId || a.CommunityId) === String(selectedGlobeItem.id)).slice(0, 8).map((a, i) => (
+                                                                            <div key={i} className="flex flex-col items-center gap-2 shrink-0 group/member cursor-pointer" onClick={() => navigateToProfile(a.userId || a.UserId)}>
+                                                                                <div className="w-14 h-14 rounded-full border border-white/10 overflow-hidden group-hover/member:border-[#ff006e] transition-colors bg-white/5">
+                                                                                    <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale group-hover/member:grayscale-0 transition-all" />
+                                                                                </div>
+                                                                                <span className="text-[7px] font-bold text-white/60 tracking-wider uppercase group-hover/member:text-white">{a.name || a.Name}</span>
                                                                             </div>
-                                                                            <span className="text-[7px] font-bold text-white/60 tracking-wider uppercase group-hover/member:text-white">{a.name || a.Name}</span>
-                                                                        </div>
-                                                                    ))
-                                                                ) : (
-                                                                    // ARTIST: Show Signal Previews
-                                                                    visualUploads.filter(v => {
-                                                                        const artistId = selectedGlobeItem.type === 'track' 
-                                                                            ? (selectedGlobeItem.artistId || selectedGlobeItem.ArtistId)
-                                                                            : (selectedGlobeItem.userId || selectedGlobeItem.UserId || selectedGlobeItem.id || selectedGlobeItem.Id);
-                                                                        
-                                                                        const uploadArtistId = v.userId || v.UserId || v.artistId || v.ArtistId;
-                                                                        
-                                                                        const artistName = (selectedGlobeItem.type === 'track' 
-                                                                            ? (selectedGlobeItem.artist || selectedGlobeItem.artistName)
-                                                                            : (selectedGlobeItem.name || selectedGlobeItem.Name)) || '';
+                                                                        ))
+                                                                    ) : (
+                                                                        // ARTIST: Show Signal Previews
+                                                                        visualUploads.filter(v => {
+                                                                            const artistId = selectedGlobeItem.type === 'track' 
+                                                                                ? (selectedGlobeItem.artistId || selectedGlobeItem.ArtistId)
+                                                                                : (selectedGlobeItem.userId || selectedGlobeItem.UserId || selectedGlobeItem.id || selectedGlobeItem.Id);
                                                                             
-                                                                        const uploadArtistName = (v.artist || v.Artist || '').toLowerCase();
-                                                                        
-                                                                        // Strict matching: If names are present and different, don't show
-                                                                        if (artistName && uploadArtistName && artistName.toLowerCase() !== uploadArtistName) return false;
-                                                                        
-                                                                        return (String(uploadArtistId) === String(artistId)) || (artistName && artistName.toLowerCase() === uploadArtistName);
-                                                                    }).slice(0, 5).map((v, i) => (
-                                                                        <div key={i} className="w-32 h-20 bg-black border border-white/10 shrink-0 relative group/img overflow-hidden rounded-sm">
-                                                                            <img src={resolveThumbnail(v)} alt="" className="w-full h-full object-cover opacity-60 group-hover/img:opacity-100 transition-opacity" />
-                                                                            <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60" />
-                                                                            <div className="absolute bottom-2 left-2 right-2 flex justify-between items-end">
-                                                                                <span className="text-[7px] font-black truncate uppercase leading-none">{v.title}</span>
-                                                                                <div className="p-1 bg-white/10 rounded-full"><Camera size={8} /></div>
+                                                                            const uploadArtistId = v.userId || v.UserId || v.artistId || v.ArtistId;
+                                                                            
+                                                                            const artistName = (selectedGlobeItem.type === 'track' 
+                                                                                ? (selectedGlobeItem.artist || selectedGlobeItem.artistName)
+                                                                                : (selectedGlobeItem.name || selectedGlobeItem.Name)) || '';
+                                                                                
+                                                                            const uploadArtistName = (v.artist || v.Artist || '').toLowerCase();
+                                                                            
+                                                                            // Strict matching: If names are present and different, don't show
+                                                                            if (artistName && uploadArtistName && artistName.toLowerCase() !== uploadArtistName) return false;
+                                                                            
+                                                                            return (String(uploadArtistId) === String(artistId)) || (artistName && artistName.toLowerCase() === uploadArtistName);
+                                                                        }).slice(0, 5).map((v, i) => (
+                                                                            <div key={i} className="w-32 h-20 bg-black border border-white/10 shrink-0 relative group/img overflow-hidden rounded-sm">
+                                                                                <img src={resolveThumbnail(v)} alt="" className="w-full h-full object-cover opacity-60 group-hover/img:opacity-100 transition-opacity" />
+                                                                                <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60" />
+                                                                                <div className="absolute bottom-2 left-2 right-2 flex justify-between items-end">
+                                                                                    <span className="text-[7px] font-black truncate uppercase leading-none">{v.title}</span>
+                                                                                    <div className="p-1 bg-white/10 rounded-full"><Camera size={8} /></div>
+                                                                                </div>
                                                                             </div>
-                                                                        </div>
-                                                                    ))
-                                                                )}
+                                                                        ))
+                                                                    )}
 
-                                                                {/* Edge Case Fallbacks */}
-                                                                {selectedGlobeItem.type === 'community' && trendingArtists.filter(a => String(a.communityId || a.CommunityId) === String(selectedGlobeItem.id)).length === 0 && (
-                                                                    <div className="text-[9px] text-white/10 font-bold tracking-[0.2em] italic uppercase py-6">No neural signals detected in this cluster...</div>
-                                                                )}
+                                                                    {/* Edge Case Fallbacks */}
+                                                                    {selectedGlobeItem.type === 'community' && trendingArtists.filter(a => String(a.communityId || a.CommunityId) === String(selectedGlobeItem.id)).length === 0 && (
+                                                                        <div className="text-[9px] text-white/10 font-bold tracking-[0.2em] italic uppercase py-6">No neural signals detected in this cluster...</div>
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                        </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </motion.div>
