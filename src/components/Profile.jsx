@@ -220,16 +220,15 @@ const ProfileIdentityHeader = ({
     );
 };
 
-const AudioSignalsWidget = ({ tracks, playlists, isExpanded, onToggleExpand, onPlayTrack, onPlayPlaylist, isMe, onUpload }) => {
+const AudioSignalsWidget = ({ tracks, isExpanded, onToggleExpand, onPlayTrack, isMe, onUpload }) => {
     const [subTab, setSubTab] = useState('All');
 
     const allItems = [
-        ...tracks.map(t => ({ ...t, _type: 'track' })),
-        ...playlists.map(p => ({ ...p, _type: 'playlist' }))
+        ...tracks.map(t => ({ ...t, _type: 'track' }))
     ];
 
     const filtered = subTab === 'All' ? allItems :
-        subTab === 'albums' ? allItems.filter(i => i._type === 'playlist') :
+        subTab === 'albums' ? [] :
         allItems.filter(i => i._type === 'track');
 
     return (
@@ -338,7 +337,8 @@ const DisplayWallGrid = ({ tracks, gallery, journal, playlists, uid, onExpand, o
     if (Array.isArray(gallery)) {
         gallery.filter(c => String(c.UserId || c.userId) === String(uid)).forEach(c => {
             if (isTruthy(c.IsPosted || c.isPosted)) {
-                items.push({ id: c.id || c.Id, type: c.type || c.Type, title: c.title || c.Title, url: c.url || c.Url, original: c });
+                const thumb = c.thumbnailUrl || c.ThumbnailUrl || c.coverImageUrl || c.CoverImageUrl || c.url || c.Url;
+                items.push({ id: c.id || c.Id, type: c.type || c.Type, title: c.title || c.Title, url: thumb, original: c });
             }
         });
     }
@@ -369,16 +369,11 @@ const DisplayWallGrid = ({ tracks, gallery, journal, playlists, uid, onExpand, o
                     className="aspect-square relative overflow-hidden border border-white/5 hover:border-[var(--text-color)]/50 bg-black/40 cursor-pointer group transition-all"
                     onClick={() => onExpand({ ...item.original, type: item.type }, item.type)}
                 >
-                    {item.type === 'VIDEO' ? (
-                        <div className="w-full h-full flex flex-col items-center justify-center bg-black/80">
-                            <Video size={28} strokeWidth={1} className="text-cyan-400/60" />
-                            <div className="mt-1 text-[6px] mono text-cyan-400/40 uppercase tracking-widest">VIDEO</div>
-                        </div>
-                    ) : item.url ? (
+                    {item.url && (item.type === 'VIDEO' || item.type === 'PHOTO' || item.type === 'TRACK' || item.type === 'PLAYLIST') ? (
                         <img src={getMediaUrl(item.url)} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" />
                     ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-[var(--text-color)]/20">
-                            {item.type === 'JOURNAL' ? <Book size={20} /> : item.type === 'PLAYLIST' ? <Database size={20} /> : <Music size={20} />}
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-black/80">
+                            {item.type === 'VIDEO' ? <Video size={28} strokeWidth={1} className="text-cyan-400/60" /> : <Music size={28} className="text-[var(--text-color)]/20" />}
                         </div>
                     )}
 
@@ -407,6 +402,44 @@ const DisplayWallGrid = ({ tracks, gallery, journal, playlists, uid, onExpand, o
         </div>
     );
 };
+
+const SequenceMapWidget = ({ playlists, onPlay, isMe, onNew }) => (
+    <HUDWidget title="SEQUENCE_MAPS" icon={Database}>
+        <div className="space-y-1">
+            {isMe && (
+                <button onClick={onNew} className="w-full py-2 mb-2 border border-dashed border-cyan-400/20 text-cyan-400/40 hover:text-cyan-400 hover:border-cyan-400/40 transition-all text-[8px] mono uppercase tracking-[.3em]">
+                    + NEW_SEQUENCE
+                </button>
+            )}
+            {playlists.length > 0 ? playlists.map((p, idx) => (
+                <div 
+                    key={p.id || idx} 
+                    className="group border border-white/5 bg-black/40 p-2 hover:border-cyan-400/30 transition-all cursor-pointer flex items-center gap-3"
+                    onClick={() => onPlay(p)}
+                >
+                    <div className="w-8 h-8 bg-black border border-white/10 overflow-hidden shrink-0">
+                        {p.imageUrl || p.ImageUrl ? (
+                            <img src={getMediaUrl(p.imageUrl || p.ImageUrl)} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-white/10"><Music size={14} /></div>
+                        )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <div className="text-[9px] font-black text-white/80 uppercase tracking-widest truncate group-hover:text-cyan-400 transition-colors">
+                            {p.name || p.Name || 'UNTITLED_MAP'}
+                        </div>
+                        <div className="text-[6px] mono text-white/30 uppercase tracking-widest">
+                            {(p.tracks || p.Tracks || []).length} SIGNALS // SYNC_LOADED
+                        </div>
+                    </div>
+                    <Play size={10} className="text-white/10 group-hover:text-cyan-400 transition-colors" />
+                </div>
+            )) : (
+                <div className="text-[8px] mono text-white/20 italic p-2 text-center">// NO_SEQUENCES_FOUND</div>
+            )}
+        </div>
+    </HUDWidget>
+);
 
 const EntityMetadataWidget = ({ user, sectorName, sectorColor }) => (
     <HUDWidget title="ENTITY_METADATA" icon={Cpu}>
@@ -607,8 +640,8 @@ export const ProfileView = React.memo(({
     const displayUser = isMe ? currentUser : profileData;
 
     const sector = SECTORS.find(s => s.id === (displayUser?.residentSectorId || displayUser?.ResidentSectorId || 0));
-    const communityName = sector?.name;
-    const communityColor = sector?.color;
+    const communityName = (displayUser?.communityName || displayUser?.CommunityName) || 'N/A';
+    const communityColor = (displayUser?.communityColor || displayUser?.CommunityColor) || sector?.color;
 
     const [localStatus, setLocalStatus] = useState(displayUser?.statusMessage || displayUser?.StatusMessage || '');
     const [isSavingStatus, setIsSavingStatus] = useState(false);
@@ -1198,14 +1231,21 @@ export const ProfileView = React.memo(({
                 try {
                     setIsLoadingJournal(true);
                     setIsLoadingGallery(true);
-                    const [jRes, gRes, sRes, fvRes] = await Promise.all([
+                    const [jRes, gRes, sRes, fvRes, pRes] = await Promise.all([
                         isMe ? API.Journal.getMyJournal().catch(() => ({ data: [] })) : API.Journal.getUserJournal(effectiveId).catch(() => ({ data: [] })),
                         isMe ? API.Studio.getMyGallery().catch(() => ({ data: [] })) : API.Studio.getUserGallery(effectiveId).catch(() => ({ data: [] })),
                         API.Stations.getByUserId(effectiveId).catch(() => ({ data: null })),
-                        API.Stations.getFavorites().catch(() => ({ data: [] }))
+                        API.Stations.getFavorites().catch(() => ({ data: [] })),
+                        API.Playlists.getUserPlaylists(effectiveId).catch(() => ({ data: [] }))
                     ]);
                     setProfileJournal(jRes.data || []);
                     setProfileGallery(gRes.data || []);
+                    setProfilePlaylists((pRes.data || []).map(p => ({
+                        ...p,
+                        id: p.id || p.Id,
+                        name: p.name || p.Name,
+                        imageUrl: p.imageUrl || p.ImageUrl
+                    })));
                     setIsLoadingJournal(false);
                     setIsLoadingGallery(false);
                     setStationData(sRes.data);
@@ -1299,13 +1339,17 @@ export const ProfileView = React.memo(({
                     <div className={`w-full lg:w-[320px] shrink-0 flex flex-col gap-4 ${mobileView !== 'STREAM' ? 'hidden lg:flex' : 'flex'}`}>
                         <AudioSignalsWidget
                             tracks={profileTracks}
-                            playlists={profilePlaylists}
                             isExpanded={true}
                             onToggleExpand={null}
                             onPlayTrack={onPlayTrack}
-                            onPlayPlaylist={(p) => onPlayPlaylist(p.tracks || [], 0)}
                             isMe={isMe}
                             onUpload={() => setShowGlobalUpload(true)}
+                        />
+                        <SequenceMapWidget 
+                            playlists={profilePlaylists}
+                            onPlay={(p) => onPlayPlaylist(p.tracks || [], 0)}
+                            isMe={isMe}
+                            onNew={() => setShowCreatePlaylist(true)}
                         />
                         <JournalWidget 
                             entries={profileJournal} 
