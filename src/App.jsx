@@ -2247,13 +2247,40 @@ const Dashboard = React.memo(({
                   onRefreshProfile={onRefreshProfile}
                   onRefreshTracks={onRefreshTracks}
                   onLike={onLike}
-                  onPurchase={onPurchase}
-                  onDownload={onDownload}
-                  onModifyId={onModifyId}
-                  onGoLive={onGoLive}
-                  onUpload={onUpload}
+                  navigateToProfile={navigateToProfile}
+                  onPlayPlaylist={handlePlayPlaylist}
+                  onPlayTrack={(track) => {
+                    const tId = track.id || track.Id;
+                    const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
+                    const pureYtId = getGlobalYoutubeId(track);
+                    const isYoutube = !!pureYtId;
+                    const sourceStr = isYoutube ? `youtube:${pureYtId}` : (rawSource || "");
+                    const enriched = {
+                      ...track,
+                      id: tId,
+                      source: isYoutube ? sourceStr : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null),
+                      isLiked: isYoutube ? likedYoutubeIds.has(pureYtId) : (track.isLiked || track.IsLiked),
+                      isOwned: true,
+                      isLocked: false
+                    };
+                    setTracks([enriched]);
+                    setCurrentTrackIndex(0);
+                    setIsPlaying(true);
+                    if (isYoutube) setIsYoutubeMode(true);
+                  }}
+                  activeStation={activeStation}
+                  stationChat={stationChat}
+                  stationQueue={stationQueue}
+                  isPlaying={isPlaying}
                   onExitProfile={() => setView('discovery')}
+                  onMessageUser={(u) => { setActiveMessageUser(u); setView('messages'); }}
+                  setActiveStation={setActiveStation}
+                  setShowGlobalGoLive={setShowGlobalGoLive}
+                  setShowGlobalUpload={setShowGlobalUpload}
+                  setShowGlobalIngest={setShowGlobalIngest}
+                  onExpandContent={onExpandContent}
                   onThemeChange={handleProfileThemeChange}
+                  hasMiniPlayer={currentTrackIndex >= 0}
                 />
               </motion.div>
             )}
