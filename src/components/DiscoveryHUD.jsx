@@ -602,7 +602,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                                             <div className="text-[9px] text-[#ff006e] font-bold tracking-[0.4em] uppercase mt-3 flex items-center gap-2 whitespace-nowrap">
                                                                                 <Activity size={10} /> 
                                                                                 <span className="leading-none">
-                                                                                    {selectedGlobeItem.type === 'track' ? 'SIGNAL_BROADCAST' : 
+                                                                                    {selectedGlobeItem.type === 'track' ? 'SIGNAL_BROADCAST_v2' : 
                                                                                      selectedGlobeItem.type === 'community' ? 'NEURAL_CLUSTER' : 
                                                                                      'ARTIST_IDENTITY'}
                                                                                 </span>
