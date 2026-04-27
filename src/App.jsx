@@ -2052,14 +2052,36 @@ const Dashboard = React.memo(({
           className={`cursor-pointer flex flex-col justify-center items-center transition-all group ${isSidebarCollapsed ? 'p-4' : 'p-6'}`}
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         >
-          <div 
-            className={`system-skull transition-all duration-300 pointer-events-none select-none animate-beat-pulse ${isSidebarCollapsed ? 'w-11 h-11' : 'w-20 h-20'}`}
-            style={{ 
-              WebkitMaskImage: `url(${skullImg})`, 
-              maskImage: `url(${skullImg})`,
-              filter: `drop-shadow(0 0 ${isSidebarCollapsed ? '8px' : '12px'} var(--theme-color))` 
-            }}
-          />
+          <div className="relative w-20 h-20 flex items-center justify-center overflow-hidden">
+            <div 
+              className={`transition-all duration-300 pointer-events-none select-none animate-beat-pulse ${isSidebarCollapsed ? 'w-11 h-11' : 'w-20 h-20'} flex items-center justify-center`}
+              style={{ mixBlendMode: 'screen' }}
+            >
+              <div 
+                className="w-full h-full flex items-center justify-center"
+                style={{ backgroundColor: 'var(--theme-color)' }}
+              >
+                <img
+                  src={skullImg}
+                  alt="System Kernel"
+                  className="w-full h-full object-contain"
+                  style={{ 
+                    filter: 'grayscale(1) brightness(5) contrast(10)', 
+                    mixBlendMode: 'multiply' 
+                  }}
+                />
+              </div>
+            </div>
+            {/* Ambient Glow */}
+            <div 
+              className="absolute inset-0 pointer-events-none transition-opacity duration-300"
+              style={{ 
+                background: `radial-gradient(circle at center, var(--theme-color) 0%, transparent 70%)`,
+                opacity: 0.2,
+                filter: 'blur(10px)'
+              }}
+            />
+          </div>
         </div>
 
         <nav className="flex-1 space-y-3 p-4">
