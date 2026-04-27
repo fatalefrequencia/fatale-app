@@ -2052,33 +2052,35 @@ const Dashboard = React.memo(({
           className={`cursor-pointer flex flex-col justify-center items-center transition-all group ${isSidebarCollapsed ? 'p-4' : 'p-6'}`}
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         >
-          <div className="relative w-24 h-24 flex items-center justify-center">
-            {/* The Tinted Skull - Use a masked DIV for perfect linework */}
-            <div 
-              className={`transition-all duration-300 pointer-events-none select-none animate-subsystem-pulse ${isSidebarCollapsed ? 'w-10 h-10' : 'w-18 h-18'}`}
-              style={{ 
-                backgroundColor: 'var(--theme-color)',
-                WebkitMaskImage: `url(${skullImg})`,
-                WebkitMaskSize: 'contain',
-                WebkitMaskRepeat: 'no-repeat',
-                WebkitMaskPosition: 'center',
-                maskImage: `url(${skullImg})`,
-                maskSize: 'contain',
-                maskRepeat: 'no-repeat',
-                maskPosition: 'center',
-                /* Filter here follows the mask shape */
-                filter: 'drop-shadow(0 0 8px var(--theme-color))'
-              }}
-            />
+          <div className="relative w-20 h-20 flex items-center justify-center">
+            {/* Base White Skull - Thin and sharp */}
+            <div className={`relative transition-all duration-300 pointer-events-none select-none animate-subsystem-pulse ${isSidebarCollapsed ? 'w-10 h-10' : 'w-18 h-18'} flex items-center justify-center`}>
+              <img
+                src={skullImg}
+                alt="System Kernel"
+                className="absolute inset-0 w-full h-full object-contain"
+                style={{ 
+                  filter: 'grayscale(1) brightness(3) contrast(1.5)', 
+                }}
+              />
+              {/* Theme Color Multiply Layer - Tints only the white skull bits */}
+              <div 
+                className="absolute inset-0 w-full h-full pointer-events-none"
+                style={{ 
+                  backgroundColor: 'var(--theme-color)',
+                  mixBlendMode: 'multiply',
+                }}
+              />
+            </div>
             
-            {/* Ambient Glow - Very soft, non-boxed */}
+            {/* Ambient Glow - Soft and deep */}
             <div 
-              className="absolute inset-0 pointer-events-none transition-all duration-1000 rounded-full animate-pulse"
+              className="absolute inset-0 pointer-events-none transition-all duration-1000 rounded-full"
               style={{ 
                 backgroundColor: 'var(--theme-color)',
-                opacity: 0.05,
-                filter: 'blur(40px)',
-                transform: 'scale(1.8)',
+                opacity: 0.04,
+                filter: 'blur(30px)',
+                transform: 'scale(1.6)',
                 zIndex: -1
               }}
             />
