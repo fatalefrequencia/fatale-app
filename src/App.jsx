@@ -2053,38 +2053,41 @@ const Dashboard = React.memo(({
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         >
           <div className="relative w-20 h-20 flex items-center justify-center">
-            {/* The Tinted Skull System */}
+            {/* The Tinted Skull System - Refined for thin lines */}
             <div 
-              className={`relative transition-all duration-300 pointer-events-none select-none animate-subsystem-pulse ${isSidebarCollapsed ? 'w-11 h-11' : 'w-20 h-20'} flex items-center justify-center bg-black overflow-hidden`}
+              className={`relative transition-all duration-300 pointer-events-none select-none ${isSidebarCollapsed ? 'w-11 h-11' : 'w-20 h-20'} flex items-center justify-center bg-black overflow-hidden`}
               style={{ borderRadius: '4px' }}
             >
-              {/* Step 1: The white skull base */}
-              <img
-                src={skullImg}
-                alt="System Kernel"
-                className="absolute inset-0 w-full h-full object-contain"
-                style={{ 
-                  filter: 'grayscale(1) brightness(20) contrast(10)', 
-                }}
-              />
-              {/* Step 2: The Color Multiply Layer */}
-              <div 
-                className="absolute inset-0 w-full h-full"
-                style={{ 
-                  backgroundColor: 'var(--theme-color)',
-                  mixBlendMode: 'multiply'
-                }}
-              />
+              {/* Pulse wrapper - Affects scale without thickening lines via shadow */}
+              <div className="w-full h-full animate-subsystem-pulse flex items-center justify-center">
+                {/* Step 1: The white skull base - Lower contrast to keep lines sharp */}
+                <img
+                  src={skullImg}
+                  alt="System Kernel"
+                  className="absolute inset-0 w-full h-full object-contain p-1"
+                  style={{ 
+                    filter: 'grayscale(1) brightness(1.5) contrast(1.2)', 
+                  }}
+                />
+                {/* Step 2: The Color Multiply Layer */}
+                <div 
+                  className="absolute inset-0 w-full h-full"
+                  style={{ 
+                    backgroundColor: 'var(--theme-color)',
+                    mixBlendMode: 'multiply'
+                  }}
+                />
+              </div>
             </div>
             
-            {/* Ambient Glow */}
+            {/* Ambient Glow - Softened and separated */}
             <div 
-              className="absolute inset-0 pointer-events-none transition-all duration-700 rounded-full"
+              className="absolute inset-0 pointer-events-none transition-all duration-1000 rounded-full animate-pulse"
               style={{ 
                 backgroundColor: 'var(--theme-color)',
-                opacity: 0.1,
-                filter: 'blur(30px)',
-                transform: 'scale(1.4)',
+                opacity: 0.08,
+                filter: 'blur(35px)',
+                transform: 'scale(1.6)',
                 zIndex: -1
               }}
             />
