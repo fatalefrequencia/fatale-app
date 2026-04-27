@@ -96,9 +96,11 @@
         -webkit-mask-size: contain;
         -webkit-mask-repeat: no-repeat;
         -webkit-mask-position: center;
+        -webkit-mask-mode: luminance;
         mask-size: contain;
         mask-repeat: no-repeat;
         mask-position: center;
+        mask-mode: luminance;
         transition: background-color 0.7s ease, filter 0.7s ease;
     }
 
