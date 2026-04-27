@@ -408,7 +408,115 @@ const DisplayWallGrid = ({ tracks, gallery, journal, playlists, uid, onExpand, o
     );
 };
 
-// --- VISTA: PERFIL (DISEÃ‘O SLAVA KORNILOV) ---
+const EntityMetadataWidget = ({ user, sectorName, sectorColor }) => (
+    <HUDWidget title="ENTITY_METADATA" icon={Cpu}>
+        <div className="space-y-4">
+            <div className="p-3 border border-white/5 bg-black/40 relative">
+                 <div className="absolute top-0 right-0 p-1">
+                    <Database size={8} className="text-[var(--text-color)]/20" />
+                 </div>
+                <div className="text-[7px] mono text-white/30 uppercase tracking-[0.2em] mb-1">// BIOGRAPHY</div>
+                <div className="text-[10px] text-white/80 leading-relaxed font-medium">
+                    {user?.biography || user?.Biography || 'SIGNAL_DEVOID_OF_METADATA'}
+                </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+                <StatItem label="SCANS" value={Math.floor(Math.random() * 10000)} />
+                <StatItem label="FREQ" value={user?.id || user?.Id || '0000'} />
+            </div>
+            {sectorName && (
+                <div className="flex items-center gap-2 p-2 border border-[var(--text-color)]/10 bg-black/60">
+                    <MapPin size={10} style={{ color: sectorColor }} />
+                    <span className="text-[8px] mono uppercase tracking-widest font-black" style={{ color: sectorColor }}>
+                        {sectorName}
+                    </span>
+                </div>
+            )}
+        </div>
+    </HUDWidget>
+);
+
+const JournalWidget = ({ entries, onExpand, isMe, onNew }) => (
+    <HUDWidget title="FREQ_JOURNAL" icon={Book}>
+        <div className="space-y-1">
+            {isMe && (
+                <button onClick={onNew} className="w-full py-2 mb-2 border border-dashed border-[var(--text-color)]/20 text-[var(--text-color)]/40 hover:text-[var(--text-color)] hover:border-[var(--text-color)]/40 transition-all text-[8px] mono uppercase tracking-[.3em]">
+                    + NEW_LOG_ENTRY
+                </button>
+            )}
+            {entries.length > 0 ? entries.map((entry, idx) => (
+                <div 
+                    key={entry.id || idx} 
+                    onClick={() => onExpand({ ...entry, type: 'JOURNAL' }, 'JOURNAL')}
+                    className="group flex flex-col p-2 border border-white/5 hover:border-[var(--text-color)]/20 bg-black/20 cursor-pointer transition-all"
+                >
+                    <div className="flex justify-between items-center mb-1">
+                        <span className="text-[9px] font-black text-white/80 uppercase group-hover:text-[var(--text-color)] transition-colors truncate">
+                            {entry.title || entry.Title || 'UNTITLED_LOG'}
+                        </span>
+                        <span className="text-[6px] mono text-white/20">
+                            {new Date(entry.createdAt || entry.CreatedAt).toLocaleDateString()}
+                        </span>
+                    </div>
+                </div>
+            )) : (
+                <div className="text-[8px] mono text-white/20 italic p-2 text-center">// NO_LOGS_FOUND</div>
+            )}
+        </div>
+    </HUDWidget>
+);
+
+const VisualArchiveWidget = ({ gallery, onExpand, isMe, onIngest }) => (
+    <HUDWidget title="VISUAL_ARCHIVE" icon={Camera}>
+        <div className="grid grid-cols-2 gap-1.5">
+            {(gallery || []).slice(0, 7).map((item, i) => (
+                <div 
+                    key={item.id || i}
+                    onClick={() => onExpand(item, item.type || item.Type || 'PHOTO')}
+                    className="aspect-square border border-white/5 bg-black/40 relative group cursor-pointer overflow-hidden"
+                >
+                    <img src={getMediaUrl(item.url || item.Url)} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
+                        <Maximize2 size={12} className="text-white" />
+                    </div>
+                </div>
+            ))}
+            {isMe && (
+                <button onClick={onIngest} className="aspect-square border border-dashed border-white/10 flex flex-col items-center justify-center gap-1 hover:border-[var(--text-color)]/40 hover:bg-[var(--text-color)]/5 transition-all group">
+                    <Plus size={14} className="text-white/20 group-hover:text-[var(--text-color)]" />
+                    <span className="text-[6px] mono text-white/10 group-hover:text-[var(--text-color)] uppercase tracking-widest">INGEST</span>
+                </button>
+            )}
+        </div>
+    </HUDWidget>
+);
+
+const GearRackWidget = ({ gear, isMe, onAdd }) => (
+    <HUDWidget title="GEAR_RACK" icon={Zap}>
+        <div className="space-y-1">
+            {isMe && (
+                <button onClick={onAdd} className="w-full py-2 mb-2 border border-dashed border-white/10 text-white/20 hover:text-[var(--theme-color)] hover:border-[var(--theme-color)]/30 transition-all text-[8px] mono uppercase tracking-[.3em]">
+                    + REGISTER_HARDWARE
+                </button>
+            )}
+            {(gear || []).length > 0 ? (gear || []).map((item, idx) => (
+                <div key={idx} className="p-2 border border-white/5 bg-black/20 flex gap-3 items-center group">
+                    <div className="w-7 h-7 rounded bg-white/5 flex items-center justify-center text-white/20 group-hover:bg-[var(--theme-color)]/10 group-hover:text-[var(--theme-color)] transition-all">
+                        <Processor size={12} />
+                    </div>
+                    <div>
+                        <div className="text-[9px] font-black text-white/70 uppercase tracking-wider">{item.name}</div>
+                        <div className="text-[6px] mono text-[var(--theme-color)]/60 uppercase">{item.category}</div>
+                    </div>
+                </div>
+            )) : (
+                <div className="text-[8px] mono text-white/20 italic p-2 text-center">// NO_GEAR_DETECTED</div>
+            )}
+        </div>
+    </HUDWidget>
+);
+
+// --- VISTA: PERFIL ---
 export const ProfileView = React.memo(({
     user: currentUser, tracks: allTracks, onLogout, onAddCredits, onRefreshProfile, onRefreshTracks,
     targetUserId,
@@ -1187,8 +1295,8 @@ export const ProfileView = React.memo(({
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-4 flex-1">
-                    {/* LEFTSIDE: DATA STREAM */}
-                    <div className={`w-full lg:w-[340px] shrink-0 flex flex-col gap-4 ${mobileView !== 'STREAM' ? 'hidden lg:flex' : 'flex'}`}>
+                    {/* LEFT COLUMN: AUDIO & JOURNALS */}
+                    <div className={`w-full lg:w-[320px] shrink-0 flex flex-col gap-4 ${mobileView !== 'STREAM' ? 'hidden lg:flex' : 'flex'}`}>
                         <AudioSignalsWidget
                             tracks={profileTracks}
                             playlists={profilePlaylists}
@@ -1199,13 +1307,21 @@ export const ProfileView = React.memo(({
                             isMe={isMe}
                             onUpload={() => setShowGlobalUpload(true)}
                         />
+                        <JournalWidget 
+                            entries={profileJournal} 
+                            onExpand={handleItemClick} 
+                            isMe={isMe} 
+                            onNew={() => setShowJournalForm(true)} 
+                        />
                     </div>
 
-                    {/* RIGHTSIDE: DISPLAY WALL */}
+                    {/* CENTER COLUMN: DISPLAY WALL */}
                     <div className={`flex-1 min-w-0 flex flex-col gap-4 ${mobileView !== 'WALL' ? 'hidden lg:flex' : 'flex'}`}>
-                        <div className="border border-[var(--text-color)]/20 p-4 bg-black/40 backdrop-blur-md min-h-[400px]">
-                            <div className="text-[10px] mono text-[var(--text-color)]/60 uppercase tracking-[0.4em] mb-4 pb-2 border-b border-[var(--text-color)]/10 font-bold">
-                                // CORE_DISPLAY_GRID
+                        <div className="border border-[var(--text-color)]/20 p-4 bg-black/40 backdrop-blur-md min-h-[600px] relative">
+                            <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[var(--text-color)]/30 -translate-x-1 -translate-y-1" />
+                            <div className="text-[10px] mono text-[var(--text-color)]/60 uppercase tracking-[0.4em] mb-4 pb-2 border-b border-[var(--text-color)]/10 font-bold flex justify-between items-center">
+                                <span>// CORE_DISPLAY_GRID</span>
+                                <span className="text-[8px] opacity-40">Z-AXIS::ENABLED</span>
                             </div>
                             <DisplayWallGrid
                                 tracks={profileTracks}
@@ -1218,6 +1334,26 @@ export const ProfileView = React.memo(({
                                 onPlayPlaylist={(p) => onPlayPlaylist(p.tracks || [], 0)}
                             />
                         </div>
+                    </div>
+
+                    {/* RIGHT COLUMN: METADATA & ARCHIVE */}
+                    <div className={`w-full lg:w-[320px] shrink-0 flex flex-col gap-4 ${mobileView !== 'STREAM' ? 'hidden lg:flex' : 'flex'}`}>
+                        <EntityMetadataWidget 
+                            user={displayUser} 
+                            sectorName={communityName} 
+                            sectorColor={communityColor} 
+                        />
+                        <VisualArchiveWidget 
+                            gallery={profileGallery} 
+                            onExpand={handleItemClick} 
+                            isMe={isMe} 
+                            onIngest={() => setShowGlobalIngest(true)} 
+                        />
+                        <GearRackWidget 
+                            gear={profileGear} 
+                            isMe={isMe} 
+                            onAdd={() => setShowGearForm(true)} 
+                        />
                     </div>
                 </div>
             </div>
