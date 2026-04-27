@@ -2053,33 +2053,38 @@ const Dashboard = React.memo(({
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         >
           <div className="relative w-20 h-20 flex items-center justify-center">
+            {/* The Tinted Skull System */}
             <div 
-              className={`transition-all duration-300 pointer-events-none select-none animate-subsystem-pulse ${isSidebarCollapsed ? 'w-11 h-11' : 'w-20 h-20'}`}
+              className={`relative transition-all duration-300 pointer-events-none select-none animate-subsystem-pulse ${isSidebarCollapsed ? 'w-11 h-11' : 'w-20 h-20'} flex items-center justify-center bg-black overflow-hidden`}
+              style={{ borderRadius: '4px' }}
             >
+              {/* Step 1: The white skull base */}
+              <img
+                src={skullImg}
+                alt="System Kernel"
+                className="absolute inset-0 w-full h-full object-contain"
+                style={{ 
+                  filter: 'grayscale(1) brightness(20) contrast(10)', 
+                }}
+              />
+              {/* Step 2: The Color Multiply Layer */}
               <div 
+                className="absolute inset-0 w-full h-full"
                 style={{ 
                   backgroundColor: 'var(--theme-color)',
-                  WebkitMaskImage: `url(${skullImg})`,
-                  WebkitMaskSize: 'contain',
-                  WebkitMaskRepeat: 'no-repeat',
-                  WebkitMaskPosition: 'center',
-                  maskImage: `url(${skullImg})`,
-                  maskSize: 'contain',
-                  maskRepeat: 'no-repeat',
-                  maskPosition: 'center',
-                  width: '100%',
-                  height: '100%'
+                  mixBlendMode: 'multiply'
                 }}
               />
             </div>
-            {/* Ambient Glow - Unclipped */}
+            
+            {/* Ambient Glow */}
             <div 
               className="absolute inset-0 pointer-events-none transition-all duration-700 rounded-full"
               style={{ 
                 backgroundColor: 'var(--theme-color)',
-                opacity: 0.2,
-                filter: 'blur(35px)',
-                transform: 'scale(1.5)',
+                opacity: 0.1,
+                filter: 'blur(30px)',
+                transform: 'scale(1.4)',
                 zIndex: -1
               }}
             />
