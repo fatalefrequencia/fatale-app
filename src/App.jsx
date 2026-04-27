@@ -2052,35 +2052,35 @@ const Dashboard = React.memo(({
           className={`cursor-pointer flex flex-col justify-center items-center transition-all group ${isSidebarCollapsed ? 'p-4' : 'p-6'}`}
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         >
-          <div className="relative w-20 h-20 flex items-center justify-center overflow-hidden">
+          <div className="relative w-20 h-20 flex items-center justify-center">
             <div 
-              className={`transition-all duration-300 pointer-events-none select-none animate-subsystem-pulse ${isSidebarCollapsed ? 'w-11 h-11' : 'w-20 h-20'} flex items-center justify-center`}
+              className={`transition-all duration-300 pointer-events-none select-none animate-subsystem-pulse ${isSidebarCollapsed ? 'w-11 h-11' : 'w-20 h-20'}`}
             >
-                <img
-                  src={skullImg}
-                  alt="System Kernel"
-                  className="w-full h-full object-contain"
-                  style={{ 
-                    backgroundColor: 'var(--theme-color)',
-                    WebkitMaskImage: `url(${skullImg})`,
-                    WebkitMaskSize: 'contain',
-                    WebkitMaskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                    maskImage: `url(${skullImg})`,
-                    maskSize: 'contain',
-                    maskRepeat: 'no-repeat',
-                    maskPosition: 'center'
-                  }}
-                />
+              <div 
+                style={{ 
+                  backgroundColor: 'var(--theme-color)',
+                  WebkitMaskImage: `url(${skullImg})`,
+                  WebkitMaskSize: 'contain',
+                  WebkitMaskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                  maskImage: `url(${skullImg})`,
+                  maskSize: 'contain',
+                  maskRepeat: 'no-repeat',
+                  maskPosition: 'center',
+                  width: '100%',
+                  height: '100%'
+                }}
+              />
             </div>
-            {/* Ambient Glow */}
+            {/* Ambient Glow - Unclipped */}
             <div 
               className="absolute inset-0 pointer-events-none transition-all duration-700 rounded-full"
               style={{ 
                 backgroundColor: 'var(--theme-color)',
-                opacity: 0.15,
-                filter: 'blur(20px)',
-                transform: 'scale(1.2)'
+                opacity: 0.2,
+                filter: 'blur(35px)',
+                transform: 'scale(1.5)',
+                zIndex: -1
               }}
             />
           </div>
