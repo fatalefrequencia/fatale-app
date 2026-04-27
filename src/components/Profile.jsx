@@ -1177,6 +1177,7 @@ export const ProfileView = React.memo(({
                     onMessageClick={onMessageUser}
                     communityName={communityName}
                     communityColor={communityColor}
+                    stationData={stationData}
                 />
 
                 {/* Mobile Tab Toggle */}
