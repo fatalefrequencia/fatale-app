@@ -2056,24 +2056,22 @@ const Dashboard = React.memo(({
             <div 
               className={`transition-all duration-300 pointer-events-none select-none animate-subsystem-pulse ${isSidebarCollapsed ? 'w-11 h-11' : 'w-20 h-20'} flex items-center justify-center`}
             >
-              <div className="w-full h-full flex items-center justify-center">
-                <svg width="0" height="0" style={{ position: 'absolute' }}>
-                  <defs>
-                    <filter id="subsystem-recolor">
-                      <feFlood floodColor="var(--theme-color)" result="flood" />
-                      <feComposite in="flood" in2="SourceAlpha" operator="in" />
-                    </filter>
-                  </defs>
-                </svg>
                 <img
                   src={skullImg}
                   alt="System Kernel"
                   className="w-full h-full object-contain"
                   style={{ 
-                    filter: 'url(#subsystem-recolor)'
+                    backgroundColor: 'var(--theme-color)',
+                    WebkitMaskImage: `url(${skullImg})`,
+                    WebkitMaskSize: 'contain',
+                    WebkitMaskRepeat: 'no-repeat',
+                    WebkitMaskPosition: 'center',
+                    maskImage: `url(${skullImg})`,
+                    maskSize: 'contain',
+                    maskRepeat: 'no-repeat',
+                    maskPosition: 'center'
                   }}
                 />
-              </div>
             </div>
             {/* Ambient Glow */}
             <div 
