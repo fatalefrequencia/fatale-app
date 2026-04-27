@@ -1440,8 +1440,8 @@ export const ProfileView = React.memo(({
     const [panelsVisible, setPanelsVisible] = useState(true);
 
     return (
-        <div className="monitor-shell min-h-screen">
-            <div className={`relative min-h-screen bg-[#050505] overflow-y-auto no-scrollbar`}>
+        <div className="monitor-shell min-h-screen relative bg-[#050505]">
+            <div className="relative min-h-screen overflow-y-auto no-scrollbar">
             {/* Ambient Background layer */}
             {(displayUser?.bannerUrl || displayUser?.BannerUrl || (isMe && showEditProfile && profileData?.previewBannerUrl)) && !(displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl || (isMe && showEditProfile && profileData?.previewWallpaperVideoUrl)) && (
                 <div className="absolute inset-0 z-[-1] opacity-20">
@@ -1494,7 +1494,7 @@ export const ProfileView = React.memo(({
 
                 <div className="flex flex-col lg:flex-row gap-4 flex-1">
                     {/* LEFT COLUMN: AUDIO & JOURNALS */}
-                    <AnimatePresence>
+                    <AnimatePresence mode="popLayout">
                         {panelsVisible && (
                             <motion.div 
                                 initial={{ width: 0, opacity: 0, x: -20 }}
@@ -1555,7 +1555,7 @@ export const ProfileView = React.memo(({
                     </div>
 
                     {/* RIGHT COLUMN: ARCHIVE */}
-                    <AnimatePresence>
+                    <AnimatePresence mode="popLayout">
                         {panelsVisible && (
                             <motion.div 
                                 initial={{ width: 0, opacity: 0, x: 20 }}
@@ -1587,7 +1587,6 @@ export const ProfileView = React.memo(({
                     </AnimatePresence>
                 </div>
             </div>
-        </div>
 
             {/* Global Overlays */}
             <AnimatePresence>
@@ -1616,7 +1615,6 @@ export const ProfileView = React.memo(({
                     </motion.div>
                 )}
                 {
-
                     showEditProfile && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
                             <div className="bg-black border border-[var(--text-color)]/30 p-10 max-w-xl w-full relative shadow-[0_0_60px_rgba(0,0,0,0.8)] rounded-2xl overflow-hidden">
@@ -1691,7 +1689,8 @@ export const ProfileView = React.memo(({
                 }
             </AnimatePresence>
             {!(displayUser?.monitorImageUrl || displayUser?.MonitorImageUrl || (isMe && showEditProfile && profileData?.previewMonitorImageUrl)) && <CRTOverlay />}
-        </>
+            </div>
+        </div>
     );
 });
 
