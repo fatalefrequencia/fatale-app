@@ -89,20 +89,20 @@ const CyberDust = ({ count = 30 }) => (
     </div>
 );
 
-const SignalWaveform = ({ isLive }) => {
+const SignalWaveform = ({ isLive, isProfilePlaying }) => {
     return (
         <div className="w-full h-8 relative flex items-center justify-center overflow-hidden bg-black/40 border-y border-[var(--subsystem-accent)]/10">
             <div className="absolute inset-0 opacity-10 flex items-center justify-center">
                  <div className="w-full h-px bg-[var(--subsystem-accent)]" />
             </div>
-            {isLive ? (
+            {isLive || isProfilePlaying ? (
                 <div className="flex items-end gap-[2px] h-4">
                     {Array.from({ length: 48 }).map((_, i) => (
                         <motion.div
                             key={i}
-                            className="w-[2px] bg-[var(--subsystem-accent)]"
+                            className={`w-[2px] ${isLive ? 'bg-red-500' : 'bg-[var(--subsystem-accent)]'}`}
                             animate={{ 
-                                height: [2, Math.random() * 16 + 4, 2],
+                                height: [2, Math.random() * (isLive ? 16 : 10) + 4, 2],
                                 opacity: [0.3, 1, 0.3]
                             }}
                             transition={{ 
@@ -167,7 +167,8 @@ const ProfileIdentityHeader = ({
     setLocalStatus, handleInlineStatusUpdate, handleFollow,
     onModifyId, onGoLive, onUpload, onLogout, onExitProfile,
     onMessageClick, communityName, communityColor, stationData,
-    panelsVisible, onTogglePanels
+    panelsVisible, onTogglePanels,
+    isProfileTrackMuted, onToggleProfileMusic, hasFeaturedTrack
 }) => {
     const pfp = displayUser?.profilePictureUrl || displayUser?.ProfilePictureUrl || displayUser?.profileImageUrl || displayUser?.ProfileImageUrl;
     const isLive = stationData?.isLive || stationData?.IsLive;
@@ -293,7 +294,20 @@ const ProfileIdentityHeader = ({
             </div>
 
             {/* Middle Tier: Waveform */}
-            <SignalWaveform isLive={isLive} />
+            <div className="relative">
+                <SignalWaveform isLive={isLive} isProfilePlaying={!isProfileTrackMuted} />
+                {hasFeaturedTrack && !isLive && (
+                    <div className="absolute inset-0 pr-4 flex items-center justify-end pointer-events-none">
+                        <button 
+                            onClick={onToggleProfileMusic} 
+                            className="pointer-events-auto subsystem-command-btn py-0.5 px-2 bg-black/80 flex items-center gap-2 group/mute"
+                        >
+                            {isProfileTrackMuted ? <VolumeX size={10} className="text-[var(--subsystem-accent)]/40 group-hover/mute:text-[var(--subsystem-accent)]" /> : <Volume2 size={10} className="text-[var(--subsystem-accent)] animate-pulse" />}
+                            <span className="text-[7px]">{isProfileTrackMuted ? '[ LISTEN_PROFILE_SIGNAL ]' : '[ SIGNAL_ACTIVE ]'}</span>
+                        </button>
+                    </div>
+                )}
+            </div>
             
             {/* Bottom Tier Decor */}
             <div className="h-1 bg-gradient-to-r from-transparent via-[var(--subsystem-accent)]/5 to-transparent flex items-center justify-center">
@@ -691,6 +705,7 @@ export const ProfileView = React.memo(({
     navigateToProfile,
     onPlayPlaylist,
     onPlayTrack,
+    currentTrack,
     onQueueTrack,
     playlists: currentUserPlaylists = [], // Prop from App (current user's playlists)
     initialModal,
@@ -748,6 +763,8 @@ export const ProfileView = React.memo(({
     const [leftOpen, setLeftOpen] = useState(false);
     const [rightOpen, setRightOpen] = useState(false);
     const [roomMode, setRoomMode] = useState('room');
+    const [isProfileTrackMuted, setIsProfileTrackMuted] = useState(true);
+    const [savedPlaybackState, setSavedPlaybackState] = useState(null);
     const [widgetsExpanded, setWidgetsExpanded] = useState({
         audio: true,
         sequences: true,
@@ -759,7 +776,39 @@ export const ProfileView = React.memo(({
 
     const toggleWidget = (key) => setWidgetsExpanded(prev => ({ ...prev, [key]: !prev[key] }));
 
+    const hasFeaturedTrack = !!(displayUser?.featuredTrackId || displayUser?.FeaturedTrackId);
 
+    const toggleProfileMusic = () => {
+        if (isProfileTrackMuted) {
+            // UNMUTING
+            // Store current state to return to
+            setSavedPlaybackState({
+                track: currentTrack,
+                playing: isPlaying
+            });
+            
+            // Find the featured track in our local lists
+            const fId = String(displayUser?.featuredTrackId || displayUser?.FeaturedTrackId);
+            const profileTrack = profileTracks.find(t => String(t.id || t.Id) === fId);
+            
+            if (profileTrack) {
+                onPlayTrack(profileTrack);
+            } else {
+                // If not in registry, attempt to play via ID if available or show error
+                console.warn("[BIO_SYNC] Profile track not found in local registry cache.");
+            }
+            setIsProfileTrackMuted(false);
+        } else {
+            // MUTING
+            if (savedPlaybackState?.track) {
+                onPlayTrack(savedPlaybackState.track);
+            } else {
+                // Fallback: stop playback if no previous state
+                // (We don't have a direct pause, so we might just leave it or play something else)
+            }
+            setIsProfileTrackMuted(true);
+        }
+    };
     // Sync profileData with currentUser for "Me" view to ensure instant updates
     useEffect(() => {
         if (isMe && currentUser) {
@@ -1484,6 +1533,9 @@ export const ProfileView = React.memo(({
                     stationData={stationData}
                     panelsVisible={panelsVisible}
                     onTogglePanels={() => setPanelsVisible(!panelsVisible)}
+                    isProfileTrackMuted={isProfileTrackMuted}
+                    onToggleProfileMusic={toggleProfileMusic}
+                    hasFeaturedTrack={hasFeaturedTrack}
                 />
 
                 {/* Mobile Tab Toggle */}
@@ -1531,8 +1583,8 @@ export const ProfileView = React.memo(({
                     </AnimatePresence>
 
                     {/* CENTER COLUMN: DISPLAY WALL */}
-                    <div className={`flex-1 min-w-0 flex flex-col gap-4 ${mobileView !== 'WALL' ? 'hidden lg:flex' : 'flex'}`}>
-                        <div className="border border-[var(--subsystem-accent)]/20 p-4 bg-black/60 backdrop-blur-md min-h-[600px] relative">
+                    <div className={`transition-all duration-700 ease-in-out flex flex-col gap-4 ${panelsVisible ? 'flex-1 min-w-0' : 'mx-auto w-full max-w-4xl opacity-90 scale-[0.98]'} ${mobileView !== 'WALL' ? 'hidden lg:flex' : 'flex'}`}>
+                        <div className={`border border-[var(--subsystem-accent)]/20 p-4 bg-black/60 backdrop-blur-md min-h-[600px] relative transition-all duration-700 ${!panelsVisible ? 'bg-black/40 backdrop-blur-3xl shadow-[0_0_100px_rgba(0,0,0,0.8)]' : ''}`}>
                              <div className="absolute top-0 right-0 p-1">
                                 <span className="text-[6px] mono text-[var(--subsystem-accent)]/20 uppercase tracking-[0.4em]">ADDR: GRID_0x{effectiveId?.toString().slice(-4)}</span>
                              </div>

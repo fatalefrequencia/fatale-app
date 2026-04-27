@@ -2160,6 +2160,7 @@ const Dashboard = React.memo(({
                 targetUserId={viewingUserId}
                 user={user}
                 tracks={tracks}
+                currentTrack={currentTrack}
                 setTracks={setTracks}
                 onLogout={onLogout}
                 onAddCredits={onAddCredits}
