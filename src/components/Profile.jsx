@@ -15,6 +15,14 @@ import {
 import { useNotification } from '../contexts/NotificationContext';
 import { API_BASE_URL, getMediaUrl } from '../constants';
 
+const SECTORS = [
+    { id: 0, name: 'NEON SLUMS', color: 'var(--text-color)' },
+    { id: 1, name: 'SILICON HEIGHTS', color: '#00ffff' },
+    { id: 2, name: 'DATA VOID', color: '#9b5de5' },
+    { id: 3, name: 'CENTRAL HUB', color: '#ffcc00' },
+    { id: 4, name: 'OUTER RIM', color: '#00ff88' },
+];
+
 // --- TERMINAL STYLING UTILITIES ---
 const hexToRgb = (hex) => {
     if (!hex || typeof hex !== 'string') return '255, 0, 110';
@@ -489,6 +497,10 @@ export const ProfileView = React.memo(({
     const [isStationFavorited, setIsStationFavorited] = useState(false);
 
     const displayUser = isMe ? currentUser : profileData;
+
+    const sector = SECTORS.find(s => s.id === (displayUser?.residentSectorId || displayUser?.ResidentSectorId || 0));
+    const communityName = sector?.name;
+    const communityColor = sector?.color;
 
     const [localStatus, setLocalStatus] = useState(displayUser?.statusMessage || displayUser?.StatusMessage || '');
     const [isSavingStatus, setIsSavingStatus] = useState(false);
@@ -1162,7 +1174,7 @@ export const ProfileView = React.memo(({
                     onUpload={() => setShowGlobalUpload(true)}
                     onLogout={onLogout}
                     onExitProfile={onExitProfile}
-                    onMessageClick={onMessageClick}
+                    onMessageClick={onMessageUser}
                     communityName={communityName}
                     communityColor={communityColor}
                 />
@@ -1415,13 +1427,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
 
     const selectedTrack = tracks.find(t => String(t.id || t.Id) === String(featuredTrackId));
 
-    const SECTORS = [
-        { id: 0, name: 'NEON SLUMS', color: 'var(--text-color)' },
-        { id: 1, name: 'SILICON HEIGHTS', color: '#00ffff' },
-        { id: 2, name: 'DATA VOID', color: '#9b5de5' },
-        { id: 3, name: 'CENTRAL HUB', color: '#ffcc00' },
-        { id: 4, name: 'OUTER RIM', color: '#00ff88' },
-    ];
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
