@@ -2052,35 +2052,36 @@ const Dashboard = React.memo(({
           className={`cursor-pointer flex flex-col justify-center items-center transition-all group ${isSidebarCollapsed ? 'p-4' : 'p-6'}`}
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         >
-          <div className="relative w-20 h-20 flex items-center justify-center">
-            {/* Base White Skull - Thin and sharp */}
-            <div className={`relative transition-all duration-300 pointer-events-none select-none animate-subsystem-pulse ${isSidebarCollapsed ? 'w-10 h-10' : 'w-18 h-18'} flex items-center justify-center`}>
+          <div className="relative w-24 h-24 flex items-center justify-center">
+            {/* The Tinted Skull System - Visibility Boosted */}
+            <div className={`relative transition-all duration-300 pointer-events-none select-none animate-subsystem-pulse ${isSidebarCollapsed ? 'w-11 h-11' : 'w-20 h-20'} flex items-center justify-center`}>
               <img
                 src={skullImg}
                 alt="System Kernel"
                 className="absolute inset-0 w-full h-full object-contain"
                 style={{ 
-                  filter: 'grayscale(1) brightness(3) contrast(1.5)', 
+                  filter: 'grayscale(1) brightness(8) contrast(2)', 
                 }}
               />
-              {/* Theme Color Multiply Layer - Tints only the white skull bits */}
+              {/* Theme Color Multiply Layer */}
               <div 
                 className="absolute inset-0 w-full h-full pointer-events-none"
                 style={{ 
                   backgroundColor: 'var(--theme-color)',
                   mixBlendMode: 'multiply',
+                  opacity: 0.95
                 }}
               />
             </div>
             
-            {/* Ambient Glow - Soft and deep */}
+            {/* Ambient Glow - Visibility Boosted */}
             <div 
               className="absolute inset-0 pointer-events-none transition-all duration-1000 rounded-full"
               style={{ 
                 backgroundColor: 'var(--theme-color)',
-                opacity: 0.04,
-                filter: 'blur(30px)',
-                transform: 'scale(1.6)',
+                opacity: 0.1,
+                filter: 'blur(35px)',
+                transform: 'scale(1.5)',
                 zIndex: -1
               }}
             />
