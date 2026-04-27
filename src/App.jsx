@@ -2053,22 +2053,22 @@ const Dashboard = React.memo(({
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         >
           <div 
-            className="relative w-24 h-24 flex items-center justify-center transition-all duration-500"
+            className={`relative transition-all duration-500 flex items-center justify-center animate-subsystem-pulse ${isSidebarCollapsed ? 'w-10 h-10 p-1' : 'w-20 h-20 p-2'}`}
             style={{ 
-              boxShadow: `0 0 25px rgba(var(--theme-color-rgb), 0.08)`,
-              borderRadius: '6px',
-              border: `1px solid rgba(var(--theme-color-rgb), 0.25)`,
-              background: `rgba(0, 0, 0, 0.2)`
+              boxShadow: `0 0 20px rgba(var(--theme-color-rgb), 0.06)`,
+              borderRadius: '4px',
+              border: `1px solid rgba(var(--theme-color-rgb), 0.2)`,
+              background: `rgba(0, 0, 0, 0.15)`
             }}
           >
-            {/* The Tinted Skull System - Visibility Boosted */}
-            <div className={`relative transition-all duration-300 pointer-events-none select-none animate-subsystem-pulse ${isSidebarCollapsed ? 'w-11 h-11' : 'w-20 h-20'} flex items-center justify-center`}>
+            {/* The Tinted Skull System */}
+            <div className={`relative w-full h-full flex items-center justify-center`}>
               <img
                 src={skullImg}
                 alt="System Kernel"
                 className="absolute inset-0 w-full h-full object-contain"
                 style={{ 
-                  filter: 'grayscale(1) brightness(8) contrast(2)', 
+                  filter: 'grayscale(1) brightness(8) contrast(1.5)', 
                 }}
               />
               {/* Theme Color Multiply Layer */}
@@ -2081,19 +2081,21 @@ const Dashboard = React.memo(({
                 }}
               />
             </div>
-            
-            {/* Ambient Glow - Visibility Boosted */}
-            <div 
-              className="absolute inset-0 pointer-events-none transition-all duration-1000 rounded-full"
-              style={{ 
-                backgroundColor: 'var(--theme-color)',
-                opacity: 0.1,
-                filter: 'blur(35px)',
-                transform: 'scale(1.5)',
-                zIndex: -1
-              }}
-            />
           </div>
+          
+          {/* Ambient Glow - Soft and deep */}
+          <div 
+            className="absolute pointer-events-none transition-all duration-1000 rounded-full"
+            style={{ 
+              backgroundColor: 'var(--theme-color)',
+              opacity: 0.05,
+              filter: 'blur(30px)',
+              transform: 'scale(1.2)',
+              zIndex: -1,
+              width: '100px',
+              height: '100px'
+            }}
+          />
         </div>
 
         <nav className="flex-1 space-y-3 p-4">
