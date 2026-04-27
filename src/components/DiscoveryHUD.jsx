@@ -751,8 +751,8 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                     </div>
 
                         
-                        {/* Floating Overlay for Sector Status - Hide when terminal is active */}
-                        {!activeTerminalCommunity && (
+                        {/* Floating Overlay for Sector Status - Hide when terminal or detail card is active */}
+                        {!activeTerminalCommunity && !selectedGlobeItem && (
                             <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xl border border-white/5 px-8 pt-3 pb-2 rounded-sm flex gap-10 z-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] scale-75 lg:scale-100">
                                 {SECTORS.map(s => (
                                     <div key={s.id} className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => setActiveSector(activeSector === s.id ? null : s.id)}>

@@ -486,7 +486,7 @@ const InteractiveGlobe = memo(({
                     autoRotateSpeed={isGlobeSpinning ? 0.5 : 0}
                     dampingFactor={0.1} // Lower damping for smoother manual but explicit auto-stop
                     enableDamping={true}
-                    rotateSpeed={selectedId ? 0 : 0.5}
+                    rotateSpeed={0.5}
                 />
                 
                 <ambientLight intensity={0.5} />
