@@ -8,6 +8,7 @@ const ContentModal = ({
     content, 
     onClose, 
     children,
+    title,
     type = 'JOURNAL', 
     hasMiniPlayer = true, 
     themeColor = '#9d00ff', 
