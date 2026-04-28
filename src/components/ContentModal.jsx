@@ -6,8 +6,8 @@ import { useNotification } from '../contexts/NotificationContext';
 
 const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true, themeColor = '#9d00ff', backgroundColor = '#000000', isGlass = false, monitorImageUrl = null, monitorBackgroundColor = '#000000', monitorIsGlass = false }) => {
     const { showNotification } = useNotification();
-    if (!content) return null;
-    const mediaType = (content.mediaType || content.MediaType || content.type || content.Type || type || '').toUpperCase();
+    if (!content && !children) return null;
+    const mediaType = (content?.mediaType || content?.MediaType || content?.type || content?.Type || type || '').toUpperCase();
     const normalizedType = mediaType;
     console.log("[ContentModal] Decoding signal:", content, "Resolved Type:", normalizedType);
 
@@ -94,97 +94,98 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
 
                 {/* Content Body */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10">
-                    <div className="p-8 md:p-12 relative">
-                        {['JOURNAL', 'TEXT'].includes(normalizedType) && (
-                            <div className="space-y-8">
-                                <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter italic leading-tight">
-                                    {content.Title || content.title || '// UNTITLED_LOG'}
-                                </h2>
-                                <div className="w-24 h-1 bg-gradient-to-r from-[#ff006e] to-transparent"></div>
-                                <div className="prose prose-invert max-w-none">
-                                    <p className="text-sm md:text-base text-white/80 leading-relaxed font-mono whitespace-pre-wrap tracking-wide">
-                                        {content.Content || content.content || content.Text || content.text}
-                                    </p>
+                    {children ? children : (
+                        <div className="p-8 md:p-12 relative">
+                            {['JOURNAL', 'TEXT'].includes(normalizedType) && (
+                                <div className="space-y-8">
+                                    <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter italic leading-tight">
+                                        {content.Title || content.title || '// UNTITLED_LOG'}
+                                    </h2>
+                                    <div className="w-24 h-1 bg-gradient-to-r from-[#ff006e] to-transparent"></div>
+                                    <div className="prose prose-invert max-w-none">
+                                        <p className="text-sm md:text-base text-white/80 leading-relaxed font-mono whitespace-pre-wrap tracking-wide">
+                                            {content.Content || content.content || content.Text || content.text}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        {['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) && (content.mediaType !== 'VIDEO' && content.type !== 'VIDEO' && content.MediaType !== 'VIDEO' && content.Type !== 'VIDEO') && (
-                            <div className="flex flex-col items-center justify-center min-h-[400px]">
-                                <div className="relative group">
-                                    <div className="absolute inset-0 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `${activeTheme}1A` }} />
-                                    <img
-                                        src={getMediaUrl(content.Url || content.url || content.imageUrl || content.ImageUrl || content.thumbnailUrl || content.ThumbnailUrl || content.source || content.Source)}
-                                        alt="Expanded Visual"
-                                        className="max-w-full max-h-[65vh] object-contain border border-white/10 shadow-2xl relative z-10"
-                                    />
+                            {['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) && (content?.mediaType?.toUpperCase() !== 'VIDEO' && content?.type?.toUpperCase() !== 'VIDEO' && content?.MediaType?.toUpperCase() !== 'VIDEO' && content?.Type?.toUpperCase() !== 'VIDEO') && (
+                                <div className="flex flex-col items-center justify-center min-h-[400px]">
+                                    <div className="relative group">
+                                        <div className="absolute inset-0 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `${activeTheme}1A` }} />
+                                        <img
+                                            src={getMediaUrl(content.Url || content.url || content.imageUrl || content.ImageUrl || content.thumbnailUrl || content.ThumbnailUrl || content.source || content.Source)}
+                                            alt="Expanded Visual"
+                                            className="max-w-full max-h-[65vh] object-contain border border-white/10 shadow-2xl relative z-10"
+                                        />
+                                    </div>
+                                    {(content.caption || content.Caption || content.description || content.Description || content.Content || content.content) && (
+                                        <p className="mt-8 text-[10px] text-white/60 mono uppercase tracking-[0.3em] text-center border-t border-white/5 pt-4">
+                                            {content.caption || content.Caption || content.description || content.Description || content.Content || content.content}
+                                        </p>
+                                    )}
                                 </div>
-                                {(content.caption || content.Caption || content.description || content.Description || content.Content || content.content) && (
-                                    <p className="mt-8 text-[10px] text-white/60 mono uppercase tracking-[0.3em] text-center border-t border-white/5 pt-4">
-                                        {content.caption || content.Caption || content.description || content.Description || content.Content || content.content}
-                                    </p>
-                                )}
-                            </div>
-                        )}
+                            )}
 
-                        {['VIDEO', 'MEDIA', 'GALLERY'].includes(normalizedType) && (content.mediaType === 'VIDEO' || content.type === 'VIDEO' || content.MediaType === 'VIDEO' || content.Type === 'VIDEO') && (() => {
-                            const videoUrl = content.url || content.Url || content.videoUrl || content.VideoUrl || content.mediaUrl || content.MediaUrl || content.source || content.Source || content.filePath || content.FilePath;
-                            const isYoutube = videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') || videoUrl.startsWith('youtube:'));
-                            
-                            if (isYoutube) {
-                                let id = null;
-                                if (videoUrl.startsWith('youtube:')) id = videoUrl.split(':')[1];
-                                else {
-                                    const match = videoUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
-                                    id = (match && match[2].length === 11) ? match[2] : null;
+                            {['VIDEO', 'MEDIA', 'GALLERY'].includes(normalizedType) && (content?.mediaType?.toUpperCase() === 'VIDEO' || content?.type?.toUpperCase() === 'VIDEO' || content?.MediaType?.toUpperCase() === 'VIDEO' || content?.Type?.toUpperCase() === 'VIDEO') && (() => {
+                                const videoUrl = content.url || content.Url || content.videoUrl || content.VideoUrl || content.mediaUrl || content.MediaUrl || content.source || content.Source || content.filePath || content.FilePath;
+                                const isYoutube = videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') || videoUrl.startsWith('youtube:'));
+                                
+                                if (isYoutube) {
+                                    let id = null;
+                                    if (videoUrl.startsWith('youtube:')) id = videoUrl.split(':')[1];
+                                    else {
+                                        const match = videoUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+                                        id = (match && match[2].length === 11) ? match[2] : null;
+                                    }
+                                    return (
+                                        <div className="w-full aspect-video border border-white/10 shadow-2xl relative z-10 bg-black">
+                                            {id ? (
+                                                <iframe 
+                                                    src={`https://www.youtube.com/embed/${id}?autoplay=1`}
+                                                    className="w-full h-full"
+                                                    frameBorder="0"
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                    allowFullScreen
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-white/20 mono text-[10px]">FAILED_TO_RESOLVE_YT_SIGNAL</div>
+                                            )}
+                                        </div>
+                                    );
                                 }
+
                                 return (
-                                    <div className="w-full aspect-video border border-white/10 shadow-2xl relative z-10 bg-black">
-                                        {id ? (
-                                            <iframe 
-                                                src={`https://www.youtube.com/embed/${id}?autoplay=1`}
-                                                className="w-full h-full"
-                                                frameBorder="0"
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                allowFullScreen
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-white/20 mono text-[10px]">FAILED_TO_RESOLVE_YT_SIGNAL</div>
-                                        )}
+                                    <div className="flex flex-col items-center justify-center min-h-[400px]">
+                                        <video
+                                            src={getMediaUrl(videoUrl || content.ImageUrl || content.imageUrl)}
+                                            controls
+                                            autoPlay
+                                            muted
+                                            playsInline
+                                            className="max-w-full max-h-[65vh] border border-white/10 shadow-2xl relative z-10"
+                                        />
+                                        <div className="mt-6 flex items-center gap-4 text-[10px] mono uppercase tracking-[0.3em] font-black" style={{ color: activeTheme }}>
+                                            <div className="w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: activeTheme }} />
+                                            SIGNAL_LIVE_DECODING_ACTIVE
+                                        </div>
                                     </div>
                                 );
-                            }
-
-                            return (
-                                <div className="flex flex-col items-center justify-center min-h-[400px]">
-                                    <video
-                                        src={getMediaUrl(videoUrl || content.ImageUrl || content.imageUrl)}
-                                        controls
-                                        autoPlay
-                                        muted
-                                        playsInline
-                                        className="max-w-full max-h-[65vh] border border-white/10 shadow-2xl relative z-10"
-                                    />
-                                    <div className="mt-6 flex items-center gap-4 text-[10px] mono uppercase tracking-[0.3em] font-black" style={{ color: activeTheme }}>
-                                        <div className="w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: activeTheme }} />
-                                        SIGNAL_LIVE_DECODING_ACTIVE
-                                    </div>
-                                </div>
-                            );
-                        })()}
-                    </div>
+                            })()}
+                        </div>
+                    )}
                 </div>
 
-                {/* Footer / Metadata */}
                 <div className="p-6 border-t border-white/5 bg-black/40 flex flex-wrap justify-between items-center gap-4 text-[9px] mono uppercase tracking-widest text-white/30 relative z-10">
                     <div className="flex items-center gap-8">
                         <div className="flex flex-col gap-1">
                             <span className="text-[#9d00ff]/40 tracking-tighter">PACKAGE_ID</span>
-                            <span className="text-white/60 font-bold">{content.Id || content.id || 'NULL_SIGNAL'}</span>
+                            <span className="text-white/60 font-bold">{content?.Id || content?.id || 'GLOBAL_CORE'}</span>
                         </div>
                         <div className="flex flex-col gap-1">
                             <span className="text-[#9d00ff]/40 tracking-tighter">TIMESTAMP</span>
-                            <span className="text-white/60 font-bold">{content.CreatedAt ? new Date(content.CreatedAt).toLocaleString() : 'UNDEFINED'}</span>
+                            <span className="text-white/60 font-bold">{content?.CreatedAt ? new Date(content.CreatedAt).toLocaleString() : 'SYNCHRONIZED'}</span>
                         </div>
                     </div>
                     <div className="flex gap-4">
