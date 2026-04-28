@@ -927,7 +927,15 @@ export const ProfileView = React.memo(({
         try {
             const API = await import('../services/api').then(mod => mod.default);
             const res = await API.Stations.toggleFavorite(stationData.id || stationData.Id);
-            setIsStationFavorited(res.data.favorited || res.data.Favorited);
+            const isFavNow = res.data && (res.data.hasOwnProperty('favorited') || res.data.hasOwnProperty('Favorited'))
+                ? (res.data.favorited || res.data.Favorited)
+                : !isStationFavorited;
+            
+            setIsStationFavorited(isFavNow);
+            showNotification("STATION_UPDATE", isFavNow ? "Station frequency added to favorites." : "Station frequency removed.", "success");
+            
+            // Refresh global app state to ensure absolute persistence
+            if (onRefreshProfile) onRefreshProfile();
             showNotification(res.data.favorited ? "STATION_SYNCED" : "STATION_DISCONNECTED",
                 `Frequency ${stationData.frequency || stationData.Frequency || 'LINK'} ${res.data.favorited ? 'added to' : 'removed from'} favorites.`, "success");
         } catch (e) {
@@ -993,15 +1001,21 @@ export const ProfileView = React.memo(({
         setIsSavingStatus(true);
         try {
             const API = await import('../services/api').then(mod => mod.default);
+            // Use same high-reliability Multipart buffer as the main update
             const fd = new FormData();
             fd.append('StatusMessage', localStatus);
+            // Maintain existing metadata to prevent fragmentation
+            fd.append('Username', currentUser?.username || '');
+            fd.append('Biography', currentUser?.biography || '');
+            
             const uid = currentUser?.id || currentUser?.Id || currentUser?.userId || currentUser?.UserId;
             await API.Users.updateProfile(fd, uid);
             showNotification("STATUS_UPDATED", "Uplink message synchronized.", "success");
-            if (onRefreshProfile) onRefreshProfile();
+            
+            if (onRefreshProfile) await onRefreshProfile();
         } catch (e) {
-            console.error("Failed to update status", e);
-            showNotification("SYNC_ERROR", "Failed to commit status change.", "error");
+            console.error("Failed to save status", e);
+            showNotification("UPLINK_FAILURE", "Neural link unstable. Status broadcast failed.", "error");
         } finally {
             setIsSavingStatus(false);
         }
@@ -1415,8 +1429,13 @@ export const ProfileView = React.memo(({
             showNotification("PROFILE_SYNCED", "Identity modifications committed and persistent.", "success");
             setShowEditProfile(false);
 
-            if (res?.data?.user && setUser) {
-                const rawData = res.data.user;
+            // Force total system refresh to ensure source-of-truth parity
+            if (onRefreshProfile) await onRefreshProfile();
+            if (onRefreshTracks) await onRefreshTracks();
+
+            // Fallback optimistic update if refresh is pending
+            const rawData = res.data?.user || res.data;
+            if (rawData && setUser) {
                 const updated = {
                     ...currentUser,
                     username: rawData.username || rawData.Username || currentUser.username,
@@ -1445,13 +1464,9 @@ export const ProfileView = React.memo(({
                     monitorBackgroundColor: rawData.hasOwnProperty('monitorBackgroundColor') ? rawData.monitorBackgroundColor : (rawData.hasOwnProperty('MonitorBackgroundColor') ? rawData.MonitorBackgroundColor : currentUser.monitorBackgroundColor),
                     monitorIsGlass: rawData.hasOwnProperty('monitorIsGlass') ? rawData.monitorIsGlass : (rawData.hasOwnProperty('MonitorIsGlass') ? rawData.MonitorIsGlass : currentUser.monitorIsGlass)
                 };
-                setUser(prev => {
-                    try { localStorage.setItem('user', JSON.stringify(updated)); } catch (e) { }
-                    return updated;
-                });
+                setUser(updated);
                 setProfileData(updated);
-            } else {
-                onRefreshProfile?.();
+                try { localStorage.setItem('user', JSON.stringify(updated)); } catch (e) { }
             }
         } catch (error) {
             console.error("Profile Sync Error:", error);
