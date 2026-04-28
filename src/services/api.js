@@ -96,8 +96,8 @@ const API = {
         getProfile: (userId = null) => api.get(`Users/profile?_t=${new Date().getTime()}`, { 
             headers: userId ? { 'UserId': userId } : {} 
         }),
-        updateProfile: (formData, userId) => api.put('Users/update-profile', formData, {
-            headers: { 'Content-Type': 'multipart/form-data', UserId: userId },
+        updateProfile: (data, userId) => api.put('Users/update-profile', data, {
+            headers: { UserId: userId },
             timeout: 120000 // 2 min for media updates
         }),
         followUser: (id) => api.post(`Artists/like/${id}`), // Re-routed to Artists for social linking

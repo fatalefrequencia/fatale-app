@@ -1355,42 +1355,58 @@ export const ProfileView = React.memo(({
             const API = await import('../services/api').then(mod => mod.default);
             const uid = currentUser?.id || currentUser?.Id || currentUser?.userId || currentUser?.UserId;
             
-            // Intercept files for manual upload to ensure maximum compatibility
+            // Build the payload as a plain object for JSON transmission
+            const payload = {
+                Username: formData.get('Username'),
+                Biography: formData.get('Biography'),
+                StatusMessage: formData.get('StatusMessage'),
+                ResidentSectorId: parseInt(formData.get('ResidentSectorId')) || 0,
+                IsLive: formData.get('IsLive') === 'true',
+                FeaturedTrackId: parseInt(formData.get('FeaturedTrackId')) || null,
+                ThemeColor: formData.get('ThemeColor'),
+                TextColor: formData.get('TextColor'),
+                BackgroundColor: formData.get('BackgroundColor'),
+                IsGlass: formData.get('IsGlass') === 'true',
+                // Keep existing URLs by default
+                ProfilePictureUrl: currentUser.profileImageUrl || currentUser.ProfilePictureUrl,
+                BannerUrl: currentUser.bannerUrl || currentUser.BannerUrl,
+                WallpaperVideoUrl: currentUser.wallpaperVideoUrl || currentUser.WallpaperVideoUrl
+            };
+
+            // Intercept and manually upload files to get persistent URLs
             const pfpFile = formData.get('ProfilePicture');
             const bnrFile = formData.get('Banner');
             const vdoFile = formData.get('WallpaperVideo');
 
             if (pfpFile instanceof File) {
-                showNotification("UPLOADING_PFP", "Initializing profile picture buffer...", "info");
+                showNotification("UPLOADING_PFP", "Establishing profile picture node...", "info");
                 const fd = new FormData();
                 fd.append('file', pfpFile);
                 const r = await API.Files.upload(fd);
-                formData.set('ProfilePictureUrl', r.data.path || r.data.Path || r.data.url);
-                formData.delete('ProfilePicture');
+                payload.ProfilePictureUrl = r.data.path || r.data.Path || r.data.url;
             }
 
             if (bnrFile instanceof File) {
-                showNotification("UPLOADING_BACKDROP", "Broadcasting visual signal to core...", "info");
+                showNotification("UPLOADING_BACKDROP", "Committing visual backdrop to core...", "info");
                 const fd = new FormData();
                 fd.append('file', bnrFile);
                 const r = await API.Files.upload(fd);
-                formData.set('BannerUrl', r.data.path || r.data.Path || r.data.url);
-                formData.set('WallpaperVideoUrl', ''); // Clear existing video fragments
-                formData.delete('Banner');
+                payload.BannerUrl = r.data.path || r.data.Path || r.data.url;
+                payload.WallpaperVideoUrl = ''; // Clear video
             }
 
             if (vdoFile instanceof File) {
-                showNotification("UPLOADING_VIDEO", "Synchronizing high-fidelity video stream...", "info");
+                showNotification("UPLOADING_VIDEO", "Synchronizing mission-critical video stream...", "info");
                 const fd = new FormData();
                 fd.append('file', vdoFile);
                 const r = await API.Files.upload(fd);
-                formData.set('WallpaperVideoUrl', r.data.path || r.data.Path || r.data.url);
-                formData.set('BannerUrl', ''); // Clear existing photo/gif fragments
-                formData.delete('WallpaperVideo');
+                payload.WallpaperVideoUrl = r.data.path || r.data.Path || r.data.url;
+                payload.BannerUrl = ''; // Clear photo
             }
 
-            const res = await API.Users.updateProfile(formData, uid);
-            showNotification("PROFILE_SYNCED", "Identity modifications committed to core.", "success");
+            // High-reliability commit via JSON payload
+            const res = await API.Users.updateProfile(payload, uid);
+            showNotification("PROFILE_SYNCED", "Identity modifications committed and persistent.", "success");
             setShowEditProfile(false);
 
             if (res?.data?.user && setUser) {
