@@ -1631,7 +1631,7 @@ export const ProfileView = React.memo(({
                                     <div className="w-48 h-48 border border-white/10 bg-black/40 p-1">
                                         <div className="w-full h-full border border-white/20 relative overflow-hidden group">
                                             {pfp ? (
-                                                <img src={getMediaUrl(pfp)} className="w-full h-full object-cover grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-105" />
+                                                <img src={getMediaUrl(pfp)} className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105" />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-white/5"><Cpu size={48} /></div>
                                             )}
@@ -1744,7 +1744,7 @@ export const ProfileView = React.memo(({
                                 <LBrackets className="scale-75 opacity-40" />
                                 <div className="w-full h-full border border-[var(--subsystem-accent)]/10 overflow-hidden">
                                      {pfp ? (
-                                        <img src={getMediaUrl(pfp)} className="w-full h-full object-cover grayscale transition-all duration-700 hover:grayscale-0" />
+                                        <img src={getMediaUrl(pfp)} className="w-full h-full object-cover transition-all duration-700" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-white/5"><Cpu size={32} /></div>
                                     )}
@@ -2015,13 +2015,13 @@ export const ProfileView = React.memo(({
                         autoPlay 
                         muted 
                         loop 
-                        className="w-full h-full object-cover opacity-50 grayscale transition-opacity duration-1000"
+                        className="w-full h-full object-cover opacity-50 transition-opacity duration-1000"
                     />
                 ) : (displayUser?.bannerUrl || displayUser?.BannerUrl) ? (
                     <img 
                         key={displayUser.bannerUrl || displayUser.BannerUrl}
                         src={getMediaUrl(displayUser.bannerUrl || displayUser.BannerUrl)} 
-                        className="w-full h-full object-cover opacity-40 grayscale transition-opacity duration-1000"
+                        className="w-full h-full object-cover opacity-40 transition-opacity duration-1000"
                     />
                 ) : null}
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-30" />

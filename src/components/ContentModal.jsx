@@ -103,7 +103,14 @@ const ContentModal = ({
                             <span className="mono text-[6px] tracking-widest opacity-40 uppercase">DATA_SIGNAL_DECODE_SUCCESS</span>
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-white/50 hover:text-white transition-colors">
+                    <button 
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onClose?.();
+                        }} 
+                        className="text-white/50 hover:text-white transition-all cursor-pointer relative z-[200] p-2 hover:bg-white/10"
+                    >
                         <X size={20} />
                     </button>
                 </div>
