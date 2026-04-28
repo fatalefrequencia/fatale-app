@@ -1315,16 +1315,20 @@
 /* --- DASHBOARD VIEW --- */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto 1fr 1fr;
-    gap: 20px;
+    grid-template-columns: 1.2fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 30px;
     width: 100%;
-    height: 100%;
-    padding: 0 40px 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 100px 60px 60px;
+    height: 100vh;
     overflow-y: auto;
+    position: relative;
+    z-index: 5;
 }
 
-.identity-core-panel { grid-column: 2; grid-row: 1 / span 1; }
+.identity-core-panel { grid-column: 2; grid-row: 1; }
 .music-releases-panel { grid-column: 1; grid-row: 1 / span 2; }
 .studio-content-panel { grid-column: 1; grid-row: 3; }
 .archive-panel { grid-column: 2; grid-row: 2 / span 2; }
@@ -1377,4 +1381,86 @@
     color: #fff;
     outline: none;
     width: 100%;
+}
+/* --- TACTICAL SUBSYSTEM BLOCKS --- */
+.subsystem-block {
+    background: rgba(var(--subsystem-accent-rgb), 0.03);
+    border: 0.5px solid rgba(var(--subsystem-accent-rgb), 0.15);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+}
+
+.subsystem-block::before {
+    content: attr(data-addr);
+    position: absolute;
+    top: 2px;
+    right: 6px;
+    font-size: 6px;
+    color: var(--subsystem-accent);
+    opacity: 0.4;
+    font-family: 'Share Tech Mono', monospace;
+}
+
+.subsystem-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(var(--subsystem-accent-rgb), 0.1);
+    border-bottom: 0.5px solid rgba(var(--subsystem-accent-rgb), 0.2);
+}
+
+.subsystem-title {
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.3em;
+    color: var(--subsystem-accent);
+    text-transform: uppercase;
+}
+
+.subsystem-status {
+    width: 4px;
+    height: 4px;
+    background: var(--subsystem-accent);
+    box-shadow: 0 0 5px var(--subsystem-accent);
+    border-radius: 50%;
+}
+
+.subsystem-content {
+    flex: 1;
+    position: relative;
+}
+
+/* Metadata list styling for Dashboard */
+.metadata-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+}
+
+.metadata-entry {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.metadata-label {
+    font-size: 7px;
+    color: rgba(var(--subsystem-accent-rgb), 0.4);
+    text-transform: uppercase;
+    width: 80px;
+    flex-shrink: 0;
+    font-family: 'Share Tech Mono', monospace;
+}
+
+.metadata-value {
+    font-size: 9px;
+    font-weight: 900;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
 }

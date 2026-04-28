@@ -1667,28 +1667,46 @@ export const ProfileView = React.memo(({
             <div className="dashboard-grid custom-scrollbar">
                 {/* Identity Core Panel (Upper Right) */}
                 <div className="identity-core-panel">
-                    <SubsystemBlock title="IDENTITY_CORE" showBrackets={true}>
-                        <div className="p-4 flex gap-4">
-                            <div className="w-20 h-20 border border-[var(--subsystem-accent)]/20 bg-black/40 p-0.5 shrink-0">
+                    <SubsystemBlock title="IDENTITY_CORE" showBrackets={true} address="USR_USR_01">
+                        <div className="p-4 flex gap-6 border-b border-white/5">
+                            <div className="w-24 h-24 border border-[var(--subsystem-accent)]/30 bg-black/40 p-0.5 shrink-0 relative">
+                                <LBrackets className="scale-75 opacity-40" />
                                 <div className="w-full h-full border border-[var(--subsystem-accent)]/10 overflow-hidden">
                                      {pfp ? (
-                                        <img src={getMediaUrl(pfp)} className="w-full h-full object-cover grayscale" />
+                                        <img src={getMediaUrl(pfp)} className="w-full h-full object-cover grayscale transition-all duration-700 hover:grayscale-0" />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-white/5"><Cpu size={24} /></div>
+                                        <div className="w-full h-full flex items-center justify-center text-white/5"><Cpu size={32} /></div>
                                     )}
                                 </div>
                             </div>
-                            <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                <div className="text-[14px] font-black uppercase tracking-widest leading-none mb-1">{displayUser?.username}</div>
+                            <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
+                                <div className="text-[18px] font-black uppercase tracking-widest leading-none mb-1 text-[var(--subsystem-accent)]">{displayUser?.username}</div>
                                 <div className="flex items-center gap-2">
                                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
-                                    <div className="text-[7px] mono text-[var(--subsystem-accent)]/60 uppercase tracking-widest">UPLINK_STABLE</div>
-                                </div>
-                                <div className="mt-2 text-[9px] mono text-white/40 uppercase tracking-widest truncate group-hover:text-white/80 transition-colors cursor-help">
-                                    {"> "} {localStatus || 'NO_SIGNAL_BROADCAST'}
+                                    <div className="text-[8px] mono text-[var(--subsystem-accent)]/60 uppercase tracking-widest">UPLINK_STABLE // PROT_9.5</div>
                                 </div>
                             </div>
                         </div>
+
+                        <div className="metadata-list">
+                            <div className="metadata-entry">
+                                <span className="metadata-label">FULL_NAME</span>
+                                <span className="metadata-value">{displayUser?.username || 'ANONYMOUS'}</span>
+                            </div>
+                            <div className="metadata-entry">
+                                <span className="metadata-label">RES_SECTOR</span>
+                                <span className="metadata-value" style={{ color: communityColor }}>{communityName}</span>
+                            </div>
+                            <div className="metadata-entry">
+                                <span className="metadata-label">SIG_ID</span>
+                                <span className="metadata-value">0X{displayUser?.id?.toString().slice(0, 8).toUpperCase()}</span>
+                            </div>
+                            <div className="metadata-entry">
+                                <span className="metadata-label">UPLINK_STAT</span>
+                                <span className="metadata-value opacity-60 italic">{localStatus || 'NO_SIGNAL_BROADCAST'}</span>
+                            </div>
+                        </div>
+
                         <GearRack 
                             gears={profileGear} 
                             isMe={isMe} 
@@ -1703,39 +1721,44 @@ export const ProfileView = React.memo(({
 
                 {/* Music Releases Panel */}
                 <div className="music-releases-panel">
-                    <SubsystemBlock title="MUSIC_RELEASES" showBrackets={true}>
-                        <div className="flex items-center justify-between px-4 py-2 bg-black/40 border-b border-white/5">
-                            <div className="flex gap-4">
+                    <SubsystemBlock title="MUSIC_RELEASES" showBrackets={true} address="SIG_AUD_04">
+                        <div className="flex items-center justify-between px-6 py-3 bg-black/40 border-b border-white/5">
+                            <div className="flex gap-6">
                                 {['ALL', 'ALBUMS', 'SINGLES'].map(f => (
                                     <button 
                                         key={f}
                                         onClick={() => setMusicFilter(f)}
-                                        className={`text-[8px] font-black uppercase tracking-[0.2em] transition-all hover:text-white ${musicFilter === f ? 'text-[var(--subsystem-accent)]' : 'text-white/20'}`}
+                                        className={`text-[9px] font-black uppercase tracking-[0.3em] transition-all hover:text-white ${musicFilter === f ? 'text-[var(--subsystem-accent)] border-b border-[var(--subsystem-accent)]' : 'text-white/20'}`}
                                     >
                                         {f}
                                     </button>
                                 ))}
                             </div>
-                            <div className="flex gap-2">
-                                <button className="p-1 hover:text-white text-white/20 transition-all"><ChevronLeft size={14} /></button>
-                                <button className="p-1 hover:text-white text-white/20 transition-all"><ChevronRight size={14} /></button>
+                            <div className="flex gap-4">
+                                <button className="p-1 hover:text-white text-white/20 transition-all hover:scale-110"><ChevronLeft size={16} /></button>
+                                <button className="p-1 hover:text-white text-white/20 transition-all hover:scale-110"><ChevronRight size={16} /></button>
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 p-4 max-h-[500px] overflow-y-auto custom-scrollbar">
+                        <div className="grid grid-cols-2 gap-6 p-6 max-h-[600px] overflow-y-auto custom-scrollbar">
                             {profileTracks.filter(t => musicFilter === 'ALL' || (musicFilter === 'ALBUMS' ? (t.isAlbum || t.IsAlbum) : !(t.isAlbum || t.IsAlbum))).map((t, idx) => (
                                 <div key={idx} className="group cursor-pointer" onClick={() => onPlayTrack(t)}>
-                                    <div className="aspect-square bg-black border border-white/5 overflow-hidden relative mb-2">
-                                        {t.coverImageUrl || t.CoverImageUrl ? (
-                                            <img src={getMediaUrl(t.coverImageUrl || t.CoverImageUrl)} className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
-                                        ) : (
-                                            <div className="w-full h-full bg-[#050505] flex items-center justify-center text-white/10"><Music size={32} /></div>
-                                        )}
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <Play size={24} className="text-white scale-75 group-hover:scale-100 transition-transform" />
+                                    <div className="aspect-square bg-black border border-white/10 overflow-hidden relative mb-3 p-1">
+                                        <div className="w-full h-full border border-white/5 relative overflow-hidden">
+                                            {t.coverImageUrl || t.CoverImageUrl ? (
+                                                <img src={getMediaUrl(t.coverImageUrl || t.CoverImageUrl)} className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 group-hover:scale-105" />
+                                            ) : (
+                                                <div className="w-full h-full bg-[#050505] flex items-center justify-center text-white/10"><Music size={48} /></div>
+                                            )}
+                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <Play size={32} className="text-white scale-75 group-hover:scale-100 transition-transform" />
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="text-[10px] font-bold text-white uppercase tracking-wider truncate">{t.title || t.Title}</div>
-                                    <div className="text-[7px] mono text-white/20 uppercase tracking-widest">{(t.isAlbum || t.IsAlbum) ? 'ALBUM_RELEASE' : 'SINGLE_SIGNAL'}</div>
+                                    <div className="text-[11px] font-black text-white uppercase tracking-wider truncate mb-1">{t.title || t.Title}</div>
+                                    <div className="flex items-center justify-between">
+                                        <div className="text-[7px] mono text-[var(--subsystem-accent)]/80 uppercase tracking-widest">{(t.isAlbum || t.IsAlbum) ? 'ALBUM_RELEASE' : 'SINGLE_SIGNAL'}</div>
+                                        <div className="text-[6px] mono text-white/20 uppercase">ID_0X{idx.toString(16).padStart(3,'0')}</div>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -1744,18 +1767,22 @@ export const ProfileView = React.memo(({
 
                 {/* Studio Content Panel */}
                 <div className="studio-content-panel">
-                    <SubsystemBlock title="STUDIO_ARCHIVE" showBrackets={true}>
-                        <div className="p-4 grid grid-cols-3 gap-2 max-h-[300px] overflow-y-auto custom-scrollbar">
+                    <SubsystemBlock title="STUDIO_ARCHIVE" showBrackets={true} address="VIS_CAP_09">
+                        <div className="p-4 grid grid-cols-4 gap-2 max-h-[300px] overflow-y-auto custom-scrollbar">
                             {profileGallery.map((img, idx) => (
                                 <div key={idx} className="aspect-square bg-black border border-white/5 overflow-hidden group relative cursor-pointer" onClick={() => handleItemClick(img, 'GALLERY')}>
-                                    <img src={getMediaUrl(img.url || img.Url || img.imageUrl || img.ImageUrl)} className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity" />
-                                    {(img.type === 'VIDEO' || img.Type === 'VIDEO') && <Video size={12} className="absolute bottom-1 right-1 text-white/40" />}
+                                    <img src={getMediaUrl(img.url || img.Url || img.imageUrl || img.ImageUrl)} className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-all duration-500 group-hover:scale-110" />
+                                    {(img.type === 'VIDEO' || img.Type === 'VIDEO') && (
+                                        <div className="absolute top-1 right-1 p-1 bg-black/60 border border-cyan-500/30">
+                                            <Video size={10} className="text-cyan-400" />
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                             {profileJournal.map((entry, idx) => (
-                                <div key={idx} className="aspect-square border border-white/5 bg-white/5 p-2 flex flex-col justify-between group cursor-pointer hover:bg-white/10 transition-colors" onClick={() => handleItemClick(entry, 'JOURNAL')}>
-                                    <Book size={16} className="text-white/20 group-hover:text-white/60 transition-colors" />
-                                    <div className="text-[7px] font-black uppercase tracking-tight leading-tight line-clamp-2">{entry.title || entry.Title}</div>
+                                <div key={idx} className="aspect-square border border-white/5 bg-white/5 p-3 flex flex-col justify-between group cursor-pointer hover:bg-[var(--subsystem-accent)]/10 transition-all border-l-2 border-l-transparent hover:border-l-[var(--subsystem-accent)]" onClick={() => handleItemClick(entry, 'JOURNAL')}>
+                                    <Book size={16} className="text-white/20 group-hover:text-[var(--subsystem-accent)] transition-colors" />
+                                    <div className="text-[8px] font-black uppercase tracking-tight leading-tight line-clamp-2 text-white/60 group-hover:text-white transition-colors">{entry.title || entry.Title}</div>
                                 </div>
                             ))}
                         </div>
@@ -1764,22 +1791,31 @@ export const ProfileView = React.memo(({
 
                 {/* Archive Panel (Playlists/Past Broadcasts) */}
                 <div className="archive-panel">
-                    <SubsystemBlock title="PLAYLISTS_&_BROADCASTS" showBrackets={true}>
-                        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-px p-1 max-h-[400px]">
+                    <SubsystemBlock title="PLAYLISTS_&_BROADCASTS" showBrackets={true} address="ARC_MEM_02">
+                        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 p-3 max-h-[500px]">
                             {profilePlaylists.map((p, idx) => (
                                 <div 
                                     key={idx} 
-                                    className="flex items-center gap-4 p-3 bg-white/5 border border-transparent hover:border-[var(--subsystem-accent)]/20 hover:bg-white/10 transition-all cursor-pointer group"
+                                    className="flex items-center gap-4 p-4 bg-white/5 border border-white/5 hover:border-[var(--subsystem-accent)]/40 hover:bg-[var(--subsystem-accent)]/5 transition-all cursor-pointer group relative"
                                     onClick={() => handleItemClick(p, 'PLAYLIST')}
                                 >
-                                    <div className="w-10 h-10 bg-black border border-white/10 overflow-hidden shrink-0">
-                                        <img src={getMediaUrl(p.imageUrl || p.ImageUrl)} className="w-full h-full object-cover grayscale opacity-40 group-hover:opacity-100 transition-opacity" />
+                                    <div className="w-12 h-12 bg-black border border-[var(--subsystem-accent)]/20 p-0.5 shrink-0">
+                                        <div className="w-full h-full border border-white/5 overflow-hidden">
+                                            <img src={getMediaUrl(p.imageUrl || p.ImageUrl)} className="w-full h-full object-cover grayscale opacity-40 group-hover:opacity-100 transition-all duration-500" />
+                                        </div>
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="text-[10px] font-bold text-white uppercase tracking-wider truncate">{p.name || p.Name}</div>
-                                        <div className="text-[7px] mono text-white/20 uppercase tracking-widest">{p.isPublic ? 'PUBLIC_SOURCE' : 'ENCRYPTED_SIG'}</div>
+                                        <div className="text-[12px] font-black text-white uppercase tracking-widest truncate group-hover:text-[var(--subsystem-accent)] transition-colors">{p.name || p.Name}</div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="text-[7px] mono text-white/30 uppercase tracking-widest">{p.isPublic ? 'PUBLIC_SOURCE' : 'ENCRYPTED_SIG'}</div>
+                                            <div className="w-1 h-1 rounded-full bg-white/10" />
+                                            <div className="text-[7px] mono text-white/20 uppercase tracking-widest">ARCHIVE_0X{idx}</div>
+                                        </div>
                                     </div>
-                                    <ChevronRight size={14} className="text-white/10 group-hover:text-white/40 transition-colors" />
+                                    <ChevronRight size={18} className="text-white/10 group-hover:text-[var(--subsystem-accent)] group-hover:translate-x-1 transition-all" />
+                                    <div className="absolute top-0 right-0 p-1 opacity-0 group-hover:opacity-40 transition-opacity">
+                                        <div className="text-[6px] mono text-white">RECOVER_SIG</div>
+                                    </div>
                                 </div>
                             ))}
                         </div>
