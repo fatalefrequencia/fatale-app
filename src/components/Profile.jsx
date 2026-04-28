@@ -89,54 +89,41 @@ const CyberDust = ({ count = 30 }) => (
     </div>
 );
 
-const SignalWaveform = ({ isLive, isProfilePlaying }) => {
+const SignalWaveform = ({ isLive, isProfilePlaying, color }) => {
     // Number of points to render
-    const points = Array.from({ length: 60 });
+    const points = Array.from({ length: 40 });
+    const accent = color || 'var(--subsystem-accent)';
     
     return (
-        <div className="w-full h-12 relative flex items-center justify-center overflow-hidden bg-black/40 border-y border-[var(--subsystem-accent)]/10">
-            <div className="absolute inset-0 opacity-5 flex items-center justify-center">
-                 <div className="w-full h-px bg-[var(--subsystem-accent)]" />
+        <div className="w-full h-24 relative flex items-center justify-center overflow-hidden bg-black/40 border-y border-white/5">
+            <div className="absolute inset-0 opacity-10 flex items-center justify-center">
+                 <div className="w-full h-[0.5px]" style={{ background: accent }} />
             </div>
             {isLive || isProfilePlaying ? (
-                <div className="relative w-full h-full flex items-center justify-around px-4">
+                <div className="relative w-full h-full flex items-center justify-around px-8">
                     {points.map((_, i) => (
-                        <div key={i} className="relative h-full flex flex-col justify-center gap-1">
-                            {/* Particle Cloud representation */}
-                            {Array.from({ length: 3 }).map((__, j) => (
-                                <motion.div
-                                    key={j}
-                                    className={`w-[1.5px] h-[1.5px] rounded-full bg-[var(--subsystem-accent)]`}
-                                    animate={{ 
-                                        y: [(Math.random() - 0.5) * 4, (Math.random() - 0.5) * (isLive ? 30 : 20), (Math.random() - 0.5) * 4],
-                                        opacity: [0.2, 0.8, 0.2],
-                                        scale: [1, 1.5, 1]
-                                    }}
-                                    transition={{ 
-                                        duration: 0.6 + Math.random() * 0.8, 
-                                        repeat: Infinity,
-                                        delay: i * 0.01 + j * 0.1
-                                    }}
-                                />
-                            ))}
+                        <div key={i} className="relative h-full flex flex-col justify-center">
+                            <motion.div
+                                className="w-[1.5px] rounded-full"
+                                style={{ background: accent }}
+                                animate={{ 
+                                    height: [2, Math.random() * (isLive ? 60 : 40), 2],
+                                    opacity: [0.3, 1, 0.3],
+                                }}
+                                transition={{ 
+                                    duration: 0.5 + Math.random() * 0.5, 
+                                    repeat: Infinity,
+                                    delay: i * 0.02
+                                }}
+                            />
                         </div>
                     ))}
-                    {/* Pulsing Core Line */}
-                    <motion.div 
-                        className="absolute left-0 right-0 h-[1px] bg-[var(--subsystem-accent)]/20"
-                        animate={{ opacity: [0.1, 0.4, 0.1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                    />
+                    <div className="absolute top-2 left-4 text-[7px] mono font-bold uppercase tracking-[0.2em]" style={{ color: accent }}>SIGNAL_ACTIVE // {isLive ? 'BROADCASTING' : 'AUDIO_SYNC'}</div>
                 </div>
             ) : (
-                <div className="flex items-center gap-[40px] opacity-30">
-                    <motion.div 
-                        animate={{ opacity: [0.4, 1, 0.4] }} 
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="text-[6px] mono text-[var(--subsystem-accent)] font-bold tracking-[0.5em]"
-                    >
-                        SIGNAL_IDLE // HEARTBEAT_STABLE
-                    </motion.div>
+                <div className="flex flex-col items-center gap-2 opacity-20">
+                    <div className="text-[7px] mono font-bold tracking-[0.3em]" style={{ color: accent }}>SIGNAL_IDLE</div>
+                    <div className="w-32 h-[1px]" style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
                 </div>
             )}
         </div>
@@ -145,8 +132,55 @@ const SignalWaveform = ({ isLive, isProfilePlaying }) => {
 
 // --- HUD PROFILE COMPONENTS ---
 
-const SubsystemBlock = ({ title, icon: Icon, children, className = "", expand, onToggleExpand, address = "A1-D4" }) => (
+const LBrackets = ({ className = "" }) => (
+    <>
+        <div className={`console-bracket console-bracket-tl ${className}`} />
+        <div className={`console-bracket console-bracket-tr ${className}`} />
+        <div className={`console-bracket console-bracket-bl ${className}`} />
+        <div className={`console-bracket console-bracket-br ${className}`} />
+    </>
+);
+
+const GearRack = ({ gears, onAddGear, onRemoveGear, isMe, input, setInput, isSaving }) => (
+    <div className="gear-rack">
+        <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5 bg-white/5">
+            <Cpu size={10} className="text-[var(--subsystem-accent)]/60" />
+            <span className="text-[8px] font-black tracking-widest uppercase">HARDWARE_RACK</span>
+        </div>
+        <div className="gear-list custom-scrollbar">
+            {gears.length > 0 ? gears.map((item, idx) => (
+                <div key={idx} className="gear-item group/gear">
+                    <span>{item.name || item.Name || item}</span>
+                    {isMe && (
+                        <button 
+                            onClick={() => onRemoveGear(idx)}
+                            className="opacity-0 group-hover/gear:opacity-100 text-red-500/40 hover:text-red-500 transition-opacity"
+                        >
+                            <X size={8} />
+                        </button>
+                    )}
+                </div>
+            )) : (
+                <div className="text-[7px] mono text-white/10 p-4 text-center mt-4">NO_GEAR_DETECTED // RACK_EMPTY</div>
+            )}
+        </div>
+        {isMe && (
+            <input 
+                type="text"
+                placeholder="REGISTER_GEAR_SIGNAL..."
+                className="register-gear-input"
+                value={input}
+                onChange={(e) => setInput(e.target.value.toUpperCase())}
+                onKeyDown={(e) => e.key === 'Enter' && onAddGear()}
+                disabled={isSaving}
+            />
+        )}
+    </div>
+);
+
+const SubsystemBlock = ({ title, icon: Icon, children, className = "", expand, onToggleExpand, address = "A1-D4", showBrackets = false }) => (
     <div className={`subsystem-block group/widget ${className}`} data-addr={address}>
+        {showBrackets && <LBrackets className="scale-75 opacity-20" />}
         <div className="subsystem-header">
             <div className="flex items-center gap-2">
                 <div className="subsystem-status" />
@@ -164,8 +198,6 @@ const SubsystemBlock = ({ title, icon: Icon, children, className = "", expand, o
         </div>
     </div>
 );
-
-const HUDWidget = SubsystemBlock; // Aliasing for compatibility if needed, but we should use SubsystemBlock
 
 const ProfileIdentityHeader = ({
     displayUser, isMe, isFollowing, localStatus, isSavingStatus,
@@ -776,14 +808,16 @@ export const ProfileView = React.memo(({
     const [localStatus, setLocalStatus] = useState('');
     const [isSavingStatus, setIsSavingStatus] = useState(false);
     
+    const [viewMode, setViewMode] = useState('CONSOLE'); // 'CONSOLE' or 'DASHBOARD'
+    const [cycleIndex, setCycleIndex] = useState(0); // 0: PFP, 1: Tracks, 2: Activity, 3: Social
+    const [musicFilter, setMusicFilter] = useState('ALL'); // 'ALL', 'ALBUMS', 'SINGLES'
+    
     // RESTORED GEAR/STUDIO STATES
     const [profileGear, setProfileGear] = useState([]);
     const [isLoadingGear, setIsLoadingGear] = useState(false);
-    const [showGearForm, setShowGearForm] = useState(false);
-    const [gearFormData, setGearFormData] = useState({ name: '', category: 'Synth', notes: '' });
+    const [gearInput, setGearInput] = useState('');
     const [isSavingGear, setIsSavingGear] = useState(false);
     const [studioSubTab, setStudioSubTab] = useState('All');
-    const [musicSubTab, setMusicSubTab] = useState('All');
     const [selectedRelease, setSelectedRelease] = useState(null);
 
     // 2. DERIVED VARIABLES
@@ -1478,257 +1512,379 @@ export const ProfileView = React.memo(({
     };
 
 
-    return (
-        <div className="monitor-shell min-h-screen relative bg-transparent" style={{ '--subsystem-accent': profileAccent }}>
-            <div className="relative min-h-screen overflow-y-auto no-scrollbar">
-            {/* Ambient Background layer */}
-            {(displayUser?.bannerUrl || displayUser?.BannerUrl || (isMe && showEditProfile && profileData?.previewBannerUrl)) && !(displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl || (isMe && showEditProfile && profileData?.previewWallpaperVideoUrl)) && (
-                <div className={`absolute inset-0 z-[-1] transition-opacity duration-1000 ${panelsVisible ? 'opacity-50' : 'opacity-100'}`}>
-                        <img src={getMediaUrl(isMe && showEditProfile && profileData?.previewBannerUrl ? profileData.previewBannerUrl : (displayUser?.bannerUrl || displayUser?.BannerUrl))} className="w-full h-full object-cover" />
-                </div>
-            )}
-            {(displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl || (isMe && showEditProfile && profileData?.previewWallpaperVideoUrl)) && (
-                <div className={`absolute inset-0 z-[-1] overflow-hidden transition-opacity duration-1000 ${panelsVisible ? 'opacity-50' : 'opacity-100'}`}>
-                    <video 
-                        autoPlay 
-                        muted 
-                        loop 
-                        playsInline 
-                        className="w-full h-full object-cover"
-                        src={getMediaUrl(isMe && showEditProfile && profileData?.previewWallpaperVideoUrl ? profileData.previewWallpaperVideoUrl : (displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl))}
-                    />
-                </div>
-            )}
-            
-            {/* HUD Grid Layout */}
-            <div className="relative z-10 w-full max-w-[1920px] mx-auto min-h-screen flex flex-col p-4 lg:p-8 gap-6 pt-24 lg:pt-32">
-                <ProfileIdentityHeader
-                    displayUser={displayUser}
-                    isMe={isMe}
-                    isFollowing={isFollowing}
-                    localStatus={localStatus}
-                    isSavingStatus={isSavingStatus}
-                    setLocalStatus={setLocalStatus}
-                    handleInlineStatusUpdate={handleInlineStatusUpdate}
-                    handleFollow={handleFollow}
-                    onModifyId={() => setShowEditProfile(true)}
-                    onGoLive={() => setShowGlobalGoLive(true)}
-                    onLogout={onLogout}
-                    onExitProfile={onExitProfile}
-                    onMessageClick={onMessageUser}
-                    communityName={communityName}
-                    communityColor={communityColor}
-                    stationData={stationData}
-                    panelsVisible={panelsVisible}
-                    onTogglePanels={() => setPanelsVisible(!panelsVisible)}
-                    isProfileTrackMuted={isProfileTrackMuted}
-                    onToggleProfileMusic={toggleProfileMusic}
-                    hasFeaturedTrack={hasFeaturedTrack}
-                />
+    // 5. RENDER PHASE: CONSOLE (PROJECTION)
+    const renderConsoleView = () => {
+        const pfp = displayUser?.profilePictureUrl || displayUser?.ProfilePictureUrl || displayUser?.profileImageUrl || displayUser?.ProfileImageUrl;
+        const isLive = stationData?.isLive || stationData?.IsLive;
 
-                {/* Mobile Tab Toggle */}
-                <div className="lg:hidden flex border border-white/10 p-1 bg-black/60 backdrop-blur-md">
-                    <button onClick={() => setMobileView('WALL')} className={`flex-1 py-2 text-[9px] font-bold mono uppercase tracking-widest transition-all ${mobileView === 'WALL' ? 'bg-[var(--text-color)] text-black' : 'text-white/40'}`}>DISPLAY_WALL</button>
-                    <button onClick={() => setMobileView('STREAM')} className={`flex-1 py-2 text-[9px] font-bold mono uppercase tracking-widest transition-all ${mobileView === 'STREAM' ? 'bg-[var(--text-color)] text-black' : 'text-white/40'}`}>DATA_STREAM</button>
-                </div>
-
-                <div className="flex flex-col lg:flex-row gap-4 flex-1">
-                    {/* LEFT COLUMN: AUDIO & JOURNALS */}
-                    <AnimatePresence mode="popLayout">
-                        {panelsVisible && (
-                            <motion.div 
-                                initial={{ width: 0, opacity: 0, x: -20 }}
-                                animate={{ width: 320, opacity: 1, x: 0 }}
-                                exit={{ width: 0, opacity: 0, x: -20 }}
-                                className={`shrink-0 flex flex-col gap-4 overflow-hidden ${mobileView !== 'STREAM' ? 'hidden lg:flex' : 'flex'}`}
-                            >
-                                <AudioSignalsWidget
-                                    tracks={profileTracks}
-                                    isExpanded={widgetsExpanded.audio}
-                                    onToggleExpand={() => toggleWidget('audio')}
-                                    onPlayTrack={onPlayTrack}
-                                    isMe={isMe}
-                                    onUpload={() => setShowGlobalUpload(true)}
-                                />
-                                <SequenceMapWidget 
-                                    playlists={profilePlaylists}
-                                    onPlay={(p) => onPlayPlaylist(p.tracks || [], 0)}
-                                    isMe={isMe}
-                                    onNew={() => setShowCreatePlaylist(true)}
-                                    expand={widgetsExpanded.sequences}
-                                    onToggleExpand={() => toggleWidget('sequences')}
-                                />
-                                <JournalWidget 
-                                    entries={profileJournal} 
-                                    onExpand={handleItemClick} 
-                                    isMe={isMe} 
-                                    onNew={() => setShowJournalForm(true)} 
-                                    expand={widgetsExpanded.journal}
-                                    onToggleExpand={() => toggleWidget('journal')}
-                                />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
-                    {/* CENTER COLUMN: DISPLAY WALL */}
-                    <div className={`transition-all duration-700 ease-in-out flex flex-col gap-4 ${panelsVisible ? 'flex-1 min-w-0' : 'mx-auto w-full max-w-4xl opacity-90 scale-[0.98]'} ${mobileView !== 'WALL' ? 'hidden lg:flex' : 'flex'}`}>
-                        <div className={`border border-[var(--subsystem-accent)]/20 p-4 bg-black/60 backdrop-blur-md min-h-[600px] relative transition-all duration-700 ${!panelsVisible ? 'bg-black/40 backdrop-blur-3xl shadow-[0_0_100px_rgba(0,0,0,0.8)]' : ''}`}>
-                             <div className="absolute top-0 right-0 p-1">
-                                <span className="text-[6px] mono text-[var(--subsystem-accent)]/20 uppercase tracking-[0.4em]">ADDR: GRID_0x{effectiveId?.toString().slice(-4)}</span>
-                             </div>
-                            <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[var(--subsystem-accent)]/30 -translate-x-1 -translate-y-1" />
-                            <div className="text-[10px] mono text-[var(--subsystem-accent)]/60 uppercase tracking-[0.4em] mb-4 pb-2 border-b border-[var(--subsystem-accent)]/10 font-bold flex justify-between items-center">
-                                <span>// CORE_DISPLAY_GRID</span>
-                                <span className="text-[8px] opacity-40">Z-AXIS::ENABLED</span>
+        return (
+            <div className="console-container pt-12">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 1.05 }}
+                    className="console-outer-frame"
+                >
+                    <LBrackets className="opacity-60" />
+                    
+                    {/* Left: Station Signal */}
+                    <div className="console-panel">
+                        <div className="flex-1 flex flex-col items-center justify-center p-6 gap-6">
+                            <div className="text-[9px] mono font-bold uppercase tracking-[0.4em] opacity-40">STATION_LINK</div>
+                            <div className="w-32 h-32 border border-white/10 bg-black/40 flex items-center justify-center relative overflow-hidden">
+                                {isLive && stationData?.imageUrl ? (
+                                    <img src={getMediaUrl(stationData.imageUrl)} className="w-full h-full object-cover animate-pulse" />
+                                ) : (
+                                    <Radio size={32} className="text-white/10" />
+                                )}
+                                <div className="absolute inset-0 bg-scanlines opacity-10 pointer-events-none" />
                             </div>
-                            <DisplayWallGrid
-                                tracks={profileTracks}
-                                gallery={profileGallery}
-                                journal={isMe ? profileJournal : profileJournal.filter(j => j.IsPosted || j.isPosted)}
-                                playlists={profilePlaylists}
-                                uid={effectiveId}
-                                onExpand={handleItemClick}
-                                onPlayTrack={onPlayTrack}
-                                onPlayPlaylist={(p) => onPlayPlaylist(p.tracks || [], 0)}
-                            />
+                            <SignalWaveform isLive={isLive} isProfilePlaying={!isProfileTrackMuted} color={profileAccent} />
+                            <div className="text-[10px] font-black uppercase tracking-widest text-center" style={{ color: profileAccent }}>
+                                {isLive ? 'SIGNAL_DETECTION: LIVE' : 'STATUS: OFFLINE'}
+                            </div>
                         </div>
                     </div>
 
-                    {/* RIGHT COLUMN: ARCHIVE */}
-                    <AnimatePresence mode="popLayout">
-                        {panelsVisible && (
+                    {/* Center: Dynamic Core */}
+                    <div className="console-panel w-[320px]">
+                        <AnimatePresence mode="wait">
                             <motion.div 
-                                initial={{ width: 0, opacity: 0, x: 20 }}
-                                animate={{ width: 320, opacity: 1, x: 0 }}
-                                exit={{ width: 0, opacity: 0, x: 20 }}
-                                className={`shrink-0 flex flex-col gap-4 overflow-hidden ${mobileView !== 'STREAM' ? 'hidden lg:flex' : 'flex'}`}
+                                key={cycleIndex}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="flex-1 p-6 flex flex-col items-center justify-center"
                             >
-                                <VisualArchiveWidget 
-                                    gallery={profileGallery} 
-                                    onExpand={handleItemClick} 
-                                    isMe={isMe} 
-                                    onIngest={() => setShowGlobalIngest(true)} 
-                                    expand={widgetsExpanded.archive}
-                                    onToggleExpand={() => toggleWidget('archive')}
-                                />
-                                <GearRackWidget 
-                                    gear={profileGear} 
-                                    isMe={isMe} 
-                                    onAdd={() => {
-                                        setGearFormData({ name: '', category: 'Synth', notes: '' });
-                                        setShowGearForm(true);
-                                    }} 
-                                    onDelete={handleDeleteGear}
-                                    expand={widgetsExpanded.gear}
-                                    onToggleExpand={() => toggleWidget('gear')}
-                                />
+                                {cycleIndex === 0 && (
+                                    <div className="w-48 h-48 border border-white/10 bg-black/40 p-1">
+                                        <div className="w-full h-full border border-white/20 relative overflow-hidden group">
+                                            {pfp ? (
+                                                <img src={getMediaUrl(pfp)} className="w-full h-full object-cover grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-105" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-white/5"><Cpu size={48} /></div>
+                                            )}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                                                <span className="text-[7px] mono font-bold tracking-widest">BIO_SCAN_COMPLETE</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {cycleIndex === 1 && (
+                                    <div className="w-full space-y-4">
+                                        <div className="text-[9px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2">SIGNAL_TRACKS</div>
+                                        {profileTracks.slice(0, 5).map((t, idx) => (
+                                            <div key={idx} className="flex items-center gap-3 group cursor-pointer" onClick={() => onPlayTrack(t)}>
+                                                <span className="text-[8px] mono opacity-20">[{String(idx+1).padStart(2,'0')}]</span>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-[10px] font-bold text-white uppercase tracking-wider truncate group-hover:text-[var(--subsystem-accent)] transition-colors">{t.title || t.Title}</div>
+                                                    <div className="text-[7px] mono opacity-40 uppercase truncate">{t.artistName || t.ArtistName}</div>
+                                                </div>
+                                                {idx === 0 && <Star size={10} className="text-yellow-500/60" />}
+                                                <Play size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {cycleIndex === 2 && (
+                                    <div className="w-full h-full flex flex-col">
+                                        <div className="text-[9px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-4">ACTIVITY_LOG</div>
+                                        <div className="flex-1 space-y-4">
+                                            {profileJournal.slice(0, 4).map((entry, idx) => (
+                                                <div key={idx} className="border-l border-white/10 pl-3">
+                                                    <div className="text-[8px] mono text-white/30 uppercase">{new Date(entry.createdAt || entry.CreatedAt).toLocaleDateString()}</div>
+                                                    <div className="text-[9px] font-bold text-white/80 uppercase tracking-wide truncate">{entry.title || entry.Title}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {cycleIndex === 3 && (
+                                    <div className="w-full flex flex-col items-center gap-8">
+                                        <div className="text-[9px] mono font-bold uppercase tracking-[0.4em] opacity-40">NEURAL_LINKS</div>
+                                        <div className="grid grid-cols-2 gap-8">
+                                            <div className="flex flex-col items-center gap-2 group cursor-pointer opacity-40 hover:opacity-100 transition-all">
+                                                <div className="p-4 border border-white/10 bg-white/5 rounded-full"><Share2 size={24} /></div>
+                                                <span className="text-[8px] mono">SOCIAL_01</span>
+                                            </div>
+                                            <div className="flex flex-col items-center gap-2 group cursor-pointer opacity-40 hover:opacity-100 transition-all">
+                                                <div className="p-4 border border-white/10 bg-white/5 rounded-full"><Link size={24} /></div>
+                                                <span className="text-[8px] mono">WEBSITE</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </motion.div>
-                        )}
-                    </AnimatePresence>
+                        </AnimatePresence>
+
+                        {/* Controls */}
+                        <div className="center-cycle-controls">
+                            <button onClick={() => setCycleIndex((prev) => (prev - 1 + 4) % 4)} className="cycle-btn"><ChevronDown size={20} className="rotate-180" /></button>
+                            <button onClick={() => setCycleIndex((prev) => (prev + 1) % 4)} className="cycle-btn"><ChevronDown size={20} /></button>
+                        </div>
+                    </div>
+
+                    {/* Right: Metadata */}
+                    <div className="console-panel">
+                        <div className="flex-1 p-8 space-y-6">
+                            <div className="text-[9px] mono font-bold uppercase tracking-[0.4em] opacity-40">USER_DATA</div>
+                            <div className="space-y-4">
+                                <div className="space-y-1">
+                                    <div className="text-[7px] mono text-white/20 uppercase">FULL_NAME</div>
+                                    <div className="text-[11px] font-black text-white uppercase tracking-widest">{displayUser?.username || 'ANONYMOUS'}</div>
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="text-[7px] mono text-white/20 uppercase">RES_SECTOR</div>
+                                    <div className="text-[11px] font-black uppercase tracking-widest" style={{ color: communityColor }}>{communityName}</div>
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="text-[7px] mono text-white/20 uppercase">SIG_ID</div>
+                                    <div className="text-[10px] mono font-bold text-white/60 tracking-wider">0X{displayUser?.id?.toString().slice(0, 8).toUpperCase()}</div>
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="text-[7px] mono text-white/20 uppercase">BIO_SYNC</div>
+                                    <div className="text-[10px] mono font-bold text-white/40 tracking-widest">NORMALIZED_98%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Enter Button */}
+                    <button onClick={() => setViewMode('DASHBOARD')} className="enter-system-btn">ENTER_SYSTEM</button>
+                </motion.div>
+            </div>
+        );
+    };
+
+    // 6. RENDER PHASE: DASHBOARD (EXPANDED)
+    const renderDashboardView = () => {
+        const pfp = displayUser?.profilePictureUrl || displayUser?.ProfilePictureUrl || displayUser?.profileImageUrl || displayUser?.ProfileImageUrl;
+
+        return (
+            <div className="dashboard-grid custom-scrollbar">
+                {/* Identity Core Panel (Upper Right) */}
+                <div className="identity-core-panel">
+                    <SubsystemBlock title="IDENTITY_CORE" showBrackets={true}>
+                        <div className="p-4 flex gap-4">
+                            <div className="w-20 h-20 border border-[var(--subsystem-accent)]/20 bg-black/40 p-0.5 shrink-0">
+                                <div className="w-full h-full border border-[var(--subsystem-accent)]/10 overflow-hidden">
+                                     {pfp ? (
+                                        <img src={getMediaUrl(pfp)} className="w-full h-full object-cover grayscale" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-white/5"><Cpu size={24} /></div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                <div className="text-[14px] font-black uppercase tracking-widest leading-none mb-1">{displayUser?.username}</div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
+                                    <div className="text-[7px] mono text-[var(--subsystem-accent)]/60 uppercase tracking-widest">UPLINK_STABLE</div>
+                                </div>
+                                <div className="mt-2 text-[9px] mono text-white/40 uppercase tracking-widest truncate group-hover:text-white/80 transition-colors cursor-help">
+                                    {"> "} {localStatus || 'NO_SIGNAL_BROADCAST'}
+                                </div>
+                            </div>
+                        </div>
+                        <GearRack 
+                            gears={profileGear} 
+                            isMe={isMe} 
+                            input={gearInput} 
+                            setInput={setGearInput} 
+                            onAddGear={handleAddGear}
+                            onRemoveGear={handleDeleteGear}
+                            isSaving={isSavingGear}
+                        />
+                    </SubsystemBlock>
+                </div>
+
+                {/* Music Releases Panel */}
+                <div className="music-releases-panel">
+                    <SubsystemBlock title="MUSIC_RELEASES" showBrackets={true}>
+                        <div className="flex items-center justify-between px-4 py-2 bg-black/40 border-b border-white/5">
+                            <div className="flex gap-4">
+                                {['ALL', 'ALBUMS', 'SINGLES'].map(f => (
+                                    <button 
+                                        key={f}
+                                        onClick={() => setMusicFilter(f)}
+                                        className={`text-[8px] font-black uppercase tracking-[0.2em] transition-all hover:text-white ${musicFilter === f ? 'text-[var(--subsystem-accent)]' : 'text-white/20'}`}
+                                    >
+                                        {f}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="flex gap-2">
+                                <button className="p-1 hover:text-white text-white/20 transition-all"><ChevronLeft size={14} /></button>
+                                <button className="p-1 hover:text-white text-white/20 transition-all"><ChevronRight size={14} /></button>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 p-4 max-h-[500px] overflow-y-auto custom-scrollbar">
+                            {profileTracks.filter(t => musicFilter === 'ALL' || (musicFilter === 'ALBUMS' ? (t.isAlbum || t.IsAlbum) : !(t.isAlbum || t.IsAlbum))).map((t, idx) => (
+                                <div key={idx} className="group cursor-pointer" onClick={() => onPlayTrack(t)}>
+                                    <div className="aspect-square bg-black border border-white/5 overflow-hidden relative mb-2">
+                                        {t.coverImageUrl || t.CoverImageUrl ? (
+                                            <img src={getMediaUrl(t.coverImageUrl || t.CoverImageUrl)} className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
+                                        ) : (
+                                            <div className="w-full h-full bg-[#050505] flex items-center justify-center text-white/10"><Music size={32} /></div>
+                                        )}
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <Play size={24} className="text-white scale-75 group-hover:scale-100 transition-transform" />
+                                        </div>
+                                    </div>
+                                    <div className="text-[10px] font-bold text-white uppercase tracking-wider truncate">{t.title || t.Title}</div>
+                                    <div className="text-[7px] mono text-white/20 uppercase tracking-widest">{(t.isAlbum || t.IsAlbum) ? 'ALBUM_RELEASE' : 'SINGLE_SIGNAL'}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </SubsystemBlock>
+                </div>
+
+                {/* Studio Content Panel */}
+                <div className="studio-content-panel">
+                    <SubsystemBlock title="STUDIO_ARCHIVE" showBrackets={true}>
+                        <div className="p-4 grid grid-cols-3 gap-2 max-h-[300px] overflow-y-auto custom-scrollbar">
+                            {profileGallery.map((img, idx) => (
+                                <div key={idx} className="aspect-square bg-black border border-white/5 overflow-hidden group relative cursor-pointer" onClick={() => handleItemClick(img, 'GALLERY')}>
+                                    <img src={getMediaUrl(img.url || img.Url || img.imageUrl || img.ImageUrl)} className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity" />
+                                    {(img.type === 'VIDEO' || img.Type === 'VIDEO') && <Video size={12} className="absolute bottom-1 right-1 text-white/40" />}
+                                </div>
+                            ))}
+                            {profileJournal.map((entry, idx) => (
+                                <div key={idx} className="aspect-square border border-white/5 bg-white/5 p-2 flex flex-col justify-between group cursor-pointer hover:bg-white/10 transition-colors" onClick={() => handleItemClick(entry, 'JOURNAL')}>
+                                    <Book size={16} className="text-white/20 group-hover:text-white/60 transition-colors" />
+                                    <div className="text-[7px] font-black uppercase tracking-tight leading-tight line-clamp-2">{entry.title || entry.Title}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </SubsystemBlock>
+                </div>
+
+                {/* Archive Panel (Playlists/Past Broadcasts) */}
+                <div className="archive-panel">
+                    <SubsystemBlock title="PLAYLISTS_&_BROADCASTS" showBrackets={true}>
+                        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-px p-1 max-h-[400px]">
+                            {profilePlaylists.map((p, idx) => (
+                                <div 
+                                    key={idx} 
+                                    className="flex items-center gap-4 p-3 bg-white/5 border border-transparent hover:border-[var(--subsystem-accent)]/20 hover:bg-white/10 transition-all cursor-pointer group"
+                                    onClick={() => handleItemClick(p, 'PLAYLIST')}
+                                >
+                                    <div className="w-10 h-10 bg-black border border-white/10 overflow-hidden shrink-0">
+                                        <img src={getMediaUrl(p.imageUrl || p.ImageUrl)} className="w-full h-full object-cover grayscale opacity-40 group-hover:opacity-100 transition-opacity" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-[10px] font-bold text-white uppercase tracking-wider truncate">{p.name || p.Name}</div>
+                                        <div className="text-[7px] mono text-white/20 uppercase tracking-widest">{p.isPublic ? 'PUBLIC_SOURCE' : 'ENCRYPTED_SIG'}</div>
+                                    </div>
+                                    <ChevronRight size={14} className="text-white/10 group-hover:text-white/40 transition-colors" />
+                                </div>
+                            ))}
+                        </div>
+                    </SubsystemBlock>
+                </div>
+            </div>
+        );
+    };
+
+    return (
+        <div className="spatial-container monitor-shell min-h-screen pt-4" style={{ '--subsystem-accent': profileAccent, '--subsystem-accent-rgb': hexToRgb(profileAccent) }}>
+            <DataStream />
+            <CRTOverlay />
+            <CyberDust count={40} />
+
+            {/* Global Refined Header */}
+            <div className="fixed top-6 left-12 right-12 z-[100] flex items-center justify-between">
+                <button 
+                    onClick={onExitProfile}
+                    className="group flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white transition-all"
+                >
+                    <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+                    RETURN_ORBIT
+                </button>
+
+                <div className="flex items-center gap-6">
+                    {isMe ? (
+                        <>
+                            <button onClick={onLogout} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-red-500/40 hover:text-red-500 transition-colors">
+                                <LogOut size={14} /> LOGOUT
+                            </button>
+                            <button onClick={() => setShowEditProfile(true)} className="px-4 py-1.5 bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all">
+                                MODIFY_ID
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <button onClick={() => onMessageUser?.(displayUser)} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/40 hover:text-white transition-colors">
+                                <MessageSquare size={14} /> MESSAGE
+                            </button>
+                            <button onClick={handleFollow} className={`px-6 py-1.5 border text-[9px] font-black uppercase tracking-[0.3em] transition-all ${isFollowing ? 'border-white/10 text-white/40' : 'border-[var(--subsystem-accent)] text-[var(--subsystem-accent)] hover:bg-[var(--subsystem-accent)] hover:text-black'}`}>
+                                {isFollowing ? 'FOLLOWING' : 'FOLLOW'}
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
 
-            {/* Global Overlays */}
+            <motion.div 
+                className="flex-1 w-full h-full relative z-10 flex flex-col"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8 }}
+            >
+                <AnimatePresence mode="wait">
+                    {viewMode === 'CONSOLE' ? (
+                        <div key="console" className="flex-1 overflow-hidden">{renderConsoleView()}</div>
+                    ) : (
+                        <div key="dashboard" className="flex-1 overflow-hidden">{renderDashboardView()}</div>
+                    )}
+                </AnimatePresence>
+            </motion.div>
+
+            {/* Modal Layer */}
             <AnimatePresence>
-                {showCreatePlaylist && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
-                        <div className="bg-black border border-[var(--text-color)]/25 p-10 max-w-md w-full relative shadow-[0_0_60px_rgba(0,0,0,0.8)]">
-                            {/* Corner Accents */}
-                            <div className="absolute top-0 left-0 w-6 h-6 border-t border-l border-[var(--text-color)]/40" />
-                            <div className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-[var(--text-color)]/40" />
-                            <button onClick={() => setShowCreatePlaylist(false)} className="absolute top-4 right-4 text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300">
-                                <X size={20} />
-                            </button>
-                            <h3 className="text-xl font-bold text-white uppercase tracking-tighter mb-8 pb-4 border-b border-[var(--text-color)]/20">// INIT_SEQ_MAP_V1</h3>
-                            <form onSubmit={handleCreatePlaylist} className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-[9px] font-bold text-[var(--text-color)] uppercase tracking-[0.4em]">_SEQUENCE_NAME</label>
-                                    <input type="text" value={newPlaylistName} onChange={e => setNewPlaylistName(e.target.value)} className="w-full bg-black border border-white/10 p-4 text-white font-bold outline-none focus:border-[var(--text-color)] tracking-widest transition-all" placeholder="sequence_id_0" />
-                                </div>
-                                <div className="flex items-center justify-between p-4 border border-white/5 cursor-pointer group" onClick={() => setIsPlaylistPublic(!isPlaylistPublic)}>
-                                    <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest">_ACCESS_PROTOCOL</span>
-                                    <span className="text-[9px] text-[var(--text-color)] uppercase">{isPlaylistPublic ? 'PUBL_SYSTEM' : 'PRIV_ENCRYPTED'}</span>
-                                </div>
-                                <button type="submit" className="w-full py-4 bg-black border border-[var(--theme-color)] text-[var(--text-color)] font-bold uppercase tracking-widest hover:bg-[var(--theme-color)] hover:text-black transition-all">ESTABLISH_SEQUENCE</button>
-                            </form>
+                {showEditProfile && (
+                    <ContentModal onClose={() => setShowEditProfile(false)} title="MODIFY_IDENTITY">
+                         <div className="p-8 h-full bg-black/90 backdrop-blur-3xl border border-white/5 overflow-y-auto custom-scrollbar">
+                            <h2 className="text-2xl font-black text-white mb-8 border-b border-white/10 pb-4 uppercase tracking-[0.2em] italic flex items-center gap-4">
+                                <span className="p-2 bg-red-500 text-black">01</span> Identity_Core_Update
+                            </h2>
+                            <EditProfileForm
+                                user={displayUser}
+                                tracks={isMe ? profileTracks : []}
+                                onSubmit={handleUpdateProfile}
+                                onLogout={onLogout}
+                            />
                         </div>
-                    </motion.div>
+                    </ContentModal>
                 )}
-                {
-                    showEditProfile && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
-                            <div className="bg-black border border-[var(--text-color)]/30 p-10 max-w-xl w-full relative shadow-[0_0_60px_rgba(0,0,0,0.8)] rounded-2xl overflow-hidden">
-                                <button onClick={() => setShowEditProfile(false)} className="absolute top-4 right-4 text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300"><X size={20} /></button>
-                                <div className="max-h-[70vh] overflow-y-auto no-scrollbar pr-1">
-                                    <EditProfileForm
-                                        user={displayUser}
-                                        tracks={isMe ? allTracks.filter(t => t.isOwned || t.isLiked || String(t.artistUserId || t.ArtistUserId) === String(currentUser?.id || currentUser?.Id)) : profileTracks}
-                                        onSubmit={handleUpdateProfile}
-                                        onLogout={onLogout}
-                                        onColorPreview={(colors) => {
-                                            setProfileData(prev => ({
-                                                ...prev,
-                                                previewThemeColor: colors.themeColor,
-                                                previewTextColor: colors.textColor,
-                                                previewBackgroundColor: colors.backgroundColor,
-                                                previewIsGlass: colors.isGlass,
-                                                previewMonitorImageUrl: colors.previewMonitorImageUrl,
-                                                previewMonitorBackgroundColor: colors.monitorBackgroundColor,
-                                                previewMonitorIsGlass: colors.monitorIsGlass
-                                            }));
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        </motion.div>
-                    )
-                }
-                {
-                    selectedPlaylistId && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                            <div className="bg-black border border-[var(--text-color)]/15 w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden relative shadow-[0_0_80px_rgba(0,0,0,1)]">
-                                <button onClick={() => setSelectedPlaylistId(null)} className="absolute top-4 right-4 z-50 text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300">
-                                    <X size={24} />
-                                </button>
-                                {isLoadingPlaylist ? (
-                                    <div className="flex-1 flex items-center justify-center"><RefreshCw className="animate-spin text-[var(--text-color)]" /></div>
-                                ) : (
-                                    <PlaylistDetailsModal
-                                        playlist={playlistDetails?.playlist || playlistDetails?.Playlist}
-                                        tracks={playlistDetails?.tracks || playlistDetails?.Tracks}
-                                        isOwner={isMe}
-                                        onUpdate={handleUpdatePlaylist}
-                                        onDelete={handleDeletePlaylist}
-                                        onRemoveTrack={handleRemoveTrackFromPlaylist}
-                                        onPlayAll={(tracks) => onPlayPlaylist?.(tracks)}
-                                        playlists={currentUserPlaylists}
-                                        myLikes={myLikes}
-                                        onQueueTrack={onQueueTrack}
-                                        onRefreshPlaylists={onRefreshPlaylists}
-                                    />
-                                )}
-                            </div>
-                        </motion.div>
-                    )
-                }
-                {
-                    selectedContent && (
-                        <ContentModal
-                            content={selectedContent}
-                            type={selectedContent.type}
-                            onClose={() => setSelectedContent(null)}
-                            hasMiniPlayer={hasMiniPlayer}
-                            themeColor={(isMe && showEditProfile && profileData?.previewThemeColor) ? profileData.previewThemeColor : (displayUser?.themeColor || displayUser?.ThemeColor)}
-                            backgroundColor={isMe && showEditProfile ? (profileData?.previewBackgroundColor || displayUser?.backgroundColor) : (displayUser?.backgroundColor || displayUser?.BackgroundColor)}
-                            isGlass={isMe && showEditProfile ? (profileData?.previewIsGlass !== null ? profileData.previewIsGlass : displayUser?.isGlass) : (displayUser?.isGlass || displayUser?.IsGlass)}
-                            monitorImageUrl={isMe && showEditProfile ? (profileData?.previewMonitorImageUrl === 'none' ? 'none' : (profileData?.previewMonitorImageUrl || displayUser?.monitorImageUrl)) : (displayUser?.monitorImageUrl || displayUser?.MonitorImageUrl)}
-                            monitorBackgroundColor={isMe && showEditProfile ? (profileData?.previewMonitorBackgroundColor || displayUser?.monitorBackgroundColor) : (displayUser?.monitorBackgroundColor || displayUser?.MonitorBackgroundColor)}
-                            monitorIsGlass={isMe && showEditProfile ? (profileData?.previewMonitorIsGlass !== null ? profileData.previewMonitorIsGlass : (displayUser?.monitorIsGlass || displayUser?.MonitorIsGlass)) : (displayUser?.monitorIsGlass || displayUser?.MonitorIsGlass)}
-                        />
-                    )
-                }
+                {selectedPlaylistId && playlistDetails && (
+                    <PlaylistPopup 
+                        playlist={playlistDetails.Playlist || playlistDetails.playlist} 
+                        tracks={playlistDetails.Tracks || playlistDetails.tracks} 
+                        isMe={isMe}
+                        onClose={() => { setSelectedPlaylistId(null); setPlaylistDetails(null); }}
+                        onRemoveTrack={handleRemoveTrackFromPlaylist}
+                        onPlayAll={onPlayPlaylist}
+                        playlists={profilePlaylists}
+                        myLikes={myLikes}
+                        onQueueTrack={onQueueTrack}
+                        onRefreshPlaylists={onRefreshPlaylists}
+                        onLike={onLike}
+                    />
+                )}
+                {selectedContent && (
+                    <ContentModal
+                        content={selectedContent}
+                        type={selectedContent.type || selectedContent.Type}
+                        onClose={() => setSelectedContent(null)}
+                        hasMiniPlayer={true}
+                        themeColor={profileAccent}
+                    />
+                )}
             </AnimatePresence>
-            {!(displayUser?.monitorImageUrl || displayUser?.MonitorImageUrl || (isMe && showEditProfile && profileData?.previewMonitorImageUrl)) && <CRTOverlay />}
             </div>
         </div>
     );
