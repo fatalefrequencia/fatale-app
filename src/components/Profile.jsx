@@ -2511,7 +2511,7 @@ const StatItem = ({ label, value }) => (
     </div>
 );
 
-const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, onRemoveTrack, onPlayAll, playlists = [], myLikes = [], onQueueTrack, onRefreshPlaylists }) => {
+const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, onRemoveTrack, onPlayAll, playlists = [], myLikes = [], onQueueTrack, onRefreshPlaylists, onLike }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [localImageUrl, setLocalImageUrl] = useState(playlist?.imageUrl || '');
 
