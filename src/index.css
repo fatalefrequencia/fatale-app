@@ -8,7 +8,20 @@
 }
 
 body {
-    text-shadow: 0 0 1px rgba(var(--theme-color-rgb), 0.2), 0 0 8px rgba(var(--theme-color-rgb), 0.1);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    animation: terminal-text-flicker 10s infinite;
+}
+
+@keyframes terminal-text-flicker {
+    0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% {
+        opacity: 1;
+        text-shadow: 0 0 15px rgba(var(--theme-color-rgb), 0.12);
+    }
+    20%, 21.999%, 63%, 63.999%, 65%, 69.999% {
+        opacity: 0.98;
+        text-shadow: 0 0 18px rgba(var(--theme-color-rgb), 0.15);
+    }
 }
 
 @layer utilities {
@@ -142,7 +155,6 @@ body {
 
     .mono {
         font-family: 'Share Tech Mono', monospace;
-        text-shadow: 0 0 1px rgba(var(--theme-color-rgb), 0.3), 0 0 10px rgba(var(--theme-color-rgb), 0.15);
     }
 
     @keyframes pulse-ring {
