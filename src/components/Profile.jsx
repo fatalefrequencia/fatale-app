@@ -1355,23 +1355,24 @@ export const ProfileView = React.memo(({
             const API = await import('../services/api').then(mod => mod.default);
             const uid = currentUser?.id || currentUser?.Id || currentUser?.userId || currentUser?.UserId;
             
-            // Build the payload as a plain object for JSON transmission
-            const payload = {
-                Username: formData.get('Username'),
-                Biography: formData.get('Biography'),
-                StatusMessage: formData.get('StatusMessage'),
-                ResidentSectorId: parseInt(formData.get('ResidentSectorId')) || 0,
-                IsLive: formData.get('IsLive') === 'true',
-                FeaturedTrackId: parseInt(formData.get('FeaturedTrackId')) || null,
-                ThemeColor: formData.get('ThemeColor'),
-                TextColor: formData.get('TextColor'),
-                BackgroundColor: formData.get('BackgroundColor'),
-                IsGlass: formData.get('IsGlass') === 'true',
-                // Keep existing URLs by default
-                ProfilePictureUrl: currentUser.profileImageUrl || currentUser.ProfilePictureUrl,
-                BannerUrl: currentUser.bannerUrl || currentUser.BannerUrl,
-                WallpaperVideoUrl: currentUser.wallpaperVideoUrl || currentUser.WallpaperVideoUrl
-            };
+            // Critical Calibration: .NET backend REQUIRES multipart/form-data (ReadForm)
+            // We use the upload-first strategy to get absolute URLs, then commit via FormData
+            const updateForm = new FormData();
+            updateForm.append('Username', formData.get('Username'));
+            updateForm.append('Biography', formData.get('Biography'));
+            updateForm.append('StatusMessage', formData.get('StatusMessage'));
+            updateForm.append('ResidentSectorId', formData.get('ResidentSectorId'));
+            updateForm.append('IsLive', formData.get('IsLive'));
+            updateForm.append('FeaturedTrackId', formData.get('FeaturedTrackId') || '');
+            updateForm.append('ThemeColor', formData.get('ThemeColor'));
+            updateForm.append('TextColor', formData.get('TextColor'));
+            updateForm.append('BackgroundColor', formData.get('BackgroundColor'));
+            updateForm.append('IsGlass', formData.get('IsGlass'));
+
+            // Legacy URL Fallbacks
+            let pfpUrl = currentUser.profileImageUrl || currentUser.ProfilePictureUrl;
+            let bnrUrl = currentUser.bannerUrl || currentUser.BannerUrl;
+            let vdoUrl = currentUser.wallpaperVideoUrl || currentUser.WallpaperVideoUrl;
 
             // Intercept and manually upload files to get persistent URLs
             const pfpFile = formData.get('ProfilePicture');
@@ -1383,7 +1384,7 @@ export const ProfileView = React.memo(({
                 const fd = new FormData();
                 fd.append('file', pfpFile);
                 const r = await API.Files.upload(fd);
-                payload.ProfilePictureUrl = r.data.path || r.data.Path || r.data.url;
+                pfpUrl = r.data.path || r.data.Path || r.data.url;
             }
 
             if (bnrFile instanceof File) {
@@ -1391,8 +1392,8 @@ export const ProfileView = React.memo(({
                 const fd = new FormData();
                 fd.append('file', bnrFile);
                 const r = await API.Files.upload(fd);
-                payload.BannerUrl = r.data.path || r.data.Path || r.data.url;
-                payload.WallpaperVideoUrl = ''; // Clear video
+                bnrUrl = r.data.path || r.data.Path || r.data.url;
+                vdoUrl = ''; // Clear video
             }
 
             if (vdoFile instanceof File) {
@@ -1400,12 +1401,17 @@ export const ProfileView = React.memo(({
                 const fd = new FormData();
                 fd.append('file', vdoFile);
                 const r = await API.Files.upload(fd);
-                payload.WallpaperVideoUrl = r.data.path || r.data.Path || r.data.url;
-                payload.BannerUrl = ''; // Clear photo
+                vdoUrl = r.data.path || r.data.Path || r.data.url;
+                bnrUrl = ''; // Clear photo
             }
 
-            // High-reliability commit via JSON payload
-            const res = await API.Users.updateProfile(payload, uid);
+            // Sync resulting URLs to the primary update buffer
+            updateForm.append('ProfilePictureUrl', pfpUrl || '');
+            updateForm.append('BannerUrl', bnrUrl || '');
+            updateForm.append('WallpaperVideoUrl', vdoUrl || '');
+
+            // Synchronize with backend core
+            const res = await API.Users.updateProfile(updateForm, uid);
             showNotification("PROFILE_SYNCED", "Identity modifications committed and persistent.", "success");
             setShowEditProfile(false);
 
