@@ -1949,6 +1949,8 @@ export const ProfileView = React.memo(({
                         onQueueTrack={onQueueTrack}
                         onRefreshPlaylists={onRefreshPlaylists}
                         onLike={onLike}
+                        onUpdate={handleUpdatePlaylist}
+                        onDelete={handleDeletePlaylist}
                     />
                 )}
                 {selectedContent && (
@@ -2647,6 +2649,33 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
                 )}
             </div>
         </div>
+    );
+};
+
+const PlaylistPopup = ({ 
+    playlist, tracks, isMe, onClose, onUpdate, onDelete, 
+    onRemoveTrack, onPlayAll, playlists, myLikes, 
+    onQueueTrack, onRefreshPlaylists, onLike 
+}) => {
+    return (
+        <ContentModal onClose={onClose} title={`PLAYLIST // ${playlist.name?.toUpperCase()}`}>
+            <div className="h-full bg-black/90 backdrop-blur-3xl">
+                <PlaylistDetailsModal 
+                    playlist={playlist}
+                    tracks={tracks}
+                    isOwner={isMe}
+                    onUpdate={onUpdate}
+                    onDelete={onDelete}
+                    onRemoveTrack={onRemoveTrack}
+                    onPlayAll={onPlayAll}
+                    playlists={playlists}
+                    myLikes={myLikes}
+                    onQueueTrack={onQueueTrack}
+                    onRefreshPlaylists={onRefreshPlaylists}
+                    onLike={onLike}
+                />
+            </div>
+        </ContentModal>
     );
 };
 
