@@ -7,8 +7,9 @@ import { useNotification } from '../contexts/NotificationContext';
 const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true, themeColor = '#9d00ff', backgroundColor = '#000000', isGlass = false, monitorImageUrl = null, monitorBackgroundColor = '#000000', monitorIsGlass = false }) => {
     const { showNotification } = useNotification();
     if (!content) return null;
-    const normalizedType = (type || '').toUpperCase();
-    console.log("[ContentModal] Received content:", content, "type:", normalizedType);
+    const mediaType = (content.mediaType || content.MediaType || content.type || content.Type || type || '').toUpperCase();
+    const normalizedType = mediaType;
+    console.log("[ContentModal] Decoding signal:", content, "Resolved Type:", normalizedType);
 
     const handleShare = (e) => {
         e.stopPropagation();
@@ -80,9 +81,8 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
                 {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-white/5 bg-black/40 relative z-10">
                     <div className="flex items-center gap-3" style={{ color: activeTheme }}>
-                        {['JOURNAL', 'TEXT'].includes(normalizedType) && <Book size={18} />}
-                        {['PHOTO', 'IMAGE', 'PICTURE'].includes(normalizedType) && <Camera size={18} />}
-                        {['VIDEO', 'MEDIA'].includes(normalizedType) && <Video size={18} />}
+                        {['VIDEO', 'MEDIA', 'GALLERY'].includes(normalizedType) && (content.mediaType === 'VIDEO' || content.type === 'VIDEO') && <Video size={18} />}
+                        {['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) && (content.mediaType !== 'VIDEO' && content.type !== 'VIDEO') && <Camera size={18} />}
                         <div className="flex flex-col">
                             <span className="mono text-[10px] font-black tracking-[0.3em] uppercase">
                                 {['JOURNAL', 'TEXT'].includes(normalizedType) ? 'ARCHIVED_LOG_ENTRY' : ['PHOTO', 'IMAGE', 'PICTURE'].includes(normalizedType) ? 'VISUAL_DATA_FRAGMENT' : 'SIGNAL_FEED_RECORDING'}
@@ -109,7 +109,7 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
                             </div>
                         )}
 
-                        {['PHOTO', 'IMAGE', 'PICTURE'].includes(normalizedType) && (
+                        {['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) && (content.mediaType !== 'VIDEO' && content.type !== 'VIDEO' && content.MediaType !== 'VIDEO' && content.Type !== 'VIDEO') && (
                             <div className="flex flex-col items-center justify-center min-h-[400px]">
                                 <div className="relative group">
                                     <div className="absolute inset-0 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `${activeTheme}1A` }} />
@@ -127,7 +127,7 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
                             </div>
                         )}
 
-                        {['VIDEO', 'MEDIA'].includes(normalizedType) && (() => {
+                        {['VIDEO', 'MEDIA', 'GALLERY'].includes(normalizedType) && (content.mediaType === 'VIDEO' || content.type === 'VIDEO' || content.MediaType === 'VIDEO' || content.Type === 'VIDEO') && (() => {
                             const videoUrl = content.url || content.Url || content.videoUrl || content.VideoUrl || content.mediaUrl || content.MediaUrl || content.source || content.Source || content.filePath || content.FilePath;
                             const isYoutube = videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') || videoUrl.startsWith('youtube:'));
                             

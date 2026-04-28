@@ -1888,8 +1888,13 @@ export const ProfileView = React.memo(({
                             {profilePlaylists.map((p, idx) => (
                                 <div 
                                     key={idx} 
-                                    className="flex items-center gap-4 p-4 bg-white/5 border border-white/5 hover:border-[var(--subsystem-accent)]/40 hover:bg-[var(--subsystem-accent)]/5 transition-all cursor-pointer group relative z-10"
-                                    onClick={() => handleOpenPlaylist(p.id || p.Id)}
+                                    className="flex items-center gap-4 p-4 bg-white/5 border border-white/5 hover:border-[var(--subsystem-accent)]/40 hover:bg-[var(--subsystem-accent)]/5 transition-all cursor-pointer group relative z-20"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        console.log("[Profile] Opening Playlist:", p.id);
+                                        handleOpenPlaylist(p.id || p.Id);
+                                    }}
                                 >
                                     <div className="w-12 h-12 bg-black border border-[var(--subsystem-accent)]/20 p-0.5 shrink-0">
                                         <div className="w-full h-full border border-white/5 overflow-hidden">
@@ -1939,7 +1944,14 @@ export const ProfileView = React.memo(({
                             <button onClick={onLogout} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-red-500/40 hover:text-red-500 transition-colors">
                                 <LogOut size={14} /> LOGOUT
                             </button>
-                            <button onClick={() => setShowEditProfile(true)} className="px-4 py-1.5 bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all">
+                            <button 
+                                onClick={() => {
+                                    console.log("[Profile] Triggering Identity Modification...");
+                                    showNotification("ID_MOD_START", "Initializing identity override protocol...", "info");
+                                    setShowEditProfile(true);
+                                }} 
+                                className="relative z-[200] px-4 py-1.5 bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all"
+                            >
                                 MODIFY_ID
                             </button>
                         </>
