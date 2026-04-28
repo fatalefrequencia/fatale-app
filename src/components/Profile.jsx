@@ -2249,8 +2249,16 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             }
 
             if (file) formData.append('ProfilePicture', file);
-            if (bannerFile) formData.append('Banner', bannerFile);
-            if (wallpaperVideoFile) formData.append('WallpaperVideo', wallpaperVideoFile);
+            
+            if (bannerFile) {
+                formData.append('Banner', bannerFile);
+                // Explicitly clear video when photo/gif is selected
+                formData.append('WallpaperVideoUrl', ''); 
+            } else if (wallpaperVideoFile) {
+                formData.append('WallpaperVideo', wallpaperVideoFile);
+                // Explicitly clear banner when video is selected
+                formData.append('BannerUrl', '');
+            }
             
             formData.append('ThemeColor', themeColor);
             formData.append('TextColor', textColor);
