@@ -2048,13 +2048,17 @@ const Dashboard = React.memo(({
         transition={{ type: 'spring', stiffness: 200, damping: 25 }}
         className={`hidden lg:flex flex-col border-r border-white/5 bg-black/20 backdrop-blur-2xl z-30 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.4)] ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}
       >
-        <div
+        <motion.div
+          layout
           className={`cursor-pointer flex flex-col justify-center items-center transition-all group ${isSidebarCollapsed ? 'p-4' : 'p-6'}`}
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         >
-          <div 
-            className={`relative transition-all duration-500 flex items-center justify-center animate-subsystem-pulse ${isSidebarCollapsed ? 'w-10 h-10 p-1' : 'w-20 h-20 p-2'}`}
+          <motion.div 
+            layout
+            className="relative flex items-center justify-center animate-subsystem-pulse"
             style={{ 
+              width: isSidebarCollapsed ? '40px' : '80px',
+              height: isSidebarCollapsed ? '40px' : '80px',
               boxShadow: `0 0 15px rgba(var(--theme-color-rgb), 0.25)`,
               borderRadius: '4px',
               border: `1px solid rgba(var(--theme-color-rgb), 0.3)`,
@@ -2062,17 +2066,19 @@ const Dashboard = React.memo(({
             }}
           >
             {/* The Tinted Skull System */}
-            <div className={`relative w-full h-full flex items-center justify-center`}>
-              <img
+            <motion.div layout className="relative w-full h-full flex items-center justify-center p-2">
+              <motion.img
+                layout
                 src={skullImg}
                 alt="System Kernel"
-                className="absolute inset-0 w-full h-full object-contain"
+                className="w-full h-full object-contain"
                 style={{ 
                   filter: 'grayscale(1) brightness(8) contrast(1.5)', 
                 }}
               />
               {/* Theme Color Multiply Layer */}
-              <div 
+              <motion.div 
+                layout
                 className="absolute inset-0 w-full h-full pointer-events-none"
                 style={{ 
                   backgroundColor: 'var(--theme-color)',
@@ -2080,11 +2086,12 @@ const Dashboard = React.memo(({
                   opacity: 0.95
                 }}
               />
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
           
-          {/* Ambient Glow - Tighter and more opaque */}
-          <div 
+          {/* Ambient Glow - Now dynamic to fit the sidebar */}
+          <motion.div 
+            layout
             className="absolute pointer-events-none transition-all duration-1000 rounded-full"
             style={{ 
               backgroundColor: 'var(--theme-color)',
@@ -2092,11 +2099,11 @@ const Dashboard = React.memo(({
               filter: 'blur(20px)',
               transform: 'scale(1.15)',
               zIndex: -1,
-              width: '100px',
-              height: '100px'
+              width: isSidebarCollapsed ? '60px' : '100px',
+              height: isSidebarCollapsed ? '60px' : '100px'
             }}
           />
-        </div>
+        </motion.div>
 
         <nav className="flex-1 space-y-3 p-4">
           <SidebarLink collapsed={isSidebarCollapsed} icon={<Radio size={isSidebarCollapsed ? 18 : 22} />} label="DSC_SCAN" active={activeView === 'discovery'} onClick={() => handleNav('discovery')} />
