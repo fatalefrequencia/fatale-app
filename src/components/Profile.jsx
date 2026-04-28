@@ -7,11 +7,7 @@ import ContentModal from './ContentModal';
 import API from '../services/api';
 import './SpatialProfile.css';
 import {
-    Terminal, Cpu, Database, Hash, Shield, Code, ChevronRight, Play, X, Music,
-    RefreshCw, Plus, Frown, Globe, Lock, PlayCircle, Edit3, Send, Library, Radio,
-    ChevronDown, LogOut, Upload, MessageSquare, MapPin, Calendar, Activity,
-    Eye, Cpu as Processor, Zap, Search, Palette, Type, Layout, Maximize2, Monitor,
-    Camera, Video, Book, ChevronLeft, Star, Share2, Link, FileText
+    Camera, Video, Book, ChevronLeft, Star, Share2, Link, FileText, ArrowLeft, Shuffle
 } from 'lucide-react';
 import { useNotification } from '../contexts/NotificationContext';
 import { API_BASE_URL, getMediaUrl } from '../constants';
@@ -1883,38 +1879,116 @@ export const ProfileView = React.memo(({
 
                 {/* Archive Panel (Playlists/Past Broadcasts) */}
                 <div className="archive-panel">
-                    <SubsystemBlock title="PLAYLISTS_&_BROADCASTS" showBrackets={true} address="ARC_MEM_02">
-                        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 p-3 max-h-[500px]">
-                            {profilePlaylists.map((p, idx) => (
-                                <div 
-                                    key={idx} 
-                                    className="flex items-center gap-4 p-4 bg-white/5 border border-white/5 hover:border-[var(--subsystem-accent)]/40 hover:bg-[var(--subsystem-accent)]/5 transition-all cursor-pointer group relative z-20"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        console.log("[Profile] Opening Playlist:", p.id);
-                                        handleOpenPlaylist(p.id || p.Id);
-                                    }}
-                                >
-                                    <div className="w-12 h-12 bg-black border border-[var(--subsystem-accent)]/20 p-0.5 shrink-0">
-                                        <div className="w-full h-full border border-white/5 overflow-hidden">
-                                            <img src={getMediaUrl(p.imageUrl || p.ImageUrl)} className="w-full h-full object-cover grayscale opacity-40 group-hover:opacity-100 transition-all duration-500" />
+                    <SubsystemBlock 
+                        title={selectedPlaylistId && playlistDetails ? `PLAYLIST // ${playlistDetails.Playlist?.name?.toUpperCase() || playlistDetails.playlist?.Name?.toUpperCase()}` : "PLAYLISTS_&_BROADCASTS"} 
+                        showBrackets={true} 
+                        address="ARC_MEM_02"
+                    >
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-3 max-h-[500px]">
+                            {selectedPlaylistId && playlistDetails ? (
+                                <div className="flex flex-col h-full animate-in fade-in slide-in-from-right-4 duration-500">
+                                    <div className="flex items-center justify-between p-2 border-b border-white/5 mb-3">
+                                        <button 
+                                            onClick={() => { setSelectedPlaylistId(null); setPlaylistDetails(null); }}
+                                            className="flex items-center gap-2 text-[8px] font-black uppercase text-white/40 hover:text-white transition-all bg-white/5 px-2 py-1 border border-white/10 hover:border-white/20"
+                                        >
+                                            <ArrowLeft size={12} /> BACK
+                                        </button>
+                                        <div className="flex gap-2">
+                                            <button 
+                                                onClick={() => onPlayPlaylist?.(playlistDetails.Tracks || playlistDetails.tracks)}
+                                                className="px-4 py-1 bg-[var(--subsystem-accent)]/80 text-black hover:bg-[var(--subsystem-accent)] transition-all flex items-center gap-1 text-[8px] font-black"
+                                            >
+                                                <Play size={10} fill="currentColor" /> PLAY_ALL
+                                            </button>
+                                            <button 
+                                                onClick={() => {
+                                                    const pltTracks = playlistDetails.Tracks || playlistDetails.tracks || [];
+                                                    const shuffled = [...pltTracks].sort(() => Math.random() - 0.5);
+                                                    onPlayPlaylist?.(shuffled);
+                                                }}
+                                                className="px-4 py-1 bg-white/5 border border-white/10 hover:border-white/40 text-white/60 hover:text-white transition-all flex items-center gap-1 text-[8px] font-black"
+                                            >
+                                                <Shuffle size={10} /> SHUFFLE
+                                            </button>
                                         </div>
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-[12px] font-black text-white uppercase tracking-widest truncate group-hover:text-[var(--subsystem-accent)] transition-colors">{p.name || p.Name}</div>
-                                        <div className="flex items-center gap-3">
-                                            <div className="text-[7px] mono text-white/30 uppercase tracking-widest">{p.isPublic ? 'PUBLIC_SOURCE' : 'ENCRYPTED_SIG'}</div>
-                                            <div className="w-1 h-1 rounded-full bg-white/10" />
-                                            <div className="text-[7px] mono text-white/20 uppercase tracking-widest">ARCHIVE_0X{idx}</div>
-                                        </div>
-                                    </div>
-                                    <ChevronRight size={18} className="text-white/10 group-hover:text-[var(--subsystem-accent)] group-hover:translate-x-1 transition-all" />
-                                    <div className="absolute top-0 right-0 p-1 opacity-0 group-hover:opacity-40 transition-opacity">
-                                        <div className="text-[6px] mono text-white">RECOVER_SIG</div>
+                                    <div className="space-y-1">
+                                        {(playlistDetails.Tracks || playlistDetails.tracks || []).map((t, idx) => (
+                                            <div 
+                                                key={t.id || t.Id || idx} 
+                                                className="flex items-center gap-3 p-3 bg-white/5 border border-transparent hover:border-[var(--subsystem-accent)]/20 group transition-all cursor-pointer relative"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    console.log("[Archive] Playing Track:", t.title);
+                                                    onPlayTrack?.(t);
+                                                }}
+                                            >
+                                                <div className="w-8 h-8 bg-black overflow-hidden border border-white/10 shrink-0">
+                                                    <img 
+                                                        src={getMediaUrl(t.coverImageUrl || t.cover || t.ImageUrl)} 
+                                                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" 
+                                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/100?text=SIG'; }}
+                                                    />
+                                                </div>
+                                                <div className="flex-1 min-w-0 pr-6">
+                                                    <div className="text-[10px] font-black text-white uppercase truncate tracking-wider group-hover:text-[var(--subsystem-accent)] transition-colors">{t.title || t.Title}</div>
+                                                    <div className="text-[7px] text-white/40 uppercase tracking-[0.2em] mt-0.5">{t.artistName || t.ArtistName || 'UNKNOWN_SOURCE'}</div>
+                                                </div>
+                                                <div className="opacity-0 group-hover:opacity-100 transition-all">
+                                                    <Play size={12} fill="currentColor" className="text-[var(--subsystem-accent)]" />
+                                                </div>
+                                                <div className="absolute top-0 right-0 px-1 py-0.5 text-[5px] mono text-white/10 group-hover:text-white/30 truncate max-w-[40px]">
+                                                    {t.id || t.Id}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {(playlistDetails.Tracks || playlistDetails.tracks || []).length === 0 && (
+                                            <div className="py-12 text-center text-white/20 mono text-[8px] uppercase tracking-widest italic">
+                                                Archive_Empty: No_Signals_Detected
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                            ))}
+                            ) : isLoadingPlaylist ? (
+                                <div className="flex flex-col items-center justify-center py-24 gap-4 animate-pulse">
+                                    <Zap size={24} className="text-[var(--subsystem-accent)] animate-bounce" />
+                                    <div className="mono text-[8px] text-[var(--subsystem-accent)] uppercase tracking-[0.5em]">Establishing_Uplink...</div>
+                                </div>
+                            ) : (
+                                <div className="space-y-1">
+                                    {profilePlaylists.map((p, idx) => (
+                                        <div 
+                                            key={idx} 
+                                            className="flex items-center gap-4 p-4 bg-white/5 border border-white/5 hover:border-[var(--subsystem-accent)]/40 hover:bg-[var(--subsystem-accent)]/5 transition-all cursor-pointer group relative z-20"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                console.log("[Profile] Opening Playlist:", p.id);
+                                                handleOpenPlaylist(p.id || p.Id);
+                                            }}
+                                        >
+                                            <div className="w-12 h-12 bg-black border border-[var(--subsystem-accent)]/20 p-0.5 shrink-0">
+                                                <div className="w-full h-full border border-white/5 overflow-hidden">
+                                                    <img src={getMediaUrl(p.imageUrl || p.ImageUrl)} className="w-full h-full object-cover grayscale opacity-40 group-hover:opacity-100 transition-all duration-500" />
+                                                </div>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-[12px] font-black text-white uppercase tracking-widest truncate group-hover:text-[var(--subsystem-accent)] transition-colors">{p.name || p.Name}</div>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="text-[7px] mono text-white/30 uppercase tracking-widest">{p.isPublic ? 'PUBLIC_SOURCE' : 'ENCRYPTED_SIG'}</div>
+                                                    <div className="w-1 h-1 rounded-full bg-white/10" />
+                                                    <div className="text-[7px] mono text-white/20 uppercase tracking-widest">ARCHIVE_0X{idx}</div>
+                                                </div>
+                                            </div>
+                                            <ChevronRight size={18} className="text-white/10 group-hover:text-[var(--subsystem-accent)] group-hover:translate-x-1 transition-all" />
+                                            <div className="absolute top-0 right-0 p-1 opacity-0 group-hover:opacity-40 transition-opacity">
+                                                <div className="text-[6px] mono text-white">RECOVER_SIG</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </SubsystemBlock>
                 </div>
@@ -2000,23 +2074,7 @@ export const ProfileView = React.memo(({
                         </div>
                     </ContentModal>
                 )}
-                {selectedPlaylistId && playlistDetails && (
-                    <PlaylistPopup 
-                        playlist={playlistDetails.Playlist || playlistDetails.playlist} 
-                        tracks={playlistDetails.Tracks || playlistDetails.tracks} 
-                        isMe={isMe}
-                        onClose={() => { setSelectedPlaylistId(null); setPlaylistDetails(null); }}
-                        onRemoveTrack={handleRemoveTrackFromPlaylist}
-                        onPlayAll={onPlayPlaylist}
-                        playlists={profilePlaylists}
-                        myLikes={myLikes}
-                        onQueueTrack={onQueueTrack}
-                        onRefreshPlaylists={onRefreshPlaylists}
-                        onLike={onLike}
-                        onUpdate={handleUpdatePlaylist}
-                        onDelete={handleDeletePlaylist}
-                    />
-                )}
+                {/* Standard Popups Removed in favor of Inline Archive View */}
                 {selectedContent && (
                     <ContentModal
                         content={selectedContent}
