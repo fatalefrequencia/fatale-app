@@ -1354,6 +1354,41 @@ export const ProfileView = React.memo(({
         try {
             const API = await import('../services/api').then(mod => mod.default);
             const uid = currentUser?.id || currentUser?.Id || currentUser?.userId || currentUser?.UserId;
+            
+            // Intercept files for manual upload to ensure maximum compatibility
+            const pfpFile = formData.get('ProfilePicture');
+            const bnrFile = formData.get('Banner');
+            const vdoFile = formData.get('WallpaperVideo');
+
+            if (pfpFile instanceof File) {
+                showNotification("UPLOADING_PFP", "Initializing profile picture buffer...", "info");
+                const fd = new FormData();
+                fd.append('file', pfpFile);
+                const r = await API.Files.upload(fd);
+                formData.set('ProfilePictureUrl', r.data.path || r.data.Path || r.data.url);
+                formData.delete('ProfilePicture');
+            }
+
+            if (bnrFile instanceof File) {
+                showNotification("UPLOADING_BACKDROP", "Broadcasting visual signal to core...", "info");
+                const fd = new FormData();
+                fd.append('file', bnrFile);
+                const r = await API.Files.upload(fd);
+                formData.set('BannerUrl', r.data.path || r.data.Path || r.data.url);
+                formData.set('WallpaperVideoUrl', ''); // Clear existing video fragments
+                formData.delete('Banner');
+            }
+
+            if (vdoFile instanceof File) {
+                showNotification("UPLOADING_VIDEO", "Synchronizing high-fidelity video stream...", "info");
+                const fd = new FormData();
+                fd.append('file', vdoFile);
+                const r = await API.Files.upload(fd);
+                formData.set('WallpaperVideoUrl', r.data.path || r.data.Path || r.data.url);
+                formData.set('BannerUrl', ''); // Clear existing photo/gif fragments
+                formData.delete('WallpaperVideo');
+            }
+
             const res = await API.Users.updateProfile(formData, uid);
             showNotification("PROFILE_SYNCED", "Identity modifications committed to core.", "success");
             setShowEditProfile(false);
@@ -1364,7 +1399,7 @@ export const ProfileView = React.memo(({
                     ...currentUser,
                     username: rawData.username || rawData.Username || currentUser.username,
                     biography: rawData.biography || rawData.Biography || currentUser.biography,
-                    residentSectorId: rawData.residentSectorId !== undefined ? rawData.residentSectorId : (rawData.ResidentSectorId !== undefined ? rawData.ResidentSectorId : currentUser.residentSectorId),
+                    residentSectorId: rawData.hasOwnProperty('residentSectorId') ? rawData.residentSectorId : (rawData.hasOwnProperty('ResidentSectorId') ? rawData.ResidentSectorId : currentUser.residentSectorId),
                     profileImageUrl: (rawData.hasOwnProperty('profilePictureUrl') || rawData.hasOwnProperty('ProfilePictureUrl'))
                         ? getMediaUrl(rawData.profilePictureUrl || rawData.ProfilePictureUrl) 
                         : currentUser.profileImageUrl,
