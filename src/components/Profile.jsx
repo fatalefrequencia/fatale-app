@@ -7,6 +7,10 @@ import ContentModal from './ContentModal';
 import API from '../services/api';
 import './SpatialProfile.css';
 import {
+    Terminal, Cpu, Database, Hash, Shield, Code, ChevronRight, Play, X, Music,
+    RefreshCw, Plus, Frown, Globe, Lock, PlayCircle, Edit3, Send, Library, Radio,
+    ChevronDown, LogOut, Upload, MessageSquare, MapPin, Calendar, Activity,
+    Eye, Cpu as Processor, Zap, Search, Palette, Type, Layout, Maximize2, Monitor,
     Camera, Video, Book, ChevronLeft, Star, Share2, Link, FileText, ArrowLeft, Shuffle
 } from 'lucide-react';
 import { useNotification } from '../contexts/NotificationContext';
