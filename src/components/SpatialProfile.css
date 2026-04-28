@@ -1217,18 +1217,22 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100%;
-    height: 100%;
-    position: relative;
-    padding-top: 40px;
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding-top: 0;
+    z-index: 10;
 }
 
 .console-outer-frame {
     position: relative;
-    padding: 30px;
+    padding: 80px 120px;
     display: flex;
-    gap: 40px;
-    align-items: stretch;
+    gap: 80px;
+    align-items: center;
+    justify-content: center;
 }
 
 .console-bracket {
@@ -1245,14 +1249,15 @@
 .console-bracket-br { bottom: 0; right: 0; border-bottom: 1.5px solid; border-right: 1.5px solid; }
 
 .console-panel {
-    width: 280px;
-    min-height: 380px;
+    width: 320px;
+    min-height: 420px;
     background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(40px);
     border: 0.5px solid rgba(var(--subsystem-accent-rgb), 0.1);
     position: relative;
     display: flex;
     flex-direction: column;
+    transition: all 0.5s ease;
 }
 
 .center-cycle-controls {
@@ -1269,6 +1274,9 @@
 .cycle-btn {
     color: rgba(var(--subsystem-accent-rgb), 0.4);
     transition: all 0.3s ease;
+    background: none;
+    border: none;
+    cursor: pointer;
 }
 
 .cycle-btn:hover {
@@ -1278,24 +1286,30 @@
 
 .enter-system-btn {
     position: absolute;
-    bottom: -60px;
+    bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
-    padding: 8px 30px;
-    background: transparent;
-    border: 1px solid rgba(var(--subsystem-accent-rgb), 0.3);
+    padding: 12px 60px;
+    background: rgba(var(--subsystem-accent-rgb), 0.1);
+    border: 1px solid var(--subsystem-accent);
     color: var(--subsystem-accent);
     font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.3em;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.6em;
     text-transform: uppercase;
-    transition: all 0.4s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    z-index: 100;
+    backdrop-filter: blur(10px);
 }
 
 .enter-system-btn:hover {
-    background: rgba(var(--subsystem-accent-rgb), 0.1);
-    box-shadow: 0 0 20px rgba(var(--subsystem-accent-rgb), 0.2);
-    letter-spacing: 0.4em;
+    background: var(--subsystem-accent);
+    color: #000;
+    box-shadow: 0 0 40px var(--subsystem-accent);
+    letter-spacing: 0.8em;
+    transform: translateX(-50%) scale(1.05);
 }
 
 /* --- DASHBOARD VIEW --- */

@@ -1547,7 +1547,7 @@ export const ProfileView = React.memo(({
                     </div>
 
                     {/* Center: Dynamic Core */}
-                    <div className="console-panel w-[320px]">
+                    <div className="console-panel w-[380px]">
                         <AnimatePresence mode="wait">
                             <motion.div 
                                 key={cycleIndex}
