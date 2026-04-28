@@ -141,6 +141,15 @@ const LBrackets = ({ className = "" }) => (
     </>
 );
 
+const GearIcon = ({ category }) => {
+    const c = category?.toLowerCase() || '';
+    if (c.includes('synth')) return <Zap size={10} />;
+    if (c.includes('soft') || c.includes('vst')) return <Code size={10} />;
+    if (c.includes('drum') || c.includes('perc')) return <Activity size={10} />;
+    if (c.includes('fx') || c.includes('pedal')) return <Zap size={10} className="rotate-45" />;
+    return <Cpu size={10} />;
+};
+
 const GearRack = ({ gears, onAddGear, onRemoveGear, isMe, input, setInput, isSaving }) => (
     <div className="gear-rack">
         <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5 bg-white/5">
@@ -150,18 +159,23 @@ const GearRack = ({ gears, onAddGear, onRemoveGear, isMe, input, setInput, isSav
         <div className="gear-list custom-scrollbar">
             {gears.length > 0 ? gears.map((item, idx) => (
                 <div key={idx} className="gear-item group/gear">
-                    <span>{item.name || item.Name || item}</span>
+                    <div className="flex items-center gap-2">
+                        <span className="opacity-40 group-hover/gear:opacity-100 transition-opacity">
+                            <GearIcon category={item.category || item.Category} />
+                        </span>
+                        <span className="uppercase text-[9px]">{item.name || item.Name || item}</span>
+                    </div>
                     {isMe && (
                         <button 
-                            onClick={() => onRemoveGear(idx)}
-                            className="opacity-0 group-hover/gear:opacity-100 text-red-500/40 hover:text-red-500 transition-opacity"
+                            onClick={(e) => { e.stopPropagation(); onRemoveGear(item.id || item.Id); }}
+                            className="opacity-0 group-hover/gear:opacity-100 text-red-500/40 hover:text-red-500 transition-opacity p-1"
                         >
                             <X size={8} />
                         </button>
                     )}
                 </div>
             )) : (
-                <div className="text-[7px] mono text-white/10 p-4 text-center mt-4">NO_GEAR_DETECTED // RACK_EMPTY</div>
+                <div className="text-[7px] mono text-white/10 p-4 text-center mt-4 uppercase italic">NO_GEAR_DETECTED // RACK_EMPTY</div>
             )}
         </div>
         {isMe && (
@@ -965,6 +979,14 @@ export const ProfileView = React.memo(({
         }
     };
 
+    const handleBack = () => {
+        if (viewMode === 'DASHBOARD') {
+            setViewMode('CONSOLE');
+        } else {
+            onClose?.();
+        }
+    };
+
     const handleIngestFile = async (e, type) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -1721,7 +1743,7 @@ export const ProfileView = React.memo(({
                                 <span className="metadata-value">0X{displayUser?.id?.toString().slice(0, 8).toUpperCase()}</span>
                             </div>
                             <div className="metadata-entry">
-                                <span className="metadata-label">UPLINK_STAT</span>
+                                <span className="metadata-label">SIG_STATUS</span>
                                 <span className="metadata-value opacity-60 italic">{localStatus || 'NO_SIGNAL_BROADCAST'}</span>
                             </div>
                         </div>
@@ -1837,7 +1859,7 @@ export const ProfileView = React.memo(({
                                 <div 
                                     key={idx} 
                                     className="flex items-center gap-4 p-4 bg-white/5 border border-white/5 hover:border-[var(--subsystem-accent)]/40 hover:bg-[var(--subsystem-accent)]/5 transition-all cursor-pointer group relative"
-                                    onClick={() => handleItemClick(p, 'PLAYLIST')}
+                                    onClick={() => handleOpenPlaylist(p.id || p.Id)}
                                 >
                                     <div className="w-12 h-12 bg-black border border-[var(--subsystem-accent)]/20 p-0.5 shrink-0">
                                         <div className="w-full h-full border border-white/5 overflow-hidden">
@@ -1874,11 +1896,11 @@ export const ProfileView = React.memo(({
             {/* Global Refined Header */}
             <div className="fixed top-6 left-12 right-12 z-[100] flex items-center justify-between">
                 <button 
-                    onClick={onExitProfile}
+                    onClick={handleBack}
                     className="group flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white transition-all"
                 >
                     <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                    RETURN_ORBIT
+                    {viewMode === 'DASHBOARD' ? 'BACK_LANDING' : 'RETURN_ORBIT'}
                 </button>
 
                 <div className="flex items-center gap-6">

@@ -1,4 +1,4 @@
-﻿:root {
+:root {
     --subsystem-accent: #ff3131;
     --subsystem-accent-rgb: 255, 49, 49;
     --subsystem-bg: #050505;
@@ -1315,7 +1315,7 @@
 /* --- DASHBOARD VIEW --- */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 1fr 1.2fr;
+    grid-template-columns: 1.2fr 1fr;
     grid-template-rows: auto auto auto;
     gap: 30px;
     width: 100%;
@@ -1329,9 +1329,9 @@
 }
 
 .identity-core-panel { grid-column: 1; grid-row: 1; }
-.music-releases-panel { grid-column: 2; grid-row: 1 / span 2; }
+.music-releases-panel { grid-column: 2; grid-row: 1; }
 .studio-content-panel { grid-column: 1; grid-row: 2 / span 2; }
-.archive-panel { grid-column: 2; grid-row: 3; }
+.archive-panel { grid-column: 2; grid-row: 2 / span 2; }
 
 /* --- GEAR RACK --- */
 .gear-rack {
