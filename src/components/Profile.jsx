@@ -1011,7 +1011,7 @@ export const ProfileView = React.memo(({
         if (viewMode === 'DASHBOARD') {
             setViewMode('CONSOLE');
         } else {
-            onClose?.();
+            onExitProfile?.();
         }
     };
 
@@ -1599,7 +1599,7 @@ export const ProfileView = React.memo(({
                     <LBrackets className="opacity-60" />
                     
                     {/* Left: Station Signal */}
-                    <div className="console-panel">
+                    <div className="console-panel grayscale">
                         <div className="flex-1 flex flex-col items-center justify-center p-6 gap-6">
                             <div className="text-[9px] mono font-bold uppercase tracking-[0.4em] opacity-40">STATION_LINK</div>
                             <div className="w-32 h-32 border border-white/10 bg-black/40 flex items-center justify-center relative overflow-hidden">
@@ -1629,7 +1629,7 @@ export const ProfileView = React.memo(({
                             >
                                 {cycleIndex === 0 && (
                                     <div className="w-48 h-48 border border-white/10 bg-black/40 p-1">
-                                        <div className="w-full h-full border border-white/20 relative overflow-hidden group">
+                                        <div className="w-full h-full border border-white/20 relative overflow-hidden group grayscale hover:grayscale-0 transition-all duration-500">
                                             {pfp ? (
                                                 <img src={getMediaUrl(pfp)} className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105" />
                                             ) : (
@@ -1699,7 +1699,7 @@ export const ProfileView = React.memo(({
                     </div>
 
                     {/* Right: Metadata */}
-                    <div className="console-panel">
+                    <div className="console-panel grayscale">
                         <div className="flex-1 p-8 space-y-6">
                             <div className="text-[9px] mono font-bold uppercase tracking-[0.4em] opacity-40">USER_DATA</div>
                             <div className="space-y-4">
