@@ -4,6 +4,7 @@ import TrackActionsDropdown from './TrackActionsDropdown';
 import UploadTrackView from './UploadTrackView';
 import NeuroGraph from './NeuroGraph';
 import ContentModal from './ContentModal';
+import API from '../services/api';
 import './SpatialProfile.css';
 import {
     Terminal, Cpu, Database, Hash, Shield, Code, ChevronRight, Play, X, Music,
@@ -128,6 +129,33 @@ const SignalWaveform = ({ isLive, isProfilePlaying, color }) => {
             )}
         </div>
     );
+};
+
+const resolveThumbnail = (vis) => {
+    if (!vis) return null;
+    const thumb = vis.thumbnailUrl || vis.ThumbnailUrl || vis.coverImageUrl || vis.CoverImageUrl;
+    const img = vis.imageUrl || vis.ImageUrl || vis.url || vis.Url || vis.cover || vis.Cover;
+    
+    if (thumb) return getMediaUrl(thumb);
+    
+    const mediaType = (vis.mediaType || vis.MediaType || vis.type || vis.Type || '').toLowerCase();
+    if (img && mediaType !== 'video') {
+        return getMediaUrl(img);
+    }
+
+    const videoUrl = (vis.videoUrl || vis.VideoUrl || vis.source || vis.Source || vis.url || vis.Url || '');
+    if (videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') || videoUrl.startsWith('youtube:'))) {
+        let id = null;
+        if (videoUrl.startsWith('youtube:')) id = videoUrl.split(':')[1];
+        else {
+            const match = videoUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+            id = (match && match[2].length === 11) ? match[2] : null;
+        }
+        if (id) return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+    }
+    
+    if (img) return getMediaUrl(img);
+    return null;
 };
 
 // --- HUD PROFILE COMPONENTS ---
@@ -1171,10 +1199,11 @@ export const ProfileView = React.memo(({
     };
 
     const handleOpenPlaylist = async (playlistId) => {
+        if (!playlistId) return;
         setSelectedPlaylistId(playlistId);
         setIsLoadingPlaylist(true);
+        setPlaylistDetails(null); 
         try {
-            const API = await import('../services/api').then(mod => mod.default);
             const res = await API.Playlists.getById(playlistId);
             const data = res.data;
             if (data && data.Playlist) {
@@ -1833,7 +1862,7 @@ export const ProfileView = React.memo(({
                         <div className="p-4 grid grid-cols-4 gap-2 max-h-[300px] overflow-y-auto custom-scrollbar">
                             {profileGallery.map((img, idx) => (
                                 <div key={idx} className="aspect-square bg-black border border-white/5 overflow-hidden group relative cursor-pointer" onClick={() => handleItemClick(img, 'GALLERY')}>
-                                    <img src={getMediaUrl(img.url || img.Url || img.imageUrl || img.ImageUrl)} className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-all duration-500 group-hover:scale-110" />
+                                    <img src={resolveThumbnail(img)} className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-all duration-500 group-hover:scale-110" />
                                     {(img.type === 'VIDEO' || img.Type === 'VIDEO') && (
                                         <div className="absolute top-1 right-1 p-1 bg-black/60 border border-cyan-500/30">
                                             <Video size={10} className="text-cyan-400" />
