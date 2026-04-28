@@ -2015,16 +2015,16 @@ export const ProfileView = React.memo(({
                         autoPlay 
                         muted 
                         loop 
-                        className="w-full h-full object-cover opacity-20 grayscale brightness-[0.3]"
+                        className="w-full h-full object-cover opacity-50 grayscale transition-opacity duration-1000"
                     />
                 ) : (displayUser?.bannerUrl || displayUser?.BannerUrl) ? (
                     <img 
                         key={displayUser.bannerUrl || displayUser.BannerUrl}
                         src={getMediaUrl(displayUser.bannerUrl || displayUser.BannerUrl)} 
-                        className="w-full h-full object-cover opacity-10 grayscale brightness-50"
+                        className="w-full h-full object-cover opacity-40 grayscale transition-opacity duration-1000"
                     />
                 ) : null}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-80" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-30" />
             </div>
 
             {/* Global Refined Header */}
@@ -2087,8 +2087,8 @@ export const ProfileView = React.memo(({
                 {showEditProfile && (
                     <ContentModal onClose={() => setShowEditProfile(false)} title="MODIFY_IDENTITY">
                          <div className="p-8 h-full bg-black/90 backdrop-blur-3xl border border-white/5 overflow-y-auto custom-scrollbar">
-                            <h2 className="text-2xl font-black text-white mb-8 border-b border-white/10 pb-4 uppercase tracking-[0.2em] italic flex items-center gap-4">
-                                <span className="p-2 bg-red-500 text-black">01</span> Identity_Core_Update
+                            <h2 className="text-xs font-black text-white/80 mb-6 uppercase tracking-[0.4em] flex items-center gap-2">
+                                IDENTITY_CORE_UPDATE
                             </h2>
                             <EditProfileForm
                                 user={displayUser}
