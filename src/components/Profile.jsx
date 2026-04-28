@@ -1885,7 +1885,6 @@ export const ProfileView = React.memo(({
                     />
                 )}
             </AnimatePresence>
-            </div>
         </div>
     );
 });
