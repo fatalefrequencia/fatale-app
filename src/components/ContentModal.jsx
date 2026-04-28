@@ -97,11 +97,14 @@ const ContentModal = ({
                         {['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) && (content.mediaType !== 'VIDEO' && content.type !== 'VIDEO') && <Camera size={18} />}
                         <div className="flex flex-col">
                             <span className="mono text-[10px] font-black tracking-[0.3em] uppercase">
-                                {['JOURNAL', 'TEXT'].includes(normalizedType) ? 'ARCHIVED_LOG_ENTRY' : ['PHOTO', 'IMAGE', 'PICTURE'].includes(normalizedType) ? 'VISUAL_DATA_FRAGMENT' : 'SIGNAL_FEED_RECORDING'}
+                                {title === 'MODIFY_IDENTITY' ? 'CORE_IDENTITY_MGMT' : ['JOURNAL', 'TEXT'].includes(normalizedType) ? 'ARCHIVED_LOG_ENTRY' : ['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) ? 'VISUAL_DATA_FRAGMENT' : 'SIGNAL_FEED_RECORDING'}
                             </span>
-                            <span className="text-[7px] text-[#ff006e]/40 mono uppercase">:: ACCESS_PROTOCOL_SECURED ::</span>
+                            <span className="mono text-[6px] tracking-widest opacity-40 uppercase">DATA_SIGNAL_DECODE_SUCCESS</span>
                         </div>
                     </div>
+                    <button onClick={onClose} className="text-white/50 hover:text-white transition-colors">
+                        <X size={20} />
+                    </button>
                 </div>
 
                 {/* Content Body */}
@@ -209,10 +212,9 @@ const ContentModal = ({
                         </button>
                         <button
                             onClick={onClose}
-                            className="text-black font-black px-6 py-2 uppercase transition-all hover:shadow-[0_0_20px_rgba(157,0,255,0.4)]"
-                            style={{ backgroundColor: activeTheme }}
+                            className="text-white font-black px-8 py-2 uppercase transition-all border border-white/40 hover:border-white hover:bg-white hover:text-black text-[10px] tracking-[0.2em]"
                         >
-                            CLOSE_FEED
+                            CLOSE
                         </button>
                     </div>
                 </div>

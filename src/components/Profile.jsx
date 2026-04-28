@@ -2006,6 +2006,27 @@ export const ProfileView = React.memo(({
             <CRTOverlay />
             <CyberDust count={40} />
 
+            {/* Tactical Backdrop Fragment */}
+            <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+                {(displayUser?.wallpaperVideoUrl || displayUser?.WallpaperVideoUrl) ? (
+                    <video 
+                        key={displayUser.wallpaperVideoUrl || displayUser.WallpaperVideoUrl}
+                        src={getMediaUrl(displayUser.wallpaperVideoUrl || displayUser.WallpaperVideoUrl)} 
+                        autoPlay 
+                        muted 
+                        loop 
+                        className="w-full h-full object-cover opacity-20 grayscale brightness-[0.3]"
+                    />
+                ) : (displayUser?.bannerUrl || displayUser?.BannerUrl) ? (
+                    <img 
+                        key={displayUser.bannerUrl || displayUser.BannerUrl}
+                        src={getMediaUrl(displayUser.bannerUrl || displayUser.BannerUrl)} 
+                        className="w-full h-full object-cover opacity-10 grayscale brightness-50"
+                    />
+                ) : null}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-80" />
+            </div>
+
             {/* Global Refined Header */}
             <div className="fixed top-6 left-12 right-12 z-[100] flex items-center justify-between">
                 <button 
@@ -2500,48 +2521,22 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                         })()}
                     </div>
 
-                    {/* Theme Calibration Grid */}
+                    {/* Calibration Section */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* TERMINAL_STYLING */}
                         <div className="space-y-6">
                             <div className="flex items-center gap-2 mb-2 pb-2 border-b border-[var(--text-color)]/10">
                                 <Layout size={14} className="text-[var(--theme-color)]" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-color)]/80">TERMINAL_STYLING</span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-color)]/80">TERMINAL_CALIBRATION</span>
                             </div>
 
                             <div className="space-y-4">
-                                {/* Theme & Text Color */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-3">
-                                        <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">HUE</label>
-                                        <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--theme-color)] transition-all">
-                                            <input type="color" value={themeColor} onChange={e => setThemeColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
-                                            <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20" style={{ backgroundColor: themeColor }} />
-                                            <span className="text-[10px] font-bold text-[var(--theme-color)] mono">{themeColor}</span>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">DATA</label>
-                                        <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--text-color)] transition-all">
-                                            <input type="color" value={textColor} onChange={e => setTextColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
-                                            <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20" style={{ backgroundColor: textColor }} />
-                                            <span className="text-[10px] font-bold text-[var(--text-color)] mono">{textColor}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Backdrop & Glass */}
+                                {/* Theme & Hue Only */}
                                 <div className="space-y-3">
-                                    <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">BACKDROP</label>
-                                    <div className="flex gap-4">
-                                        <div className="flex-1 flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--text-color)] transition-all">
-                                            <input type="color" value={backgroundColor} onChange={e => setBackgroundColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
-                                            <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20" style={{ backgroundColor: backgroundColor }} />
-                                            <span className="text-[10px] font-bold text-[var(--text-color)] mono">{backgroundColor}</span>
-                                        </div>
-                                        <button type="button" onClick={() => setIsGlass(!isGlass)} className={`w-24 px-4 py-3 border flex items-center justify-center transition-all ${isGlass ? 'bg-[var(--text-color)]/10 border-[var(--text-color)] text-[var(--text-color)]' : 'bg-black border-[var(--text-color)]/10 text-[var(--text-color)]/40'}`}>
-                                            <span className="text-[8px] font-black uppercase tracking-widest">GLASS</span>
-                                        </button>
+                                    <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">SYSTEM_HUE_SIGNAL</label>
+                                    <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--theme-color)] transition-all">
+                                        <input type="color" value={themeColor} onChange={e => setThemeColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
+                                        <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20 shadow-[0_0_15px_rgba(var(--theme-color-rgb),0.3)]" style={{ backgroundColor: themeColor }} />
+                                        <span className="text-[10px] font-bold text-[var(--theme-color)] mono">{themeColor}</span>
                                     </div>
                                 </div>
                             </div>
