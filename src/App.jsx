@@ -2055,9 +2055,9 @@ const Dashboard = React.memo(({
           <div 
             className={`relative transition-all duration-500 flex items-center justify-center animate-subsystem-pulse ${isSidebarCollapsed ? 'w-10 h-10 p-1' : 'w-20 h-20 p-2'}`}
             style={{ 
-              boxShadow: `0 0 35px rgba(var(--theme-color-rgb), 0.12)`,
+              boxShadow: `0 0 15px rgba(var(--theme-color-rgb), 0.25)`,
               borderRadius: '4px',
-              border: `1px solid rgba(var(--theme-color-rgb), 0.25)`,
+              border: `1px solid rgba(var(--theme-color-rgb), 0.3)`,
               background: `rgba(0, 0, 0, 0.15)`
             }}
           >
@@ -2083,17 +2083,17 @@ const Dashboard = React.memo(({
             </div>
           </div>
           
-          {/* Ambient Glow - Soft and deep */}
+          {/* Ambient Glow - Tighter and more opaque */}
           <div 
             className="absolute pointer-events-none transition-all duration-1000 rounded-full"
             style={{ 
               backgroundColor: 'var(--theme-color)',
-              opacity: 0.08,
-              filter: 'blur(35px)',
-              transform: 'scale(1.4)',
+              opacity: 0.15,
+              filter: 'blur(20px)',
+              transform: 'scale(1.15)',
               zIndex: -1,
-              width: '120px',
-              height: '120px'
+              width: '100px',
+              height: '100px'
             }}
           />
         </div>
