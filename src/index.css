@@ -7,6 +7,10 @@
     --theme-color-rgb: 255, 0, 110;
 }
 
+body {
+    text-shadow: 0 0 1px rgba(var(--theme-color-rgb), 0.2), 0 0 8px rgba(var(--theme-color-rgb), 0.1);
+}
+
 @layer utilities {
     .custom-scrollbar::-webkit-scrollbar {
         width: 4px;
@@ -138,6 +142,7 @@
 
     .mono {
         font-family: 'Share Tech Mono', monospace;
+        text-shadow: 0 0 1px rgba(var(--theme-color-rgb), 0.3), 0 0 10px rgba(var(--theme-color-rgb), 0.15);
     }
 
     @keyframes pulse-ring {
