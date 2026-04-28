@@ -1365,8 +1365,15 @@ export const ProfileView = React.memo(({
                     username: rawData.username || rawData.Username || currentUser.username,
                     biography: rawData.biography || rawData.Biography || currentUser.biography,
                     residentSectorId: rawData.residentSectorId !== undefined ? rawData.residentSectorId : (rawData.ResidentSectorId !== undefined ? rawData.ResidentSectorId : currentUser.residentSectorId),
-                    profileImageUrl: getMediaUrl(rawData.profilePictureUrl || rawData.ProfilePictureUrl) || currentUser.profileImageUrl,
-                    bannerUrl: getMediaUrl(rawData.bannerUrl || rawData.BannerUrl) || currentUser.bannerUrl,
+                    profileImageUrl: (rawData.hasOwnProperty('profilePictureUrl') || rawData.hasOwnProperty('ProfilePictureUrl'))
+                        ? getMediaUrl(rawData.profilePictureUrl || rawData.ProfilePictureUrl) 
+                        : currentUser.profileImageUrl,
+                    bannerUrl: (rawData.hasOwnProperty('bannerUrl') || rawData.hasOwnProperty('BannerUrl'))
+                        ? getMediaUrl(rawData.bannerUrl || rawData.BannerUrl) 
+                        : currentUser.bannerUrl,
+                    wallpaperVideoUrl: (rawData.hasOwnProperty('wallpaperVideoUrl') || rawData.hasOwnProperty('WallpaperVideoUrl'))
+                        ? getMediaUrl(rawData.wallpaperVideoUrl || rawData.WallpaperVideoUrl) 
+                        : currentUser.wallpaperVideoUrl,
                     themeColor: rawData.themeColor || rawData.ThemeColor || currentUser.themeColor,
                     textColor: rawData.textColor || rawData.TextColor || currentUser.textColor,
                     backgroundColor: rawData.backgroundColor || rawData.BackgroundColor || currentUser.backgroundColor,
