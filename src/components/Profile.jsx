@@ -2032,7 +2032,7 @@ export const ProfileView = React.memo(({
                     <img 
                         key={displayUser.bannerUrl || displayUser.BannerUrl}
                         src={getMediaUrl(displayUser.bannerUrl || displayUser.BannerUrl)} 
-                        className={`w-full h-full object-cover transition-all duration-1000 ${viewMode === 'CONSOLE' ? 'opacity-10 grayscale brightness-50' : 'opacity-40'}`}
+                        className={`w-full h-full object-cover transition-all duration-1000 ${viewMode === 'CONSOLE' ? 'opacity-25 grayscale brightness-50' : 'opacity-50'}`}
                     />
                 ) : null}
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-30" />
@@ -2503,7 +2503,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                         <span className="text-[9px] text-[var(--text-color)]/60 uppercase tracking-widest text-center">
                                             {user?.bannerUrl || user?.wallpaperVideoUrl ? 'UPDATE_BACKDROP_SIGNAL' : 'UPLOAD_PHOTO_OR_VIDEO'}
                                         </span>
-                                        <span className="text-[7px] text-[var(--text-color)]/20 uppercase tracking-widest">JPG Â· PNG Â· MP4 Â· WEBM</span>
+                                        <span className="text-[7px] text-[var(--text-color)]/20 uppercase tracking-widest">JPG · PNG · GIF · MP4 · WEBM</span>
                                     </>
                                 )}
                             </div>
