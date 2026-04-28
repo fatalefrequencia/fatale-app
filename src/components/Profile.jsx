@@ -1663,12 +1663,19 @@ export const ProfileView = React.memo(({
                                     <div className="w-full h-full flex flex-col">
                                         <div className="text-[9px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-4">ACTIVITY_LOG</div>
                                         <div className="flex-1 space-y-4">
-                                            {profileJournal.slice(0, 4).map((entry, idx) => (
-                                                <div key={idx} className="border-l border-white/10 pl-3">
-                                                    <div className="text-[8px] mono text-white/30 uppercase">{new Date(entry.createdAt || entry.CreatedAt).toLocaleDateString()}</div>
-                                                    <div className="text-[9px] font-bold text-white/80 uppercase tracking-wide truncate">{entry.title || entry.Title}</div>
+                                            {profileJournal && profileJournal.length > 0 ? (
+                                                profileJournal.slice(0, 4).map((entry, idx) => (
+                                                    <div key={idx} className="border-l border-white/10 pl-3">
+                                                        <div className="text-[8px] mono text-white/30 uppercase">{new Date(entry.createdAt || entry.CreatedAt).toLocaleDateString()}</div>
+                                                        <div className="text-[9px] font-bold text-white/80 uppercase tracking-wide truncate">{entry.title || entry.Title || 'SIGNAL_FRAGMENT'}</div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="flex-1 flex flex-col items-center justify-center opacity-20 gap-2">
+                                                    <Activity size={24} />
+                                                    <span className="text-[8px] mono uppercase tracking-widest">NO_ACTIVITY_LOGGED</span>
                                                 </div>
-                                            ))}
+                                            )}
                                         </div>
                                     </div>
                                 )}
@@ -1716,6 +1723,10 @@ export const ProfileView = React.memo(({
                                     <div className="text-[10px] mono font-bold text-white/60 tracking-wider">0X{displayUser?.id?.toString().slice(0, 8).toUpperCase()}</div>
                                 </div>
                                 <div className="space-y-1">
+                                    <div className="text-[7px] mono text-white/20 uppercase">STATUS_FEED</div>
+                                    <div className="text-[10px] font-bold text-white uppercase tracking-widest">{displayUser?.statusMessage || displayUser?.StatusMessage || 'empty_string'}</div>
+                                </div>
+                                <div className="space-y-1">
                                     <div className="text-[7px] mono text-white/20 uppercase">BIO_SYNC</div>
                                     <div className="text-[10px] mono font-bold text-white/40 tracking-widest">NORMALIZED_98%</div>
                                 </div>
@@ -1754,7 +1765,7 @@ export const ProfileView = React.memo(({
                                 <div className="text-[18px] font-black uppercase tracking-widest leading-none mb-1 text-[var(--subsystem-accent)]">{displayUser?.username}</div>
                                 <div className="flex items-center gap-2">
                                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
-                                    <div className="text-[8px] mono text-[var(--subsystem-accent)]/60 uppercase tracking-widest">UPLINK_STABLE // PROT_9.5</div>
+                                    <div className="text-[8px] mono text-[var(--subsystem-accent)]/60 uppercase tracking-widest">{displayUser?.statusMessage || displayUser?.StatusMessage || 'empty_string'}</div>
                                 </div>
                             </div>
                         </div>
