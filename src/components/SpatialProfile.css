@@ -1,4 +1,4 @@
-:root {
+﻿:root {
     --subsystem-accent: #ff3131;
     --subsystem-accent-rgb: 255, 49, 49;
     --subsystem-bg: #050505;
@@ -1315,11 +1315,11 @@
 /* --- DASHBOARD VIEW --- */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 1.2fr 1fr;
+    grid-template-columns: 1fr 1.2fr;
     grid-template-rows: auto auto auto;
     gap: 30px;
     width: 100%;
-    max-width: 1400px;
+    max-width: 1600px;
     margin: 0 auto;
     padding: 100px 60px 60px;
     height: 100vh;
@@ -1328,20 +1328,22 @@
     z-index: 5;
 }
 
-.identity-core-panel { grid-column: 2; grid-row: 1; }
-.music-releases-panel { grid-column: 1; grid-row: 1 / span 2; }
-.studio-content-panel { grid-column: 1; grid-row: 3; }
-.archive-panel { grid-column: 2; grid-row: 2 / span 2; }
+.identity-core-panel { grid-column: 1; grid-row: 1; }
+.music-releases-panel { grid-column: 2; grid-row: 1 / span 2; }
+.studio-content-panel { grid-column: 1; grid-row: 2 / span 2; }
+.archive-panel { grid-column: 2; grid-row: 3; }
 
 /* --- GEAR RACK --- */
 .gear-rack {
     flex: 1;
-    margin-top: 10px;
-    border-top: 1px solid rgba(var(--subsystem-accent-rgb), 0.1);
+    margin-top: 15px;
+    border: 1px solid rgba(var(--subsystem-accent-rgb), 0.2);
+    background: rgba(0, 0, 0, 0.4);
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    min-height: 150px;
+    min-height: 180px;
+    position: relative;
 }
 
 .gear-list {
@@ -1382,6 +1384,7 @@
     outline: none;
     width: 100%;
 }
+
 /* --- TACTICAL SUBSYSTEM BLOCKS --- */
 .subsystem-block {
     background: rgba(var(--subsystem-accent-rgb), 0.03);
@@ -1463,4 +1466,42 @@
     color: #fff;
     text-transform: uppercase;
     letter-spacing: 0.1em;
+}
+
+/* Status Action within Identity Core */
+.status-action-container {
+    padding: 8px 12px;
+    border-top: 1px solid rgba(var(--subsystem-accent-rgb), 0.1);
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    gap: 8px;
+}
+
+.status-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 8px;
+    color: rgba(var(--subsystem-accent-rgb), 0.8);
+    text-transform: uppercase;
+    outline: none;
+}
+
+.status-input::placeholder {
+    color: rgba(var(--subsystem-accent-rgb), 0.2);
+}
+
+.status-save-btn {
+    font-size: 7px;
+    font-weight: 900;
+    color: var(--subsystem-accent);
+    text-transform: uppercase;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+}
+
+.status-save-btn:hover {
+    opacity: 1;
 }

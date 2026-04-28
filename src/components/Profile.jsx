@@ -946,6 +946,25 @@ export const ProfileView = React.memo(({
         }));
     };
 
+    const handleSaveStatus = async () => {
+        if (!isMe) return;
+        setIsSavingStatus(true);
+        try {
+            const API = await import('../services/api').then(mod => mod.default);
+            const fd = new FormData();
+            fd.append('StatusMessage', localStatus);
+            const uid = currentUser?.id || currentUser?.Id || currentUser?.userId || currentUser?.UserId;
+            await API.Users.updateProfile(fd, uid);
+            showNotification("STATUS_UPDATED", "Uplink message synchronized.", "success");
+            if (onRefreshProfile) onRefreshProfile();
+        } catch (e) {
+            console.error("Failed to update status", e);
+            showNotification("SYNC_ERROR", "Failed to commit status change.", "error");
+        } finally {
+            setIsSavingStatus(false);
+        }
+    };
+
     const handleIngestFile = async (e, type) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -1706,6 +1725,27 @@ export const ProfileView = React.memo(({
                                 <span className="metadata-value opacity-60 italic">{localStatus || 'NO_SIGNAL_BROADCAST'}</span>
                             </div>
                         </div>
+
+                        {isMe && (
+                            <div className="status-action-container">
+                                <input 
+                                    type="text"
+                                    className="status-input"
+                                    placeholder="UPDATE_SYSTEM_STATUS..."
+                                    value={localStatus}
+                                    onChange={(e) => setLocalStatus(e.target.value.toUpperCase())}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSaveStatus()}
+                                    disabled={isSavingStatus}
+                                />
+                                <button 
+                                    onClick={handleSaveStatus} 
+                                    className="status-save-btn"
+                                    disabled={isSavingStatus}
+                                >
+                                    {isSavingStatus ? 'SYNCING...' : 'UPDATE'}
+                                </button>
+                            </div>
+                        )}
 
                         <GearRack 
                             gears={profileGear} 
