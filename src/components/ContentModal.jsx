@@ -127,22 +127,51 @@ const ContentModal = ({ content, onClose, type = 'JOURNAL', hasMiniPlayer = true
                             </div>
                         )}
 
-                        {['VIDEO', 'MEDIA'].includes(normalizedType) && (
-                            <div className="flex flex-col items-center justify-center min-h-[400px]">
-                                <video
-                                    src={getMediaUrl(content.url || content.Url || content.videoUrl || content.VideoUrl || content.mediaUrl || content.MediaUrl || content.source || content.Source || content.filePath || content.FilePath || content.ImageUrl || content.imageUrl)}
-                                    controls
-                                    autoPlay
-                                    muted
-                                    playsInline
-                                    className="max-w-full max-h-[65vh] border border-white/10 shadow-2xl relative z-10"
-                                />
-                                <div className="mt-6 flex items-center gap-4 text-[10px] mono uppercase tracking-[0.3em] font-black" style={{ color: activeTheme }}>
-                                    <div className="w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: activeTheme }} />
-                                    SIGNAL_LIVE_DECODING_ACTIVE
+                        {['VIDEO', 'MEDIA'].includes(normalizedType) && (() => {
+                            const videoUrl = content.url || content.Url || content.videoUrl || content.VideoUrl || content.mediaUrl || content.MediaUrl || content.source || content.Source || content.filePath || content.FilePath;
+                            const isYoutube = videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') || videoUrl.startsWith('youtube:'));
+                            
+                            if (isYoutube) {
+                                let id = null;
+                                if (videoUrl.startsWith('youtube:')) id = videoUrl.split(':')[1];
+                                else {
+                                    const match = videoUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+                                    id = (match && match[2].length === 11) ? match[2] : null;
+                                }
+                                return (
+                                    <div className="w-full aspect-video border border-white/10 shadow-2xl relative z-10 bg-black">
+                                        {id ? (
+                                            <iframe 
+                                                src={`https://www.youtube.com/embed/${id}?autoplay=1`}
+                                                className="w-full h-full"
+                                                frameBorder="0"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-white/20 mono text-[10px]">FAILED_TO_RESOLVE_YT_SIGNAL</div>
+                                        )}
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div className="flex flex-col items-center justify-center min-h-[400px]">
+                                    <video
+                                        src={getMediaUrl(videoUrl || content.ImageUrl || content.imageUrl)}
+                                        controls
+                                        autoPlay
+                                        muted
+                                        playsInline
+                                        className="max-w-full max-h-[65vh] border border-white/10 shadow-2xl relative z-10"
+                                    />
+                                    <div className="mt-6 flex items-center gap-4 text-[10px] mono uppercase tracking-[0.3em] font-black" style={{ color: activeTheme }}>
+                                        <div className="w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: activeTheme }} />
+                                        SIGNAL_LIVE_DECODING_ACTIVE
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            );
+                        })()}
                     </div>
                 </div>
 

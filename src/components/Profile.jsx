@@ -1200,6 +1200,7 @@ export const ProfileView = React.memo(({
 
     const handleOpenPlaylist = async (playlistId) => {
         if (!playlistId) return;
+        showNotification("UPLINK_START", "Establishing terminal connection to playlist...", "info");
         setSelectedPlaylistId(playlistId);
         setIsLoadingPlaylist(true);
         setPlaylistDetails(null); 
@@ -1887,7 +1888,7 @@ export const ProfileView = React.memo(({
                             {profilePlaylists.map((p, idx) => (
                                 <div 
                                     key={idx} 
-                                    className="flex items-center gap-4 p-4 bg-white/5 border border-white/5 hover:border-[var(--subsystem-accent)]/40 hover:bg-[var(--subsystem-accent)]/5 transition-all cursor-pointer group relative"
+                                    className="flex items-center gap-4 p-4 bg-white/5 border border-white/5 hover:border-[var(--subsystem-accent)]/40 hover:bg-[var(--subsystem-accent)]/5 transition-all cursor-pointer group relative z-10"
                                     onClick={() => handleOpenPlaylist(p.id || p.Id)}
                                 >
                                     <div className="w-12 h-12 bg-black border border-[var(--subsystem-accent)]/20 p-0.5 shrink-0">
