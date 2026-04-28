@@ -2015,13 +2015,13 @@ export const ProfileView = React.memo(({
                         autoPlay 
                         muted 
                         loop 
-                        className="w-full h-full object-cover opacity-50 transition-opacity duration-1000"
+                        className={`w-full h-full object-cover transition-all duration-1000 ${viewMode === 'CONSOLE' ? 'opacity-20 grayscale brightness-50' : 'opacity-50'}`}
                     />
                 ) : (displayUser?.bannerUrl || displayUser?.BannerUrl) ? (
                     <img 
                         key={displayUser.bannerUrl || displayUser.BannerUrl}
                         src={getMediaUrl(displayUser.bannerUrl || displayUser.BannerUrl)} 
-                        className="w-full h-full object-cover opacity-40 transition-opacity duration-1000"
+                        className={`w-full h-full object-cover transition-all duration-1000 ${viewMode === 'CONSOLE' ? 'opacity-10 grayscale brightness-50' : 'opacity-40'}`}
                     />
                 ) : null}
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-30" />
