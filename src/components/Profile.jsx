@@ -160,12 +160,12 @@ const resolveThumbnail = (vis) => {
 
 // --- HUD PROFILE COMPONENTS ---
 
-const LBrackets = ({ className = "" }) => (
+const LBrackets = ({ className = "", color }) => (
     <>
-        <div className={`console-bracket console-bracket-tl ${className}`} />
-        <div className={`console-bracket console-bracket-tr ${className}`} />
-        <div className={`console-bracket console-bracket-bl ${className}`} />
-        <div className={`console-bracket console-bracket-br ${className}`} />
+        <div className={`console-bracket console-bracket-tl ${className}`} style={color ? { borderColor: color } : {}} />
+        <div className={`console-bracket console-bracket-tr ${className}`} style={color ? { borderColor: color } : {}} />
+        <div className={`console-bracket console-bracket-bl ${className}`} style={color ? { borderColor: color } : {}} />
+        <div className={`console-bracket console-bracket-br ${className}`} style={color ? { borderColor: color } : {}} />
     </>
 );
 
@@ -180,7 +180,7 @@ const GearIcon = ({ category }) => {
     return <Cpu size={10} />;
 };
 
-const GearRack = ({ gears, onAddGear, onRemoveGear, isMe, formData, setFormData, isSaving, showForm, setShowForm }) => {
+const GearRack = ({ gears, onAddGear, onRemoveGear, isMe, formData, setFormData, isSaving, showForm, setShowForm, secondaryColor }) => {
     const GEAR_PRESETS = [
         { name: 'ABLETON LIVE', category: 'Soft/VST' },
         { name: 'FL STUDIO', category: 'Soft/VST' },
@@ -276,7 +276,7 @@ const GearRack = ({ gears, onAddGear, onRemoveGear, isMe, formData, setFormData,
                                 <GearIcon category={item.category || item.Category} />
                             </span>
                             <span className="uppercase text-[9px] font-bold text-white/80 group-hover:text-white transition-colors">{item.name || item.Name || item}</span>
-                            <span className="text-[6px] mono opacity-20 uppercase">[{item.category || item.Category || 'HW'}]</span>
+                            <span className="text-[6px] mono uppercase transition-colors" style={{ color: secondaryColor || 'rgba(255,255,255,0.2)' }}>[{item.category || item.Category || 'HW'}]</span>
                         </div>
                         {isMe && (
                             <button 
@@ -295,9 +295,9 @@ const GearRack = ({ gears, onAddGear, onRemoveGear, isMe, formData, setFormData,
     );
 };
 
-const SubsystemBlock = ({ title, icon: Icon, children, className = "", expand, onToggleExpand, address = "A1-D4", showBrackets = false }) => (
+const SubsystemBlock = ({ title, icon: Icon, children, className = "", expand, onToggleExpand, address = "A1-D4", showBrackets = false, secondaryColor }) => (
     <div className={`subsystem-block group/widget ${className}`} data-addr={address}>
-        {showBrackets && <LBrackets className="scale-75 opacity-20" />}
+        {showBrackets && <LBrackets className="scale-75 opacity-20" color={secondaryColor} />}
         <div className="subsystem-header">
             <div className="flex items-center gap-2">
                 <div className="subsystem-status" />
@@ -943,6 +943,7 @@ export const ProfileView = React.memo(({
     const isMe = String(effectiveId) === String(currentUser?.id || currentUser?.Id);
     const displayUser = isMe ? currentUser : profileData;
     const profileAccent = displayUser?.previewThemeColor || displayUser?.themeColor || displayUser?.ThemeColor || displayUser?.profileColor || displayUser?.ProfileColor || '#ff3131';
+    const profileSecondary = displayUser?.previewSecondaryColor || displayUser?.secondaryColor || displayUser?.SecondaryColor || '#00ffff';
 
     const sector = SECTORS.find(s => s.id === (displayUser?.residentSectorId || displayUser?.ResidentSectorId || 0));
     const communityName = (displayUser?.communityName || displayUser?.CommunityName) || (displayUser?.communityId || displayUser?.CommunityId ? 'SYNCING...' : 'N/A');
@@ -1457,6 +1458,7 @@ export const ProfileView = React.memo(({
             updateForm.append('ThemeColor', formData.get('ThemeColor'));
             updateForm.append('TextColor', formData.get('TextColor'));
             updateForm.append('BackgroundColor', formData.get('BackgroundColor'));
+            updateForm.append('SecondaryColor', formData.get('SecondaryColor'));
             updateForm.append('IsGlass', formData.get('IsGlass'));
 
             // Legacy URL Fallbacks
@@ -1529,6 +1531,7 @@ export const ProfileView = React.memo(({
                     themeColor: rawData.themeColor || rawData.ThemeColor || currentUser.themeColor,
                     textColor: rawData.textColor || rawData.TextColor || currentUser.textColor,
                     backgroundColor: rawData.backgroundColor || rawData.BackgroundColor || currentUser.backgroundColor,
+                    secondaryColor: rawData.secondaryColor || rawData.SecondaryColor || currentUser.secondaryColor,
                     isGlass: rawData.isGlass !== undefined ? rawData.isGlass : (rawData.IsGlass !== undefined ? rawData.IsGlass : currentUser.isGlass),
                     statusMessage: rawData.statusMessage || rawData.StatusMessage || currentUser.statusMessage,
                     StatusMessage: rawData.statusMessage || rawData.StatusMessage || currentUser.StatusMessage,
@@ -1751,7 +1754,7 @@ export const ProfileView = React.memo(({
                     exit={{ opacity: 0, scale: 1.05 }}
                     className="console-outer-frame"
                 >
-                    <LBrackets className="opacity-60" />
+                    <LBrackets className="opacity-60" color="#ff006e" />
                     
                     {/* Left: Station Signal */}
                     <div className="console-panel grayscale">
@@ -1904,10 +1907,10 @@ export const ProfileView = React.memo(({
             <div className="dashboard-grid custom-scrollbar">
                 {/* Identity Core Panel (Upper Right) */}
                 <div className="identity-core-panel">
-                    <SubsystemBlock title="IDENTITY_CORE" showBrackets={true} address="USR_USR_01">
+                    <SubsystemBlock title="IDENTITY_CORE" showBrackets={true} address="USR_USR_01" secondaryColor="#ff006e">
                         <div className="p-4 flex gap-6 border-b border-white/5">
                             <div className="w-24 h-24 border border-[var(--subsystem-accent)]/30 bg-black/40 p-0.5 shrink-0 relative">
-                                <LBrackets className="scale-75 opacity-40" />
+                                <LBrackets className="scale-75 opacity-40" color="#ff006e" />
                                 <div className="w-full h-full border border-[var(--subsystem-accent)]/10 overflow-hidden">
                                      {pfp ? (
                                         <img src={getMediaUrl(pfp)} className="w-full h-full object-cover transition-all duration-700" />
@@ -1975,13 +1978,14 @@ export const ProfileView = React.memo(({
                             isSaving={isSavingGear}
                             showForm={showGearForm}
                             setShowForm={setShowGearForm}
+                            secondaryColor={profileSecondary}
                         />
                     </SubsystemBlock>
                 </div>
 
                 {/* Music Releases Panel */}
                 <div className="music-releases-panel">
-                    <SubsystemBlock title="MUSIC_RELEASES" showBrackets={true} address="SIG_AUD_04">
+                    <SubsystemBlock title="MUSIC_RELEASES" showBrackets={true} address="SIG_AUD_04" secondaryColor={profileSecondary}>
                         <div className="flex items-center justify-between px-6 py-3 bg-black/40 border-b border-white/5">
                             <div className="flex gap-6">
                                 {['ALL', 'ALBUMS', 'SINGLES'].map(f => (
@@ -2027,7 +2031,7 @@ export const ProfileView = React.memo(({
 
                 {/* Studio Content Panel */}
                 <div className="studio-content-panel">
-                    <SubsystemBlock title="STUDIO_ARCHIVE" showBrackets={true} address="VIS_CAP_09">
+                    <SubsystemBlock title="STUDIO_ARCHIVE" showBrackets={true} address="VIS_CAP_09" secondaryColor={profileSecondary}>
                         <div className="p-4 grid grid-cols-4 gap-2 max-h-[300px] overflow-y-auto custom-scrollbar">
                             {profileGallery.map((img, idx) => (
                                 <div key={idx} className="aspect-square bg-black border border-white/5 overflow-hidden group relative cursor-pointer" onClick={() => handleItemClick(img, 'GALLERY')}>
@@ -2055,6 +2059,7 @@ export const ProfileView = React.memo(({
                         title={selectedPlaylistId && playlistDetails ? `PLAYLIST // ${playlistDetails.Playlist?.name?.toUpperCase() || playlistDetails.playlist?.Name?.toUpperCase()}` : "PLAYLISTS_&_BROADCASTS"} 
                         showBrackets={true} 
                         address="ARC_MEM_02"
+                        secondaryColor={profileSecondary}
                     >
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-3 max-h-[500px]">
                             {selectedPlaylistId && playlistDetails ? (
@@ -2337,6 +2342,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
     const [themeColor, setThemeColor] = useState(user?.themeColor || user?.ThemeColor || 'var(--text-color)');
     const [textColor, setTextColor] = useState(user?.textColor || user?.TextColor || '#ffffff');
     const [backgroundColor, setBackgroundColor] = useState(user?.backgroundColor || user?.BackgroundColor || '#000000');
+    const [secondaryColor, setSecondaryColor] = useState(user?.secondaryColor || user?.SecondaryColor || '#00ffff');
     const [isGlass, setIsGlass] = useState(user?.isGlass || user?.IsGlass || false);
 
     // Sync state with user prop updates
@@ -2351,6 +2357,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             setThemeColor(user.themeColor || user.ThemeColor || 'var(--text-color)');
             setTextColor(user.textColor || user.TextColor || '#ffffff');
             setBackgroundColor(user.backgroundColor || user.BackgroundColor || '#000000');
+            setSecondaryColor(user.secondaryColor || user.SecondaryColor || '#00ffff');
             setIsGlass(user.isGlass || user.IsGlass || false);
         }
     }, [user]);
@@ -2361,9 +2368,10 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             themeColor, 
             textColor, 
             backgroundColor, 
+            secondaryColor,
             isGlass 
         });
-    }, [themeColor, textColor, backgroundColor, isGlass]);
+    }, [themeColor, textColor, backgroundColor, secondaryColor, isGlass]);
 
     // Sort and filter tracks
     const processedTracks = React.useMemo(() => {
@@ -2413,6 +2421,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             formData.append('ThemeColor', themeColor);
             formData.append('TextColor', textColor);
             formData.append('BackgroundColor', backgroundColor);
+            formData.append('SecondaryColor', secondaryColor);
             formData.append('IsGlass', isGlass);
 
             await onSubmit(formData);
@@ -2713,6 +2722,16 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                         <input type="color" value={themeColor} onChange={e => setThemeColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
                                         <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20 shadow-[0_0_15px_rgba(var(--theme-color-rgb),0.3)]" style={{ backgroundColor: themeColor }} />
                                         <span className="text-[10px] font-bold text-[var(--theme-color)] mono">{themeColor}</span>
+                                    </div>
+                                </div>
+
+                                {/* Secondary Color Picker */}
+                                <div className="space-y-3">
+                                    <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">SECONDARY_ACCENT_SIGNAL</label>
+                                    <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--theme-color)] transition-all">
+                                        <input type="color" value={secondaryColor} onChange={e => setSecondaryColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
+                                        <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20 shadow-[0_0_15px_rgba(var(--secondary-color-rgb,0,255,255),0.3)]" style={{ backgroundColor: secondaryColor }} />
+                                        <span className="text-[10px] font-bold mono" style={{ color: secondaryColor }}>{secondaryColor}</span>
                                     </div>
                                 </div>
                             </div>
