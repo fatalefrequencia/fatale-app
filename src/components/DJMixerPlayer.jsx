@@ -523,32 +523,35 @@ const DJMixerPlayer = ({
                     <div className="pane-glitch-border"></div>
                     
                     {/* Top Signal Strip */}
-                    <div className="mixer-header-compact">
-                        <div className="signal-identity">
+                    <div className="mixer-header-compact-neural">
+                        <div className="signal-identity-nano">
                             <div className="station-node">
                                 <Radio size={14} className="pulse-icon text-[var(--accent)]" />
                                 <span className="mono tracking-[0.4em] uppercase text-[var(--accent)] glow-text">FREQ_{station?.frequency || '100.1'}</span>
                             </div>
-                            <div className="session-info">
-                                <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">{station?.name || 'NEURAL_BROADCAST'}</h2>
+                            <div className="session-info-nano">
+                                <h2 className="text-[9px] font-black uppercase tracking-[0.1em] text-white/90">{station?.name || 'NEURAL_BROADCAST'}</h2>
                             </div>
                         </div>
 
-                        <div className="main-waveform-mini">
-                            <div className="neural-waveform-container-nano">
-                                <div className="neural-visualizer">
+                        <div className="neural-analyzers-hub">
+                            <div className="analyzers-row">
+                                <div className="analyzer-mini-v">
+                                    <div className="label-nano mono">NODE_A_SIGNAL</div>
                                     <NeuralSpectrum analyser={analyserA} isActive={isPlayingA} />
                                 </div>
-                                <div className="waveform-playhead-nano" style={{ left: `${(currentTime / (duration || 1)) * 100}%` }}></div>
+                                <div className="analyzer-mini-v">
+                                    <div className="label-nano mono text-right">NODE_B_SIGNAL</div>
+                                    <NeuralSpectrum analyser={analyserB.current} isActive={isPlayingB} />
+                                </div>
+                            </div>
+                            <div className="global-progress-bar-nano">
+                                <div className="progress-fill-nano" style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}></div>
                             </div>
                         </div>
 
-                        <div className="hud-readouts mono">
-                            <div className="readout-item">
-                                <span className="label">SYNC</span>
-                                <span className="val text-green-500">LOCKED</span>
-                            </div>
-                            <div className="readout-item">
+                        <div className="hud-readouts-compact mono">
+                            <div className="readout-item-nano">
                                 <Users size={10} className="text-[var(--accent)]" />
                                 <span className="val">{station?.listenerCount || '1.2K'}</span>
                             </div>
@@ -588,27 +591,6 @@ const DJMixerPlayer = ({
                             <div className="deck-core-layout-mirrored">
                                 {/* Outer Controls */}
                                 <div className="deck-controls-column-nano">
-                                    <div className="loop-authority-cluster">
-                                        <div className="loop-header mono">LOOP_SYNC</div>
-                                        <div className="loop-grid">
-                                            {[1, 2, 4, 8, 16].map(b => (
-                                                <button 
-                                                    key={b}
-                                                    onClick={() => handleLoop('A', b)}
-                                                    className={`loop-btn-nano ${loopA.active && loopA.beats === b ? 'active' : ''}`}
-                                                >
-                                                    {b}
-                                                </button>
-                                            ))}
-                                            <button 
-                                                onClick={() => setLoopA({ ...loopA, active: false })}
-                                                className="loop-btn-nano exit"
-                                            >
-                                                EXIT
-                                            </button>
-                                        </div>
-                                    </div>
-
                                     <div className="evolve-toggle-container">
                                         <button 
                                             onClick={() => setIsEvolveA(!isEvolveA)} 
@@ -655,11 +637,33 @@ const DJMixerPlayer = ({
                                 </div>
 
                                 {/* Center Jog */}
-                                <div className="jog-wheel-nano" style={{ transform: `rotate(${rotationA}deg)` }}>
-                                    <div className="jog-center-art">
-                                        {deckA?.cover && <img src={deckA.cover} alt="" />}
+                                <div className="deck-spinner-command-cluster">
+                                    <div className="jog-wheel-nano" style={{ transform: `rotate(${rotationA}deg)` }}>
+                                        <div className="jog-center-art">
+                                            {deckA?.cover && <img src={deckA.cover} alt="" />}
+                                        </div>
+                                        <div className="jog-active-node"></div>
                                     </div>
-                                    <div className="jog-active-node"></div>
+                                    
+                                    <div className="loop-command-bar-horizontal">
+                                        <div className="loop-grid-horizontal">
+                                            {[1, 2, 4, 8, 16].map(b => (
+                                                <button 
+                                                    key={b}
+                                                    onClick={() => handleLoop('A', b)}
+                                                    className={`loop-btn-nano-h ${loopA.active && loopA.beats === b ? 'active' : ''}`}
+                                                >
+                                                    {b}
+                                                </button>
+                                            ))}
+                                            <button 
+                                                onClick={() => setLoopA({ ...loopA, active: false })}
+                                                className="loop-btn-nano-h exit"
+                                            >
+                                                X
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Inner EQ */}
@@ -843,36 +847,37 @@ const DJMixerPlayer = ({
                                 </div>
 
                                 {/* Center Jog */}
-                                <div className="jog-wheel-nano" style={{ transform: `rotate(${rotationB}deg)` }}>
-                                    <div className="jog-center-art">
-                                        {deckB?.cover && <img src={deckB.cover} alt="" />}
+                                <div className="deck-spinner-command-cluster">
+                                    <div className="jog-wheel-nano" style={{ transform: `rotate(${rotationB}deg)` }}>
+                                        <div className="jog-center-art">
+                                            {deckB?.cover && <img src={deckB.cover} alt="" />}
+                                        </div>
+                                        <div className="jog-active-node"></div>
                                     </div>
-                                    <div className="jog-active-node"></div>
-                                </div>
 
-                                {/* Outer Controls */}
-                                <div className="deck-controls-column-nano">
-                                    <div className="loop-authority-cluster">
-                                        <div className="loop-header mono">LOOP_SYNC</div>
-                                        <div className="loop-grid">
+                                    <div className="loop-command-bar-horizontal">
+                                        <div className="loop-grid-horizontal">
                                             {[1, 2, 4, 8, 16].map(b => (
                                                 <button 
                                                     key={b}
                                                     onClick={() => handleLoop('B', b)}
-                                                    className={`loop-btn-nano ${loopB.active && loopB.beats === b ? 'active' : ''}`}
+                                                    className={`loop-btn-nano-h ${loopB.active && loopB.beats === b ? 'active' : ''}`}
                                                 >
                                                     {b}
                                                 </button>
                                             ))}
                                             <button 
                                                 onClick={() => setLoopB({ ...loopB, active: false })}
-                                                className="loop-btn-nano exit"
+                                                className="loop-btn-nano-h exit"
                                             >
-                                                EXIT
+                                                X
                                             </button>
                                         </div>
                                     </div>
+                                </div>
 
+                                {/* Outer Controls */}
+                                <div className="deck-controls-column-nano">
                                     <div className="evolve-toggle-container">
                                         <button 
                                             onClick={() => setIsEvolveB(!isEvolveB)} 

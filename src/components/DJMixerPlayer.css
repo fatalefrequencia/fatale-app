@@ -983,86 +983,176 @@
     width: 40px;
 }
 
-.loop-authority-cluster {
+/* --- UPDATED NEURAL HEADER & COMMAND BAR --- */
+.mixer-header-compact-neural {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: linear-gradient(to bottom, rgba(20, 20, 25, 0.95), rgba(15, 15, 20, 0.98));
+    border-bottom: 1px solid rgba(255, 0, 110, 0.1);
+    height: 50px;
+    position: relative;
+    z-index: 10;
+}
+
+.signal-identity-nano {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 150px;
+}
+
+.neural-analyzers-hub {
+    flex: 1;
+    max-width: 500px;
+    margin: 0 20px;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    margin-bottom: 8px;
-    padding: 6px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
-    width: 100%;
 }
 
-.loop-header {
-    font-size: 7px;
-    color: var(--accent);
-    letter-spacing: 0.2em;
-    opacity: 0.8;
-    text-align: center;
+.analyzers-row {
+    display: flex;
+    gap: 12px;
+    height: 30px;
 }
 
-.loop-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 3px;
-}
-
-.loop-btn-nano {
-    background: #111;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
-    font-size: 8px;
-    font-weight: 900;
-    padding: 3px 0;
-    border-radius: 2px;
-    transition: all 0.2s;
-    cursor: pointer;
-}
-
-.loop-btn-nano:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: var(--accent);
-}
-
-.loop-btn-nano.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: black;
-    box-shadow: 0 0 10px var(--accent);
-}
-
-.loop-btn-nano.exit {
-    grid-column: span 3;
-    background: rgba(255, 255, 255, 0.05);
-    font-size: 6px;
-}
-
-.neural-waveform-container-nano {
+.analyzer-mini-v {
+    flex: 1;
     position: relative;
-    width: 100%;
-    height: 40px;
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 4px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,0,110,0.05);
+    border-radius: 2px;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.analyzer-mini-v .label-nano {
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    right: 4px;
+    font-size: 6px;
+    color: var(--accent);
+    opacity: 0.6;
+    letter-spacing: 0.1em;
+    pointer-events: none;
+}
+
+.global-progress-bar-nano {
+    height: 2px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 1px;
+    overflow: hidden;
+}
+
+.progress-fill-nano {
+    height: 100%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    transition: width 0.1s linear;
+}
+
+.hud-readouts-compact {
+    display: flex;
+    gap: 12px;
+    min-width: 100px;
+    justify-content: flex-end;
+}
+
+.readout-item-nano {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--accent);
+}
+
+/* --- HORIZONTAL COMMAND BAR --- */
+.deck-spinner-command-cluster {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+}
+
+.loop-command-bar-horizontal {
+    width: 100%;
+    max-width: 160px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,0,110,0.1);
+    border-radius: 4px;
+    padding: 4px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+
+.loop-grid-horizontal {
+    display: flex;
+    gap: 4px;
+    justify-content: space-between;
+}
+
+.loop-btn-nano-h {
+    flex: 1;
+    height: 24px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 2px;
+    color: rgba(255,255,255,0.4);
+    font-size: 10px;
+    font-weight: 900;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loop-btn-nano-h:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    border-color: rgba(255, 0, 110, 0.3);
+}
+
+.loop-btn-nano-h.active {
+    background: rgba(255, 0, 110, 0.1);
+    color: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 15px rgba(255, 0, 110, 0.2), inset 0 0 5px rgba(255, 0, 110, 0.3);
+    text-shadow: 0 0 5px var(--accent);
+}
+
+.loop-btn-nano-h.exit {
+    background: rgba(255, 0, 0, 0.05);
+    border-color: rgba(255, 0, 0, 0.1);
+    color: #ff4444;
+}
+
+.loop-btn-nano-h.exit:hover {
+    background: rgba(255, 0, 0, 0.1);
+    border-color: #ff4444;
+}
+
+/* --- ADJUSTMENTS FOR NANO DECK --- */
+.deck-controls-strip-nano {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 15px;
+    padding: 10px;
+}
+
+.jog-wheel-nano {
+    margin-bottom: 0 !important;
 }
 
 .neural-spectrum-canvas {
     width: 100%;
     height: 100%;
     display: block;
-}
-
-.waveform-playhead-nano {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: white;
-    box-shadow: 0 0 10px white;
-    z-index: 5;
-    pointer-events: none;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 0 2px var(--accent));
 }
 
