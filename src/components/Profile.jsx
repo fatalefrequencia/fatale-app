@@ -1376,7 +1376,14 @@ export const ProfileView = React.memo(({
         if (resolvedType === 'PLAYLIST') {
             handleOpenPlaylist(item.id || item.Id);
         } else {
-            onExpandContent?.(item, resolvedType);
+            // Inject owner info so ContentModal tipping works correctly
+            // We prioritize the displayUser's identity since these items are fetched for this specific profile
+            const enrichedItem = {
+                ...item,
+                userId: displayUser?.id || displayUser?.Id || item.userId || item.UserId,
+                artist: displayUser?.username || displayUser?.Username || item.artist || item.Artist
+            };
+            onExpandContent?.(enrichedItem, resolvedType);
         }
     };
 

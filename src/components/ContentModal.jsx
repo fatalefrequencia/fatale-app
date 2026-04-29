@@ -9,6 +9,7 @@ import { Coins } from 'lucide-react';
 const ContentModal = ({ 
     content, 
     onClose, 
+    user,
     children,
     title,
     type = 'JOURNAL', 
@@ -263,8 +264,8 @@ const ContentModal = ({
                 <AnimatePresence>
                     {showTipModal && (
                         <CreditTransferModal 
-                            user={null}
-                            initialTargetId={content?.userId || content?.UserId || content?.OwnerId || content?.ownerId || ''}
+                            user={user}
+                            initialTargetId={content?.artistId || content?.ArtistId || content?.userId || content?.UserId || content?.OwnerId || content?.ownerId || ''}
                             initialTargetName={content?.artist || content?.Artist || content?.artistName || content?.username || content?.Username || 'UNKNOWN_SIGNAL'}
                             onClose={() => setShowTipModal(false)}
                             onRefresh={() => showNotification("TIP_SENT", "Signal of appreciation transmitted.", "success")}
