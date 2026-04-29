@@ -335,7 +335,17 @@
     color: white;
     opacity: 0.3;
     letter-spacing: 0.1em;
+    line-height: 1;
 }
+
+.eq-val-nano {
+    font-size: 8px;
+    font-weight: 900;
+    color: var(--accent);
+    text-shadow: 0 0 5px var(--accent);
+    margin-top: 2px;
+}
+
 
 .nano-knob {
     width: 28px;
@@ -374,14 +384,18 @@
 
 .knob-ring {
     position: absolute;
-    inset: -3px;
+    inset: -4px;
     border-radius: 50%;
-    background: conic-gradient(var(--accent) var(--ring-fill, 0%), rgba(255, 255, 255, 0.05) 0%);
-    mask: radial-gradient(transparent 62%, black 64%);
-    -webkit-mask: radial-gradient(transparent 62%, black 64%);
-    opacity: 0.9;
-    transition: all 0.2s;
-    z-index: 5;
+    /* Simplified ring using border + background mask */
+    border: 2px solid transparent;
+    background: conic-gradient(var(--accent) var(--ring-fill, 0%), rgba(255, 255, 255, 0.05) 0%) border-box;
+    -webkit-mask: 
+       linear-gradient(#fff 0 0) padding-box, 
+       linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    opacity: 0.95;
+    z-index: 10;
     pointer-events: none;
     filter: drop-shadow(0 0 4px var(--accent));
 }
@@ -389,9 +403,9 @@
 .nano-knob.interactive:hover .knob-ring,
 .nano-knob.interactive:active .knob-ring {
     opacity: 1;
-    filter: drop-shadow(0 0 10px var(--accent));
-    transform: scale(1.1);
+    filter: drop-shadow(0 0 12px var(--accent));
 }
+
 
 
 

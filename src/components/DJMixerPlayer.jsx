@@ -275,10 +275,14 @@ const DJMixerPlayer = ({
 
     const adjustEq = (deck, param, delta) => {
         const setter = deck === 'A' ? setEqA : setEqB;
-        setter(prev => ({
-            ...prev,
-            [param]: Math.max(-20, Math.min(20, prev[param] + delta))
-        }));
+        setter(prev => {
+            const newVal = Math.max(-20, Math.min(20, prev[param] + delta));
+            console.log(`[Neural Core] ${deck} ${param.toUpperCase()} adjusted to: ${newVal.toFixed(1)}dB`);
+            return {
+                ...prev,
+                [param]: newVal
+            };
+        });
     };
 
     const handleKnobDragStart = (e, deck, param = 'pitch') => {
@@ -564,6 +568,7 @@ const DJMixerPlayer = ({
                                             <div className="knob-dot" style={{ transform: `rotate(${eqA.hi * 7.2}deg)` }}></div>
                                         </div>
                                         <span>HI</span>
+                                        <div className="eq-val-nano mono">{(eqA.hi > 0 ? '+' : '')}{eqA.hi.toFixed(1)}</div>
                                     </div>
                                     <div className="nano-knob-wrap">
                                         <div className="nano-knob interactive" 
@@ -577,6 +582,7 @@ const DJMixerPlayer = ({
                                             <div className="knob-dot" style={{ transform: `rotate(${eqA.mid * 7.2}deg)` }}></div>
                                         </div>
                                         <span>MID</span>
+                                        <div className="eq-val-nano mono">{(eqA.mid > 0 ? '+' : '')}{eqA.mid.toFixed(1)}</div>
                                     </div>
                                     <div className="nano-knob-wrap">
                                         <div className="nano-knob interactive" 
@@ -590,6 +596,7 @@ const DJMixerPlayer = ({
                                             <div className="knob-dot" style={{ transform: `rotate(${eqA.low * 7.2}deg)` }}></div>
                                         </div>
                                         <span>LOW</span>
+                                        <div className="eq-val-nano mono">{(eqA.low > 0 ? '+' : '')}{eqA.low.toFixed(1)}</div>
                                     </div>
                                 </div>
                             </div>
@@ -679,6 +686,7 @@ const DJMixerPlayer = ({
                                             <div className="knob-dot" style={{ transform: `rotate(${eqB.hi * 7.2}deg)` }}></div>
                                         </div>
                                         <span>HI</span>
+                                        <div className="eq-val-nano mono">{(eqB.hi > 0 ? '+' : '')}{eqB.hi.toFixed(1)}</div>
                                     </div>
                                     <div className="nano-knob-wrap">
                                         <div className="nano-knob interactive" 
@@ -692,6 +700,7 @@ const DJMixerPlayer = ({
                                             <div className="knob-dot" style={{ transform: `rotate(${eqB.mid * 7.2}deg)` }}></div>
                                         </div>
                                         <span>MID</span>
+                                        <div className="eq-val-nano mono">{(eqB.mid > 0 ? '+' : '')}{eqB.mid.toFixed(1)}</div>
                                     </div>
                                     <div className="nano-knob-wrap">
                                         <div className="nano-knob interactive" 
@@ -705,6 +714,7 @@ const DJMixerPlayer = ({
                                             <div className="knob-dot" style={{ transform: `rotate(${eqB.low * 7.2}deg)` }}></div>
                                         </div>
                                         <span>LOW</span>
+                                        <div className="eq-val-nano mono">{(eqB.low > 0 ? '+' : '')}{eqB.low.toFixed(1)}</div>
                                     </div>
                                 </div>
 
