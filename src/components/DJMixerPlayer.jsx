@@ -421,10 +421,17 @@ const DJMixerPlayer = ({
                         )}
                     </div>
 
-                    <div className="utility-content-nano">
+                    <div className="utility-content-nano relative overflow-hidden">
                         <AnimatePresence mode="wait">
                             {activeTab === 'LIBRARY' && (
-                                <motion.div key="lib" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="library-nano custom-scrollbar">
+                                <motion.div 
+                                    key={`lib-${crateCategory}-${viewingPlaylist?.id || 'main'}`}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                                    className="library-nano custom-scrollbar h-full w-full"
+                                >
                                     <table className="signal-table-nano">
                                         <thead>
                                             <tr>
@@ -475,7 +482,7 @@ const DJMixerPlayer = ({
                                                         </tr>
                                                     ))}
 
-                                                    {getFilteredTracks().network.length > 0 && (
+                                                    {getFilteredTracks().network.length > 0 && !viewingPlaylist && (
                                                         <tr className="section-header-row"><td colSpan="5">GLOBAL_NETWORK_RESULTS</td></tr>
                                                     )}
                                                     {getFilteredTracks().network.map((t, i) => (
