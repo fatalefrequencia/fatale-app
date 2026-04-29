@@ -11,7 +11,8 @@ import {
     RefreshCw, Plus, Frown, Globe, Lock, PlayCircle, Edit3, Send, Library, Radio,
     ChevronDown, LogOut, Upload, MessageSquare, MapPin, Calendar, Activity,
     Eye, Cpu as Processor, Zap, Search, Palette, Type, Layout, Maximize2, Monitor,
-    Camera, Video, Book, ChevronLeft, Star, Share2, Link, FileText, ArrowLeft, Shuffle
+    Camera, Video, Book, ChevronLeft, Star, Share2, Link, FileText, ArrowLeft, Shuffle,
+    Coins
 } from 'lucide-react';
 import { useNotification } from '../contexts/NotificationContext';
 import { API_BASE_URL, getMediaUrl } from '../constants';
