@@ -56,6 +56,13 @@ const DJMixerPlayer = ({
     const [durationB, setDurationB] = useState(0);
     const [volumeB, setVolumeB] = useState(1);
     const [baseVolume, setBaseVolume] = useState(volume); // Store user preference
+    const [isEvolveA, setIsEvolveA] = useState(false);
+    const [isEvolveB, setIsEvolveB] = useState(false);
+    const [isPlayingA, setIsPlayingA] = useState(isPlaying);
+
+    useEffect(() => {
+        setIsPlayingA(isPlaying);
+    }, [isPlaying]);
 
     // Deck B Audio Event Handlers
     useEffect(() => {
@@ -263,7 +270,7 @@ const DJMixerPlayer = ({
                     <div className="mixer-decks-grid-compact">
                         {/* DECK A */}
                         <div className={`deck-module-nano deck-a ${!deckA ? 'empty' : 'active'} ${isSyncing ? 'syncing' : ''}`}>
-                            {/* Signal Ingest Bar */}
+                            {/* Top Signal Ingest Bar */}
                             <div className="signal-ingest-bar">
                                 <div className="ingest-info truncate">{deckA?.title || 'NO_SIGNAL'}</div>
                                 <div className="ingest-actions">
@@ -273,37 +280,47 @@ const DJMixerPlayer = ({
                             </div>
 
                             <div className="deck-meta-strip">
-                                <div className="deck-id-tag">NODE_A</div>
-                                <div className="bpm-tag mono">{deckA?.bpm || '128.0'} <span className="opacity-20 text-[8px]">BPM</span></div>
+                                <div className="deck-id-tag font-black tracking-widest opacity-40">NODE_A</div>
+                                <div className="bpm-tag mono text-white/90">{deckA?.bpm || '128.0'} <span className="opacity-20 text-[8px]">BPM</span></div>
                             </div>
 
-                            <div className="deck-visual-core-nano">
-                                <div className="evolve-toggle-container">
-                                    <button 
-                                        onClick={() => setIsAutoMixEnabled(!isAutoMixEnabled)} 
-                                        className={`evolve-btn ${isAutoMixEnabled ? 'active' : ''}`}
-                                    >
-                                        <Zap size={10} />
-                                        <span>EVOLVE</span>
-                                    </button>
+                            <div className="deck-core-layout-mirrored">
+                                {/* Outer Controls */}
+                                <div className="deck-controls-column-nano">
+                                    <div className="evolve-toggle-container">
+                                        <button 
+                                            onClick={() => setIsEvolveA(!isEvolveA)} 
+                                            className={`evolve-btn ${isEvolveA ? 'active' : ''}`}
+                                        >
+                                            <Zap size={10} />
+                                            <span>EVOLVE</span>
+                                        </button>
+                                    </div>
+                                    <div className="play-toggle-container-nano">
+                                        <button onClick={onPlayPause} className={`play-btn-nano ${isPlayingA ? 'active' : ''}`}>
+                                            {isPlayingA ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
+                                            <span>{isPlayingA ? 'PLAYING' : 'PAUSED'}</span>
+                                        </button>
+                                    </div>
+                                    <div className="pitch-readout mono opacity-40">PITCH_0.0%</div>
+                                    <input type="range" min="-8" max="8" step="0.1" value={pitchA} onChange={(e) => setPitchA(e.target.value)} className="nano-slider" />
                                 </div>
 
-                                <div className="pitch-readout mono">PITCH_0.0%</div>
-                                <input type="range" min="-8" max="8" step="0.1" value={pitchA} onChange={(e) => setPitchA(e.target.value)} className="nano-slider" />
-                            </div>
-
-                            <div className="jog-wheel-nano" style={{ transform: `rotate(${rotationA}deg)` }}>
-                                <div className="jog-center-art">
-                                    {deckA?.cover && <img src={deckA.cover} alt="" />}
+                                {/* Center Jog */}
+                                <div className="jog-wheel-nano" style={{ transform: `rotate(${rotationA}deg)` }}>
+                                    <div className="jog-center-art">
+                                        {deckA?.cover && <img src={deckA.cover} alt="" />}
+                                    </div>
+                                    <div className="jog-active-node"></div>
                                 </div>
-                                <div className="jog-active-node"></div>
-                            </div>
 
-                            <div className="eq-knobs-column">
-                                <div className="nano-knob"><div className="knob-dot"></div><span>HI</span></div>
-                                <div className="nano-knob"><div className="knob-dot"></div><span>MID</span></div>
-                                <div className="nano-knob"><div className="knob-dot"></div><span>LOW</span></div>
-                                <div className="nano-knob"><div className="knob-dot"></div><span>GAIN</span></div>
+                                {/* Inner EQ */}
+                                <div className="eq-knobs-column inner">
+                                    <div className="nano-knob"><div className="knob-dot"></div><span>HI</span></div>
+                                    <div className="nano-knob"><div className="knob-dot"></div><span>MID</span></div>
+                                    <div className="nano-knob"><div className="knob-dot"></div><span>LOW</span></div>
+                                    <div className="nano-knob"><div className="knob-dot"></div><span>GAIN</span></div>
+                                </div>
                             </div>
                         </div>
 
@@ -330,7 +347,7 @@ const DJMixerPlayer = ({
 
                         {/* DECK B */}
                         <div className={`deck-module-nano deck-b ${!deckB ? 'empty' : 'active'}`}>
-                            {/* Signal Ingest Bar */}
+                            {/* Top Signal Ingest Bar */}
                             <div className="signal-ingest-bar">
                                 <div className="ingest-info truncate">{deckB?.title || 'NO_SIGNAL'}</div>
                                 <div className="ingest-actions">
@@ -339,35 +356,48 @@ const DJMixerPlayer = ({
                                 </div>
                             </div>
 
-                            <div className="eq-knobs-column">
-                                <div className="nano-knob"><div className="knob-dot"></div><span>HI</span></div>
-                                <div className="nano-knob"><div className="knob-dot"></div><span>MID</span></div>
-                                <div className="nano-knob"><div className="knob-dot"></div><span>LOW</span></div>
-                                <div className="nano-knob"><div className="knob-dot"></div><span>GAIN</span></div>
-                            </div>
-
-                            <div className="jog-wheel-nano" style={{ transform: `rotate(${rotationB}deg)` }}>
-                                <div className="jog-center-art">
-                                    {deckB?.cover && <img src={deckB.cover} alt="" />}
-                                </div>
-                                <div className="jog-active-node"></div>
-                            </div>
-
-                            <div className="pitch-slider-nano">
-                                <button 
-                                    onClick={togglePlayB} 
-                                    className={`evolve-btn ${isPlayingB ? 'active' : ''}`}
-                                >
-                                    {isPlayingB ? <Pause size={10} /> : <Play size={10} />}
-                                    <span>{isPlayingB ? 'PLAYING' : 'STAGED'}</span>
-                                </button>
-                                <div className="pitch-readout mono">PITCH_0.0%</div>
-                                <input type="range" min="-8" max="8" step="0.1" value={pitchB} onChange={(e) => setPitchB(e.target.value)} className="nano-slider" />
-                            </div>
-
                             <div className="deck-meta-strip text-right">
-                                <div className="bpm-tag mono">{deckB?.bpm || '124.5'} <span className="opacity-20 text-[8px]">BPM</span></div>
-                                <div className="deck-id-tag">NODE_B</div>
+                                <div className="bpm-tag mono text-white/90">{deckB?.bpm || '124.5'} <span className="opacity-20 text-[8px]">BPM</span></div>
+                                <div className="deck-id-tag font-black tracking-widest opacity-40">NODE_B</div>
+                            </div>
+
+                            <div className="deck-core-layout-mirrored">
+                                {/* Inner EQ (Mirrored from A) */}
+                                <div className="eq-knobs-column inner">
+                                    <div className="nano-knob"><div className="knob-dot"></div><span>HI</span></div>
+                                    <div className="nano-knob"><div className="knob-dot"></div><span>MID</span></div>
+                                    <div className="nano-knob"><div className="knob-dot"></div><span>LOW</span></div>
+                                    <div className="nano-knob"><div className="knob-dot"></div><span>GAIN</span></div>
+                                </div>
+
+                                {/* Center Jog */}
+                                <div className="jog-wheel-nano" style={{ transform: `rotate(${rotationB}deg)` }}>
+                                    <div className="jog-center-art">
+                                        {deckB?.cover && <img src={deckB.cover} alt="" />}
+                                    </div>
+                                    <div className="jog-active-node"></div>
+                                </div>
+
+                                {/* Outer Controls */}
+                                <div className="deck-controls-column-nano">
+                                    <div className="evolve-toggle-container">
+                                        <button 
+                                            onClick={() => setIsEvolveB(!isEvolveB)} 
+                                            className={`evolve-btn ${isEvolveB ? 'active' : ''}`}
+                                        >
+                                            <Zap size={10} />
+                                            <span>EVOLVE</span>
+                                        </button>
+                                    </div>
+                                    <div className="play-toggle-container-nano">
+                                        <button onClick={togglePlayB} className={`play-btn-nano ${isPlayingB ? 'active' : ''}`}>
+                                            {isPlayingB ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
+                                            <span>{isPlayingB ? 'PLAYING' : 'STAGED'}</span>
+                                        </button>
+                                    </div>
+                                    <div className="pitch-readout mono opacity-40">PITCH_0.0%</div>
+                                    <input type="range" min="-8" max="8" step="0.1" value={pitchB} onChange={(e) => setPitchB(e.target.value)} className="nano-slider" />
+                                </div>
                             </div>
                         </div>
                     </div>
