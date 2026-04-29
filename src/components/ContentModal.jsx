@@ -226,6 +226,7 @@ const ContentModal = ({
                                     <span className="text-white/60 font-bold">{content?.CreatedAt ? new Date(content.CreatedAt).toLocaleString() : 'SYNCHRONIZED'}</span>
                                 </div>
                             </div>
+                            <div className="flex gap-4">
                                 <button 
                                     onClick={() => setShowTipModal(true)}
                                     className="px-4 py-2 bg-[#ff006e]/10 border border-[#ff006e]/30 hover:bg-[#ff006e] hover:text-black transition-all text-[#ff006e] font-black flex items-center gap-2 group"
