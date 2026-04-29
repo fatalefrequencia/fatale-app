@@ -30,13 +30,15 @@ const DJMixerPlayer = ({
     onLike,
     onPurchase,
     onPlayPlaylist,
-    onPlayTrack
+    onPlayTrack,
+    onFetchPlaylistTracks
 }) => {
     const [activeTab, setActiveTab] = useState('LIBRARY'); // LIBRARY, CHAT, REQUESTS
     const [crateCategory, setCrateCategory] = useState('ALL'); // ALL, PURCHASED, FAVORITES, ARTISTS, PLAYLISTS
     const [searchQuery, setSearchQuery] = useState('');
     const [isAutoMixEnabled, setIsAutoMixEnabled] = useState(false);
     const [viewingPlaylist, setViewingPlaylist] = useState(null);
+    const [isCrateLoading, setIsCrateLoading] = useState(false);
     
     const [deckA, setDeckA] = useState(currentTrack || null);
     const [deckB, setDeckB] = useState(null);
@@ -132,6 +134,22 @@ const DJMixerPlayer = ({
                 audioB.current.load();
                 if (isPlayingB) audioB.current.play();
             }
+        }
+    };
+
+    const handlePlaylistClick = async (p) => {
+        if (onFetchPlaylistTracks) {
+            setIsCrateLoading(true);
+            try {
+                const tracks = await onFetchPlaylistTracks(p.id || p.Id);
+                setViewingPlaylist({ ...p, tracks });
+            } catch (e) {
+                console.error("Signal ingestion failed", e);
+            } finally {
+                setIsCrateLoading(false);
+            }
+        } else {
+            setViewingPlaylist(p);
         }
     };
 
@@ -418,9 +436,11 @@ const DJMixerPlayer = ({
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {crateCategory === 'PLAYLISTS' && !viewingPlaylist ? (
+                                            {isCrateLoading ? (
+                                                <tr className="signal-row"><td colSpan="5" className="text-center py-8 opacity-40 italic">HYDRATING_SIGNAL_SEQUENCE...</td></tr>
+                                            ) : crateCategory === 'PLAYLISTS' && !viewingPlaylist ? (
                                                 getFilteredTracks().playlists.map((p, i) => (
-                                                    <tr key={`pl-${i}`} className="signal-row cursor-pointer" onClick={() => setViewingPlaylist(p)}>
+                                                    <tr key={`pl-${i}`} className="signal-row cursor-pointer" onClick={() => handlePlaylistClick(p)}>
                                                         <td className="load-actions">
                                                             <button className="load-chip"><List size={8} /></button>
                                                         </td>

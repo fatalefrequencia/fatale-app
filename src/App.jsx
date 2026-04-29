@@ -1134,6 +1134,17 @@ function App() {
   // Actually handleLike calls API, so we can re-fetch or optimistically update.
   // Let's add optimistic update in handleLike for this set too.
 
+  const handleFetchPlaylistTracks = async (playlistId) => {
+    try {
+      const res = await API.Playlists.getById(playlistId);
+      // Backend returns { playlist: ..., tracks: [...] } or just tracks
+      return res.data.Tracks || res.data.tracks || res.data.playlistTracks || [];
+    } catch (e) {
+      console.error("Failed to fetch playlist tracks", e);
+      return [];
+    }
+  };
+
   const checkNewMessages = async () => {
     if (activeView === 'messages') {
       setHasNewMessages(false);
@@ -1954,6 +1965,7 @@ function App() {
               onLike={onLike}
               onPurchase={onPurchase}
               onPlayPlaylist={onPlayPlaylist}
+              onFetchPlaylistTracks={handleFetchPlaylistTracks}
               onPlayTrack={(track) => {
                 const tId = track.id || track.Id;
                 const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
@@ -2413,6 +2425,7 @@ const Dashboard = React.memo(({
               volume={volume}
               setVolume={setVolume}
               userPlaylists={playlists}
+              onFetchPlaylistTracks={handleFetchPlaylistTracks}
             />}
             {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} initialChatUser={activeMessageUser} />}
             {activeView === 'settings' && (
@@ -4124,7 +4137,8 @@ const PlayerContent = ({
   requestTrack,
   volume,
   setVolume,
-  userPlaylists
+  userPlaylists,
+  onFetchPlaylistTracks
 }) => {
   const isDesktop = window.innerWidth >= 1024;
 
@@ -4154,6 +4168,7 @@ const PlayerContent = ({
           onLike={onLike}
           onPurchase={onPurchase}
           onPlayPlaylist={onPlayPlaylist}
+          onFetchPlaylistTracks={onFetchPlaylistTracks}
           onPlayTrack={(track) => {
             const tId = track.id || track.Id;
             const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
