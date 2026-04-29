@@ -317,25 +317,58 @@
 .eq-knobs-column {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 15px;
+    align-items: center;
 }
 
-.nano-knob {
+.nano-knob-wrap {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 4px;
 }
 
-.knob-dot {
-    width: 20px;
-    height: 20px;
-    background: #111;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
+.nano-knob-wrap span {
+    font-size: 6px;
+    font-weight: 900;
+    color: white;
+    opacity: 0.3;
+    letter-spacing: 0.1em;
 }
 
-.nano-knob span { font-size: 6px; opacity: 0.3; font-weight: 900; }
+.nano-knob {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #111;
+    border: 1.5px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.8);
+    transition: all 0.2s ease;
+}
+
+.nano-knob.interactive {
+    cursor: ns-resize;
+    border-color: rgba(255, 0, 110, 0.2);
+}
+
+.nano-knob.interactive:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(255, 0, 110, 0.3);
+}
+
+.knob-dot {
+    position: absolute;
+    top: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 5px var(--accent);
+}
+
 
 /* Master Hub Nano */
 .master-central-strip {
