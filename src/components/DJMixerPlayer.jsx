@@ -65,6 +65,9 @@ const DJMixerPlayer = ({
     const [effectiveRateA, setEffectiveRateA] = useState(1);
     const [effectiveRateB, setEffectiveRateB] = useState(1);
     const bpmInterval = useRef(null);
+    const isDraggingKnob = useRef(false);
+    const lastY = useRef(0);
+    const dragTarget = useRef(null);
 
     useEffect(() => {
         setIsPlayingA(isPlaying);
@@ -216,6 +219,52 @@ const DJMixerPlayer = ({
         } else {
             setPitchB(prev => Math.max(-100, Math.min(100, Number(prev) + delta)));
         }
+    };
+
+    const handleKnobDragStart = (e, deck) => {
+        isDraggingKnob.current = true;
+        lastY.current = e.clientY;
+        dragTarget.current = deck;
+        document.addEventListener('mousemove', handleKnobDragMove);
+        document.addEventListener('mouseup', handleKnobDragEnd);
+    };
+
+    const handleKnobDragMove = (e) => {
+        if (!isDraggingKnob.current) return;
+        const delta = (lastY.current - e.clientY) * 0.05; // Sensitivity
+        adjustBpm(dragTarget.current, delta);
+        lastY.current = e.clientY;
+    };
+
+    const handleKnobDragEnd = () => {
+        isDraggingKnob.current = false;
+        dragTarget.current = null;
+        document.removeEventListener('mousemove', handleKnobDragMove);
+        document.removeEventListener('mouseup', handleKnobDragEnd);
+    };
+
+    const handleKnobWheel = (e, deck) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        adjustBpm(deck, delta);
+    };
+
+    const handleKnobTouchStart = (e, deck) => {
+        isDraggingKnob.current = true;
+        lastY.current = e.touches[0].clientY;
+        dragTarget.current = deck;
+    };
+
+    const handleKnobTouchMove = (e) => {
+        if (!isDraggingKnob.current) return;
+        const delta = (lastY.current - e.touches[0].clientY) * 0.05;
+        adjustBpm(dragTarget.current, delta);
+        lastY.current = e.touches[0].clientY;
+    };
+
+    const handleKnobTouchEnd = () => {
+        isDraggingKnob.current = false;
+        dragTarget.current = null;
     };
 
     const handlePlaylistClick = async (p) => {
@@ -386,8 +435,15 @@ const DJMixerPlayer = ({
                                     
                                     <div className="tempo-control-group">
                                         <div className="tempo-knob-container">
-                                            <div className="nano-knob interactive" onClick={() => adjustBpm('A', 0.1)}>
-                                                <div className="knob-dot" style={{ transform: `rotate(${(pitchA % 1) * 360}deg)` }}></div>
+                                            <div 
+                                                className="nano-knob interactive" 
+                                                onMouseDown={(e) => handleKnobDragStart(e, 'A')}
+                                                onWheel={(e) => handleKnobWheel(e, 'A')}
+                                                onTouchStart={(e) => handleKnobTouchStart(e, 'A')}
+                                                onTouchMove={handleKnobTouchMove}
+                                                onTouchEnd={handleKnobTouchEnd}
+                                            >
+                                                <div className="knob-dot" style={{ transform: `rotate(${pitchA * 7.2}deg)` }}></div>
                                             </div>
                                             <span className="knob-label">FINE</span>
                                         </div>
@@ -527,8 +583,15 @@ const DJMixerPlayer = ({
                                     
                                     <div className="tempo-control-group">
                                         <div className="tempo-knob-container">
-                                            <div className="nano-knob interactive" onClick={() => adjustBpm('B', 0.1)}>
-                                                <div className="knob-dot" style={{ transform: `rotate(${(pitchB % 1) * 360}deg)` }}></div>
+                                            <div 
+                                                className="nano-knob interactive" 
+                                                onMouseDown={(e) => handleKnobDragStart(e, 'B')}
+                                                onWheel={(e) => handleKnobWheel(e, 'B')}
+                                                onTouchStart={(e) => handleKnobTouchStart(e, 'B')}
+                                                onTouchMove={handleKnobTouchMove}
+                                                onTouchEnd={handleKnobTouchEnd}
+                                            >
+                                                <div className="knob-dot" style={{ transform: `rotate(${pitchB * 7.2}deg)` }}></div>
                                             </div>
                                             <span className="knob-label">FINE</span>
                                         </div>
