@@ -346,6 +346,7 @@
     position: relative;
     box-shadow: inset 0 0 8px rgba(0,0,0,0.8);
     transition: all 0.2s ease;
+    /* Removed overflow: hidden to allow ring glow */
 }
 
 .nano-knob.interactive {
@@ -375,19 +376,24 @@
     position: absolute;
     inset: -3px;
     border-radius: 50%;
-    background: conic-gradient(var(--accent) var(--ring-fill, 0%), rgba(255, 0, 110, 0.05) 0%);
-    mask: radial-gradient(transparent 58%, black 60%);
-    -webkit-mask: radial-gradient(transparent 58%, black 60%);
-    opacity: 0.4;
-    transition: opacity 0.2s;
-    z-index: 1;
+    background: conic-gradient(var(--accent) var(--ring-fill, 0%), rgba(255, 255, 255, 0.05) 0%);
+    mask: radial-gradient(transparent 62%, black 64%);
+    -webkit-mask: radial-gradient(transparent 62%, black 64%);
+    opacity: 0.9;
+    transition: all 0.2s;
+    z-index: 5;
+    pointer-events: none;
+    filter: drop-shadow(0 0 4px var(--accent));
 }
 
 .nano-knob.interactive:hover .knob-ring,
 .nano-knob.interactive:active .knob-ring {
     opacity: 1;
-    filter: drop-shadow(0 0 5px var(--accent));
+    filter: drop-shadow(0 0 10px var(--accent));
+    transform: scale(1.1);
 }
+
+
 
 
 
