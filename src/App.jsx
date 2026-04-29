@@ -4127,8 +4127,24 @@ const PlayerContent = ({
           onPurchase={onPurchase}
           onPlayPlaylist={onPlayPlaylist}
           onPlayTrack={(track) => {
-            const index = tracks.findIndex(t => (t.id || t.Id) === (track.id || track.Id));
-            if (index >= 0) setCurrentTrackIndex(index);
+            const tId = track.id || track.Id;
+            const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
+            const pureYtId = getGlobalYoutubeId(track);
+            const isYoutube = !!pureYtId;
+            const sourceStr = isYoutube ? `youtube:${pureYtId}` : (rawSource || "");
+
+            // Enrichment logic for Mixer
+            const enriched = {
+              ...track,
+              id: tId,
+              source: isYoutube ? sourceStr : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null),
+              cover: track.cover || track.imageUrl || track.CoverImageUrl || (isYoutube ? `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg` : null),
+            };
+
+            setTracks([enriched]);
+            setCurrentTrackIndex(0);
+            setIsPlaying(true);
+            if (isYoutube) setIsYoutubeMode(true);
           }}
           user={user}
         />

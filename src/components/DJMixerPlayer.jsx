@@ -34,12 +34,47 @@ const DJMixerPlayer = ({
     
     const [deckA, setDeckA] = useState(currentTrack || null);
     const [deckB, setDeckB] = useState(null);
-    const [crossfader, setCrossfader] = useState(0); // -100 to 100
-    const [rotationA, setRotationA] = useState(0);
-    const [rotationB, setRotationB] = useState(0);
     const [pitchA, setPitchA] = useState(0);
     const [pitchB, setPitchB] = useState(0);
     const [isSyncing, setIsSyncing] = useState(false);
+    
+    // DECK B LOCAL ENGINE
+    const audioB = useRef(new Audio());
+    const [isPlayingB, setIsPlayingB] = useState(false);
+    const [currentTimeB, setCurrentTimeB] = useState(0);
+    const [durationB, setDurationB] = useState(0);
+    const [volumeB, setVolumeB] = useState(1);
+    const [baseVolume, setBaseVolume] = useState(volume); // Store user preference
+
+    // Deck B Audio Event Handlers
+    useEffect(() => {
+        const b = audioB.current;
+        const updateTime = () => setCurrentTimeB(b.currentTime);
+        const updateDuration = () => setDurationB(b.duration);
+        const onEnd = () => setIsPlayingB(false);
+
+        b.addEventListener('timeupdate', updateTime);
+        b.addEventListener('loadedmetadata', updateDuration);
+        b.addEventListener('ended', onEnd);
+
+        return () => {
+            b.removeEventListener('timeupdate', updateTime);
+            b.removeEventListener('loadedmetadata', updateDuration);
+            b.removeEventListener('ended', onEnd);
+            b.pause();
+        };
+    }, []);
+
+    // Crossfader Volume Phasing
+    useEffect(() => {
+        // Deck A (Global)
+        const attenuationA = Math.min(1, (100 - crossfader) / 100);
+        if (onVolumeChange) onVolumeChange(baseVolume * attenuationA);
+
+        // Deck B (Local)
+        const attenuationB = Math.min(1, (100 + crossfader) / 100);
+        audioB.current.volume = volumeB * attenuationB;
+    }, [crossfader, baseVolume, volumeB]);
 
     // Sync Deck A with global track in real-time
     useEffect(() => {
@@ -56,13 +91,15 @@ const DJMixerPlayer = ({
         const animate = () => {
             if (isPlaying) {
                 setRotationA(prev => (prev + 1.2) % 360);
-                if (deckB) setRotationB(prev => (prev + 1.2) % 360);
+            }
+            if (isPlayingB) {
+                setRotationB(prev => (prev + 1.2) % 360);
             }
             animationFrame = requestAnimationFrame(animate);
         };
         animationFrame = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(animationFrame);
-    }, [isPlaying, deckB]);
+    }, [isPlaying, isPlayingB]);
 
     // Auto-Mix Evolution logic
     useEffect(() => {
@@ -79,7 +116,23 @@ const DJMixerPlayer = ({
             if (onPlayTrack) onPlayTrack(track);
         } else {
             setDeckB(track);
+            // Load source locally for Deck B
+            const source = track.source || (track.filePath ? (track.filePath.startsWith('http') ? track.filePath : `https://fatale-api.azurewebsites.net/api/Media/${track.filePath}`) : null);
+            if (source) {
+                audioB.current.src = source;
+                audioB.current.load();
+                if (isPlayingB) audioB.current.play();
+            }
         }
+    };
+
+    const togglePlayB = () => {
+        if (isPlayingB) {
+            audioB.current.pause();
+        } else {
+            if (audioB.current.src) audioB.current.play();
+        }
+        setIsPlayingB(!isPlayingB);
     };
 
     // Filtered Crate Logic
@@ -185,25 +238,32 @@ const DJMixerPlayer = ({
                             </div>
 
                             <div className="deck-visual-core-nano">
-                                <div className="pitch-slider-vertical">
-                                    <input type="range" min="-8" max="8" step="0.1" value={pitchA} onChange={(e) => setPitchA(e.target.value)} className="nano-slider" />
-                                    <div className="pitch-readout mono">{pitchA}%</div>
+                                <div className="evolve-toggle-container">
+                                    <button 
+                                        onClick={() => setIsAutoMixEnabled(!isAutoMixEnabled)} 
+                                        className={`evolve-btn ${isAutoMixEnabled ? 'active' : ''}`}
+                                    >
+                                        <Zap size={10} />
+                                        <span>EVOLVE</span>
+                                    </button>
                                 </div>
 
-                                <div className="jog-wheel-nano">
-                                    <motion.div className="jog-ring" style={{ rotate: rotationA }}>
-                                        <div className="jog-center-art">
-                                            {deckA?.cover || deckA?.thumbnail ? <img src={deckA.cover || deckA.thumbnail} alt="" /> : <div className="neon-glitch-icon">A</div>}
-                                        </div>
-                                        <div className="jog-active-node"></div>
-                                    </motion.div>
-                                </div>
+                                <div className="pitch-readout mono">PITCH_0.0%</div>
+                                <input type="range" min="-8" max="8" step="0.1" value={pitchA} onChange={(e) => setPitchA(e.target.value)} className="nano-slider" />
+                            </div>
 
-                                <div className="eq-knobs-column">
-                                    <div className="nano-knob"><div className="knob-dot"></div><span>LOW</span></div>
-                                    <div className="nano-knob"><div className="knob-dot"></div><span>MID</span></div>
-                                    <div className="nano-knob"><div className="knob-dot"></div><span>HI</span></div>
+                            <div className="jog-wheel-nano" style={{ transform: `rotate(${rotationA}deg)` }}>
+                                <div className="jog-center-art">
+                                    {deckA?.cover && <img src={deckA.cover} alt="" />}
                                 </div>
+                                <div className="jog-active-node"></div>
+                            </div>
+
+                            <div className="eq-knobs-column">
+                                <div className="nano-knob"><div className="knob-dot"></div><span>HI</span></div>
+                                <div className="nano-knob"><div className="knob-dot"></div><span>MID</span></div>
+                                <div className="nano-knob"><div className="knob-dot"></div><span>LOW</span></div>
+                                <div className="nano-knob"><div className="knob-dot"></div><span>GAIN</span></div>
                             </div>
                         </div>
 
@@ -217,29 +277,19 @@ const DJMixerPlayer = ({
                                 <button onClick={onNext} className="nav-btn mini"><SkipForward size={12} /></button>
                             </div>
                             
-                            <div className="evolve-toggle-container">
-                                <button 
-                                    onClick={() => setIsAutoMixEnabled(!isAutoMixEnabled)} 
-                                    className={`evolve-btn ${isAutoMixEnabled ? 'active' : ''}`}
-                                >
-                                    <Zap size={10} />
-                                    <span>EVOLVE</span>
-                                </button>
-                            </div>
-
                             <div className="master-vu-nano">
                                 <div className="vu-led"><div className="vu-led-fill" style={{ height: isPlaying ? '70%' : '0%' }}></div></div>
-                                <div className="vu-led"><div className="vu-led-fill" style={{ height: isPlaying ? '65%' : '0%' }}></div></div>
+                                <div className="vu-led"><div className="vu-led-fill" style={{ height: isPlayingB ? '65%' : '0%' }}></div></div>
                             </div>
                             <div className="deck-crossfader">
                                 <div className="cf-label">A</div>
-                                <input type="range" min="-100" max="100" value={crossfader} onChange={(e) => setCrossfader(e.target.value)} className="crossfader-nano" />
+                                <input type="range" min="-100" max="100" value={crossfader} onChange={(e) => setCrossfader(Number(e.target.value))} className="crossfader-nano" />
                                 <div className="cf-label">B</div>
                             </div>
                         </div>
 
                         {/* DECK B */}
-                        <div className={`deck-module-nano deck-b ${!deckB ? 'empty' : ''}`}>
+                        <div className={`deck-module-nano deck-b ${!deckB ? 'empty' : 'active'}`}>
                             {/* Signal Ingest Bar */}
                             <div className="signal-ingest-bar">
                                 <div className="ingest-info truncate">{deckB?.title || 'NO_SIGNAL'}</div>
@@ -249,16 +299,36 @@ const DJMixerPlayer = ({
                                 </div>
                             </div>
 
+                            <div className="eq-knobs-column">
+                                <div className="nano-knob"><div className="knob-dot"></div><span>HI</span></div>
+                                <div className="nano-knob"><div className="knob-dot"></div><span>MID</span></div>
+                                <div className="nano-knob"><div className="knob-dot"></div><span>LOW</span></div>
+                                <div className="nano-knob"><div className="knob-dot"></div><span>GAIN</span></div>
+                            </div>
+
+                            <div className="jog-wheel-nano" style={{ transform: `rotate(${rotationB}deg)` }}>
+                                <div className="jog-center-art">
+                                    {deckB?.cover && <img src={deckB.cover} alt="" />}
+                                </div>
+                                <div className="jog-active-node"></div>
+                            </div>
+
+                            <div className="pitch-slider-nano">
+                                <button 
+                                    onClick={togglePlayB} 
+                                    className={`evolve-btn ${isPlayingB ? 'active' : ''}`}
+                                >
+                                    {isPlayingB ? <Pause size={10} /> : <Play size={10} />}
+                                    <span>{isPlayingB ? 'PLAYING' : 'STAGED'}</span>
+                                </button>
+                                <div className="pitch-readout mono">PITCH_0.0%</div>
+                                <input type="range" min="-8" max="8" step="0.1" value={pitchB} onChange={(e) => setPitchB(e.target.value)} className="nano-slider" />
+                            </div>
+
                             <div className="deck-meta-strip text-right">
                                 <div className="bpm-tag mono">{deckB?.bpm || '124.5'} <span className="opacity-20 text-[8px]">BPM</span></div>
                                 <div className="deck-id-tag">NODE_B</div>
                             </div>
-
-                            <div className="deck-visual-core-nano">
-                                <div className="eq-knobs-column">
-                                    <div className="nano-knob"><div className="knob-dot"></div><span>HI</span></div>
-                                    <div className="nano-knob"><div className="knob-dot"></div><span>MID</span></div>
-                                    <div className="nano-knob"><div className="knob-dot"></div><span>LOW</span></div>
                                 </div>
 
                                 <div className="jog-wheel-nano">
