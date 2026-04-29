@@ -3,8 +3,8 @@ import { motion } from 'framer-motion';
 import { Send, X, AlertCircle, Check } from 'lucide-react';
 import API from '../services/api';
 
-const CreditTransferModal = ({ user, onClose, onRefresh }) => {
-    const [targetId, setTargetId] = useState('');
+const CreditTransferModal = ({ user, onClose, onRefresh, initialTargetId = '' }) => {
+    const [targetId, setTargetId] = useState(initialTargetId);
     const [amount, setAmount] = useState('');
     const [status, setStatus] = useState('idle'); // idle, processing, success, error
     const [msg, setMsg] = useState('');

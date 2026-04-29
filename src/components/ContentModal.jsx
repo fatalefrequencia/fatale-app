@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Book, Camera, Video, Share2, Download, ExternalLink } from 'lucide-react';
 import { API_BASE_URL, getMediaUrl } from '../constants';
 import { useNotification } from '../contexts/NotificationContext';
+import CreditTransferModal from './CreditTransferModal';
+import { Coins } from 'lucide-react';
 
 const ContentModal = ({ 
     content, 
@@ -19,6 +21,7 @@ const ContentModal = ({
     monitorIsGlass = false 
 }) => {
     const { showNotification } = useNotification();
+    const [showTipModal, setShowTipModal] = React.useState(false);
     if (!content && !children) return null;
     const mediaType = (content?.mediaType || content?.MediaType || content?.type || content?.Type || type || '').toUpperCase();
     const normalizedType = mediaType;
@@ -109,6 +112,11 @@ const ContentModal = ({
                             e.stopPropagation();
                             onClose?.();
                         }} 
+                        onTouchEnd={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onClose?.();
+                        }}
                         className="text-white/50 hover:text-white transition-all cursor-pointer relative z-[200] p-2 hover:bg-white/10"
                     >
                         <X size={20} />
@@ -218,7 +226,12 @@ const ContentModal = ({
                                     <span className="text-white/60 font-bold">{content?.CreatedAt ? new Date(content.CreatedAt).toLocaleString() : 'SYNCHRONIZED'}</span>
                                 </div>
                             </div>
-                            <div className="flex gap-4">
+                                <button 
+                                    onClick={() => setShowTipModal(true)}
+                                    className="px-4 py-2 bg-[#ff006e]/10 border border-[#ff006e]/30 hover:bg-[#ff006e] hover:text-black transition-all text-[#ff006e] font-black flex items-center gap-2 group"
+                                >
+                                    <Coins size={12} className="group-hover:animate-bounce" /> TIP_ARTIST
+                                </button>
                                 <button 
                                     onClick={handleShare}
                                     className="px-4 py-2 bg-white/5 border border-white/10 hover:border-[#9d00ff]/50 hover:text-white transition-all text-white/60 flex items-center gap-2"
@@ -226,13 +239,34 @@ const ContentModal = ({
                                     <Share2 size={12} /> SHARE_SIGNAL
                                 </button>
                                 <button
-                                    onClick={onClose}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        onClose?.();
+                                    }}
+                                    onTouchEnd={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        onClose?.();
+                                    }}
                                     className="text-white font-black px-8 py-2 uppercase transition-all border border-white/40 hover:border-white hover:bg-white hover:text-black text-[10px] tracking-[0.2em]"
                                 >
                                     CLOSE
                                 </button>
                             </div>
                         </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Tipping Overlay */}
+                <AnimatePresence>
+                    {showTipModal && (
+                        <CreditTransferModal 
+                            user={null}
+                            initialTargetId={content?.userId || content?.UserId || content?.OwnerId || content?.ownerId || ''}
+                            onClose={() => setShowTipModal(false)}
+                            onRefresh={() => showNotification("TIP_SENT", "Signal of appreciation transmitted.", "success")}
+                        />
                     )}
                 </AnimatePresence>
             </motion.div>

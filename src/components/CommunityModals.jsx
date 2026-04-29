@@ -295,24 +295,7 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                                 e.stopPropagation();
                                 onClose();
                             }}
-                            style={{ 
-                                background: 'none', 
-                                border: 'none', 
-                                color: '#ff006e', 
-                                cursor: 'pointer',
-                                padding: '12px',
-                                marginRight: '-12px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                zIndex: 1100,
-                                position: 'relative',
-                                pointerEvents: 'auto',
-                                opacity: 0.4,
-                                transition: 'all 0.3s ease'
-                            }}
-                            onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'rotate(90deg)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.opacity = '0.4'; e.currentTarget.style.transform = 'rotate(0deg)'; }}
+                            className="p-3 text-[#ff006e] opacity-60 hover:opacity-100 hover:rotate-90 transition-all cursor-pointer relative z-[1100]"
                         >
                             <X size={24} />
                         </button>
@@ -603,7 +586,11 @@ export const CreateCommunityModal = ({ onClose, onSubmit, loading, user_credits 
                             <Users size={18} style={{ color: activeSector.color }} />
                             <h2 className="mono font-black text-xs uppercase tracking-[0.4em] text-white">INITIALIZE_COMMUNITY</h2>
                         </div>
-                        <button onClick={onClose} className="text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300">
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); onClose(); }} 
+                            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); onClose(); }}
+                            className="text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300 cursor-pointer p-2"
+                        >
                             <X size={18} />
                         </button>
                     </div>

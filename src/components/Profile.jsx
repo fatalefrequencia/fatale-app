@@ -281,9 +281,10 @@ const GearRack = ({ gears, onAddGear, onRemoveGear, isMe, formData, setFormData,
                         {isMe && (
                             <button 
                                 onClick={(e) => { e.stopPropagation(); onRemoveGear(item.id || item.Id); }}
-                                className="opacity-0 group-hover/gear:opacity-100 text-red-500/40 hover:text-red-500 transition-opacity p-1"
+                                onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); onRemoveGear(item.id || item.Id); }}
+                                className="opacity-0 group-hover/gear:opacity-100 text-red-500/40 hover:text-red-500 transition-opacity p-2 cursor-pointer relative z-20"
                             >
-                                <X size={8} />
+                                <X size={10} />
                             </button>
                         )}
                     </div>
@@ -924,6 +925,7 @@ export const ProfileView = React.memo(({
     const [isStationFavorited, setIsStationFavorited] = useState(false);
     const [localStatus, setLocalStatus] = useState('');
     const [isSavingStatus, setIsSavingStatus] = useState(false);
+    const [showTipModal, setShowTipModal] = useState(false);
     
     const [viewMode, setViewMode] = useState('CONSOLE'); // 'CONSOLE' or 'DASHBOARD'
     const [cycleIndex, setCycleIndex] = useState(0); // 0: PFP, 1: Tracks, 2: Activity, 3: Social
@@ -1921,9 +1923,19 @@ export const ProfileView = React.memo(({
                             </div>
                             <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
                                 <div className="text-[18px] font-black uppercase tracking-widest leading-none mb-1 text-[var(--subsystem-accent)]">{displayUser?.username}</div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
-                                    <div className="text-[8px] mono text-[var(--subsystem-accent)]/60 uppercase tracking-widest">{displayUser?.statusMessage || displayUser?.StatusMessage || 'empty_string'}</div>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
+                                        <div className="text-[8px] mono text-[var(--subsystem-accent)]/60 uppercase tracking-widest">{displayUser?.statusMessage || displayUser?.StatusMessage || 'empty_string'}</div>
+                                    </div>
+                                    {!isMe && (
+                                        <button 
+                                            onClick={() => setShowTipModal(true)}
+                                            className="px-3 py-1 bg-[#ff006e]/10 border border-[#ff006e]/30 hover:bg-[#ff006e] hover:text-black transition-all text-[#ff006e] font-black uppercase text-[8px] flex items-center gap-1.5 group"
+                                        >
+                                            <Coins size={10} className="group-hover:animate-bounce" /> TIP_ARTIST
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -2280,6 +2292,18 @@ export const ProfileView = React.memo(({
                         onClose={() => setSelectedContent(null)}
                         hasMiniPlayer={true}
                         themeColor={profileAccent}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Tipping Overlay */}
+            <AnimatePresence>
+                {showTipModal && (
+                    <CreditTransferModal 
+                        user={currentUser}
+                        initialTargetId={effectiveId}
+                        onClose={() => setShowTipModal(false)}
+                        onRefresh={() => showNotification("TIP_SENT", "Signal of appreciation transmitted.", "success")}
                     />
                 )}
             </AnimatePresence>
@@ -2793,8 +2817,9 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
                 <div className="flex justify-between items-center border-b border-[var(--text-color)]/20 pb-4">
                     <h3 className="text-2xl font-bold text-white uppercase tracking-tighter">// MODIFY_PLAYLIST_METADATA</h3>
                     <button
-                        onClick={() => setIsEditing(false)}
-                        className="text-[var(--text-color)]/30 hover:text-[var(--text-color)] transition-colors"
+                        onClick={(e) => { e.stopPropagation(); setIsEditing(false); }}
+                        onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setIsEditing(false); }}
+                        className="text-[var(--text-color)]/30 hover:text-[var(--text-color)] transition-colors p-2 cursor-pointer"
                     >
                         <X size={20} />
                     </button>

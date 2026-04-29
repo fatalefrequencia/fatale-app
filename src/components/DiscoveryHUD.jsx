@@ -611,8 +611,9 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                                     </div>
                                                                 </div>
                                                                 <button 
-                                                                    onClick={() => setSelectedGlobeItem(null)}
-                                                                    className="p-2 text-white/20 hover:text-white transition-all scale-125"
+                                                                    onClick={(e) => { e.stopPropagation(); setSelectedGlobeItem(null); }}
+                                                                    onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedGlobeItem(null); }}
+                                                                    className="p-2 text-white/20 hover:text-white transition-all scale-125 cursor-pointer relative z-[100]"
                                                                 >
                                                                     <X size={16} />
                                                                 </button>
