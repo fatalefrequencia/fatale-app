@@ -1793,6 +1793,7 @@ function App() {
                setVolume={setVolume}
                isMiniPlayerMinimized={isMiniPlayerMinimized}
                setIsMiniPlayerMinimized={setIsMiniPlayerMinimized}
+               onFetchPlaylistTracks={handleFetchPlaylistTracks}
            />
           </>
         )}
@@ -2083,7 +2084,8 @@ const Dashboard = React.memo(({
   volume,
   setVolume,
   isMiniPlayerMinimized,
-  setIsMiniPlayerMinimized
+  setIsMiniPlayerMinimized,
+  onFetchPlaylistTracks
 }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -2425,7 +2427,7 @@ const Dashboard = React.memo(({
               volume={volume}
               setVolume={setVolume}
               userPlaylists={playlists}
-              onFetchPlaylistTracks={handleFetchPlaylistTracks}
+              onFetchPlaylistTracks={onFetchPlaylistTracks}
             />}
             {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} initialChatUser={activeMessageUser} />}
             {activeView === 'settings' && (
