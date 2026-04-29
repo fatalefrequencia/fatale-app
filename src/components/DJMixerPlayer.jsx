@@ -31,7 +31,8 @@ const DJMixerPlayer = ({
     onPurchase,
     onPlayPlaylist,
     onPlayTrack,
-    onFetchPlaylistTracks
+    onFetchPlaylistTracks,
+    onPlaybackRateChange
 }) => {
     const [activeTab, setActiveTab] = useState('LIBRARY'); // LIBRARY, CHAT, REQUESTS
     const [crateCategory, setCrateCategory] = useState('ALL'); // ALL, PURCHASED, FAVORITES, ARTISTS, PLAYLISTS
@@ -59,7 +60,10 @@ const DJMixerPlayer = ({
     const [isEvolveA, setIsEvolveA] = useState(false);
     const [isEvolveB, setIsEvolveB] = useState(false);
     const [isPlayingA, setIsPlayingA] = useState(isPlaying);
-    const [isSynced, setIsSynced] = useState(false);
+    const [isSyncedA, setIsSyncedA] = useState(false);
+    const [isSyncedB, setIsSyncedB] = useState(false);
+    const [effectiveRateA, setEffectiveRateA] = useState(1);
+    const [effectiveRateB, setEffectiveRateB] = useState(1);
     const bpmInterval = useRef(null);
 
     useEffect(() => {
@@ -110,16 +114,36 @@ const DJMixerPlayer = ({
         let animationFrame;
         const animate = () => {
             if (isPlaying) {
-                setRotationA(prev => (prev + 1.2) % 360);
+                setRotationA(prev => (prev + 1.2 * effectiveRateA) % 360);
             }
             if (isPlayingB) {
-                setRotationB(prev => (prev + 1.2) % 360);
+                setRotationB(prev => (prev + 1.2 * effectiveRateB) % 360);
             }
             animationFrame = requestAnimationFrame(animate);
         };
         animationFrame = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(animationFrame);
     }, [isPlaying, isPlayingB]);
+
+    useEffect(() => {
+        const baseA = Number(deckA?.bpm || 128);
+        const effectiveA = baseA + Number(pitchA);
+        const rate = baseA > 0 ? effectiveA / baseA : 1;
+        setEffectiveRateA(rate);
+        if (onPlaybackRateChange) {
+            onPlaybackRateChange(rate);
+        }
+    }, [pitchA, deckA, onPlaybackRateChange]);
+
+    useEffect(() => {
+        const baseB = Number(deckB?.bpm || 124.5);
+        const effectiveB = baseB + Number(pitchB);
+        const rate = baseB > 0 ? effectiveB / baseB : 1;
+        setEffectiveRateB(rate);
+        if (audioB.current) {
+            audioB.current.playbackRate = rate;
+        }
+    }, [pitchB, deckB]);
 
     // Auto-Mix Evolution logic
     useEffect(() => {
@@ -147,27 +171,31 @@ const DJMixerPlayer = ({
     };
 
     const handleSync = (initiator) => {
-        setIsSynced(true);
         const bpmA = Number(deckA?.bpm || 128) + Number(pitchA);
         const bpmB = Number(deckB?.bpm || 124.5) + Number(pitchB);
 
-        if (initiator === 'A' && deckB) {
+        console.log(`[SYNC] Initiator: ${initiator} | A:${bpmA.toFixed(1)} | B:${bpmB.toFixed(1)}`);
+
+        if (initiator === 'A') {
             // Make B match A
+            if (!deckB) return;
+            setIsSyncedA(true);
             const targetBpm = bpmA;
-            const baseB = Number(deckB?.bpm || 124.5);
+            const baseB = Number(deckB.bpm || 124.5);
             setPitchB(targetBpm - baseB);
-        } else if (initiator === 'B' && deckA) {
+            setTimeout(() => setIsSyncedA(false), 2000);
+        } else if (initiator === 'B') {
             // Make A match B
+            if (!deckA) return;
+            setIsSyncedB(true);
             const targetBpm = bpmB;
-            const baseA = Number(deckA?.bpm || 128);
+            const baseA = Number(deckA.bpm || 128);
             setPitchA(targetBpm - baseA);
+            setTimeout(() => setIsSyncedB(false), 2000);
         }
         
         setIsSyncing(true);
-        setTimeout(() => {
-            setIsSyncing(false);
-            setIsSynced(false);
-        }, 2000);
+        setTimeout(() => setIsSyncing(false), 500);
     };
 
     const startBpmAdjust = (deck, delta) => {
@@ -332,7 +360,7 @@ const DJMixerPlayer = ({
                                         {isPlayingA ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
                                     </button>
                                     <button onClick={onNext} className="transport-btn-sq"><SkipForward size={10} /></button>
-                                    <button onClick={() => handleSync('A')} className={`sync-btn-nano ${isSynced ? 'active' : ''}`}>SYNC</button>
+                                    <button onClick={() => handleSync('A')} className={`sync-btn-nano ${isSyncedA ? 'active' : ''}`}>SYNC</button>
                                 </div>
                                 <div className="deck-id-readout mirrored-right">
                                     <div className="deck-id-tag font-black tracking-widest opacity-40">NODE_A</div>
@@ -367,8 +395,8 @@ const DJMixerPlayer = ({
                                         </button>
                                     </div>
                                     
-                                    <div className="pitch-readout mono opacity-40">PITCH_0.0%</div>
-                                    <input type="range" min="-8" max="8" step="0.1" value={pitchA} onChange={(e) => setPitchA(e.target.value)} className="nano-slider" />
+                                    <div className="pitch-readout mono opacity-40">PITCH_{Number(pitchA).toFixed(1)}%</div>
+                                    <input type="range" min="-50" max="50" step="0.1" value={pitchA} onChange={(e) => setPitchA(Number(e.target.value))} className="nano-slider" />
                                 </div>
 
                                 {/* Center Jog */}
@@ -460,7 +488,7 @@ const DJMixerPlayer = ({
                                     </div>
                                 </div>
                                 <div className="deck-transport-row-nano right">
-                                    <button onClick={() => handleSync('B')} className={`sync-btn-nano ${isSynced ? 'active' : ''}`}>SYNC</button>
+                                    <button onClick={() => handleSync('B')} className={`sync-btn-nano ${isSyncedB ? 'active' : ''}`}>SYNC</button>
                                     <button className="transport-btn-sq"><SkipBack size={10} /></button>
                                     <button onClick={togglePlayB} className={`transport-btn-sq main ${isPlayingB ? 'active' : ''}`}>
                                         {isPlayingB ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
@@ -498,8 +526,8 @@ const DJMixerPlayer = ({
                                         </button>
                                     </div>
                                     
-                                    <div className="pitch-readout mono opacity-40">PITCH_0.0%</div>
-                                    <input type="range" min="-8" max="8" step="0.1" value={pitchB} onChange={(e) => setPitchB(e.target.value)} className="nano-slider" />
+                                    <div className="pitch-readout mono opacity-40">PITCH_{Number(pitchB).toFixed(1)}%</div>
+                                    <input type="range" min="-50" max="50" step="0.1" value={pitchB} onChange={(e) => setPitchB(Number(e.target.value))} className="nano-slider" />
                                 </div>
                             </div>
                         </div>

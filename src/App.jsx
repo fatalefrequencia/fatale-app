@@ -134,6 +134,7 @@ function App() {
   const [isMiniPlayerMinimized, setIsMiniPlayerMinimized] = useState(() => {
     return localStorage.getItem('isMiniPlayerMinimized') === 'true';
   });
+  const [globalPlaybackRate, setGlobalPlaybackRate] = useState(1);
 
   // Live Radio State
   const [followingMap, setFollowingMap] = useState({});
@@ -144,6 +145,16 @@ function App() {
   const [stationQueue, setStationQueue] = useState([]);
   const [showMixer, setShowMixer] = useState(false);
   const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
+
+  const handlePlaybackRateChange = (newRate) => {
+    setGlobalPlaybackRate(newRate);
+    if (audioRef.current) audioRef.current.playbackRate = newRate;
+    if (youtubePlayer && typeof youtubePlayer.setPlaybackRate === 'function') {
+        try {
+            youtubePlayer.setPlaybackRate(newRate);
+        } catch(e) { console.warn("YT setRate fail", e); }
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => setIsLandscape(window.innerWidth > window.innerHeight);
@@ -308,9 +319,9 @@ function App() {
   };
 
   const handleLoadedMetadata = () => {
-    if (audioRef.current) {
-      setDuration(audioRef.current.duration);
-    }
+    setDuration(audioRef.current.duration);
+    // Apply active playback rate to new signal
+    audioRef.current.playbackRate = globalPlaybackRate;
   };
 
   const handleSeek = (newTime) => {
@@ -1684,6 +1695,7 @@ function App() {
                 if (isPlaying && isYoutubeMode) {
                   try {
                     e.target.playVideo();
+                    e.target.setPlaybackRate(globalPlaybackRate);
                   } catch (err) { console.warn("YT Play onReady failure:", err); }
                 }
               }}
@@ -1794,6 +1806,7 @@ function App() {
                isMiniPlayerMinimized={isMiniPlayerMinimized}
                setIsMiniPlayerMinimized={setIsMiniPlayerMinimized}
                onFetchPlaylistTracks={handleFetchPlaylistTracks}
+               onPlaybackRateChange={handlePlaybackRateChange}
            />
           </>
         )}
@@ -1967,6 +1980,7 @@ function App() {
               onPurchase={onPurchase}
               onPlayPlaylist={onPlayPlaylist}
               onFetchPlaylistTracks={handleFetchPlaylistTracks}
+              onPlaybackRateChange={handlePlaybackRateChange}
               onPlayTrack={(track) => {
                 const tId = track.id || track.Id;
                 const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
@@ -2085,7 +2099,8 @@ const Dashboard = React.memo(({
   setVolume,
   isMiniPlayerMinimized,
   setIsMiniPlayerMinimized,
-  onFetchPlaylistTracks
+  onFetchPlaylistTracks,
+  onPlaybackRateChange
 }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -2428,6 +2443,7 @@ const Dashboard = React.memo(({
               setVolume={setVolume}
               userPlaylists={playlists}
               onFetchPlaylistTracks={onFetchPlaylistTracks}
+              onPlaybackRateChange={onPlaybackRateChange}
             />}
             {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} initialChatUser={activeMessageUser} />}
             {activeView === 'settings' && (
@@ -4140,7 +4156,8 @@ const PlayerContent = ({
   volume,
   setVolume,
   userPlaylists,
-  onFetchPlaylistTracks
+  onFetchPlaylistTracks,
+  onPlaybackRateChange
 }) => {
   const isDesktop = window.innerWidth >= 1024;
 
@@ -4171,6 +4188,7 @@ const PlayerContent = ({
           onPurchase={onPurchase}
           onPlayPlaylist={onPlayPlaylist}
           onFetchPlaylistTracks={onFetchPlaylistTracks}
+          onPlaybackRateChange={onPlaybackRateChange}
           onPlayTrack={(track) => {
             const tId = track.id || track.Id;
             const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
