@@ -68,217 +68,180 @@ const DJMixerPlayer = ({
     const progress = (currentTime / duration) * 100 || 0;
 
     return (
-        <div className="dj-mixer-container landscape-mode">
-            {/* Top Signal Strip */}
-            <div className="mixer-header">
-                <div className="signal-identity">
-                    <div className="station-node">
-                        <Radio size={14} className="pulse-icon" />
-                        <span className="mono tracking-[0.3em] uppercase text-[var(--accent)]">FREQ_{station?.frequency || '100.1'}</span>
-                    </div>
-                    <div className="session-info">
-                        <h2 className="text-xs font-black uppercase tracking-widest text-white">{station?.name || 'NEURAL_BROADCAST'}</h2>
-                        <p className="text-[8px] mono opacity-40 uppercase tracking-tighter">Broadcast_Node_{station?.id || 'ALPHA'}</p>
-                    </div>
-                </div>
-
-                <div className="main-waveform-container">
-                    <div className="waveform-peaks">
-                        {[...Array(80)].map((_, i) => (
-                            <div 
-                                key={i} 
-                                className="peak-bar" 
-                                style={{ 
-                                    height: `${15 + Math.random() * 70}%`,
-                                    background: i / 80 < progress / 100 ? 'var(--accent)' : 'rgba(255,255,255,0.1)',
-                                    boxShadow: i / 80 < progress / 100 ? '0 0 10px var(--accent)' : 'none'
-                                }} 
-                            />
-                        ))}
-                    </div>
-                    <div className="waveform-playhead" style={{ left: `${progress}%` }}></div>
-                </div>
-
-                <div className="listener-count-hud">
-                    <Users size={12} className="text-[var(--accent)]" />
-                    <span className="mono text-[10px] font-bold">{station?.listenerCount || '1.2K'}</span>
-                    <div className="live-dot animate-pulse"></div>
-                </div>
-            </div>
-
-            {/* Main Dual Deck Area */}
-            <div className="mixer-decks-grid">
-                {/* DECK A */}
-                <div className={`deck-module deck-a ${!deckA ? 'empty' : 'active'}`}>
-                    <div className="deck-header">
-                        <div className="deck-id">DECK_A</div>
-                        <div className="track-meta">
-                            <div className="title truncate text-white">{deckA?.title || 'LOAD_SIGNAL_...'}</div>
-                            <div className="artist truncate opacity-50">{deckA?.artist || 'EMPTY_NODE'}</div>
-                        </div>
-                        <div className="bpm-display mono">
-                            <span className="text-[var(--accent)]">{deckA?.bpm || '128.0'}</span>
-                            <span className="opacity-20 text-[8px]">BPM</span>
-                        </div>
-                    </div>
-
-                    <div className="deck-visual-core">
-                        <div className="pitch-slider-container">
-                            <input 
-                                type="range" 
-                                min="-8" max="8" step="0.1" 
-                                value={pitchA} 
-                                onChange={(e) => setPitchA(e.target.value)}
-                                className="pitch-slider vertical-slider"
-                            />
-                            <div className="pitch-value mono">{pitchA > 0 ? `+${pitchA}` : pitchA}%</div>
-                        </div>
-
-                        <div className="jog-wheel-container small">
-                            <motion.div className="jog-wheel" style={{ rotate: rotationA }}>
-                                <div className="jog-center">
-                                    {deckA?.cover || deckA?.thumbnail ? <img src={deckA.cover || deckA.thumbnail} alt="" /> : <Cpu size={24} className="opacity-20" />}
-                                </div>
-                                <div className="jog-marker-active"></div>
-                            </motion.div>
-                        </div>
-
-                        <div className="deck-controls-strip">
-                            <div className="knob-mini"><div className="knob-pointer"></div><span className="label">GAIN</span></div>
-                            <div className="knob-mini"><div className="knob-pointer"></div><span className="label">LOW</span></div>
-                            <div className="knob-mini"><div className="knob-pointer"></div><span className="label">MID</span></div>
-                            <div className="knob-mini"><div className="knob-pointer"></div><span className="label">HI</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* CENTRAL MIXER STRIP */}
-                <div className="central-mixer-strip">
-                    <div className="master-controls">
-                        <button onClick={onPrev} className="master-btn mini"><SkipBack size={14} /></button>
-                        <button onClick={onPlayPause} className="master-btn play">
-                            {isPlaying ? <Pause size={20} /> : <Play size={20} fill="currentColor" />}
-                        </button>
-                        <button onClick={onNext} className="master-btn mini"><SkipForward size={14} /></button>
-                    </div>
-
-                    <div className="v-faders">
-                        <div className="fader-track"><div className="fader-knob" style={{ bottom: '80%' }}></div></div>
-                        <div className="fader-track"><div className="fader-knob" style={{ bottom: '70%' }}></div></div>
-                    </div>
+        <div className="dj-mixer-overlay">
+            {/* Scanline / Texture Layer */}
+            <div className="cyber-overlay-fx"></div>
+            
+            <div className="mixer-hud-wrapper custom-scrollbar">
+                {/* PRIMARY CONSOLE PANE */}
+                <div className="mixer-console-pane glass-pane">
+                    <div className="pane-glitch-border"></div>
                     
-                    <div className="master-vu-meters">
-                        <div className="vu-bar"><div className="vu-fill" style={{ height: `${isPlaying ? 40 + Math.random() * 40 : 0}%` }}></div></div>
-                        <div className="vu-bar"><div className="vu-fill" style={{ height: `${isPlaying ? 35 + Math.random() * 45 : 0}%` }}></div></div>
+                    {/* Top Signal Strip */}
+                    <div className="mixer-header-compact">
+                        <div className="signal-identity">
+                            <div className="station-node">
+                                <Radio size={14} className="pulse-icon text-[var(--accent)]" />
+                                <span className="mono tracking-[0.4em] uppercase text-[var(--accent)] glow-text">FREQ_{station?.frequency || '100.1'}</span>
+                            </div>
+                            <div className="session-info">
+                                <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">{station?.name || 'NEURAL_BROADCAST'}</h2>
+                            </div>
+                        </div>
+
+                        <div className="main-waveform-mini">
+                            <div className="waveform-peaks-dense">
+                                {[...Array(120)].map((_, i) => (
+                                    <div 
+                                        key={i} 
+                                        className="peak-bar-nano" 
+                                        style={{ 
+                                            height: `${10 + Math.random() * 80}%`,
+                                            background: i / 120 < progress / 100 ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                                            boxShadow: i / 120 < progress / 100 ? '0 0 8px var(--accent)' : 'none'
+                                        }} 
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="hud-readouts mono">
+                            <div className="readout-item">
+                                <span className="label">SYNC</span>
+                                <span className="val text-green-500">LOCKED</span>
+                            </div>
+                            <div className="readout-item">
+                                <Users size={10} className="text-[var(--accent)]" />
+                                <span className="val">{station?.listenerCount || '1.2K'}</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                {/* DECK B */}
-                <div className={`deck-module deck-b ${!deckB ? 'empty' : ''}`}>
-                    <div className="deck-header">
-                        <div className="bpm-display mono">
-                            <span className="text-[var(--accent)]">{deckB?.bpm || '124.5'}</span>
-                            <span className="opacity-20 text-[8px]">BPM</span>
-                        </div>
-                        <div className="track-meta text-right">
-                            <div className="title truncate text-white">{deckB?.title || 'LOAD_SIGNAL_...'}</div>
-                            <div className="artist truncate opacity-50">{deckB?.artist || 'EMPTY_NODE'}</div>
-                        </div>
-                        <div className="deck-id">DECK_B</div>
-                    </div>
+                    <div className="mixer-decks-grid-compact">
+                        {/* DECK A */}
+                        <div className={`deck-module-nano deck-a ${!deckA ? 'empty' : 'active'}`}>
+                            <div className="deck-meta-strip">
+                                <div className="deck-id-tag">NODE_A</div>
+                                <div className="bpm-tag mono">{deckA?.bpm || '128.0'} <span className="opacity-20">BPM</span></div>
+                            </div>
 
-                    <div className="deck-visual-core">
-                        <div className="deck-controls-strip">
-                            <div className="knob-mini"><div className="knob-pointer"></div><span className="label">HI</span></div>
-                            <div className="knob-mini"><div className="knob-pointer"></div><span className="label">MID</span></div>
-                            <div className="knob-mini"><div className="knob-pointer"></div><span className="label">LOW</span></div>
-                            <div className="knob-mini"><div className="knob-pointer"></div><span className="label">GAIN</span></div>
-                        </div>
-
-                        <div className="jog-wheel-container small">
-                            <motion.div className="jog-wheel" style={{ rotate: rotationB }}>
-                                <div className="jog-center">
-                                    {deckB?.cover || deckB?.thumbnail ? <img src={deckB.cover || deckB.thumbnail} alt="" /> : <Cpu size={24} className="opacity-20" />}
+                            <div className="deck-visual-core-nano">
+                                <div className="pitch-slider-vertical">
+                                    <input type="range" min="-8" max="8" step="0.1" value={pitchA} onChange={(e) => setPitchA(e.target.value)} className="nano-slider" />
+                                    <div className="pitch-readout mono">{pitchA}%</div>
                                 </div>
-                                <div className="jog-marker-active"></div>
-                            </motion.div>
+
+                                <div className="jog-wheel-nano">
+                                    <motion.div className="jog-ring" style={{ rotate: rotationA }}>
+                                        <div className="jog-center-art">
+                                            {deckA?.cover || deckA?.thumbnail ? <img src={deckA.cover || deckA.thumbnail} alt="" /> : <div className="neon-glitch-icon">A</div>}
+                                        </div>
+                                        <div className="jog-active-node"></div>
+                                    </motion.div>
+                                </div>
+
+                                <div className="eq-knobs-column">
+                                    <div className="nano-knob"><div className="knob-dot"></div><span>LOW</span></div>
+                                    <div className="nano-knob"><div className="knob-dot"></div><span>MID</span></div>
+                                    <div className="nano-knob"><div className="knob-dot"></div><span>HI</span></div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="pitch-slider-container">
-                            <input 
-                                type="range" 
-                                min="-8" max="8" step="0.1" 
-                                value={pitchB} 
-                                onChange={(e) => setPitchB(e.target.value)}
-                                className="pitch-slider vertical-slider"
-                            />
-                            <div className="pitch-value mono">{pitchB > 0 ? `+${pitchB}` : pitchB}%</div>
+                        {/* MASTER CENTRAL HUB */}
+                        <div className="master-central-strip">
+                            <div className="master-controls-nano">
+                                <button onClick={onPlayPause} className="master-btn-neon">
+                                    {isPlaying ? <Pause size={20} /> : <Play size={20} fill="currentColor" />}
+                                </button>
+                                <div className="master-vu-nano">
+                                    <div className="vu-led"><div className="vu-led-fill" style={{ height: isPlaying ? '70%' : '0%' }}></div></div>
+                                    <div className="vu-led"><div className="vu-led-fill" style={{ height: isPlaying ? '65%' : '0%' }}></div></div>
+                                </div>
+                            </div>
+                            <div className="deck-crossfader">
+                                <input type="range" min="-100" max="100" value={crossfader} onChange={(e) => setCrossfader(e.target.value)} className="crossfader-nano" />
+                            </div>
+                        </div>
+
+                        {/* DECK B */}
+                        <div className={`deck-module-nano deck-b ${!deckB ? 'empty' : ''}`}>
+                            <div className="deck-meta-strip text-right">
+                                <div className="bpm-tag mono">{deckB?.bpm || '124.5'} <span className="opacity-20">BPM</span></div>
+                                <div className="deck-id-tag">NODE_B</div>
+                            </div>
+
+                            <div className="deck-visual-core-nano">
+                                <div className="eq-knobs-column">
+                                    <div className="nano-knob"><div className="knob-dot"></div><span>HI</span></div>
+                                    <div className="nano-knob"><div className="knob-dot"></div><span>MID</span></div>
+                                    <div className="nano-knob"><div className="knob-dot"></div><span>LOW</span></div>
+                                </div>
+
+                                <div className="jog-wheel-nano">
+                                    <motion.div className="jog-ring" style={{ rotate: rotationB }}>
+                                        <div className="jog-center-art">
+                                            {deckB?.cover || deckB?.thumbnail ? <img src={deckB.cover || deckB.thumbnail} alt="" /> : <div className="neon-glitch-icon">B</div>}
+                                        </div>
+                                        <div className="jog-active-node"></div>
+                                    </motion.div>
+                                </div>
+
+                                <div className="pitch-slider-vertical">
+                                    <input type="range" min="-8" max="8" step="0.1" value={pitchB} onChange={(e) => setPitchB(e.target.value)} className="nano-slider" />
+                                    <div className="pitch-readout mono">{pitchB}%</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Bottom Interaction Strip */}
-            <div className="mixer-footer-expanded">
-                <div className="mixer-footer-nav">
-                    <button onClick={() => setActiveTab('LIBRARY')} className={`footer-tab ${activeTab === 'LIBRARY' ? 'active' : ''}`}><Disc size={14} /> <span>SIGNAL_CRATE</span></button>
-                    <button onClick={() => setActiveTab('CHAT')} className={`footer-tab ${activeTab === 'CHAT' ? 'active' : ''}`}><MessageSquare size={14} /> <span>NEURAL_CHAT</span></button>
-                    <button onClick={() => setActiveTab('REQUESTS')} className={`footer-tab ${activeTab === 'REQUESTS' ? 'active' : ''}`}><List size={14} /> <span>SIGNAL_REQUESTS</span></button>
-                </div>
+                {/* SECONDARY UTILITY PANE */}
+                <div className="utility-interlink-pane glass-pane">
+                    <div className="utility-tabs-neon">
+                        <button onClick={() => setActiveTab('LIBRARY')} className={`util-tab ${activeTab === 'LIBRARY' ? 'active' : ''}`}><Disc size={12} /> <span>SIGNAL_CRATE</span></button>
+                        <button onClick={() => setActiveTab('CHAT')} className={`util-tab ${activeTab === 'CHAT' ? 'active' : ''}`}><MessageSquare size={12} /> <span>NEURAL_CHAT</span></button>
+                        <button onClick={() => setActiveTab('REQUESTS')} className={`util-tab ${activeTab === 'REQUESTS' ? 'active' : ''}`}><List size={12} /> <span>SIGNAL_REQUESTS</span></button>
+                    </div>
 
-                <div className="mixer-footer-content">
-                    <AnimatePresence mode="wait">
-                        {activeTab === 'LIBRARY' && (
-                            <motion.div key="library" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="library-browser custom-scrollbar">
-                                <table className="crate-table">
-                                    <thead>
-                                        <tr>
-                                            <th>LOAD</th>
-                                            <th>SIGNAL_ID</th>
-                                            <th>ARTIST</th>
-                                            <th>BPM</th>
-                                            <th>TIME</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {[...tracks, ...libraryTracks].map((t, i) => (
-                                            <tr key={i} className="crate-row">
-                                                <td className="load-btns">
-                                                    <button onClick={() => loadToDeck(t, 'A')} className="load-btn">A</button>
-                                                    <button onClick={() => loadToDeck(t, 'B')} className="load-btn">B</button>
-                                                </td>
-                                                <td className="title font-bold uppercase">{t.title}</td>
-                                                <td className="artist opacity-40">{t.artist}</td>
-                                                <td className="mono text-[var(--accent)]">{t.bpm || '---'}</td>
-                                                <td className="mono opacity-40">{t.duration ? Math.floor(t.duration / 60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '--:--'}</td>
+                    <div className="utility-content-nano">
+                        <AnimatePresence mode="wait">
+                            {activeTab === 'LIBRARY' && (
+                                <motion.div key="lib" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="library-nano custom-scrollbar">
+                                    <table className="signal-table-nano">
+                                        <thead>
+                                            <tr>
+                                                <th>LOAD</th>
+                                                <th>SIGNAL_ID</th>
+                                                <th>ORIGIN</th>
+                                                <th>BPM</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </motion.div>
-                        )}
-                        {/* CHAT and REQUESTS components remain similar but scaled */}
-                    </AnimatePresence>
-                </div>
-
-                <div className="crossfader-strip">
-                    <span className="mono text-[8px] opacity-20">A</span>
-                    <div className="crossfader-track">
-                        <input 
-                            type="range" 
-                            min="-100" max="100" 
-                            value={crossfader} 
-                            onChange={(e) => setCrossfader(e.target.value)} 
-                            className="crossfader-slider"
-                        />
+                                        </thead>
+                                        <tbody>
+                                            {[...tracks, ...libraryTracks].map((t, i) => (
+                                                <tr key={i} className="signal-row">
+                                                    <td className="load-actions">
+                                                        <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
+                                                        <button onClick={() => loadToDeck(t, 'B')} className="load-chip">B</button>
+                                                    </td>
+                                                    <td className="sig-title truncate font-black">{t.title}</td>
+                                                    <td className="sig-artist truncate opacity-30">{t.artist}</td>
+                                                    <td className="sig-bpm mono text-[var(--accent)]">{t.bpm || '--'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </motion.div>
+                            )}
+                            {/* Additional Tab Content ... */}
+                        </AnimatePresence>
                     </div>
-                    <span className="mono text-[8px] opacity-20">B</span>
                 </div>
             </div>
 
             {/* Tactical Decals */}
-            <div className="tactical-decal top-left">MODEL_55_COMMAND_DECK</div>
-            <div className="tactical-decal bottom-right">FATALE_SYSTEM_V4.2</div>
+            <div className="cyber-label-fx top-right">SYSTEM_STABLE_4.2.0</div>
+            <div className="cyber-label-fx bottom-left">NEURAL_DECK_PRO_V5</div>
         </div>
     );
 };
