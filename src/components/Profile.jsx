@@ -1907,10 +1907,10 @@ export const ProfileView = React.memo(({
             <div className="dashboard-grid custom-scrollbar">
                 {/* Identity Core Panel (Upper Right) */}
                 <div className="identity-core-panel">
-                    <SubsystemBlock title="IDENTITY_CORE" showBrackets={true} address="USR_USR_01" secondaryColor="#ff006e">
+                    <SubsystemBlock title="IDENTITY_CORE" showBrackets={true} address="USR_USR_01" secondaryColor={profileSecondary}>
                         <div className="p-4 flex gap-6 border-b border-white/5">
                             <div className="w-24 h-24 border border-[var(--subsystem-accent)]/30 bg-black/40 p-0.5 shrink-0 relative">
-                                <LBrackets className="scale-75 opacity-40" color="#ff006e" />
+                                <LBrackets className="scale-75 opacity-40" color={profileSecondary} />
                                 <div className="w-full h-full border border-[var(--subsystem-accent)]/10 overflow-hidden">
                                      {pfp ? (
                                         <img src={getMediaUrl(pfp)} className="w-full h-full object-cover transition-all duration-700" />
@@ -2715,8 +2715,9 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                             </div>
 
                             <div className="space-y-4">
-                                {/* Theme & Hue Only */}
-                                <div className="space-y-3">
+                                <div className="grid grid-cols-2 gap-4">
+                                    {/* Primary Color Picker */}
+                                    <div className="space-y-3">
                                     <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">SYSTEM_HUE_SIGNAL</label>
                                     <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--theme-color)] transition-all">
                                         <input type="color" value={themeColor} onChange={e => setThemeColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
