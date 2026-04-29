@@ -74,45 +74,46 @@ const DJMixerPlayer = ({
                 <div className="signal-identity">
                     <div className="station-node">
                         <Radio size={14} className="pulse-icon" />
-                        <span className="mono tracking-[0.3em] uppercase">FREQ_{station?.frequency || '100.1'}</span>
+                        <span className="mono tracking-[0.3em] uppercase text-[var(--accent)]">FREQ_{station?.frequency || '100.1'}</span>
                     </div>
                     <div className="session-info">
-                        <h2 className="text-xs font-black uppercase tracking-widest">{station?.name || 'NEURAL_BROADCAST'}</h2>
-                        <p className="text-[8px] mono opacity-40 uppercase">Broadcast_Node_{station?.id || 'ALPHA'}</p>
+                        <h2 className="text-xs font-black uppercase tracking-widest text-white">{station?.name || 'NEURAL_BROADCAST'}</h2>
+                        <p className="text-[8px] mono opacity-40 uppercase tracking-tighter">Broadcast_Node_{station?.id || 'ALPHA'}</p>
                     </div>
                 </div>
 
                 <div className="main-waveform-container">
-                    <div className="waveform-bg"></div>
-                    <div className="waveform-progress" style={{ width: `${progress}%` }}></div>
                     <div className="waveform-peaks">
-                        {[...Array(60)].map((_, i) => (
+                        {[...Array(80)].map((_, i) => (
                             <div 
                                 key={i} 
                                 className="peak-bar" 
                                 style={{ 
-                                    height: `${20 + Math.random() * 60}%`,
-                                    opacity: i / 60 < progress / 100 ? 1 : 0.2
+                                    height: `${15 + Math.random() * 70}%`,
+                                    background: i / 80 < progress / 100 ? 'var(--accent)' : 'rgba(255,255,255,0.1)',
+                                    boxShadow: i / 80 < progress / 100 ? '0 0 10px var(--accent)' : 'none'
                                 }} 
                             />
                         ))}
                     </div>
+                    <div className="waveform-playhead" style={{ left: `${progress}%` }}></div>
                 </div>
 
-                <div className="listener-count">
-                    <Users size={12} />
-                    <span className="mono text-[10px]">{station?.listenerCount || 0}</span>
+                <div className="listener-count-hud">
+                    <Users size={12} className="text-[var(--accent)]" />
+                    <span className="mono text-[10px] font-bold">{station?.listenerCount || '1.2K'}</span>
+                    <div className="live-dot animate-pulse"></div>
                 </div>
             </div>
 
             {/* Main Dual Deck Area */}
             <div className="mixer-decks-grid">
                 {/* DECK A */}
-                <div className={`deck-module deck-a ${!deckA ? 'empty' : ''}`}>
+                <div className={`deck-module deck-a ${!deckA ? 'empty' : 'active'}`}>
                     <div className="deck-header">
                         <div className="deck-id">DECK_A</div>
                         <div className="track-meta">
-                            <div className="title truncate">{deckA?.title || 'LOAD_SIGNAL_...'}</div>
+                            <div className="title truncate text-white">{deckA?.title || 'LOAD_SIGNAL_...'}</div>
                             <div className="artist truncate opacity-50">{deckA?.artist || 'EMPTY_NODE'}</div>
                         </div>
                         <div className="bpm-display mono">
@@ -128,7 +129,7 @@ const DJMixerPlayer = ({
                                 min="-8" max="8" step="0.1" 
                                 value={pitchA} 
                                 onChange={(e) => setPitchA(e.target.value)}
-                                className="pitch-slider"
+                                className="pitch-slider vertical-slider"
                             />
                             <div className="pitch-value mono">{pitchA > 0 ? `+${pitchA}` : pitchA}%</div>
                         </div>
@@ -136,12 +137,14 @@ const DJMixerPlayer = ({
                         <div className="jog-wheel-container small">
                             <motion.div className="jog-wheel" style={{ rotate: rotationA }}>
                                 <div className="jog-center">
-                                    {deckA?.cover && <img src={deckA.cover} alt="" />}
+                                    {deckA?.cover || deckA?.thumbnail ? <img src={deckA.cover || deckA.thumbnail} alt="" /> : <Cpu size={24} className="opacity-20" />}
                                 </div>
+                                <div className="jog-marker-active"></div>
                             </motion.div>
                         </div>
 
                         <div className="deck-controls-strip">
+                            <div className="knob-mini"><div className="knob-pointer"></div><span className="label">GAIN</span></div>
                             <div className="knob-mini"><div className="knob-pointer"></div><span className="label">LOW</span></div>
                             <div className="knob-mini"><div className="knob-pointer"></div><span className="label">MID</span></div>
                             <div className="knob-mini"><div className="knob-pointer"></div><span className="label">HI</span></div>
@@ -151,13 +154,22 @@ const DJMixerPlayer = ({
 
                 {/* CENTRAL MIXER STRIP */}
                 <div className="central-mixer-strip">
+                    <div className="master-controls">
+                        <button onClick={onPrev} className="master-btn mini"><SkipBack size={14} /></button>
+                        <button onClick={onPlayPause} className="master-btn play">
+                            {isPlaying ? <Pause size={20} /> : <Play size={20} fill="currentColor" />}
+                        </button>
+                        <button onClick={onNext} className="master-btn mini"><SkipForward size={14} /></button>
+                    </div>
+
                     <div className="v-faders">
                         <div className="fader-track"><div className="fader-knob" style={{ bottom: '80%' }}></div></div>
                         <div className="fader-track"><div className="fader-knob" style={{ bottom: '70%' }}></div></div>
                     </div>
+                    
                     <div className="master-vu-meters">
-                        <div className="vu-bar"><div className="vu-fill" style={{ height: '60%' }}></div></div>
-                        <div className="vu-bar"><div className="vu-fill" style={{ height: '65%' }}></div></div>
+                        <div className="vu-bar"><div className="vu-fill" style={{ height: `${isPlaying ? 40 + Math.random() * 40 : 0}%` }}></div></div>
+                        <div className="vu-bar"><div className="vu-fill" style={{ height: `${isPlaying ? 35 + Math.random() * 45 : 0}%` }}></div></div>
                     </div>
                 </div>
 
@@ -169,7 +181,7 @@ const DJMixerPlayer = ({
                             <span className="opacity-20 text-[8px]">BPM</span>
                         </div>
                         <div className="track-meta text-right">
-                            <div className="title truncate">{deckB?.title || 'LOAD_SIGNAL_...'}</div>
+                            <div className="title truncate text-white">{deckB?.title || 'LOAD_SIGNAL_...'}</div>
                             <div className="artist truncate opacity-50">{deckB?.artist || 'EMPTY_NODE'}</div>
                         </div>
                         <div className="deck-id">DECK_B</div>
@@ -180,13 +192,15 @@ const DJMixerPlayer = ({
                             <div className="knob-mini"><div className="knob-pointer"></div><span className="label">HI</span></div>
                             <div className="knob-mini"><div className="knob-pointer"></div><span className="label">MID</span></div>
                             <div className="knob-mini"><div className="knob-pointer"></div><span className="label">LOW</span></div>
+                            <div className="knob-mini"><div className="knob-pointer"></div><span className="label">GAIN</span></div>
                         </div>
 
                         <div className="jog-wheel-container small">
                             <motion.div className="jog-wheel" style={{ rotate: rotationB }}>
                                 <div className="jog-center">
-                                    {deckB?.cover && <img src={deckB.cover} alt="" />}
+                                    {deckB?.cover || deckB?.thumbnail ? <img src={deckB.cover || deckB.thumbnail} alt="" /> : <Cpu size={24} className="opacity-20" />}
                                 </div>
+                                <div className="jog-marker-active"></div>
                             </motion.div>
                         </div>
 
@@ -196,7 +210,7 @@ const DJMixerPlayer = ({
                                 min="-8" max="8" step="0.1" 
                                 value={pitchB} 
                                 onChange={(e) => setPitchB(e.target.value)}
-                                className="pitch-slider"
+                                className="pitch-slider vertical-slider"
                             />
                             <div className="pitch-value mono">{pitchB > 0 ? `+${pitchB}` : pitchB}%</div>
                         </div>
