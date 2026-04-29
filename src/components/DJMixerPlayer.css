@@ -695,6 +695,17 @@
     box-shadow: 0 0 10px var(--accent);
 }
 
+.sync-btn-nano.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(255, 0, 110, 0.1);
+    box-shadow: 
+        0 0 20px rgba(255, 0, 110, 0.4),
+        inset 0 0 10px rgba(255, 0, 110, 0.2);
+    border-width: 1.5px;
+}
+
+
 .bpm-controls-nano {
     display: flex;
     align-items: center;

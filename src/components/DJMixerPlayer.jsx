@@ -59,6 +59,8 @@ const DJMixerPlayer = ({
     const [isEvolveA, setIsEvolveA] = useState(false);
     const [isEvolveB, setIsEvolveB] = useState(false);
     const [isPlayingA, setIsPlayingA] = useState(isPlaying);
+    const [isSynced, setIsSynced] = useState(false);
+    const bpmInterval = useRef(null);
 
     useEffect(() => {
         setIsPlayingA(isPlaying);
@@ -144,24 +146,47 @@ const DJMixerPlayer = ({
         }
     };
 
-    const handleSync = (targetDeck) => {
-        if (targetDeck === 'B' && deckA && deckB) {
-            setPitchB((deckA.bpm || 128) - (deckB.bpm || 128));
-            // In a real app we'd adjust playbackRate, here we simulate with state
-            setIsSyncing(true);
-            setTimeout(() => setIsSyncing(false), 500);
-        } else if (targetDeck === 'A' && deckB && deckA) {
-            // Adjust Deck A BPM to match B (if possible via props or local simulation)
-            setIsSyncing(true);
-            setTimeout(() => setIsSyncing(false), 500);
+    const handleSync = (initiator) => {
+        setIsSynced(true);
+        const bpmA = Number(deckA?.bpm || 128) + Number(pitchA);
+        const bpmB = Number(deckB?.bpm || 124.5) + Number(pitchB);
+
+        if (initiator === 'A' && deckB) {
+            // Make B match A
+            const targetBpm = bpmA;
+            const baseB = Number(deckB?.bpm || 124.5);
+            setPitchB(targetBpm - baseB);
+        } else if (initiator === 'B' && deckA) {
+            // Make A match B
+            const targetBpm = bpmB;
+            const baseA = Number(deckA?.bpm || 128);
+            setPitchA(targetBpm - baseA);
+        }
+        
+        setIsSyncing(true);
+        setTimeout(() => {
+            setIsSyncing(false);
+            setIsSynced(false);
+        }, 2000);
+    };
+
+    const startBpmAdjust = (deck, delta) => {
+        adjustBpm(deck, delta);
+        bpmInterval.current = setInterval(() => adjustBpm(deck, delta), 80);
+    };
+
+    const stopBpmAdjust = () => {
+        if (bpmInterval.current) {
+            clearInterval(bpmInterval.current);
+            bpmInterval.current = null;
         }
     };
 
     const adjustBpm = (deck, delta) => {
         if (deck === 'A') {
-            setPitchA(prev => Math.max(-8, Math.min(8, Number(prev) + delta)));
+            setPitchA(prev => Math.max(-100, Math.min(100, Number(prev) + delta)));
         } else {
-            setPitchB(prev => Math.max(-8, Math.min(8, Number(prev) + delta)));
+            setPitchB(prev => Math.max(-100, Math.min(100, Number(prev) + delta)));
         }
     };
 
@@ -307,14 +332,24 @@ const DJMixerPlayer = ({
                                         {isPlayingA ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
                                     </button>
                                     <button onClick={onNext} className="transport-btn-sq"><SkipForward size={10} /></button>
-                                    <button onClick={() => handleSync('A')} className="sync-btn-nano">SYNC</button>
+                                    <button onClick={() => handleSync('A')} className={`sync-btn-nano ${isSynced ? 'active' : ''}`}>SYNC</button>
                                 </div>
                                 <div className="deck-id-readout mirrored-right">
                                     <div className="deck-id-tag font-black tracking-widest opacity-40">NODE_A</div>
                                     <div className="bpm-controls-nano">
-                                        <button onClick={() => adjustBpm('A', -0.1)} className="bpm-step">-</button>
+                                        <button 
+                                            onMouseDown={() => startBpmAdjust('A', -0.1)} 
+                                            onMouseUp={stopBpmAdjust}
+                                            onMouseLeave={stopBpmAdjust}
+                                            className="bpm-step"
+                                        >-</button>
                                         <div className="bpm-tag mono text-white/90">{(Number(deckA?.bpm || 128) + Number(pitchA)).toFixed(1)} <span className="opacity-20 text-[8px]">BPM</span></div>
-                                        <button onClick={() => adjustBpm('A', 0.1)} className="bpm-step">+</button>
+                                        <button 
+                                            onMouseDown={() => startBpmAdjust('A', 0.1)} 
+                                            onMouseUp={stopBpmAdjust}
+                                            onMouseLeave={stopBpmAdjust}
+                                            className="bpm-step"
+                                        >+</button>
                                     </div>
                                 </div>
                             </div>
@@ -409,13 +444,23 @@ const DJMixerPlayer = ({
                                 <div className="deck-id-readout mirrored-left text-left">
                                     <div className="deck-id-tag font-black tracking-widest opacity-40">NODE_B</div>
                                     <div className="bpm-controls-nano">
-                                        <button onClick={() => adjustBpm('B', -0.1)} className="bpm-step">-</button>
+                                        <button 
+                                            onMouseDown={() => startBpmAdjust('B', -0.1)} 
+                                            onMouseUp={stopBpmAdjust}
+                                            onMouseLeave={stopBpmAdjust}
+                                            className="bpm-step"
+                                        >-</button>
                                         <div className="bpm-tag mono text-white/90">{(Number(deckB?.bpm || 124.5) + Number(pitchB)).toFixed(1)} <span className="opacity-20 text-[8px]">BPM</span></div>
-                                        <button onClick={() => adjustBpm('B', 0.1)} className="bpm-step">+</button>
+                                        <button 
+                                            onMouseDown={() => startBpmAdjust('B', 0.1)} 
+                                            onMouseUp={stopBpmAdjust}
+                                            onMouseLeave={stopBpmAdjust}
+                                            className="bpm-step"
+                                        >+</button>
                                     </div>
                                 </div>
                                 <div className="deck-transport-row-nano right">
-                                    <button onClick={() => handleSync('B')} className="sync-btn-nano">SYNC</button>
+                                    <button onClick={() => handleSync('B')} className={`sync-btn-nano ${isSynced ? 'active' : ''}`}>SYNC</button>
                                     <button className="transport-btn-sq"><SkipBack size={10} /></button>
                                     <button onClick={togglePlayB} className={`transport-btn-sq main ${isPlayingB ? 'active' : ''}`}>
                                         {isPlayingB ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
