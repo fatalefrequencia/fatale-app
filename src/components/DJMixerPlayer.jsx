@@ -22,12 +22,13 @@ const DJMixerPlayer = ({
     isBroadcaster = false,
     requests = [],
     chatMessages = [],
-    onSendMessage,
+    onClose,
     tracks = [],
-    libraryTracks = []
+    libraryTracks = [],
+    onPlayTrack
 }) => {
     const [activeTab, setActiveTab] = useState('LIBRARY'); // LIBRARY, CHAT, REQUESTS
-    const [crateCategory, setCrateCategory] = useState('ALL'); // ALL, PURCHASED, FAVORITES, ARTISTS
+    const [crateCategory, setCrateCategory] = useState('COLLECTION'); // COLLECTION, DISCOVERY
     const [searchQuery, setSearchQuery] = useState('');
     const [isAutoMixEnabled, setIsAutoMixEnabled] = useState(false);
     
@@ -38,10 +39,15 @@ const DJMixerPlayer = ({
     const [rotationB, setRotationB] = useState(0);
     const [pitchA, setPitchA] = useState(0);
     const [pitchB, setPitchB] = useState(0);
+    const [isSyncing, setIsSyncing] = useState(false);
 
-    // Sync Deck A with global track if needed
+    // Sync Deck A with global track in real-time
     useEffect(() => {
-        if (currentTrack && !deckA) setDeckA(currentTrack);
+        if (currentTrack) {
+            setDeckA(currentTrack);
+            setIsSyncing(true);
+            setTimeout(() => setIsSyncing(false), 1000);
+        }
     }, [currentTrack]);
 
     // Animate Jog Wheels
@@ -70,9 +76,7 @@ const DJMixerPlayer = ({
     const loadToDeck = (track, deck) => {
         if (deck === 'A') {
             setDeckA(track);
-            // In our current engine, Deck A is the audio source
-            // We should find the index and call a global play if needed
-            // For now, visual load.
+            if (onPlayTrack) onPlayTrack(track);
         } else {
             setDeckB(track);
         }
@@ -80,19 +84,17 @@ const DJMixerPlayer = ({
 
     // Filtered Crate Logic
     const getFilteredTracks = () => {
-        let base = crateCategory === 'ALL' ? [...tracks, ...libraryTracks] : libraryTracks;
+        // Clear distinction between personal library and global discovery
+        let base = crateCategory === 'COLLECTION' ? libraryTracks : tracks;
         
-        // Remove duplicates based on ID
+        // Ensure no duplicates
         const seen = new Set();
         base = base.filter(t => {
             const id = t.id || t.Id;
-            if (seen.has(id)) return false;
+            if (!id || seen.has(id)) return false;
             seen.add(id);
             return true;
         });
-
-        if (crateCategory === 'PURCHASED') base = base.filter(t => t.isPurchased);
-        if (crateCategory === 'FAVORITES') base = base.filter(t => t.isLiked);
         
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
@@ -135,18 +137,21 @@ const DJMixerPlayer = ({
                         </div>
 
                         <div className="main-waveform-mini">
-                            <div className="waveform-peaks-dense">
-                                {[...Array(120)].map((_, i) => (
-                                    <div 
-                                        key={i} 
-                                        className="peak-bar-nano" 
-                                        style={{ 
-                                            height: `${10 + Math.random() * 80}%`,
-                                            background: i / 120 < progress / 100 ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
-                                            boxShadow: i / 120 < progress / 100 ? '0 0 8px var(--accent)' : 'none'
-                                        }} 
-                                    />
-                                ))}
+                            <div className="waveform-play-track">
+                                <div className="waveform-fill-progress" style={{ width: `${progress}%` }}></div>
+                                <div className="waveform-peaks-static">
+                                    {[...Array(120)].map((_, i) => (
+                                        <div 
+                                            key={i} 
+                                            className="peak-bar-nano" 
+                                            style={{ 
+                                                height: `${20 + Math.sin(i * 0.2) * 30 + Math.random() * 20}%`,
+                                                opacity: i / 120 < progress / 100 ? 1 : 0.2
+                                            }} 
+                                        />
+                                    ))}
+                                </div>
+                                <div className="waveform-playhead-nano" style={{ left: `${progress}%` }}></div>
                             </div>
                         </div>
 
@@ -164,7 +169,7 @@ const DJMixerPlayer = ({
 
                     <div className="mixer-decks-grid-compact">
                         {/* DECK A */}
-                        <div className={`deck-module-nano deck-a ${!deckA ? 'empty' : 'active'}`}>
+                        <div className={`deck-module-nano deck-a ${!deckA ? 'empty' : 'active'} ${isSyncing ? 'syncing' : ''}`}>
                             {/* Signal Ingest Bar */}
                             <div className="signal-ingest-bar">
                                 <div className="ingest-info truncate">{deckA?.title || 'NO_SIGNAL'}</div>
@@ -296,7 +301,7 @@ const DJMixerPlayer = ({
                                     />
                                 </div>
                                 <div className="crate-filter-chips">
-                                    {['ALL', 'PURCHASED', 'FAVORITES', 'ARTISTS'].map(cat => (
+                                    {['COLLECTION', 'DISCOVERY'].map(cat => (
                                         <button 
                                             key={cat}
                                             onClick={() => setCrateCategory(cat)}

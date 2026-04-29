@@ -84,26 +84,68 @@
 .main-waveform-mini {
     flex: 1;
     max-width: 400px;
-    height: 30px;
-    background: rgba(0,0,0,0.4);
+    height: 40px;
+    background: rgba(0,0,0,0.6);
     margin: 0 30px;
-    border-radius: 2px;
+    border-radius: 4px;
     position: relative;
     overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.waveform-peaks-dense {
+.waveform-play-track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.waveform-fill-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255, 0, 110, 0.15));
+    border-right: 1px solid var(--accent);
+    z-index: 1;
+}
+
+.waveform-peaks-static {
+    position: absolute;
+    inset: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 100%;
     padding: 0 5px;
+    z-index: 2;
+    pointer-events: none;
 }
 
 .peak-bar-nano {
     width: 1px;
     background: var(--accent);
-    opacity: 0.3;
+    transition: opacity 0.3s;
+}
+
+.waveform-playhead-nano {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--accent);
+    box-shadow: 0 0 15px var(--accent);
+    z-index: 10;
+    transform: translateX(-50%);
+}
+
+.deck-module-nano.syncing {
+    animation: pulse-sync 0.5s 2;
+}
+
+@keyframes pulse-sync {
+    0% { border-color: var(--accent); box-shadow: inset 0 0 50px rgba(255,0,110,0.2); }
+    100% { border-color: rgba(255,255,255,0.03); box-shadow: none; }
 }
 
 .hud-readouts {

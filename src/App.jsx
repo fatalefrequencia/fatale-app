@@ -4126,6 +4126,10 @@ const PlayerContent = ({
           onLike={onLike}
           onPurchase={onPurchase}
           onPlayPlaylist={onPlayPlaylist}
+          onPlayTrack={(track) => {
+            const index = tracks.findIndex(t => (t.id || t.Id) === (track.id || track.Id));
+            if (index >= 0) setCurrentTrackIndex(index);
+          }}
           user={user}
         />
       ) : (
