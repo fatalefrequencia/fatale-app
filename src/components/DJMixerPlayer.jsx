@@ -1,11 +1,48 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    Play, Pause, Volume2, Settings, MessageSquare, List, Share2,
-    Activity, Zap, Cpu, Radio, Shield, Users, Disc,
-    Search, Plus, DollarSign, Heart, SkipBack, SkipForward
-} from 'lucide-react';
+import { SkipBack, SkipForward, Play, Pause, Zap, Disc, MessageSquare, List, Search, Plus, DollarSign, Users } from 'lucide-react';
 import './DJMixerPlayer.css';
+
+const NeuralSpectrum = ({ analyser, isActive }) => {
+    const canvasRef = useRef(null);
+    
+    useEffect(() => {
+        if (!canvasRef.current || !analyser) return;
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        
+        let animationFrame;
+        const draw = () => {
+            animationFrame = requestAnimationFrame(draw);
+            analyser.getByteFrequencyData(dataArray);
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const barWidth = (canvas.width / bufferLength) * 2.5;
+            let barHeight;
+            let x = 0;
+            
+            for (let i = 0; i < bufferLength; i++) {
+                barHeight = (dataArray[i] / 255) * canvas.height;
+                const glow = isActive ? 1 : 0.2;
+                ctx.fillStyle = `rgba(255, 0, 110, ${glow})`;
+                ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                x += barWidth + 1;
+            }
+        };
+        
+        if (isActive) {
+            draw();
+        } else {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        return () => cancelAnimationFrame(animationFrame);
+    }, [analyser, isActive]);
+
+    return <canvas ref={canvasRef} width={200} height={40} className="neural-spectrum-canvas" />;
+};
 
 const DJMixerPlayer = ({ 
     currentTrack, 
@@ -33,7 +70,8 @@ const DJMixerPlayer = ({
     onPlayTrack,
     onFetchPlaylistTracks,
     onPlaybackRateChange,
-    onEqA
+    onEqA,
+    analyserA
 }) => {
     const [activeTab, setActiveTab] = useState('LIBRARY'); // LIBRARY, CHAT, REQUESTS
     const [crateCategory, setCrateCategory] = useState('ALL'); // ALL, PURCHASED, FAVORITES, ARTISTS, PLAYLISTS
@@ -73,10 +111,14 @@ const DJMixerPlayer = ({
 
     const audioCtxB = useRef(null);
     const filtersB = useRef({ low: null, mid: null, high: null });
+    const analyserB = useRef(null);
     const sourceNodeB = useRef(null);
 
     const [eqA, setEqA] = useState({ hi: 0, mid: 0, low: 0 });
     const [eqB, setEqB] = useState({ hi: 0, mid: 0, low: 0 });
+
+    const [loopA, setLoopA] = useState({ active: false, start: 0, beats: 4 });
+    const [loopB, setLoopB] = useState({ active: false, start: 0, beats: 4 });
 
     useEffect(() => {
         setIsPlayingA(isPlaying);
@@ -100,6 +142,49 @@ const DJMixerPlayer = ({
             b.pause();
         };
     }, []);
+
+    // Quantized Loop Engine
+    useEffect(() => {
+        if (loopA.active && isPlayingA) {
+            const bpm = Number(deckA?.bpm || 128) + Number(pitchA);
+            const beatDuration = 60 / bpm;
+            const loopDuration = beatDuration * loopA.beats;
+            if (currentTime >= loopA.start + loopDuration) {
+                onSeek(loopA.start);
+            }
+        }
+    }, [currentTime, loopA, isPlayingA, deckA, pitchA, onSeek]);
+
+    useEffect(() => {
+        if (loopB.active && isPlayingB) {
+            const bpm = Number(deckB?.bpm || 124.5) + Number(pitchB);
+            const beatDuration = 60 / bpm;
+            const loopDuration = beatDuration * loopB.beats;
+            if (currentTimeB >= loopB.start + loopDuration) {
+                audioB.current.currentTime = loopB.start;
+            }
+        }
+    }, [currentTimeB, loopB, isPlayingB, deckB, pitchB]);
+
+    const handleLoop = (deck, beats) => {
+        if (deck === 'A') {
+            if (loopA.active && loopA.beats === beats) {
+                setLoopA({ ...loopA, active: false });
+                console.log("[Neural Core] NODE_A Loop deactivated");
+            } else {
+                setLoopA({ active: true, start: currentTime, beats });
+                console.log(`[Neural Core] NODE_A Loop activated: ${beats} beats`);
+            }
+        } else {
+            if (loopB.active && loopB.beats === beats) {
+                setLoopB({ ...loopB, active: false });
+                console.log("[Neural Core] NODE_B Loop deactivated");
+            } else {
+                setLoopB({ active: true, start: currentTimeB, beats });
+                console.log(`[Neural Core] NODE_B Loop activated: ${beats} beats`);
+            }
+        }
+    };
 
     // Crossfader Volume Phasing
     useEffect(() => {
@@ -151,6 +236,9 @@ const DJMixerPlayer = ({
         if (!audioCtxB.current && audioB.current) {
             audioCtxB.current = new (window.AudioContext || window.webkitAudioContext)();
             
+            analyserB.current = audioCtxB.current.createAnalyser();
+            analyserB.current.fftSize = 256;
+
             filtersB.current.low = audioCtxB.current.createBiquadFilter();
             filtersB.current.low.type = 'lowshelf';
             filtersB.current.low.frequency.value = 320;
@@ -168,7 +256,8 @@ const DJMixerPlayer = ({
             sourceNodeB.current.connect(filtersB.current.low);
             filtersB.current.low.connect(filtersB.current.mid);
             filtersB.current.mid.connect(filtersB.current.high);
-            filtersB.current.high.connect(audioCtxB.current.destination);
+            filtersB.current.high.connect(analyserB.current);
+            analyserB.current.connect(audioCtxB.current.destination);
         }
     };
 
@@ -446,21 +535,11 @@ const DJMixerPlayer = ({
                         </div>
 
                         <div className="main-waveform-mini">
-                            <div className="waveform-play-track">
-                                <div className="waveform-fill-progress" style={{ width: `${progress}%` }}></div>
-                                <div className="waveform-peaks-static">
-                                    {[...Array(120)].map((_, i) => (
-                                        <div 
-                                            key={i} 
-                                            className="peak-bar-nano" 
-                                            style={{ 
-                                                height: `${20 + Math.sin(i * 0.2) * 30 + Math.random() * 20}%`,
-                                                opacity: i / 120 < progress / 100 ? 1 : 0.2
-                                            }} 
-                                        />
-                                    ))}
+                            <div className="neural-waveform-container-nano">
+                                <div className="neural-visualizer">
+                                    <NeuralSpectrum analyser={analyserA} isActive={isPlayingA} />
                                 </div>
-                                <div className="waveform-playhead-nano" style={{ left: `${progress}%` }}></div>
+                                <div className="waveform-playhead-nano" style={{ left: `${(currentTime / (duration || 1)) * 100}%` }}></div>
                             </div>
                         </div>
 
@@ -509,6 +588,27 @@ const DJMixerPlayer = ({
                             <div className="deck-core-layout-mirrored">
                                 {/* Outer Controls */}
                                 <div className="deck-controls-column-nano">
+                                    <div className="loop-authority-cluster">
+                                        <div className="loop-header mono">LOOP_SYNC</div>
+                                        <div className="loop-grid">
+                                            {[1, 2, 4, 8, 16].map(b => (
+                                                <button 
+                                                    key={b}
+                                                    onClick={() => handleLoop('A', b)}
+                                                    className={`loop-btn-nano ${loopA.active && loopA.beats === b ? 'active' : ''}`}
+                                                >
+                                                    {b}
+                                                </button>
+                                            ))}
+                                            <button 
+                                                onClick={() => setLoopA({ ...loopA, active: false })}
+                                                className="loop-btn-nano exit"
+                                            >
+                                                EXIT
+                                            </button>
+                                        </div>
+                                    </div>
+
                                     <div className="evolve-toggle-container">
                                         <button 
                                             onClick={() => setIsEvolveA(!isEvolveA)} 
@@ -752,6 +852,27 @@ const DJMixerPlayer = ({
 
                                 {/* Outer Controls */}
                                 <div className="deck-controls-column-nano">
+                                    <div className="loop-authority-cluster">
+                                        <div className="loop-header mono">LOOP_SYNC</div>
+                                        <div className="loop-grid">
+                                            {[1, 2, 4, 8, 16].map(b => (
+                                                <button 
+                                                    key={b}
+                                                    onClick={() => handleLoop('B', b)}
+                                                    className={`loop-btn-nano ${loopB.active && loopB.beats === b ? 'active' : ''}`}
+                                                >
+                                                    {b}
+                                                </button>
+                                            ))}
+                                            <button 
+                                                onClick={() => setLoopB({ ...loopB, active: false })}
+                                                className="loop-btn-nano exit"
+                                            >
+                                                EXIT
+                                            </button>
+                                        </div>
+                                    </div>
+
                                     <div className="evolve-toggle-container">
                                         <button 
                                             onClick={() => setIsEvolveB(!isEvolveB)} 

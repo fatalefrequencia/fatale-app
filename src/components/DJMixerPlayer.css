@@ -982,3 +982,87 @@
 .eq-knobs-column.outer {
     width: 40px;
 }
+
+.loop-authority-cluster {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    width: 100%;
+}
+
+.loop-header {
+    font-size: 7px;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    opacity: 0.8;
+    text-align: center;
+}
+
+.loop-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+}
+
+.loop-btn-nano {
+    background: #111;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 8px;
+    font-weight: 900;
+    padding: 3px 0;
+    border-radius: 2px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.loop-btn-nano:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent);
+}
+
+.loop-btn-nano.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: black;
+    box-shadow: 0 0 10px var(--accent);
+}
+
+.loop-btn-nano.exit {
+    grid-column: span 3;
+    background: rgba(255, 255, 255, 0.05);
+    font-size: 6px;
+}
+
+.neural-waveform-container-nano {
+    position: relative;
+    width: 100%;
+    height: 40px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.neural-spectrum-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.waveform-playhead-nano {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: white;
+    box-shadow: 0 0 10px white;
+    z-index: 5;
+    pointer-events: none;
+}
+

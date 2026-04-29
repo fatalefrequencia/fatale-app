@@ -150,11 +150,15 @@ function App() {
   const audioCtx = useRef(null);
   const sourceNode = useRef(null);
   const filters = useRef({ low: null, mid: null, high: null });
+  const analyser = useRef(null);
 
   const initAudioCtx = () => {
     if (!audioCtx.current && audioRef.current) {
         audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
         
+        analyser.current = audioCtx.current.createAnalyser();
+        analyser.current.fftSize = 256;
+
         filters.current.low = audioCtx.current.createBiquadFilter();
         filters.current.low.type = 'lowshelf';
         filters.current.low.frequency.value = 320;
@@ -172,7 +176,8 @@ function App() {
         sourceNode.current.connect(filters.current.low);
         filters.current.low.connect(filters.current.mid);
         filters.current.mid.connect(filters.current.high);
-        filters.current.high.connect(audioCtx.current.destination);
+        filters.current.high.connect(analyser.current);
+        analyser.current.connect(audioCtx.current.destination);
     }
   };
 
@@ -1847,6 +1852,9 @@ function App() {
                setIsMiniPlayerMinimized={setIsMiniPlayerMinimized}
                onFetchPlaylistTracks={handleFetchPlaylistTracks}
                onPlaybackRateChange={handlePlaybackRateChange}
+               onEqA={onEqA}
+               analyserA={analyserA}
+               station={activeStation}
            />
           </>
         )}
@@ -2141,7 +2149,8 @@ const Dashboard = React.memo(({
   setIsMiniPlayerMinimized,
   onFetchPlaylistTracks,
   onPlaybackRateChange,
-  onEqA
+  onEqA,
+  analyserA
 }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -2486,6 +2495,7 @@ const Dashboard = React.memo(({
               onFetchPlaylistTracks={onFetchPlaylistTracks}
               onPlaybackRateChange={onPlaybackRateChange}
               onEqA={onEqA}
+              analyserA={analyser.current}
             />}
             {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} initialChatUser={activeMessageUser} />}
             {activeView === 'settings' && (
@@ -4200,7 +4210,8 @@ const PlayerContent = ({
   userPlaylists,
   onFetchPlaylistTracks,
   onPlaybackRateChange,
-  onEqA
+  onEqA,
+  analyserA
 }) => {
   const isDesktop = window.innerWidth >= 1024;
 
@@ -4233,6 +4244,7 @@ const PlayerContent = ({
           onFetchPlaylistTracks={onFetchPlaylistTracks}
           onPlaybackRateChange={onPlaybackRateChange}
           onEqA={onEqA}
+          analyserA={analyserA}
           onPlayTrack={(track) => {
             const tId = track.id || track.Id;
             const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
