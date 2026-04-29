@@ -912,9 +912,10 @@ const DJMixerPlayer = ({
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> {/* End Deck B */}
+                </div> {/* End mixer-decks-grid-compact */}
 
-                    {/* MASTER NEURAL SPECTRUM HUB: Below Decks, spanning width */}
+                {/* MASTER NEURAL SPECTRUM HUB: Below Decks, spanning width */}
                     <div className="neural-spectrum-master-hub">
                         <div className="spectrum-container-wide">
                             <div className="node-label-strip mono">
@@ -1073,12 +1074,13 @@ const DJMixerPlayer = ({
                         </AnimatePresence>
                     </div>
                 </div>
-            </div>
+            </div> {/* End mixer-console-pane */}
+        </div> {/* End mixer-hud-wrapper */}
 
             {/* Tactical Decals */}
             <div className="cyber-label-fx top-right">SYSTEM_STABLE_4.2.0</div>
             <div className="cyber-label-fx bottom-left">NEURAL_DECK_PRO_V5</div>
-        </div>
+        </div> {/* End dj-mixer-overlay */}
     );
 };
 
