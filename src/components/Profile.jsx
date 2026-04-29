@@ -172,53 +172,128 @@ const LBrackets = ({ className = "" }) => (
 const GearIcon = ({ category }) => {
     const c = category?.toLowerCase() || '';
     if (c.includes('synth')) return <Zap size={10} />;
-    if (c.includes('soft') || c.includes('vst')) return <Code size={10} />;
-    if (c.includes('drum') || c.includes('perc')) return <Activity size={10} />;
-    if (c.includes('fx') || c.includes('pedal')) return <Zap size={10} className="rotate-45" />;
+    if (c.includes('soft') || c.includes('vst') || c.includes('daw') || c.includes('plugin')) return <Code size={10} />;
+    if (c.includes('drum') || c.includes('perc') || c.includes('rhythm')) return <Activity size={10} />;
+    if (c.includes('fx') || c.includes('pedal') || c.includes('rack')) return <Zap size={10} className="rotate-45 text-cyan-400" />;
+    if (c.includes('interface') || c.includes('sound') || c.includes('card')) return <Database size={10} className="text-yellow-400" />;
+    if (c.includes('monitor') || c.includes('speaker')) return <Monitor size={10} className="text-purple-400" />;
     return <Cpu size={10} />;
 };
 
-const GearRack = ({ gears, onAddGear, onRemoveGear, isMe, input, setInput, isSaving }) => (
-    <div className="gear-rack">
-        <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5 bg-white/5">
-            <Cpu size={10} className="text-[var(--subsystem-accent)]/60" />
-            <span className="text-[8px] font-black tracking-widest uppercase">HARDWARE_RACK</span>
-        </div>
-        <div className="gear-list custom-scrollbar">
-            {gears.length > 0 ? gears.map((item, idx) => (
-                <div key={idx} className="gear-item group/gear">
-                    <div className="flex items-center gap-2">
-                        <span className="opacity-40 group-hover/gear:opacity-100 transition-opacity">
-                            <GearIcon category={item.category || item.Category} />
-                        </span>
-                        <span className="uppercase text-[9px]">{item.name || item.Name || item}</span>
-                    </div>
-                    {isMe && (
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); onRemoveGear(item.id || item.Id); }}
-                            className="opacity-0 group-hover/gear:opacity-100 text-red-500/40 hover:text-red-500 transition-opacity p-1"
-                        >
-                            <X size={8} />
-                        </button>
-                    )}
+const GearRack = ({ gears, onAddGear, onRemoveGear, isMe, formData, setFormData, isSaving, showForm, setShowForm }) => {
+    const GEAR_PRESETS = [
+        { name: 'ABLETON LIVE', category: 'Soft/VST' },
+        { name: 'FL STUDIO', category: 'Soft/VST' },
+        { name: 'SERUM', category: 'Soft/VST' },
+        { name: 'VITAL', category: 'Soft/VST' },
+        { name: 'TR-808', category: 'Drum/Perc' },
+        { name: 'TB-303', category: 'Synth' },
+        { name: 'JUNO-106', category: 'Synth' },
+        { name: 'VIRUS TI', category: 'Synth' }
+    ];
+
+    return (
+        <div className="gear-rack">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 bg-white/5">
+                <div className="flex items-center gap-2">
+                    <Cpu size={10} className="text-[var(--subsystem-accent)]/60" />
+                    <span className="text-[8px] font-black tracking-widest uppercase">HARDWARE_RACK</span>
                 </div>
-            )) : (
-                <div className="text-[7px] mono text-white/10 p-4 text-center mt-4 uppercase italic">NO_GEAR_DETECTED // RACK_EMPTY</div>
-            )}
+                {isMe && !showForm && (
+                    <button 
+                        onClick={() => setShowForm(true)}
+                        className="text-[7px] mono text-[var(--subsystem-accent)] hover:text-white transition-colors uppercase font-bold"
+                    >
+                        + REGISTER
+                    </button>
+                )}
+            </div>
+            
+            <div className="gear-list custom-scrollbar">
+                {showForm ? (
+                    <div className="p-3 space-y-3 bg-black/40 border-b border-white/5 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="space-y-1">
+                            <div className="text-[6px] mono text-white/20 uppercase">GEAR_NAME</div>
+                            <input 
+                                type="text"
+                                className="w-full bg-black border border-white/10 p-2 text-[10px] text-white outline-none focus:border-[var(--subsystem-accent)] uppercase"
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value.toUpperCase() })}
+                                placeholder="DEVICE_ID..."
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                                <div className="text-[6px] mono text-white/20 uppercase">CATEGORY</div>
+                                <select 
+                                    className="w-full bg-black border border-white/10 p-1 text-[8px] text-white outline-none"
+                                    value={formData.category}
+                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                >
+                                    <option value="Synth">SYNTH</option>
+                                    <option value="Soft/VST">SOFT/VST</option>
+                                    <option value="Drum/Perc">DRUM/PERC</option>
+                                    <option value="Fx/Pedal">FX/PEDAL</option>
+                                    <option value="Interface">INTERFACE</option>
+                                    <option value="Monitors">MONITORS</option>
+                                </select>
+                            </div>
+                            <div className="space-y-1">
+                                <div className="text-[6px] mono text-white/20 uppercase">QUICK_SYNC</div>
+                                <select 
+                                    className="w-full bg-black border border-white/10 p-1 text-[8px] text-white outline-none opacity-40 hover:opacity-100 transition-opacity"
+                                    onChange={(e) => {
+                                        const p = GEAR_PRESETS.find(pr => pr.name === e.target.value);
+                                        if (p) setFormData({ ...formData, name: p.name, category: p.category });
+                                    }}
+                                    value=""
+                                >
+                                    <option value="" disabled>PRESETS</option>
+                                    {GEAR_PRESETS.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="flex gap-2 pt-1">
+                            <button 
+                                onClick={onAddGear}
+                                disabled={isSaving || !formData.name.trim()}
+                                className="flex-1 py-1.5 bg-[var(--subsystem-accent)]/80 text-black text-[8px] font-black uppercase tracking-widest hover:bg-[var(--subsystem-accent)] transition-all disabled:opacity-50"
+                            >
+                                {isSaving ? 'SYNCING...' : 'SYNC_GEAR'}
+                            </button>
+                            <button 
+                                onClick={() => setShowForm(false)}
+                                className="px-3 py-1.5 border border-white/10 text-white/40 text-[8px] font-black uppercase hover:text-white transition-all"
+                            >
+                                CANCEL
+                            </button>
+                        </div>
+                    </div>
+                ) : gears.length > 0 ? gears.map((item, idx) => (
+                    <div key={idx} className="gear-item group/gear">
+                        <div className="flex items-center gap-2">
+                            <span className="opacity-40 group-hover/gear:opacity-100 transition-opacity">
+                                <GearIcon category={item.category || item.Category} />
+                            </span>
+                            <span className="uppercase text-[9px] font-bold text-white/80 group-hover:text-white transition-colors">{item.name || item.Name || item}</span>
+                            <span className="text-[6px] mono opacity-20 uppercase">[{item.category || item.Category || 'HW'}]</span>
+                        </div>
+                        {isMe && (
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); onRemoveGear(item.id || item.Id); }}
+                                className="opacity-0 group-hover/gear:opacity-100 text-red-500/40 hover:text-red-500 transition-opacity p-1"
+                            >
+                                <X size={8} />
+                            </button>
+                        )}
+                    </div>
+                )) : (
+                    <div className="text-[7px] mono text-white/10 p-4 text-center mt-4 uppercase italic">NO_GEAR_DETECTED // RACK_EMPTY</div>
+                )}
+            </div>
         </div>
-        {isMe && (
-            <input 
-                type="text"
-                placeholder="REGISTER_GEAR_SIGNAL..."
-                className="register-gear-input"
-                value={input}
-                onChange={(e) => setInput(e.target.value.toUpperCase())}
-                onKeyDown={(e) => e.key === 'Enter' && onAddGear()}
-                disabled={isSaving}
-            />
-        )}
-    </div>
-);
+    );
+};
 
 const SubsystemBlock = ({ title, icon: Icon, children, className = "", expand, onToggleExpand, address = "A1-D4", showBrackets = false }) => (
     <div className={`subsystem-block group/widget ${className}`} data-addr={address}>
@@ -857,8 +932,9 @@ export const ProfileView = React.memo(({
     // RESTORED GEAR/STUDIO STATES
     const [profileGear, setProfileGear] = useState([]);
     const [isLoadingGear, setIsLoadingGear] = useState(false);
-    const [gearInput, setGearInput] = useState('');
     const [isSavingGear, setIsSavingGear] = useState(false);
+    const [gearFormData, setGearFormData] = useState({ name: '', category: 'Synth', notes: '' });
+    const [showGearForm, setShowGearForm] = useState(false);
     const [studioSubTab, setStudioSubTab] = useState('All');
     const [selectedRelease, setSelectedRelease] = useState(null);
 
@@ -1146,7 +1222,7 @@ export const ProfileView = React.memo(({
     }, [fetchGear]);
 
     const handleAddGear = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         if (!gearFormData.name.trim()) return;
         setIsSavingGear(true);
         try {
@@ -1892,11 +1968,13 @@ export const ProfileView = React.memo(({
                         <GearRack 
                             gears={profileGear} 
                             isMe={isMe} 
-                            input={gearInput} 
-                            setInput={setGearInput} 
+                            formData={gearFormData} 
+                            setFormData={setGearFormData} 
                             onAddGear={handleAddGear}
                             onRemoveGear={handleDeleteGear}
                             isSaving={isSavingGear}
+                            showForm={showGearForm}
+                            setShowForm={setShowGearForm}
                         />
                     </SubsystemBlock>
                 </div>
