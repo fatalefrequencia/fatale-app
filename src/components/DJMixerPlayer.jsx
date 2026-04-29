@@ -285,6 +285,12 @@ const DJMixerPlayer = ({
         });
     };
 
+    const handleEqReset = (deck, param) => {
+        const setter = deck === 'A' ? setEqA : setEqB;
+        setter(prev => ({ ...prev, [param]: 0 }));
+        console.log(`[Neural Core] ${deck} ${param.toUpperCase()} reset to zero-point`);
+    };
+
     const handleKnobDragStart = (e, deck, param = 'pitch') => {
         isDraggingKnob.current = true;
         lastY.current = e.clientY;
@@ -522,6 +528,7 @@ const DJMixerPlayer = ({
                                                 onTouchStart={(e) => handleKnobTouchStart(e, 'A')}
                                                 onTouchMove={handleKnobTouchMove}
                                                 onTouchEnd={handleKnobTouchEnd}
+                                                onDoubleClick={() => { setPitchA(0); console.log("[Neural Core] NODE_A PITCH reset to zero-point"); }}
                                             >
                                                 <div className="knob-ring" style={{ '--ring-fill': `${50 + (pitchA)}%` }}></div>
                                                 <div className="knob-dot" style={{ transform: `rotate(${pitchA * 7.2}deg)` }}></div>
@@ -539,6 +546,7 @@ const DJMixerPlayer = ({
                                                 step="0.1" 
                                                 value={pitchA} 
                                                 onChange={(e) => setPitchA(Number(e.target.value))} 
+                                                onDoubleClick={() => setPitchA(0)}
                                                 className="nano-slider" 
                                             />
                                         </div>
@@ -563,6 +571,7 @@ const DJMixerPlayer = ({
                                             onTouchStart={(e) => handleKnobTouchStart(e, 'A', 'hi')}
                                             onTouchMove={handleKnobTouchMove}
                                             onTouchEnd={handleKnobTouchEnd}
+                                            onDoubleClick={() => handleEqReset('A', 'hi')}
                                         >
                                             <div className="knob-ring" style={{ '--ring-fill': `${50 + (eqA.hi * 2.5)}%` }}></div>
                                             <div className="knob-dot" style={{ transform: `rotate(${eqA.hi * 7.2}deg)` }}></div>
@@ -577,6 +586,7 @@ const DJMixerPlayer = ({
                                             onTouchStart={(e) => handleKnobTouchStart(e, 'A', 'mid')}
                                             onTouchMove={handleKnobTouchMove}
                                             onTouchEnd={handleKnobTouchEnd}
+                                            onDoubleClick={() => handleEqReset('A', 'mid')}
                                         >
                                             <div className="knob-ring" style={{ '--ring-fill': `${50 + (eqA.mid * 2.5)}%` }}></div>
                                             <div className="knob-dot" style={{ transform: `rotate(${eqA.mid * 7.2}deg)` }}></div>
@@ -591,6 +601,7 @@ const DJMixerPlayer = ({
                                             onTouchStart={(e) => handleKnobTouchStart(e, 'A', 'low')}
                                             onTouchMove={handleKnobTouchMove}
                                             onTouchEnd={handleKnobTouchEnd}
+                                            onDoubleClick={() => handleEqReset('A', 'low')}
                                         >
                                             <div className="knob-ring" style={{ '--ring-fill': `${50 + (eqA.low * 2.5)}%` }}></div>
                                             <div className="knob-dot" style={{ transform: `rotate(${eqA.low * 7.2}deg)` }}></div>
@@ -614,6 +625,7 @@ const DJMixerPlayer = ({
                                         step="0.01" 
                                         value={baseVolume} 
                                         onChange={(e) => setBaseVolume(Number(e.target.value))} 
+                                        onDoubleClick={() => setBaseVolume(0.8)}
                                         className="vertical-fader-nano" 
                                     />
                                 </div>
@@ -626,6 +638,7 @@ const DJMixerPlayer = ({
                                         step="0.01" 
                                         value={volumeB} 
                                         onChange={(e) => setVolumeB(Number(e.target.value))} 
+                                        onDoubleClick={() => setVolumeB(0.8)}
                                         className="vertical-fader-nano" 
                                     />
                                 </div>
@@ -637,7 +650,15 @@ const DJMixerPlayer = ({
                             </div>
                             <div className="deck-crossfader">
                                 <div className="cf-label">A</div>
-                                <input type="range" min="-100" max="100" value={crossfader} onChange={(e) => setCrossfader(Number(e.target.value))} className="crossfader-nano" />
+                                <input 
+                                    type="range" 
+                                    min="-100" 
+                                    max="100" 
+                                    value={crossfader} 
+                                    onChange={(e) => setCrossfader(Number(e.target.value))} 
+                                    onDoubleClick={() => setCrossfader(0)}
+                                    className="crossfader-nano" 
+                                />
                                 <div className="cf-label">B</div>
                             </div>
                         </div>
@@ -681,6 +702,7 @@ const DJMixerPlayer = ({
                                             onTouchStart={(e) => handleKnobTouchStart(e, 'B', 'hi')}
                                             onTouchMove={handleKnobTouchMove}
                                             onTouchEnd={handleKnobTouchEnd}
+                                            onDoubleClick={() => handleEqReset('B', 'hi')}
                                         >
                                             <div className="knob-ring" style={{ '--ring-fill': `${50 + (eqB.hi * 2.5)}%` }}></div>
                                             <div className="knob-dot" style={{ transform: `rotate(${eqB.hi * 7.2}deg)` }}></div>
@@ -695,6 +717,7 @@ const DJMixerPlayer = ({
                                             onTouchStart={(e) => handleKnobTouchStart(e, 'B', 'mid')}
                                             onTouchMove={handleKnobTouchMove}
                                             onTouchEnd={handleKnobTouchEnd}
+                                            onDoubleClick={() => handleEqReset('B', 'mid')}
                                         >
                                             <div className="knob-ring" style={{ '--ring-fill': `${50 + (eqB.mid * 2.5)}%` }}></div>
                                             <div className="knob-dot" style={{ transform: `rotate(${eqB.mid * 7.2}deg)` }}></div>
@@ -709,6 +732,7 @@ const DJMixerPlayer = ({
                                             onTouchStart={(e) => handleKnobTouchStart(e, 'B', 'low')}
                                             onTouchMove={handleKnobTouchMove}
                                             onTouchEnd={handleKnobTouchEnd}
+                                            onDoubleClick={() => handleEqReset('B', 'low')}
                                         >
                                             <div className="knob-ring" style={{ '--ring-fill': `${50 + (eqB.low * 2.5)}%` }}></div>
                                             <div className="knob-dot" style={{ transform: `rotate(${eqB.low * 7.2}deg)` }}></div>
@@ -747,6 +771,7 @@ const DJMixerPlayer = ({
                                                 onTouchStart={(e) => handleKnobTouchStart(e, 'B')}
                                                 onTouchMove={handleKnobTouchMove}
                                                 onTouchEnd={handleKnobTouchEnd}
+                                                onDoubleClick={() => { setPitchB(0); console.log("[Neural Core] NODE_B PITCH reset to zero-point"); }}
                                             >
                                                 <div className="knob-ring" style={{ '--ring-fill': `${50 + (pitchB)}%` }}></div>
                                                 <div className="knob-dot" style={{ transform: `rotate(${pitchB * 7.2}deg)` }}></div>
@@ -764,6 +789,7 @@ const DJMixerPlayer = ({
                                                 step="0.1" 
                                                 value={pitchB} 
                                                 onChange={(e) => setPitchB(Number(e.target.value))} 
+                                                onDoubleClick={() => setPitchB(0)}
                                                 className="nano-slider" 
                                             />
                                         </div>
