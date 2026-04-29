@@ -280,16 +280,17 @@ const DJMixerPlayer = ({
                             </div>
 
                             <div className="deck-meta-strip">
-                                <div className="deck-id-tag font-black tracking-widest opacity-40">NODE_A</div>
-                                <div className="bpm-tag mono text-white/90">{deckA?.bpm || '128.0'} <span className="opacity-20 text-[8px]">BPM</span></div>
-                            </div>
-
-                            <div className="deck-transport-row-nano">
-                                <button onClick={onPrev} className="transport-btn-sq"><SkipBack size={10} /></button>
-                                <button onClick={onPlayPause} className={`transport-btn-sq main ${isPlayingA ? 'active' : ''}`}>
-                                    {isPlayingA ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
-                                </button>
-                                <button onClick={onNext} className="transport-btn-sq"><SkipForward size={10} /></button>
+                                <div className="deck-transport-row-nano left">
+                                    <button onClick={onPrev} className="transport-btn-sq"><SkipBack size={10} /></button>
+                                    <button onClick={onPlayPause} className={`transport-btn-sq main ${isPlayingA ? 'active' : ''}`}>
+                                        {isPlayingA ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
+                                    </button>
+                                    <button onClick={onNext} className="transport-btn-sq"><SkipForward size={10} /></button>
+                                </div>
+                                <div className="deck-id-readout">
+                                    <div className="deck-id-tag font-black tracking-widest opacity-40">NODE_A</div>
+                                    <div className="bpm-tag mono text-white/90">{deckA?.bpm || '128.0'} <span className="opacity-20 text-[8px]">BPM</span></div>
+                                </div>
                             </div>
 
                             <div className="deck-core-layout-mirrored">
@@ -329,7 +330,32 @@ const DJMixerPlayer = ({
 
                         {/* MASTER CENTRAL HUB */}
                         <div className="master-central-strip">
-                            {/* Central transport removed per user request */}
+                            <div className="master-gain-faders-row">
+                                <div className="fader-channel">
+                                    <span className="fader-label">A</span>
+                                    <input 
+                                        type="range" 
+                                        min="0" 
+                                        max="1" 
+                                        step="0.01" 
+                                        value={baseVolume} 
+                                        onChange={(e) => setBaseVolume(Number(e.target.value))} 
+                                        className="vertical-fader-nano" 
+                                    />
+                                </div>
+                                <div className="fader-channel">
+                                    <span className="fader-label">B</span>
+                                    <input 
+                                        type="range" 
+                                        min="0" 
+                                        max="1" 
+                                        step="0.01" 
+                                        value={volumeB} 
+                                        onChange={(e) => setVolumeB(Number(e.target.value))} 
+                                        className="vertical-fader-nano" 
+                                    />
+                                </div>
+                            </div>
                             
                             <div className="master-vu-nano">
                                 <div className="vu-led"><div className="vu-led-fill" style={{ height: isPlaying ? '70%' : '0%' }}></div></div>
@@ -354,16 +380,17 @@ const DJMixerPlayer = ({
                             </div>
 
                             <div className="deck-meta-strip text-right">
-                                <div className="bpm-tag mono text-white/90">{deckB?.bpm || '124.5'} <span className="opacity-20 text-[8px]">BPM</span></div>
-                                <div className="deck-id-tag font-black tracking-widest opacity-40">NODE_B</div>
-                            </div>
-
-                            <div className="deck-transport-row-nano">
-                                <button className="transport-btn-sq"><SkipBack size={10} /></button>
-                                <button onClick={togglePlayB} className={`transport-btn-sq main ${isPlayingB ? 'active' : ''}`}>
-                                    {isPlayingB ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
-                                </button>
-                                <button className="transport-btn-sq"><SkipForward size={10} /></button>
+                                <div className="deck-id-readout text-right">
+                                    <div className="bpm-tag mono text-white/90">{deckB?.bpm || '124.5'} <span className="opacity-20 text-[8px]">BPM</span></div>
+                                    <div className="deck-id-tag font-black tracking-widest opacity-40">NODE_B</div>
+                                </div>
+                                <div className="deck-transport-row-nano right">
+                                    <button className="transport-btn-sq"><SkipBack size={10} /></button>
+                                    <button onClick={togglePlayB} className={`transport-btn-sq main ${isPlayingB ? 'active' : ''}`}>
+                                        {isPlayingB ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
+                                    </button>
+                                    <button className="transport-btn-sq"><SkipForward size={10} /></button>
+                                </div>
                             </div>
 
                             <div className="deck-core-layout-mirrored">

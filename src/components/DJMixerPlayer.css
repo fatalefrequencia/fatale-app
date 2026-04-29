@@ -643,10 +643,12 @@
 /* Tactical Transport Row */
 .deck-transport-row-nano {
     display: flex;
-    justify-content: center;
     gap: 6px;
-    margin-bottom: 15px;
 }
+
+.deck-transport-row-nano.left { justify-content: flex-start; }
+.deck-transport-row-nano.right { justify-content: flex-end; }
+
 
 .transport-btn-sq {
     width: 32px;
@@ -672,6 +674,55 @@
     color: var(--accent);
     box-shadow: 0 0 15px rgba(255, 0, 110, 0.2);
 }
+
+.deck-id-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.master-gain-faders-row {
+    display: flex;
+    gap: 30px;
+    height: 120px;
+    margin-bottom: 20px;
+    align-items: flex-end;
+}
+
+.fader-channel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.fader-label {
+    font-size: 8px;
+    font-weight: 900;
+    color: var(--accent);
+    opacity: 0.4;
+}
+
+.vertical-fader-nano {
+    -webkit-appearance: none;
+    width: 100px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    transform: rotate(-90deg) translate(50px, 0);
+    transform-origin: center;
+}
+
+.vertical-fader-nano::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 24px;
+    height: 12px;
+    background: #333;
+    border: 1px solid var(--accent);
+    box-shadow: 0 0 10px rgba(255, 0, 110, 0.3);
+    cursor: pointer;
+    border-radius: 2px;
+}
+
 
 .transport-btn-sq:hover {
     border-color: var(--accent);
