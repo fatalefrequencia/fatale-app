@@ -32,7 +32,8 @@ const DJMixerPlayer = ({
     onPlayPlaylist,
     onPlayTrack,
     onFetchPlaylistTracks,
-    onPlaybackRateChange
+    onPlaybackRateChange,
+    onEqA
 }) => {
     const [activeTab, setActiveTab] = useState('LIBRARY'); // LIBRARY, CHAT, REQUESTS
     const [crateCategory, setCrateCategory] = useState('ALL'); // ALL, PURCHASED, FAVORITES, ARTISTS, PLAYLISTS
@@ -69,6 +70,10 @@ const DJMixerPlayer = ({
     const lastY = useRef(0);
     const dragTarget = useRef(null);
     const dragParam = useRef(null); // hi, mid, low, pitch
+
+    const audioCtxB = useRef(null);
+    const filtersB = useRef({ low: null, mid: null, high: null });
+    const sourceNodeB = useRef(null);
 
     const [eqA, setEqA] = useState({ hi: 0, mid: 0, low: 0 });
     const [eqB, setEqB] = useState({ hi: 0, mid: 0, low: 0 });
@@ -141,6 +146,49 @@ const DJMixerPlayer = ({
             onPlaybackRateChange(rate);
         }
     }, [pitchA, deckA, onPlaybackRateChange]);
+
+    const initAudioB = () => {
+        if (!audioCtxB.current && audioB.current) {
+            audioCtxB.current = new (window.AudioContext || window.webkitAudioContext)();
+            
+            filtersB.current.low = audioCtxB.current.createBiquadFilter();
+            filtersB.current.low.type = 'lowshelf';
+            filtersB.current.low.frequency.value = 320;
+            
+            filtersB.current.mid = audioCtxB.current.createBiquadFilter();
+            filtersB.current.mid.type = 'peaking';
+            filtersB.current.mid.frequency.value = 1000;
+            filtersB.current.mid.Q.value = 1;
+            
+            filtersB.current.high = audioCtxB.current.createBiquadFilter();
+            filtersB.current.high.type = 'highshelf';
+            filtersB.current.high.frequency.value = 3200;
+
+            sourceNodeB.current = audioCtxB.current.createMediaElementSource(audioB.current);
+            sourceNodeB.current.connect(filtersB.current.low);
+            filtersB.current.low.connect(filtersB.current.mid);
+            filtersB.current.mid.connect(filtersB.current.high);
+            filtersB.current.high.connect(audioCtxB.current.destination);
+        }
+    };
+
+    useEffect(() => {
+        if (deckB) initAudioB();
+    }, [deckB]);
+
+    useEffect(() => {
+        if (filtersB.current.low) filtersB.current.low.gain.value = eqB.low;
+        if (filtersB.current.mid) filtersB.current.mid.gain.value = eqB.mid;
+        if (filtersB.current.high) filtersB.current.high.gain.value = eqB.hi;
+    }, [eqB]);
+
+    useEffect(() => {
+        if (onEqA) {
+            onEqA('low', eqA.low);
+            onEqA('mid', eqA.mid);
+            onEqA('high', eqA.hi);
+        }
+    }, [eqA, onEqA]);
 
     useEffect(() => {
         const baseB = Number(deckB?.bpm || 124.5);
@@ -471,6 +519,7 @@ const DJMixerPlayer = ({
                                                 onTouchMove={handleKnobTouchMove}
                                                 onTouchEnd={handleKnobTouchEnd}
                                             >
+                                                <div className="knob-ring" style={{ '--ring-fill': `${50 + (pitchA)}%` }}></div>
                                                 <div className="knob-dot" style={{ transform: `rotate(${pitchA * 7.2}deg)` }}></div>
                                             </div>
                                             <span className="knob-label">FINE</span>
@@ -511,6 +560,7 @@ const DJMixerPlayer = ({
                                             onTouchMove={handleKnobTouchMove}
                                             onTouchEnd={handleKnobTouchEnd}
                                         >
+                                            <div className="knob-ring" style={{ '--ring-fill': `${50 + (eqA.hi * 2.5)}%` }}></div>
                                             <div className="knob-dot" style={{ transform: `rotate(${eqA.hi * 7.2}deg)` }}></div>
                                         </div>
                                         <span>HI</span>
@@ -523,6 +573,7 @@ const DJMixerPlayer = ({
                                             onTouchMove={handleKnobTouchMove}
                                             onTouchEnd={handleKnobTouchEnd}
                                         >
+                                            <div className="knob-ring" style={{ '--ring-fill': `${50 + (eqA.mid * 2.5)}%` }}></div>
                                             <div className="knob-dot" style={{ transform: `rotate(${eqA.mid * 7.2}deg)` }}></div>
                                         </div>
                                         <span>MID</span>
@@ -535,6 +586,7 @@ const DJMixerPlayer = ({
                                             onTouchMove={handleKnobTouchMove}
                                             onTouchEnd={handleKnobTouchEnd}
                                         >
+                                            <div className="knob-ring" style={{ '--ring-fill': `${50 + (eqA.low * 2.5)}%` }}></div>
                                             <div className="knob-dot" style={{ transform: `rotate(${eqA.low * 7.2}deg)` }}></div>
                                         </div>
                                         <span>LOW</span>
@@ -623,6 +675,7 @@ const DJMixerPlayer = ({
                                             onTouchMove={handleKnobTouchMove}
                                             onTouchEnd={handleKnobTouchEnd}
                                         >
+                                            <div className="knob-ring" style={{ '--ring-fill': `${50 + (eqB.hi * 2.5)}%` }}></div>
                                             <div className="knob-dot" style={{ transform: `rotate(${eqB.hi * 7.2}deg)` }}></div>
                                         </div>
                                         <span>HI</span>
@@ -635,6 +688,7 @@ const DJMixerPlayer = ({
                                             onTouchMove={handleKnobTouchMove}
                                             onTouchEnd={handleKnobTouchEnd}
                                         >
+                                            <div className="knob-ring" style={{ '--ring-fill': `${50 + (eqB.mid * 2.5)}%` }}></div>
                                             <div className="knob-dot" style={{ transform: `rotate(${eqB.mid * 7.2}deg)` }}></div>
                                         </div>
                                         <span>MID</span>
@@ -647,6 +701,7 @@ const DJMixerPlayer = ({
                                             onTouchMove={handleKnobTouchMove}
                                             onTouchEnd={handleKnobTouchEnd}
                                         >
+                                            <div className="knob-ring" style={{ '--ring-fill': `${50 + (eqB.low * 2.5)}%` }}></div>
                                             <div className="knob-dot" style={{ transform: `rotate(${eqB.low * 7.2}deg)` }}></div>
                                         </div>
                                         <span>LOW</span>
@@ -683,6 +738,7 @@ const DJMixerPlayer = ({
                                                 onTouchMove={handleKnobTouchMove}
                                                 onTouchEnd={handleKnobTouchEnd}
                                             >
+                                                <div className="knob-ring" style={{ '--ring-fill': `${50 + (pitchB)}%` }}></div>
                                                 <div className="knob-dot" style={{ transform: `rotate(${pitchB * 7.2}deg)` }}></div>
                                             </div>
                                             <span className="knob-label">FINE</span>

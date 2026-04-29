@@ -146,6 +146,44 @@ function App() {
   const [showMixer, setShowMixer] = useState(false);
   const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
 
+  // EQ / Filter State
+  const audioCtx = useRef(null);
+  const sourceNode = useRef(null);
+  const filters = useRef({ low: null, mid: null, high: null });
+
+  const initAudioCtx = () => {
+    if (!audioCtx.current && audioRef.current) {
+        audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
+        
+        filters.current.low = audioCtx.current.createBiquadFilter();
+        filters.current.low.type = 'lowshelf';
+        filters.current.low.frequency.value = 320;
+        
+        filters.current.mid = audioCtx.current.createBiquadFilter();
+        filters.current.mid.type = 'peaking';
+        filters.current.mid.frequency.value = 1000;
+        filters.current.mid.Q.value = 1;
+        
+        filters.current.high = audioCtx.current.createBiquadFilter();
+        filters.current.high.type = 'highshelf';
+        filters.current.high.frequency.value = 3200;
+
+        sourceNode.current = audioCtx.current.createMediaElementSource(audioRef.current);
+        sourceNode.current.connect(filters.current.low);
+        filters.current.low.connect(filters.current.mid);
+        filters.current.mid.connect(filters.current.high);
+        filters.current.high.connect(audioCtx.current.destination);
+    }
+  };
+
+  const handleEqChange = (type, val) => {
+    initAudioCtx();
+    if (audioCtx.current?.state === 'suspended') audioCtx.current.resume();
+    if (filters.current[type]) {
+        filters.current[type].gain.value = val;
+    }
+  };
+
   const handlePlaybackRateChange = (newRate) => {
     setGlobalPlaybackRate(newRate);
     if (audioRef.current) audioRef.current.playbackRate = newRate;
@@ -155,6 +193,8 @@ function App() {
         } catch(e) { console.warn("YT setRate fail", e); }
     }
   };
+
+  const onEqA = (type, val) => handleEqChange(type, val);
 
   useEffect(() => {
     const handleResize = () => setIsLandscape(window.innerWidth > window.innerHeight);
@@ -2100,7 +2140,8 @@ const Dashboard = React.memo(({
   isMiniPlayerMinimized,
   setIsMiniPlayerMinimized,
   onFetchPlaylistTracks,
-  onPlaybackRateChange
+  onPlaybackRateChange,
+  onEqA
 }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -2444,6 +2485,7 @@ const Dashboard = React.memo(({
               userPlaylists={playlists}
               onFetchPlaylistTracks={onFetchPlaylistTracks}
               onPlaybackRateChange={onPlaybackRateChange}
+              onEqA={onEqA}
             />}
             {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} initialChatUser={activeMessageUser} />}
             {activeView === 'settings' && (
@@ -4157,7 +4199,8 @@ const PlayerContent = ({
   setVolume,
   userPlaylists,
   onFetchPlaylistTracks,
-  onPlaybackRateChange
+  onPlaybackRateChange,
+  onEqA
 }) => {
   const isDesktop = window.innerWidth >= 1024;
 
@@ -4189,6 +4232,7 @@ const PlayerContent = ({
           onPlayPlaylist={onPlayPlaylist}
           onFetchPlaylistTracks={onFetchPlaylistTracks}
           onPlaybackRateChange={onPlaybackRateChange}
+          onEqA={onEqA}
           onPlayTrack={(track) => {
             const tId = track.id || track.Id;
             const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
