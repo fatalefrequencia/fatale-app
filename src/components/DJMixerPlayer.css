@@ -675,11 +675,61 @@
     box-shadow: 0 0 15px rgba(255, 0, 110, 0.2);
 }
 
+.sync-btn-nano {
+    padding: 0 8px;
+    height: 32px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--accent);
+    font-size: 7px;
+    font-weight: 900;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 0.1em;
+}
+
+.sync-btn-nano:hover {
+    background: var(--accent);
+    color: black;
+    box-shadow: 0 0 10px var(--accent);
+}
+
+.bpm-controls-nano {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.02);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.bpm-step {
+    width: 16px;
+    height: 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: white;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 2px;
+    opacity: 0.4;
+}
+
+.bpm-step:hover { opacity: 1; border-color: var(--accent); color: var(--accent); }
+
 .deck-id-readout {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
 }
+
+.deck-id-readout.mirrored-right { align-items: flex-end; }
+.deck-id-readout.mirrored-left { align-items: flex-start; }
 
 .master-gain-faders-row {
     display: flex;

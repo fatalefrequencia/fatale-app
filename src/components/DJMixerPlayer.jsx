@@ -144,6 +144,27 @@ const DJMixerPlayer = ({
         }
     };
 
+    const handleSync = (targetDeck) => {
+        if (targetDeck === 'B' && deckA && deckB) {
+            setPitchB((deckA.bpm || 128) - (deckB.bpm || 128));
+            // In a real app we'd adjust playbackRate, here we simulate with state
+            setIsSyncing(true);
+            setTimeout(() => setIsSyncing(false), 500);
+        } else if (targetDeck === 'A' && deckB && deckA) {
+            // Adjust Deck A BPM to match B (if possible via props or local simulation)
+            setIsSyncing(true);
+            setTimeout(() => setIsSyncing(false), 500);
+        }
+    };
+
+    const adjustBpm = (deck, delta) => {
+        if (deck === 'A') {
+            setPitchA(prev => Math.max(-8, Math.min(8, Number(prev) + delta)));
+        } else {
+            setPitchB(prev => Math.max(-8, Math.min(8, Number(prev) + delta)));
+        }
+    };
+
     const handlePlaylistClick = async (p) => {
         if (onFetchPlaylistTracks) {
             setIsCrateLoading(true);
@@ -286,10 +307,15 @@ const DJMixerPlayer = ({
                                         {isPlayingA ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
                                     </button>
                                     <button onClick={onNext} className="transport-btn-sq"><SkipForward size={10} /></button>
+                                    <button onClick={() => handleSync('A')} className="sync-btn-nano">SYNC</button>
                                 </div>
-                                <div className="deck-id-readout">
+                                <div className="deck-id-readout mirrored-right">
                                     <div className="deck-id-tag font-black tracking-widest opacity-40">NODE_A</div>
-                                    <div className="bpm-tag mono text-white/90">{deckA?.bpm || '128.0'} <span className="opacity-20 text-[8px]">BPM</span></div>
+                                    <div className="bpm-controls-nano">
+                                        <button onClick={() => adjustBpm('A', -0.1)} className="bpm-step">-</button>
+                                        <div className="bpm-tag mono text-white/90">{(Number(deckA?.bpm || 128) + Number(pitchA)).toFixed(1)} <span className="opacity-20 text-[8px]">BPM</span></div>
+                                        <button onClick={() => adjustBpm('A', 0.1)} className="bpm-step">+</button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -380,11 +406,16 @@ const DJMixerPlayer = ({
                             </div>
 
                             <div className="deck-meta-strip text-right">
-                                <div className="deck-id-readout text-right">
-                                    <div className="bpm-tag mono text-white/90">{deckB?.bpm || '124.5'} <span className="opacity-20 text-[8px]">BPM</span></div>
+                                <div className="deck-id-readout mirrored-left text-left">
                                     <div className="deck-id-tag font-black tracking-widest opacity-40">NODE_B</div>
+                                    <div className="bpm-controls-nano">
+                                        <button onClick={() => adjustBpm('B', -0.1)} className="bpm-step">-</button>
+                                        <div className="bpm-tag mono text-white/90">{(Number(deckB?.bpm || 124.5) + Number(pitchB)).toFixed(1)} <span className="opacity-20 text-[8px]">BPM</span></div>
+                                        <button onClick={() => adjustBpm('B', 0.1)} className="bpm-step">+</button>
+                                    </div>
                                 </div>
                                 <div className="deck-transport-row-nano right">
+                                    <button onClick={() => handleSync('B')} className="sync-btn-nano">SYNC</button>
                                     <button className="transport-btn-sq"><SkipBack size={10} /></button>
                                     <button onClick={togglePlayB} className={`transport-btn-sq main ${isPlayingB ? 'active' : ''}`}>
                                         {isPlayingB ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
