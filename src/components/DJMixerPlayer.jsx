@@ -364,20 +364,9 @@ const DJMixerPlayer = ({
                                 </div>
                                 <div className="deck-id-readout mirrored-right">
                                     <div className="deck-id-tag font-black tracking-widest opacity-40">NODE_A</div>
-                                    <div className="bpm-controls-nano">
-                                        <button 
-                                            onMouseDown={() => startBpmAdjust('A', -0.1)} 
-                                            onMouseUp={stopBpmAdjust}
-                                            onMouseLeave={stopBpmAdjust}
-                                            className="bpm-step"
-                                        >-</button>
-                                        <div className="bpm-tag mono text-white/90">{(Number(deckA?.bpm || 128) + Number(pitchA)).toFixed(1)} <span className="opacity-20 text-[8px]">BPM</span></div>
-                                        <button 
-                                            onMouseDown={() => startBpmAdjust('A', 0.1)} 
-                                            onMouseUp={stopBpmAdjust}
-                                            onMouseLeave={stopBpmAdjust}
-                                            className="bpm-step"
-                                        >+</button>
+                                    <div className="tempo-status-nano mono">
+                                        <div className="val text-white/90">{(Number(deckA?.bpm || 128) + Number(pitchA)).toFixed(1)}</div>
+                                        <div className="label opacity-40 uppercase tracking-tighter">BPM_SIGNAL</div>
                                     </div>
                                 </div>
                             </div>
@@ -395,8 +384,29 @@ const DJMixerPlayer = ({
                                         </button>
                                     </div>
                                     
-                                    <div className="pitch-readout mono opacity-40">PITCH_{Number(pitchA).toFixed(1)}%</div>
-                                    <input type="range" min="-50" max="50" step="0.1" value={pitchA} onChange={(e) => setPitchA(Number(e.target.value))} className="nano-slider" />
+                                    <div className="tempo-control-group">
+                                        <div className="tempo-knob-container">
+                                            <div className="nano-knob interactive" onClick={() => adjustBpm('A', 0.1)}>
+                                                <div className="knob-dot" style={{ transform: `rotate(${(pitchA % 1) * 360}deg)` }}></div>
+                                            </div>
+                                            <span className="knob-label">FINE</span>
+                                        </div>
+                                        <div className="pitch-readout mono text-[9px] text-[var(--accent)] font-bold">
+                                            {Number(pitchA) >= 0 ? '+' : ''}{Number(pitchA).toFixed(1)}%
+                                        </div>
+                                        <div className="slider-track-vertical">
+                                            <input 
+                                                type="range" 
+                                                min="-50" 
+                                                max="50" 
+                                                step="0.1" 
+                                                value={pitchA} 
+                                                onChange={(e) => setPitchA(Number(e.target.value))} 
+                                                className="nano-slider" 
+                                            />
+                                        </div>
+                                        <div className="tempo-label-nano mono opacity-40">TEMPO_BPM</div>
+                                    </div>
                                 </div>
 
                                 {/* Center Jog */}
@@ -471,20 +481,9 @@ const DJMixerPlayer = ({
                             <div className="deck-meta-strip text-right">
                                 <div className="deck-id-readout mirrored-left text-left">
                                     <div className="deck-id-tag font-black tracking-widest opacity-40">NODE_B</div>
-                                    <div className="bpm-controls-nano">
-                                        <button 
-                                            onMouseDown={() => startBpmAdjust('B', -0.1)} 
-                                            onMouseUp={stopBpmAdjust}
-                                            onMouseLeave={stopBpmAdjust}
-                                            className="bpm-step"
-                                        >-</button>
-                                        <div className="bpm-tag mono text-white/90">{(Number(deckB?.bpm || 124.5) + Number(pitchB)).toFixed(1)} <span className="opacity-20 text-[8px]">BPM</span></div>
-                                        <button 
-                                            onMouseDown={() => startBpmAdjust('B', 0.1)} 
-                                            onMouseUp={stopBpmAdjust}
-                                            onMouseLeave={stopBpmAdjust}
-                                            className="bpm-step"
-                                        >+</button>
+                                    <div className="tempo-status-nano mono">
+                                        <div className="val text-white/90">{(Number(deckB?.bpm || 124.5) + Number(pitchB)).toFixed(1)}</div>
+                                        <div className="label opacity-40 uppercase tracking-tighter">BPM_SIGNAL</div>
                                     </div>
                                 </div>
                                 <div className="deck-transport-row-nano right">
@@ -526,8 +525,29 @@ const DJMixerPlayer = ({
                                         </button>
                                     </div>
                                     
-                                    <div className="pitch-readout mono opacity-40">PITCH_{Number(pitchB).toFixed(1)}%</div>
-                                    <input type="range" min="-50" max="50" step="0.1" value={pitchB} onChange={(e) => setPitchB(Number(e.target.value))} className="nano-slider" />
+                                    <div className="tempo-control-group">
+                                        <div className="tempo-knob-container">
+                                            <div className="nano-knob interactive" onClick={() => adjustBpm('B', 0.1)}>
+                                                <div className="knob-dot" style={{ transform: `rotate(${(pitchB % 1) * 360}deg)` }}></div>
+                                            </div>
+                                            <span className="knob-label">FINE</span>
+                                        </div>
+                                        <div className="pitch-readout mono text-[9px] text-[var(--accent)] font-bold">
+                                            {Number(pitchB) >= 0 ? '+' : ''}{Number(pitchB).toFixed(1)}%
+                                        </div>
+                                        <div className="slider-track-vertical">
+                                            <input 
+                                                type="range" 
+                                                min="-50" 
+                                                max="50" 
+                                                step="0.1" 
+                                                value={pitchB} 
+                                                onChange={(e) => setPitchB(Number(e.target.value))} 
+                                                className="nano-slider" 
+                                            />
+                                        </div>
+                                        <div className="tempo-label-nano mono opacity-40">TEMPO_BPM</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

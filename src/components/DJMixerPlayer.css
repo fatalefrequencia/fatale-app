@@ -706,32 +706,81 @@
 }
 
 
-.bpm-controls-nano {
+.tempo-control-group {
     display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 8px;
-    background: rgba(255,255,255,0.02);
-    padding: 4px 8px;
+    margin-top: 10px;
+    padding: 10px 4px;
+    background: rgba(255, 0, 110, 0.03);
     border-radius: 4px;
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid rgba(255, 0, 110, 0.05);
 }
 
-.bpm-step {
-    width: 16px;
-    height: 16px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    color: white;
-    font-size: 10px;
+.tempo-knob-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.nano-knob.interactive {
+    cursor: pointer;
+    background: #111;
+    border: 1px solid var(--accent);
+    box-shadow: 0 0 10px rgba(255, 0, 110, 0.2);
+    transition: all 0.2s ease;
+}
+
+.nano-knob.interactive:hover {
+    background: var(--accent);
+    box-shadow: 0 0 15px var(--accent);
+}
+
+.nano-knob.interactive:hover .knob-dot {
+    background: black;
+}
+
+.knob-label {
+    font-size: 6px;
+    font-weight: 900;
+    color: var(--accent);
+    opacity: 0.6;
+    letter-spacing: 0.1em;
+}
+
+.tempo-label-nano {
+    font-size: 7px;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+}
+
+.tempo-status-nano {
+    display: flex;
+    flex-direction: column;
+    margin-top: 4px;
+}
+
+.tempo-status-nano .val {
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1;
+    text-shadow: 0 0 10px rgba(255, 0, 110, 0.2);
+}
+
+.tempo-status-nano .label {
+    font-size: 6px;
+    margin-top: 2px;
+}
+
+.slider-track-vertical {
+    height: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    border-radius: 2px;
-    opacity: 0.4;
 }
 
-.bpm-step:hover { opacity: 1; border-color: var(--accent); color: var(--accent); }
 
 .deck-id-readout {
     display: flex;
