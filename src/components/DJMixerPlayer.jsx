@@ -141,14 +141,24 @@ const DJMixerPlayer = ({
     // Filtered Crate Logic
     const getFilteredTracks = () => {
         // Clear distinction between personal library and global discovery
-        let base = crateCategory === 'COLLECTION' ? libraryTracks : tracks;
+        let base = [];
         
-        // Ensure no duplicates
+        if (crateCategory === 'COLLECTION') {
+            // COLLECTION should strictly show signals the user has interacted with
+            base = libraryTracks.filter(t => t.isLiked || t.isOwned);
+        } else {
+            // DISCOVERY/NETWORK shows everything available
+            base = tracks;
+        }
+        
+        // Ensure no duplicates based on source or ID
         const seen = new Set();
         base = base.filter(t => {
             const id = t.id || t.Id;
-            if (!id || seen.has(id)) return false;
-            seen.add(id);
+            const src = t.source || t.Source;
+            const key = src || id;
+            if (!key || seen.has(key)) return false;
+            seen.add(key);
             return true;
         });
         
