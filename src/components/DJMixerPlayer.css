@@ -640,6 +640,49 @@
     background: rgba(255, 0, 110, 0.1);
     box-shadow: 0 0 10px rgba(255, 0, 110, 0.2);
 }
+/* Tactical Transport Row */
+.deck-transport-row-nano {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 15px;
+}
+
+.transport-btn-sq {
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.transport-btn-sq.main {
+    width: 40px;
+}
+
+.transport-btn-sq.active {
+    background: rgba(255, 0, 110, 0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 15px rgba(255, 0, 110, 0.2);
+}
+
+.transport-btn-sq:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.transport-btn-sq:active {
+    transform: scale(0.95);
+}
+
 /* Mirrored Deck Layout */
 .deck-core-layout-mirrored {
     display: flex;

@@ -284,6 +284,14 @@ const DJMixerPlayer = ({
                                 <div className="bpm-tag mono text-white/90">{deckA?.bpm || '128.0'} <span className="opacity-20 text-[8px]">BPM</span></div>
                             </div>
 
+                            <div className="deck-transport-row-nano">
+                                <button onClick={onPrev} className="transport-btn-sq"><SkipBack size={10} /></button>
+                                <button onClick={onPlayPause} className={`transport-btn-sq main ${isPlayingA ? 'active' : ''}`}>
+                                    {isPlayingA ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
+                                </button>
+                                <button onClick={onNext} className="transport-btn-sq"><SkipForward size={10} /></button>
+                            </div>
+
                             <div className="deck-core-layout-mirrored">
                                 {/* Outer Controls */}
                                 <div className="deck-controls-column-nano">
@@ -296,12 +304,7 @@ const DJMixerPlayer = ({
                                             <span>EVOLVE</span>
                                         </button>
                                     </div>
-                                    <div className="play-toggle-container-nano">
-                                        <button onClick={onPlayPause} className={`play-btn-nano ${isPlayingA ? 'active' : ''}`}>
-                                            {isPlayingA ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
-                                            <span>{isPlayingA ? 'PLAYING' : 'PAUSED'}</span>
-                                        </button>
-                                    </div>
+                                    
                                     <div className="pitch-readout mono opacity-40">PITCH_0.0%</div>
                                     <input type="range" min="-8" max="8" step="0.1" value={pitchA} onChange={(e) => setPitchA(e.target.value)} className="nano-slider" />
                                 </div>
@@ -326,13 +329,7 @@ const DJMixerPlayer = ({
 
                         {/* MASTER CENTRAL HUB */}
                         <div className="master-central-strip">
-                            <div className="master-nav-row">
-                                <button onClick={onPrev} className="nav-btn mini"><SkipBack size={12} /></button>
-                                <button onClick={onPlayPause} className="master-btn-neon">
-                                    {isPlaying ? <Pause size={20} /> : <Play size={20} fill="currentColor" />}
-                                </button>
-                                <button onClick={onNext} className="nav-btn mini"><SkipForward size={12} /></button>
-                            </div>
+                            {/* Central transport removed per user request */}
                             
                             <div className="master-vu-nano">
                                 <div className="vu-led"><div className="vu-led-fill" style={{ height: isPlaying ? '70%' : '0%' }}></div></div>
@@ -359,6 +356,14 @@ const DJMixerPlayer = ({
                             <div className="deck-meta-strip text-right">
                                 <div className="bpm-tag mono text-white/90">{deckB?.bpm || '124.5'} <span className="opacity-20 text-[8px]">BPM</span></div>
                                 <div className="deck-id-tag font-black tracking-widest opacity-40">NODE_B</div>
+                            </div>
+
+                            <div className="deck-transport-row-nano">
+                                <button className="transport-btn-sq"><SkipBack size={10} /></button>
+                                <button onClick={togglePlayB} className={`transport-btn-sq main ${isPlayingB ? 'active' : ''}`}>
+                                    {isPlayingB ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
+                                </button>
+                                <button className="transport-btn-sq"><SkipForward size={10} /></button>
                             </div>
 
                             <div className="deck-core-layout-mirrored">
@@ -389,12 +394,7 @@ const DJMixerPlayer = ({
                                             <span>EVOLVE</span>
                                         </button>
                                     </div>
-                                    <div className="play-toggle-container-nano">
-                                        <button onClick={togglePlayB} className={`play-btn-nano ${isPlayingB ? 'active' : ''}`}>
-                                            {isPlayingB ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
-                                            <span>{isPlayingB ? 'PLAYING' : 'STAGED'}</span>
-                                        </button>
-                                    </div>
+                                    
                                     <div className="pitch-readout mono opacity-40">PITCH_0.0%</div>
                                     <input type="range" min="-8" max="8" step="0.1" value={pitchB} onChange={(e) => setPitchB(e.target.value)} className="nano-slider" />
                                 </div>
