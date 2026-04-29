@@ -522,31 +522,16 @@ const DJMixerPlayer = ({
                 <div className="mixer-console-pane glass-pane">
                     <div className="pane-glitch-border"></div>
                     
-                    {/* Top Signal Strip */}
+                    {/* Top Signal Strip: Ultra-Thin tactical bar */}
                     <div className="mixer-header-compact-neural">
-                        <div className="signal-identity-nano">
-                            <div className="station-node">
-                                <Radio size={14} className="pulse-icon text-[var(--accent)]" />
-                                <span className="mono tracking-[0.4em] uppercase text-[var(--accent)] glow-text">FREQ_{station?.frequency || '100.1'}</span>
+                        <div className="signal-identity-inline">
+                            <div className="station-node-compact">
+                                <Radio size={12} className="pulse-icon text-[var(--accent)]" />
+                                <span className="mono tracking-[0.2em] uppercase text-[var(--accent)] glow-text">FREQ_{station?.frequency || '100.1'}</span>
                             </div>
-                            <div className="session-info-nano">
-                                <h2 className="text-[9px] font-black uppercase tracking-[0.1em] text-white/90">{station?.name || 'NEURAL_BROADCAST'}</h2>
-                            </div>
-                        </div>
-
-                        <div className="neural-analyzers-hub">
-                            <div className="analyzers-row">
-                                <div className="analyzer-mini-v">
-                                    <div className="label-nano mono">NODE_A_SIGNAL</div>
-                                    <NeuralSpectrum analyser={analyserA} isActive={isPlayingA} />
-                                </div>
-                                <div className="analyzer-mini-v">
-                                    <div className="label-nano mono text-right">NODE_B_SIGNAL</div>
-                                    <NeuralSpectrum analyser={analyserB.current} isActive={isPlayingB} />
-                                </div>
-                            </div>
-                            <div className="global-progress-bar-nano">
-                                <div className="progress-fill-nano" style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}></div>
+                            <div className="divider-nano">|</div>
+                            <div className="session-info-inline">
+                                <h2 className="text-[10px] font-black uppercase tracking-[0.1em] text-white/90">{station?.name || 'NEURAL_BROADCAST'}</h2>
                             </div>
                         </div>
 
@@ -555,7 +540,11 @@ const DJMixerPlayer = ({
                                 <Users size={10} className="text-[var(--accent)]" />
                                 <span className="val">{station?.listenerCount || '1.2K'}</span>
                             </div>
-                        </div>
+                            <div className="divider-nano">|</div>
+                            <div className="readout-item-nano">
+                                <span className="label-nano opacity-40">STB_SYS</span>
+                                <span className="val text-green-500">V.1.0</span>
+                            </div>
                     </div>
 
                     <div className="mixer-decks-grid-compact">
@@ -921,11 +910,32 @@ const DJMixerPlayer = ({
                                         </div>
                                         <div className="tempo-label-nano mono opacity-40">TEMPO_BPM</div>
                                     </div>
+                        </div>
+                    </div>
+
+                    {/* MASTER NEURAL SPECTRUM HUB: Below Decks, spanning width */}
+                    <div className="neural-spectrum-master-hub">
+                        <div className="spectrum-container-wide">
+                            <div className="node-label-strip mono">
+                                <span className="text-[var(--accent)]">NODE_A_SIGNAL_FLUX</span>
+                                <span className="text-[var(--accent)] opacity-40">PHASE_LOCKED</span>
+                                <span className="text-[var(--accent)]">NODE_B_SIGNAL_FLUX</span>
+                            </div>
+                            <div className="master-analyzers-row">
+                                <div className="master-analyzer-node">
+                                    <NeuralSpectrum analyser={analyserA} isActive={isPlayingA} />
+                                </div>
+                                <div className="master-analyzer-node">
+                                    <NeuralSpectrum analyser={analyserB.current} isActive={isPlayingB} />
+                                </div>
+                            </div>
+                            <div className="master-playhead-strip">
+                                <div className="playhead-track">
+                                    <div className="playhead-marker" style={{ left: `${(currentTime / (duration || 1)) * 100}%` }}></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
                 {/* SECONDARY UTILITY PANE */}
                 <div className="utility-interlink-pane glass-pane">
