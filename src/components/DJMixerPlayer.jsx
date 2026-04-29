@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Play, Pause, SkipForward, SkipBack, Volume2, 
     Settings, MessageSquare, List, Share2, 
-    Activity, Zap, Cpu, Radio, Shield, Users
+    Activity, Zap, Cpu, Radio, Shield, Users, Disc
 } from 'lucide-react';
 import './DJMixerPlayer.css';
 
