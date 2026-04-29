@@ -34,6 +34,9 @@ const DJMixerPlayer = ({
     
     const [deckA, setDeckA] = useState(currentTrack || null);
     const [deckB, setDeckB] = useState(null);
+    const [crossfader, setCrossfader] = useState(0); // -100 to 100
+    const [rotationA, setRotationA] = useState(0);
+    const [rotationB, setRotationB] = useState(0);
     const [pitchA, setPitchA] = useState(0);
     const [pitchB, setPitchB] = useState(0);
     const [isSyncing, setIsSyncing] = useState(false);
@@ -329,22 +332,6 @@ const DJMixerPlayer = ({
                                 <div className="bpm-tag mono">{deckB?.bpm || '124.5'} <span className="opacity-20 text-[8px]">BPM</span></div>
                                 <div className="deck-id-tag">NODE_B</div>
                             </div>
-                                </div>
-
-                                <div className="jog-wheel-nano">
-                                    <motion.div className="jog-ring" style={{ rotate: rotationB }}>
-                                        <div className="jog-center-art">
-                                            {deckB?.cover || deckB?.thumbnail ? <img src={deckB.cover || deckB.thumbnail} alt="" /> : <div className="neon-glitch-icon">B</div>}
-                                        </div>
-                                        <div className="jog-active-node"></div>
-                                    </motion.div>
-                                </div>
-
-                                <div className="pitch-slider-vertical">
-                                    <input type="range" min="-8" max="8" step="0.1" value={pitchB} onChange={(e) => setPitchB(e.target.value)} className="nano-slider" />
-                                    <div className="pitch-readout mono">{pitchB}%</div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -419,7 +406,6 @@ const DJMixerPlayer = ({
                                     </table>
                                 </motion.div>
                             )}
-                            {/* Additional Tab Content ... */}
                         </AnimatePresence>
                     </div>
                 </div>
