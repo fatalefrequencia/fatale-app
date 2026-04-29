@@ -545,6 +545,7 @@ const DJMixerPlayer = ({
                                 <span className="label-nano opacity-40">STB_SYS</span>
                                 <span className="val text-green-500">V.1.0</span>
                             </div>
+                        </div>
                     </div>
 
                     <div className="mixer-decks-grid-compact">
