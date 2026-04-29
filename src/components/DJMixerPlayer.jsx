@@ -36,6 +36,7 @@ const DJMixerPlayer = ({
     const [crateCategory, setCrateCategory] = useState('ALL'); // ALL, PURCHASED, FAVORITES, ARTISTS, PLAYLISTS
     const [searchQuery, setSearchQuery] = useState('');
     const [isAutoMixEnabled, setIsAutoMixEnabled] = useState(false);
+    const [viewingPlaylist, setViewingPlaylist] = useState(null);
     
     const [deckA, setDeckA] = useState(currentTrack || null);
     const [deckB, setDeckB] = useState(null);
@@ -146,6 +147,9 @@ const DJMixerPlayer = ({
     // Filtered Crate Logic
     const getFilteredTracks = () => {
         if (crateCategory === 'PLAYLISTS') {
+            if (viewingPlaylist) {
+                return { collection: viewingPlaylist.tracks || viewingPlaylist.Tracks || [], network: [], playlists: [] };
+            }
             return { collection: [], network: [], playlists: userPlaylists };
         }
 
@@ -373,15 +377,27 @@ const DJMixerPlayer = ({
                                     />
                                 </div>
                                 <div className="crate-filter-chips">
-                                    {['ALL', 'PURCHASED', 'FAVORITES', 'ARTISTS', 'PLAYLISTS'].map(cat => (
+                                    {viewingPlaylist ? (
                                         <button 
-                                            key={cat}
-                                            onClick={() => setCrateCategory(cat)}
-                                            className={`filter-chip ${crateCategory === cat ? 'active' : ''}`}
+                                            onClick={() => setViewingPlaylist(null)}
+                                            className="filter-chip active flex items-center gap-2"
                                         >
-                                            {cat}
+                                            <SkipBack size={8} /> BACK_TO_PLAYLISTS
                                         </button>
-                                    ))}
+                                    ) : (
+                                        ['ALL', 'PURCHASED', 'FAVORITES', 'ARTISTS', 'PLAYLISTS'].map(cat => (
+                                            <button 
+                                                key={cat}
+                                                onClick={() => {
+                                                    setCrateCategory(cat);
+                                                    setViewingPlaylist(null);
+                                                }}
+                                                className={`filter-chip ${crateCategory === cat ? 'active' : ''}`}
+                                            >
+                                                {cat}
+                                            </button>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -402,9 +418,9 @@ const DJMixerPlayer = ({
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {crateCategory === 'PLAYLISTS' ? (
+                                            {crateCategory === 'PLAYLISTS' && !viewingPlaylist ? (
                                                 getFilteredTracks().playlists.map((p, i) => (
-                                                    <tr key={`pl-${i}`} className="signal-row cursor-pointer" onClick={() => onPlayPlaylist(p)}>
+                                                    <tr key={`pl-${i}`} className="signal-row cursor-pointer" onClick={() => setViewingPlaylist(p)}>
                                                         <td className="load-actions">
                                                             <button className="load-chip"><List size={8} /></button>
                                                         </td>
@@ -412,12 +428,15 @@ const DJMixerPlayer = ({
                                                             {p.name || p.Title || 'UNNAMED_PLAYLIST'}
                                                         </td>
                                                         <td className="sig-bpm mono opacity-20">{(p.tracks || p.Tracks || []).length} SIG</td>
-                                                        <td className="sig-sync mono opacity-20">LOAD_ALL</td>
+                                                        <td className="sig-sync mono opacity-20">VIEW_SIGNALS</td>
                                                     </tr>
                                                 ))
                                             ) : (
                                                 <>
-                                                    {getFilteredTracks().collection.length > 0 && (
+                                                    {viewingPlaylist && (
+                                                        <tr className="section-header-row"><td colSpan="5">PLAYLIST_INSPECTION: {viewingPlaylist.name || viewingPlaylist.Title}</td></tr>
+                                                    )}
+                                                    {getFilteredTracks().collection.length > 0 && !viewingPlaylist && (
                                                         <tr className="section-header-row"><td colSpan="5">SIGNAL_COLLECTION</td></tr>
                                                     )}
                                                     {getFilteredTracks().collection.map((t, i) => (
