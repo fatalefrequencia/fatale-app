@@ -4121,6 +4121,12 @@ const PlayerContent = ({
           requests={stationQueue}
           onSendMessage={sendMessage}
           onClose={() => setView('discovery')}
+          tracks={tracks}
+          libraryTracks={libraryTracks}
+          onLike={onLike}
+          onPurchase={onPurchase}
+          onPlayPlaylist={onPlayPlaylist}
+          user={user}
         />
       ) : (
         <IPodPlayer

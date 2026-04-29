@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    Play, Pause, SkipForward, SkipBack, Volume2, 
-    Settings, MessageSquare, List, Share2, 
-    Activity, Zap, Cpu, Radio, Shield, Users, Disc
+    Activity, Zap, Cpu, Radio, Shield, Users, Disc,
+    Search, Plus, DollarSign, Heart, SkipBack, SkipForward
 } from 'lucide-react';
 import './DJMixerPlayer.css';
 
@@ -27,6 +25,10 @@ const DJMixerPlayer = ({
     libraryTracks = []
 }) => {
     const [activeTab, setActiveTab] = useState('LIBRARY'); // LIBRARY, CHAT, REQUESTS
+    const [crateCategory, setCrateCategory] = useState('ALL'); // ALL, PURCHASED, FAVORITES, ARTISTS
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isAutoMixEnabled, setIsAutoMixEnabled] = useState(false);
+    
     const [deckA, setDeckA] = useState(currentTrack || null);
     const [deckB, setDeckB] = useState(null);
     const [crossfader, setCrossfader] = useState(0); // -100 to 100
@@ -54,9 +56,50 @@ const DJMixerPlayer = ({
         return () => cancelAnimationFrame(animationFrame);
     }, [isPlaying, deckB]);
 
+    // Auto-Mix Evolution logic
+    useEffect(() => {
+        if (isAutoMixEnabled && isPlaying && duration > 0 && currentTime > duration - 8) {
+            // Trigger transition to next track
+            onNext();
+            // Optional: reset crossfader or animate it
+        }
+    }, [currentTime, isAutoMixEnabled, isPlaying, duration]);
+
     const loadToDeck = (track, deck) => {
-        if (deck === 'A') setDeckA(track);
-        else setDeckB(track);
+        if (deck === 'A') {
+            setDeckA(track);
+            // In our current engine, Deck A is the audio source
+            // We should find the index and call a global play if needed
+            // For now, visual load.
+        } else {
+            setDeckB(track);
+        }
+    };
+
+    // Filtered Crate Logic
+    const getFilteredTracks = () => {
+        let base = crateCategory === 'ALL' ? [...tracks, ...libraryTracks] : libraryTracks;
+        
+        // Remove duplicates based on ID
+        const seen = new Set();
+        base = base.filter(t => {
+            const id = t.id || t.Id;
+            if (seen.has(id)) return false;
+            seen.add(id);
+            return true;
+        });
+
+        if (crateCategory === 'PURCHASED') base = base.filter(t => t.isPurchased);
+        if (crateCategory === 'FAVORITES') base = base.filter(t => t.isLiked);
+        
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            base = base.filter(t => 
+                t.title?.toLowerCase().includes(q) || 
+                t.artist?.toLowerCase().includes(q)
+            );
+        }
+        return base;
     };
 
     const formatTime = (time) => {
@@ -120,9 +163,18 @@ const DJMixerPlayer = ({
                     <div className="mixer-decks-grid-compact">
                         {/* DECK A */}
                         <div className={`deck-module-nano deck-a ${!deckA ? 'empty' : 'active'}`}>
+                            {/* Signal Ingest Bar */}
+                            <div className="signal-ingest-bar">
+                                <div className="ingest-info truncate">{deckA?.title || 'NO_SIGNAL'}</div>
+                                <div className="ingest-actions">
+                                    <button onClick={() => onLike(deckA)} className="ingest-btn" title="ADD_TO_LIBRARY"><Plus size={10} /></button>
+                                    <button onClick={() => onPurchase(deckA)} className="ingest-btn" title="PURCHASE_SIGNAL"><DollarSign size={10} /></button>
+                                </div>
+                            </div>
+
                             <div className="deck-meta-strip">
                                 <div className="deck-id-tag">NODE_A</div>
-                                <div className="bpm-tag mono">{deckA?.bpm || '128.0'} <span className="opacity-20">BPM</span></div>
+                                <div className="bpm-tag mono">{deckA?.bpm || '128.0'} <span className="opacity-20 text-[8px]">BPM</span></div>
                             </div>
 
                             <div className="deck-visual-core-nano">
@@ -150,24 +202,48 @@ const DJMixerPlayer = ({
 
                         {/* MASTER CENTRAL HUB */}
                         <div className="master-central-strip">
-                            <div className="master-controls-nano">
+                            <div className="master-nav-row">
+                                <button onClick={onPrev} className="nav-btn mini"><SkipBack size={12} /></button>
                                 <button onClick={onPlayPause} className="master-btn-neon">
                                     {isPlaying ? <Pause size={20} /> : <Play size={20} fill="currentColor" />}
                                 </button>
-                                <div className="master-vu-nano">
-                                    <div className="vu-led"><div className="vu-led-fill" style={{ height: isPlaying ? '70%' : '0%' }}></div></div>
-                                    <div className="vu-led"><div className="vu-led-fill" style={{ height: isPlaying ? '65%' : '0%' }}></div></div>
-                                </div>
+                                <button onClick={onNext} className="nav-btn mini"><SkipForward size={12} /></button>
+                            </div>
+                            
+                            <div className="evolve-toggle-container">
+                                <button 
+                                    onClick={() => setIsAutoMixEnabled(!isAutoMixEnabled)} 
+                                    className={`evolve-btn ${isAutoMixEnabled ? 'active' : ''}`}
+                                >
+                                    <Zap size={10} />
+                                    <span>EVOLVE</span>
+                                </button>
+                            </div>
+
+                            <div className="master-vu-nano">
+                                <div className="vu-led"><div className="vu-led-fill" style={{ height: isPlaying ? '70%' : '0%' }}></div></div>
+                                <div className="vu-led"><div className="vu-led-fill" style={{ height: isPlaying ? '65%' : '0%' }}></div></div>
                             </div>
                             <div className="deck-crossfader">
+                                <div className="cf-label">A</div>
                                 <input type="range" min="-100" max="100" value={crossfader} onChange={(e) => setCrossfader(e.target.value)} className="crossfader-nano" />
+                                <div className="cf-label">B</div>
                             </div>
                         </div>
 
                         {/* DECK B */}
                         <div className={`deck-module-nano deck-b ${!deckB ? 'empty' : ''}`}>
+                            {/* Signal Ingest Bar */}
+                            <div className="signal-ingest-bar">
+                                <div className="ingest-info truncate">{deckB?.title || 'NO_SIGNAL'}</div>
+                                <div className="ingest-actions">
+                                    <button onClick={() => onLike(deckB)} className="ingest-btn"><Plus size={10} /></button>
+                                    <button onClick={() => onPurchase(deckB)} className="ingest-btn"><DollarSign size={10} /></button>
+                                </div>
+                            </div>
+
                             <div className="deck-meta-strip text-right">
-                                <div className="bpm-tag mono">{deckB?.bpm || '124.5'} <span className="opacity-20">BPM</span></div>
+                                <div className="bpm-tag mono">{deckB?.bpm || '124.5'} <span className="opacity-20 text-[8px]">BPM</span></div>
                                 <div className="deck-id-tag">NODE_B</div>
                             </div>
 
@@ -198,10 +274,38 @@ const DJMixerPlayer = ({
 
                 {/* SECONDARY UTILITY PANE */}
                 <div className="utility-interlink-pane glass-pane">
-                    <div className="utility-tabs-neon">
-                        <button onClick={() => setActiveTab('LIBRARY')} className={`util-tab ${activeTab === 'LIBRARY' ? 'active' : ''}`}><Disc size={12} /> <span>SIGNAL_CRATE</span></button>
-                        <button onClick={() => setActiveTab('CHAT')} className={`util-tab ${activeTab === 'CHAT' ? 'active' : ''}`}><MessageSquare size={12} /> <span>NEURAL_CHAT</span></button>
-                        <button onClick={() => setActiveTab('REQUESTS')} className={`util-tab ${activeTab === 'REQUESTS' ? 'active' : ''}`}><List size={12} /> <span>SIGNAL_REQUESTS</span></button>
+                    <div className="utility-header-neon">
+                        <div className="utility-tabs-neon">
+                            <button onClick={() => setActiveTab('LIBRARY')} className={`util-tab ${activeTab === 'LIBRARY' ? 'active' : ''}`}><Disc size={12} /> <span>SIGNAL_CRATE</span></button>
+                            <button onClick={() => setActiveTab('CHAT')} className={`util-tab ${activeTab === 'CHAT' ? 'active' : ''}`}><MessageSquare size={12} /> <span>NEURAL_CHAT</span></button>
+                            <button onClick={() => setActiveTab('REQUESTS')} className={`util-tab ${activeTab === 'REQUESTS' ? 'active' : ''}`}><List size={12} /> <span>SIGNAL_REQUESTS</span></button>
+                        </div>
+                        
+                        {activeTab === 'LIBRARY' && (
+                            <div className="crate-controls-hub">
+                                <div className="crate-search-box">
+                                    <Search size={10} className="opacity-30" />
+                                    <input 
+                                        type="text" 
+                                        placeholder="SEARCH_SIGNAL_DATABASE..." 
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="crate-search-input"
+                                    />
+                                </div>
+                                <div className="crate-filter-chips">
+                                    {['ALL', 'PURCHASED', 'FAVORITES', 'ARTISTS'].map(cat => (
+                                        <button 
+                                            key={cat}
+                                            onClick={() => setCrateCategory(cat)}
+                                            className={`filter-chip ${crateCategory === cat ? 'active' : ''}`}
+                                        >
+                                            {cat}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="utility-content-nano">
@@ -211,22 +315,27 @@ const DJMixerPlayer = ({
                                     <table className="signal-table-nano">
                                         <thead>
                                             <tr>
-                                                <th>LOAD</th>
+                                                <th className="w-16">LOAD</th>
                                                 <th>SIGNAL_ID</th>
                                                 <th>ORIGIN</th>
-                                                <th>BPM</th>
+                                                <th className="w-12">BPM</th>
+                                                <th className="w-12">SYNC</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {[...tracks, ...libraryTracks].map((t, i) => (
+                                            {getFilteredTracks().map((t, i) => (
                                                 <tr key={i} className="signal-row">
                                                     <td className="load-actions">
                                                         <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
                                                         <button onClick={() => loadToDeck(t, 'B')} className="load-chip">B</button>
                                                     </td>
-                                                    <td className="sig-title truncate font-black">{t.title}</td>
+                                                    <td className="sig-title truncate font-black flex items-center gap-2">
+                                                        {t.title}
+                                                        {t.isLiked && <Heart size={8} fill="var(--accent)" className="text-[var(--accent)]" />}
+                                                    </td>
                                                     <td className="sig-artist truncate opacity-30">{t.artist}</td>
                                                     <td className="sig-bpm mono text-[var(--accent)]">{t.bpm || '--'}</td>
+                                                    <td className="sig-sync mono opacity-20">{t.duration ? Math.floor(t.duration / 60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '--:--'}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
