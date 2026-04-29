@@ -265,6 +265,7 @@ const ContentModal = ({
                         <CreditTransferModal 
                             user={null}
                             initialTargetId={content?.userId || content?.UserId || content?.OwnerId || content?.ownerId || ''}
+                            initialTargetName={content?.artist || content?.Artist || content?.artistName || content?.username || content?.Username || 'UNKNOWN_SIGNAL'}
                             onClose={() => setShowTipModal(false)}
                             onRefresh={() => showNotification("TIP_SENT", "Signal of appreciation transmitted.", "success")}
                         />

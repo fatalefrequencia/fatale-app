@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Send, X, AlertCircle, Check } from 'lucide-react';
 import API from '../services/api';
 
-const CreditTransferModal = ({ user, onClose, onRefresh, initialTargetId = '' }) => {
+const CreditTransferModal = ({ user, onClose, onRefresh, initialTargetId = '', initialTargetName = '' }) => {
     const [targetId, setTargetId] = useState(initialTargetId);
     const [amount, setAmount] = useState('');
     const [status, setStatus] = useState('idle'); // idle, processing, success, error
@@ -72,14 +72,21 @@ const CreditTransferModal = ({ user, onClose, onRefresh, initialTargetId = '' })
                 ) : (
                     <form onSubmit={handleTransfer} className="space-y-6">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-extrabold text-[#ff006e] uppercase tracking-widest ml-1">Recipient_ID</label>
-                            <input
-                                type="number"
-                                value={targetId}
-                                onChange={e => setTargetId(e.target.value)}
-                                placeholder="Target System ID"
-                                className="w-full bg-white/5 border border-white/10 rounded-lg p-4 text-white text-sm font-bold outline-none focus:border-[#ff006e]/50 transition-colors placeholder:text-white/10"
-                            />
+                            <label className="text-[10px] font-extrabold text-[#ff006e] uppercase tracking-widest ml-1">Recipient_Signal</label>
+                            {initialTargetName ? (
+                                <div className="w-full bg-[#ff006e]/5 border border-[#ff006e]/20 rounded-lg p-4 flex items-center justify-between">
+                                    <span className="text-white font-black uppercase tracking-widest text-sm">{initialTargetName}</span>
+                                    <span className="text-[#ff006e]/40 text-[8px] mono">ID: {targetId}</span>
+                                </div>
+                            ) : (
+                                <input
+                                    type="number"
+                                    value={targetId}
+                                    onChange={e => setTargetId(e.target.value)}
+                                    placeholder="Target System ID"
+                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-4 text-white text-sm font-bold outline-none focus:border-[#ff006e]/50 transition-colors placeholder:text-white/10"
+                                />
+                            )}
                         </div>
 
                         <div className="space-y-2">

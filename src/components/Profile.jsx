@@ -2304,6 +2304,7 @@ export const ProfileView = React.memo(({
                     <CreditTransferModal 
                         user={currentUser}
                         initialTargetId={effectiveId}
+                        initialTargetName={displayUser?.username || displayUser?.Username}
                         onClose={() => setShowTipModal(false)}
                         onRefresh={() => showNotification("TIP_SENT", "Signal of appreciation transmitted.", "success")}
                     />
