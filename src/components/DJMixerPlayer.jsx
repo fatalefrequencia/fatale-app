@@ -907,9 +907,9 @@ const DJMixerPlayer = ({
                                                 onDoubleClick={() => setPitchB(0)}
                                                 className="nano-slider" 
                                             />
-                                        </div>
-                                        <div className="tempo-label-nano mono opacity-40">TEMPO_BPM</div>
                                     </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
