@@ -28,13 +28,16 @@
 }
 
 .mixer-hud-wrapper {
-    width: 100%;
-    max-width: 1200px;
-    height: 100%;
+    width: 95%;
+    max-width: 1400px;
+    height: auto;
+    max-height: 90vh;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    overflow-y: auto;
+    gap: 15px;
+    padding: 20px;
+    position: relative;
+    z-index: 10;
 }
 
 .glass-pane {
@@ -68,13 +71,12 @@
 
 /* Header Compact */
 .mixer-header-compact {
-    height: 60px;
-    padding: 0 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: rgba(255, 255, 255, 0.02);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 .glow-text {
@@ -165,16 +167,31 @@
 /* Decks Grid Nano */
 .mixer-decks-grid-compact {
     display: grid;
-    grid-template-columns: 1fr 140px 1fr;
+    grid-template-columns: 1fr 150px 1fr;
     gap: 15px;
-    padding: 20px;
+    height: 380px;
 }
 
 .deck-module-nano {
-    padding: 15px;
     background: rgba(255, 255, 255, 0.01);
     border: 1px solid rgba(255, 255, 255, 0.03);
     border-radius: 4px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+}
+
+.mixer-console-pane {
+    background: rgba(2, 2, 2, 0.9);
+    border: 1px solid rgba(255, 0, 110, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    position: relative;
+    box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    backdrop-filter: blur(10px);
 }
 
 .deck-module-nano.active {
@@ -523,6 +540,25 @@
 
 .signal-table-nano { width: 100%; border-collapse: collapse; font-size: 10px; }
 .signal-table-nano th { text-align: left; padding: 10px; opacity: 0.3; font-size: 7px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+.section-header-row td {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--accent);
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.3em;
+    padding: 8px 15px !important;
+    text-transform: uppercase;
+}
+
+.signal-row.discovery {
+    background: rgba(0, 180, 255, 0.02);
+}
+
+.signal-row.discovery:hover {
+    background: rgba(0, 180, 255, 0.05);
+}
+
 .signal-row:hover { background: rgba(255,255,255,0.02); }
 .signal-row td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.01); }
 

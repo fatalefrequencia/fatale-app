@@ -140,36 +140,34 @@ const DJMixerPlayer = ({
 
     // Filtered Crate Logic
     const getFilteredTracks = () => {
-        // Clear distinction between personal library and global discovery
-        let base = [];
-        
-        if (crateCategory === 'COLLECTION') {
-            // COLLECTION should strictly show signals the user has interacted with
-            base = libraryTracks.filter(t => t.isLiked || t.isOwned);
-        } else {
-            // DISCOVERY/NETWORK shows everything available
-            base = tracks;
+        if (!searchQuery) {
+            // Default: Only show Collection
+            return {
+                collection: libraryTracks.filter(t => t.isLiked || t.isOwned),
+                network: []
+            };
         }
+
+        const q = searchQuery.toLowerCase();
         
-        // Ensure no duplicates based on source or ID
-        const seen = new Set();
-        base = base.filter(t => {
+        // Search in Collection
+        const collectionResults = libraryTracks.filter(t => 
+            (t.isLiked || t.isOwned) && 
+            (t.title?.toLowerCase().includes(q) || t.artist?.toLowerCase().includes(q))
+        );
+
+        // Search in Global Network (excluding those already in collection results)
+        const collectionIds = new Set(collectionResults.map(t => t.id || t.Id));
+        const networkResults = tracks.filter(t => {
             const id = t.id || t.Id;
-            const src = t.source || t.Source;
-            const key = src || id;
-            if (!key || seen.has(key)) return false;
-            seen.add(key);
-            return true;
+            return !collectionIds.has(id) && 
+                   (t.title?.toLowerCase().includes(q) || t.artist?.toLowerCase().includes(q));
         });
-        
-        if (searchQuery) {
-            const q = searchQuery.toLowerCase();
-            base = base.filter(t => 
-                t.title?.toLowerCase().includes(q) || 
-                t.artist?.toLowerCase().includes(q)
-            );
-        }
-        return base;
+
+        return {
+            collection: collectionResults,
+            network: networkResults
+        };
     };
 
     const formatTime = (time) => {
@@ -356,7 +354,6 @@ const DJMixerPlayer = ({
                         </div>
                         
                         {activeTab === 'LIBRARY' && (
-                            <div className="crate-controls-hub">
                                 <div className="crate-search-box">
                                     <Search size={10} className="opacity-30" />
                                     <input 
@@ -366,17 +363,6 @@ const DJMixerPlayer = ({
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="crate-search-input"
                                     />
-                                </div>
-                                <div className="crate-filter-chips">
-                                    {['COLLECTION', 'DISCOVERY'].map(cat => (
-                                        <button 
-                                            key={cat}
-                                            onClick={() => setCrateCategory(cat)}
-                                            className={`filter-chip ${crateCategory === cat ? 'active' : ''}`}
-                                        >
-                                            {cat}
-                                        </button>
-                                    ))}
                                 </div>
                             </div>
                         )}
@@ -397,8 +383,11 @@ const DJMixerPlayer = ({
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {getFilteredTracks().map((t, i) => (
-                                                <tr key={i} className="signal-row">
+                                            {getFilteredTracks().collection.length > 0 && (
+                                                <tr className="section-header-row"><td colSpan="5">SIGNAL_COLLECTION</td></tr>
+                                            )}
+                                            {getFilteredTracks().collection.map((t, i) => (
+                                                <tr key={`col-${i}`} className="signal-row">
                                                     <td className="load-actions">
                                                         <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
                                                         <button onClick={() => loadToDeck(t, 'B')} className="load-chip">B</button>
@@ -406,6 +395,24 @@ const DJMixerPlayer = ({
                                                     <td className="sig-title truncate font-black flex items-center gap-2">
                                                         {t.title}
                                                         {t.isLiked && <Heart size={8} fill="var(--accent)" className="text-[var(--accent)]" />}
+                                                    </td>
+                                                    <td className="sig-artist truncate opacity-30">{t.artist}</td>
+                                                    <td className="sig-bpm mono text-[var(--accent)]">{t.bpm || '--'}</td>
+                                                    <td className="sig-sync mono opacity-20">{t.duration ? Math.floor(t.duration / 60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '--:--'}</td>
+                                                </tr>
+                                            ))}
+
+                                            {getFilteredTracks().network.length > 0 && (
+                                                <tr className="section-header-row"><td colSpan="5">GLOBAL_NETWORK_RESULTS</td></tr>
+                                            )}
+                                            {getFilteredTracks().network.map((t, i) => (
+                                                <tr key={`net-${i}`} className="signal-row discovery">
+                                                    <td className="load-actions">
+                                                        <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
+                                                        <button onClick={() => loadToDeck(t, 'B')} className="load-chip">B</button>
+                                                    </td>
+                                                    <td className="sig-title truncate font-black flex items-center gap-2">
+                                                        {t.title}
                                                     </td>
                                                     <td className="sig-artist truncate opacity-30">{t.artist}</td>
                                                     <td className="sig-bpm mono text-[var(--accent)]">{t.bpm || '--'}</td>
