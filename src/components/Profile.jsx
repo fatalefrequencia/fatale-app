@@ -4,6 +4,7 @@ import TrackActionsDropdown from './TrackActionsDropdown';
 import UploadTrackView from './UploadTrackView';
 import NeuroGraph from './NeuroGraph';
 import ContentModal from './ContentModal';
+import CreditTransferModal from './CreditTransferModal';
 import API from '../services/api';
 import './SpatialProfile.css';
 import {
