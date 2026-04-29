@@ -1074,13 +1074,13 @@ const DJMixerPlayer = ({
                         </AnimatePresence>
                     </div>
                 </div>
-            </div> {/* End mixer-console-pane */}
-        </div> {/* End mixer-hud-wrapper */}
+            </div>
+        </div>
 
             {/* Tactical Decals */}
             <div className="cyber-label-fx top-right">SYSTEM_STABLE_4.2.0</div>
             <div className="cyber-label-fx bottom-left">NEURAL_DECK_PRO_V5</div>
-        </div> {/* End dj-mixer-overlay */}
+        </div>
     );
 };
 
