@@ -1948,6 +1948,31 @@ function App() {
               onClose={() => setShowMixer(false)}
               chatMessages={stationChat}
               requests={stationQueue}
+              tracks={tracks}
+              libraryTracks={libraryTracks}
+              userPlaylists={playlists}
+              onLike={onLike}
+              onPurchase={onPurchase}
+              onPlayPlaylist={onPlayPlaylist}
+              onPlayTrack={(track) => {
+                const tId = track.id || track.Id;
+                const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
+                const pureYtId = getGlobalYoutubeId(track);
+                const isYoutube = !!pureYtId;
+                const sourceStr = isYoutube ? `youtube:${pureYtId}` : (rawSource || "");
+                const enriched = {
+                  ...track,
+                  id: tId,
+                  source: isYoutube ? sourceStr : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null),
+                  isLiked: isYoutube ? likedYoutubeIds.has(pureYtId) : (track.isLiked || track.IsLiked),
+                  isOwned: true,
+                  isLocked: false
+                };
+                setTracks([enriched]);
+                setCurrentTrackIndex(0);
+                setIsPlaying(true);
+                if (isYoutube) setIsYoutubeMode(true);
+              }}
             />
             
             {/* Close Mixer Toggle */}
@@ -2387,6 +2412,7 @@ const Dashboard = React.memo(({
               requestTrack={requestTrack}
               volume={volume}
               setVolume={setVolume}
+              userPlaylists={playlists}
             />}
             {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} initialChatUser={activeMessageUser} />}
             {activeView === 'settings' && (
@@ -4097,7 +4123,8 @@ const PlayerContent = ({
   sendMessage,
   requestTrack,
   volume,
-  setVolume
+  setVolume,
+  userPlaylists
 }) => {
   const isDesktop = window.innerWidth >= 1024;
 
