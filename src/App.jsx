@@ -30,6 +30,7 @@ import ContentModal from './components/ContentModal';
 
 
 import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
+import DJMixerPlayer from './components/DJMixerPlayer';
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
 import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack } from './services/signalr';
 
@@ -141,6 +142,14 @@ function App() {
   const [activeStation, setActiveStation] = useState(null);
   const [stationChat, setStationChat] = useState([]);
   const [stationQueue, setStationQueue] = useState([]);
+  const [showMixer, setShowMixer] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
+
+  useEffect(() => {
+    const handleResize = () => setIsLandscape(window.innerWidth > window.innerHeight);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // --- AUDIO LOGIC (Unified Manager) ---
   const currentTrack = React.useMemo(() => {
@@ -854,7 +863,7 @@ function App() {
     }
   };
 
-  const handleNext = async () => {
+  const playNext = async () => {
     if (tracks.length === 0) return;
 
     const nextIndex = currentTrackIndex + 1;
@@ -937,7 +946,7 @@ function App() {
       navigator.mediaSession.setActionHandler('previoustrack', () => {
         if (currentTrackIndex > 0) setCurrentTrackIndex(prev => prev - 1);
       });
-      navigator.mediaSession.setActionHandler('nexttrack', handleNext);
+      navigator.mediaSession.setActionHandler('nexttrack', playNext);
 
       // Sync playback state
       navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
@@ -961,7 +970,7 @@ function App() {
     }
   }, [currentTrack?.id, isPlaying]);
 
-  const handlePrev = () => {
+  const playPrev = () => {
     setCurrentTrackIndex((prev) => (prev - 1 + tracks.length) % (tracks.length || 1));
     setIsPlaying(true);
   };
@@ -1629,7 +1638,7 @@ function App() {
 
       <audio
         ref={audioRef}
-        onEnded={handleNext}
+        onEnded={playNext}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         preload="auto"
@@ -1669,14 +1678,14 @@ function App() {
               }}
               onStateChange={(e) => {
                 console.log("[YOUTUBE] State Change:", e.data);
-                if (e.data === 0) handleNext();
+                if (e.data === 0) playNext();
                 if (e.data === 1 && !isPlaying) setIsPlaying(true);
                 if (e.data === 2 && isPlaying) setIsPlaying(false);
               }}
               onError={(e) => {
                 console.error("[YOUTUBE] Error detected:", e.data);
                 // Handle private/deleted videos by skipping
-                if (isPlaying) handleNext();
+                if (isPlaying) playNext();
               }}
               opts={{
                 height: '1',
@@ -1715,8 +1724,8 @@ function App() {
                tracks={tracks}
                libraryTracks={libraryTracks}
                togglePlay={togglePlay}
-               handleNext={handleNext}
-               handlePrev={handlePrev}
+               handleNext={playNext}
+               handlePrev={playPrev}
                handlePlayPlaylist={handlePlayPlaylist}
                onQueueTrack={(track) => setTracks(prev => [...prev, track])}
                onPurchase={handlePurchase}
@@ -1900,6 +1909,54 @@ function App() {
                 ))}
               </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showMixer && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            className="fixed inset-0 z-[2000]"
+          >
+            {/* Landscape Prompt for Mobile */}
+            {!isLandscape && window.innerWidth < 1024 && (
+              <div className="fixed inset-0 bg-black/90 z-[2100] flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-16 h-16 border-2 border-[var(--theme-color)] rounded-lg animate-bounce mb-6 flex items-center justify-center">
+                  <RotateCw className="text-[var(--theme-color)]" />
+                </div>
+                <h2 className="mono font-black text-xs uppercase tracking-widest text-white mb-2">ROTATE_FOR_TRANSMISSION</h2>
+                <p className="text-[8px] opacity-40 uppercase tracking-tight">Signal console requires landscape orientation for optimal neural sync.</p>
+              </div>
+            )}
+            
+            <DJMixerPlayer 
+              currentTrack={currentTrack}
+              isPlaying={isPlaying}
+              onPlayPause={togglePlay}
+              onNext={playNext}
+              onPrev={playPrev}
+              currentTime={currentTime}
+              duration={duration}
+              onSeek={handleSeek}
+              volume={volume}
+              onVolumeChange={setVolume}
+              station={activeStation}
+              isBroadcaster={activeStation?.artistUserId === currentUserId}
+              onClose={() => setShowMixer(false)}
+              chatMessages={stationChat}
+              requests={stationQueue}
+            />
+            
+            {/* Close Mixer Toggle */}
+            <button 
+              onClick={() => setShowMixer(false)}
+              className="fixed top-6 right-6 z-[2001] w-10 h-10 bg-black/40 border border-white/10 text-white/40 hover:text-white transition-all flex items-center justify-center rounded-full backdrop-blur-md"
+            >
+              <X size={18} />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -2377,6 +2434,7 @@ const Dashboard = React.memo(({
                 setIsMiniPlayerMinimized(newState);
                 localStorage.setItem('isMiniPlayerMinimized', newState);
               }}
+              onOpenMixer={() => setShowMixer(true)}
             />
           )
         )}
@@ -2386,7 +2444,7 @@ const Dashboard = React.memo(({
 });
 
 // --- MINI PLAYER COMPONENT ---
-const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView, isMuted, onToggleMute, currentTime, duration, isSidebarCollapsed, volume, setVolume, isMinimized, onToggleMinimize }) => {
+const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView, isMuted, onToggleMute, currentTime, duration, isSidebarCollapsed, volume, setVolume, isMinimized, onToggleMinimize, isBroadcasting, onOpenMixer }) => {
   const isMessages = activeView === 'messages';
 
   if (isMinimized) {
@@ -2483,6 +2541,16 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
         <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="text-white/30 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
           <SkipForward size={18} fill="currentColor" />
         </button>
+
+        {isBroadcasting && (
+          <button 
+            onClick={(e) => { e.stopPropagation(); onOpenMixer(); }}
+            className="ml-2 p-2 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] rounded-sm hover:bg-[#ff006e] hover:text-black transition-all shadow-[0_0_15px_rgba(255,0,110,0.2)]"
+            title="OPEN_MIXER_CONSOLE"
+          >
+            <AntennaIcon size={16} className="animate-pulse" />
+          </button>
+        )}
       </div>
 
       {/* Extra Actions - Desktop/Side Panel */}
