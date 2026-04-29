@@ -2385,6 +2385,8 @@ const Dashboard = React.memo(({
               stationQueue={stationQueue}
               sendMessage={sendMessage}
               requestTrack={requestTrack}
+              volume={volume}
+              setVolume={setVolume}
             />}
             {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} initialChatUser={activeMessageUser} />}
             {activeView === 'settings' && (
@@ -4093,38 +4095,63 @@ const PlayerContent = ({
   stationChat,
   stationQueue,
   sendMessage,
-  requestTrack
+  requestTrack,
+  volume,
+  setVolume
 }) => {
+  const isDesktop = window.innerWidth >= 1024;
+
   return (
     <div className="flex items-center justify-center h-full w-full">
-      <IPodPlayer
-        forceNowPlaying={forceNowPlaying}
-        currentTrackIndex={currentTrackIndex}
-        setCurrentTrackIndex={setCurrentTrackIndex}
-        isPlaying={isPlaying}
-        setIsPlaying={setIsPlaying}
-        tracks={tracks}
-        libraryTracks={libraryTracks}
-        onMinimize={() => setView('discovery')}
-        currentTime={currentTime}
-        duration={duration}
-        onSeek={onSeek}
-        onNext={onNext}
-        onPrev={onPrev}
-        onLike={onLike}
-        togglePlay={togglePlay}
-        user={user}
-        onPurchase={onPurchase}
-        onDownload={onDownload}
-        onAddCredits={onAddCredits}
-        navigateToProfile={navigateToProfile}
-        onPlayPlaylist={onPlayPlaylist}
-        activeStation={activeStation}
-        stationChat={stationChat}
-        stationQueue={stationQueue}
-        sendMessage={sendMessage}
-        requestTrack={requestTrack}
-      />
+      {isDesktop ? (
+        <DJMixerPlayer 
+          currentTrack={currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null}
+          isPlaying={isPlaying}
+          onPlayPause={togglePlay}
+          onNext={onNext}
+          onPrev={onPrev}
+          currentTime={currentTime}
+          duration={duration}
+          onSeek={onSeek}
+          volume={volume}
+          onVolumeChange={setVolume}
+          station={activeStation}
+          isBroadcaster={activeStation?.artistUserId === (user?.id || user?.Id)}
+          chatMessages={stationChat}
+          requests={stationQueue}
+          onSendMessage={sendMessage}
+          onClose={() => setView('discovery')}
+        />
+      ) : (
+        <IPodPlayer
+          forceNowPlaying={forceNowPlaying}
+          currentTrackIndex={currentTrackIndex}
+          setCurrentTrackIndex={setCurrentTrackIndex}
+          isPlaying={isPlaying}
+          setIsPlaying={setIsPlaying}
+          tracks={tracks}
+          libraryTracks={libraryTracks}
+          onMinimize={() => setView('discovery')}
+          currentTime={currentTime}
+          duration={duration}
+          onSeek={onSeek}
+          onNext={onNext}
+          onPrev={onPrev}
+          onLike={onLike}
+          togglePlay={togglePlay}
+          user={user}
+          onPurchase={onPurchase}
+          onDownload={onDownload}
+          onAddCredits={onAddCredits}
+          navigateToProfile={navigateToProfile}
+          onPlayPlaylist={onPlayPlaylist}
+          activeStation={activeStation}
+          stationChat={stationChat}
+          stationQueue={stationQueue}
+          sendMessage={sendMessage}
+          requestTrack={requestTrack}
+        />
+      )}
     </div>
   );
 };
