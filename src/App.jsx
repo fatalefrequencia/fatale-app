@@ -4123,6 +4123,7 @@ const PlayerContent = ({
           onClose={() => setView('discovery')}
           tracks={tracks}
           libraryTracks={libraryTracks}
+          userPlaylists={userPlaylists}
           onLike={onLike}
           onPurchase={onPurchase}
           onPlayPlaylist={onPlayPlaylist}

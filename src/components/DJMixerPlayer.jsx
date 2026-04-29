@@ -22,13 +22,18 @@ const DJMixerPlayer = ({
     isBroadcaster = false,
     requests = [],
     chatMessages = [],
+    onSendMessage,
     onClose,
     tracks = [],
     libraryTracks = [],
+    userPlaylists = [],
+    onLike,
+    onPurchase,
+    onPlayPlaylist,
     onPlayTrack
 }) => {
     const [activeTab, setActiveTab] = useState('LIBRARY'); // LIBRARY, CHAT, REQUESTS
-    const [crateCategory, setCrateCategory] = useState('COLLECTION'); // COLLECTION, DISCOVERY
+    const [crateCategory, setCrateCategory] = useState('ALL'); // ALL, PURCHASED, FAVORITES, ARTISTS, PLAYLISTS
     const [searchQuery, setSearchQuery] = useState('');
     const [isAutoMixEnabled, setIsAutoMixEnabled] = useState(false);
     
@@ -140,23 +145,25 @@ const DJMixerPlayer = ({
 
     // Filtered Crate Logic
     const getFilteredTracks = () => {
+        if (crateCategory === 'PLAYLISTS') {
+            return { collection: [], network: [], playlists: userPlaylists };
+        }
+
+        let collectionBase = libraryTracks.filter(t => t.isLiked || t.isOwned);
+        
+        if (crateCategory === 'PURCHASED') collectionBase = collectionBase.filter(t => t.isOwned);
+        if (crateCategory === 'FAVORITES') collectionBase = collectionBase.filter(t => t.isLiked);
+        
         if (!searchQuery) {
-            // Default: Only show Collection
-            return {
-                collection: libraryTracks.filter(t => t.isLiked || t.isOwned),
-                network: []
-            };
+            return { collection: collectionBase, network: [] };
         }
 
         const q = searchQuery.toLowerCase();
         
-        // Search in Collection
-        const collectionResults = libraryTracks.filter(t => 
-            (t.isLiked || t.isOwned) && 
-            (t.title?.toLowerCase().includes(q) || t.artist?.toLowerCase().includes(q))
+        const collectionResults = collectionBase.filter(t => 
+            t.title?.toLowerCase().includes(q) || t.artist?.toLowerCase().includes(q)
         );
 
-        // Search in Global Network (excluding those already in collection results)
         const collectionIds = new Set(collectionResults.map(t => t.id || t.Id));
         const networkResults = tracks.filter(t => {
             const id = t.id || t.Id;
@@ -354,6 +361,7 @@ const DJMixerPlayer = ({
                         </div>
                         
                         {activeTab === 'LIBRARY' && (
+                            <div className="crate-controls-hub">
                                 <div className="crate-search-box">
                                     <Search size={10} className="opacity-30" />
                                     <input 
@@ -364,6 +372,18 @@ const DJMixerPlayer = ({
                                         className="crate-search-input"
                                     />
                                 </div>
+                                <div className="crate-filter-chips">
+                                    {['ALL', 'PURCHASED', 'FAVORITES', 'ARTISTS', 'PLAYLISTS'].map(cat => (
+                                        <button 
+                                            key={cat}
+                                            onClick={() => setCrateCategory(cat)}
+                                            className={`filter-chip ${crateCategory === cat ? 'active' : ''}`}
+                                        >
+                                            {cat}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
                         )}
                     </div>
 
@@ -382,42 +402,59 @@ const DJMixerPlayer = ({
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {getFilteredTracks().collection.length > 0 && (
-                                                <tr className="section-header-row"><td colSpan="5">SIGNAL_COLLECTION</td></tr>
-                                            )}
-                                            {getFilteredTracks().collection.map((t, i) => (
-                                                <tr key={`col-${i}`} className="signal-row">
-                                                    <td className="load-actions">
-                                                        <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
-                                                        <button onClick={() => loadToDeck(t, 'B')} className="load-chip">B</button>
-                                                    </td>
-                                                    <td className="sig-title truncate font-black flex items-center gap-2">
-                                                        {t.title}
-                                                        {t.isLiked && <Heart size={8} fill="var(--accent)" className="text-[var(--accent)]" />}
-                                                    </td>
-                                                    <td className="sig-artist truncate opacity-30">{t.artist}</td>
-                                                    <td className="sig-bpm mono text-[var(--accent)]">{t.bpm || '--'}</td>
-                                                    <td className="sig-sync mono opacity-20">{t.duration ? Math.floor(t.duration / 60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '--:--'}</td>
-                                                </tr>
-                                            ))}
+                                            {crateCategory === 'PLAYLISTS' ? (
+                                                getFilteredTracks().playlists.map((p, i) => (
+                                                    <tr key={`pl-${i}`} className="signal-row cursor-pointer" onClick={() => onPlayPlaylist(p)}>
+                                                        <td className="load-actions">
+                                                            <button className="load-chip"><List size={8} /></button>
+                                                        </td>
+                                                        <td colSpan="2" className="sig-title truncate font-black">
+                                                            {p.name || p.Title || 'UNNAMED_PLAYLIST'}
+                                                        </td>
+                                                        <td className="sig-bpm mono opacity-20">{(p.tracks || p.Tracks || []).length} SIG</td>
+                                                        <td className="sig-sync mono opacity-20">LOAD_ALL</td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <>
+                                                    {getFilteredTracks().collection.length > 0 && (
+                                                        <tr className="section-header-row"><td colSpan="5">SIGNAL_COLLECTION</td></tr>
+                                                    )}
+                                                    {getFilteredTracks().collection.map((t, i) => (
+                                                        <tr key={`col-${i}`} className="signal-row">
+                                                            <td className="load-actions">
+                                                                <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
+                                                                <button onClick={() => loadToDeck(t, 'B')} className="load-chip">B</button>
+                                                            </td>
+                                                            <td className="sig-title truncate font-black flex items-center gap-2">
+                                                                {t.title}
+                                                                {t.isLiked && <Heart size={8} fill="var(--accent)" className="text-[var(--accent)]" />}
+                                                            </td>
+                                                            <td className="sig-artist truncate opacity-30">{t.artist}</td>
+                                                            <td className="sig-bpm mono text-[var(--accent)]">{t.bpm || '--'}</td>
+                                                            <td className="sig-sync mono opacity-20">{t.duration ? Math.floor(t.duration / 60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '--:--'}</td>
+                                                        </tr>
+                                                    ))}
 
-                                            {getFilteredTracks().network.length > 0 && (
-                                                <tr className="section-header-row"><td colSpan="5">GLOBAL_NETWORK_RESULTS</td></tr>
+                                                    {getFilteredTracks().network.length > 0 && (
+                                                        <tr className="section-header-row"><td colSpan="5">GLOBAL_NETWORK_RESULTS</td></tr>
+                                                    )}
+                                                    {getFilteredTracks().network.map((t, i) => (
+                                                        <tr key={`net-${i}`} className="signal-row discovery">
+                                                            <td className="load-actions">
+                                                                <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
+                                                                <button onClick={() => loadToDeck(t, 'B')} className="load-chip">B</button>
+                                                            </td>
+                                                            <td className="sig-title truncate font-black flex items-center gap-2">
+                                                                {t.title}
+                                                            </td>
+                                                            <td className="sig-artist truncate opacity-30">{t.artist}</td>
+                                                            <td className="sig-bpm mono text-[var(--accent)]">{t.bpm || '--'}</td>
+                                                            <td className="sig-sync mono opacity-20">{t.duration ? Math.floor(t.duration / 60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '--:--'}</td>
+                                                        </tr>
+                                                    ))}
+                                                </>
                                             )}
-                                            {getFilteredTracks().network.map((t, i) => (
-                                                <tr key={`net-${i}`} className="signal-row discovery">
-                                                    <td className="load-actions">
-                                                        <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
-                                                        <button onClick={() => loadToDeck(t, 'B')} className="load-chip">B</button>
-                                                    </td>
-                                                    <td className="sig-title truncate font-black flex items-center gap-2">
-                                                        {t.title}
-                                                    </td>
-                                                    <td className="sig-artist truncate opacity-30">{t.artist}</td>
-                                                    <td className="sig-bpm mono text-[var(--accent)]">{t.bpm || '--'}</td>
-                                                    <td className="sig-sync mono opacity-20">{t.duration ? Math.floor(t.duration / 60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '--:--'}</td>
-                                                </tr>
-                                            ))}
                                         </tbody>
                                     </table>
                                 </motion.div>
