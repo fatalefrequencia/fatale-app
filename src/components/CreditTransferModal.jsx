@@ -12,6 +12,11 @@ const CreditTransferModal = ({ user, onClose, onRefresh, initialTargetId = '', i
     const handleTransfer = async (e) => {
         e.preventDefault();
         if (!targetId || !amount) return;
+        if (parseInt(amount) <= 0) {
+            setStatus('error');
+            setMsg("Amount must be greater than zero");
+            return;
+        }
 
         setStatus('processing');
         try {
@@ -96,6 +101,7 @@ const CreditTransferModal = ({ user, onClose, onRefresh, initialTargetId = '', i
                                 value={amount}
                                 onChange={e => setAmount(e.target.value)}
                                 placeholder="0.00"
+                                min="1"
                                 max={user?.credits || 0}
                                 className="w-full bg-white/5 border border-white/10 rounded-lg p-4 text-white text-sm font-bold outline-none focus:border-[#ff006e]/50 transition-colors placeholder:text-white/10"
                             />
