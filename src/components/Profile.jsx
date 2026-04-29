@@ -2739,6 +2739,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                         </div>
                     </div>
                 </div>
+            </div>
             )}
 
             <div className="mt-auto pt-10 flex flex-col gap-4">
