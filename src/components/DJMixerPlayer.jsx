@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+    Play, Pause, Volume2, Settings, MessageSquare, List, Share2,
     Activity, Zap, Cpu, Radio, Shield, Users, Disc,
     Search, Plus, DollarSign, Heart, SkipBack, SkipForward
 } from 'lucide-react';
