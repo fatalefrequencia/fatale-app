@@ -2497,7 +2497,7 @@ const Dashboard = React.memo(({
               onFetchPlaylistTracks={onFetchPlaylistTracks}
               onPlaybackRateChange={onPlaybackRateChange}
               onEqA={onEqA}
-              analyserA={analyser.current}
+              analyserA={analyserA}
             />}
             {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} initialChatUser={activeMessageUser} />}
             {activeView === 'settings' && (
