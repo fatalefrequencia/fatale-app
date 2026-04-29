@@ -1853,7 +1853,7 @@ function App() {
                onFetchPlaylistTracks={handleFetchPlaylistTracks}
                onPlaybackRateChange={handlePlaybackRateChange}
                onEqA={onEqA}
-               analyserA={analyserA}
+               analyserA={analyser.current}
                station={activeStation}
            />
           </>
@@ -2029,6 +2029,8 @@ function App() {
               onPlayPlaylist={onPlayPlaylist}
               onFetchPlaylistTracks={handleFetchPlaylistTracks}
               onPlaybackRateChange={handlePlaybackRateChange}
+              onEqA={onEqA}
+              analyserA={analyser.current}
               onPlayTrack={(track) => {
                 const tId = track.id || track.Id;
                 const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
