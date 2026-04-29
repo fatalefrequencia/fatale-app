@@ -364,7 +364,6 @@ const DJMixerPlayer = ({
                                         className="crate-search-input"
                                     />
                                 </div>
-                            </div>
                         )}
                     </div>
 
