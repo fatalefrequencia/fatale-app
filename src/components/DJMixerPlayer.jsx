@@ -7,29 +7,26 @@ const NeuralSpectrum = ({ analyser, isActive }) => {
     const canvasRef = useRef(null);
     
     useEffect(() => {
-        if (!canvasRef.current || !analyser) return;
+        if (!canvasRef.current) return;
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
         
         let animationFrame;
         const draw = () => {
             animationFrame = requestAnimationFrame(draw);
             
-            if (analyser) {
+            if (analyser && isActive) {
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
                 analyser.getByteFrequencyData(dataArray);
+                
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 const barWidth = (canvas.width / bufferLength) * 2.5;
-                let barHeight;
-                let x = 0;
                 
                 for (let i = 0; i < bufferLength; i++) {
-                    barHeight = (dataArray[i] / 255) * canvas.height;
-                    const glow = isActive ? 1 : 0.2;
-                    ctx.fillStyle = `rgba(255, 0, 110, ${glow})`;
-                    ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-                    x += barWidth + 1;
+                    const barHeight = (dataArray[i] / 255) * canvas.height;
+                    ctx.fillStyle = `rgba(255, 0, 110, 1)`;
+                    ctx.fillRect(i * (barWidth + 1), canvas.height - barHeight, barWidth, barHeight);
                 }
             } else if (isActive) {
                 // Mock Pulse for YouTube/Fallback
@@ -44,15 +41,12 @@ const NeuralSpectrum = ({ analyser, isActive }) => {
                     ctx.fillStyle = `rgba(255, 0, 110, 0.4)`;
                     ctx.fillRect(i * barWidth, canvas.height - barHeight, barWidth - 1, barHeight);
                 }
+            } else {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
         };
         
-        if (isActive) {
-            draw();
-        } else {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-        
+        draw();
         return () => cancelAnimationFrame(animationFrame);
     }, [analyser, isActive]);
 
@@ -105,7 +99,7 @@ const DJMixerPlayer = ({
     const [isSyncing, setIsSyncing] = useState(false);
     
     // DECK B LOCAL ENGINE
-    const audioB = useRef(new Audio());
+    const audioB = useRef(null);
     const [isPlayingB, setIsPlayingB] = useState(false);
     const [currentTimeB, setCurrentTimeB] = useState(0);
     const [durationB, setDurationB] = useState(0);
@@ -126,6 +120,7 @@ const DJMixerPlayer = ({
 
     const audioCtxB = useRef(null);
     const filtersB = useRef({ low: null, mid: null, high: null });
+    const [analyserBState, setAnalyserBState] = useState(null);
     const analyserB = useRef(null);
     const sourceNodeB = useRef(null);
 
@@ -273,6 +268,7 @@ const DJMixerPlayer = ({
             filtersB.current.mid.connect(filtersB.current.high);
             filtersB.current.high.connect(analyserB.current);
             analyserB.current.connect(audioCtxB.current.destination);
+            setAnalyserBState(analyserB.current);
         }
     };
 
@@ -537,6 +533,8 @@ const DJMixerPlayer = ({
         <div className="dj-mixer-overlay">
             {/* Scanline / Texture Layer */}
             <div className="cyber-overlay-fx"></div>
+
+            <audio ref={audioB} crossOrigin="anonymous" className="hidden" />
             
             <div className="mixer-hud-wrapper custom-scrollbar">
                 {/* PRIMARY CONSOLE PANE */}
@@ -949,7 +947,7 @@ const DJMixerPlayer = ({
                                     <NeuralSpectrum analyser={analyserA} isActive={isPlayingA} />
                                 </div>
                                 <div className="master-analyzer-node">
-                                    <NeuralSpectrum analyser={analyserB.current} isActive={isPlayingB} />
+                                    <NeuralSpectrum analyser={analyserBState} isActive={isPlayingB} />
                                 </div>
                             </div>
                             <div className="master-playhead-strip">

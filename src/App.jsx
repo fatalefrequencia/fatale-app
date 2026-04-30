@@ -150,7 +150,8 @@ function App() {
   const audioCtx = useRef(null);
   const sourceNode = useRef(null);
   const filters = useRef({ low: null, mid: null, high: null });
-  const analyser = useRef(null);
+  const [analyserA, setAnalyserA] = useState(null);
+  const analyser = useRef(null); // Keep ref for internal logic but use state for props
 
   const initAudioCtx = () => {
     if (!audioCtx.current && audioRef.current) {
@@ -158,6 +159,7 @@ function App() {
         
         analyser.current = audioCtx.current.createAnalyser();
         analyser.current.fftSize = 256;
+        setAnalyserA(analyser.current);
 
         filters.current.low = audioCtx.current.createBiquadFilter();
         filters.current.low.type = 'lowshelf';
@@ -1711,6 +1713,7 @@ function App() {
 
       <audio
         ref={audioRef}
+        crossOrigin="anonymous"
         onEnded={playNext}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
@@ -1859,7 +1862,7 @@ function App() {
                onFetchPlaylistTracks={handleFetchPlaylistTracks}
                onPlaybackRateChange={handlePlaybackRateChange}
                onEqA={onEqA}
-               analyserA={analyser.current}
+               analyserA={analyserA}
                station={activeStation}
            />
           </>
@@ -2036,7 +2039,7 @@ function App() {
               onFetchPlaylistTracks={handleFetchPlaylistTracks}
               onPlaybackRateChange={handlePlaybackRateChange}
               onEqA={onEqA}
-              analyserA={analyser.current}
+              analyserA={analyserA}
               onPlayTrack={(track) => {
                 const tId = track.id || track.Id;
                 const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
