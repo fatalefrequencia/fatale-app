@@ -16,19 +16,34 @@ const NeuralSpectrum = ({ analyser, isActive }) => {
         let animationFrame;
         const draw = () => {
             animationFrame = requestAnimationFrame(draw);
-            analyser.getByteFrequencyData(dataArray);
             
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const barWidth = (canvas.width / bufferLength) * 2.5;
-            let barHeight;
-            let x = 0;
-            
-            for (let i = 0; i < bufferLength; i++) {
-                barHeight = (dataArray[i] / 255) * canvas.height;
-                const glow = isActive ? 1 : 0.2;
-                ctx.fillStyle = `rgba(255, 0, 110, ${glow})`;
-                ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-                x += barWidth + 1;
+            if (analyser) {
+                analyser.getByteFrequencyData(dataArray);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const barWidth = (canvas.width / bufferLength) * 2.5;
+                let barHeight;
+                let x = 0;
+                
+                for (let i = 0; i < bufferLength; i++) {
+                    barHeight = (dataArray[i] / 255) * canvas.height;
+                    const glow = isActive ? 1 : 0.2;
+                    ctx.fillStyle = `rgba(255, 0, 110, ${glow})`;
+                    ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                    x += barWidth + 1;
+                }
+            } else if (isActive) {
+                // Mock Pulse for YouTube/Fallback
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const time = Date.now() / 200;
+                const barCount = 40;
+                const barWidth = canvas.width / barCount;
+                
+                for (let i = 0; i < barCount; i++) {
+                    const noise = Math.sin(time + i * 0.5) * 0.5 + 0.5;
+                    const barHeight = (0.2 + noise * 0.6) * canvas.height;
+                    ctx.fillStyle = `rgba(255, 0, 110, 0.4)`;
+                    ctx.fillRect(i * barWidth, canvas.height - barHeight, barWidth - 1, barHeight);
+                }
             }
         };
         
@@ -309,7 +324,11 @@ const DJMixerPlayer = ({
             if (source) {
                 audioB.current.src = source;
                 audioB.current.load();
-                if (isPlayingB) audioB.current.play();
+                if (isPlayingB) {
+                    initAudioB();
+                    if (audioCtxB.current?.state === 'suspended') audioCtxB.current.resume();
+                    audioB.current.play();
+                }
             }
         }
     };
@@ -462,6 +481,8 @@ const DJMixerPlayer = ({
         if (isPlayingB) {
             audioB.current.pause();
         } else {
+            initAudioB();
+            if (audioCtxB.current?.state === 'suspended') audioCtxB.current.resume();
             if (audioB.current.src) audioB.current.play();
         }
         setIsPlayingB(!isPlayingB);

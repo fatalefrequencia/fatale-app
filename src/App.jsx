@@ -1031,7 +1031,13 @@ function App() {
     setIsPlaying(true);
   };
 
-  const togglePlay = () => setIsPlaying(!isPlaying);
+  const togglePlay = () => {
+    initAudioCtx();
+    if (audioCtx.current?.state === 'suspended') {
+      audioCtx.current.resume().catch(e => console.warn("AudioContext resume failed:", e));
+    }
+    setIsPlaying(!isPlaying);
+  };
 
   // Modified to use main library tracks for correct Like status
   const handlePlayPlaylist = (playlistTracksRaw, startIndex = 0, shouldRedirect = true) => {
@@ -2547,7 +2553,13 @@ const Dashboard = React.memo(({
                 setIsMiniPlayerMinimized(newState);
                 localStorage.setItem('isMiniPlayerMinimized', newState);
               }}
-              onOpenMixer={() => setShowMixer(true)}
+              onOpenMixer={() => {
+                initAudioCtx();
+                if (audioCtx.current?.state === 'suspended') {
+                  audioCtx.current.resume();
+                }
+                setShowMixer(true);
+              }}
             />
           )
         )}
