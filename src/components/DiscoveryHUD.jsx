@@ -550,7 +550,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
 
                                     {/* Globe Detail Card - Premium Glassmorphism */}
                                     <AnimatePresence>
-                                        {selectedGlobeItem && (
+                                        {selectedGlobeItem && !activeTerminalCommunity && (
                                             <motion.div 
                                                 initial={isMobile ? { y: "100%" } : { y: 300, opacity: 0 }}
                                                 animate={isMobile ? { y: 0 } : { y: 0, opacity: 1 }}
@@ -717,39 +717,43 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                     </AnimatePresence>
 
                                     {/* Globe Controls - Premium Mirror Layout */}
-                                    <div className="absolute top-10 left-4 z-50 scale-75 lg:scale-100">
-                                        <button 
-                                            onClick={() => setIsGlobeSpinning(!isGlobeSpinning)}
-                                            className={`flex items-center justify-center w-10 h-10 rounded-sm border transition-all duration-300 ${isGlobeSpinning ? 'bg-[#00ffff]/10 border-[#00ffff] text-[#00ffff]' : 'bg-black/40 border-white/5 text-white/40'}`}
-                                            title={isGlobeSpinning ? "PAUSE_SPIN" : "START_SPIN"}
-                                        >
-                                            {isGlobeSpinning ? <Pause size={14} /> : <Play size={14} />}
-                                        </button>
-                                    </div>
+                                    {!activeTerminalCommunity && (
+                                        <>
+                                            <div className="absolute top-10 left-4 z-50 scale-75 lg:scale-100">
+                                                <button 
+                                                    onClick={() => setIsGlobeSpinning(!isGlobeSpinning)}
+                                                    className={`flex items-center justify-center w-10 h-10 rounded-sm border transition-all duration-300 ${isGlobeSpinning ? 'bg-[#00ffff]/10 border-[#00ffff] text-[#00ffff]' : 'bg-black/40 border-white/5 text-white/40'}`}
+                                                    title={isGlobeSpinning ? "PAUSE_SPIN" : "START_SPIN"}
+                                                >
+                                                    {isGlobeSpinning ? <Pause size={14} /> : <Play size={14} />}
+                                                </button>
+                                            </div>
 
-                                    <div className="absolute top-10 right-4 flex flex-col gap-3 z-50 scale-75 lg:scale-100">
+                                            <div className="absolute top-10 right-4 flex flex-col gap-3 z-50 scale-75 lg:scale-100">
 
-                                        {[
-                                            { id: 'CORE_PULSE', icon: <Activity size={12} />, label: 'CORE_PULSE', desc: 'Realtime Activity' },
-                                            { id: 'LIVE_SIGNAL_HUB', icon: <Radio size={12} />, label: 'LIVE_SIGNAL_HUB', desc: 'Active Transmissions' },
-                                            { id: 'CLIQUE_VALENCE', icon: <Layers size={12} />, label: 'CLIQUE_VALENCE', desc: 'Territory Map' },
-                                            { id: 'FREQ_PEAKS', icon: <Activity size={12} />, label: 'FREQ_DATA_PEAKS', desc: 'Density Analysis' }
-                                        ].map(v => (
-                                            <button 
-                                                key={v.id}
-                                                onClick={() => setActiveGlobeView(v.id)}
-                                                className={`flex flex-col items-end gap-1 px-3 py-2 rounded-sm border transition-all duration-300 group ${activeGlobeView === v.id ? 'bg-[#ff006e]/10 border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.2)]' : 'bg-black/40 border-white/5 text-white/40 hover:border-white/20 hover:text-white'}`}
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    {v.icon}
-                                                    <span className={`text-[8px] font-black tracking-[0.2em] transition-all uppercase ${activeGlobeView === v.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto overflow-hidden'}`}>{v.label}</span>
-                                                </div>
-                                                {activeGlobeView === v.id && (
-                                                    <div className="text-[6px] opacity-60 font-bold tracking-tighter uppercase">{v.desc}</div>
-                                                )}
-                                            </button>
-                                        ))}
-                                    </div>
+                                                {[
+                                                    { id: 'CORE_PULSE', icon: <Activity size={12} />, label: 'CORE_PULSE', desc: 'Realtime Activity' },
+                                                    { id: 'LIVE_SIGNAL_HUB', icon: <Radio size={12} />, label: 'LIVE_SIGNAL_HUB', desc: 'Active Transmissions' },
+                                                    { id: 'CLIQUE_VALENCE', icon: <Layers size={12} />, label: 'CLIQUE_VALENCE', desc: 'Territory Map' },
+                                                    { id: 'FREQ_PEAKS', icon: <Activity size={12} />, label: 'FREQ_DATA_PEAKS', desc: 'Density Analysis' }
+                                                ].map(v => (
+                                                    <button 
+                                                        key={v.id}
+                                                        onClick={() => setActiveGlobeView(v.id)}
+                                                        className={`flex flex-col items-end gap-1 px-3 py-2 rounded-sm border transition-all duration-300 group ${activeGlobeView === v.id ? 'bg-[#ff006e]/10 border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.2)]' : 'bg-black/40 border-white/5 text-white/40 hover:border-white/20 hover:text-white'}`}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            {v.icon}
+                                                            <span className={`text-[8px] font-black tracking-[0.2em] transition-all uppercase ${activeGlobeView === v.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto overflow-hidden'}`}>{v.label}</span>
+                                                        </div>
+                                                        {activeGlobeView === v.id && (
+                                                            <div className="text-[6px] opacity-60 font-bold tracking-tighter uppercase">{v.desc}</div>
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
 
                         
                         {/* Floating Overlay for Sector Status - Hide when terminal or detail card is active */}
