@@ -615,14 +615,6 @@ const DJMixerPlayer = ({
                             <div className="deck-core-layout-mirrored">
                                 {/* Outer Controls */}
                                 <div className="deck-controls-column-nano">
-                                    <button 
-                                        onClick={() => onKeyLockAChange(!keyLockA)}
-                                        className={`key-lock-btn-nano ${keyLockA ? 'active' : ''}`}
-                                        title="KEY_LOCK"
-                                    >
-                                        <Music size={10} />
-                                        <span>LOCK</span>
-                                    </button>
                                     <div className="evolve-toggle-container">
                                         <button 
                                             onClick={() => setIsEvolveA(!isEvolveA)} 
@@ -632,6 +624,14 @@ const DJMixerPlayer = ({
                                             <span>EVOLVE</span>
                                         </button>
                                     </div>
+                                    <button 
+                                        onClick={() => onKeyLockAChange(!keyLockA)}
+                                        className={`key-lock-btn-nano ${keyLockA ? 'active' : ''}`}
+                                        title="KEY_LOCK"
+                                    >
+                                        <Music size={10} />
+                                        <span>LOCK</span>
+                                    </button>
                                     
                                     <div className="tempo-control-group">
                                         <div className="tempo-knob-container">
@@ -910,14 +910,6 @@ const DJMixerPlayer = ({
 
                                 {/* Outer Controls */}
                                 <div className="deck-controls-column-nano">
-                                    <button 
-                                        onClick={() => setKeyLockB(!keyLockB)}
-                                        className={`key-lock-btn-nano ${keyLockB ? 'active' : ''}`}
-                                        title="KEY_LOCK"
-                                    >
-                                        <Music size={10} />
-                                        <span>LOCK</span>
-                                    </button>
                                     <div className="evolve-toggle-container">
                                         <button 
                                             onClick={() => setIsEvolveB(!isEvolveB)} 
@@ -927,6 +919,14 @@ const DJMixerPlayer = ({
                                             <span>EVOLVE</span>
                                         </button>
                                     </div>
+                                    <button 
+                                        onClick={() => setKeyLockB(!keyLockB)}
+                                        className={`key-lock-btn-nano ${keyLockB ? 'active' : ''}`}
+                                        title="KEY_LOCK"
+                                    >
+                                        <Music size={10} />
+                                        <span>LOCK</span>
+                                    </button>
                                     
                                     <div className="tempo-control-group">
                                         <div className="tempo-knob-container">

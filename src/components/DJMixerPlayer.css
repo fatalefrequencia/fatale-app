@@ -1181,25 +1181,25 @@
 
 .key-lock-btn-nano {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
-    width: 32px;
-    height: 32px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    gap: 4px;
+    width: 62px;
+    height: 18px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 4px;
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.3);
     cursor: pointer;
     transition: all 0.2s ease;
-    margin-bottom: 4px;
+    margin-top: 8px;
 }
 
 .key-lock-btn-nano span {
-    font-size: 6px;
+    font-size: 7px;
     font-weight: 900;
     letter-spacing: 0.1em;
+    margin-top: 1px;
 }
 
 .key-lock-btn-nano:hover {
