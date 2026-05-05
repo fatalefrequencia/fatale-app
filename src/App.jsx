@@ -443,12 +443,18 @@ function App() {
       const station = e.detail;
       setActiveStation(station);
       joinStation(station.id || station.Id);
-      // Note: we can use the notification context if we wrap this in a component that has it,
-      // but App.jsx uses it. We might need to ensure showNotification is accessible or just let it be silent.
     };
     window.addEventListener('tuneIn', handleTuneIn);
     return () => window.removeEventListener('tuneIn', handleTuneIn);
   }, []);
+
+  // Ensure the current user (including broadcasters) joins their station SignalR group
+  useEffect(() => {
+    if (activeStation) {
+      const sId = activeStation.id || activeStation.Id;
+      joinStation(sId);
+    }
+  }, [activeStation]);
 
   useEffect(() => {
     // Check for existing session
@@ -516,7 +522,21 @@ function App() {
       });
 
       conn.on("ReceiveMessage", (msg) => {
-        setStationChat(prev => [...prev, msg].slice(-50));
+        setStationChat(prev => {
+          // Skip duplicates: if we already added this message optimistically, don't add the server echo
+          const alreadyExists = prev.some(
+            m => m.isLocal && m.message === (msg.message || msg.content) && m.username === (msg.username || msg.userName)
+          );
+          if (alreadyExists) {
+            // Replace the optimistic copy with the canonical server copy (removes isLocal flag)
+            return prev.map(m =>
+              m.isLocal && m.message === (msg.message || msg.content) && m.username === (msg.username || msg.userName)
+                ? { ...msg, isLocal: false }
+                : m
+            );
+          }
+          return [...prev, msg].slice(-50);
+        });
       });
 
       conn.on("TrackRequested", (req) => {
@@ -1542,9 +1562,21 @@ function App() {
   };
 
   const handleSendMessage = (message) => {
-    if (!activeStation) return;
-    const sId = activeStation.id || activeStation.Id;
-    sendMessage(sId, message, user?.username || user?.Username || 'ANON_NODE');
+    if (!message || !message.trim()) return;
+    const username = user?.username || user?.Username || 'ANON_NODE';
+    // Optimistic update: add message locally immediately so it shows up for the sender
+    const localMsg = {
+      username,
+      message: message.trim(),
+      timestamp: new Date().toISOString(),
+      isLocal: true,
+    };
+    setStationChat(prev => [...prev, localMsg].slice(-50));
+    // Also broadcast via SignalR if in a live station
+    if (activeStation) {
+      const sId = activeStation.id || activeStation.Id;
+      sendMessage(sId, message.trim(), username);
+    }
   };
 
   const handleRequestTrack = (trackData) => {
