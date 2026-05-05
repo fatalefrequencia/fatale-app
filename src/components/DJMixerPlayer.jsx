@@ -97,6 +97,7 @@ const DJMixerPlayer = ({
     const [viewingPlaylist, setViewingPlaylist] = useState(null);
     const [isCrateLoading, setIsCrateLoading] = useState(false);
     const [keyLockB, setKeyLockB] = useState(false);
+    const [viewingArtist, setViewingArtist] = useState(null);
     
     const [deckA, setDeckA] = useState(currentTrack || null);
     const [deckB, setDeckB] = useState(null);
@@ -515,6 +516,15 @@ const DJMixerPlayer = ({
                 return { collection: viewingPlaylist.tracks || viewingPlaylist.Tracks || [], network: [], playlists: [] };
             }
             return { collection: [], network: [], playlists: userPlaylists };
+        }
+
+        if (crateCategory === 'ARTISTS') {
+            if (viewingArtist) {
+                const artistTracks = libraryTracks.filter(t => (t.artist || t.ArtistName || 'Unknown Artist') === viewingArtist);
+                return { collection: artistTracks, network: [] };
+            }
+            const uniqueArtists = Array.from(new Set(libraryTracks.map(t => t.artist || t.ArtistName || 'Unknown Artist'))).sort();
+            return { collection: [], network: [], artists: uniqueArtists };
         }
 
         let collectionBase = libraryTracks.filter(t => t.isLiked || t.isOwned);
@@ -1016,36 +1026,40 @@ const DJMixerPlayer = ({
                                     />
                                 </div>
                                 <div className="crate-filter-chips">
-                                    {viewingPlaylist ? (
+                                    {viewingPlaylist || viewingArtist ? (
                                         <button 
-                                            onClick={() => setViewingPlaylist(null)}
+                                            onClick={() => {
+                                                setViewingPlaylist(null);
+                                                setViewingArtist(null);
+                                            }}
                                             className="filter-chip active flex items-center gap-2"
                                         >
-                                            <SkipBack size={8} /> BACK_TO_PLAYLISTS
+                                            <SkipBack size={8} /> BACK_TO_BROWSE
                                         </button>
                                     ) : (
-                                    <div className="flex items-center gap-2">
-                                        <button 
-                                            onClick={handleShuffle}
-                                            className="filter-chip shuffle-btn flex items-center gap-2 bg-[#ff006e]/10 border-[#ff006e]/20 text-[#ff006e]"
-                                            title="SHUFFLE_SIGNALS"
-                                        >
-                                            <Shuffle size={10} /> SHUFFLE
-                                        </button>
-                                        <div className="w-px h-4 bg-white/10 mx-1" />
-                                        {['ALL', 'PURCHASED', 'FAVORITES', 'ARTISTS', 'PLAYLISTS'].map(cat => (
+                                        <div className="flex items-center gap-2">
                                             <button 
-                                                key={cat}
-                                                onClick={() => {
-                                                    setCrateCategory(cat);
-                                                    setViewingPlaylist(null);
-                                                }}
-                                                className={`filter-chip ${crateCategory === cat ? 'active' : ''}`}
+                                                onClick={handleShuffle}
+                                                className="filter-chip shuffle-btn flex items-center gap-2 bg-[#ff006e]/10 border-[#ff006e]/20 text-[#ff006e]"
+                                                title="SHUFFLE_SIGNALS"
                                             >
-                                                {cat}
+                                                <Shuffle size={10} /> SHUFFLE
                                             </button>
-                                        ))}
-                                    </div>
+                                            <div className="w-px h-4 bg-white/10 mx-1" />
+                                            {['ALL', 'PURCHASED', 'FAVORITES', 'ARTISTS', 'PLAYLISTS'].map(cat => (
+                                                <button 
+                                                    key={cat}
+                                                    onClick={() => {
+                                                        setCrateCategory(cat);
+                                                        setViewingPlaylist(null);
+                                                        setViewingArtist(null);
+                                                    }}
+                                                    className={`filter-chip ${crateCategory === cat ? 'active' : ''}`}
+                                                >
+                                                    {cat}
+                                                </button>
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -1077,7 +1091,7 @@ const DJMixerPlayer = ({
                                             {isCrateLoading ? (
                                                 <tr className="signal-row"><td colSpan="5" className="text-center py-8 opacity-40 italic">HYDRATING_SIGNAL_SEQUENCE...</td></tr>
                                             ) : crateCategory === 'PLAYLISTS' && !viewingPlaylist ? (
-                                                getFilteredTracks().playlists.map((p, i) => (
+                                                (getFilteredTracks().playlists || []).map((p, i) => (
                                                     <tr key={`pl-${i}`} className="signal-row cursor-pointer" onClick={() => handlePlaylistClick(p)}>
                                                         <td className="load-actions">
                                                             <button className="load-chip"><List size={8} /></button>
@@ -1089,12 +1103,30 @@ const DJMixerPlayer = ({
                                                         <td className="sig-sync mono opacity-20">VIEW_SIGNALS</td>
                                                     </tr>
                                                 ))
+                                            ) : crateCategory === 'ARTISTS' && !viewingArtist ? (
+                                                (getFilteredTracks().artists || []).map((artist, i) => (
+                                                    <tr key={`art-${i}`} className="signal-row cursor-pointer" onClick={() => setViewingArtist(artist)}>
+                                                        <td className="load-actions">
+                                                            <button className="load-chip"><Users size={8} /></button>
+                                                        </td>
+                                                        <td colSpan="2" className="sig-title truncate font-black">
+                                                            {artist}
+                                                        </td>
+                                                        <td className="sig-bpm mono opacity-20">
+                                                            {libraryTracks.filter(t => (t.artist || t.ArtistName) === artist).length} SIG
+                                                        </td>
+                                                        <td className="sig-sync mono opacity-20">BROWSE_NODE</td>
+                                                    </tr>
+                                                ))
                                             ) : (
                                                 <>
                                                     {viewingPlaylist && (
                                                         <tr className="section-header-row"><td colSpan="5">PLAYLIST_INSPECTION: {viewingPlaylist.name || viewingPlaylist.Title}</td></tr>
                                                     )}
-                                                    {getFilteredTracks().collection.length > 0 && !viewingPlaylist && (
+                                                    {viewingArtist && (
+                                                        <tr className="section-header-row"><td colSpan="5">ARTIST_SEQUENCE: {viewingArtist}</td></tr>
+                                                    )}
+                                                    {getFilteredTracks().collection.length > 0 && !viewingPlaylist && !viewingArtist && (
                                                         <tr className="section-header-row"><td colSpan="5">SIGNAL_COLLECTION</td></tr>
                                                     )}
                                                     {getFilteredTracks().collection.map((t, i) => (
