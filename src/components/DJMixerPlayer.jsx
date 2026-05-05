@@ -1345,12 +1345,11 @@ const DJMixerPlayer = ({
                         </AnimatePresence>
                     </div>
                 </div>
-            </div>
-        </div>
 
-            {/* Tactical Decals */}
-            <div className="cyber-label-fx top-right">SYSTEM_STABLE_4.2.0</div>
-            <div className="cyber-label-fx bottom-left">NEURAL_DECK_PRO_V5</div>
+                {/* Tactical Decals */}
+                <div className="cyber-label-fx top-right">SYSTEM_STABLE_4.2.0</div>
+                <div className="cyber-label-fx bottom-left">NEURAL_DECK_PRO_V5</div>
+            </div>
         </div>
     );
 };
