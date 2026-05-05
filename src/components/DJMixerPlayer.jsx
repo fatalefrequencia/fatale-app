@@ -1214,13 +1214,13 @@ const DJMixerPlayer = ({
                                 >
                                     <div className="chat-messages-scroll custom-scrollbar flex-1 overflow-y-auto p-4 space-y-4">
                                         {chatMessages.length > 0 ? chatMessages.map((m, i) => (
-                                            <div key={i} className={`neural-msg ${m.userId === (station?.artistUserId) ? 'artist' : ''}`}>
+                                            <div key={i} className={`neural-msg ${m.username === (station?.artistName) ? 'artist' : ''}`}>
                                                 <div className="msg-meta flex items-center gap-2 mb-1">
-                                                    <span className="msg-user font-black tracking-tighter text-[8px] uppercase">{m.userName || 'ANON_NODE'}</span>
+                                                    <span className="msg-user font-black tracking-tighter text-[8px] uppercase">{m.username || m.userName || 'ANON_NODE'}</span>
                                                     <span className="msg-time opacity-20 text-[6px]">{new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                                 </div>
                                                 <div className="msg-content p-2 rounded bg-white/5 border border-white/5 text-[10px] leading-relaxed">
-                                                    {m.content}
+                                                    {m.message || m.content}
                                                 </div>
                                             </div>
                                         )) : (
