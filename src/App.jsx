@@ -1541,6 +1541,18 @@ function App() {
     setViewOriginal('profile');
   };
 
+  const handleSendMessage = (message) => {
+    if (!activeStation) return;
+    const sId = activeStation.id || activeStation.Id;
+    sendMessage(sId, message, user?.username || user?.Username || 'ANON_NODE');
+  };
+
+  const handleRequestTrack = (trackData) => {
+    if (!activeStation) return;
+    const sId = activeStation.id || activeStation.Id;
+    requestTrack(sId, trackData, user?.username || user?.Username || 'ANON_NODE');
+  };
+
   const handleGlobalIngestFile = async (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -2521,8 +2533,8 @@ const Dashboard = React.memo(({
               activeStation={activeStation}
               stationChat={stationChat}
               stationQueue={stationQueue}
-              sendMessage={sendMessage}
-              requestTrack={requestTrack}
+              onSendMessage={handleSendMessage}
+              onRequestTrack={handleRequestTrack}
               volume={volume}
               setVolume={setVolume}
               userPlaylists={playlists}
@@ -4248,8 +4260,8 @@ const PlayerContent = ({
   activeStation,
   stationChat,
   stationQueue,
-  sendMessage,
-  requestTrack,
+  onSendMessage,
+  onRequestTrack,
   volume,
   setVolume,
   userPlaylists,
@@ -4278,7 +4290,7 @@ const PlayerContent = ({
           isBroadcaster={activeStation?.artistUserId === (user?.id || user?.Id)}
           chatMessages={stationChat}
           requests={stationQueue}
-          onSendMessage={sendMessage}
+          onSendMessage={onSendMessage}
           onClose={() => setView('discovery')}
           tracks={tracks}
           setTracks={setTracks}
