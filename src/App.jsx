@@ -1875,8 +1875,8 @@ function App() {
                setShowGlobalUpload={setShowGlobalUpload}
                setShowGlobalIngest={setShowGlobalIngest}
                setActiveStation={setActiveStation}
-               sendMessage={sendMessage}
-               requestTrack={requestTrack}
+               sendMessage={handleSendMessage}
+               requestTrack={handleRequestTrack}
                setUser={setUser}
                onExpandContent={(content, type, themeData) => {
                  setGlobalExpandedContent(content);
@@ -2533,8 +2533,8 @@ const Dashboard = React.memo(({
               activeStation={activeStation}
               stationChat={stationChat}
               stationQueue={stationQueue}
-              onSendMessage={handleSendMessage}
-              onRequestTrack={handleRequestTrack}
+              onSendMessage={sendMessage}
+              onRequestTrack={requestTrack}
               volume={volume}
               setVolume={setVolume}
               userPlaylists={playlists}
@@ -4354,8 +4354,8 @@ const PlayerContent = ({
           activeStation={activeStation}
           stationChat={stationChat}
           stationQueue={stationQueue}
-          sendMessage={sendMessage}
-          requestTrack={requestTrack}
+          onSendMessage={onSendMessage}
+          onRequestTrack={onRequestTrack}
         />
       )}
     </div>
