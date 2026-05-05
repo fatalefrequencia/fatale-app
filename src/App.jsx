@@ -1009,19 +1009,17 @@ function App() {
 
   // --- MEDIA SESSION API (Background Audio Support) ---
   useEffect(() => {
-    if ('mediaSession' in navigator && currentTrack && currentTrack.id) {
-      console.log("[MEDIA_SESSION] Syncing metadata for:", currentTrack.title);
+    if ('mediaSession' in navigator) {
+      const displayTitle = activeStation ? (activeStation.name || activeStation.Name) : (currentTrack?.title || "Fatale Signal");
+      const displayArtist = activeStation ? (activeStation.artistName || activeStation.ArtistName || "Live DJ") : (currentTrack?.artist || "System Node");
+      const displayCover = activeStation?.imageUrl || currentTrack?.cover || skullImg;
+
       navigator.mediaSession.metadata = new MediaMetadata({
-        title: currentTrack.title,
-        artist: currentTrack.artist,
-        album: currentTrack.album || "Fatale Digital",
+        title: displayTitle,
+        artist: displayArtist,
+        album: activeStation ? "Fatale Live Radio" : (currentTrack?.album || "Fatale Digital"),
         artwork: [
-          { src: currentTrack.cover || skullImg, sizes: '96x96', type: 'image/png' },
-          { src: currentTrack.cover || skullImg, sizes: '128x128', type: 'image/png' },
-          { src: currentTrack.cover || skullImg, sizes: '192x192', type: 'image/png' },
-          { src: currentTrack.cover || skullImg, sizes: '256x256', type: 'image/png' },
-          { src: currentTrack.cover || skullImg, sizes: '384x384', type: 'image/png' },
-          { src: currentTrack.cover || skullImg, sizes: '512x512', type: 'image/png' },
+          { src: displayCover, sizes: '512x512', type: 'image/png' },
         ]
       });
 
@@ -1043,7 +1041,7 @@ function App() {
       // Sync playback state
       navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
     }
-  }, [currentTrack?.id, isPlaying, isYoutubeMode, youtubePlayer]);
+  }, [currentTrack?.id, isPlaying, isYoutubeMode, youtubePlayer, activeStation?.id, activeStation?.Id]);
 
   // --- ORGANIC LOGGING EFFECT ---
   useEffect(() => {
@@ -2558,6 +2556,7 @@ const Dashboard = React.memo(({
               onPrev={handlePrev}
               onLike={onLike}
               onCache={onCache}
+              isLandscape={isLandscape}
               togglePlay={togglePlay}
               navigateToProfile={navigateToProfile}
               onPlayPlaylist={handlePlayPlaylist}
@@ -4300,14 +4299,17 @@ const PlayerContent = ({
   onFetchPlaylistTracks,
   onPlaybackRateChange,
   onEqA,
-  analyserA
+  analyserA,
+  isLandscape
 }) => {
-  const isDesktop = window.innerWidth >= 1024;
+  const isMobile = !isDesktop;
+  const showFullMixer = isDesktop || isLandscape;
 
   return (
     <div className="flex items-center justify-center h-full w-full">
-      {isDesktop ? (
+      {showFullMixer ? (
         <DJMixerPlayer 
+          isMobile={isMobile}
           currentTrack={currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null}
           isPlaying={isPlaying}
           onPlayPause={togglePlay}

@@ -90,7 +90,8 @@ const DJMixerPlayer = ({
     keyLockA,
     onKeyLockAChange,
     setTracks,
-    setCurrentTrackIndex
+    setCurrentTrackIndex,
+    isMobile = false
 }) => {
     const [activeTab, setActiveTab] = useState('LIBRARY'); // LIBRARY, CHAT, REQUESTS
     const [crateCategory, setCrateCategory] = useState('ALL'); // ALL, PURCHASED, FAVORITES, ARTISTS, PLAYLISTS
@@ -591,7 +592,7 @@ const DJMixerPlayer = ({
     const progress = (currentTime / duration) * 100 || 0;
 
     return (
-        <div className="dj-mixer-overlay">
+        <div className={`dj-mixer-overlay ${isMobile ? 'is-mobile-landscape' : ''}`}>
             {/* Scanline / Texture Layer */}
             <div className="cyber-overlay-fx"></div>
 

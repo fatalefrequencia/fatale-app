@@ -13,6 +13,19 @@
     user-select: none;
 }
 
+.dj-mixer-overlay.is-mobile-landscape {
+    padding: 0 !important;
+    overflow-y: auto;
+}
+
+.dj-mixer-overlay.is-mobile-landscape .mixer-hud-wrapper {
+    width: 100vw;
+    height: 100vh;
+    max-height: none;
+    padding: 5px;
+    gap: 5px;
+}
+
 /* Sidebar Collapsed State Support */
 .dj-mixer-overlay.sidebar-collapsed {
     padding-left: calc(6rem + 40px);

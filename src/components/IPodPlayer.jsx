@@ -44,8 +44,8 @@ export const IPodPlayer = ({
     activeStation,
     stationChat = [],
     stationQueue = [],
-    sendMessage,
-    requestTrack
+    onSendMessage,
+    onRequestTrack
 }) => {
     const { showNotification } = useNotification();
     const [screen, setScreen] = useState(forceNowPlaying ? 'NOW_PLAYING' : (initialScreen || 'MAIN'));
@@ -804,8 +804,8 @@ export const IPodPlayer = ({
             }
             if (item.id === 'SEND_MESSAGE') {
                 const text = window.prompt("Enter message for live chat:");
-                if (text && text.trim() && sendMessage && activeStation) {
-                    sendMessage(activeStation.id || activeStation.Id, text, user?.username || user?.Username || "Listeners");
+                if (text && text.trim() && onSendMessage && activeStation) {
+                    onSendMessage(text.trim());
                     showNotification("SIGNAL_SENT", "Message broadcasted to comm link.", "success");
                 }
             }
@@ -819,8 +819,8 @@ export const IPodPlayer = ({
                 return;
             }
             if (item.id === 'REQUEST_TRACK') {
-                if (requestTrack && activeStation) {
-                    requestTrack(activeStation.id || activeStation.Id, currentTrack, user?.username || user?.Username || "Listeners");
+                if (onRequestTrack && activeStation) {
+                    onRequestTrack(currentTrack);
                     showNotification("REQ_SUBMITTED", "Track requested in queue.", "success");
                 }
             }
@@ -1058,16 +1058,18 @@ export const IPodPlayer = ({
                                     {/* TRACK INFO - BELOW COVER */}
                                     <div className="flex-1 flex flex-col justify-start min-h-0 space-y-1 pt-1 px-2 text-center">
                                         <div>
-                                            <h3 className={`${isVertical ? 'text-[10px]' : 'text-sm'} font-black text-white truncate tracking-tighter drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] transition-all`}>{currentTrack.title}</h3>
+                                            <h3 className={`${isVertical ? 'text-[10px]' : 'text-sm'} font-black text-white truncate tracking-tighter drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] transition-all`}>
+                                                {activeStation ? (activeStation.name || activeStation.Name) : currentTrack.title}
+                                            </h3>
                                             <p
                                                 className={`${isVertical ? 'text-[7px]' : 'text-[10px]'} font-bold text-[#f00060] truncate tracking-[0.2em] cursor-pointer hover:underline hover:text-white transition-all`}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    const targetId = currentTrack.artistUserId;
+                                                    const targetId = activeStation ? (activeStation.artistUserId || activeStation.ArtistUserId) : currentTrack.artistUserId;
                                                     if (targetId && navigateToProfile) navigateToProfile(targetId);
                                                 }}
                                             >
-                                                {currentTrack.artist}
+                                                {activeStation ? `LIVE: ${activeStation.artistName || activeStation.ArtistName || 'HOST'}` : currentTrack.artist}
                                             </p>
                                         </div>
 
