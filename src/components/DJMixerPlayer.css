@@ -217,7 +217,7 @@
     background: rgba(255, 255, 255, 0.03);
     padding: 6px 12px;
     border-radius: 4px;
-    margin-bottom: 12px;
+    margin-bottom: 4px;
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -447,7 +447,7 @@
 .nav-btn.mini:hover { opacity: 1; border-color: var(--accent); }
 
 .evolve-toggle-container {
-    margin: 5px 0;
+    margin: 0 0 4px 0;
 }
 
 .evolve-btn {
@@ -925,7 +925,7 @@
     justify-content: space-between;
     gap: 10px;
     flex: 1;
-    margin-top: 10px;
+    margin-top: 0;
 }
 
 .deck-controls-column-nano {
