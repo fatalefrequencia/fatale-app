@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SkipBack, SkipForward, Play, Pause, Zap, Disc, MessageSquare, List, Search, Plus, DollarSign, Users, Radio, Heart } from 'lucide-react';
+import { SkipBack, SkipForward, Play, Pause, Zap, Disc, MessageSquare, List, Search, Plus, DollarSign, Users, Radio, Heart, Music } from 'lucide-react';
 import './DJMixerPlayer.css';
 
 const NeuralSpectrum = ({ analyser, isActive }) => {
@@ -41,6 +41,12 @@ const NeuralSpectrum = ({ analyser, isActive }) => {
                     ctx.fillStyle = `rgba(255, 0, 110, 0.4)`;
                     ctx.fillRect(i * barWidth, canvas.height - barHeight, barWidth - 1, barHeight);
                 }
+
+                // YouTube Licensing Note
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.font = 'bold 7px "Courier New", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('YOUTUBE_LICENSE: VISUAL_DATA_RESTRICTED', canvas.width / 2, canvas.height - 4);
             } else {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
@@ -80,7 +86,9 @@ const DJMixerPlayer = ({
     onFetchPlaylistTracks,
     onPlaybackRateChange,
     onEqA,
-    analyserA
+    analyserA,
+    keyLockA,
+    onKeyLockAChange
 }) => {
     const [activeTab, setActiveTab] = useState('LIBRARY'); // LIBRARY, CHAT, REQUESTS
     const [crateCategory, setCrateCategory] = useState('ALL'); // ALL, PURCHASED, FAVORITES, ARTISTS, PLAYLISTS
@@ -88,6 +96,7 @@ const DJMixerPlayer = ({
     const [isAutoMixEnabled, setIsAutoMixEnabled] = useState(false);
     const [viewingPlaylist, setViewingPlaylist] = useState(null);
     const [isCrateLoading, setIsCrateLoading] = useState(false);
+    const [keyLockB, setKeyLockB] = useState(false);
     
     const [deckA, setDeckA] = useState(currentTrack || null);
     const [deckB, setDeckB] = useState(null);
@@ -273,13 +282,19 @@ const DJMixerPlayer = ({
     };
 
     useEffect(() => {
-        if (deckB) initAudioB();
-    }, [deckB]);
+        if (deckB) {
+            initAudioB();
+            if (audioB.current) audioB.current.preservesPitch = keyLockB;
+        }
+    }, [deckB, keyLockB]);
 
     useEffect(() => {
-        if (filtersB.current.low) filtersB.current.low.gain.value = eqB.low;
-        if (filtersB.current.mid) filtersB.current.mid.gain.value = eqB.mid;
-        if (filtersB.current.high) filtersB.current.high.gain.value = eqB.hi;
+        const ctx = audioCtxB.current;
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        if (filtersB.current.low) filtersB.current.low.gain.setTargetAtTime(eqB.low, now, 0.02);
+        if (filtersB.current.mid) filtersB.current.mid.gain.setTargetAtTime(eqB.mid, now, 0.02);
+        if (filtersB.current.high) filtersB.current.high.gain.setTargetAtTime(eqB.hi, now, 0.02);
     }, [eqB]);
 
     useEffect(() => {
@@ -380,7 +395,7 @@ const DJMixerPlayer = ({
     const adjustEq = (deck, param, delta) => {
         const setter = deck === 'A' ? setEqA : setEqB;
         setter(prev => {
-            const newVal = Math.max(-20, Math.min(20, prev[param] + delta));
+            const newVal = Math.max(-35, Math.min(15, prev[param] + delta));
             console.log(`[Neural Core] ${deck} ${param.toUpperCase()} adjusted to: ${newVal.toFixed(1)}dB`);
             return {
                 ...prev,
@@ -600,6 +615,14 @@ const DJMixerPlayer = ({
                             <div className="deck-core-layout-mirrored">
                                 {/* Outer Controls */}
                                 <div className="deck-controls-column-nano">
+                                    <button 
+                                        onClick={() => onKeyLockAChange(!keyLockA)}
+                                        className={`key-lock-btn-nano ${keyLockA ? 'active' : ''}`}
+                                        title="KEY_LOCK"
+                                    >
+                                        <Music size={10} />
+                                        <span>LOCK</span>
+                                    </button>
                                     <div className="evolve-toggle-container">
                                         <button 
                                             onClick={() => setIsEvolveA(!isEvolveA)} 
@@ -887,6 +910,14 @@ const DJMixerPlayer = ({
 
                                 {/* Outer Controls */}
                                 <div className="deck-controls-column-nano">
+                                    <button 
+                                        onClick={() => setKeyLockB(!keyLockB)}
+                                        className={`key-lock-btn-nano ${keyLockB ? 'active' : ''}`}
+                                        title="KEY_LOCK"
+                                    >
+                                        <Music size={10} />
+                                        <span>LOCK</span>
+                                    </button>
                                     <div className="evolve-toggle-container">
                                         <button 
                                             onClick={() => setIsEvolveB(!isEvolveB)} 

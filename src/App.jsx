@@ -135,6 +135,7 @@ function App() {
     return localStorage.getItem('isMiniPlayerMinimized') === 'true';
   });
   const [globalPlaybackRate, setGlobalPlaybackRate] = useState(1);
+  const [keyLockA, setKeyLockA] = useState(false);
 
   // Live Radio State
   const [followingMap, setFollowingMap] = useState({});
@@ -163,7 +164,7 @@ function App() {
 
         filters.current.low = audioCtx.current.createBiquadFilter();
         filters.current.low.type = 'lowshelf';
-        filters.current.low.frequency.value = 320;
+        filters.current.low.frequency.value = 200;
         
         filters.current.mid = audioCtx.current.createBiquadFilter();
         filters.current.mid.type = 'peaking';
@@ -172,7 +173,7 @@ function App() {
         
         filters.current.high = audioCtx.current.createBiquadFilter();
         filters.current.high.type = 'highshelf';
-        filters.current.high.frequency.value = 3200;
+        filters.current.high.frequency.value = 4000;
 
         sourceNode.current = audioCtx.current.createMediaElementSource(audioRef.current);
         sourceNode.current.connect(filters.current.low);
@@ -185,21 +186,34 @@ function App() {
 
   const handleEqChange = (type, val) => {
     initAudioCtx();
-    if (audioCtx.current?.state === 'suspended') audioCtx.current.resume();
+    const ctx = audioCtx.current;
+    if (ctx?.state === 'suspended') ctx.resume();
+    
     if (filters.current[type]) {
-        filters.current[type].gain.value = val;
+        // Use setTargetAtTime for smoother, more noticeable analog-style transition
+        const now = ctx.currentTime;
+        filters.current[type].gain.setTargetAtTime(val, now, 0.02);
     }
   };
 
   const handlePlaybackRateChange = (newRate) => {
     setGlobalPlaybackRate(newRate);
-    if (audioRef.current) audioRef.current.playbackRate = newRate;
+    if (audioRef.current) {
+        audioRef.current.preservesPitch = keyLockA;
+        audioRef.current.playbackRate = newRate;
+    }
     if (youtubePlayer && typeof youtubePlayer.setPlaybackRate === 'function') {
         try {
             youtubePlayer.setPlaybackRate(newRate);
         } catch(e) { console.warn("YT setRate fail", e); }
     }
   };
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.preservesPitch = keyLockA;
+    }
+  }, [keyLockA]);
 
   const onEqA = (type, val) => handleEqChange(type, val);
 
@@ -2507,6 +2521,8 @@ const Dashboard = React.memo(({
               onPlaybackRateChange={onPlaybackRateChange}
               onEqA={onEqA}
               analyserA={analyserA}
+              keyLockA={keyLockA}
+              setKeyLockA={setKeyLockA}
             />}
             {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} initialChatUser={activeMessageUser} />}
             {activeView === 'settings' && (
@@ -4197,6 +4213,8 @@ const FeedContent = React.memo(({
 // --- CONTENIDO: PLAYER (PANTALLA COMPLETA) ---
 const PlayerContent = ({
   setView,
+  keyLockA,
+  setKeyLockA,
   currentTrackIndex,
   setCurrentTrackIndex,
   isPlaying,
@@ -4262,6 +4280,8 @@ const PlayerContent = ({
           onPlaybackRateChange={onPlaybackRateChange}
           onEqA={onEqA}
           analyserA={analyserA}
+          keyLockA={keyLockA}
+          onKeyLockAChange={setKeyLockA}
           onPlayTrack={(track) => {
             const tId = track.id || track.Id;
             const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
