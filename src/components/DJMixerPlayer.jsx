@@ -88,7 +88,9 @@ const DJMixerPlayer = ({
     onEqA,
     analyserA,
     keyLockA,
-    onKeyLockAChange
+    onKeyLockAChange,
+    setTracks,
+    setCurrentTrackIndex
 }) => {
     const [activeTab, setActiveTab] = useState('LIBRARY'); // LIBRARY, CHAT, REQUESTS
     const [crateCategory, setCrateCategory] = useState('ALL'); // ALL, PURCHASED, FAVORITES, ARTISTS, PLAYLISTS
@@ -504,8 +506,18 @@ const DJMixerPlayer = ({
         const filtered = getFilteredTracks();
         const allTracks = [...(filtered.collection || []), ...(filtered.network || [])];
         if (allTracks.length > 0) {
-            const randomTrack = allTracks[Math.floor(Math.random() * allTracks.length)];
-            loadToDeck(randomTrack, 'A');
+            // Shuffle the entire group
+            const shuffled = [...allTracks].sort(() => Math.random() - 0.5);
+            
+            if (setTracks && setCurrentTrackIndex) {
+                // Update global queue so Next/Prev respect the shuffle
+                setTracks(shuffled);
+                setCurrentTrackIndex(0);
+            } else {
+                // Fallback for isolated component testing
+                const randomTrack = allTracks[Math.floor(Math.random() * allTracks.length)];
+                loadToDeck(randomTrack, 'A');
+            }
         }
     };
 

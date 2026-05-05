@@ -2058,6 +2058,8 @@ function App() {
               analyserA={analyserA}
               keyLockA={keyLockA}
               onKeyLockAChange={setKeyLockA}
+              setTracks={setTracks}
+              setCurrentTrackIndex={setCurrentTrackIndex}
               onPlayTrack={(track) => {
                 const tId = track.id || track.Id;
                 const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
@@ -2500,6 +2502,7 @@ const Dashboard = React.memo(({
               isPlaying={isPlaying}
               setIsPlaying={setIsPlaying}
               tracks={tracks}
+              setTracks={setTracks}
               user={user}
               onPurchase={onPurchase}
               onDownload={onDownload}
@@ -4226,6 +4229,7 @@ const PlayerContent = ({
   isPlaying,
   setIsPlaying,
   tracks,
+  setTracks,
   libraryTracks,
   currentTime,
   duration,
@@ -4277,6 +4281,8 @@ const PlayerContent = ({
           onSendMessage={sendMessage}
           onClose={() => setView('discovery')}
           tracks={tracks}
+          setTracks={setTracks}
+          setCurrentTrackIndex={setCurrentTrackIndex}
           libraryTracks={libraryTracks}
           userPlaylists={userPlaylists}
           onLike={onLike}
