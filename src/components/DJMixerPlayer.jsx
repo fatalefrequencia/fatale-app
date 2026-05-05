@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SkipBack, SkipForward, Play, Pause, Zap, Disc, MessageSquare, List, Search, Plus, DollarSign, Users, Radio, Heart, Music } from 'lucide-react';
+import { SkipBack, SkipForward, Play, Pause, Zap, Disc, MessageSquare, List, Search, Plus, DollarSign, Users, Radio, Heart, Music, Shuffle } from 'lucide-react';
 import './DJMixerPlayer.css';
 
 const NeuralSpectrum = ({ analyser, isActive }) => {
@@ -497,6 +497,15 @@ const DJMixerPlayer = ({
             if (audioB.current.src) audioB.current.play();
         }
         setIsPlayingB(!isPlayingB);
+    };
+
+    const handleShuffle = () => {
+        const filtered = getFilteredTracks();
+        const allTracks = [...(filtered.collection || []), ...(filtered.network || [])];
+        if (allTracks.length > 0) {
+            const randomTrack = allTracks[Math.floor(Math.random() * allTracks.length)];
+            loadToDeck(randomTrack, 'A');
+        }
     };
 
     // Filtered Crate Logic
@@ -1015,7 +1024,16 @@ const DJMixerPlayer = ({
                                             <SkipBack size={8} /> BACK_TO_PLAYLISTS
                                         </button>
                                     ) : (
-                                        ['ALL', 'PURCHASED', 'FAVORITES', 'ARTISTS', 'PLAYLISTS'].map(cat => (
+                                    <div className="flex items-center gap-2">
+                                        <button 
+                                            onClick={handleShuffle}
+                                            className="filter-chip shuffle-btn flex items-center gap-2 bg-[#ff006e]/10 border-[#ff006e]/20 text-[#ff006e]"
+                                            title="SHUFFLE_SIGNALS"
+                                        >
+                                            <Shuffle size={10} /> SHUFFLE
+                                        </button>
+                                        <div className="w-px h-4 bg-white/10 mx-1" />
+                                        {['ALL', 'PURCHASED', 'FAVORITES', 'ARTISTS', 'PLAYLISTS'].map(cat => (
                                             <button 
                                                 key={cat}
                                                 onClick={() => {
@@ -1026,7 +1044,8 @@ const DJMixerPlayer = ({
                                             >
                                                 {cat}
                                             </button>
-                                        ))
+                                        ))}
+                                    </div>
                                     )}
                                 </div>
                             </div>
