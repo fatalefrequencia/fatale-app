@@ -1041,15 +1041,24 @@ const DJMixerPlayer = ({
                                 </div>
                                 <div className="crate-filter-chips">
                                     {viewingPlaylist || viewingArtist ? (
-                                        <button 
-                                            onClick={() => {
-                                                setViewingPlaylist(null);
-                                                setViewingArtist(null);
-                                            }}
-                                            className="filter-chip active flex items-center gap-2"
-                                        >
-                                            <SkipBack size={8} /> BACK_TO_BROWSE
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <button 
+                                                onClick={() => {
+                                                    setViewingPlaylist(null);
+                                                    setViewingArtist(null);
+                                                }}
+                                                className="filter-chip active flex items-center gap-2"
+                                            >
+                                                <SkipBack size={8} /> BACK_TO_BROWSE
+                                            </button>
+                                            <button 
+                                                onClick={handleShuffle}
+                                                className="filter-chip shuffle-btn flex items-center gap-2 bg-[#ff006e]/10 border-[#ff006e]/20 text-[#ff006e]"
+                                                title="SHUFFLE_SIGNALS"
+                                            >
+                                                <Shuffle size={10} /> SHUFFLE
+                                            </button>
+                                        </div>
                                     ) : (
                                         <div className="flex items-center gap-2">
                                             <button 
