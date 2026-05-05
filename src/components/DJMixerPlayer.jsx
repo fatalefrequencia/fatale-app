@@ -620,7 +620,6 @@ const DJMixerPlayer = ({
                                             onClick={() => setIsEvolveA(!isEvolveA)} 
                                             className={`evolve-btn ${isEvolveA ? 'active' : ''}`}
                                         >
-                                            <Zap size={10} />
                                             <span>EVOLVE</span>
                                         </button>
                                     </div>
@@ -629,8 +628,7 @@ const DJMixerPlayer = ({
                                         className={`key-lock-btn-nano ${keyLockA ? 'active' : ''}`}
                                         title="KEY_LOCK"
                                     >
-                                        <Music size={10} />
-                                        <span>LOCK</span>
+                                        <span>Key Lock</span>
                                     </button>
                                     
                                     <div className="tempo-control-group">
@@ -915,7 +913,6 @@ const DJMixerPlayer = ({
                                             onClick={() => setIsEvolveB(!isEvolveB)} 
                                             className={`evolve-btn ${isEvolveB ? 'active' : ''}`}
                                         >
-                                            <Zap size={10} />
                                             <span>EVOLVE</span>
                                         </button>
                                     </div>
@@ -924,8 +921,7 @@ const DJMixerPlayer = ({
                                         className={`key-lock-btn-nano ${keyLockB ? 'active' : ''}`}
                                         title="KEY_LOCK"
                                     >
-                                        <Music size={10} />
-                                        <span>LOCK</span>
+                                        <span>Key Lock</span>
                                     </button>
                                     
                                     <div className="tempo-control-group">
