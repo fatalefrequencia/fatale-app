@@ -857,6 +857,7 @@ const GearRackWidget = ({ gear, isMe, onAdd, onDelete, expand, onToggleExpand })
 
 // --- VISTA: PERFIL ---
 export const ProfileView = React.memo(({
+    isLandscape,
     user: currentUser, tracks: allTracks, onLogout, onAddCredits, onRefreshProfile, onRefreshTracks,
     targetUserId,
     navigateToProfile,

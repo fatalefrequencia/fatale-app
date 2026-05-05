@@ -18,6 +18,7 @@ const MENU_ITEMS = [
 ];
 
 export const IPodPlayer = ({
+    isLandscape,
     tracks,
     libraryTracks = [], // New prop for full library
     currentTrackIndex,

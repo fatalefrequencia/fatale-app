@@ -1,4 +1,4 @@
-// Deployment Trigger: 2026-04-23T11:28:45-04:00
+// Deployment Trigger: 2026-05-05T02:50:00-04:00
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -91,6 +91,9 @@ const getGlobalYoutubeId = (t) => {
   
   return null;
 };
+
+// Global Orientation State Fallback (Prevents ReferenceErrors in components defined before App)
+const GLOBAL_IS_LANDSCAPE = typeof window !== 'undefined' && window.innerWidth > window.innerHeight;
 
 // --- COMPONENTE PRINCIPAL ---
 function App() {
@@ -1922,6 +1925,7 @@ function App() {
                onEqA={onEqA}
                analyserA={analyserA}
                station={activeStation}
+               isLandscape={isLandscape}
            />
           </>
         )}
@@ -2225,7 +2229,8 @@ const Dashboard = React.memo(({
   onFetchPlaylistTracks,
   onPlaybackRateChange,
   onEqA,
-  analyserA
+  analyserA,
+  isLandscape
 }) => {
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -2384,6 +2389,7 @@ const Dashboard = React.memo(({
                 <DiscoveryHUD
                   key="discovery"
                   user={user}
+                  isLandscape={isLandscape}
                   followedCommunities={followedCommunities}
                   onFollowUpdate={() => {
                     const updated = API.Communities.getFollowed();
@@ -2457,6 +2463,7 @@ const Dashboard = React.memo(({
                 <FeedContent 
                   key="feed" 
                   setView={setView} 
+                  isLandscape={isLandscape}
                   onPlayPlaylist={handlePlayPlaylist} 
                   navigateToProfile={navigateToProfile} 
                   user={user} 
@@ -2484,13 +2491,14 @@ const Dashboard = React.memo(({
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="w-full h-full"
               >
-                <ProfileView
-                  key={viewingUserId || 'me'}
-                  targetUserId={viewingUserId}
-                  user={user}
-                  tracks={tracks}
-                  currentTrack={currentTrack}
-                  setTracks={setTracks}
+                  <ProfileView
+                    key={viewingUserId || 'me'}
+                    targetUserId={viewingUserId}
+                    user={user}
+                    isLandscape={isLandscape}
+                    tracks={tracks}
+                    currentTrack={currentTrack}
+                    setTracks={setTracks}
                   onLogout={onLogout}
                   onAddCredits={onAddCredits}
                   setUser={setUser}
@@ -2744,7 +2752,7 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
             className="ml-2 p-2 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] rounded-sm hover:bg-[#ff006e] hover:text-black transition-all shadow-[0_0_15px_rgba(255,0,110,0.2)]"
             title="OPEN_MIXER_CONSOLE"
           >
-            <AntennaIcon size={16} className="animate-pulse" />
+            <Radio size={16} className="animate-pulse" />
           </button>
         )}
       </div>
@@ -2901,6 +2909,7 @@ const FeedContent = React.memo(({
   onPlayPlaylist, 
   navigateToProfile, 
   user, 
+  isLandscape,
   favoriteStations, 
   liveStations, 
   setActiveStation, 
@@ -4302,6 +4311,7 @@ const PlayerContent = ({
   analyserA,
   isLandscape
 }) => {
+  const isDesktop = window.innerWidth >= 1024;
   const isMobile = !isDesktop;
   const showFullMixer = isDesktop || isLandscape;
 
@@ -4365,6 +4375,7 @@ const PlayerContent = ({
       ) : (
         <IPodPlayer
           forceNowPlaying={forceNowPlaying}
+          isLandscape={isLandscape}
           currentTrackIndex={currentTrackIndex}
           setCurrentTrackIndex={setCurrentTrackIndex}
           isPlaying={isPlaying}
