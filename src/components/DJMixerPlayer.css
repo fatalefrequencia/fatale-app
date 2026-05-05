@@ -1551,3 +1551,118 @@
     color: white;
     border-color: rgba(255, 255, 255, 0.4);
 }
+
+/* ==============================================================
+   MOBILE LANDSCAPE OPTIMIZATIONS
+   ============================================================== */
+
+@media (max-height: 550px) {
+    .is-listener-mode .mixer-hud-wrapper {
+        padding: 10px;
+        gap: 10px;
+        max-height: 95vh;
+    }
+
+    .listener-now-playing-pane {
+        padding: 15px;
+        min-width: 220px;
+        flex: 0 0 35%;
+    }
+    
+    .listener-artwork-wrapper {
+        width: 90px;
+        margin-bottom: 10px;
+    }
+    
+    .listener-track-info {
+        margin-bottom: 8px;
+    }
+    
+    .listener-track-title {
+        font-size: 14px;
+        margin-bottom: 1px;
+    }
+    
+    .listener-track-artist {
+        font-size: 9px;
+    }
+    
+    .listener-progress-container {
+        margin-bottom: 8px;
+    }
+    
+    .listener-progress-bar {
+        height: 3px;
+        margin-bottom: 4px;
+    }
+    
+    .listener-time-row {
+        font-size: 8px;
+    }
+    
+    .listener-controls {
+        gap: 12px;
+        margin-bottom: 10px;
+    }
+    
+    .listener-controls .control-btn {
+        padding: 6px;
+    }
+    
+    .listener-controls .play-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    .listener-controls .play-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .toggle-view-btn-main {
+        padding: 4px 10px;
+        font-size: 8px;
+        letter-spacing: 0.1em;
+    }
+
+    /* Utility Pane Header Fixes */
+    .utility-header-neon {
+        padding: 6px 10px;
+        min-height: unset;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .utility-tabs-neon {
+        gap: 6px;
+    }
+    
+    .util-tab {
+        padding: 4px 6px;
+    }
+    
+    .util-tab span {
+        font-size: 8px;
+        letter-spacing: 0;
+    }
+
+    .crate-search-box {
+        height: 24px;
+        padding: 0 8px;
+    }
+    
+    .crate-search-input {
+        font-size: 8px;
+    }
+
+    .filter-chip {
+        font-size: 7px;
+        padding: 2px 6px;
+    }
+}
+
+/* Ensure images never overflow their containers */
+.listener-artwork {
+    max-width: 100%;
+    max-height: 100%;
+}

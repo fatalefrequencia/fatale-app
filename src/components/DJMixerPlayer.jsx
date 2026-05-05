@@ -592,12 +592,13 @@ const DJMixerPlayer = ({
     };
 
     const formatTime = (time) => {
+        if (!time || isNaN(time) || time < 0) return "0:00";
         const mins = Math.floor(time / 60);
         const secs = Math.floor(time % 60);
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const progress = (currentTime / duration) * 100 || 0;
+    const progress = (duration > 0 && !isNaN(duration)) ? (currentTime / duration) * 100 : 0;
 
     return (
         <div className={`dj-mixer-overlay ${isMobile ? 'is-mobile-landscape' : ''} ${viewMode === 'LISTENER' ? 'is-listener-mode' : ''}`}>
