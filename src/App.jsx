@@ -2054,6 +2054,8 @@ function App() {
               onPlaybackRateChange={handlePlaybackRateChange}
               onEqA={onEqA}
               analyserA={analyserA}
+              keyLockA={keyLockA}
+              onKeyLockAChange={setKeyLockA}
               onPlayTrack={(track) => {
                 const tId = track.id || track.Id;
                 const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
