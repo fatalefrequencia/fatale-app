@@ -1803,6 +1803,8 @@ function App() {
           <>
             {console.log("[App] Rendering Dashboard. Redirect Trigger:", redirectTrigger)}
            <Dashboard
+               keyLockA={keyLockA}
+               setKeyLockA={setKeyLockA}
                activeView={activeView}
                setView={setView}
                onLogout={handleLogout}
@@ -2111,8 +2113,10 @@ const LoginView = ({ onLogin }) => (
   </motion.div>
 );
 const Dashboard = React.memo(({ 
-  activeView, 
-  setView, 
+  keyLockA,
+  setKeyLockA,
+  activeView,
+  setView,
   onLogout, 
   currentTrackIndex, 
   setCurrentTrackIndex, 
