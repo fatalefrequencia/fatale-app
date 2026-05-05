@@ -746,23 +746,64 @@
     padding: 0 5px;
 }
 
-.crate-search-box {
-    flex: 1;
+.crate-search-box-minimal {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
-    padding: 8px 15px;
+    border-radius: 20px;
+    padding: 4px 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-width: 40px;
+    overflow: hidden;
+}
+
+.crate-search-box-minimal:hover,
+.crate-search-box-minimal:focus-within {
+    max-width: 200px;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent);
+}
+
+.search-icon-trigger {
+    color: var(--accent);
+    flex-shrink: 0;
+    opacity: 0.6;
+}
+
+.crate-search-input-minimal {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: white;
+    font-size: 9px;
+    width: 120px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.crate-search-box-minimal:hover .crate-search-input-minimal,
+.crate-search-box-minimal:focus-within .crate-search-input-minimal {
+    opacity: 1;
 }
 
 .crate-filter-chips {
     display: flex;
     gap: 8px;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 5px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.crate-filter-chips::-webkit-scrollbar {
+    display: none;
 }
 
 .filter-chip {
+    flex-shrink: 0;
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 20px;
@@ -1620,44 +1661,25 @@
     }
     
     .toggle-view-btn-main {
-        padding: 4px 10px;
-        font-size: 8px;
-        letter-spacing: 0.1em;
+        padding: 6px 14px;
+        font-size: 9px;
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: white;
     }
 
     /* Utility Pane Header Fixes */
     .utility-header-neon {
-        padding: 6px 10px;
+        padding: 8px 12px;
         min-height: unset;
-        flex-wrap: wrap;
-        gap: 8px;
+        flex-wrap: nowrap; /* Keep it one line and scrollable if needed */
+        overflow-x: auto;
+        gap: 15px;
     }
 
-    .utility-tabs-neon {
-        gap: 6px;
-    }
-    
-    .util-tab {
-        padding: 4px 6px;
-    }
-    
-    .util-tab span {
-        font-size: 8px;
-        letter-spacing: 0;
-    }
-
-    .crate-search-box {
-        height: 24px;
-        padding: 0 8px;
-    }
-    
-    .crate-search-input {
-        font-size: 8px;
-    }
-
-    .filter-chip {
-        font-size: 7px;
-        padding: 2px 6px;
+    .crate-search-box-minimal {
+        height: 28px;
+        min-width: 40px;
     }
 }
 

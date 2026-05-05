@@ -1051,7 +1051,7 @@ const DJMixerPlayer = ({
                         <div className="listener-artwork-wrapper">
                             <div className="listener-artwork-glow"></div>
                             <img 
-                                src={getMediaUrl(deckA?.imageUrl || deckA?.coverImageUrl || station?.imageUrl)} 
+                                src={getMediaUrl(deckA?.imageUrl || deckA?.coverImageUrl || deckA?.thumbnail || station?.imageUrl || station?.coverArt)} 
                                 alt="Now Playing" 
                                 className={`listener-artwork ${isPlayingA ? 'spin-slow' : ''}`} 
                                 onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/300x300/111/ff006e?text=SIGNAL'; }}
@@ -1105,14 +1105,14 @@ const DJMixerPlayer = ({
                         
                         {activeTab === 'LIBRARY' && (
                             <div className="crate-controls-hub">
-                                <div className="crate-search-box">
-                                    <Search size={10} className="opacity-30" />
+                                <div className="crate-search-box-minimal">
+                                    <Search size={12} className="search-icon-trigger" />
                                     <input 
                                         type="text" 
-                                        placeholder="SEARCH_SIGNAL_DATABASE..." 
+                                        placeholder="SEARCH..." 
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="crate-search-input"
+                                        className="crate-search-input-minimal"
                                     />
                                 </div>
                                 <div className="crate-filter-chips">
