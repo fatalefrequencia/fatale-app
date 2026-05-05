@@ -509,6 +509,20 @@ const DJMixerPlayer = ({
         }
     };
 
+    const getDisplayArtist = (t) => {
+        const source = t.source || t.Source || t.filePath || t.FilePath || "";
+        if (source.includes('youtube:') || source.includes('youtu.be') || source.includes('youtube.com')) {
+            return "YouTube Tracks";
+        }
+        
+        let artist = t.artist || t.ArtistName || t.Artist;
+        if (!artist || artist === 'Unknown Artist' || artist === 'Unknown') {
+            if (station?.artistName) return station.artistName;
+            return "Unknown Artist";
+        }
+        return artist;
+    };
+
     // Filtered Crate Logic
     const getFilteredTracks = () => {
         if (crateCategory === 'PLAYLISTS') {
@@ -520,10 +534,10 @@ const DJMixerPlayer = ({
 
         if (crateCategory === 'ARTISTS') {
             if (viewingArtist) {
-                const artistTracks = libraryTracks.filter(t => (t.artist || t.ArtistName || 'Unknown Artist') === viewingArtist);
+                const artistTracks = libraryTracks.filter(t => getDisplayArtist(t) === viewingArtist);
                 return { collection: artistTracks, network: [] };
             }
-            const uniqueArtists = Array.from(new Set(libraryTracks.map(t => t.artist || t.ArtistName || 'Unknown Artist'))).sort();
+            const uniqueArtists = Array.from(new Set(libraryTracks.map(t => getDisplayArtist(t)))).sort();
             return { collection: [], network: [], artists: uniqueArtists };
         }
 
@@ -1113,7 +1127,7 @@ const DJMixerPlayer = ({
                                                             {artist}
                                                         </td>
                                                         <td className="sig-bpm mono opacity-20">
-                                                            {libraryTracks.filter(t => (t.artist || t.ArtistName) === artist).length} SIG
+                                                            {libraryTracks.filter(t => getDisplayArtist(t) === artist).length} SIG
                                                         </td>
                                                         <td className="sig-sync mono opacity-20">BROWSE_NODE</td>
                                                     </tr>
@@ -1139,7 +1153,7 @@ const DJMixerPlayer = ({
                                                                 {t.title}
                                                                 {t.isLiked && <Heart size={8} fill="var(--accent)" className="text-[var(--accent)]" />}
                                                             </td>
-                                                            <td className="sig-artist truncate opacity-30">{t.artist}</td>
+                                                            <td className="sig-artist truncate opacity-30">{getDisplayArtist(t)}</td>
                                                             <td className="sig-bpm mono text-[var(--accent)]">{t.bpm || '--'}</td>
                                                             <td className="sig-sync mono opacity-20">{t.duration ? Math.floor(t.duration / 60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '--:--'}</td>
                                                         </tr>
@@ -1157,7 +1171,7 @@ const DJMixerPlayer = ({
                                                             <td className="sig-title truncate font-black flex items-center gap-2">
                                                                 {t.title}
                                                             </td>
-                                                            <td className="sig-artist truncate opacity-30">{t.artist}</td>
+                                                            <td className="sig-artist truncate opacity-30">{getDisplayArtist(t)}</td>
                                                             <td className="sig-bpm mono text-[var(--accent)]">{t.bpm || '--'}</td>
                                                             <td className="sig-sync mono opacity-20">{t.duration ? Math.floor(t.duration / 60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '--:--'}</td>
                                                         </tr>
