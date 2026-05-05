@@ -100,6 +100,7 @@ const DJMixerPlayer = ({
     const [isCrateLoading, setIsCrateLoading] = useState(false);
     const [keyLockB, setKeyLockB] = useState(false);
     const [viewingArtist, setViewingArtist] = useState(null);
+    const [chatInput, setChatInput] = useState('');
     
     const [deckA, setDeckA] = useState(currentTrack || null);
     const [deckB, setDeckB] = useState(null);
@@ -1198,6 +1199,88 @@ const DJMixerPlayer = ({
                                                         </tr>
                                                     ))}
                                                 </>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </motion.div>
+                            )}
+                            {activeTab === 'CHAT' && (
+                                <motion.div 
+                                    key="chat"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="chat-container-nano flex flex-col h-full"
+                                >
+                                    <div className="chat-messages-scroll custom-scrollbar flex-1 overflow-y-auto p-4 space-y-4">
+                                        {chatMessages.length > 0 ? chatMessages.map((m, i) => (
+                                            <div key={i} className={`neural-msg ${m.userId === (station?.artistUserId) ? 'artist' : ''}`}>
+                                                <div className="msg-meta flex items-center gap-2 mb-1">
+                                                    <span className="msg-user font-black tracking-tighter text-[8px] uppercase">{m.userName || 'ANON_NODE'}</span>
+                                                    <span className="msg-time opacity-20 text-[6px]">{new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                </div>
+                                                <div className="msg-content p-2 rounded bg-white/5 border border-white/5 text-[10px] leading-relaxed">
+                                                    {m.content}
+                                                </div>
+                                            </div>
+                                        )) : (
+                                            <div className="h-full flex items-center justify-center opacity-20 italic text-[10px]">NO_NEURAL_ACTIVITY_DETECTED...</div>
+                                        )}
+                                    </div>
+                                    <div className="chat-input-row p-3 border-t border-white/5 bg-black/40 flex gap-2">
+                                        <input 
+                                            type="text" 
+                                            placeholder="BROADCAST_SIGNAL..." 
+                                            value={chatInput}
+                                            onChange={(e) => setChatInput(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && (onSendMessage(chatInput), setChatInput(''))}
+                                            className="neural-chat-input flex-1 bg-white/5 border border-white/10 rounded px-3 py-2 text-[10px] focus:outline-none focus:border-[var(--accent)]/50"
+                                        />
+                                        <button 
+                                            onClick={() => { onSendMessage(chatInput); setChatInput(''); }}
+                                            className="neural-send-btn px-4 bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 rounded hover:bg-[var(--accent)]/20 transition-all"
+                                        >
+                                            <Zap size={12} />
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {activeTab === 'REQUESTS' && (
+                                <motion.div 
+                                    key="requests"
+                                    initial={{ opacity: 0, scale: 0.98 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.98 }}
+                                    className="requests-nano custom-scrollbar h-full w-full"
+                                >
+                                    <table className="signal-table-nano">
+                                        <thead>
+                                            <tr>
+                                                <th className="w-16">LOAD</th>
+                                                <th>REQUEST_ID</th>
+                                                <th>ORIGIN</th>
+                                                <th className="w-12">BPM</th>
+                                                <th className="w-12">STATUS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {requests.length > 0 ? requests.map((r, i) => (
+                                                <tr key={i} className="signal-row request-row">
+                                                    <td className="load-actions">
+                                                        <button onClick={() => loadToDeck(r, 'A')} className="load-chip">A</button>
+                                                        <button onClick={() => loadToDeck(r, 'B')} className="load-chip">B</button>
+                                                    </td>
+                                                    <td className="sig-title truncate font-black flex items-center gap-2">
+                                                        {r.title}
+                                                        <span className="text-[6px] px-1 bg-[var(--accent)]/20 rounded">REQ</span>
+                                                    </td>
+                                                    <td className="sig-artist truncate opacity-30">{getDisplayArtist(r)}</td>
+                                                    <td className="sig-bpm mono text-[var(--accent)]">{r.bpm || '--'}</td>
+                                                    <td className="sig-sync mono opacity-20 italic">PENDING</td>
+                                                </tr>
+                                            )) : (
+                                                <tr className="signal-row"><td colSpan="5" className="text-center py-12 opacity-20 italic">NO_PENDING_REQUESTS</td></tr>
                                             )}
                                         </tbody>
                                     </table>

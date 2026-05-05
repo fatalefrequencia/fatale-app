@@ -1224,3 +1224,30 @@
     transform: scale(0.95);
     background: rgba(255, 0, 110, 0.3) !important;
 }
+
+/* Neural Chat & Requests */
+.neural-msg.artist .msg-user {
+    color: var(--accent);
+    text-shadow: 0 0 10px rgba(255, 0, 110, 0.4);
+}
+
+.neural-msg.artist .msg-content {
+    background: rgba(255, 0, 110, 0.05);
+    border-color: rgba(255, 0, 110, 0.1);
+}
+
+.neural-chat-input::placeholder {
+    color: rgba(255, 255, 255, 0.2);
+    font-style: italic;
+    letter-spacing: 0.1em;
+}
+
+.request-row .sig-title {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.requests-nano .section-header-row td {
+    background: rgba(0, 255, 110, 0.05);
+    color: #00ff6e;
+    font-size: 7px;
+}
