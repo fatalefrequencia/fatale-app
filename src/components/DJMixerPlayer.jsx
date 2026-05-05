@@ -602,8 +602,9 @@ const DJMixerPlayer = ({
             
             <div className="mixer-hud-wrapper custom-scrollbar">
                 {viewMode === 'MIXER' ? (
-                    {/* PRIMARY CONSOLE PANE */}
-                    <div className="mixer-console-pane glass-pane">
+                    <>
+                        {/* PRIMARY CONSOLE PANE */}
+                        <div className="mixer-console-pane glass-pane">
                         <div className="pane-glitch-border"></div>
 
                     
@@ -1034,9 +1035,12 @@ const DJMixerPlayer = ({
                             </div>
                         </div>
                     </div>
+                </div>
+            </>
                 ) : (
-                    {/* LISTENER NOW PLAYING PANE */}
-                    <div className="listener-now-playing-pane glass-pane">
+                    <>
+                        {/* LISTENER NOW PLAYING PANE */}
+                        <div className="listener-now-playing-pane glass-pane">
                         <div className="listener-artwork-wrapper">
                             <div className="listener-artwork-glow"></div>
                             <img 
@@ -1079,7 +1083,8 @@ const DJMixerPlayer = ({
                             </button>
                         </div>
                     </div>
-                )}
+                </>
+            )}
 
                 {/* SECONDARY UTILITY PANE */}
 
