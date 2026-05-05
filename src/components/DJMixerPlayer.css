@@ -1350,3 +1350,204 @@
     color: #00ff6e;
     font-size: 7px;
 }
+ 
+/* ==============================================================
+   LISTENER MODE (NOW PLAYING VIEW)
+   ============================================================== */
+
+.is-listener-mode .mixer-hud-wrapper {
+    flex-direction: row; /* Two-column layout by default (desktop/landscape) */
+    align-items: stretch;
+}
+
+/* Portrait mobile overrides for listener mode */
+@media (max-width: 768px) and (orientation: portrait) {
+    .is-listener-mode .mixer-hud-wrapper {
+        flex-direction: column;
+    }
+}
+
+.listener-now-playing-pane {
+    flex: 0 0 40%;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    position: relative;
+    overflow: hidden;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.listener-artwork-wrapper {
+    position: relative;
+    width: 60%;
+    aspect-ratio: 1;
+    margin-bottom: 30px;
+    border-radius: 8px;
+}
+
+.listener-artwork-glow {
+    position: absolute;
+    inset: -20px;
+    background: var(--accent);
+    filter: blur(40px);
+    opacity: 0.15;
+    z-index: 0;
+    border-radius: 50%;
+    animation: pulseGlow 4s infinite alternate;
+}
+
+@keyframes pulseGlow {
+    0% { opacity: 0.1; transform: scale(0.95); }
+    100% { opacity: 0.25; transform: scale(1.05); }
+}
+
+.listener-artwork {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    background-color: #111;
+}
+
+.listener-artwork.spin-slow {
+    animation: spinArt 20s linear infinite;
+    border-radius: 50%; /* Make it look like a vinyl/CD if spinning */
+}
+
+@keyframes spinArt {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.listener-artwork-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.5) 100%);
+    border-radius: inherit;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.listener-track-info {
+    text-align: center;
+    width: 100%;
+    margin-bottom: 25px;
+}
+
+.listener-track-title {
+    font-size: 20px;
+    font-weight: 900;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 5px;
+}
+
+.listener-track-artist {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+}
+
+.listener-progress-container {
+    width: 100%;
+    margin-bottom: 25px;
+}
+
+.listener-progress-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.listener-progress-bar .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+    transition: width 0.1s linear;
+}
+
+.listener-time-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.listener-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.listener-controls .control-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 10px;
+    border-radius: 50%;
+}
+
+.listener-controls .control-btn:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.listener-controls .play-btn {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.listener-controls .play-btn:hover {
+    background: var(--accent);
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 0, 110, 0.4);
+}
+
+.listener-controls .play-btn.active {
+    background: var(--accent);
+    box-shadow: 0 0 20px rgba(255, 0, 110, 0.4);
+}
+
+.listener-mode-toggle {
+    margin-top: auto;
+}
+
+.toggle-view-btn-main {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.6);
+    padding: 8px 16px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 4px;
+}
+
+.toggle-view-btn-main:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.4);
+}

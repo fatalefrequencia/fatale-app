@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SkipBack, SkipForward, Play, Pause, Zap, Disc, MessageSquare, List, Search, Plus, DollarSign, Users, Radio, Heart, Music, Shuffle } from 'lucide-react';
+import { SkipBack, SkipForward, Play, Pause, Zap, Disc, MessageSquare, List, Search, Plus, DollarSign, Users, Radio, Heart, Music, Shuffle, Settings } from 'lucide-react';
+import { getMediaUrl } from '../constants';
 import './DJMixerPlayer.css';
 
 const NeuralSpectrum = ({ analyser, isActive }) => {
@@ -102,6 +103,7 @@ const DJMixerPlayer = ({
     const [keyLockB, setKeyLockB] = useState(false);
     const [viewingArtist, setViewingArtist] = useState(null);
     const [chatInput, setChatInput] = useState('');
+    const [viewMode, setViewMode] = useState(!isBroadcaster ? 'LISTENER' : 'MIXER');
     
     const [deckA, setDeckA] = useState(currentTrack || null);
     const [deckB, setDeckB] = useState(null);
@@ -592,16 +594,18 @@ const DJMixerPlayer = ({
     const progress = (currentTime / duration) * 100 || 0;
 
     return (
-        <div className={`dj-mixer-overlay ${isMobile ? 'is-mobile-landscape' : ''}`}>
+        <div className={`dj-mixer-overlay ${isMobile ? 'is-mobile-landscape' : ''} ${viewMode === 'LISTENER' ? 'is-listener-mode' : ''}`}>
             {/* Scanline / Texture Layer */}
             <div className="cyber-overlay-fx"></div>
 
             <audio ref={audioB} crossOrigin="anonymous" className="hidden" />
             
             <div className="mixer-hud-wrapper custom-scrollbar">
-                {/* PRIMARY CONSOLE PANE */}
-                <div className="mixer-console-pane glass-pane">
-                    <div className="pane-glitch-border"></div>
+                {viewMode === 'MIXER' ? (
+                    {/* PRIMARY CONSOLE PANE */}
+                    <div className="mixer-console-pane glass-pane">
+                        <div className="pane-glitch-border"></div>
+
                     
                     {/* Top Signal Strip: Ultra-Thin tactical bar */}
                     <div className="mixer-header-compact-neural">
@@ -622,10 +626,9 @@ const DJMixerPlayer = ({
                                 <span className="val">{station?.listenerCount || '1.2K'}</span>
                             </div>
                             <div className="divider-nano">|</div>
-                            <div className="readout-item-nano">
-                                <span className="label-nano opacity-40">STB_SYS</span>
-                                <span className="val text-green-500">V.1.0</span>
-                            </div>
+                            <button onClick={() => setViewMode('LISTENER')} className="readout-item-nano hover:text-[var(--accent)] transition-colors cursor-pointer border border-white/10 px-2 py-0.5 rounded bg-white/5">
+                                <Radio size={10} className="mr-1 inline" /> LIVE_VIEW
+                            </button>
                         </div>
                     </div>
 
@@ -1031,8 +1034,55 @@ const DJMixerPlayer = ({
                             </div>
                         </div>
                     </div>
+                ) : (
+                    {/* LISTENER NOW PLAYING PANE */}
+                    <div className="listener-now-playing-pane glass-pane">
+                        <div className="listener-artwork-wrapper">
+                            <div className="listener-artwork-glow"></div>
+                            <img 
+                                src={getMediaUrl(deckA?.imageUrl || deckA?.coverImageUrl || station?.imageUrl)} 
+                                alt="Now Playing" 
+                                className={`listener-artwork ${isPlayingA ? 'spin-slow' : ''}`} 
+                                onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/300x300/111/ff006e?text=SIGNAL'; }}
+                            />
+                            <div className="listener-artwork-overlay"></div>
+                        </div>
+                        
+                        <div className="listener-track-info">
+                            <h2 className="listener-track-title truncate">{deckA?.title || 'NO_SIGNAL'}</h2>
+                            <h3 className="listener-track-artist truncate">{getDisplayArtist(deckA) || 'AWAITING_TRANSMISSION'}</h3>
+                        </div>
+
+                        <div className="listener-progress-container">
+                            <div className="listener-progress-bar">
+                                <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+                            </div>
+                            <div className="listener-time-row mono">
+                                <span>{formatTime(currentTime)}</span>
+                                <span>-{formatTime(duration - currentTime)}</span>
+                            </div>
+                        </div>
+
+                        <div className="listener-controls">
+                            <button onClick={() => onLike(deckA)} className="control-btn"><Heart size={16} /></button>
+                            <button onClick={onPrev} className="control-btn"><SkipBack size={16} /></button>
+                            <button onClick={onPlayPause} className={`control-btn play-btn ${isPlayingA ? 'active' : ''}`}>
+                                {isPlayingA ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
+                            </button>
+                            <button onClick={onNext} className="control-btn"><SkipForward size={16} /></button>
+                            <button onClick={() => onPurchase(deckA)} className="control-btn"><DollarSign size={16} /></button>
+                        </div>
+
+                        <div className="listener-mode-toggle">
+                            <button onClick={() => setViewMode('MIXER')} className="toggle-view-btn-main">
+                                <Settings size={14} className="mr-2 inline" /> OPEN_CONSOLE
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* SECONDARY UTILITY PANE */}
+
                 <div className="utility-interlink-pane glass-pane">
                     <div className="utility-header-neon">
                         <div className="utility-tabs-neon">
