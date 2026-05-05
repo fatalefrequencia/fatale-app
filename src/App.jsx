@@ -149,6 +149,7 @@ function App() {
   const [stationQueue, setStationQueue] = useState([]);
   const [showMixer, setShowMixer] = useState(false);
   const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
+  const isMobile = window.innerWidth < 1024;
 
   // EQ / Filter State
   const audioCtx = useRef(null);
@@ -2077,6 +2078,7 @@ function App() {
             )}
             
             <DJMixerPlayer 
+              isMobile={isMobile}
               currentTrack={currentTrack}
               isPlaying={isPlaying}
               onPlayPause={togglePlay}

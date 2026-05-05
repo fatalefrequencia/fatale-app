@@ -20,10 +20,12 @@
 
 .dj-mixer-overlay.is-mobile-landscape .mixer-hud-wrapper {
     width: 100vw;
-    height: 100vh;
+    height: auto;
+    min-height: 100vh;
     max-height: none;
-    padding: 5px;
-    gap: 5px;
+    padding: 10px;
+    gap: 10px;
+    overflow-y: visible;
 }
 
 /* Sidebar Collapsed State Support */
@@ -184,6 +186,48 @@
     grid-template-columns: 1fr 150px 1fr;
     gap: 15px;
     height: 380px;
+    min-height: 320px;
+}
+
+@media (max-height: 700px), screen and (orientation: landscape) and (max-width: 932px) {
+    .mixer-decks-grid-compact {
+        height: auto;
+        min-height: 280px;
+        grid-template-columns: 1fr 100px 1fr;
+        gap: 8px;
+    }
+    
+    .jog-wheel-nano {
+        width: 100px !important;
+        height: 100px !important;
+    }
+    
+    .jog-center-art {
+        width: 40px !important;
+        height: 40px !important;
+    }
+    
+    .slider-track-vertical {
+        height: 80px !important;
+    }
+    
+    .vertical-fader-nano {
+        width: 80px !important;
+    }
+    
+    .master-gain-faders-row {
+        height: 80px !important;
+        gap: 15px !important;
+    }
+
+    .deck-module-nano {
+        padding: 8px !important;
+    }
+
+    .signal-ingest-bar {
+        padding: 4px 8px !important;
+        margin-bottom: 2px !important;
+    }
 }
 
 .deck-module-nano {
@@ -532,9 +576,27 @@
 
 /* Utility Pane */
 .utility-interlink-pane {
-    height: 250px;
+    height: 300px;
+    min-height: 250px;
     display: flex;
     flex-direction: column;
+}
+
+@media (max-height: 700px), screen and (orientation: landscape) and (max-width: 932px) {
+    .utility-interlink-pane {
+        height: auto;
+        min-height: 280px;
+    }
+    
+    .util-tab {
+        padding: 8px 12px !important;
+        font-size: 8px !important;
+    }
+    
+    .crate-controls-hub {
+        padding: 6px 12px !important;
+        gap: 10px !important;
+    }
 }
 
 /* Utility Header & Controls */
@@ -868,6 +930,12 @@
     justify-content: center;
 }
 
+@media (max-height: 700px) {
+    .slider-track-vertical {
+        height: 60px !important;
+    }
+}
+
 
 .deck-id-readout {
     display: flex;
@@ -884,6 +952,14 @@
     height: 120px;
     margin-bottom: 20px;
     align-items: flex-end;
+}
+
+@media (max-height: 700px) {
+    .master-gain-faders-row {
+        height: 60px !important;
+        margin-bottom: 10px !important;
+        gap: 15px !important;
+    }
 }
 
 .fader-channel {
@@ -1047,6 +1123,16 @@
     border-bottom: 1px solid rgba(255,0,110,0.1);
     padding: 8px 0;
     margin: 4px 0;
+}
+
+@media (max-height: 700px) {
+    .neural-spectrum-master-hub {
+        padding: 4px 0 !important;
+        margin: 2px 0 !important;
+    }
+    .master-analyzers-row {
+        height: 40px !important;
+    }
 }
 
 .spectrum-container-wide {
