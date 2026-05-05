@@ -150,6 +150,12 @@ const DJMixerPlayer = ({
         setIsPlayingA(isPlaying);
     }, [isPlaying]);
 
+    useEffect(() => {
+        if (currentTrack) {
+            setDeckA(currentTrack);
+        }
+    }, [currentTrack]);
+
     // Deck B Audio Event Handlers
     useEffect(() => {
         const b = audioB.current;
