@@ -154,7 +154,13 @@ const DJMixerPlayer = ({
     const [loopB, setLoopB] = useState({ active: false, start: 0, beats: 4 });
 
     useEffect(() => {
-        setIsPlayingA(isPlaying);
+        // Only sync Deck A with global play state if Deck B isn't hijacking it for YouTube
+        if (!deckBYoutubeActive.current) {
+            setIsPlayingA(isPlaying);
+        } else {
+            // If Deck B is playing YouTube, Deck A should be paused
+            setIsPlayingA(false);
+        }
     }, [isPlaying]);
 
 
@@ -414,6 +420,7 @@ const DJMixerPlayer = ({
 
     const loadToDeck = (track, deck) => {
         if (deck === 'A') {
+            deckBYoutubeActive.current = false;
             setDeckA(track);
             if (onPlayTrack) onPlayTrack(track);
         } else {
@@ -628,6 +635,17 @@ const DJMixerPlayer = ({
         }
     };
 
+    const handleTogglePlayA = () => {
+        // If Deck B was using the global player for YouTube, stop it and switch focus to A
+        if (deckBYoutubeActive.current) {
+            deckBYoutubeActive.current = false;
+            // If it was already playing, we might need to "re-play" the Deck A track
+            // but usually onPlayPause will just toggle the state.
+            // To be safe, we ensure Deck A is the one being controlled.
+        }
+        if (onPlayPause) onPlayPause();
+    };
+
     const handleShuffle = () => {
         const filtered = getFilteredTracks();
         const allTracks = [...(filtered.collection || []), ...(filtered.network || [])];
@@ -771,7 +789,7 @@ const DJMixerPlayer = ({
                             <div className="deck-meta-strip">
                                 <div className="deck-transport-row-nano left">
                                     <button onClick={onPrev} className="transport-btn-sq"><SkipBack size={10} /></button>
-                                    <button onClick={onPlayPause} className={`transport-btn-sq main ${isPlayingA ? 'active' : ''}`}>
+                                    <button onClick={handleTogglePlayA} className={`transport-btn-sq main ${isPlayingA ? 'active' : ''}`}>
                                         {isPlayingA ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
                                     </button>
                                     <button onClick={onNext} className="transport-btn-sq"><SkipForward size={10} /></button>
@@ -1208,7 +1226,7 @@ const DJMixerPlayer = ({
                         <div className="listener-controls">
                             <button onClick={() => onLike(deckA)} className="control-btn"><Heart size={16} /></button>
                             <button onClick={onPrev} className="control-btn"><SkipBack size={16} /></button>
-                            <button onClick={onPlayPause} className={`control-btn play-btn ${isPlayingA ? 'active' : ''}`}>
+                            <button onClick={handleTogglePlayA} className={`control-btn play-btn ${isPlayingA ? 'active' : ''}`}>
                                 {isPlayingA ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
                             </button>
                             <button onClick={onNext} className="control-btn"><SkipForward size={16} /></button>
