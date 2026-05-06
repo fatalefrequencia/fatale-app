@@ -107,6 +107,7 @@ const DJMixerPlayer = ({
     
     const [deckA, setDeckA] = useState(currentTrack || null);
     const [deckB, setDeckB] = useState(null);
+    const [deckBIndex, setDeckBIndex] = useState(-1); // Index in the crate for prev/next navigation
     const [crossfader, setCrossfader] = useState(0); // -100 to 100
     const [rotationA, setRotationA] = useState(0);
     const [rotationB, setRotationB] = useState(0);
@@ -359,54 +360,37 @@ const DJMixerPlayer = ({
         return null;
     };
 
-    // Load a track into Deck B with proper YouTube handling
-    const loadToDeckB = async (track) => {
-        setDeckB(track);
-        // Ensure AudioContext is initialized/resumed on user gesture (the load click)
-        initAudioB();
-        if (audioCtxB.current?.state === 'suspended') audioCtxB.current.resume();
+    // Check if a track is a YouTube track
+    const isYoutubeTrack = (track) => !!getYoutubeVideoId(track);
 
-        const raw = track.source || track.Source || track.filePath || track.FilePath || track.url || '';
+    // Load a track into Deck B
+    const loadToDeckB = (track, index = -1) => {
+        setDeckB(track);
+        if (index >= 0) setDeckBIndex(index);
+
         const ytId = getYoutubeVideoId(track);
 
         if (ytId) {
-            // YouTube: fetch audio through backend proxy with auth headers, then create blob URL
-            console.log('[Neural Core] Loading YouTube to Deck B:', track.title, '| videoId:', ytId);
-            try {
-                // Clear current source to prevent "stale" playback
-                if (audioB.current) {
-                    audioB.current.pause();
-                    audioB.current.src = "";
-                }
-
-                let userId = 0;
-                try {
-                    const u = JSON.parse(localStorage.getItem('user') || '{}');
-                    userId = u.id || u.Id || 0;
-                } catch (e) {}
-                const streamUrl = `${API_BASE_URL}api/Youtube/stream?videoId=${ytId}&userId=${userId}`;
-                const token = localStorage.getItem('token');
-                const res = await fetch(streamUrl, {
-                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-                });
-                if (!res.ok) throw new Error(`Stream response ${res.status}`);
-                const blob = await res.blob();
-                const blobUrl = URL.createObjectURL(blob);
-                
-                audioB.current.src = blobUrl;
-                audioB.current.load();
-                console.log('[Neural Core] YouTube blob loaded for Deck B');
-                if (isPlayingB) {
-                    audioB.current.play().catch(e => console.error('[Neural Core] Deck B play failed:', e));
-                }
-            } catch (e) {
-                console.error('[Neural Core] YouTube Deck B stream failed:', e);
+            // YouTube tracks CANNOT play through <audio> element — the backend
+            // /api/Youtube/stream returns { UseEmbed: true }, not audio data.
+            // Route through Deck A's YouTube embed player instead.
+            console.log('[Neural Core] YouTube track on Deck B — routing through Deck A embed:', track.title);
+            // Clear any stale native audio on Deck B
+            if (audioB.current) {
+                audioB.current.pause();
+                audioB.current.src = '';
             }
+            setIsPlayingB(false);
+            // Play via Deck A's YouTube embed system
+            if (onPlayTrack) onPlayTrack(track);
         } else {
-            // Native track: direct URL
+            // Native track: load directly into Deck B's <audio> element
+            const raw = track.source || track.Source || track.filePath || track.FilePath || track.url || '';
             const source = getMediaUrl(raw) || null;
             console.log('[Neural Core] Loading native to Deck B:', track.title, '| source:', source);
             if (source) {
+                initAudioB();
+                if (audioCtxB.current?.state === 'suspended') audioCtxB.current.resume();
                 audioB.current.src = source;
                 audioB.current.load();
                 if (isPlayingB) {
@@ -418,13 +402,40 @@ const DJMixerPlayer = ({
         }
     };
 
+    // Get all tracks available in the crate for navigation
+    const getCrateTrackList = () => {
+        const filtered = getFilteredTracks();
+        return [...(filtered.collection || []), ...(filtered.network || [])];
+    };
+
     const loadToDeck = (track, deck) => {
         if (deck === 'A') {
             setDeckA(track);
             if (onPlayTrack) onPlayTrack(track);
         } else {
-            loadToDeckB(track);
+            // Find the track's index in the crate for prev/next navigation
+            const allTracks = getCrateTrackList();
+            const idx = allTracks.findIndex(t => 
+                (t.id || t.Id) === (track.id || track.Id) || t.title === track.title
+            );
+            loadToDeckB(track, idx >= 0 ? idx : 0);
         }
+    };
+
+    // Deck B: skip to previous track in the crate
+    const skipBPrev = () => {
+        const allTracks = getCrateTrackList();
+        if (allTracks.length === 0) return;
+        const newIdx = deckBIndex > 0 ? deckBIndex - 1 : allTracks.length - 1;
+        loadToDeckB(allTracks[newIdx], newIdx);
+    };
+
+    // Deck B: skip to next track in the crate
+    const skipBNext = () => {
+        const allTracks = getCrateTrackList();
+        if (allTracks.length === 0) return;
+        const newIdx = deckBIndex < allTracks.length - 1 ? deckBIndex + 1 : 0;
+        loadToDeckB(allTracks[newIdx], newIdx);
     };
 
     const handleSync = (initiator) => {
@@ -572,6 +583,19 @@ const DJMixerPlayer = ({
     };
 
     const togglePlayB = () => {
+        if (!deckB) {
+            console.warn('[Neural Core] No track loaded on Deck B');
+            return;
+        }
+
+        // YouTube tracks play through Deck A's embed player
+        if (isYoutubeTrack(deckB)) {
+            // Toggle the global player (Deck A embed) since YouTube can't use <audio>
+            if (onPlayPause) onPlayPause();
+            return;
+        }
+
+        // Native tracks: use Deck B's local <audio> element
         if (isPlayingB) {
             audioB.current.pause();
             setIsPlayingB(false);
@@ -588,7 +612,6 @@ const DJMixerPlayer = ({
             } else {
                 console.warn('[Neural Core] Deck B has no source loaded');
             }
-            setIsPlayingB(true);
         }
     };
 
@@ -956,11 +979,11 @@ const DJMixerPlayer = ({
                                 </div>
                                 <div className="deck-transport-row-nano right">
                                     <button onClick={() => handleSync('B')} className={`sync-btn-nano ${isSyncedB ? 'active' : ''}`}>SYNC</button>
-                                    <button className="transport-btn-sq"><SkipBack size={10} /></button>
-                                    <button onClick={togglePlayB} className={`transport-btn-sq main ${isPlayingB ? 'active' : ''}`}>
-                                        {isPlayingB ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
+                                    <button onClick={skipBPrev} className="transport-btn-sq"><SkipBack size={10} /></button>
+                                    <button onClick={togglePlayB} className={`transport-btn-sq main ${isPlayingB || (deckB && isYoutubeTrack(deckB) && isPlaying) ? 'active' : ''}`}>
+                                        {(isPlayingB || (deckB && isYoutubeTrack(deckB) && isPlaying)) ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
                                     </button>
-                                    <button className="transport-btn-sq"><SkipForward size={10} /></button>
+                                    <button onClick={skipBNext} className="transport-btn-sq"><SkipForward size={10} /></button>
                                 </div>
                             </div>
 
