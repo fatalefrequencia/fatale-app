@@ -344,7 +344,22 @@ const DJMixerPlayer = ({
         } else {
             setDeckB(track);
             // Load source locally for Deck B using unified utility
-            const source = getMediaUrl(track.source || track.filePath || track.url);
+            let source = getMediaUrl(track.source || track.filePath || track.url);
+            
+            // Handle YouTube Streaming Proxy
+            if (source?.startsWith('youtube:')) {
+                const videoId = source.split(':')[1];
+                const userJson = localStorage.getItem('user');
+                let userId = 0;
+                try {
+                    const user = JSON.parse(userJson || '{}');
+                    userId = user.id || user.Id || 0;
+                } catch (e) {}
+                
+                // Use the backend streaming endpoint
+                source = `${API_BASE_URL}api/Youtube/stream?videoId=${videoId}&userId=${userId}`;
+            }
+
             if (source) {
                 audioB.current.src = source;
                 audioB.current.load();
