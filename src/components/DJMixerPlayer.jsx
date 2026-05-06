@@ -337,30 +337,78 @@ const DJMixerPlayer = ({
         }
     }, [currentTime, isAutoMixEnabled, isPlaying, duration]);
 
-    // Resolve the playable audio source URL for any track object
-    const resolveTrackSource = (track) => {
-        const raw = track.source || track.Source || track.filePath || track.FilePath || track.url || '';
-
-        // YouTube tracks: route through backend streaming proxy
-        if (typeof raw === 'string' && raw.startsWith('youtube:')) {
-            const videoId = raw.split(':')[1];
-            let userId = 0;
-            try {
-                const u = JSON.parse(localStorage.getItem('user') || '{}');
-                userId = u.id || u.Id || 0;
-            } catch (e) {}
-            return `${API_BASE_URL}api/Youtube/stream?videoId=${videoId}&userId=${userId}`;
-        }
-
-        // Native / uploaded tracks: use unified media resolver
-        return getMediaUrl(raw) || null;
+    // Extract YouTube video ID from a track object
+    const getYoutubeVideoId = (track) => {
+        if (!track) return null;
+        const raw = track.source || track.Source || track.filePath || track.FilePath || '';
+        if (typeof raw === 'string' && raw.startsWith('youtube:')) return raw.split(':')[1];
+        // Check if the ID itself looks like a YT video ID (11 chars)
+        const id = track.youtubeId || track.YoutubeId || track.videoId || track.VideoId;
+        if (typeof id === 'string' && id.length === 11) return id;
+        return null;
     };
 
     // Resolve album artwork from any track object
     const resolveArtwork = (track) => {
         if (!track) return null;
         const raw = track.imageUrl || track.coverImageUrl || track.thumbnail || track.cover || track.image;
-        return raw ? getMediaUrl(raw) : null;
+        if (raw) return getMediaUrl(raw);
+        // Fallback: generate YouTube thumbnail from video ID
+        const ytId = getYoutubeVideoId(track);
+        if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+        return null;
+    };
+
+    // Load a track into Deck B with proper YouTube handling
+    const loadToDeckB = async (track) => {
+        setDeckB(track);
+        const raw = track.source || track.Source || track.filePath || track.FilePath || track.url || '';
+        const ytId = getYoutubeVideoId(track);
+
+        if (ytId) {
+            // YouTube: fetch audio through backend proxy with auth headers, then create blob URL
+            console.log('[Neural Core] Loading YouTube to Deck B:', track.title, '| videoId:', ytId);
+            try {
+                let userId = 0;
+                try {
+                    const u = JSON.parse(localStorage.getItem('user') || '{}');
+                    userId = u.id || u.Id || 0;
+                } catch (e) {}
+                const streamUrl = `${API_BASE_URL}api/Youtube/stream?videoId=${ytId}&userId=${userId}`;
+                const token = localStorage.getItem('token');
+                const res = await fetch(streamUrl, {
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                });
+                if (!res.ok) throw new Error(`Stream response ${res.status}`);
+                const blob = await res.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                initAudioB();
+                audioB.current.src = blobUrl;
+                audioB.current.load();
+                console.log('[Neural Core] YouTube blob loaded for Deck B');
+                if (isPlayingB) {
+                    if (audioCtxB.current?.state === 'suspended') audioCtxB.current.resume();
+                    audioB.current.play().catch(e => console.error('[Neural Core] Deck B play failed:', e));
+                }
+            } catch (e) {
+                console.error('[Neural Core] YouTube Deck B stream failed:', e);
+            }
+        } else {
+            // Native track: direct URL
+            const source = getMediaUrl(raw) || null;
+            console.log('[Neural Core] Loading native to Deck B:', track.title, '| source:', source);
+            if (source) {
+                initAudioB();
+                audioB.current.src = source;
+                audioB.current.load();
+                if (isPlayingB) {
+                    if (audioCtxB.current?.state === 'suspended') audioCtxB.current.resume();
+                    audioB.current.play().catch(e => console.error('[Neural Core] Deck B play failed:', e));
+                }
+            } else {
+                console.warn('[Neural Core] Deck B: No playable source for track:', track.title);
+            }
+        }
     };
 
     const loadToDeck = (track, deck) => {
@@ -368,22 +416,7 @@ const DJMixerPlayer = ({
             setDeckA(track);
             if (onPlayTrack) onPlayTrack(track);
         } else {
-            setDeckB(track);
-            const source = resolveTrackSource(track);
-            console.log('[Neural Core] Loading to Deck B:', track.title, '| source:', source);
-
-            if (source) {
-                // Always init audio context on user gesture (load is user-initiated)
-                initAudioB();
-                audioB.current.src = source;
-                audioB.current.load();
-                if (isPlayingB) {
-                    if (audioCtxB.current?.state === 'suspended') audioCtxB.current.resume();
-                    audioB.current.play().catch(e => console.error("[Neural Core] Deck B Playback failed", e));
-                }
-            } else {
-                console.warn('[Neural Core] Deck B: No playable source for track:', track.title);
-            }
+            loadToDeckB(track);
         }
     };
 
@@ -1091,26 +1124,41 @@ const DJMixerPlayer = ({
                         <div className="listener-artwork-wrapper">
                             <div className="listener-artwork-glow"></div>
                             <img 
-                                src={resolveArtwork(deckA) || getMediaUrl(station?.imageUrl || station?.coverArt) || 'https://via.placeholder.com/300x300/111/ff006e?text=SIGNAL'} 
+                                src={station ? (getMediaUrl(station.imageUrl || station.coverArt || station.image) || 'https://via.placeholder.com/300x300/111/ff006e?text=LIVE') : (resolveArtwork(deckA) || 'https://via.placeholder.com/300x300/111/ff006e?text=SIGNAL')} 
                                 alt="Now Playing" 
-                                className={`listener-artwork ${isPlayingA ? 'spin-slow' : ''}`} 
+                                className={`listener-artwork ${isPlayingA && !station ? 'spin-slow' : ''}`} 
                                 onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/300x300/111/ff006e?text=SIGNAL'; }}
                             />
                             <div className="listener-artwork-overlay"></div>
                         </div>
                         
                         <div className="listener-track-info">
-                            <h2 className="listener-track-title truncate">{deckA?.title || 'NO_SIGNAL'}</h2>
-                            <h3 className="listener-track-artist truncate">{getDisplayArtist(deckA) || 'AWAITING_TRANSMISSION'}</h3>
+                            {station ? (
+                                <>
+                                    <h2 className="listener-track-title truncate">{station.name || station.Name || 'LIVE_BROADCAST'}</h2>
+                                    <h3 className="listener-track-artist truncate" style={{ color: 'var(--accent)' }}>
+                                        <Radio size={10} className="inline mr-1" style={{ verticalAlign: 'middle' }} />
+                                        LIVE: {station.artistName || station.ArtistName || 'DJ'}
+                                    </h3>
+                                </>
+                            ) : (
+                                <>
+                                    <h2 className="listener-track-title truncate">{deckA?.title || 'NO_SIGNAL'}</h2>
+                                    <h3 className="listener-track-artist truncate">{getDisplayArtist(deckA) || 'AWAITING_TRANSMISSION'}</h3>
+                                </>
+                            )}
                         </div>
 
                         <div className="listener-progress-container">
                             <div className="listener-progress-bar">
-                                <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+                                <div className="progress-fill" style={{ width: `${station ? '100' : progress}%`, opacity: station ? 0.3 : 1 }}></div>
                             </div>
                             <div className="listener-time-row mono">
-                                <span>{formatTime(currentTime)}</span>
-                                <span>-{formatTime(duration - currentTime)}</span>
+                                {station ? (
+                                    <><span style={{ color: 'var(--accent)' }}>● LIVE</span><span>{formatTime(currentTime)}</span></>
+                                ) : (
+                                    <><span>{formatTime(currentTime)}</span><span>-{formatTime(duration - currentTime)}</span></>
+                                )}
                             </div>
                         </div>
 
