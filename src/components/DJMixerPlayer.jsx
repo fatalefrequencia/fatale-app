@@ -222,21 +222,21 @@ const DJMixerPlayer = ({
         }
     };
 
-    // Crossfader Volume Phasing
+    // Manual Volume Control (Independent of Crossfader)
     useEffect(() => {
         // Deck A (Global)
-        const attenuationA = Math.min(1, (100 - crossfader) / 100);
-        if (onVolumeChange) onVolumeChange(baseVolume * attenuationA);
+        if (onVolumeChange) onVolumeChange(baseVolume);
 
         // Deck B (Local Audio)
-        const attenuationB = Math.min(1, (100 + crossfader) / 100);
-        audioB.current.volume = volumeB * attenuationB;
+        if (audioB.current) {
+            audioB.current.volume = volumeB;
+        }
 
         // Deck B (YouTube Engine)
         if (youtubePlayerB && typeof youtubePlayerB.setVolume === 'function') {
-            youtubePlayerB.setVolume(volumeB * attenuationB * 100);
+            youtubePlayerB.setVolume(volumeB * 100);
         }
-    }, [crossfader, baseVolume, volumeB, youtubePlayerB]);
+    }, [baseVolume, volumeB, youtubePlayerB]);
 
     // Sync Deck A with global track in real-time
     useEffect(() => {
@@ -741,8 +741,7 @@ const DJMixerPlayer = ({
                         }}
                         onReady={(e) => {
                             setYoutubePlayerB(e.target);
-                            const attenuationB = Math.min(1, (100 + crossfader) / 100);
-                            e.target.setVolume(volumeB * attenuationB * 100);
+                            e.target.setVolume(volumeB * 100);
                         }}
                         onStateChange={(e) => {
                             if (e.data === 1 && !isPlayingB) setIsPlayingB(true);
