@@ -120,7 +120,12 @@ const DJMixerPlayer = ({
     const [currentTimeB, setCurrentTimeB] = useState(0);
     const [durationB, setDurationB] = useState(0);
     const [volumeB, setVolumeB] = useState(1);
-    const [baseVolume, setBaseVolume] = useState(volume); // Store user preference
+    const [baseVolume, setBaseVolume] = useState(volume);
+    
+    useEffect(() => {
+        setBaseVolume(volume);
+    }, [volume]);
+
     const [isEvolveA, setIsEvolveA] = useState(false);
     const [isEvolveB, setIsEvolveB] = useState(false);
     const [isPlayingA, setIsPlayingA] = useState(isPlaying);
@@ -150,11 +155,6 @@ const DJMixerPlayer = ({
         setIsPlayingA(isPlaying);
     }, [isPlaying]);
 
-    useEffect(() => {
-        if (currentTrack) {
-            setDeckA(currentTrack);
-        }
-    }, [currentTrack]);
 
     // Deck B Audio Event Handlers
     useEffect(() => {
@@ -343,15 +343,15 @@ const DJMixerPlayer = ({
             if (onPlayTrack) onPlayTrack(track);
         } else {
             setDeckB(track);
-            // Load source locally for Deck B
-            const source = track.source || (track.filePath ? (track.filePath.startsWith('http') ? track.filePath : `https://fatale-api.azurewebsites.net/api/Media/${track.filePath}`) : null);
+            // Load source locally for Deck B using unified utility
+            const source = getMediaUrl(track.source || track.filePath || track.url);
             if (source) {
                 audioB.current.src = source;
                 audioB.current.load();
                 if (isPlayingB) {
                     initAudioB();
                     if (audioCtxB.current?.state === 'suspended') audioCtxB.current.resume();
-                    audioB.current.play();
+                    audioB.current.play().catch(e => console.error("[Neural Core] Deck B Playback failed", e));
                 }
             }
         }
