@@ -362,6 +362,10 @@ const DJMixerPlayer = ({
     // Load a track into Deck B with proper YouTube handling
     const loadToDeckB = async (track) => {
         setDeckB(track);
+        // Ensure AudioContext is initialized/resumed on user gesture (the load click)
+        initAudioB();
+        if (audioCtxB.current?.state === 'suspended') audioCtxB.current.resume();
+
         const raw = track.source || track.Source || track.filePath || track.FilePath || track.url || '';
         const ytId = getYoutubeVideoId(track);
 
@@ -369,6 +373,12 @@ const DJMixerPlayer = ({
             // YouTube: fetch audio through backend proxy with auth headers, then create blob URL
             console.log('[Neural Core] Loading YouTube to Deck B:', track.title, '| videoId:', ytId);
             try {
+                // Clear current source to prevent "stale" playback
+                if (audioB.current) {
+                    audioB.current.pause();
+                    audioB.current.src = "";
+                }
+
                 let userId = 0;
                 try {
                     const u = JSON.parse(localStorage.getItem('user') || '{}');
@@ -382,12 +392,11 @@ const DJMixerPlayer = ({
                 if (!res.ok) throw new Error(`Stream response ${res.status}`);
                 const blob = await res.blob();
                 const blobUrl = URL.createObjectURL(blob);
-                initAudioB();
+                
                 audioB.current.src = blobUrl;
                 audioB.current.load();
                 console.log('[Neural Core] YouTube blob loaded for Deck B');
                 if (isPlayingB) {
-                    if (audioCtxB.current?.state === 'suspended') audioCtxB.current.resume();
                     audioB.current.play().catch(e => console.error('[Neural Core] Deck B play failed:', e));
                 }
             } catch (e) {
@@ -398,11 +407,9 @@ const DJMixerPlayer = ({
             const source = getMediaUrl(raw) || null;
             console.log('[Neural Core] Loading native to Deck B:', track.title, '| source:', source);
             if (source) {
-                initAudioB();
                 audioB.current.src = source;
                 audioB.current.load();
                 if (isPlayingB) {
-                    if (audioCtxB.current?.state === 'suspended') audioCtxB.current.resume();
                     audioB.current.play().catch(e => console.error('[Neural Core] Deck B play failed:', e));
                 }
             } else {
