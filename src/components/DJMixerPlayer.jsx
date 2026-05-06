@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SkipBack, SkipForward, Play, Pause, Zap, Disc, MessageSquare, List, Search, Plus, DollarSign, Users, Radio, Heart, Music, Shuffle, Settings } from 'lucide-react';
-import { getMediaUrl } from '../constants';
+import { getMediaUrl, API_BASE_URL } from '../constants';
 import './DJMixerPlayer.css';
 
 const NeuralSpectrum = ({ analyser, isActive }) => {
@@ -115,7 +115,7 @@ const DJMixerPlayer = ({
     const [isSyncing, setIsSyncing] = useState(false);
     
     // DECK B LOCAL ENGINE
-    const audioB = useRef(null);
+    const audioB = useRef(new Audio());
     const [isPlayingB, setIsPlayingB] = useState(false);
     const [currentTimeB, setCurrentTimeB] = useState(0);
     const [durationB, setDurationB] = useState(0);
@@ -337,37 +337,52 @@ const DJMixerPlayer = ({
         }
     }, [currentTime, isAutoMixEnabled, isPlaying, duration]);
 
+    // Resolve the playable audio source URL for any track object
+    const resolveTrackSource = (track) => {
+        const raw = track.source || track.Source || track.filePath || track.FilePath || track.url || '';
+
+        // YouTube tracks: route through backend streaming proxy
+        if (typeof raw === 'string' && raw.startsWith('youtube:')) {
+            const videoId = raw.split(':')[1];
+            let userId = 0;
+            try {
+                const u = JSON.parse(localStorage.getItem('user') || '{}');
+                userId = u.id || u.Id || 0;
+            } catch (e) {}
+            return `${API_BASE_URL}api/Youtube/stream?videoId=${videoId}&userId=${userId}`;
+        }
+
+        // Native / uploaded tracks: use unified media resolver
+        return getMediaUrl(raw) || null;
+    };
+
+    // Resolve album artwork from any track object
+    const resolveArtwork = (track) => {
+        if (!track) return null;
+        const raw = track.imageUrl || track.coverImageUrl || track.thumbnail || track.cover || track.image;
+        return raw ? getMediaUrl(raw) : null;
+    };
+
     const loadToDeck = (track, deck) => {
         if (deck === 'A') {
             setDeckA(track);
             if (onPlayTrack) onPlayTrack(track);
         } else {
             setDeckB(track);
-            // Load source locally for Deck B using unified utility
-            let source = getMediaUrl(track.source || track.filePath || track.url);
-            
-            // Handle YouTube Streaming Proxy
-            if (source?.startsWith('youtube:')) {
-                const videoId = source.split(':')[1];
-                const userJson = localStorage.getItem('user');
-                let userId = 0;
-                try {
-                    const user = JSON.parse(userJson || '{}');
-                    userId = user.id || user.Id || 0;
-                } catch (e) {}
-                
-                // Use the backend streaming endpoint
-                source = `${API_BASE_URL}api/Youtube/stream?videoId=${videoId}&userId=${userId}`;
-            }
+            const source = resolveTrackSource(track);
+            console.log('[Neural Core] Loading to Deck B:', track.title, '| source:', source);
 
             if (source) {
+                // Always init audio context on user gesture (load is user-initiated)
+                initAudioB();
                 audioB.current.src = source;
                 audioB.current.load();
                 if (isPlayingB) {
-                    initAudioB();
                     if (audioCtxB.current?.state === 'suspended') audioCtxB.current.resume();
                     audioB.current.play().catch(e => console.error("[Neural Core] Deck B Playback failed", e));
                 }
+            } else {
+                console.warn('[Neural Core] Deck B: No playable source for track:', track.title);
             }
         }
     };
@@ -519,12 +534,22 @@ const DJMixerPlayer = ({
     const togglePlayB = () => {
         if (isPlayingB) {
             audioB.current.pause();
+            setIsPlayingB(false);
         } else {
             initAudioB();
             if (audioCtxB.current?.state === 'suspended') audioCtxB.current.resume();
-            if (audioB.current.src) audioB.current.play();
+            if (audioB.current.src) {
+                audioB.current.play()
+                    .then(() => setIsPlayingB(true))
+                    .catch(e => {
+                        console.error('[Neural Core] Deck B play failed:', e);
+                        setIsPlayingB(false);
+                    });
+            } else {
+                console.warn('[Neural Core] Deck B has no source loaded');
+            }
+            setIsPlayingB(true);
         }
-        setIsPlayingB(!isPlayingB);
     };
 
     const handleShuffle = () => {
@@ -743,7 +768,7 @@ const DJMixerPlayer = ({
                                 <div className="deck-spinner-command-cluster">
                                     <div className="jog-wheel-nano" style={{ transform: `rotate(${rotationA}deg)` }}>
                                         <div className="jog-center-art">
-                                            {deckA?.cover && <img src={deckA.cover} alt="" />}
+                                            {resolveArtwork(deckA) && <img src={resolveArtwork(deckA)} alt="" onError={(e) => { e.target.style.display = 'none'; }} />}
                                         </div>
                                         <div className="jog-active-node"></div>
                                     </div>
@@ -953,7 +978,7 @@ const DJMixerPlayer = ({
                                 <div className="deck-spinner-command-cluster">
                                     <div className="jog-wheel-nano" style={{ transform: `rotate(${rotationB}deg)` }}>
                                         <div className="jog-center-art">
-                                            {deckB?.cover && <img src={deckB.cover} alt="" />}
+                                            {resolveArtwork(deckB) && <img src={resolveArtwork(deckB)} alt="" onError={(e) => { e.target.style.display = 'none'; }} />}
                                         </div>
                                         <div className="jog-active-node"></div>
                                     </div>
@@ -1066,7 +1091,7 @@ const DJMixerPlayer = ({
                         <div className="listener-artwork-wrapper">
                             <div className="listener-artwork-glow"></div>
                             <img 
-                                src={getMediaUrl(deckA?.imageUrl || deckA?.coverImageUrl || deckA?.thumbnail || station?.imageUrl || station?.coverArt)} 
+                                src={resolveArtwork(deckA) || getMediaUrl(station?.imageUrl || station?.coverArt) || 'https://via.placeholder.com/300x300/111/ff006e?text=SIGNAL'} 
                                 alt="Now Playing" 
                                 className={`listener-artwork ${isPlayingA ? 'spin-slow' : ''}`} 
                                 onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/300x300/111/ff006e?text=SIGNAL'; }}
