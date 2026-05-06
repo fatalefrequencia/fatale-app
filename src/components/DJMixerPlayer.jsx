@@ -108,6 +108,7 @@ const DJMixerPlayer = ({
     const [deckA, setDeckA] = useState(currentTrack || null);
     const [deckB, setDeckB] = useState(null);
     const [deckBIndex, setDeckBIndex] = useState(-1); // Index in the crate for prev/next navigation
+    const deckBYoutubeActive = useRef(false); // Flag: YouTube track playing FROM Deck B (don't sync to Deck A)
     const [crossfader, setCrossfader] = useState(0); // -100 to 100
     const [rotationA, setRotationA] = useState(0);
     const [rotationB, setRotationB] = useState(0);
@@ -231,8 +232,14 @@ const DJMixerPlayer = ({
     }, [crossfader, baseVolume, volumeB]);
 
     // Sync Deck A with global track in real-time
+    // BUT skip if the change was triggered by Deck B playing a YouTube track
     useEffect(() => {
         if (currentTrack) {
+            if (deckBYoutubeActive.current) {
+                // This currentTrack update came from Deck B's YouTube playback — don't overwrite Deck A
+                console.log('[Neural Core] Skipping Deck A sync — YouTube playing from Deck B');
+                return;
+            }
             setDeckA(currentTrack);
             setIsSyncing(true);
             setTimeout(() => setIsSyncing(false), 1000);
@@ -363,7 +370,7 @@ const DJMixerPlayer = ({
     // Check if a track is a YouTube track
     const isYoutubeTrack = (track) => !!getYoutubeVideoId(track);
 
-    // Load a track into Deck B
+    // Load a track into Deck B (metadata only — does NOT auto-play)
     const loadToDeckB = (track, index = -1) => {
         setDeckB(track);
         if (index >= 0) setDeckBIndex(index);
@@ -371,20 +378,17 @@ const DJMixerPlayer = ({
         const ytId = getYoutubeVideoId(track);
 
         if (ytId) {
-            // YouTube tracks CANNOT play through <audio> element — the backend
-            // /api/Youtube/stream returns { UseEmbed: true }, not audio data.
-            // Route through Deck A's YouTube embed player instead.
-            console.log('[Neural Core] YouTube track on Deck B — routing through Deck A embed:', track.title);
+            // YouTube: just load metadata on Deck B. Playback is triggered by togglePlayB.
+            console.log('[Neural Core] YouTube track queued on Deck B:', track.title);
             // Clear any stale native audio on Deck B
             if (audioB.current) {
                 audioB.current.pause();
                 audioB.current.src = '';
             }
-            setIsPlayingB(false);
-            // Play via Deck A's YouTube embed system
-            if (onPlayTrack) onPlayTrack(track);
+            // Don't call onPlayTrack here — that would load it on Deck A too
         } else {
             // Native track: load directly into Deck B's <audio> element
+            deckBYoutubeActive.current = false;
             const raw = track.source || track.Source || track.filePath || track.FilePath || track.url || '';
             const source = getMediaUrl(raw) || null;
             console.log('[Neural Core] Loading native to Deck B:', track.title, '| source:', source);
@@ -590,10 +594,19 @@ const DJMixerPlayer = ({
 
         // YouTube tracks play through Deck A's embed player
         if (isYoutubeTrack(deckB)) {
-            // Toggle the global player (Deck A embed) since YouTube can't use <audio>
-            if (onPlayPause) onPlayPause();
+            if (isPlaying && deckBYoutubeActive.current) {
+                // Currently playing this YouTube track — pause it
+                deckBYoutubeActive.current = false;
+                if (onPlayPause) onPlayPause();
+            } else {
+                // Start playing: set the flag so currentTrack sync doesn't overwrite Deck A
+                deckBYoutubeActive.current = true;
+                if (onPlayTrack) onPlayTrack(deckB);
+            }
             return;
         }
+        // Clear the YouTube flag when playing native
+        deckBYoutubeActive.current = false;
 
         // Native tracks: use Deck B's local <audio> element
         if (isPlayingB) {
