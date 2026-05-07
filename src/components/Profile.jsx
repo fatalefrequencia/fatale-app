@@ -940,15 +940,6 @@ export const ProfileView = React.memo(({
     const [youtubeUrl, setYoutubeUrl] = useState('');
     const [websiteUrl, setWebsiteUrl] = useState('');
 
-    useEffect(() => {
-        if (displayUser) {
-            setInstagramUrl(displayUser.instagramUrl || displayUser.InstagramUrl || '');
-            setTwitterUrl(displayUser.twitterUrl || displayUser.TwitterUrl || '');
-            setYoutubeUrl(displayUser.youtubeUrl || displayUser.YoutubeUrl || '');
-            setWebsiteUrl(displayUser.websiteUrl || displayUser.WebsiteUrl || '');
-        }
-    }, [displayUser]);
-    
     // RESTORED GEAR/STUDIO STATES
     const [profileGear, setProfileGear] = useState([]);
     const [isLoadingGear, setIsLoadingGear] = useState(false);
@@ -968,6 +959,16 @@ export const ProfileView = React.memo(({
     const sector = SECTORS.find(s => s.id === (displayUser?.residentSectorId || displayUser?.ResidentSectorId || 0));
     const communityName = (displayUser?.communityName || displayUser?.CommunityName) || (displayUser?.communityId || displayUser?.CommunityId ? 'SYNCING...' : 'N/A');
     const communityColor = (displayUser?.communityColor || displayUser?.CommunityColor) || sector?.color;
+
+    // Sync social links when displayUser loads (must be after displayUser is defined above)
+    useEffect(() => {
+        if (displayUser) {
+            setInstagramUrl(displayUser.instagramUrl || displayUser.InstagramUrl || '');
+            setTwitterUrl(displayUser.twitterUrl || displayUser.TwitterUrl || '');
+            setYoutubeUrl(displayUser.youtubeUrl || displayUser.YoutubeUrl || '');
+            setWebsiteUrl(displayUser.websiteUrl || displayUser.WebsiteUrl || '');
+        }
+    }, [displayUser]);
 
     // 3. EFFECTS & LOGIC
     const toggleWidget = (key) => setWidgetsExpanded(prev => ({ ...prev, [key]: !prev[key] }));
