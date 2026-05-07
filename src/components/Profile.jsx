@@ -930,9 +930,24 @@ export const ProfileView = React.memo(({
     const [isSavingStatus, setIsSavingStatus] = useState(false);
     const [showTipModal, setShowTipModal] = useState(false);
     
-    const [viewMode, setViewMode] = useState('CONSOLE'); // 'CONSOLE' or 'DASHBOARD'
+    const [viewMode, setViewMode] = useState(initialModal === 'console' ? 'CONSOLE' : (isMe ? 'CONSOLE' : 'DASHBOARD')); // Listeners default to Dashboard unless 'console' trigger
     const [cycleIndex, setCycleIndex] = useState(0); // 0: PFP, 1: Tracks, 2: Activity, 3: Social
     const [musicFilter, setMusicFilter] = useState('ALL'); // 'ALL', 'ALBUMS', 'SINGLES'
+
+    // Social States
+    const [instagramUrl, setInstagramUrl] = useState(displayUser?.instagramUrl || displayUser?.InstagramUrl || '');
+    const [twitterUrl, setTwitterUrl] = useState(displayUser?.twitterUrl || displayUser?.TwitterUrl || '');
+    const [youtubeUrl, setYoutubeUrl] = useState(displayUser?.youtubeUrl || displayUser?.YoutubeUrl || '');
+    const [websiteUrl, setWebsiteUrl] = useState(displayUser?.websiteUrl || displayUser?.WebsiteUrl || '');
+
+    useEffect(() => {
+        if (displayUser) {
+            setInstagramUrl(displayUser.instagramUrl || displayUser.InstagramUrl || '');
+            setTwitterUrl(displayUser.twitterUrl || displayUser.TwitterUrl || '');
+            setYoutubeUrl(displayUser.youtubeUrl || displayUser.YoutubeUrl || '');
+            setWebsiteUrl(displayUser.websiteUrl || displayUser.WebsiteUrl || '');
+        }
+    }, [displayUser]);
     
     // RESTORED GEAR/STUDIO STATES
     const [profileGear, setProfileGear] = useState([]);
@@ -962,6 +977,12 @@ export const ProfileView = React.memo(({
             onThemeChange(profileAccent);
         }
     }, [profileAccent, onThemeChange]);
+
+    const sortedJournal = React.useMemo(() => {
+        return [...(profileJournal || [])].sort((a, b) => 
+            new Date(b.createdAt || b.CreatedAt || 0).getTime() - new Date(a.createdAt || a.CreatedAt || 0).getTime()
+        );
+    }, [profileJournal]);
 
     const hasFeaturedTrack = !!(displayUser?.featuredTrackId || displayUser?.FeaturedTrackId);
 
@@ -1768,8 +1789,8 @@ export const ProfileView = React.memo(({
                 >
                     <LBrackets className="opacity-60" color="#ff006e" />
                     
-                    {/* Left: Station Signal */}
-                    <div className="console-panel grayscale">
+                    {/* Left: Station Signal (Archived/Hidden for Listeners unless active) */}
+                    <div className="console-panel grayscale hidden">
                         <div className="flex-1 flex flex-col items-center justify-center p-6 gap-6">
                             <div className="text-[9px] mono font-bold uppercase tracking-[0.4em] opacity-40">STATION_LINK</div>
                             <div className="w-32 h-32 border border-white/10 bg-black/40 flex items-center justify-center relative overflow-hidden">
@@ -1833,8 +1854,8 @@ export const ProfileView = React.memo(({
                                     <div className="w-full h-full flex flex-col">
                                         <div className="text-[9px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-4">ACTIVITY_LOG</div>
                                         <div className="flex-1 space-y-4">
-                                            {profileJournal && profileJournal.length > 0 ? (
-                                                profileJournal.slice(0, 4).map((entry, idx) => (
+                                            {sortedJournal && sortedJournal.length > 0 ? (
+                                                sortedJournal.slice(0, 4).map((entry, idx) => (
                                                     <div key={idx} className="border-l border-white/10 pl-3">
                                                         <div className="text-[8px] mono text-white/30 uppercase">{new Date(entry.createdAt || entry.CreatedAt).toLocaleDateString()}</div>
                                                         <div className="text-[9px] font-bold text-white/80 uppercase tracking-wide truncate">{entry.title || entry.Title || 'SIGNAL_FRAGMENT'}</div>
@@ -1854,14 +1875,36 @@ export const ProfileView = React.memo(({
                                     <div className="w-full flex flex-col items-center gap-8">
                                         <div className="text-[9px] mono font-bold uppercase tracking-[0.4em] opacity-40">NEURAL_LINKS</div>
                                         <div className="grid grid-cols-2 gap-8">
-                                            <div className="flex flex-col items-center gap-2 group cursor-pointer opacity-40 hover:opacity-100 transition-all">
-                                                <div className="p-4 border border-white/10 bg-white/5 rounded-full"><Share2 size={24} /></div>
-                                                <span className="text-[8px] mono">SOCIAL_01</span>
-                                            </div>
-                                            <div className="flex flex-col items-center gap-2 group cursor-pointer opacity-40 hover:opacity-100 transition-all">
-                                                <div className="p-4 border border-white/10 bg-white/5 rounded-full"><Link size={24} /></div>
-                                                <span className="text-[8px] mono">WEBSITE</span>
-                                            </div>
+                                            {instagramUrl && (
+                                                <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 group cursor-pointer opacity-40 hover:opacity-100 transition-all">
+                                                    <div className="p-4 border border-white/10 bg-white/5 rounded-full"><Share2 size={24} /></div>
+                                                    <span className="text-[8px] mono">INSTAGRAM</span>
+                                                </a>
+                                            )}
+                                            {twitterUrl && (
+                                                <a href={twitterUrl} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 group cursor-pointer opacity-40 hover:opacity-100 transition-all">
+                                                    <div className="p-4 border border-white/10 bg-white/5 rounded-full"><Zap size={24} /></div>
+                                                    <span className="text-[8px] mono">TWITTER_X</span>
+                                                </a>
+                                            )}
+                                            {youtubeUrl && (
+                                                <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 group cursor-pointer opacity-40 hover:opacity-100 transition-all">
+                                                    <div className="p-4 border border-white/10 bg-white/5 rounded-full"><Video size={24} /></div>
+                                                    <span className="text-[8px] mono">YOUTUBE</span>
+                                                </a>
+                                            )}
+                                            {websiteUrl && (
+                                                <a href={websiteUrl} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 group cursor-pointer opacity-40 hover:opacity-100 transition-all">
+                                                    <div className="p-4 border border-white/10 bg-white/5 rounded-full"><Link size={24} /></div>
+                                                    <span className="text-[8px] mono">WEBSITE</span>
+                                                </a>
+                                            )}
+                                            {!instagramUrl && !twitterUrl && !youtubeUrl && !websiteUrl && (
+                                                <div className="col-span-2 flex flex-col items-center gap-2 opacity-20">
+                                                    <Lock size={24} />
+                                                    <span className="text-[8px] mono uppercase">NO_LINKS_ESTABLISHED</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}
@@ -1892,7 +1935,7 @@ export const ProfileView = React.memo(({
                                     <div className="text-[7px] mono text-white/20 uppercase">SIG_ID</div>
                                     <div className="text-[10px] mono font-bold text-white/60 tracking-wider">0X{displayUser?.id?.toString().slice(0, 8).toUpperCase()}</div>
                                 </div>
-                                <div className="space-y-1">
+                                <div className="space-y-1 hidden">
                                     <div className="text-[7px] mono text-white/20 uppercase">STATUS_FEED</div>
                                     <div className="text-[10px] font-bold text-white uppercase tracking-widest">{displayUser?.statusMessage || displayUser?.StatusMessage || 'empty_string'}</div>
                                 </div>
@@ -1934,7 +1977,7 @@ export const ProfileView = React.memo(({
                             <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
                                 <div className="text-[18px] font-black uppercase tracking-widest leading-none mb-1 text-[var(--subsystem-accent)]">{displayUser?.username}</div>
                                 <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 hidden">
                                         <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
                                         <div className="text-[8px] mono text-[var(--subsystem-accent)]/60 uppercase tracking-widest">{displayUser?.statusMessage || displayUser?.StatusMessage || 'empty_string'}</div>
                                     </div>
@@ -2380,6 +2423,12 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
     const [secondaryColor, setSecondaryColor] = useState(user?.secondaryColor || user?.SecondaryColor || '#00ffff');
     const [isGlass, setIsGlass] = useState(user?.isGlass || user?.IsGlass || false);
 
+    // Social Links
+    const [instagramUrl, setInstagramUrl] = useState(user?.instagramUrl || user?.InstagramUrl || '');
+    const [twitterUrl, setTwitterUrl] = useState(user?.twitterUrl || user?.TwitterUrl || '');
+    const [youtubeUrl, setYoutubeUrl] = useState(user?.youtubeUrl || user?.YoutubeUrl || '');
+    const [websiteUrl, setWebsiteUrl] = useState(user?.websiteUrl || user?.WebsiteUrl || '');
+
     // Sync state with user prop updates
     React.useEffect(() => {
         if (user) {
@@ -2394,6 +2443,10 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             setBackgroundColor(user.backgroundColor || user.BackgroundColor || '#000000');
             setSecondaryColor(user.secondaryColor || user.SecondaryColor || '#00ffff');
             setIsGlass(user.isGlass || user.IsGlass || false);
+            setInstagramUrl(user.instagramUrl || user.InstagramUrl || '');
+            setTwitterUrl(user.twitterUrl || user.TwitterUrl || '');
+            setYoutubeUrl(user.youtubeUrl || user.YoutubeUrl || '');
+            setWebsiteUrl(user.websiteUrl || user.WebsiteUrl || '');
         }
     }, [user]);
 
@@ -2458,6 +2511,10 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             formData.append('BackgroundColor', backgroundColor);
             formData.append('SecondaryColor', secondaryColor);
             formData.append('IsGlass', isGlass);
+            formData.append('InstagramUrl', instagramUrl);
+            formData.append('TwitterUrl', twitterUrl);
+            formData.append('YoutubeUrl', youtubeUrl);
+            formData.append('WebsiteUrl', websiteUrl);
 
             await onSubmit(formData);
         } catch (error) {
@@ -2551,7 +2608,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                         </div>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-3 hidden">
                         <label className="text-xs font-bold text-[var(--text-color)]/60 uppercase tracking-widest ml-1">Signal Status</label>
                         <input
                             type="text"
@@ -2561,6 +2618,26 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                             placeholder="INITIALIZE_STATUS_STREAM..."
                             maxLength={100}
                         />
+                    </div>
+
+                    <div className="text-[10px] font-black text-[var(--text-color)]/40 uppercase tracking-[0.4em] pt-4 border-t border-white/5">Neural_Links_Config</div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-[8px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">Instagram_Link</label>
+                            <input value={instagramUrl} onChange={e => setInstagramUrl(e.target.value)} className="w-full bg-black/60 border border-white/10 p-3 text-[10px] text-white outline-none focus:border-[var(--text-color)]" placeholder="https://..." />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[8px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">Twitter_X_Link</label>
+                            <input value={twitterUrl} onChange={e => setTwitterUrl(e.target.value)} className="w-full bg-black/60 border border-white/10 p-3 text-[10px] text-white outline-none focus:border-[var(--text-color)]" placeholder="https://..." />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[8px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">YouTube_Link</label>
+                            <input value={youtubeUrl} onChange={e => setYoutubeUrl(e.target.value)} className="w-full bg-black/60 border border-white/10 p-3 text-[10px] text-white outline-none focus:border-[var(--text-color)]" placeholder="https://..." />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[8px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">Website_Link</label>
+                            <input value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} className="w-full bg-black/60 border border-white/10 p-3 text-[10px] text-white outline-none focus:border-[var(--text-color)]" placeholder="https://..." />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

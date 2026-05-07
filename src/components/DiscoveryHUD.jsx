@@ -989,7 +989,10 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                     <HUDWidget title="RADAR_SIGNAL" icon={<Radio size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="space-y-4">
                              {liveStations.length > 0 ? liveStations.map(s => (
-                                 <div key={s.id} className="group cursor-pointer" onClick={() => onPlayStation(s)}>
+                                 <div key={s.id} className="group cursor-pointer" onClick={() => {
+                                     onPlayStation(s);
+                                     navigateToProfile(s.artistUserId || s.ArtistUserId, 'console');
+                                 }}>
                                      <div className="flex items-center justify-between mb-1">
                                          <div className="text-[10px] font-black group-hover:text-[#00ffff] transition-colors uppercase tracking-tight truncate flex-1">{s.name}</div>
                                          <div className="flex items-center gap-1.5 shrink-0 ml-2">

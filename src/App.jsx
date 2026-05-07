@@ -31,6 +31,7 @@ import ContentModal from './components/ContentModal';
 
 import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
 import DJMixerPlayer from './components/DJMixerPlayer';
+import ShoppingView from './components/ShoppingView';
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
 import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack } from './services/signalr';
 
@@ -2348,6 +2349,7 @@ const Dashboard = React.memo(({
           <SidebarLink collapsed={isSidebarCollapsed} icon={<User size={isSidebarCollapsed ? 18 : 22} />} label="USR_LINK" active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => handleNav('profile', true)} />
           <SidebarLink collapsed={isSidebarCollapsed} icon={<Play size={isSidebarCollapsed ? 18 : 22} />} label="PLY_CORE" active={activeView === 'player'} onClick={() => handleNav('player')} />
           <SidebarLink collapsed={isSidebarCollapsed} icon={<MessageSquare size={isSidebarCollapsed ? 18 : 22} />} label="MSG_SYNC" active={activeView === 'messages'} onClick={() => handleNav('messages')} hasNotification={hasNewMessages} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<ShoppingBag size={isSidebarCollapsed ? 18 : 22} />} label="SHOP_LNK" active={activeView === 'shopping'} onClick={() => handleNav('shopping')} />
 
           <div className="my-6 border-t border-white/5 opacity-50" />
           <SidebarLink collapsed={isSidebarCollapsed} icon={<Wallet size={isSidebarCollapsed ? 18 : 22} />} label="WAL_BASE" active={activeView === 'wallet'} onClick={() => handleNav('wallet')} />
@@ -2372,6 +2374,7 @@ const Dashboard = React.memo(({
             <NavButton icon={<Radio size={20} />} active={activeView === 'discovery'} onClick={() => setView('discovery')} />
             <NavButton icon={<Hash size={20} />} active={activeView === 'feed'} onClick={() => setView('feed')} />
             <NavButton icon={<Play size={20} />} active={activeView === 'player'} onClick={() => setView('player')} />
+            <NavButton icon={<ShoppingBag size={20} />} active={activeView === 'shopping'} onClick={() => setView('shopping')} />
             <NavButton icon={<MessageSquare size={20} />} active={activeView === 'messages'} onClick={() => setView('messages')} hasNotification={hasNewMessages} />
             <NavButton icon={<User size={20} />} active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => navigateToProfile(null)} />
           </div>
@@ -2450,6 +2453,17 @@ const Dashboard = React.memo(({
                   }}
                   isPlayerActive={currentTrackIndex >= 0 && !isMiniPlayerMinimized}
                 />
+              </motion.div>
+            )}
+            {activeView === 'shopping' && (
+              <motion.div
+                key="shopping-wrapper"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.02 }}
+                className="w-full h-full"
+              >
+                <ShoppingView />
               </motion.div>
             )}
             {activeView === 'wallet' && <WalletView user={user} onRefreshProfile={onRefreshProfile} />}
@@ -4125,7 +4139,7 @@ const FeedContent = React.memo(({
                                 setActiveStation(station);
                                 import('./services/signalr').then(m => m.joinStation(station.id || station.Id));
                                 setMobilePanelOpen(false);
-                                setView('player');
+                                navigateToProfile(station.artistUserId || station.ArtistUserId, 'console');
                               }}
                               className="px-3 py-1 border border-[#ff006e] text-[#ff006e] text-[8px] font-black rounded hover:bg-[#ff006e] hover:text-black transition-all"
                             >
@@ -4248,9 +4262,9 @@ const FeedContent = React.memo(({
                         setActiveStation(station);
                         import('./services/signalr').then(m => m.joinStation(station.id || station.Id));
                         if (String(station.artistUserId || station.ArtistUserId) === String(user?.id || user?.Id)) {
-                          navigateToProfile(user?.id || user?.Id);
+                          navigateToProfile(user?.id || user?.Id, 'console');
                         } else {
-                          setView('player');
+                          navigateToProfile(station.artistUserId || station.ArtistUserId, 'console');
                         }
                       }}
                       className="px-2 py-0.5 border border-[#ff006e] text-[#ff006e] text-[8px] font-black rounded hover:bg-[#ff006e] hover:text-black transition-all"
@@ -4315,7 +4329,7 @@ const PlayerContent = ({
 }) => {
   const isDesktop = window.innerWidth >= 1024;
   const isMobile = !isDesktop;
-  const showFullMixer = isDesktop || isLandscape;
+  const showFullMixer = isDesktop; // Force Cyberpod on mobile
 
   return (
     <div className="flex items-center justify-center h-full w-full">
