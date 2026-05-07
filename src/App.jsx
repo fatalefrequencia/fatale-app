@@ -31,7 +31,7 @@ import ContentModal from './components/ContentModal';
 
 import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
 import DJMixerPlayer from './components/DJMixerPlayer';
-import ShoppingView from './components/ShoppingView';
+const ShoppingView = React.lazy(() => import('./components/ShoppingView'));
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
 import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack } from './services/signalr';
 
@@ -2463,7 +2463,9 @@ const Dashboard = React.memo(({
                 exit={{ opacity: 0, scale: 1.02 }}
                 className="w-full h-full"
               >
-                <ShoppingView />
+                <React.Suspense fallback={<div className="w-full h-full bg-black animate-pulse" />}>
+                  <ShoppingView />
+                </React.Suspense>
               </motion.div>
             )}
             {activeView === 'wallet' && <WalletView user={user} onRefreshProfile={onRefreshProfile} />}
