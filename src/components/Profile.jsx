@@ -930,15 +930,15 @@ export const ProfileView = React.memo(({
     const [isSavingStatus, setIsSavingStatus] = useState(false);
     const [showTipModal, setShowTipModal] = useState(false);
     
-    const [viewMode, setViewMode] = useState(initialModal === 'console' ? 'CONSOLE' : (isMe ? 'CONSOLE' : 'DASHBOARD')); // Listeners default to Dashboard unless 'console' trigger
+    const [viewMode, setViewMode] = useState('CONSOLE'); // Will be corrected via useEffect once isMe is resolved
     const [cycleIndex, setCycleIndex] = useState(0); // 0: PFP, 1: Tracks, 2: Activity, 3: Social
     const [musicFilter, setMusicFilter] = useState('ALL'); // 'ALL', 'ALBUMS', 'SINGLES'
 
-    // Social States
-    const [instagramUrl, setInstagramUrl] = useState(displayUser?.instagramUrl || displayUser?.InstagramUrl || '');
-    const [twitterUrl, setTwitterUrl] = useState(displayUser?.twitterUrl || displayUser?.TwitterUrl || '');
-    const [youtubeUrl, setYoutubeUrl] = useState(displayUser?.youtubeUrl || displayUser?.YoutubeUrl || '');
-    const [websiteUrl, setWebsiteUrl] = useState(displayUser?.websiteUrl || displayUser?.WebsiteUrl || '');
+    // Social States — default to '' since displayUser isn't defined yet at init time
+    const [instagramUrl, setInstagramUrl] = useState('');
+    const [twitterUrl, setTwitterUrl] = useState('');
+    const [youtubeUrl, setYoutubeUrl] = useState('');
+    const [websiteUrl, setWebsiteUrl] = useState('');
 
     useEffect(() => {
         if (displayUser) {
@@ -977,6 +977,15 @@ export const ProfileView = React.memo(({
             onThemeChange(profileAccent);
         }
     }, [profileAccent, onThemeChange]);
+
+    // Set viewMode correctly once isMe is resolved (can't use isMe in useState initializer — it's defined after)
+    useEffect(() => {
+        if (initialModal === 'console') {
+            setViewMode('CONSOLE');
+        } else if (!isMe) {
+            setViewMode('DASHBOARD');
+        }
+    }, [isMe, initialModal]);
 
     const sortedJournal = React.useMemo(() => {
         return [...(profileJournal || [])].sort((a, b) => 
