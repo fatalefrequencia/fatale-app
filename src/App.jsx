@@ -9,7 +9,7 @@ import {
   MapPin, Calendar, Users, Edit3, Library,
   ChevronDown, Camera, Video, PenTool, BookOpen,
   MessageSquare, Repeat, MoreHorizontal, RefreshCw,
-  Frown, Star, Volume2, VolumeX, Plus, Minus, Globe, Maximize2, Minimize2, LogOut, Wallet,
+  Frown, Star, Volume2, VolumeX, Plus, Minus, Globe, Maximize2, Minimize2, LogOut, Wallet, ShoppingBag
 } from 'lucide-react';
 import YouTube from 'react-youtube';
 
