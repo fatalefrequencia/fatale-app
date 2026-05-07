@@ -123,11 +123,24 @@ const DJMixerPlayer = ({
     const [isPlayingB, setIsPlayingB] = useState(false);
     const [currentTimeB, setCurrentTimeB] = useState(0);
     const [durationB, setDurationB] = useState(0);
-    const [volumeB, setVolumeB] = useState(1);
-    const [baseVolume, setBaseVolume] = useState(volume);
-    
+    const [faderB, setFaderB] = useState(1);
+    const [faderA, setFaderA] = useState(volume);
+    const lastSentVolA = useRef(volume);
+
+    // Sync from parent prop ONLY if it changes externally (not from our own fader/crossfader actions)
     useEffect(() => {
-        setBaseVolume(volume);
+        // If the incoming volume prop is different from what we last sent, 
+        // it means an external change happened (e.g. Master Volume, Mute, or change in another view)
+        // We need to account for the current crossfader position to see if the faderA matches
+        const fadeA = crossfader > 0 ? (100 - crossfader) / 100 : 1;
+        const expectedPropVolume = faderA * fadeA;
+
+        if (Math.abs(volume - expectedPropVolume) > 0.01 && Math.abs(volume - lastSentVolA.current) > 0.01) {
+            console.log(`[Neural Core] External volume sync: ${volume.toFixed(2)}`);
+            // Reverse calculate faderA if possible, or just reset it
+            setFaderA(fadeA > 0 ? volume / fadeA : volume);
+            lastSentVolA.current = volume;
+        }
     }, [volume]);
 
     const [isEvolveA, setIsEvolveA] = useState(false);
@@ -222,21 +235,34 @@ const DJMixerPlayer = ({
         }
     };
 
-    // Manual Volume Control (Independent of Crossfader)
+    // Master Output & Crossfader Engine
     useEffect(() => {
-        // Deck A (Global)
-        if (onVolumeChange) onVolumeChange(baseVolume);
+        // Linear crossfade curve
+        // crossfader: -100 (Full A) to 100 (Full B)
+        const fadeA = crossfader > 0 ? (100 - crossfader) / 100 : 1;
+        const fadeB = crossfader < 0 ? (100 + crossfader) / 100 : 1;
+        
+        const effectiveA = faderA * fadeA;
+        const effectiveB = faderB * fadeB;
 
-        // Deck B (Local Audio)
+        // Deck A Output (Sync to parent engine)
+        if (onVolumeChange && Math.abs(volume - effectiveA) > 0.001) {
+            lastSentVolA.current = effectiveA;
+            onVolumeChange(effectiveA);
+        }
+
+        // Deck B Output (Local Audio Engine)
         if (audioB.current) {
-            audioB.current.volume = volumeB;
+            audioB.current.volume = Math.max(0, Math.min(1, effectiveB));
         }
 
-        // Deck B (YouTube Engine)
+        // Deck B Output (YouTube Engine)
         if (youtubePlayerB && typeof youtubePlayerB.setVolume === 'function') {
-            youtubePlayerB.setVolume(volumeB * 100);
+            try {
+                youtubePlayerB.setVolume(effectiveB * 100);
+            } catch (e) { /* YT player may not be ready */ }
         }
-    }, [baseVolume, volumeB, youtubePlayerB]);
+    }, [faderA, faderB, crossfader, youtubePlayerB, onVolumeChange]);
 
     // Sync Deck A with global track in real-time
     useEffect(() => {
@@ -741,7 +767,8 @@ const DJMixerPlayer = ({
                         }}
                         onReady={(e) => {
                             setYoutubePlayerB(e.target);
-                            e.target.setVolume(volumeB * 100);
+                            const fadeB = crossfader < 0 ? (100 + crossfader) / 100 : 1;
+                            e.target.setVolume(faderB * fadeB * 100);
                         }}
                         onStateChange={(e) => {
                             if (e.data === 1 && !isPlayingB) setIsPlayingB(true);
@@ -965,9 +992,9 @@ const DJMixerPlayer = ({
                                         min="0" 
                                         max="1" 
                                         step="0.01" 
-                                        value={baseVolume} 
-                                        onChange={(e) => setBaseVolume(Number(e.target.value))} 
-                                        onDoubleClick={() => setBaseVolume(0.8)}
+                                        value={faderA} 
+                                        onChange={(e) => setFaderA(Number(e.target.value))} 
+                                        onDoubleClick={() => setFaderA(0.8)}
                                         className="vertical-fader-nano" 
                                     />
                                 </div>
@@ -978,9 +1005,9 @@ const DJMixerPlayer = ({
                                         min="0" 
                                         max="1" 
                                         step="0.01" 
-                                        value={volumeB} 
-                                        onChange={(e) => setVolumeB(Number(e.target.value))} 
-                                        onDoubleClick={() => setVolumeB(0.8)}
+                                        value={faderB} 
+                                        onChange={(e) => setFaderB(Number(e.target.value))} 
+                                        onDoubleClick={() => setFaderB(0.8)}
                                         className="vertical-fader-nano" 
                                     />
                                 </div>
