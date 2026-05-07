@@ -31,9 +31,10 @@ import ContentModal from './components/ContentModal';
 
 import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
 import DJMixerPlayer from './components/DJMixerPlayer';
-const ShoppingView = React.lazy(() => import('./components/ShoppingView'));
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
 import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack } from './services/signalr';
+
+const ShoppingView = React.lazy(() => import('./components/ShoppingView'));
 
 // --- BASE DE DATOS MOCK (Sincronizada en toda la app) ---
 const TRACKS = [
