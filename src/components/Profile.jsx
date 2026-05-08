@@ -16,6 +16,7 @@ import {
     Coins
 } from 'lucide-react';
 import { useNotification } from '../contexts/NotificationContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { API_BASE_URL, getMediaUrl } from '../constants';
 
 const SECTORS = [
@@ -183,6 +184,7 @@ const GearIcon = ({ category }) => {
 };
 
 const GearRack = ({ gears, onAddGear, onRemoveGear, isMe, formData, setFormData, isSaving, showForm, setShowForm, secondaryColor }) => {
+    const { t } = useLanguage();
     const GEAR_PRESETS = [
         { name: 'ABLETON LIVE', category: 'Soft/VST' },
         { name: 'FL STUDIO', category: 'Soft/VST' },
@@ -199,14 +201,14 @@ const GearRack = ({ gears, onAddGear, onRemoveGear, isMe, formData, setFormData,
             <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 bg-white/5">
                 <div className="flex items-center gap-2">
                     <Cpu size={10} className="text-[var(--subsystem-accent)]/60" />
-                    <span className="text-[8px] font-black tracking-widest uppercase">HARDWARE_RACK</span>
+                    <span className="text-[8px] font-black tracking-widest uppercase">{t('HARDWARE_RACK')}</span>
                 </div>
                 {isMe && !showForm && (
                     <button 
                         onClick={() => setShowForm(true)}
                         className="text-[7px] mono text-[var(--subsystem-accent)] hover:text-white transition-colors uppercase font-bold"
                     >
-                        + REGISTER
+                        + {t('REGISTER')}
                     </button>
                 )}
             </div>
@@ -261,13 +263,13 @@ const GearRack = ({ gears, onAddGear, onRemoveGear, isMe, formData, setFormData,
                                 disabled={isSaving || !formData.name.trim()}
                                 className="flex-1 py-1.5 bg-[var(--subsystem-accent)]/80 text-black text-[8px] font-black uppercase tracking-widest hover:bg-[var(--subsystem-accent)] transition-all disabled:opacity-50"
                             >
-                                {isSaving ? 'SYNCING...' : 'SYNC_GEAR'}
+                                {isSaving ? 'SYNCING...' : t('SYNC_GEAR')}
                             </button>
                             <button 
                                 onClick={() => setShowForm(false)}
                                 className="px-3 py-1.5 border border-white/10 text-white/40 text-[8px] font-black uppercase hover:text-white transition-all"
                             >
-                                CANCEL
+                                {t('CANCEL')}
                             </button>
                         </div>
                     </div>
@@ -291,7 +293,7 @@ const GearRack = ({ gears, onAddGear, onRemoveGear, isMe, formData, setFormData,
                         )}
                     </div>
                 )) : (
-                    <div className="text-[7px] mono text-white/10 p-4 text-center mt-4 uppercase italic">NO_GEAR_DETECTED // RACK_EMPTY</div>
+                    <div className="text-[7px] mono text-white/10 p-4 text-center mt-4 uppercase italic">{t('NO_GEAR_DETECTED')}</div>
                 )}
             </div>
         </div>
@@ -327,6 +329,7 @@ const ProfileIdentityHeader = ({
     panelsVisible, onTogglePanels,
     isProfileTrackMuted, onToggleProfileMusic, hasFeaturedTrack
 }) => {
+    const { t } = useLanguage();
     const pfp = displayUser?.profilePictureUrl || displayUser?.ProfilePictureUrl || displayUser?.profileImageUrl || displayUser?.ProfileImageUrl;
     const isLive = stationData?.isLive || stationData?.IsLive;
     
@@ -344,7 +347,7 @@ const ProfileIdentityHeader = ({
                                 <div className="w-full h-full flex items-center justify-center text-[var(--subsystem-accent)]/50"><Cpu size={24} /></div>
                             )}
                             <div className="absolute inset-0 bg-[var(--subsystem-accent)]/10 opacity-0 group-hover/pfp:opacity-100 transition-opacity flex items-center justify-center">
-                                <span className="text-[7px] mono font-bold text-[var(--subsystem-accent)]">BIO_SCAN</span>
+                                <span className="text-[7px] mono font-bold text-[var(--subsystem-accent)]">{t('BIO_SCAN')}</span>
                             </div>
                         </div>
                     </div>
@@ -355,19 +358,19 @@ const ProfileIdentityHeader = ({
                         </div>
                         <div className="flex flex-col gap-1 mt-2">
                             <div className="flex items-center gap-3">
-                                <span className="text-[7px] mono text-[var(--subsystem-accent)]/40">SIGNAL_ID:</span>
+                                <span className="text-[7px] mono text-[var(--subsystem-accent)]/40">{t('SIGNAL_ID')}:</span>
                                 <span className="text-[8px] mono text-white/60 tracking-widest">0x{displayUser?.id?.toString().slice(0, 8).toUpperCase() || 'NULL'}</span>
                             </div>
                             {communityName && (
                                 <div className="flex items-center gap-3">
-                                    <span className="text-[7px] mono text-[var(--subsystem-accent)]/40">RES_SECTOR:</span>
+                                    <span className="text-[7px] mono text-[var(--subsystem-accent)]/40">{t('RES_SECTOR')}:</span>
                                     <span className="text-[8px] mono font-black tracking-widest uppercase" style={{ color: communityColor || 'var(--subsystem-accent)' }}>
                                         {communityName}
                                     </span>
                                 </div>
                             )}
                             <div className="flex items-center gap-3">
-                                <span className="text-[7px] mono text-[var(--subsystem-accent)]/40">BIO_SYNC:</span>
+                                <span className="text-[7px] mono text-[var(--subsystem-accent)]/40">{t('BIO_SYNC')}:</span>
                                 <span className="text-[8px] mono text-white/50 tracking-widest">{Math.floor(Math.random() * 40 + 60)}% (OPTIMAL)</span>
                             </div>
                         </div>
@@ -378,7 +381,7 @@ const ProfileIdentityHeader = ({
                 <div className="flex-1 min-w-0 w-full flex flex-col gap-3">
                     <div className="bg-black/60 border border-[var(--subsystem-accent)]/20 p-2 relative">
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[6px] mono text-[var(--subsystem-accent)]/40 uppercase tracking-[0.2em]">FREQ_STATUS_SIGNAL</span>
+                            <span className="text-[6px] mono text-[var(--subsystem-accent)]/40 uppercase tracking-[0.2em]">{t('FREQ_STATUS')}</span>
                             <div className="h-px flex-1 bg-[var(--subsystem-accent)]/10" />
                         </div>
                         <div className="flex items-center gap-2">
@@ -390,13 +393,13 @@ const ProfileIdentityHeader = ({
                                     onChange={(e) => setLocalStatus(e.target.value)}
                                     onBlur={handleInlineStatusUpdate}
                                     onKeyDown={(e) => e.key === 'Enter' && handleInlineStatusUpdate()}
-                                    placeholder="WAITING_FOR_SIGNALS..."
+                                    placeholder={t('WAITING_SIGNALS')}
                                     className="w-full bg-transparent border-none outline-none text-[10px] text-[var(--subsystem-accent)] mono uppercase tracking-widest placeholder:text-[var(--subsystem-accent)]/20 p-0 m-0 focus:ring-0"
                                     disabled={isSavingStatus}
                                 />
                             ) : (
                                 <span className="text-[10px] text-[var(--subsystem-accent)]/80 mono uppercase tracking-widest truncate">
-                                    {displayUser?.statusMessage || displayUser?.StatusMessage || 'NO_SIGNAL_BROADCAST'}
+                                    {displayUser?.statusMessage || displayUser?.StatusMessage || t('NO_SIGNAL_BROADCAST')}
                                 </span>
                             )}
                         </div>
@@ -412,7 +415,7 @@ const ProfileIdentityHeader = ({
                         {isMe ? (
                             <>
                                 <button onClick={onModifyId} className="subsystem-command-btn py-1 px-3">
-                                    [ MODIFY_ID ]
+                                    [ {t('MODIFY_ID')} ]
                                 </button>
                                 <button onClick={onGoLive} className={`subsystem-command-btn py-1 px-3 ${isLive ? 'border-red-500 text-red-500' : ''}`}>
                                     <Radio size={10} /> [ {isLive ? 'LIVE' : 'LIVE'} ]
@@ -421,11 +424,11 @@ const ProfileIdentityHeader = ({
                         ) : (
                             <>
                                 <button onClick={handleFollow} className={`subsystem-command-btn py-1 px-3 ${isFollowing ? 'bg-[var(--subsystem-accent)]/10 text-[var(--subsystem-accent)] border-[var(--subsystem-accent)]' : ''}`}>
-                                    [ {isFollowing ? 'SYNCED' : 'INITIALIZE_LINK'} ]
+                                    [ {isFollowing ? t('SYNCED') : t('INIT_LINK')} ]
                                 </button>
                                 {onMessageClick && (
                                     <button onClick={onMessageClick} className="subsystem-command-btn py-1 px-3">
-                                        <MessageSquare size={10} /> [ COMMS ]
+                                        <MessageSquare size={10} /> [ {t('COMMS')} ]
                                     </button>
                                 )}
                             </>
@@ -433,7 +436,7 @@ const ProfileIdentityHeader = ({
                     </div>
                     <div className="flex items-center gap-2 justify-end">
                         <button onClick={onTogglePanels} className="subsystem-command-btn py-1 px-3 text-[var(--subsystem-accent)]/40 hover:text-[var(--subsystem-accent)]">
-                            {panelsVisible ? '[ COLLAPSE_SUBSYSTEMS ]' : '[ SHOW_SUBSYSTEMS ]'}
+                            {panelsVisible ? `[ ${t('COLLAPSE_SUBSYSTEMS')} ]` : `[ ${t('SHOW_SUBSYSTEMS')} ]`}
                         </button>
                         {isMe && onLogout ? (
                             <button onClick={onLogout} className="subsystem-command-btn py-1 px-3 border-red-900/40 text-red-700/60 hover:text-red-500">
@@ -460,7 +463,7 @@ const ProfileIdentityHeader = ({
                             className="pointer-events-auto subsystem-command-btn py-0.5 px-2 bg-black/80 flex items-center gap-2 group/mute"
                         >
                             {isProfileTrackMuted ? <VolumeX size={10} className="text-[var(--subsystem-accent)]/40 group-hover/mute:text-[var(--subsystem-accent)]" /> : <Volume2 size={10} className="text-[var(--subsystem-accent)] animate-pulse" />}
-                            <span className="text-[7px]">{isProfileTrackMuted ? '[ LISTEN_PROFILE_SIGNAL ]' : '[ SIGNAL_ACTIVE ]'}</span>
+                            <span className="text-[7px]">{isProfileTrackMuted ? `[ ${t('LISTEN_SIGNAL')} ]` : `[ ${t('SIGNAL_ACTIVE')} ]`}</span>
                         </button>
                     </div>
                 )}
@@ -475,6 +478,7 @@ const ProfileIdentityHeader = ({
 };
 
 const AudioSignalsWidget = ({ tracks, isExpanded, onToggleExpand, onPlayTrack, isMe, onUpload }) => {
+    const { t } = useLanguage();
     const [subTab, setSubTab] = useState('All');
 
     const allItems = [
@@ -486,7 +490,7 @@ const AudioSignalsWidget = ({ tracks, isExpanded, onToggleExpand, onPlayTrack, i
         allItems.filter(i => i._type === 'track');
 
     return (
-        <SubsystemBlock title="AUDIO_REGISTRY" icon={Music} expand={isExpanded} onToggleExpand={onToggleExpand} address="FRQ-01">
+        <SubsystemBlock title={t('AUDIO_REGISTRY')} icon={Music} expand={isExpanded} onToggleExpand={onToggleExpand} address="FRQ-01">
             <AnimatePresence mode="wait">
                 {!isExpanded ? (
                     <motion.div key="collapsed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-1 max-h-[280px] overflow-y-auto no-scrollbar">
@@ -532,7 +536,7 @@ const AudioSignalsWidget = ({ tracks, isExpanded, onToggleExpand, onPlayTrack, i
                         </div>
                         {isMe && (
                             <button onClick={onUpload} className="w-full mb-3 py-1.5 border border-dashed border-[var(--subsystem-accent)]/20 text-[8px] mono text-[var(--subsystem-accent)]/50 uppercase tracking-[0.3em] hover:border-[var(--subsystem-accent)]/40 hover:text-[var(--subsystem-accent)] transition-all flex items-center justify-center gap-2">
-                                <Plus size={10} /> [ INJECT_SIGNAL ]
+                                <Plus size={10} /> [ {t('INJECT_SIGNAL')} ]
                             </button>
                         )}
                         <div className="space-y-1 max-h-[400px] overflow-y-auto no-scrollbar">
@@ -886,6 +890,7 @@ export const ProfileView = React.memo(({
     hasMiniPlayer
 }) => {
     const { showNotification } = useNotification();
+    const { t } = useLanguage();
     
     // 1. ALL STATES
     const [profileData, setProfileData] = useState(null);
@@ -1799,24 +1804,7 @@ export const ProfileView = React.memo(({
                 >
                     <LBrackets className="opacity-60" color="#ff006e" />
                     
-                    {/* Left: Station Signal (Archived/Hidden for Listeners unless active) */}
-                    <div className="console-panel grayscale hidden">
-                        <div className="flex-1 flex flex-col items-center justify-center p-6 gap-6">
-                            <div className="text-[9px] mono font-bold uppercase tracking-[0.4em] opacity-40">STATION_LINK</div>
-                            <div className="w-32 h-32 border border-white/10 bg-black/40 flex items-center justify-center relative overflow-hidden">
-                                {isLive && stationData?.imageUrl ? (
-                                    <img src={getMediaUrl(stationData.imageUrl)} className="w-full h-full object-cover animate-pulse" />
-                                ) : (
-                                    <Radio size={32} className="text-white/10" />
-                                )}
-                                <div className="absolute inset-0 bg-scanlines opacity-10 pointer-events-none" />
-                            </div>
-                            <SignalWaveform isLive={isLive} isProfilePlaying={!isProfileTrackMuted} color={profileAccent} />
-                            <div className="text-[10px] font-black uppercase tracking-widest text-center" style={{ color: profileAccent }}>
-                                {isLive ? 'SIGNAL_DETECTION: LIVE' : 'STATUS: OFFLINE'}
-                            </div>
-                        </div>
-                    </div>
+
 
                     {/* Center: Dynamic Core */}
                     <div className="console-panel w-[380px]">
@@ -1928,34 +1916,7 @@ export const ProfileView = React.memo(({
                         </div>
                     </div>
 
-                    {/* Right: Metadata */}
-                    <div className="console-panel grayscale">
-                        <div className="flex-1 p-8 space-y-6">
-                            <div className="text-[9px] mono font-bold uppercase tracking-[0.4em] opacity-40">USER_DATA</div>
-                            <div className="space-y-4">
-                                <div className="space-y-1">
-                                    <div className="text-[7px] mono text-white/20 uppercase">FULL_NAME</div>
-                                    <div className="text-[11px] font-black text-white uppercase tracking-widest">{displayUser?.username || 'ANONYMOUS'}</div>
-                                </div>
-                                <div className="space-y-1">
-                                    <div className="text-[7px] mono text-white/20 uppercase">RES_SECTOR</div>
-                                    <div className="text-[11px] font-black uppercase tracking-widest" style={{ color: communityColor }}>{communityName}</div>
-                                </div>
-                                <div className="space-y-1">
-                                    <div className="text-[7px] mono text-white/20 uppercase">SIG_ID</div>
-                                    <div className="text-[10px] mono font-bold text-white/60 tracking-wider">0X{displayUser?.id?.toString().slice(0, 8).toUpperCase()}</div>
-                                </div>
-                                <div className="space-y-1 hidden">
-                                    <div className="text-[7px] mono text-white/20 uppercase">STATUS_FEED</div>
-                                    <div className="text-[10px] font-bold text-white uppercase tracking-widest">{displayUser?.statusMessage || displayUser?.StatusMessage || 'empty_string'}</div>
-                                </div>
-                                <div className="space-y-1">
-                                    <div className="text-[7px] mono text-white/20 uppercase">BIO_SYNC</div>
-                                    <div className="text-[10px] mono font-bold text-white/40 tracking-widest">NORMALIZED_98%</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+
 
                     {/* Enter Button */}
                     <button onClick={() => setViewMode('DASHBOARD')} className="enter-system-btn">ENTER_SYSTEM</button>
@@ -1972,7 +1933,7 @@ export const ProfileView = React.memo(({
             <div className="dashboard-grid custom-scrollbar">
                 {/* Identity Core Panel (Upper Right) */}
                 <div className="identity-core-panel">
-                    <SubsystemBlock title="IDENTITY_CORE" showBrackets={true} address="USR_USR_01" secondaryColor={profileSecondary}>
+                    <SubsystemBlock title={t('IDENTITY_CORE')} showBrackets={true} address="USR_USR_01" secondaryColor={profileSecondary}>
                         <div className="p-4 flex gap-6 border-b border-white/5">
                             <div className="w-24 h-24 border border-[var(--subsystem-accent)]/30 bg-black/40 p-0.5 shrink-0 relative">
                                 <LBrackets className="scale-75 opacity-40" color={profileSecondary} />
@@ -2017,8 +1978,8 @@ export const ProfileView = React.memo(({
                                 <span className="metadata-value">0X{displayUser?.id?.toString().slice(0, 8).toUpperCase()}</span>
                             </div>
                             <div className="metadata-entry">
-                                <span className="metadata-label">SIG_STATUS</span>
-                                <span className="metadata-value opacity-60 italic">{localStatus || 'NO_SIGNAL_BROADCAST'}</span>
+                                <span className="metadata-label">{t('SIG_STATUS')}</span>
+                                <span className="metadata-value opacity-60 italic">{localStatus || t('NO_SIGNAL_BROADCAST')}</span>
                             </div>
                         </div>
 
@@ -2027,7 +1988,7 @@ export const ProfileView = React.memo(({
                                 <input 
                                     type="text"
                                     className="status-input"
-                                    placeholder="UPDATE_SYSTEM_STATUS..."
+                                    placeholder={t('UPDATE_SYSTEM_STATUS')}
                                     value={localStatus}
                                     onChange={(e) => setLocalStatus(e.target.value.toUpperCase())}
                                     onKeyDown={(e) => e.key === 'Enter' && handleSaveStatus()}
@@ -2038,7 +1999,7 @@ export const ProfileView = React.memo(({
                                     className="status-save-btn"
                                     disabled={isSavingStatus}
                                 >
-                                    {isSavingStatus ? 'SYNCING...' : 'UPDATE'}
+                                    {isSavingStatus ? 'SYNCING...' : t('UPDATE')}
                                 </button>
                             </div>
                         )}
@@ -2060,7 +2021,7 @@ export const ProfileView = React.memo(({
 
                 {/* Music Releases Panel */}
                 <div className="music-releases-panel">
-                    <SubsystemBlock title="MUSIC_RELEASES" showBrackets={true} address="SIG_AUD_04" secondaryColor={profileSecondary}>
+                    <SubsystemBlock title={t('MUSIC_RELEASES')} showBrackets={true} address="SIG_AUD_04" secondaryColor={profileSecondary}>
                         <div className="flex items-center justify-between px-6 py-3 bg-black/40 border-b border-white/5">
                             <div className="flex gap-6">
                                 {['ALL', 'ALBUMS', 'SINGLES'].map(f => (
@@ -2069,7 +2030,7 @@ export const ProfileView = React.memo(({
                                         onClick={() => setMusicFilter(f)}
                                         className={`text-[9px] font-black uppercase tracking-[0.3em] transition-all hover:text-white ${musicFilter === f ? 'text-[var(--subsystem-accent)] border-b border-[var(--subsystem-accent)]' : 'text-white/20'}`}
                                     >
-                                        {f}
+                                        {t(f)}
                                     </button>
                                 ))}
                             </div>
@@ -2106,7 +2067,7 @@ export const ProfileView = React.memo(({
 
                 {/* Studio Content Panel */}
                 <div className="studio-content-panel">
-                    <SubsystemBlock title="STUDIO_ARCHIVE" showBrackets={true} address="VIS_CAP_09" secondaryColor={profileSecondary}>
+                    <SubsystemBlock title={t('STUDIO_ARCHIVE')} showBrackets={true} address="VIS_CAP_09" secondaryColor={profileSecondary}>
                         <div className="p-4 grid grid-cols-4 gap-2 max-h-[300px] overflow-y-auto custom-scrollbar">
                             {profileGallery.map((img, idx) => (
                                 <div key={idx} className="aspect-square bg-black border border-white/5 overflow-hidden group relative cursor-pointer" onClick={() => handleItemClick(img, 'GALLERY')}>
@@ -2131,7 +2092,7 @@ export const ProfileView = React.memo(({
                 {/* Archive Panel (Playlists/Past Broadcasts) */}
                 <div className="archive-panel">
                     <SubsystemBlock 
-                        title={selectedPlaylistId && playlistDetails ? `PLAYLIST // ${playlistDetails.Playlist?.name?.toUpperCase() || playlistDetails.playlist?.Name?.toUpperCase()}` : "PLAYLISTS_&_BROADCASTS"} 
+                        title={selectedPlaylistId && playlistDetails ? `PLAYLIST // ${playlistDetails.Playlist?.name?.toUpperCase() || playlistDetails.playlist?.Name?.toUpperCase()}` : t('PLAYLISTS_BROADCAST')} 
                         showBrackets={true} 
                         address="ARC_MEM_02"
                         secondaryColor={profileSecondary}
@@ -2144,7 +2105,7 @@ export const ProfileView = React.memo(({
                                             onClick={() => { setSelectedPlaylistId(null); setPlaylistDetails(null); }}
                                             className="flex items-center gap-2 text-[8px] font-black uppercase text-white/40 hover:text-white transition-all bg-white/5 px-2 py-1 border border-white/10 hover:border-white/20"
                                         >
-                                            <ArrowLeft size={12} /> BACK
+                                            <ChevronLeft size={12} /> {t('BACK')}
                                         </button>
                                         <div className="flex gap-2">
                                             <button 
@@ -2282,14 +2243,14 @@ export const ProfileView = React.memo(({
                     className="group flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white transition-all"
                 >
                     <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                    {viewMode === 'DASHBOARD' ? 'BACK_LANDING' : 'RETURN_ORBIT'}
+                    {viewMode === 'DASHBOARD' ? t('BACK_LANDING') : t('RETURN_ORBIT')}
                 </button>
 
                 <div className="flex items-center gap-6">
                     {isMe ? (
                         <>
                             <button onClick={onLogout} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-red-500/40 hover:text-red-500 transition-colors">
-                                <LogOut size={14} /> LOGOUT
+                                <LogOut size={14} /> {t('LOGOUT')}
                             </button>
                             <button 
                                 onClick={() => {
@@ -2299,16 +2260,16 @@ export const ProfileView = React.memo(({
                                 }} 
                                 className="relative z-[200] px-4 py-1.5 bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all"
                             >
-                                MODIFY_ID
+                                {t('MODIFY_ID')}
                             </button>
                         </>
                     ) : (
                         <>
                             <button onClick={() => onMessageUser?.(displayUser)} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/40 hover:text-white transition-colors">
-                                <MessageSquare size={14} /> MESSAGE
+                                <MessageSquare size={14} /> {t('MESSAGE')}
                             </button>
                             <button onClick={handleFollow} className={`px-6 py-1.5 border text-[9px] font-black uppercase tracking-[0.3em] transition-all ${isFollowing ? 'border-white/10 text-white/40' : 'border-[var(--subsystem-accent)] text-[var(--subsystem-accent)] hover:bg-[var(--subsystem-accent)] hover:text-black'}`}>
-                                {isFollowing ? 'FOLLOWING' : 'FOLLOW'}
+                                {isFollowing ? t('FOLLOWING') : t('FOLLOW')}
                             </button>
                         </>
                     )}
@@ -2333,7 +2294,7 @@ export const ProfileView = React.memo(({
             {/* Modal Layer */}
             <AnimatePresence>
                 {showEditProfile && (
-                    <ContentModal onClose={() => setShowEditProfile(false)} title="MODIFY_IDENTITY">
+                    <ContentModal onClose={() => setShowEditProfile(false)} title={t('MODIFY_IDENTITY')}>
                          <div className="p-8 h-full bg-black/90 backdrop-blur-3xl border border-white/5 overflow-y-auto custom-scrollbar">
                             <h2 className="text-xs font-black text-white/80 mb-6 uppercase tracking-[0.4em] flex items-center gap-2">
                                 IDENTITY_CORE_UPDATE
@@ -2601,21 +2562,6 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                 placeholder="Enter Username..."
                             />
                         </div>
-
-                        <div className="space-y-3">
-                            <label className="text-xs font-bold text-[var(--text-color)]/60 uppercase tracking-widest ml-1">Sector Residency</label>
-                            <select
-                                value={sectorId}
-                                onChange={(e) => setSectorId(parseInt(e.target.value))}
-                                className="w-full bg-black/40 border border-white/10 p-4 text-white font-bold outline-none focus:border-[var(--text-color)] appearance-none"
-                            >
-                                <option value={0}>NEON SLUMS</option>
-                                <option value={1}>SILICON HEIGHTS</option>
-                                <option value={2}>DATA VOID</option>
-                                <option value={3}>CENTRAL HUB</option>
-                                <option value={4}>OUTER RIM</option>
-                            </select>
-                        </div>
                     </div>
 
                     <div className="space-y-3 hidden">
@@ -2777,18 +2723,33 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                             {/* Upload area */}
                             <div className="p-8 flex flex-col items-center justify-center gap-2">
                                 {bannerFile || wallpaperVideoFile ? (
-                                    <>
-                                        {wallpaperVideoFile
-                                            ? <Video size={24} className="text-cyan-400" />
-                                            : <Camera size={24} className="text-[var(--theme-color)]" />
-                                        }
-                                        <span className="text-[9px] text-[var(--text-color)]/80 uppercase tracking-widest text-center font-bold">
-                                            {(bannerFile || wallpaperVideoFile).name}
-                                        </span>
-                                        <span className="text-[7px] text-[var(--text-color)]/30 uppercase tracking-widest">
-                                            {wallpaperVideoFile ? 'VIDEO_BACKDROP_QUEUED' : 'PHOTO_BACKDROP_QUEUED'}
-                                        </span>
-                                    </>
+                                    <div className="w-full flex flex-col items-center gap-4">
+                                        <div className="w-full h-32 bg-black border border-[var(--text-color)]/20 relative overflow-hidden">
+                                            {wallpaperVideoFile ? (
+                                                <video 
+                                                    src={URL.createObjectURL(wallpaperVideoFile)} 
+                                                    autoPlay 
+                                                    muted 
+                                                    loop 
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <img 
+                                                    src={URL.createObjectURL(bannerFile)} 
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            )}
+                                            <div className="absolute inset-0 bg-scanlines opacity-20 pointer-events-none" />
+                                        </div>
+                                        <div className="text-center">
+                                            <span className="text-[9px] text-[var(--text-color)]/80 uppercase tracking-widest font-bold">
+                                                {(bannerFile || wallpaperVideoFile).name}
+                                            </span>
+                                            <div className="text-[7px] text-[var(--text-color)]/30 uppercase tracking-widest mt-1">
+                                                {wallpaperVideoFile ? 'VIDEO_BACKDROP_QUEUED' : 'PHOTO_BACKDROP_QUEUED'}
+                                            </div>
+                                        </div>
+                                    </div>
                                 ) : (
                                     <>
                                         <div className="flex items-center gap-3 mb-1">

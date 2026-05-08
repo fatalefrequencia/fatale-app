@@ -332,8 +332,30 @@ const GlobeCore = memo(({ activeSector, communities = [], artists = [], stations
     const { camera } = useThree();
     const [cameraDist, setCameraDist] = useState(10);
 
-    useFrame(() => {
+    const scanlineRef = useRef();
+    const atmosphereRef = useRef();
+    const innerLightRef = useRef();
+
+    useFrame((state) => {
+        const t = state.clock.getElapsedTime();
         setCameraDist(camera.position.length());
+
+        // Animate Scanline sweep
+        if (scanlineRef.current) {
+            scanlineRef.current.position.y = Math.sin(t * 0.5) * 2.5;
+            scanlineRef.current.scale.x = 0.8 + Math.cos(scanlineRef.current.position.y * 0.4) * 0.2;
+            scanlineRef.current.scale.z = 0.8 + Math.cos(scanlineRef.current.position.y * 0.4) * 0.2;
+        }
+
+        // Atmosphere breathing
+        if (atmosphereRef.current) {
+            atmosphereRef.current.scale.setScalar(1 + Math.sin(t * 1.2) * 0.005);
+        }
+
+        // Inner light pulse
+        if (innerLightRef.current) {
+            innerLightRef.current.intensity = 1.0 + Math.sin(t * 2) * 0.5;
+        }
     });
 
     const activeSectorColor = useMemo(() => {
@@ -378,20 +400,63 @@ const GlobeCore = memo(({ activeSector, communities = [], artists = [], stations
 
     return (
         <group ref={groupRef}>
-            <Sphere args={[2.45, 32, 32]}>
-                <meshBasicMaterial color="#000" />
+            {/* PULSING INNER CORE LIGHT */}
+            <pointLight 
+                ref={innerLightRef}
+                color={activeSectorColor || "#ff006e"} 
+                intensity={1} 
+                distance={5} 
+            />
+            {/* --- GLOBE LAYERS --- */}
+            
+            {/* 1. DEEP CORE - Dark, sleek, and slightly reflective */}
+            <Sphere args={[2.45, 64, 64]}>
+                <meshStandardMaterial 
+                    color="#0a0a0a" 
+                    roughness={0.15} 
+                    metalness={0.9}
+                    envMapIntensity={1.5}
+                />
             </Sphere>
 
-            <Sphere args={[2.52, 40, 40]}>
+            {/* 2. INNER ENERGY SHELL - Subtle internal glow */}
+            <Sphere args={[2.46, 32, 32]}>
+                <meshStandardMaterial 
+                    color={activeSectorColor || "#ff006e"} 
+                    transparent 
+                    opacity={0.08} 
+                    emissive={activeSectorColor || "#ff006e"}
+                    emissiveIntensity={0.8}
+                />
+            </Sphere>
+
+            {/* 3. STRUCTURAL GRID - High-tech wireframe */}
+            <Sphere args={[2.52, 48, 48]}>
                 <meshStandardMaterial 
                     color={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (activeSectorColor || "#ff006e")} 
                     wireframe 
                     transparent 
-                    opacity={activeView === 'CLIQUE_VALENCE' ? 0.2 : (activeSector !== null ? 0.08 : 0.02)} 
+                    opacity={activeView === 'CLIQUE_VALENCE' ? 0.25 : (activeSector !== null ? 0.18 : 0.08)} 
                     emissive={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (activeSectorColor || "#ff006e")}
-                    emissiveIntensity={activeView === 'CORE_PULSE' ? 0.5 : 0.1}
+                    emissiveIntensity={activeView === 'CORE_PULSE' ? 1.5 : 0.5}
                 />
             </Sphere>
+
+            {/* 4. ATMOSPHERIC HALO - Separates globe from space background */}
+            <Sphere ref={atmosphereRef} args={[2.58, 64, 64]}>
+                <meshBasicMaterial 
+                    color={activeSectorColor || "#ff006e"} 
+                    transparent 
+                    opacity={0.18} 
+                    side={THREE.BackSide}
+                />
+            </Sphere>
+
+            {/* 5. TOPOGRAPHIC SCANLINE - Slow vertical sweep */}
+            <mesh ref={scanlineRef} rotation={[Math.PI / 2, 0, 0]}>
+                <torusGeometry args={[2.53, 0.004, 16, 100]} />
+                <meshBasicMaterial color={activeSectorColor || "#ff006e"} transparent opacity={0.3} />
+            </mesh>
 
             {/* LIVE_SIGNAL_HUB Beacons */}
             {activeView === 'LIVE_SIGNAL_HUB' && filteredArtists.map(a => (
@@ -477,6 +542,7 @@ const InteractiveGlobe = memo(({
                 gl={{ logarithmicDepthBuffer: true, antialias: true }}
                 camera={{ position: [0, 0, isMobile ? 12 : 10.5], fov: isMobile ? 30 : 40 }}
             >
+                <fog attach="fog" args={['#000000', 8, 30]} />
                 <OrbitControls 
                     enablePan={false} 
                     enableZoom={true} 
@@ -489,9 +555,10 @@ const InteractiveGlobe = memo(({
                     rotateSpeed={0.5}
                 />
                 
-                <ambientLight intensity={0.5} />
-                <pointLight position={[10, 10, 10]} intensity={2.0} color="#ff006e" />
-                <pointLight position={[-10, -10, -10]} intensity={1.5} color="#00ffff" />
+                <ambientLight intensity={0.4} />
+                <pointLight position={[10, 10, 10]} intensity={3.5} color={SECTORS.find(s => s.id === activeSector)?.color || "#ff006e"} />
+                <pointLight position={[-10, -10, -10]} intensity={2.5} color="#00ffff" />
+                <spotLight position={[0, 20, 0]} intensity={2} angle={0.5} penumbra={1} color="#ffffff" />
 
                 <Float 
                     speed={isGlobeSpinning && !selectedId ? (activeSector !== null ? 0.2 : 1.0) : 0} 
@@ -513,7 +580,7 @@ const InteractiveGlobe = memo(({
                     />
                 </Float>
 
-                <Stars radius={100} depth={50} count={2000} factor={4} saturation={0} fade speed={isGlobeSpinning ? 1 : 0} />
+                <Stars radius={150} depth={60} count={1200} factor={6} saturation={0.5} fade speed={isGlobeSpinning ? 0.8 : 0} />
             </Canvas>
         </div>
     );

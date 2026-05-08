@@ -54,21 +54,21 @@ const ShoppingView = () => {
                 </div>
 
                 {/* Shop Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="columns-1 md:columns-2 lg:columns-3 gap-8">
                     {ARTIST_SHOPS.map((shop, idx) => (
                         <motion.div
                             key={shop.id}
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: idx * 0.1 }}
-                            className="group relative bg-[#0a0a0a] border border-white/5 hover:border-[#ff006e]/40 transition-all duration-500 overflow-hidden"
+                            className="group relative bg-[#0a0a0a] border border-white/5 hover:border-[#ff006e]/40 transition-all duration-500 overflow-hidden break-inside-avoid mb-8 inline-block w-full"
                         >
                             {/* Image Background */}
-                            <div className="h-64 w-full overflow-hidden relative">
+                            <div className="w-full overflow-hidden relative">
                                 <img 
                                     src={shop.image} 
                                     alt={shop.shopName} 
-                                    className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
+                                    className="w-full h-auto object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent" />
                                 
@@ -107,7 +107,7 @@ const ShoppingView = () => {
                     ))}
 
                     {/* Placeholder for expansion */}
-                    <div className="border border-dashed border-white/10 flex flex-col items-center justify-center p-12 gap-4 opacity-30 hover:opacity-100 transition-opacity cursor-pointer group">
+                    <div className="border border-dashed border-white/10 flex flex-col items-center justify-center p-12 gap-4 opacity-30 hover:opacity-100 transition-opacity cursor-pointer group break-inside-avoid mb-8 inline-block w-full">
                         <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center group-hover:border-[#ff006e] group-hover:text-[#ff006e] transition-all">
                             <ShoppingCart size={20} />
                         </div>

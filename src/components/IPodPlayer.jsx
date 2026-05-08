@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNotification } from '../contexts/NotificationContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
     Play, Pause, SkipBack, SkipForward, Music,
     ChevronRight, Zap, Minimize2, Download as DownloadIcon, Heart,
@@ -8,14 +9,7 @@ import {
 } from 'lucide-react';
 import skullImg from '../assets/skull_neon_fuscia.png';
 
-const MENU_ITEMS = [
-    { id: 'NOW_PLAYING', label: 'Now Playing' },
-    { id: 'SONGS', label: 'Music' },
-    { id: 'SONGS_LIKED', label: 'Favoritos' },
-    { id: 'PLAYLISTS', label: 'Playlists' },
-    { id: 'ARTISTS', label: 'Artists' },
-    { id: 'SETTINGS', label: 'Settings' }
-];
+// MENU_ITEMS moved inside component for localization
 
 export const IPodPlayer = ({
     isLandscape,
@@ -49,6 +43,16 @@ export const IPodPlayer = ({
     onRequestTrack
 }) => {
     const { showNotification } = useNotification();
+    const { t } = useLanguage();
+
+    const MENU_ITEMS = [
+        { id: 'NOW_PLAYING', label: t('NOW_PLAYING') },
+        { id: 'SONGS', label: t('SONGS') },
+        { id: 'SONGS_LIKED', label: t('FAVORITOS') },
+        { id: 'PLAYLISTS', label: t('PLAYLISTS') },
+        { id: 'ARTISTS', label: t('ARTISTS') },
+        { id: 'SETTINGS', label: t('SETTINGS') }
+    ];
     const [screen, setScreen] = useState(forceNowPlaying ? 'NOW_PLAYING' : (initialScreen || 'MAIN'));
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [rotation, setRotation] = useState(0);
@@ -248,9 +252,9 @@ export const IPodPlayer = ({
         if (screen === 'MAIN') return MENU_ITEMS;
         if (screen === 'SONGS' || screen === 'MUSIC') {
             return [
-                { id: 'BACK', label: '.. Back' },
-                { id: 'SONGS_PURCHASED', label: 'Purchased' },
-                { id: 'SONGS_ALL', label: 'All Tracks' }
+                { id: 'BACK', label: '.. ' + t('BACK') },
+                { id: 'SONGS_PURCHASED', label: t('PURCHASED') },
+                { id: 'SONGS_ALL', label: t('ALL_TRACKS') }
             ];
         }
 
@@ -266,9 +270,9 @@ export const IPodPlayer = ({
             const filtered = getFiltered();
 
             return [
-                { id: 'BACK_SM', label: '.. Back' },
-                { id: 'PLAY_ALL_FILTERED', label: 'Play All', tracks: filtered, action: true },
-                { id: 'SHUFFLE_ALL_FILTERED', label: 'Shuffle All', tracks: filtered, action: true },
+                { id: 'BACK_SM', label: '.. ' + t('BACK') },
+                { id: 'PLAY_ALL_FILTERED', label: t('PLAY_ALL'), tracks: filtered, action: true },
+                { id: 'SHUFFLE_ALL_FILTERED', label: t('SHUFFLE_ALL'), tracks: filtered, action: true },
                 ...filtered.map(t => ({
                     id: t.originalIndex,
                     label: t.title || t.Title || 'Untitled Track',
@@ -279,7 +283,7 @@ export const IPodPlayer = ({
 
         if (screen === 'PLAYLISTS') {
             return [
-                { id: 'BACK', label: '.. Back' },
+                { id: 'BACK', label: '.. ' + t('BACK') },
                 ...playlists.map((p, i) => {
                     const pid = p.id || p.Id;
                     return { id: `PL_${pid}`, label: p.name || p.Name || 'Untitled Playlist', playlistId: pid, type: 'PLAYLIST' };
@@ -289,47 +293,47 @@ export const IPodPlayer = ({
 
         if (screen === 'PLAYLIST_DETAILS') {
             return [
-                { id: 'BACK_PL', label: '.. Back' },
-                { id: 'PLAY_PLAYLIST', label: 'Play', action: true },
-                { id: 'SHUFFLE_PLAYLIST', label: 'Shuffle', action: true },
-                { id: 'UPDATE_PLAYLIST_IMAGE', label: 'Update Image', action: true },
-                { id: 'DELETE_PLAYLIST', label: 'Delete Playlist', action: true, isDanger: true },
+                { id: 'BACK_PL', label: '.. ' + t('BACK') },
+                { id: 'PLAY_PLAYLIST', label: t('PLAY'), action: true },
+                { id: 'SHUFFLE_PLAYLIST', label: t('SHUFFLE'), action: true },
+                { id: 'UPDATE_PLAYLIST_IMAGE', label: t('UPDATE_IMAGE'), action: true },
+                { id: 'DELETE_PLAYLIST', label: t('DELETE_PLAYLIST'), action: true, isDanger: true },
                 ...playlistTracks.map((t, i) => ({ id: i, label: t.title || t.Title || 'Untitled Track', originalTrack: t }))
             ];
         }
 
         if (screen === 'ARTISTS') {
             return [
-                { id: 'BACK', label: '.. Back' },
-                { id: 'MOCK', label: `Empty ${screen}` }
+                { id: 'BACK', label: '.. ' + t('BACK') },
+                { id: 'MOCK', label: `${t('EMPTY')} ${screen}` }
             ];
         }
         if (screen === 'SETTINGS') return [
-            { id: 'CREDITS', label: `Credits: ${user?.credits || 0}` },
-            { id: 'ADD_CREDITS', label: 'Add 100 Credits (DEBUG)' }
+            { id: 'CREDITS', label: `${t('CREDITS')}: ${user?.credits || 0}` },
+            { id: 'ADD_CREDITS', label: t('ADD_CREDITS_DEBUG') }
         ];
         if (screen === 'ACTION_MENU') {
             return [
-                { id: 'BACK_NP', label: '.. Back to Track' },
+                { id: 'BACK_NP', label: '.. ' + t('BACK_TO_TRACK') },
                 ...(activeStation ? [
-                    { id: 'STATION_CHAT', label: 'Live Chat (Comm Link)' },
-                    { id: 'STATION_QUEUE', label: 'Request Queue' }
+                    { id: 'STATION_CHAT', label: t('LIVE_CHAT') },
+                    { id: 'STATION_QUEUE', label: t('REQUEST_QUEUE') }
                 ] : []),
-                { id: 'GOTO_ADD_PLAYLIST', label: 'Add to Playlist' },
-                { id: 'GOTO_TIP', label: 'Tip Artist' },
+                { id: 'GOTO_ADD_PLAYLIST', label: t('ADD_TO_PLAYLIST') },
+                { id: 'GOTO_TIP', label: t('TIP_ARTIST') },
                 ...(currentTrack.source && currentTrack.source.startsWith('youtube:')
-                    ? [{ id: 'CACHE_TRACK', label: currentTrack.isCached ? 'Remove Cache' : 'Download Cache' }]
+                    ? [{ id: 'CACHE_TRACK', label: currentTrack.isCached ? t('REMOVE_CACHE') : t('DOWNLOAD_CACHE') }]
                     : []
                 ),
                 ...(currentTrack.isOwned
-                    ? [{ id: 'DOWNLOAD_FILE', label: 'Download File' }]
-                    : [{ id: 'PURCHASE_FILE', label: `Purchase (${currentTrack.price || 0} CRD)` }]
+                    ? [{ id: 'DOWNLOAD_FILE', label: t('DOWNLOAD_FILE') }]
+                    : [{ id: 'PURCHASE_FILE', label: `${t('PURCHASE_FILE')} (${currentTrack.price || 0} CRD)` }]
                 )
             ];
         }
         if (screen === 'SELECT_PLAYLIST') {
             return [
-                { id: 'BACK_AM', label: '.. Back' },
+                { id: 'BACK_AM', label: '.. ' + t('BACK') },
                 ...playlists.map(p => {
                     const pid = p.id || p.Id;
                     return { id: `ADD_TO_${pid}`, label: p.name || p.Name, playlistId: pid, type: 'SELECT_PLAYLIST_ITEM' };
@@ -338,24 +342,24 @@ export const IPodPlayer = ({
         }
         if (screen === 'TIP_MENU') {
             return [
-                { id: 'BACK_AM', label: '.. Back to Options' },
-                { id: 'TIP_10', label: 'Tip 10 Credits' },
-                { id: 'TIP_25', label: 'Tip 25 Credits' },
-                { id: 'TIP_50', label: 'Tip 50 Credits' },
-                { id: 'TIP_100', label: 'Tip 100 Credits' },
-                { id: 'TIP_CUSTOM', label: 'Custom Amount...' }
+                { id: 'BACK_AM', label: '.. ' + t('BACK') },
+                { id: 'TIP_10', label: t('TIP_ARTIST') + ' 10' },
+                { id: 'TIP_25', label: t('TIP_ARTIST') + ' 25' },
+                { id: 'TIP_50', label: t('TIP_ARTIST') + ' 50' },
+                { id: 'TIP_100', label: t('TIP_ARTIST') + ' 100' },
+                { id: 'TIP_CUSTOM', label: t('CUSTOM_AMOUNT') + '...' }
             ];
         }
         if (screen === 'PURCHASE_CONFIRM') {
             return [
-                { id: 'CONFIRM_PURCHASE', label: 'YES' },
-                { id: 'BACK_AM', label: 'NO' }
+                { id: 'CONFIRM_PURCHASE', label: t('YES') },
+                { id: 'BACK_AM', label: t('NO') }
             ];
         }
         if (screen === 'STATION_CHAT') {
             return [
-                { id: 'BACK_AM', label: '.. Back to Options' },
-                { id: 'SEND_MESSAGE', label: 'Send Message...' },
+                { id: 'BACK_AM', label: '.. ' + t('BACK') },
+                { id: 'SEND_MESSAGE', label: t('SEND_MESSAGE') },
                 ...stationChat.slice(-10).reverse().map((msg, i) => ({
                     id: `MSG_${i}`,
                     label: `${msg.username}: ${msg.message}`
@@ -364,8 +368,8 @@ export const IPodPlayer = ({
         }
         if (screen === 'STATION_QUEUE') {
             return [
-                { id: 'BACK_AM', label: '.. Back to Options' },
-                { id: 'REQUEST_TRACK', label: 'Request Current Track' },
+                { id: 'BACK_AM', label: '.. ' + t('BACK') },
+                { id: 'REQUEST_TRACK', label: t('REQUEST_CURRENT_TRACK') },
                 ...stationQueue.map((req, i) => ({
                     id: `REQ_${i}`,
                     label: `${req.trackTitle} (${req.username})`

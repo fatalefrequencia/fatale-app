@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Users, Zap, Globe, Shield, Star, MoveLeft, MessageSquare, ImagePlus } from 'lucide-react';
 import API from '../../services/api';
@@ -6,6 +7,7 @@ import { SECTORS, getMediaUrl } from '../../constants';
 import { useNotification } from '../../contexts/NotificationContext';
 
 const CommunityTerminal = ({ community, user, followedCommunities = [], onFollowUpdate, setUser, onBack, sectorColor }) => {
+    const { t } = useLanguage();
     const { showNotification } = useNotification();
     const lastTickRef = useRef(0);
     const chatEndRef = useRef(null);
@@ -185,7 +187,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
                     style={{ color }}
                 >
                     <MoveLeft size={14} />
-                    BACK_TO_ORBIT
+                    {t('BACK_TO_ORBIT')}
                 </button>
                 <div className="flex items-center gap-3">
                     <div className="relative group/icon">
@@ -209,7 +211,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
                     </div>
                     <div className="flex flex-col items-end">
                         <div className="text-[10px] font-black text-white uppercase tracking-tight truncate max-w-[150px] text-right">{community.name}</div>
-                        <div className="text-[7px] opacity-30 mono tracking-widest">SIGNAL_STRENGTH: 98%</div>
+                        <div className="text-[7px] opacity-30 mono tracking-widest">{t('SIGNAL_STRENGTH')}: 98%</div>
                     </div>
                     <button 
                         onClick={handleToggleFollow}
@@ -230,7 +232,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
                     <span>SEC: {community.sectorId}</span>
                     {isFounder && (
                         <button onClick={handleDelete} className="text-red-500 hover:text-red-400 font-black cursor-pointer bg-red-500/10 px-2 flex items-center gap-1 border border-red-500/20">
-                            <Zap size={8} /> DELETE_CLIQUE
+                            <Zap size={8} /> {t('DELETE_CLIQUE')}
                         </button>
                     )}
                  </div>
@@ -240,20 +242,20 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
                             onClick={handleJoin}
                             className="bg-white/10 hover:bg-white/20 border border-white/10 text-white px-2 py-0.5 rounded-sm transition-all flex items-center gap-1 hover:scale-105"
                         >
-                            JOIN_CLIQUE
+                            {t('JOIN_CLIQUE')}
                         </button>
                     ) : (
                         <button 
                             onClick={handleLeave}
                             className="text-[#ff006e]/60 hover:text-[#ff006e] border border-[#ff006e]/20 px-2 py-0.5 rounded-sm transition-all"
                         >
-                            LEAVE_CLIQUE
+                            {t('LEAVE_CLIQUE')}
                         </button>
                     )}
                     <div className="w-[1px] h-3 bg-white/10 mx-1" />
                     <div className="flex items-center gap-2">
                         <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: color }} />
-                        <span style={{ color }}>LINK_STABLE</span>
+                        <span style={{ color }}>{t('LINK_STABLE')}</span>
                     </div>
                  </div>
             </div>
@@ -274,7 +276,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
                     {messages.length === 0 && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center opacity-20 text-center space-y-2 pointer-events-none">
                             <MessageSquare size={24} />
-                            <div className="text-[8px] uppercase tracking-[0.3em]">No incoming transmissions</div>
+                            <div className="text-[8px] uppercase tracking-[0.3em]">{t('NO_INCOMING_TRANSMISSIONS')}</div>
                         </div>
                     )}
                     <div className="space-y-4">
@@ -303,7 +305,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value.slice(0, 140))}
-                    placeholder="TRANSMIT_SIGNAL..."
+                    placeholder={t('TRANSMIT_SIGNAL') + '...'}
                     className="flex-1 bg-transparent border-none text-[10px] mono text-white outline-none placeholder:text-white/10"
                 />
                 <div className="w-10 flex items-center justify-center">

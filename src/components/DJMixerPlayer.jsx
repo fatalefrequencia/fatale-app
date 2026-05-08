@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SkipBack, SkipForward, Play, Pause, Zap, Disc, MessageSquare, List, Search, Plus, DollarSign, Users, Radio, Heart, Music, Shuffle, Settings } from 'lucide-react';
 import { getMediaUrl, API_BASE_URL } from '../constants';
+import { useLanguage } from '../contexts/LanguageContext';
 import YouTube from 'react-youtube';
 import './DJMixerPlayer.css';
 
@@ -48,7 +49,7 @@ const NeuralSpectrum = ({ analyser, isActive }) => {
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
                 ctx.font = 'bold 7px "Courier New", monospace';
                 ctx.textAlign = 'center';
-                ctx.fillText('YOUTUBE_LICENSE: VISUAL_DATA_RESTRICTED', canvas.width / 2, canvas.height - 4);
+                ctx.fillText(`YOUTUBE_LICENSE: ${isActive ? 'VISUAL_DATA_RESTRICTED' : 'SIGNAL_IDLE'}`, canvas.width / 2, canvas.height - 4);
             } else {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
@@ -95,6 +96,7 @@ const DJMixerPlayer = ({
     setCurrentTrackIndex,
     isMobile = false
 }) => {
+    const { t, language } = useLanguage();
     const [activeTab, setActiveTab] = useState('LIBRARY'); // LIBRARY, CHAT, REQUESTS
     const [crateCategory, setCrateCategory] = useState('ALL'); // ALL, PURCHASED, FAVORITES, ARTISTS, PLAYLISTS
     const [searchQuery, setSearchQuery] = useState('');
@@ -676,6 +678,7 @@ const DJMixerPlayer = ({
     };
 
     const getDisplayArtist = (t) => {
+        if (!t) return "Unknown Artist";
         const source = t.source || t.Source || t.filePath || t.FilePath || "";
         if (source.includes('youtube:') || source.includes('youtu.be') || source.includes('youtube.com')) {
             return "YouTube Tracks";
@@ -801,7 +804,7 @@ const DJMixerPlayer = ({
                             </div>
                             <div className="divider-nano">|</div>
                             <div className="session-info-inline">
-                                <h2 className="text-[10px] font-black uppercase tracking-[0.1em] text-white/90">{station?.name || 'NEURAL_BROADCAST'}</h2>
+                                <h2 className="text-[10px] font-black uppercase tracking-[0.1em] text-white/90">{station?.name || t('NEURAL_BROADCAST')}</h2>
                             </div>
                         </div>
 
@@ -812,7 +815,7 @@ const DJMixerPlayer = ({
                             </div>
                             <div className="divider-nano">|</div>
                             <button onClick={() => setViewMode('LISTENER')} className="readout-item-nano hover:text-[var(--accent)] transition-colors cursor-pointer border border-white/10 px-2 py-0.5 rounded bg-white/5">
-                                <Radio size={10} className="mr-1 inline" /> LIVE_VIEW
+                                <Radio size={10} className="mr-1 inline" /> {t('LIVE')}
                             </button>
                         </div>
                     </div>
@@ -822,10 +825,10 @@ const DJMixerPlayer = ({
                         <div className={`deck-module-nano deck-a ${!deckA ? 'empty' : 'active'} ${isSyncing ? 'syncing' : ''}`}>
                             {/* Top Signal Ingest Bar */}
                             <div className="signal-ingest-bar">
-                                <div className="ingest-info truncate">{deckA?.title || 'NO_SIGNAL'}</div>
+                                <div className="ingest-info truncate">{deckA?.title || t('NO_SIGNAL_BROADCAST')}</div>
                                 <div className="ingest-actions">
-                                    <button onClick={() => onLike(deckA)} className="ingest-btn" title="ADD_TO_LIBRARY"><Plus size={10} /></button>
-                                    <button onClick={() => onPurchase(deckA)} className="ingest-btn" title="PURCHASE_SIGNAL"><DollarSign size={10} /></button>
+                                    <button onClick={() => onLike(deckA)} className="ingest-btn" title={t('ADD_TO_PLAYLIST')}><Plus size={10} /></button>
+                                    <button onClick={() => onPurchase(deckA)} className="ingest-btn" title={t('PURCHASE_FILE')}><DollarSign size={10} /></button>
                                 </div>
                             </div>
 
@@ -836,13 +839,13 @@ const DJMixerPlayer = ({
                                         {isPlayingA ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
                                     </button>
                                     <button onClick={onNext} className="transport-btn-sq"><SkipForward size={10} /></button>
-                                    <button onClick={() => handleSync('A')} className={`sync-btn-nano ${isSyncedA ? 'active' : ''}`}>SYNC</button>
+                                    <button onClick={() => handleSync('A')} className={`sync-btn-nano ${isSyncedA ? 'active' : ''}`}>{t('SYNCED')}</button>
                                 </div>
                                 <div className="deck-id-readout mirrored-right">
                                     <div className="deck-id-tag font-black tracking-widest opacity-40">NODE_A</div>
                                     <div className="tempo-status-nano mono">
                                         <div className="val text-white/90">{(Number(deckA?.bpm || 128) + Number(pitchA)).toFixed(1)}</div>
-                                        <div className="label opacity-40 uppercase tracking-tighter">BPM_SIGNAL</div>
+                                        <div className="label opacity-40 uppercase tracking-tighter">{t('BPM')}</div>
                                     </div>
                                 </div>
                             </div>
@@ -855,7 +858,7 @@ const DJMixerPlayer = ({
                                             onClick={() => setIsEvolveA(!isEvolveA)} 
                                             className={`evolve-btn ${isEvolveA ? 'active' : ''}`}
                                         >
-                                            <span>EVOLVE</span>
+                                            <span>{t('EVOLVE_SIGNAL')}</span>
                                         </button>
                                     </div>
                                     <button 
@@ -1036,10 +1039,10 @@ const DJMixerPlayer = ({
                         <div className={`deck-module-nano deck-b ${!deckB ? 'empty' : 'active'}`}>
                             {/* Top Signal Ingest Bar */}
                             <div className="signal-ingest-bar">
-                                <div className="ingest-info truncate">{deckB?.title || 'NO_SIGNAL'}</div>
+                                <div className="ingest-info truncate">{deckB?.title || t('NO_SIGNAL_BROADCAST')}</div>
                                 <div className="ingest-actions">
-                                    <button onClick={() => onLike(deckB)} className="ingest-btn"><Plus size={10} /></button>
-                                    <button onClick={() => onPurchase(deckB)} className="ingest-btn"><DollarSign size={10} /></button>
+                                    <button onClick={() => onLike(deckB)} className="ingest-btn" title={t('ADD_TO_PLAYLIST')}><Plus size={10} /></button>
+                                    <button onClick={() => onPurchase(deckB)} className="ingest-btn" title={t('PURCHASE_FILE')}><DollarSign size={10} /></button>
                                 </div>
                             </div>
 
@@ -1048,11 +1051,11 @@ const DJMixerPlayer = ({
                                     <div className="deck-id-tag font-black tracking-widest opacity-40">NODE_B</div>
                                     <div className="tempo-status-nano mono">
                                         <div className="val text-white/90">{(Number(deckB?.bpm || 124.5) + Number(pitchB)).toFixed(1)}</div>
-                                        <div className="label opacity-40 uppercase tracking-tighter">BPM_SIGNAL</div>
+                                        <div className="label opacity-40 uppercase tracking-tighter">{t('BPM')}</div>
                                     </div>
                                 </div>
                                 <div className="deck-transport-row-nano right">
-                                    <button onClick={() => handleSync('B')} className={`sync-btn-nano ${isSyncedB ? 'active' : ''}`}>SYNC</button>
+                                    <button onClick={() => handleSync('B')} className={`sync-btn-nano ${isSyncedB ? 'active' : ''}`}>{t('SYNCED')}</button>
                                     <button onClick={skipBPrev} className="transport-btn-sq"><SkipBack size={10} /></button>
                                     <button onClick={togglePlayB} className={`transport-btn-sq main ${isPlayingB || (deckB && isYoutubeTrack(deckB) && isPlaying) ? 'active' : ''}`}>
                                         {(isPlayingB || (deckB && isYoutubeTrack(deckB) && isPlaying)) ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
@@ -1148,7 +1151,7 @@ const DJMixerPlayer = ({
                                             onClick={() => setIsEvolveB(!isEvolveB)} 
                                             className={`evolve-btn ${isEvolveB ? 'active' : ''}`}
                                         >
-                                            <span>EVOLVE</span>
+                                            <span>{t('EVOLVE_SIGNAL')}</span>
                                         </button>
                                     </div>
                                     <button 
@@ -1247,8 +1250,8 @@ const DJMixerPlayer = ({
                                 </>
                             ) : (
                                 <>
-                                    <h2 className="listener-track-title truncate">{deckA?.title || 'NO_SIGNAL'}</h2>
-                                    <h3 className="listener-track-artist truncate">{getDisplayArtist(deckA) || 'AWAITING_TRANSMISSION'}</h3>
+                                    <h2 className="listener-track-title truncate">{deckA?.title || t('NO_SIGNAL_BROADCAST')}</h2>
+                                    <h3 className="listener-track-artist truncate">{getDisplayArtist(deckA) || t('AWAITING_TRANSMISSION')}</h3>
                                 </>
                             )}
                         </div>
@@ -1278,7 +1281,7 @@ const DJMixerPlayer = ({
 
                         <div className="listener-mode-toggle">
                             <button onClick={() => setViewMode('MIXER')} className="toggle-view-btn-main">
-                                <Settings size={14} className="mr-2 inline" /> OPEN_CONSOLE
+                                <Settings size={14} className="mr-2 inline" /> {t('SYS_CONF')}
                             </button>
                         </div>
                     </div>
@@ -1290,9 +1293,9 @@ const DJMixerPlayer = ({
                 <div className="utility-interlink-pane glass-pane">
                     <div className="utility-header-neon">
                         <div className="utility-tabs-neon">
-                            <button onClick={() => setActiveTab('LIBRARY')} className={`util-tab ${activeTab === 'LIBRARY' ? 'active' : ''}`}><Disc size={12} /> <span>SIGNAL_CRATE</span></button>
-                            <button onClick={() => setActiveTab('CHAT')} className={`util-tab ${activeTab === 'CHAT' ? 'active' : ''}`}><MessageSquare size={12} /> <span>NEURAL_CHAT</span></button>
-                            <button onClick={() => setActiveTab('REQUESTS')} className={`util-tab ${activeTab === 'REQUESTS' ? 'active' : ''}`}><List size={12} /> <span>SIGNAL_REQUESTS</span></button>
+                            <button onClick={() => setActiveTab('LIBRARY')} className={`util-tab ${activeTab === 'LIBRARY' ? 'active' : ''}`}><Disc size={12} /> <span>{t('SIGNAL_CRATE')}</span></button>
+                            <button onClick={() => setActiveTab('CHAT')} className={`util-tab ${activeTab === 'CHAT' ? 'active' : ''}`}><MessageSquare size={12} /> <span>{t('NEURAL_CHAT')}</span></button>
+                            <button onClick={() => setActiveTab('REQUESTS')} className={`util-tab ${activeTab === 'REQUESTS' ? 'active' : ''}`}><List size={12} /> <span>{t('REQUEST_SIGNAL')}</span></button>
                         </div>
                         
                         {activeTab === 'LIBRARY' && (
@@ -1301,7 +1304,7 @@ const DJMixerPlayer = ({
                                     <Search size={12} className="search-icon-trigger" />
                                     <input 
                                         type="text" 
-                                        placeholder="SEARCH..." 
+                                        placeholder={t('SEARCH_SIGNAL')} 
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="crate-search-input-minimal"
@@ -1317,14 +1320,14 @@ const DJMixerPlayer = ({
                                                 }}
                                                 className="filter-chip active flex items-center gap-2"
                                             >
-                                                <SkipBack size={8} /> BACK_TO_BROWSE
+                                                <SkipBack size={8} /> {t('BACK')}
                                             </button>
                                             <button 
                                                 onClick={handleShuffle}
                                                 className="filter-chip shuffle-btn flex items-center gap-2 bg-[#ff006e]/10 border-[#ff006e]/20 text-[#ff006e]"
-                                                title="SHUFFLE_SIGNALS"
+                                                title={t('SHUFFLE_ALL')}
                                             >
-                                                <Shuffle size={10} /> SHUFFLE
+                                                <Shuffle size={10} /> {t('SHUFFLE')}
                                             </button>
                                         </div>
                                     ) : (
@@ -1332,9 +1335,9 @@ const DJMixerPlayer = ({
                                             <button 
                                                 onClick={handleShuffle}
                                                 className="filter-chip shuffle-btn flex items-center gap-2 bg-[#ff006e]/10 border-[#ff006e]/20 text-[#ff006e]"
-                                                title="SHUFFLE_SIGNALS"
+                                                title={t('SHUFFLE_ALL')}
                                             >
-                                                <Shuffle size={10} /> SHUFFLE
+                                                <Shuffle size={10} /> {t('SHUFFLE')}
                                             </button>
                                             <div className="w-px h-4 bg-white/10 mx-1" />
                                             {['ALL', 'PURCHASED', 'FAVORITES', 'ARTISTS', 'PLAYLISTS'].map(cat => (
@@ -1347,7 +1350,7 @@ const DJMixerPlayer = ({
                                                     }}
                                                     className={`filter-chip ${crateCategory === cat ? 'active' : ''}`}
                                                 >
-                                                    {cat}
+                                                    {t(cat)}
                                                 </button>
                                             ))}
                                         </div>
@@ -1371,16 +1374,16 @@ const DJMixerPlayer = ({
                                     <table className="signal-table-nano">
                                         <thead>
                                             <tr>
-                                                <th className="w-16">LOAD</th>
-                                                <th>SIGNAL_ID</th>
-                                                <th>ORIGIN</th>
-                                                <th className="w-12">BPM</th>
-                                                <th className="w-12">SYNC</th>
+                                                <th className="w-16">{t('LOAD')}</th>
+                                                <th>{t('SIGNAL_ID')}</th>
+                                                <th>{t('TITULAR')}</th>
+                                                <th className="w-12">{t('BPM')}</th>
+                                                <th className="w-12">{t('DURATION')}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {isCrateLoading ? (
-                                                <tr className="signal-row"><td colSpan="5" className="text-center py-8 opacity-40 italic">HYDRATING_SIGNAL_SEQUENCE...</td></tr>
+                                                <tr className="signal-row"><td colSpan="5" className="text-center py-8 opacity-40 italic">{t('TUNING_FREQS')}</td></tr>
                                             ) : crateCategory === 'PLAYLISTS' && !viewingPlaylist ? (
                                                 (getFilteredTracks().playlists || []).map((p, i) => (
                                                     <tr key={`pl-${i}`} className="signal-row cursor-pointer" onClick={() => handlePlaylistClick(p)}>
@@ -1412,13 +1415,13 @@ const DJMixerPlayer = ({
                                             ) : (
                                                 <>
                                                     {viewingPlaylist && (
-                                                        <tr className="section-header-row"><td colSpan="5">PLAYLIST_INSPECTION: {viewingPlaylist.name || viewingPlaylist.Title}</td></tr>
+                                                        <tr className="section-header-row"><td colSpan="5">{t('PLAYLISTS')}: {viewingPlaylist.name || viewingPlaylist.Title}</td></tr>
                                                     )}
                                                     {viewingArtist && (
                                                         <tr className="section-header-row"><td colSpan="5">ARTIST_SEQUENCE: {viewingArtist}</td></tr>
                                                     )}
                                                     {getFilteredTracks().collection.length > 0 && !viewingPlaylist && !viewingArtist && (
-                                                        <tr className="section-header-row"><td colSpan="5">SIGNAL_COLLECTION</td></tr>
+                                                        <tr className="section-header-row"><td colSpan="5">{t('PUBLIC_COLL')}</td></tr>
                                                     )}
                                                     {getFilteredTracks().collection.map((t, i) => (
                                                         <tr key={`col-${i}`} className="signal-row">
@@ -1437,7 +1440,7 @@ const DJMixerPlayer = ({
                                                     ))}
 
                                                     {getFilteredTracks().network.length > 0 && !viewingPlaylist && (
-                                                        <tr className="section-header-row"><td colSpan="5">GLOBAL_NETWORK_RESULTS</td></tr>
+                                                        <tr className="section-header-row"><td colSpan="5">{t('GLOBAL_SIGNAL')}</td></tr>
                                                     )}
                                                     {getFilteredTracks().network.map((t, i) => (
                                                         <tr key={`net-${i}`} className="signal-row discovery">
@@ -1479,13 +1482,13 @@ const DJMixerPlayer = ({
                                                 </div>
                                             </div>
                                         )) : (
-                                            <div className="h-full flex items-center justify-center opacity-20 italic text-[10px]">NO_NEURAL_ACTIVITY_DETECTED...</div>
+                                            <div className="h-full flex items-center justify-center opacity-20 italic text-[10px]">{t('NO_DATA_PULSES')}</div>
                                         )}
                                     </div>
                                     <div className="chat-input-row p-3 border-t border-white/5 bg-black/40 flex gap-2">
                                         <input 
                                             type="text" 
-                                            placeholder="BROADCAST_SIGNAL..." 
+                                            placeholder={t('SEND_MESSAGE')} 
                                             value={chatInput}
                                             onChange={(e) => setChatInput(e.target.value)}
                                             onKeyDown={(e) => e.key === 'Enter' && (onSendMessage(chatInput), setChatInput(''))}
@@ -1512,11 +1515,11 @@ const DJMixerPlayer = ({
                                     <table className="signal-table-nano">
                                         <thead>
                                             <tr>
-                                                <th className="w-16">LOAD</th>
-                                                <th>REQUEST_ID</th>
-                                                <th>ORIGIN</th>
-                                                <th className="w-12">BPM</th>
-                                                <th className="w-12">STATUS</th>
+                                                <th className="w-16">{t('LOAD')}</th>
+                                                <th>{t('SIGNAL_ID')}</th>
+                                                <th>{t('TITULAR')}</th>
+                                                <th className="w-12">{t('BPM')}</th>
+                                                <th className="w-12">{t('STATUS')}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -1532,10 +1535,10 @@ const DJMixerPlayer = ({
                                                     </td>
                                                     <td className="sig-artist truncate opacity-30">{getDisplayArtist(r)}</td>
                                                     <td className="sig-bpm mono text-[var(--accent)]">{r.bpm || '--'}</td>
-                                                    <td className="sig-sync mono opacity-20 italic">PENDING</td>
+                                                    <td className="sig-sync mono opacity-20 italic">{t('WAITING_INPUT')}</td>
                                                 </tr>
                                             )) : (
-                                                <tr className="signal-row"><td colSpan="5" className="text-center py-12 opacity-20 italic">NO_PENDING_REQUESTS</td></tr>
+                                                <tr className="signal-row"><td colSpan="5" className="text-center py-12 opacity-20 italic">{t('NO_SIGNAL_BROADCAST')}</td></tr>
                                             )}
                                         </tbody>
                                     </table>

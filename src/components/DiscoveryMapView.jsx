@@ -13,6 +13,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Filter } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 import API from '../services/api';
 import { SECTORS, getMediaUrl } from '../constants';
@@ -628,7 +629,7 @@ const DiscoveryCanvas = ({
                             autoFocus
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
-                            placeholder="Search artists..."
+                            placeholder={t('SEARCH_ARTISTS')}
                             style={{
                                 background: 'rgba(10,10,10,0.92)',
                                 border: '1px solid rgba(255,0,110,0.4)',
@@ -660,7 +661,7 @@ const DiscoveryCanvas = ({
                     {searchOpen ? <X size={14} /> : <Search size={14} />}
                 </button>
                 <button
-                    onClick={() => { fetchAll(); showNotification('Syncing frequencies...', 'info'); }}
+                    onClick={() => { fetchAll(); showNotification(t('SYNCING_FREQS'), 'info'); }}
                     style={{
                         background: 'rgba(10,10,10,0.92)',
                         border: '1px solid rgba(255,255,255,0.1)',
@@ -671,7 +672,7 @@ const DiscoveryCanvas = ({
                         display: 'flex',
                         alignItems: 'center',
                     }}
-                    title="Refresh Map"
+                    title={t('REFRESH_MAP')}
                 >
                     <motion.div whileTap={{ rotate: 180 }} transition={{ duration: 0.3 }}>
                         <Filter size={14} />
@@ -711,7 +712,7 @@ const DiscoveryCanvas = ({
                         boxShadow: activeSector === null ? '0 0 20px rgba(255,0,110,0.3)' : 'none',
                     }}
                 >
-                    GLOBAL_VIEW
+                    {t('GLOBAL_VIEW')}
                 </button>
                 {SECTORS.map(sec => (
                     <button
@@ -764,7 +765,7 @@ const DiscoveryCanvas = ({
                         color: '#ff006e', fontFamily: 'monospace',
                         fontSize: 11, letterSpacing: '0.25em', textTransform: 'uppercase',
                     }}>
-                        TUNING FREQUENCIES...
+                        {t('TUNING_FREQS')}
                     </div>
                 </div>
             )}

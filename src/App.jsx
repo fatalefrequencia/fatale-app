@@ -17,6 +17,7 @@ import YouTube from 'react-youtube';
 
 import skullImg from './assets/skull_neon_fuscia.png';
 import AuthView from './components/AuthView';
+import { useLanguage } from './contexts/LanguageContext';
 import { ProfileView } from './components/Profile';
 import UploadTrackView from './components/UploadTrackView';
 import API from './services/api';
@@ -27,6 +28,7 @@ import DiscoveryHUD from './components/DiscoveryHUD';
 import TrackUploadView from './components/UploadTrackView';
 import WalletView from './components/WalletView';
 import ContentModal from './components/ContentModal';
+import SettingsView from './components/SettingsView';
 
 
 import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
@@ -120,7 +122,21 @@ function App() {
   });
   const [isPlaying, setIsPlaying] = useState(false); // Never auto-play on load to respect browser policies
   const [redirectTrigger, setRedirectTrigger] = useState(null); // Refactored to fix RefError
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) { return null; }
+  });
+
+  const { language, setLanguage } = useLanguage();
+
+  useEffect(() => {
+    const userLang = user?.preferredLanguage || user?.PreferredLanguage;
+    if (userLang && userLang !== language) {
+      setLanguage(userLang);
+    }
+  }, [user?.preferredLanguage, user?.PreferredLanguage, setLanguage]);
 
   const currentUserId = getUserId(user);
   const [tracks, setTracks] = useState(() => {
@@ -291,7 +307,7 @@ function App() {
     const desc = description || goLiveFormData.description;
 
     if (!title) {
-      showNotification("BROADCAST_ERROR", "A session title is required to initialize the frequency.", "error");
+      showNotification("BROADCAST_ERROR", t('NAME_REQUIRED'), "error");
       return;
     }
 
@@ -303,7 +319,7 @@ function App() {
         IsQueueEnabled: goLiveFormData.isQueueEnabled
       });
 
-      showNotification("BROADCAST_ACTIVE", "Signal established. Frequency is now LIVE.", "success");
+      showNotification("BROADCAST_ACTIVE", t('ESTABLISH_SIGNAL'), "success");
       setShowGlobalGoLive(false);
       setGoLiveFormData({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true });
 
@@ -311,7 +327,7 @@ function App() {
       navigateToProfile(user?.id, 'broadcast');
     } catch (e) {
       console.error("Failed to go live global:", e);
-      showNotification("BROADCAST_FAILURE", "Neural interface failed to establish link.", "error");
+      showNotification("BROADCAST_FAILURE", t('SYNC_FAILURE'), "error");
     }
   };
 
@@ -552,7 +568,7 @@ function App() {
       conn.on("StationEnded", (data) => {
         setActiveStation(prev => {
           if (prev && (prev.id === data.stationId || prev.Id === data.stationId)) {
-            showNotification("BROADCAST_ENDED", "The live radio station has disconnected.", "info");
+            showNotification("BROADCAST_ENDED", t('SIGNAL_LOST'), "info");
             leaveStation(data.stationId);
             return null;
           }
@@ -876,10 +892,24 @@ function App() {
     // 1. Mode Switching
     if (isYT) {
       if (!isYoutubeMode) setIsYoutubeMode(true);
-      if (!audio.paused) {
-        audio.pause();
-        audio.removeAttribute('src');
-        audio.setAttribute('data-playing-src', '');
+      
+      // Play silent audio on native element to keep background session alive on mobile
+      const silentSrc = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+      if (audio.getAttribute('data-playing-src') !== 'silent') {
+        audio.src = silentSrc;
+        audio.loop = true;
+        audio.setAttribute('data-playing-src', 'silent');
+        audio.load();
+      }
+      
+      if (isPlaying) {
+        if (audio.paused) {
+          audio.play().catch(err => console.warn("[PLAYER] Failed to play silent audio", err));
+        }
+      } else {
+        if (!audio.paused) {
+          audio.pause();
+        }
       }
     } else {
       if (isYoutubeMode) setIsYoutubeMode(false);
@@ -889,6 +919,7 @@ function App() {
       if (trackSource && (currentSrc !== trackSource)) {
         console.log(`[PLAYER] Loading new local source: ${trackSource}`);
         audio.src = trackSource;
+        audio.loop = false; // Ensure it doesn't loop so onEnded fires
         audio.setAttribute('data-playing-src', trackSource);
         audio.load();
         setCurrentTime(0);
@@ -1184,7 +1215,8 @@ function App() {
           isGlass: rawData?.isGlass !== undefined ? rawData?.isGlass : (rawData?.IsGlass !== undefined ? rawData?.IsGlass : (user?.isGlass || false)),
           communityId: rawData?.communityId || rawData?.CommunityId || user?.communityId,
           communityName: rawData?.communityName || rawData?.CommunityName || user?.communityName,
-          communityColor: rawData?.communityColor || rawData?.CommunityColor || user?.communityColor
+          communityColor: rawData?.communityColor || rawData?.CommunityColor || user?.communityColor,
+          preferredLanguage: rawData?.preferredLanguage || rawData?.PreferredLanguage || user?.preferredLanguage || 'en'
         };
 
         setUser(prev => {
@@ -2236,6 +2268,7 @@ const Dashboard = React.memo(({
   analyserA,
   isLandscape
 }) => {
+  const { t } = useLanguage();
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -2345,20 +2378,21 @@ const Dashboard = React.memo(({
         </div>
 
         <nav className="flex-1 space-y-3 p-4">
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<Radio size={isSidebarCollapsed ? 18 : 22} />} label="DSC_SCAN" active={activeView === 'discovery'} onClick={() => handleNav('discovery')} />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<Hash size={isSidebarCollapsed ? 18 : 22} />} label="FEED_LNK" active={activeView === 'feed'} onClick={() => handleNav('feed')} />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<User size={isSidebarCollapsed ? 18 : 22} />} label="USR_LINK" active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => handleNav('profile', true)} />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<Play size={isSidebarCollapsed ? 18 : 22} />} label="PLY_CORE" active={activeView === 'player'} onClick={() => handleNav('player')} />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<MessageSquare size={isSidebarCollapsed ? 18 : 22} />} label="MSG_SYNC" active={activeView === 'messages'} onClick={() => handleNav('messages')} hasNotification={hasNewMessages} />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<ShoppingBag size={isSidebarCollapsed ? 18 : 22} />} label="SHOP_LNK" active={activeView === 'shopping'} onClick={() => handleNav('shopping')} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<Radio size={isSidebarCollapsed ? 18 : 22} />} label={t('DSC_SCAN')} active={activeView === 'discovery'} onClick={() => handleNav('discovery')} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<Hash size={isSidebarCollapsed ? 18 : 22} />} label={t('FEED_LNK')} active={activeView === 'feed'} onClick={() => handleNav('feed')} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<User size={isSidebarCollapsed ? 18 : 22} />} label={t('USR_LINK')} active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => handleNav('profile', true)} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<Play size={isSidebarCollapsed ? 18 : 22} />} label={t('PLY_CORE')} active={activeView === 'player'} onClick={() => handleNav('player')} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<MessageSquare size={isSidebarCollapsed ? 18 : 22} />} label={t('MSG_SYNC')} active={activeView === 'messages'} onClick={() => handleNav('messages')} hasNotification={hasNewMessages} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<ShoppingBag size={isSidebarCollapsed ? 18 : 22} />} label={t('SHOP_LNK')} active={activeView === 'shopping'} onClick={() => handleNav('shopping')} />
 
           <div className="my-6 border-t border-white/5 opacity-50" />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<Wallet size={isSidebarCollapsed ? 18 : 22} />} label="WAL_BASE" active={activeView === 'wallet'} onClick={() => handleNav('wallet')} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<Wallet size={isSidebarCollapsed ? 18 : 22} />} label={t('WAL_BASE')} active={activeView === 'wallet'} onClick={() => handleNav('wallet')} />
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<Settings size={isSidebarCollapsed ? 18 : 22} />} label={t('SYS_CONF')} active={activeView === 'settings'} onClick={() => handleNav('settings')} />
         </nav>
 
         <div className={`p-6 ${isSidebarCollapsed ? 'text-center' : 'text-left'}`}>
           <button onClick={onLogout} className="text-[10px] text-[var(--theme-color)]/30 hover:text-[var(--theme-color)] uppercase tracking-widest font-bold">
-            {isSidebarCollapsed ? <LogOut size={20} /> : 'Log_Out_System'}
+            {isSidebarCollapsed ? <LogOut size={20} /> : t('LOGOUT_SYS')}
           </button>
         </div>
       </motion.aside>
@@ -2378,6 +2412,7 @@ const Dashboard = React.memo(({
             <NavButton icon={<ShoppingBag size={20} />} active={activeView === 'shopping'} onClick={() => setView('shopping')} />
             <NavButton icon={<MessageSquare size={20} />} active={activeView === 'messages'} onClick={() => setView('messages')} hasNotification={hasNewMessages} />
             <NavButton icon={<User size={20} />} active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => navigateToProfile(null)} />
+            <NavButton icon={<Settings size={20} />} active={activeView === 'settings'} onClick={() => setView('settings')} />
           </div>
         </header>
 
@@ -2470,6 +2505,17 @@ const Dashboard = React.memo(({
               </motion.div>
             )}
             {activeView === 'wallet' && <WalletView user={user} onRefreshProfile={onRefreshProfile} />}
+            {activeView === 'settings' && (
+              <motion.div
+                key="settings-wrapper"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="w-full h-full"
+              >
+                <SettingsView user={user} setUser={setUser} />
+              </motion.div>
+            )}
             {activeView === 'feed' && (
               <motion.div
                 key="feed-wrapper"
@@ -2561,54 +2607,60 @@ const Dashboard = React.memo(({
                 />
               </motion.div>
             )}
-            {activeView === 'player' && <PlayerContent
-              key="player"
-              initialScreen={redirectTrigger ? 'NOW_PLAYING' : 'MAIN'}
-              forceNowPlaying={redirectTrigger}
-              setView={setView}
-              currentTrackIndex={currentTrackIndex}
-              setCurrentTrackIndex={setCurrentTrackIndex}
-              isPlaying={isPlaying}
-              setIsPlaying={setIsPlaying}
-              tracks={tracks}
-              setTracks={setTracks}
-              user={user}
-              onPurchase={onPurchase}
-              onDownload={onDownload}
-              onAddCredits={onAddCredits}
-              currentTime={currentTime}
-              duration={duration}
-              onSeek={onSeek}
-              onNext={handleNext}
-              onPrev={handlePrev}
-              onLike={onLike}
-              onCache={onCache}
-              isLandscape={isLandscape}
-              togglePlay={togglePlay}
-              navigateToProfile={navigateToProfile}
-              onPlayPlaylist={handlePlayPlaylist}
-              libraryTracks={libraryTracks}
-              activeStation={activeStation}
-              stationChat={stationChat}
-              stationQueue={stationQueue}
-              onSendMessage={sendMessage}
-              onRequestTrack={requestTrack}
-              volume={volume}
-              setVolume={setVolume}
-              userPlaylists={playlists}
-              onFetchPlaylistTracks={onFetchPlaylistTracks}
-              onPlaybackRateChange={onPlaybackRateChange}
-              onEqA={onEqA}
-              analyserA={analyserA}
-              keyLockA={keyLockA}
-              setKeyLockA={setKeyLockA}
-            />}
-            {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} initialChatUser={activeMessageUser} />}
-            {activeView === 'settings' && (
-              <div key="settings" className="flex items-center justify-center h-full text-white/50 uppercase tracking-widest text-xs">
-                Settings Module Offline
-              </div>
+            {activeView === 'player' && (
+              <motion.div
+                key="player-wrapper"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="w-full h-full"
+              >
+                <PlayerContent
+                  initialScreen={redirectTrigger ? 'NOW_PLAYING' : 'MAIN'}
+                  forceNowPlaying={redirectTrigger}
+                  setView={setView}
+                  currentTrackIndex={currentTrackIndex}
+                  setCurrentTrackIndex={setCurrentTrackIndex}
+                  isPlaying={isPlaying}
+                  setIsPlaying={setIsPlaying}
+                  tracks={tracks}
+                  setTracks={setTracks}
+                  user={user}
+                  onPurchase={onPurchase}
+                  onDownload={onDownload}
+                  onAddCredits={onAddCredits}
+                  currentTime={currentTime}
+                  duration={duration}
+                  onSeek={onSeek}
+                  onNext={handleNext}
+                  onPrev={handlePrev}
+                  onLike={onLike}
+                  onCache={onCache}
+                  isLandscape={isLandscape}
+                  togglePlay={togglePlay}
+                  navigateToProfile={navigateToProfile}
+                  onPlayPlaylist={handlePlayPlaylist}
+                  libraryTracks={libraryTracks}
+                  activeStation={activeStation}
+                  stationChat={stationChat}
+                  stationQueue={stationQueue}
+                  onSendMessage={sendMessage}
+                  onRequestTrack={requestTrack}
+                  volume={volume}
+                  setVolume={setVolume}
+                  userPlaylists={playlists}
+                  onFetchPlaylistTracks={onFetchPlaylistTracks}
+                  onPlaybackRateChange={onPlaybackRateChange}
+                  onEqA={onEqA}
+                  analyserA={analyserA}
+                  keyLockA={keyLockA}
+                  setKeyLockA={setKeyLockA}
+                />
+              </motion.div>
             )}
+            {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} initialChatUser={activeMessageUser} />}
+
           </AnimatePresence>
         </div>
       </motion.main>
@@ -4491,10 +4543,14 @@ const FEED_POSTS = [
   { id: 2, user: 'Neo_Raver', handle: '@neo_r', track: 'GLITCH_MATRIX_404.wav', type: 'track', likes: 150, reposts: 42, time: '15m' },
   { id: 3, user: 'Null_Pointer', handle: '@null_ptr', content: 'Nueva sesión de visuales industriales lista.', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=400', type: 'image', likes: 88, reposts: 12, time: '1h' },
 ];
+import { LanguageProvider } from './contexts/LanguageContext';
+
 export default function AppWrapper() {
   return (
     <NotificationProvider>
-      <App />
+      <LanguageProvider>
+        <App />
+      </LanguageProvider>
     </NotificationProvider>
   );
 }

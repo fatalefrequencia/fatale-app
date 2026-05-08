@@ -7,6 +7,7 @@ import { useNotification } from '../contexts/NotificationContext';
 import HUDWidget from './discovery/HUDWidget';
 import InteractiveGlobe from './discovery/InteractiveGlobe';
 import CommunityTerminal from './discovery/CommunityTerminal';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const hashStr = (s) => {
     if (!s) return 0;
@@ -17,6 +18,7 @@ const hashStr = (s) => {
 };
 
 const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, onPlayPlaylist, isPlayerActive, onExpandContent, onPlayStation, isLandscape }) => {
+    const { t } = useLanguage();
     const { showNotification } = useNotification();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeSector, setActiveSector] = useState(null);
@@ -364,12 +366,12 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                             animate={{ scale: 1, opacity: 1 }}
                             className="max-w-md w-full space-y-4"
                         >
-                            <div className="text-[10px] text-[#ff006e] font-black tracking-[0.5em] mb-8 animate-pulse">INITIATING_NEURAL_LINK...</div>
+                            <div className="text-[10px] text-[#ff006e] font-black tracking-[0.5em] mb-8 animate-pulse">{t('INITIATING_LINK')}</div>
                             <div className="space-y-1 font-mono text-[8px] opacity-40">
-                                <div>[SYS] BOOTING_KERNEL_v4.2.0... OK</div>
-                                <div>[SYS] CALIBRATING_SPATIAL_SENSORS... OK</div>
-                                <div>[SYS] ESTABLISHING_ENCRYPTED_SIGNAL... OK</div>
-                                <div>[SYS] LOADING_DISCOVERY_MAP... OK</div>
+                                <div>[SYS] {t('BOOTING_KERNEL')}... OK</div>
+                                <div>[SYS] {t('CALIBRATING_SENSORS')}... OK</div>
+                                <div>[SYS] {t('ESTABLISHING_SIGNAL')}... OK</div>
+                                <div>[SYS] {t('LOADING_MAP')}... OK</div>
                             </div>
                             <div className="h-1 w-full bg-[#ff006e]/20 relative overflow-hidden">
                                 <motion.div 
@@ -393,7 +395,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                     <div className="flex items-center gap-2">
                         <Activity size={14} className="text-[#ff006e] animate-pulse" />
                         <div className="text-[#ff006e] text-[10px] font-black tracking-widest opacity-70">
-                            KERNEL_PULSE: <span className="text-green-500">SYNC_OK</span>
+                            {t('KERNEL_PULSE')}: <span className="text-green-500">{t('SYNC_OK')}</span>
                         </div>
                     </div>
                 </div>
@@ -414,7 +416,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                         </div>
                         <input 
                             type="text"
-                            placeholder="SEARCH_SIGNAL_DATABASE..."
+                            placeholder={t('SEARCH_SIGNAL')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full bg-black/60 border rounded px-10 py-2.5 text-xs tracking-[0.2em] focus:outline-none focus:ring-1 transition-all placeholder:text-[#ff006e]/20"
@@ -443,14 +445,14 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                 onClick={(e) => { e.stopPropagation(); setMobileViewMode('globe'); }}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'globe' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
                             >
-                                <Globe size={12} /> GLOBE_SENSE
+                                <Globe size={12} /> {t('GLOBE_SENSE')}
                             </button>
                             <button 
                                 onTouchStart={(e) => { e.stopPropagation(); setMobileViewMode('data'); }}
                                 onClick={(e) => { e.stopPropagation(); setMobileViewMode('data'); }}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'data' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
                             >
-                                <Activity size={12} /> DATA_STREAM
+                                <Activity size={12} /> {t('DATA_STREAM')}
                             </button>
                         </div>
                     )}
@@ -473,12 +475,12 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
 
                 <div className="flex items-center gap-6 text-[10px] text-white/40 tracking-tighter self-end lg:self-auto">
                     <div className="hidden xl:flex items-center gap-2">
-                            <span className="opacity-30">LOC:</span>
+                            <span className="opacity-30">{t('LOC')}:</span>
                             <span 
                                 className="transition-all duration-500 font-black tracking-widest"
                                 style={{ color: activeSectorColor || '#ff006e' }}
                             >
-                                {activeSector !== null ? SECTORS.find(s => s.id === activeSector)?.name : 'GLOBAL_SIGNAL'}
+                                {activeSector !== null ? SECTORS.find(s => s.id === activeSector)?.name : t('GLOBAL_SIGNAL')}
                             </span>
                     </div>
                     <div className="w-[1px] h-3 bg-white/10" />
@@ -626,7 +628,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                                         className="w-full bg-transparent border border-white/20 text-white/80 hover:border-white hover:text-white py-2.5 text-[10px] font-black tracking-[0.3em] uppercase transition-all relative group/btn"
                                                                     >
                                                                         <div className="absolute inset-0 border border-white/5 transform scale-95 group-hover/btn:scale-100 transition-transform pointer-events-none" />
-                                                                        VISIT_IDENTITY
+                                                                        {t('VISIT_IDENTITY')}
                                                                     </button>
                                                                 )}
                                                                 {selectedGlobeItem.type === 'community' && (
@@ -635,7 +637,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                                         className="w-full bg-transparent border border-white/20 text-white/80 hover:border-white hover:text-white py-2.5 text-[10px] font-black tracking-[0.3em] uppercase transition-all relative group/btn"
                                                                     >
                                                                         <div className="absolute inset-0 border border-white/5 transform scale-95 group-hover/btn:scale-100 transition-transform pointer-events-none" />
-                                                                        ENTER_PORTAL
+                                                                        {t('ENTER_PORTAL')}
                                                                     </button>
                                                                 )}
                                                                 {selectedGlobeItem.type === 'track' && (
@@ -644,7 +646,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                                         className="w-full bg-transparent border border-[#ff006e]/60 text-[#ff006e] hover:bg-[#ff006e]/10 py-2.5 text-[10px] font-black tracking-[0.3em] uppercase transition-all flex items-center justify-center gap-3 relative group/btn"
                                                                     >
                                                                         <div className="absolute inset-0 border border-[#ff006e]/20 transform scale-95 group-hover/btn:scale-100 transition-transform pointer-events-none" />
-                                                                        <Play size={12} fill="currentColor" /> PLAY_TRACK
+                                                                        <Play size={12} fill="currentColor" /> {t('PLAY_TRACK')}
                                                                     </button>
                                                                 )}
                                                             </div>
@@ -655,9 +657,9 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                             <div className="md:col-span-7">
                                                                 <div className="text-[8px] text-white/40 font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
                                                                     {selectedGlobeItem.type === 'community' ? (
-                                                                        <><Users size={10} /> ARTIST_MEMBERS / CLIQUE_ROSTER</>
+                                                                        <><Users size={10} /> {t('ARTIST_MEMBERS')}</>
                                                                     ) : (
-                                                                        <><Zap size={10} /> SIGNAL_SHARES / TOP_MEDIA</>
+                                                                        <><Zap size={10} /> {t('SIGNAL_SHARES')}</>
                                                                     )}
                                                                 </div>
                                                                 
@@ -705,7 +707,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
 
                                                                     {/* Edge Case Fallbacks */}
                                                                     {selectedGlobeItem.type === 'community' && trendingArtists.filter(a => String(a.communityId || a.CommunityId) === String(selectedGlobeItem.id)).length === 0 && (
-                                                                        <div className="text-[9px] text-white/10 font-bold tracking-[0.2em] italic uppercase py-6">No neural signals detected in this cluster...</div>
+                                                                        <div className="text-[9px] text-white/10 font-bold tracking-[0.2em] italic uppercase py-6">{t('NO_SIGNALS_DETECTED')}</div>
                                                                     )}
                                                                 </div>
                                                             </div>
@@ -723,7 +725,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                 <button 
                                                     onClick={() => setIsGlobeSpinning(!isGlobeSpinning)}
                                                     className={`flex items-center justify-center w-10 h-10 rounded-sm border transition-all duration-300 ${isGlobeSpinning ? 'bg-[#00ffff]/10 border-[#00ffff] text-[#00ffff]' : 'bg-black/40 border-white/5 text-white/40'}`}
-                                                    title={isGlobeSpinning ? "PAUSE_SPIN" : "START_SPIN"}
+                                                    title={isGlobeSpinning ? t('PAUSE_SPIN') : t('START_SPIN')}
                                                 >
                                                     {isGlobeSpinning ? <Pause size={14} /> : <Play size={14} />}
                                                 </button>
@@ -732,10 +734,10 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                             <div className="absolute top-10 right-4 flex flex-col gap-3 z-50 scale-75 lg:scale-100">
 
                                                 {[
-                                                    { id: 'CORE_PULSE', icon: <Activity size={12} />, label: 'CORE_PULSE', desc: 'Realtime Activity' },
-                                                    { id: 'LIVE_SIGNAL_HUB', icon: <Radio size={12} />, label: 'LIVE_SIGNAL_HUB', desc: 'Active Transmissions' },
-                                                    { id: 'CLIQUE_VALENCE', icon: <Layers size={12} />, label: 'CLIQUE_VALENCE', desc: 'Territory Map' },
-                                                    { id: 'FREQ_PEAKS', icon: <Activity size={12} />, label: 'FREQ_DATA_PEAKS', desc: 'Density Analysis' }
+                                                    { id: 'CORE_PULSE', icon: <Activity size={12} />, label: t('CORE_PULSE'), desc: t('REALTIME_ACTIVITY') },
+                                                    { id: 'LIVE_SIGNAL_HUB', icon: <Radio size={12} />, label: t('LIVE_SIGNAL_HUB'), desc: t('ACTIVE_TRANSMISSIONS') },
+                                                    { id: 'CLIQUE_VALENCE', icon: <Layers size={12} />, label: t('CLIQUE_VALENCE'), desc: t('TERRITORY_MAP') },
+                                                    { id: 'FREQ_PEAKS', icon: <Activity size={12} />, label: t('FREQ_DATA_PEAKS'), desc: t('DENSITY_ANALYSIS') }
                                                 ].map(v => (
                                                     <button 
                                                         key={v.id}
@@ -785,7 +787,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 {(!isMobile || mobileViewMode === 'data') && (
                   <>
                     <div className="col-span-3 row-span-2 col-start-1 row-start-1 pointer-events-auto">
-                    <HUDWidget title="YT_FREQ_SCAN" icon={<Search size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                    <HUDWidget title={t('YT_FREQ_SCAN')} icon={<Search size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                         <div className="space-y-4">
                             {youtubeResults.length > 0 ? youtubeResults.map(y => (
                                 <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => onPlayTrack(y)}>
@@ -806,7 +808,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                             )) : (
                                 <div className="flex flex-col items-center justify-center h-full opacity-20 py-10">
                                     <Activity size={24} className="mb-2" />
-                                    <div className="text-[10px] tracking-widest uppercase">Waiting for input...</div>
+                                    <div className="text-[10px] tracking-widest uppercase">{t('WAITING_INPUT')}</div>
                                 </div>
                             )}
                         </div>
@@ -814,7 +816,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 </div>
 
                 <div className="col-span-3 row-span-2 col-start-1 row-start-3 pointer-events-auto">
-                    <HUDWidget title="PLATFORM_SIGS" icon={<Music size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                    <HUDWidget title={t('PLATFORM_SIGS')} icon={<Music size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="space-y-1">
                              {filteredTracks.map((t, idx) => (
                                  <div key={t.id} className="flex items-center gap-4 text-[10px] group cursor-pointer py-2 px-2 hover:bg-white/5 transition-all border-l border-transparent hover:border-[#ff006e]" onClick={() => onPlayTrack(t)}>
@@ -832,7 +834,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 </div>
 
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-1 lg:row-start-5 pointer-events-auto">
-                    <HUDWidget title="ARTIST_NODES" icon={<User size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                    <HUDWidget title={t('ARTIST_NODES')} icon={<User size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-2 pt-2">
                              {filteredArtists.map(a => (
                                  <div key={a.id} className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => navigateToProfile(a.userId)}>
@@ -858,7 +860,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 {/* --- RIGHT COLUMN: PLAYLISTS, VISUALS, JOURNALS --- */}
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-1 pointer-events-auto">
                     <HUDWidget 
-                        title={selectedPlaylist ? `DESC_PL: ${selectedPlaylist.name.toUpperCase()}` : "PUBLIC_COLL"} 
+                        title={selectedPlaylist ? `${t('DESC_PL')}: ${selectedPlaylist.name.toUpperCase()}` : t('PUBLIC_COLL')} 
                         icon={selectedPlaylist ? <ChevronLeft size={14} className="cursor-pointer hover:text-white transition-colors" onClick={() => setSelectedPlaylist(null)} /> : <Layers size={14}/>} 
                         searchQuery={searchQuery} 
                         activeColor={activeSectorColor}
@@ -872,7 +874,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                             className="text-[7px] text-[#ff006e] opacity-60 hover:opacity-100 cursor-pointer uppercase font-bold tracking-[0.2em] mt-0.5"
                                             onClick={(e) => { e.stopPropagation(); navigateToProfile(selectedPlaylist.userId); }}
                                          >
-                                             BY_{selectedPlaylist.authorName || 'RETSGEN'}
+                                             {t('BY_AUTHOR')}_{selectedPlaylist.authorName || 'RETSGEN'}
                                          </div>
                                      </div>
                                      
@@ -881,7 +883,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                              <button 
                                                 onClick={() => onPlayPlaylist(playlistTracks)}
                                                 className="p-1.5 bg-black border border-white/10 hover:border-[#ff006e]/40 hover:bg-[#ff006e]/10 group/btn transition-all rounded-sm shadow-lg overflow-hidden relative"
-                                                title="PLAY_ALL_SIGNALS"
+                                                title={t('PLAY_ALL_SIGNALS')}
                                              >
                                                  <Play size={10} className="text-white/40 group-hover/btn:text-[#ff006e] fill-transparent group-hover/btn:fill-[#ff006e]/20 relative z-10" />
                                              </button>
@@ -891,7 +893,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                     onPlayPlaylist(shuffled);
                                                 }}
                                                 className="p-1.5 bg-black border border-white/10 hover:border-[#ff006e]/40 hover:bg-[#ff006e]/10 group/btn transition-all rounded-sm shadow-lg overflow-hidden relative"
-                                                title="SHUFFLE_SIGNALS"
+                                                title={t('SHUFFLE_SIGNALS')}
                                              >
                                                  <Shuffle size={10} className="text-white/40 group-hover/btn:text-[#ff006e] relative z-10" />
                                              </button>
@@ -914,7 +916,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                              </div>
                                          ))}
                                          {playlistTracks.length === 0 && (
-                                             <div className="text-[8px] opacity-20 text-center py-4 uppercase italic">No signals found in collection</div>
+                                             <div className="text-[8px] opacity-20 text-center py-4 uppercase italic">{t('NO_SIGNALS_FOUND')}</div>
                                          )}
                                      </div>
                                  )}
@@ -928,7 +930,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                           <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
                                           <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5">
                                               <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight">{pl.name}</div>
-                                              <div className="text-[7px] opacity-40 uppercase font-light tracking-[0.2em]">{pl.trackCount} FILES</div>
+                                              <div className="text-[7px] opacity-40 uppercase font-light tracking-[0.2em]">{pl.trackCount} {t('FILES_COUNT')}</div>
                                           </div>
                                      </div>
                                  ))}
@@ -938,7 +940,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 </div>
 
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-3 pointer-events-auto">
-                    <HUDWidget title="STUDIO_TRANS" icon={<Camera size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                    <HUDWidget title={t('STUDIO_TRANS')} icon={<Camera size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                              {filteredVisuals.map(vis => (
                                  <div 
@@ -964,7 +966,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 </div>
 
                 <div className="col-span-3 row-span-2 col-start-10 row-start-5 pointer-events-auto">
-                    <HUDWidget title="FREQ_JOURNAL" icon={<BookOpen size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                    <HUDWidget title={t('FREQ_JOURNAL')} icon={<BookOpen size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                         <div className="space-y-4">
                              {filteredJournals.map(j => (
                                  <div 
@@ -976,7 +978,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                      <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase mb-1 tracking-tight">{j.title}</div>
                                      <div className="text-[8px] opacity-30 line-clamp-2 italic font-light leading-relaxed">{j.content?.substring(0, 80)}...</div>
                                      <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                          <div className="text-[7px] text-[#ff006e] font-black uppercase">READ_SIGNAL {">"}{">"}</div>
+                                          <div className="text-[7px] text-[#ff006e] font-black uppercase">{t('READ_SIGNAL')} {">"}{">"}</div>
                                      </div>
                                  </div>
                              ))}
@@ -986,7 +988,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
 
                 {/* --- BOTTOM CENTER: RADIO & COMMUNITIES --- */}
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-4 lg:row-start-5 pointer-events-auto">
-                    <HUDWidget title="RADAR_SIGNAL" icon={<Radio size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                    <HUDWidget title={t('RADAR_SIGNAL')} icon={<Radio size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="space-y-4">
                              {liveStations.length > 0 ? liveStations.map(s => (
                                  <div key={s.id} className="group cursor-pointer" onClick={() => {
@@ -997,10 +999,10 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                          <div className="text-[10px] font-black group-hover:text-[#00ffff] transition-colors uppercase tracking-tight truncate flex-1">{s.name}</div>
                                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
                                               <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
-                                              <span className="text-[7px] font-black text-red-600">LIVE</span>
+                                              <span className="text-[7px] font-black text-red-600">{t('LIVE')}</span>
                                          </div>
                                      </div>
-                                     <div className="text-[8px] opacity-30 truncate uppercase tracking-widest">{s.currentSessionTitle || "ESTABLISHING_LINK..."}</div>
+                                     <div className="text-[8px] opacity-30 truncate uppercase tracking-widest">{s.currentSessionTitle || t('ESTABLISHING_LINK')}</div>
                                      <div className="mt-2 h-[1px] w-full bg-white/5 relative overflow-hidden">
                                           <div className="absolute inset-0 bg-[#00ffff]/20 animate-scanlines" />
                                      </div>
@@ -1008,7 +1010,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                              )) : (
                                  <div className="flex flex-col items-center justify-center py-6 opacity-20">
                                      <Radio size={16} className="mb-2" />
-                                     <div className="text-[8px] tracking-widest uppercase text-center px-4">No live streams found</div>
+                                     <div className="text-[8px] tracking-widest uppercase text-center px-4">{t('NO_LIVE_STREAMS')}</div>
                                  </div>
                              )}
                          </div>
@@ -1016,7 +1018,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 </div>
 
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-7 lg:row-start-5 pointer-events-auto">
-                     <HUDWidget title="SECTOR_CLIQUE$" icon={<Globe size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                     <HUDWidget title={t('SECTOR_CLIQUES')} icon={<Globe size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                           <div className="space-y-4">
                               {/* Create Clique Trigger */}
                               <div 
@@ -1027,13 +1029,13 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                 className="flex items-center gap-2 p-2 border border-dashed border-white/10 hover:border-white/30 cursor-pointer group transition-all"
                               >
                                   <Zap size={10} className="text-[#ff006e] group-hover:animate-pulse" />
-                                  <span className="text-[9px] font-black tracking-[0.2em] opacity-40 group-hover:opacity-100">FOUND_CLIQUE [+]</span>
+                                  <span className="text-[9px] font-black tracking-[0.2em] opacity-40 group-hover:opacity-100">{t('FOUND_CLIQUE')} [+]</span>
                               </div>
 
                               {isFounding && (
                                   <form onSubmit={handleFoundCommunity} className="p-3 bg-white/5 border border-white/10 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
                                       <div className="space-y-1">
-                                          <div className="text-[7px] opacity-40 mono">NAME_REQUIRED</div>
+                                          <div className="text-[7px] opacity-40 mono">{t('NAME_REQUIRED')}</div>
                                           <input 
                                             value={newClanName}
                                             onChange={(e) => setNewClanName(e.target.value)}
@@ -1043,7 +1045,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                           />
                                       </div>
                                       <div className="space-y-1">
-                                          <div className="text-[7px] opacity-40 mono">SECTOR_ALLOCATION</div>
+                                          <div className="text-[7px] opacity-40 mono">{t('SECTOR_ALLOCATION')}</div>
                                           <select 
                                             value={newClanSector !== null ? newClanSector : (activeSector !== null ? activeSector : 0)}
                                             onChange={(e) => setNewClanSector(parseInt(e.target.value))}
@@ -1059,7 +1061,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                         disabled={!newClanName.trim()}
                                         className="w-full bg-[#ff006e]/80 hover:bg-[#ff006e] text-white text-[8px] font-black py-1.5 rounded-sm transition-all disabled:opacity-20"
                                       >
-                                          ESTABLISH_SIGNAL
+                                          {t('ESTABLISH_SIGNAL')}
                                       </button>
                                   </form>
                               )}
@@ -1087,9 +1089,9 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                               <div className="min-w-0 flex-1">
                                                   <div className="text-[10px] font-black group-hover:text-[#ff006e] transition-colors uppercase tracking-tight truncate flex items-center gap-2">
                                                       {c.name}
-                                                      {isJoined && <span className="text-[7px] text-yellow-400/60 mono font-normal border border-yellow-400/20 px-1">HOME</span>}
+                                                      {isJoined && <span className="text-[7px] text-yellow-400/60 mono font-normal border border-yellow-400/20 px-1">{t('HOME')}</span>}
                                                   </div>
-                                                  <div className="text-[7px] opacity-30 tracking-[0.2em] font-light uppercase mt-0.5">{c.memberCount || 0} CLIQUE_AGENTS</div>
+                                                  <div className="text-[7px] opacity-30 tracking-[0.2em] font-light uppercase mt-0.5">{c.memberCount || 0} {t('CLIQUE_AGENTS')}</div>
                                               </div>
                                           </div>
                                       );

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wallet, CreditCard, ArrowLeftRight, TrendingUp, Zap, History, DollarSign } from 'lucide-react';
 import WalletDashboard from './WalletDashboard';
@@ -8,6 +9,7 @@ import EarningsDashboard from './EarningsDashboard';
 import Depot from './Depot';
 
 const WalletView = ({ user, onRefreshProfile }) => {
+    const { t } = useLanguage();
     const [activeTab, setActiveTab] = useState('Overview');
 
     return (
@@ -20,9 +22,9 @@ const WalletView = ({ user, onRefreshProfile }) => {
 
             {/* Header */}
             <div className="p-8 pb-0 z-10">
-                <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.3em] font-mono mb-6">// SYSTEM_WALLET</div>
+                <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.3em] font-mono mb-6">// {t('SYSTEM_WALLET')}</div>
                 <p className="text-white/30 text-[11px] font-mono uppercase tracking-widest max-w-xl">
-                    Manage credits · Track transactions · Unlock premium access
+                    {t('WALLET_DESC')}
                     <span className="text-[#ff006e]/50 ml-3">:: ENCRYPTED_v2.0</span>
                 </p>
             </div>
@@ -30,7 +32,7 @@ const WalletView = ({ user, onRefreshProfile }) => {
             {/* Navigation Tabs */}
             <div className="px-8 mt-8 border-b border-white/5 z-10 flex justify-center gap-8 overflow-x-auto no-scrollbar">
                 <TabButton
-                    label="Overview"
+                    label={t('OVERVIEW')}
                     icon={<Wallet size={16} />}
                     active={activeTab === 'Overview'}
                     onClick={() => setActiveTab('Overview')}
@@ -38,7 +40,7 @@ const WalletView = ({ user, onRefreshProfile }) => {
 
 
                 <TabButton
-                    label="Depot"
+                    label={t('DEPOT')}
                     icon={<Zap size={16} />}
                     active={activeTab === 'Depot'}
                     onClick={() => setActiveTab('Depot')}

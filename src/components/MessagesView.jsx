@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Search, Edit, MoreHorizontal, Phone, Volume2, Send, ChevronLeft, User, X, Heart } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 import API from '../services/api';
 import { API_BASE_URL, getMediaUrl } from '../constants';
 
 export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
+    const { t } = useLanguage();
     const [conversations, setConversations] = useState([]);
     const [currentChat, setCurrentChat] = useState(null); // The user object we are chatting with
     const [messages, setMessages] = useState([]);
@@ -199,13 +201,13 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-[#4eda2c] animate-pulse" />
-                        <span className="text-[9px] text-[#4eda2c]/60 font-mono font-black">STABLE_LINK</span>
+                        <span className="text-[9px] text-[#4eda2c]/60 font-mono font-black">{t('STABLE_LINK')}</span>
                     </div>
                 </div>
 
                 {/* System Message Header */}
                 <div className="px-8 pt-6 pb-2 font-mono text-[10px] uppercase tracking-wider text-white/30 italic">
-                    -- beginning transmission with {currentChat.username} --
+                    -- {t('BEGIN_TRANS')} {currentChat.username} --
                 </div>
 
                 {/* Terminal Message Log */}
@@ -246,14 +248,14 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                             type="text"
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
-                            placeholder="AWAITING_INPUT..."
+                            placeholder={t('WAITING_INPUT')}
                             className="w-full bg-[#080808] border border-white/5 py-4 pl-10 pr-16 text-white text-[13px] outline-none focus:border-[#ff006e]/40 transition-all font-mono tracking-widest placeholder:text-white/5"
                         />
                         <button
                             type="submit"
                             className="absolute right-4 px-4 py-2 bg-[#ff006e]/10 text-[#ff006e] border border-[#ff006e]/20 hover:bg-[#ff006e] hover:text-black transition-all font-mono text-[10px] font-black uppercase tracking-widest"
                         >
-                            SEND
+                            {t('SEND')}
                         </button>
                     </div>
                 </form>
@@ -285,8 +287,8 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
 
                         <div className="flex justify-between items-center mb-8 relative">
                             <div>
-                                <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.3em] font-mono mb-1">// SUBSPACE_SYNC</div>
-                                <h2 className="text-2xl font-black text-white tracking-tighter uppercase">NEW_TRANSMISSION</h2>
+                                <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.3em] font-mono mb-1">// {t('SUBSPACE_SYNC')}</div>
+                                <h2 className="text-2xl font-black text-white tracking-tighter uppercase">{t('NEW_TRANS')}</h2>
                             </div>
                             <button 
                                 onClick={(e) => { e.stopPropagation(); setIsSearching(false); setSearchQuery(''); setSearchResults([]); }} 
@@ -306,7 +308,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                                 type="text"
                                 value={searchQuery}
                                 onChange={handleSearch}
-                                placeholder="IDENTIFY_TARGET..."
+                                placeholder={t('IDENTIFY_TARGET')}
                                 className="w-full bg-black border border-white/10 py-4 pl-12 pr-6 text-white text-sm outline-none focus:border-[#ff006e]/40 transition-all font-mono tracking-widest uppercase placeholder:text-white/10 placeholder:tracking-widest"
                             />
                         </div>
@@ -315,7 +317,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                             {isSearchingUsers ? (
                                 <div className="text-center py-16 flex flex-col items-center justify-center">
                                     <div className="w-6 h-6 border border-[#ff006e]/20 border-t-[#ff006e] animate-spin mb-4" />
-                                    <div className="text-[#ff006e]/40 font-mono tracking-widest uppercase text-[10px]">SYNC_RELAY...</div>
+                                    <div className="text-[#ff006e]/40 font-mono tracking-widest uppercase text-[10px]">{t('CALIBRATING_FREQ')}</div>
                                 </div>
                             ) : searchResults.length > 0 ? (
                                 searchResults.filter(u => u && (u.id || u.Id)).map(u => (
@@ -344,7 +346,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                                                     : 'border border-[#ff006e]/30 text-[#ff006e]/60 hover:bg-[#ff006e] hover:text-black'
                                                     }`}
                                             >
-                                                {u.isFollowing ? 'LINKED' : 'LINK'}
+                                                {u.isFollowing ? t('LINKED') : t('LINK')}
                                             </button>
                                             <button
                                                 onClick={() => startNewChat(u)}
@@ -357,12 +359,12 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                                 ))
                             ) : searchQuery.length > 0 ? (
                                 <div className="text-center py-16">
-                                    <div className="text-white/20 font-mono uppercase tracking-widest text-[10px] mb-1">&gt; NO_CONNECTION_ESTABLISHED</div>
-                                    <div className="text-[#ff006e]/40 font-mono uppercase tracking-widest text-[10px]">SIGNAL_LOST :: SECTOR_COLD</div>
+                                    <div className="text-white/20 font-mono uppercase tracking-widest text-[10px] mb-1">&gt; {t('NO_CONN')}</div>
+                                    <div className="text-[#ff006e]/40 font-mono uppercase tracking-widest text-[10px]">{t('SIGNAL_LOST')}</div>
                                 </div>
                             ) : (
                                 <div className="text-center py-16">
-                                    <div className="text-white/15 font-mono uppercase tracking-widest text-[10px] animate-pulse">&gt; AWAITING_SIGNAL_INPUT</div>
+                                    <div className="text-white/15 font-mono uppercase tracking-widest text-[10px] animate-pulse">&gt; {t('AWAITING_SIGNAL_INPUT')}</div>
                                 </div>
                             )}
                         </div>
@@ -373,10 +375,10 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
             {/* Inbox Header */}
             <div className="px-8 pt-8 pb-6 flex justify-between items-center z-10 relative border-b border-white/5">
                 <div>
-                    <div className="text-[10px] font-black text-[#ff006e] uppercase tracking-[0.3em] font-mono mb-1">// COMMS_HUB</div>
+                    <div className="text-[10px] font-black text-[#ff006e] uppercase tracking-[0.3em] font-mono mb-1">// {t('COMMS_HUB')}</div>
                     <div className="flex items-center gap-1.5">
                         <div className="w-1.5 h-1.5 bg-[#4eda2c] animate-pulse shadow-[0_0_8px_#4eda2c]" />
-                        <span className="text-[9px] text-[#4eda2c]/50 font-mono uppercase tracking-widest">ONLINE</span>
+                        <span className="text-[9px] text-[#4eda2c]/50 font-mono uppercase tracking-widest">{t('ONLINE')}</span>
                     </div>
                 </div>
 
@@ -394,16 +396,16 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                 {loading ? (
                     <div className="flex flex-col items-center justify-center h-48">
                         <div className="w-px h-8 bg-[#ff006e]/40 animate-pulse" />
-                        <div className="text-[10px] text-[#ff006e]/40 font-mono tracking-widest mt-4 uppercase">CALIBRATING_FREQ...</div>
+                        <div className="text-[10px] text-[#ff006e]/40 font-mono tracking-widest mt-4 uppercase">{t('CALIBRATING_FREQ')}</div>
                     </div>
                 ) : conversations.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-48 text-center px-8">
-                        <div className="text-white/15 font-mono uppercase tracking-widest text-[10px] mb-4">&gt; NO_DATA_PULSES_FOUND</div>
+                        <div className="text-white/15 font-mono uppercase tracking-widest text-[10px] mb-4">&gt; {t('NO_DATA_PULSES')}</div>
                         <button
                             onClick={() => setIsSearching(true)}
                             className="text-[#ff006e]/50 text-[10px] font-mono uppercase tracking-widest hover:text-[#ff006e] transition-all flex items-center gap-2"
                         >
-                            <span className="h-px w-6 bg-[#ff006e]/20" /> ESTABLISH_BRIDGE <span className="h-px w-6 bg-[#ff006e]/20" />
+                            <span className="h-px w-6 bg-[#ff006e]/20" /> {t('ESTABLISH_BRIDGE')} <span className="h-px w-6 bg-[#ff006e]/20" />
                         </button>
                     </div>
                 ) : (

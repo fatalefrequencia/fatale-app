@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Book, Camera, Video, Share2, Download, ExternalLink } from 'lucide-react';
 import { API_BASE_URL, getMediaUrl } from '../constants';
@@ -21,6 +22,7 @@ const ContentModal = ({
     monitorBackgroundColor = '#000000', 
     monitorIsGlass = false 
 }) => {
+    const { t } = useLanguage();
     const { showNotification } = useNotification();
     const [showTipModal, setShowTipModal] = React.useState(false);
     if (!content && !children) return null;
@@ -102,9 +104,9 @@ const ContentModal = ({
                         {['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) && (content.mediaType !== 'VIDEO' && content.type !== 'VIDEO') && <Camera size={18} />}
                         <div className="flex flex-col">
                             <span className="mono text-[10px] font-black tracking-[0.3em] uppercase">
-                                {title === 'MODIFY_IDENTITY' ? 'CORE_IDENTITY_MGMT' : ['JOURNAL', 'TEXT'].includes(normalizedType) ? 'ARCHIVED_LOG_ENTRY' : ['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) ? 'VISUAL_DATA_FRAGMENT' : 'SIGNAL_FEED_RECORDING'}
+                                {title === t('MODIFY_IDENTITY') ? t('CORE_IDENTITY_MGMT') : ['JOURNAL', 'TEXT'].includes(normalizedType) ? t('ARCHIVED_LOG_ENTRY') : ['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) ? t('VISUAL_DATA_FRAGMENT') : t('SIGNAL_FEED_RECORDING')}
                             </span>
-                            <span className="mono text-[6px] tracking-widest opacity-40 uppercase">DATA_SIGNAL_DECODE_SUCCESS</span>
+                            <span className="mono text-[6px] tracking-widest opacity-40 uppercase">{t('DATA_SIGNAL_DECODE_SUCCESS')}</span>
                         </div>
                     </div>
                     <button 
@@ -131,7 +133,7 @@ const ContentModal = ({
                             {['JOURNAL', 'TEXT'].includes(normalizedType) && (
                                 <div className="space-y-8">
                                     <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter italic leading-tight">
-                                        {content.Title || content.title || '// UNTITLED_LOG'}
+                                        {content.Title || content.title || t('UNTITLED_LOG')}
                                     </h2>
                                     <div className="w-24 h-1 bg-gradient-to-r from-[#ff006e] to-transparent"></div>
                                     <div className="prose prose-invert max-w-none">
@@ -210,7 +212,7 @@ const ContentModal = ({
                 </div>
 
                 <AnimatePresence mode="wait">
-                    {title !== 'MODIFY_IDENTITY' && (
+                    {title !== t('MODIFY_IDENTITY') && (
                         <motion.div 
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -232,13 +234,13 @@ const ContentModal = ({
                                     onClick={() => setShowTipModal(true)}
                                     className="px-4 py-2 bg-[#ff006e]/10 border border-[#ff006e]/30 hover:bg-[#ff006e] hover:text-black transition-all text-[#ff006e] font-black flex items-center gap-2 group"
                                 >
-                                    <Coins size={12} className="group-hover:animate-bounce" /> TIP_ARTIST
+                                    <Coins size={12} className="group-hover:animate-bounce" /> {t('TIP_ARTIST')}
                                 </button>
                                 <button 
                                     onClick={handleShare}
                                     className="px-4 py-2 bg-white/5 border border-white/10 hover:border-[#9d00ff]/50 hover:text-white transition-all text-white/60 flex items-center gap-2"
                                 >
-                                    <Share2 size={12} /> SHARE_SIGNAL
+                                    <Share2 size={12} /> {t('SHARE_SIGNAL')}
                                 </button>
                                 <button
                                     onClick={(e) => {
@@ -253,7 +255,7 @@ const ContentModal = ({
                                     }}
                                     className="text-white font-black px-8 py-2 uppercase transition-all border border-white/40 hover:border-white hover:bg-white hover:text-black text-[10px] tracking-[0.2em]"
                                 >
-                                    CLOSE
+                                    {t('CLOSE')}
                                 </button>
                             </div>
                         </motion.div>
