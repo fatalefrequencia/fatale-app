@@ -2421,10 +2421,10 @@ const Dashboard = React.memo(({
             {activeView === 'discovery' && (
               <motion.div
                 key="discovery-wrapper"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.6, ease: "easeInOut" }}
+                initial={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
+                animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, scale: 1.05, filter: 'blur(10px)' }}
+                transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
                 className="w-full h-full"
               >
                 <DiscoveryHUD
@@ -2488,15 +2488,17 @@ const Dashboard = React.memo(({
                     });
                   }}
                   isPlayerActive={currentTrackIndex >= 0 && !isMiniPlayerMinimized}
+                  setShowGlobalIngest={setShowGlobalIngest}
                 />
               </motion.div>
             )}
             {activeView === 'shopping' && (
               <motion.div
                 key="shopping-wrapper"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.02 }}
+                initial={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
+                animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, scale: 1.05, filter: 'blur(10px)' }}
+                transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
                 className="w-full h-full"
               >
                 <React.Suspense fallback={<div className="w-full h-full bg-black animate-pulse" />}>
@@ -2508,9 +2510,10 @@ const Dashboard = React.memo(({
             {activeView === 'settings' && (
               <motion.div
                 key="settings-wrapper"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
+                animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, scale: 1.05, filter: 'blur(10px)' }}
+                transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
                 className="w-full h-full"
               >
                 <SettingsView user={user} setUser={setUser} />
@@ -2519,10 +2522,10 @@ const Dashboard = React.memo(({
             {activeView === 'feed' && (
               <motion.div
                 key="feed-wrapper"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.02 }}
-                transition={{ duration: 0.5, ease: "easeInOut" }}
+                initial={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
+                animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, scale: 1.05, filter: 'blur(10px)' }}
+                transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
                 className="w-full h-full"
               >
                 <FeedContent 
@@ -2550,10 +2553,10 @@ const Dashboard = React.memo(({
             {activeView === 'profile' && (
               <motion.div
                 key={viewingUserId || 'me'}
-                initial={{ opacity: 0, filter: 'blur(8px)' }}
-                animate={{ opacity: 1, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, filter: 'blur(8px)' }}
-                transition={{ duration: 0.5, ease: "easeInOut" }}
+                initial={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
+                animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, scale: 1.05, filter: 'blur(10px)' }}
+                transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
                 className="w-full h-full"
               >
                   <ProfileView
@@ -2610,10 +2613,10 @@ const Dashboard = React.memo(({
             {activeView === 'player' && (
               <motion.div
                 key="player-wrapper"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
+                initial={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
+                animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, scale: 1.05, filter: 'blur(10px)' }}
+                transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
                 className="w-full h-full"
               >
                 <PlayerContent

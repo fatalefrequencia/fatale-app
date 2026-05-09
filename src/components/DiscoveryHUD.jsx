@@ -17,7 +17,7 @@ const hashStr = (s) => {
     return Math.abs(h);
 };
 
-const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, onPlayPlaylist, isPlayerActive, onExpandContent, onPlayStation, isLandscape }) => {
+const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, onPlayPlaylist, isPlayerActive, onExpandContent, onPlayStation, isLandscape, setShowGlobalIngest }) => {
     const { t } = useLanguage();
     const { showNotification } = useNotification();
     const [searchQuery, setSearchQuery] = useState('');
@@ -760,17 +760,17 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                         
                         {/* Floating Overlay for Sector Status - Hide when terminal or detail card is active */}
                         {!activeTerminalCommunity && !selectedGlobeItem && (
-                            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xl border border-white/5 px-8 pt-3 pb-2 rounded-sm flex gap-10 z-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] scale-75 lg:scale-100">
+                            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/40 hover:bg-black/80 backdrop-blur-xl border border-white/5 px-4 hover:px-8 py-2 hover:pt-3 hover:pb-2 rounded-full hover:rounded-sm flex gap-3 hover:gap-10 z-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] scale-75 lg:scale-100 transition-all duration-500 group/overlay cursor-default">
                                 {SECTORS.map(s => (
-                                    <div key={s.id} className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => setActiveSector(activeSector === s.id ? null : s.id)}>
+                                    <div key={s.id} className="flex flex-col items-center justify-end gap-1 hover:gap-1.5 cursor-pointer group/item px-2 py-1" onClick={() => setActiveSector(activeSector === s.id ? null : s.id)}>
                                         <div 
-                                            className="text-[8px] tracking-[0.2em] font-black opacity-30 group-hover:opacity-100 transition-opacity" 
+                                            className="text-[8px] tracking-[0.2em] font-black transition-all duration-500 overflow-hidden max-h-0 opacity-0 group-hover/overlay:max-h-4 group-hover/overlay:opacity-30 group-hover/item:!opacity-100" 
                                             style={{ color: activeSector === s.id ? (s.id === 0 ? "#ff33aa" : s.color) : s.color }}
                                         >
                                             {s.name.split(' ')[0]}
                                         </div>
                                         <div 
-                                            className={`w-0.5 h-4 transition-all duration-300 ${activeSector === s.id ? 'opacity-100 scale-y-125' : 'opacity-20 translate-y-1'}`} 
+                                            className={`w-1.5 rounded-full transition-all duration-500 ${activeSector === s.id ? 'opacity-100 h-4 scale-y-125' : 'opacity-40 h-1.5 group-hover/overlay:h-4 group-hover/item:translate-y-1 group-hover/item:opacity-100'}`} 
                                             style={{ 
                                                 backgroundColor: s.id === 0 && activeSector === 0 ? "#ff33aa" : s.color, 
                                                 boxShadow: activeSector === s.id ? `0 0 10px ${s.id === 0 ? "#ff33aa" : s.color}` : 'none' 
@@ -806,9 +806,12 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                     <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </div>
                             )) : (
-                                <div className="flex flex-col items-center justify-center h-full opacity-20 py-10">
-                                    <Activity size={24} className="mb-2" />
-                                    <div className="text-[10px] tracking-widest uppercase">{t('WAITING_INPUT')}</div>
+                                <div className="flex flex-col items-center justify-center h-full opacity-40 py-10 text-center px-4 group">
+                                    <div className="w-8 h-8 border border-white/20 rounded-full flex items-center justify-center mb-3 group-hover:border-[#ff006e] group-hover:text-[#ff006e] transition-all animate-pulse">
+                                        <Search size={14} />
+                                    </div>
+                                    <div className="text-[10px] font-black tracking-widest uppercase mb-1">RADAR_YOUTUBE_ESPERANDO</div>
+                                    <div className="text-[7px] tracking-[0.2em] uppercase opacity-60">INGRESA UNA FRECUENCIA EN LA BARRA SUPERIOR PARA INTERCEPTAR SEÑALES</div>
                                 </div>
                             )}
                         </div>
@@ -942,7 +945,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-3 pointer-events-auto">
                     <HUDWidget title={t('STUDIO_TRANS')} icon={<Camera size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                             {filteredVisuals.map(vis => (
+                             {filteredVisuals.length > 0 ? filteredVisuals.map(vis => (
                                  <div 
                                     key={vis.id} 
                                     className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-[#ff006e]/60 transition-all shadow-xl" 
@@ -960,7 +963,16 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                           </div>
                                       )}
                                  </div>
-                             ))}
+                             )) : (
+                                 <div 
+                                     onClick={() => setShowGlobalIngest && setShowGlobalIngest(true)}
+                                     className="col-span-full border border-dashed border-white/20 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-[#ff006e]/60 hover:bg-[#ff006e]/5 transition-all group"
+                                 >
+                                     <Camera size={20} className="opacity-40 group-hover:text-[#ff006e] group-hover:opacity-100 mb-2 transition-all" />
+                                     <span className="text-[9px] font-black uppercase tracking-widest opacity-60 group-hover:text-[#ff006e] group-hover:opacity-100">SIN_TRANSMISIONES_VISUALES</span>
+                                     <span className="text-[7px] uppercase tracking-[0.2em] opacity-40 mt-1">[ INICIAR_TRANSMISIÓN ]</span>
+                                 </div>
+                             )}
                          </div>
                     </HUDWidget>
                 </div>
@@ -968,7 +980,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 <div className="col-span-3 row-span-2 col-start-10 row-start-5 pointer-events-auto">
                     <HUDWidget title={t('FREQ_JOURNAL')} icon={<BookOpen size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                         <div className="space-y-4">
-                             {filteredJournals.map(j => (
+                             {filteredJournals.length > 0 ? filteredJournals.map(j => (
                                  <div 
                                     key={j.id} 
                                     className="border-l border-[#ff006e]/10 pl-4 py-2 relative group cursor-pointer hover:bg-white/[0.02] transition-all" 
@@ -981,7 +993,15 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                           <div className="text-[7px] text-[#ff006e] font-black uppercase">{t('READ_SIGNAL')} {">"}{">"}</div>
                                      </div>
                                  </div>
-                             ))}
+                             )) : (
+                                 <div 
+                                     onClick={() => setShowGlobalIngest && setShowGlobalIngest(true)}
+                                     className="border-l-2 border-[#ff006e]/20 pl-4 py-4 cursor-pointer hover:border-[#ff006e] group transition-all"
+                                 >
+                                     <div className="text-[10px] font-black text-white/60 group-hover:text-white tracking-widest uppercase mb-1">BITÁCORA_VACÍA</div>
+                                     <div className="text-[8px] opacity-40 group-hover:text-[#ff006e] transition-colors">[+] AÑADIR_NUEVA_ENTRADA</div>
+                                 </div>
+                             )}
                         </div>
                     </HUDWidget>
                 </div>
