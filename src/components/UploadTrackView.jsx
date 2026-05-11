@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, X, Music, Image as ImageIcon, CheckCircle, AlertCircle, Plus, Trash2, Lock, Unlock } from 'lucide-react';
 import API from '../services/api';
+import { SECTORS } from '../constants';
 
 // ─── Empty track template ────────────────────────────────────────────────────
 const emptyTrack = () => ({
     id: Date.now() + Math.random(),
     title: '',
     genre: '',
+    sectorId: null,
     audioFile: null,
     coverFile: null,
     price: 0,
@@ -62,14 +64,25 @@ const AlbumTrackRow = ({ track, index, onChange, onRemove, canRemove }) => {
                     />
                 </div>
                 {/* Genre */}
-                <div>
-                    <input
-                        type="text"
-                        placeholder="genre_tag"
-                        value={track.genre}
-                        onChange={e => onChange(index, { genre: e.target.value })}
-                        className="w-full bg-white/[0.02] border border-white/5 p-3 text-white text-[10px] font-bold outline-none focus:border-[#ff006e]/30 tracking-widest transition-all rounded-sm"
-                    />
+                <div className="col-span-2 space-y-1">
+                    <label className="text-[8px] mono text-white/30 uppercase tracking-[0.2em] ml-1">select_sector</label>
+                    <div className="grid grid-cols-3 gap-1">
+                        {SECTORS.map((sector, idx) => (
+                            <button
+                                key={sector.name}
+                                type="button"
+                                onClick={() => onChange(index, { sectorId: idx, genre: sector.name })}
+                                className={`flex items-center gap-1.5 px-2 py-1.5 rounded border text-[8px] font-bold uppercase tracking-widest transition-all ${track.sectorId === idx
+                                    ? 'text-white'
+                                    : 'bg-black/20 border-white/5 text-white/40 hover:border-white/20'
+                                    }`}
+                                style={track.sectorId === idx ? { backgroundColor: `${sector.color}20`, borderColor: `${sector.color}50` } : {}}
+                            >
+                                <div className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: sector.color }} />
+                                <span className="truncate">{sector.name.replace(' ', '_')}</span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
                 {/* Price */}
                 <div className="space-y-1">
@@ -147,6 +160,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
     const [formData, setFormData] = useState({
         title: '',
         genre: '',
+        sectorId: null,
         audioFile: null,
         coverFile: null,
         price: 0,
@@ -177,6 +191,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
             const data = new FormData();
             data.append('TrackTitle', formData.title);
             data.append('Genre', formData.genre || 'Unknown');
+            if (formData.sectorId !== null) data.append('SectorId', formData.sectorId);
             data.append('Price', formData.price || 0);
             data.append('IsLocked', formData.isLocked || false);
             data.append('AudioFile', formData.audioFile);
@@ -211,6 +226,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
             albumTracks.forEach((track, i) => {
                 data.append(`Tracks[${i}].Title`, track.title);
                 data.append(`Tracks[${i}].Genre`, track.genre || 'Unknown');
+                if (track.sectorId !== null) data.append(`Tracks[${i}].SectorId`, track.sectorId);
                 data.append(`Tracks[${i}].Price`, track.price || 0);
                 data.append(`Tracks[${i}].IsLocked`, track.isLocked);
                 data.append(`Tracks[${i}].AudioFile`, track.audioFile);
@@ -334,14 +350,25 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <input
-                                                type="text"
-                                                value={formData.genre}
-                                                onChange={e => setFormData({ ...formData, genre: e.target.value })}
-                                                className="w-full bg-white/[0.03] border border-white/10 p-4 text-white font-black outline-none focus:border-[#ff006e]/40 transition-all text-[11px] tracking-widest rounded-sm"
-                                                placeholder="genre_tag"
-                                            />
+                                        <div className="col-span-2 space-y-2">
+                                            <label className="text-[10px] text-[#ff006e]/60 uppercase tracking-widest">Select Sector</label>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {SECTORS.map((sector, idx) => (
+                                                    <button
+                                                        key={sector.name}
+                                                        type="button"
+                                                        onClick={() => setFormData({ ...formData, sectorId: idx, genre: sector.name })}
+                                                        className={`flex items-center gap-2 px-3 py-3 rounded border text-[9px] font-bold uppercase tracking-widest transition-all ${formData.sectorId === idx
+                                                            ? 'text-white'
+                                                            : 'bg-black/20 border-white/5 text-white/40 hover:border-white/20'
+                                                            }`}
+                                                        style={formData.sectorId === idx ? { backgroundColor: `${sector.color}20`, borderColor: `${sector.color}50` } : {}}
+                                                    >
+                                                        <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: sector.color }} />
+                                                        <span className="truncate">{sector.name.replace(' ', '_')}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
                                         <div className="space-y-1">
                                             <label className="text-[7px] mono text-white/30 uppercase tracking-[0.2em] ml-1">download_cost</label>

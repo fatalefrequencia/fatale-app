@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Music, Disc, User, Users, Play, Pause, Heart, Layers, Radio, BookOpen, Camera, Zap, Share2, Activity, Globe, X, Star, ChevronLeft, Shuffle } from 'lucide-react';
+import { Search, Music, Disc, User, Users, Play, Pause, Heart, Layers, Radio, BookOpen, Camera, Zap, Share2, Activity, Globe, X, Star, ChevronLeft, Shuffle, MessageSquare } from 'lucide-react';
 import API from '../services/api';
 import { SECTORS, getMediaUrl } from '../constants';
 import { useNotification } from '../contexts/NotificationContext';
@@ -21,7 +21,20 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     const { t } = useLanguage();
     const { showNotification } = useNotification();
     const [searchQuery, setSearchQuery] = useState('');
+    const [conversations, setConversations] = useState([]);
     const [activeSector, setActiveSector] = useState(null);
+
+    useEffect(() => {
+        const fetchConversations = async () => {
+            try {
+                const res = await API.Messages.getConversations();
+                setConversations(res.data || []);
+            } catch (err) {
+                console.error("Failed to fetch conversations in DiscoveryHUD:", err);
+            }
+        };
+        fetchConversations();
+    }, []);
     const [isFounding, setIsFounding] = useState(false);
     const [newClanName, setNewClanName] = useState('');
     const [newClanDesc, setNewClanDesc] = useState('');
@@ -941,8 +954,9 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
                                           <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
                                           <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5">
-                                              <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight">{item.title || item.Title}</div>
-                                              <div className="text-[7px] opacity-40 uppercase font-light tracking-[0.2em]">{item.description || item.Description}</div>
+                                              <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight">
+                                                  {(item.description || item.Description) ? (item.description || item.Description) : ((item.title || item.Title) && !(item.title || item.Title).includes(' ') && (item.title || item.Title).length > 20 ? 'UNTITLED' : (item.title || item.Title))}
+                                              </div>
                                           </div>
                                      </div>
                                  ))}
@@ -1024,36 +1038,35 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                     </HUDWidget>
                 </div>
 
-                {/* --- BOTTOM CENTER: RADIO & COMMUNITIES --- */}
+                {/* --- BOTTOM CENTER: MESSAGES & COMMUNITIES --- */}
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-4 lg:row-start-5 pointer-events-auto">
-                    <HUDWidget title={t('RADAR_SIGNAL')} icon={<Radio size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                    <HUDWidget title={t('MESSAGES') || 'MENSAJES'} icon={<MessageSquare size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                          <div className="space-y-4">
-                             {liveStations.length > 0 ? liveStations.map(s => (
-                                 <div key={s.id} className="group cursor-pointer" onClick={() => {
-                                     onPlayStation(s);
-                                     navigateToProfile(s.artistUserId || s.ArtistUserId, 'console');
+                             {conversations.length > 0 ? conversations.map(c => (
+                                 <div key={c.conversationId || c.id} className="group cursor-pointer border-b border-white/5 pb-2" onClick={() => {
+                                     navigateToProfile(c.userId || c.UserId, 'messages');
                                  }}>
                                      <div className="flex items-center justify-between mb-1">
-                                         <div className="text-[10px] font-black group-hover:text-[#00ffff] transition-colors uppercase tracking-tight truncate flex-1">{s.name}</div>
-                                         <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                                              <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
-                                              <span className="text-[7px] font-black text-red-600">{t('LIVE')}</span>
-                                         </div>
+                                         <div className="text-[10px] font-black group-hover:text-[#ff006e] transition-colors uppercase tracking-tight truncate flex-1">{c.username || c.Username}</div>
+                                         {c.unreadCount > 0 && (
+                                             <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                                  <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse" />
+                                                  <span className="text-[7px] font-black text-[#ff006e]">{c.unreadCount} NEW</span>
+                                             </div>
+                                         )}
                                      </div>
-                                     <div className="text-[8px] opacity-30 truncate uppercase tracking-widest">{s.currentSessionTitle || t('ESTABLISHING_LINK')}</div>
-                                     <div className="mt-2 h-[1px] w-full bg-white/5 relative overflow-hidden">
-                                          <div className="absolute inset-0 bg-[#00ffff]/20 animate-scanlines" />
-                                     </div>
+                                     <div className="text-[8px] opacity-30 truncate uppercase tracking-widest">{c.lastMessage || 'No messages yet'}</div>
                                  </div>
                              )) : (
                                  <div className="flex flex-col items-center justify-center py-6 opacity-20">
-                                     <Radio size={16} className="mb-2" />
-                                     <div className="text-[8px] tracking-widest uppercase text-center px-4">{t('NO_LIVE_STREAMS')}</div>
+                                     <MessageSquare size={16} className="mb-2" />
+                                     <div className="text-[8px] tracking-widest uppercase text-center px-4">SIN_MENSAJES_NUEVOS</div>
                                  </div>
                              )}
                          </div>
                     </HUDWidget>
                 </div>
+
 
                 <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-7 lg:row-start-5 pointer-events-auto">
                      <HUDWidget title={t('SECTOR_CLIQUES')} icon={<Globe size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>

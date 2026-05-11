@@ -1925,7 +1925,7 @@ export const ProfileView = React.memo(({
                             </div>
                             <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
                                 <div className="text-[18px] font-black uppercase tracking-widest leading-none mb-1 text-[var(--subsystem-accent)]">{displayUser?.username}</div>
-                                <div className="text-[10px] text-white/70 leading-relaxed font-medium mono mb-2">
+                                <div className="text-[10px] text-white leading-relaxed font-medium mono mb-2">
                                     {displayUser?.biography || displayUser?.Biography || 'No biography available.'}
                                 </div>
                                 <div className="flex items-center justify-between">
@@ -1997,6 +1997,25 @@ export const ProfileView = React.memo(({
                             setShowForm={setShowGearForm}
                             secondaryColor={profileSecondary}
                         />
+                        <div className="p-4 border-t border-white/5 max-h-[300px] overflow-y-auto custom-scrollbar">
+                            <div className="text-[10px] font-black text-white/40 mb-3 uppercase tracking-widest">Recent Activity</div>
+                            <div className="space-y-2">
+                                {[
+                                    ...profileTracks.map(t => ({ ...t, type: 'TRACK' })),
+                                    ...profileGallery.map(g => ({ ...g, type: 'GALLERY' })),
+                                    ...profileJournal.map(j => ({ ...j, type: 'JOURNAL' }))
+                                ].sort((a, b) => new Date(b.createdAt || b.CreatedAt) - new Date(a.createdAt || a.CreatedAt)).slice(0, 10).map((item, idx) => (
+                                    <div key={idx} className="flex items-center gap-3 text-[9px] text-white/70 hover:text-white cursor-pointer transition-colors" onClick={() => {
+                                        if (item.type === 'TRACK') onPlayTrack(item);
+                                        else handleItemClick(item, item.type);
+                                    }}>
+                                        <div className="w-1.5 h-1.5 rounded-full bg-[var(--subsystem-accent)]" />
+                                        <div className="flex-1 truncate">{item.title || item.Title || 'Untitled'}</div>
+                                        <div className="text-[7px] opacity-40 uppercase">{item.type}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </SubsystemBlock>
                 </div>
 

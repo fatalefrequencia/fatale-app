@@ -143,6 +143,9 @@ function App() {
     try { return JSON.parse(localStorage.getItem('tracks') || '[]'); } catch { return []; }
   });
   const [libraryTracks, setLibraryTracks] = useState([]);
+  const [postText, setPostText] = useState('');
+  const [postFile, setPostFile] = useState(null);
+  const [isSubmittingPost, setIsSubmittingPost] = useState(false);
 
   // Real-time Audio State
   const [currentTime, setCurrentTime] = useState(() => {
@@ -295,6 +298,7 @@ function App() {
   const [showGlobalGoLive, setShowGlobalGoLive] = useState(false);
   const [showGlobalUpload, setShowGlobalUpload] = useState(false);
   const [showGlobalIngest, setShowGlobalIngest] = useState(false);
+
   const [goLiveFormData, setGoLiveFormData] = useState({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true });
   
   // --- GLOBAL MODAL STATE ---
@@ -1666,6 +1670,41 @@ function App() {
     }
   };
 
+  const handleNewPostSubmit = async () => {
+    if (!postText.trim()) return;
+    setIsSubmittingPost(true);
+    try {
+      if (postFile) {
+        const formData = new FormData();
+        formData.append('File', postFile);
+        formData.append('Type', postFile.type.startsWith('video') ? 'VIDEO' : 'PHOTO');
+        formData.append('Title', postText.slice(0, 20));
+        formData.append('Description', postText);
+        formData.append('IsPosted', false);
+        
+        await API.Studio.upload(formData);
+        showNotification("INGEST_COMPLETE", "Visual post transmitted successfully.", "success");
+      } else {
+        await API.Journal.create({
+          Title: postText.slice(0, 20),
+          Content: postText,
+          IsPosted: false,
+          IsPinned: false
+        });
+        showNotification("INGEST_COMPLETE", "Journal post transmitted successfully.", "success");
+      }
+      setShowGlobalIngest(false);
+      setPostText('');
+      setPostFile(null);
+      window.location.reload();
+    } catch (error) {
+      console.error("Post failed:", error);
+      showNotification("INGEST_FAILURE", "Failed to transmit post.", "error");
+    } finally {
+      setIsSubmittingPost(false);
+    }
+  };
+
   // --- SWIPE NAVIGATION LOGIC ---
   useEffect(() => {
     const VIEWS_SEQUENCE = ['discovery', 'feed', 'messages', 'profile'];
@@ -2059,33 +2098,46 @@ function App() {
         {showGlobalIngest && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[500] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" onClick={() => setShowGlobalIngest(false)} />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative w-full max-w-2xl text-center space-y-12">
-              <button onClick={() => setShowGlobalIngest(false)} className="absolute top-0 right-0 p-2 text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative w-full max-w-xl text-center space-y-8 bg-black p-8 border border-white/10">
+              <button onClick={() => setShowGlobalIngest(false)} className="absolute top-4 right-4 p-2 text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300">
                 <X size={20} />
               </button>
               <div className="space-y-4">
-                <p className="text-[10px] text-[#ff006e] mono uppercase tracking-[0.6em] animate-pulse">/ Select Data Sector for Transmission /</p>
+                <p className="text-[10px] text-[#ff006e] mono uppercase tracking-[0.6em] animate-pulse">/ New Transmission /</p>
+                <div className="flex items-center gap-3 justify-center">
+                    <div className="w-10 h-10 bg-black border border-white/10 rounded-full overflow-hidden shrink-0">
+                        <img src={getMediaUrl(user?.profilePictureUrl || user?.profileImageUrl || user?.ProfilePictureUrl)} className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://via.placeholder.com/100?text=USER'; }} alt="" />
+                    </div>
+                    <span className="text-[12px] text-white font-black uppercase tracking-tighter">{user?.username || 'ANON'}</span>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[
-                  { id: 'journal', label: 'JOURNAL_LOG', icon: <BookOpen />, desc: 'Text-based entry', color: '#ff006e', action: () => document.getElementById('global-ingest-log').click() },
-                  { id: 'visual', label: 'VISUAL_DATA', icon: <Camera />, desc: 'Photos & Art', color: '#00f2ff', action: () => document.getElementById('global-ingest-visual').click() },
-                  { id: 'video', label: 'VISUAL_FEED', icon: <Video />, desc: 'Video Transmissions', color: '#7000ff', action: () => document.getElementById('global-ingest-signal').click() }
-                ].map(item => (
+              <div className="space-y-6 text-left">
+                  <div className="space-y-2">
+                      <label className="text-[10px] text-[#ff006e]/60 uppercase tracking-widest">Post Content (Required)</label>
+                      <textarea 
+                          value={postText}
+                          onChange={(e) => setPostText(e.target.value)}
+                          className="w-full bg-[#050505] border border-white/5 p-4 text-white text-xs outline-none focus:border-[#ff006e]/40 min-h-[120px] resize-none font-sans"
+                          placeholder="What's on your mind?..."
+                      />
+                  </div>
+                  <div className="space-y-2">
+                      <label className="text-[10px] text-[#ff006e]/60 uppercase tracking-widest">Attach Media (Optional)</label>
+                      <input 
+                          type="file"
+                          accept="image/*,video/*"
+                          onChange={(e) => setPostFile(e.target.files[0])}
+                          className="w-full bg-[#050505] border border-white/5 p-4 text-white text-xs outline-none focus:border-[#ff006e]/40 font-sans"
+                      />
+                  </div>
                   <button
-                    key={item.id}
-                    onClick={item.action}
-                    className="group relative p-8 border border-white/10 bg-black hover:border-white/30 transition-all overflow-hidden text-left"
+                      onClick={handleNewPostSubmit}
+                      disabled={!postText.trim() || isSubmittingPost}
+                      className="w-full py-4 bg-[#ff006e]/10 border border-[#ff006e] text-[#ff006e] text-[10px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all disabled:opacity-30 disabled:pointer-events-none"
                   >
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-100 group-hover:scale-125 transition-all" style={{ color: item.color }}>{item.icon}</div>
-                    <div className="space-y-3 relative z-10">
-                      <span className="text-[10px] font-black uppercase tracking-[0.3em] group-hover:text-white transition-colors" style={{ color: item.color }}>[{item.label}]</span>
-                      <p className="text-[9px] text-white/40 uppercase tracking-widest">{item.desc}</p>
-                    </div>
-                    <div className="absolute bottom-0 left-0 w-1 group-hover:h-full h-0 transition-all duration-300" style={{ backgroundColor: item.color }} />
+                      {isSubmittingPost ? 'TRANSMITTING...' : 'TRANSMIT_SIGNAL'}
                   </button>
-                ))}
               </div>
             </motion.div>
           </motion.div>
@@ -2386,7 +2438,7 @@ const Dashboard = React.memo(({
           <SidebarLink collapsed={isSidebarCollapsed} icon={<ShoppingBag size={isSidebarCollapsed ? 18 : 22} />} label={t('SHOP_LNK')} active={activeView === 'shopping'} onClick={() => handleNav('shopping')} />
 
           <div className="my-6 border-t border-white/5 opacity-50" />
-          <SidebarLink collapsed={isSidebarCollapsed} icon={<Wallet size={isSidebarCollapsed ? 18 : 22} />} label={t('WAL_BASE')} active={activeView === 'wallet'} onClick={() => handleNav('wallet')} />
+          {/* <SidebarLink collapsed={isSidebarCollapsed} icon={<Wallet size={isSidebarCollapsed ? 18 : 22} />} label={t('WAL_BASE')} active={activeView === 'wallet'} onClick={() => handleNav('wallet')} /> */}
           <SidebarLink collapsed={isSidebarCollapsed} icon={<Settings size={isSidebarCollapsed ? 18 : 22} />} label={t('SYS_CONF')} active={activeView === 'settings'} onClick={() => handleNav('settings')} />
         </nav>
 
@@ -3641,6 +3693,7 @@ const FeedContent = React.memo(({
             </div>
           ) : (
             <>
+
               {feed.filter(item => {
                 if (selectedCommunityId !== null) {
                   const itemCommId = item.communityId || item.CommunityId;
@@ -3709,8 +3762,9 @@ const FeedContent = React.memo(({
                       );
                     }
 
+                    const sectorColor = SECTORS[item.sectorId || item.SectorId]?.color || '#ff006e';
                     return (
-                      <div key={item.Id} className="group transition-colors hover:bg-white/[0.05] py-2 px-3 rounded border border-transparent hover:border-white/10 relative mb-4">
+                      <div key={item.Id} className="group transition-colors hover:bg-white/[0.05] py-4 px-5 rounded border border-white/5 hover:border-white/10 relative mb-6 max-w-2xl mx-auto w-full bg-black/20" style={{ borderLeft: `2px solid ${sectorColor}` }}>
                         {!isOriginal && repostedBy && (
                           <div className="flex items-center gap-2 mb-1 px-1">
                             <Repeat size={10} className="text-[#ff006e] animate-pulse" />
@@ -3720,23 +3774,29 @@ const FeedContent = React.memo(({
                           </div>
                         )}
 
-                        <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
-                          <span className="text-[11px] text-white/80 whitespace-nowrap select-none font-bold">[{getTime(createdAt)}]</span>
-                          <span className={`text-[11px] font-bold whitespace-nowrap ${getColor(type)}`}>[{getPrefix(type)}]</span>
-                          <button
-                            onClick={() => navigateToProfile(item.ArtistUserId || item.artistUserId)}
-                            className="text-[11px] text-white font-black uppercase tracking-tighter hover:text-[#ff006e] transition-colors"
-                          >
-                            ::{artist}::
-                          </button>
-                          <span className="text-[11px] text-white/90 flex-1 min-w-[200px] leading-relaxed">
-                            {type === 'track' && `ULINKED_SIGNAL: "${title}" [${content || 'unknown'}]`}
-                            {type === 'studio' && `NODAL_UPDATE: "${title}"`}
-                            {type === 'journal' && `DATA_LOG: ${title}`}
-                          </span>
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 bg-black border border-white/10 rounded-full overflow-hidden shrink-0">
+                              <img src={getMediaUrl(item.profilePictureUrl || item.ProfilePictureUrl)} className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://via.placeholder.com/100?text=USER'; }} alt="" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => navigateToProfile(item.ArtistUserId || item.artistUserId)}
+                                    className="text-[12px] text-white font-black uppercase tracking-tighter hover:text-[#ff006e] transition-colors"
+                                  >
+                                    {artist}
+                                  </button>
+                                  <span className="text-[9px] text-white/40">{getTime(createdAt)}</span>
+                              </div>
+                              <div className="text-[11px] text-white/90 leading-relaxed mt-0.5">
+                                {type === 'track' && `Liked track "${title}"`}
+                                {type === 'studio' && (content || title)}
+                                {type === 'journal' && (content || title)}
+                              </div>
+                          </div>
                         </div>
 
-                        <div className="ml-0 sm:ml-40 mt-3 space-y-4">
+                        <div className="mt-3 space-y-4">
                           {type === 'track' && (
                             <div
                               onClick={(e) => {

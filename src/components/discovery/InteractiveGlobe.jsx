@@ -27,6 +27,11 @@ const getSphericalPos = (id, radius = 2.5, offset = 0, parentId = null, type = '
     let lat = phi - Math.PI / 2;
     let lon = theta % (Math.PI * 2);
 
+    // Add some noise to break clusters and spread all over the globe
+    const h2 = hashStr(id + "noise");
+    lat += ((h2 % 100) / 100 - 0.5) * 0.4;
+    lon += ((h2 % 100) / 100 - 0.5) * 0.4;
+
     // 2. ORBITAL AVOIDANCE LOGIC
     if (parentId) {
         // Strict orbital clustering: hugged around parent monolith
