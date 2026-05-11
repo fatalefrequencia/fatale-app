@@ -1494,8 +1494,6 @@ export const ProfileView = React.memo(({
             const API = await import('../services/api').then(mod => mod.default);
             const uid = currentUser?.id || currentUser?.Id || currentUser?.userId || currentUser?.UserId;
             
-            // Critical Calibration: .NET backend REQUIRES multipart/form-data (ReadForm)
-            // We use the upload-first strategy to get absolute URLs, then commit via FormData
             const updateForm = new FormData();
             updateForm.append('Username', formData.get('Username'));
             updateForm.append('Biography', formData.get('Biography'));
@@ -1509,46 +1507,19 @@ export const ProfileView = React.memo(({
             updateForm.append('SecondaryColor', formData.get('SecondaryColor'));
             updateForm.append('IsGlass', formData.get('IsGlass'));
 
-            // Legacy URL Fallbacks
-            let pfpUrl = currentUser.profileImageUrl || currentUser.ProfilePictureUrl;
-            let bnrUrl = currentUser.bannerUrl || currentUser.BannerUrl;
-            let vdoUrl = currentUser.wallpaperVideoUrl || currentUser.WallpaperVideoUrl;
-
-            // Intercept and manually upload files to get persistent URLs
             const pfpFile = formData.get('ProfilePicture');
             const bnrFile = formData.get('Banner');
             const vdoFile = formData.get('WallpaperVideo');
 
             if (pfpFile instanceof File) {
-                showNotification("UPLOADING_PFP", "Establishing profile picture node...", "info");
-                const fd = new FormData();
-                fd.append('file', pfpFile);
-                const r = await API.Files.upload(fd);
-                pfpUrl = r.data.path || r.data.Path || r.data.url;
+                updateForm.append('ProfilePicture', pfpFile);
             }
-
             if (bnrFile instanceof File) {
-                showNotification("UPLOADING_BACKDROP", "Committing visual backdrop to core...", "info");
-                const fd = new FormData();
-                fd.append('file', bnrFile);
-                const r = await API.Files.upload(fd);
-                bnrUrl = r.data.path || r.data.Path || r.data.url;
-                vdoUrl = ''; // Clear video
+                updateForm.append('Banner', bnrFile);
             }
-
             if (vdoFile instanceof File) {
-                showNotification("UPLOADING_VIDEO", "Synchronizing mission-critical video stream...", "info");
-                const fd = new FormData();
-                fd.append('file', vdoFile);
-                const r = await API.Files.upload(fd);
-                vdoUrl = r.data.path || r.data.Path || r.data.url;
-                bnrUrl = ''; // Clear photo
+                updateForm.append('WallpaperVideo', vdoFile);
             }
-
-            // Sync resulting URLs to the primary update buffer
-            updateForm.append('ProfilePictureUrl', pfpUrl || '');
-            updateForm.append('BannerUrl', bnrUrl || '');
-            updateForm.append('WallpaperVideoUrl', vdoUrl || '');
 
             // Synchronize with backend core
             const res = await API.Users.updateProfile(updateForm, uid);
@@ -1817,18 +1788,25 @@ export const ProfileView = React.memo(({
                                 className="flex-1 p-6 flex flex-col items-center justify-center"
                             >
                                 {cycleIndex === 0 && (
-                                    <div className="w-48 h-48 border border-white/10 bg-black/40 p-1">
-                                        <div className="w-full h-full border border-white/20 relative overflow-hidden group grayscale hover:grayscale-0 transition-all duration-500">
-                                            {pfp ? (
-                                                <img src={getMediaUrl(pfp)} className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-white/5"><Cpu size={48} /></div>
-                                            )}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                                                <span className="text-[7px] mono font-bold tracking-widest">BIO_SCAN_COMPLETE</span>
+                                    <>
+                                        <div className="w-48 h-48 border border-white/10 bg-black/40 p-1">
+                                            <div className="w-full h-full border border-white/20 relative overflow-hidden group grayscale hover:grayscale-0 transition-all duration-500">
+                                                {pfp ? (
+                                                    <img src={getMediaUrl(pfp)} className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-white/5"><Cpu size={48} /></div>
+                                                )}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                                                    <span className="text-[7px] mono font-bold tracking-widest">BIO_SCAN_COMPLETE</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                        <div className="mt-3 text-center max-w-[240px]">
+                                            <div className="text-[9px] text-[var(--subsystem-accent)]/80 leading-relaxed font-medium mono uppercase tracking-wider">
+                                                {displayUser?.biography || displayUser?.Biography || 'SIGNAL_DEVOID_OF_METADATA'}
+                                            </div>
+                                        </div>
+                                    </>
                                 )}
 
                                 {cycleIndex === 1 && (
@@ -1947,6 +1925,9 @@ export const ProfileView = React.memo(({
                             </div>
                             <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
                                 <div className="text-[18px] font-black uppercase tracking-widest leading-none mb-1 text-[var(--subsystem-accent)]">{displayUser?.username}</div>
+                                <div className="text-[10px] text-white/70 leading-relaxed font-medium mono mb-2">
+                                    {displayUser?.biography || displayUser?.Biography || 'No biography available.'}
+                                </div>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2 hidden">
                                         <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]" />

@@ -161,6 +161,7 @@ const API = {
         stream: (videoId, userId) => api.get(`Youtube/stream?videoId=${videoId}&userId=${userId}`),
         saveTrack: (trackData) => api.post('YoutubeTracks/save', trackData),
         getTrack: (videoId) => api.get(`YoutubeTracks/by-youtube-id/${videoId}`),
+        getRecentTracks: () => api.get('YoutubeTracks/recent'),
         getDiscoveryNodes: (query) => api.get(`Youtube/discovery-nodes?query=${encodeURIComponent(query || '')}`),
     },
     Messages: {
@@ -213,6 +214,7 @@ const API = {
     Studio: {
         getMyGallery: () => api.get('Studio'),
         getUserGallery: (userId) => api.get(`Studio/user/${userId}`),
+        getAllPosted: () => api.get('Studio/all'),
         upload: (formData) => api.post('Studio/upload', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
             timeout: 120000

@@ -1,36 +1,107 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingBag, ExternalLink, ArrowRight, ShoppingCart, Tag, Star } from 'lucide-react';
+import { ShoppingBag, ExternalLink, ArrowRight, ShoppingCart, Tag, Star, Plus, X, Upload, Trash2 } from 'lucide-react';
 import { getMediaUrl } from '../constants';
+import API from '../services/api';
 
-const ARTIST_SHOPS = [
-    {
-        id: 1,
-        artistName: "FATALE_CORE",
-        shopName: "OFFICIAL_MERCH_HUB",
-        url: "https://fatale-frequencia.creator-spring.com/",
-        image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop",
-        desc: "Neural-link compatible apparel and system hardware."
-    },
-    {
-        id: 2,
-        artistName: "NEON_WITCH",
-        shopName: "HEX_WARE_COLLECTIVE",
-        url: "#",
-        image: "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?q=80&w=1974&auto=format&fit=crop",
-        desc: "Custom synth modules and digital spellbooks."
-    },
-    {
-        id: 3,
-        artistName: "VOID_RUNNER",
-        shopName: "SIGNAL_GEAR_SHOP",
-        url: "#",
-        image: "https://images.unsplash.com/photo-1614850523296-e8c041de4398?q=80&w=2070&auto=format&fit=crop",
-        desc: "Encrypted data drives and street-ready tactical gear."
-    }
-];
+
 
 const ShoppingView = () => {
+    const [shops, setShops] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    
+    // Form state
+    const [file, setFile] = useState(null);
+    const [link, setLink] = useState('');
+    const [title, setTitle] = useState('');
+    const [mediaType, setMediaType] = useState('PHOTO');
+    const [isUploading, setIsUploading] = useState(false);
+
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isLoggedIn = !!user.id;
+
+    useEffect(() => {
+        fetchShops();
+    }, []);
+
+    const fetchShops = async () => {
+        setLoading(true);
+        try {
+            const response = await API.Studio.getAllPosted();
+            console.log("MARKETPLACE_RESPONSE:", response.data);
+            const apiShops = response.data.map(item => {
+                const url = item.url || item.Url || '';
+                const desc = item.description || item.Description || '';
+                const title = item.title || item.Title || '';
+                const type = item.type || item.Type || 'PHOTO';
+                const userId = item.userId || item.UserId || 0;
+                
+                return {
+                    id: `api-${item.id || item.Id}`,
+                    artistName: `USER_${userId}`,
+                    shopName: title,
+                    url: desc, // We use description to store the link
+                    image: url.startsWith('http') ? url : `${import.meta.env.VITE_API_BASE_URL?.replace('/api/', '') || 'http://localhost:5264'}${url}`,
+                    desc: "User submitted shop node.",
+                    type: type
+                };
+            });
+            
+            setShops(apiShops);
+        } catch (error) {
+            console.error("Failed to fetch shops:", error);
+            setShops([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleUpload = async (e) => {
+        e.preventDefault();
+        if (!file || !link || !title) {
+            alert("Please fill all fields and select a file.");
+            return;
+        }
+
+        setIsUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('File', file);
+            formData.append('Title', title);
+            formData.append('Description', link); // Store link in description
+            formData.append('Type', mediaType);
+            formData.append('IsPosted', 'true');
+
+            await API.Studio.upload(formData);
+            
+            // Reset form and close modal
+            setFile(null);
+            setLink('');
+            setTitle('');
+            setIsModalOpen(false);
+            
+            // Refresh shops
+            fetchShops();
+        } catch (error) {
+            console.error("Upload failed:", error);
+            alert("Upload failed. Please try again.");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this item?")) return;
+        try {
+            await API.Studio.delete(id);
+            fetchShops();
+        } catch (error) {
+            console.error("Delete failed:", error);
+            alert("Failed to delete item.");
+        }
+    };
+
     return (
         <div className="h-full w-full overflow-y-auto no-scrollbar bg-black p-6 lg:p-12">
             <motion.div 
@@ -49,75 +120,160 @@ const ShoppingView = () => {
                     </div>
                     <div className="flex items-center gap-4 text-[10px] mono text-white/20 uppercase tracking-widest bg-white/5 px-4 py-2 rounded-sm border border-white/5">
                         <Tag size={12} className="text-[#ff006e]" />
-                        <span>Active_Vending_Nodes: {ARTIST_SHOPS.length}</span>
+                        <span>Active_Vending_Nodes: {shops.length}</span>
                     </div>
                 </div>
 
-                {/* Shop Grid */}
-                <div className="columns-1 md:columns-2 lg:columns-3 gap-8">
-                    {ARTIST_SHOPS.map((shop, idx) => (
+                {/* Shop Grid - Pinterest Style */}
+                <div className="columns-2 md:columns-3 lg:columns-4 gap-6">
+                    {/* Upload Card (Only visible or active if logged in) */}
+                    <div 
+                        onClick={() => isLoggedIn ? setIsModalOpen(true) : alert("Please log in to upload.")}
+                        className="border border-dashed border-[#ff006e]/20 flex flex-col items-center justify-center p-6 gap-3 opacity-40 hover:opacity-100 transition-opacity cursor-pointer group break-inside-avoid mb-6 bg-[#0a0a0a]/50 aspect-[3/4]"
+                    >
+                        <div className="w-10 h-10 rounded-full border border-[#ff006e]/40 flex items-center justify-center group-hover:bg-[#ff006e]/10 transition-all">
+                            <Plus size={16} className="text-[#ff006e]" />
+                        </div>
+                        <div className="text-center">
+                            <div className="text-[10px] font-black uppercase tracking-widest text-[#ff006e]">SUBMIT_STORE</div>
+                            <div className="text-[8px] mono mt-1 text-white/40">{isLoggedIn ? "OPEN_FOR_ARTISTS [+]" : "LOGIN_REQUIRED"}</div>
+                        </div>
+                    </div>
+
+                    {shops.map((shop, idx) => (
                         <motion.div
                             key={shop.id}
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: idx * 0.1 }}
-                            className="group relative bg-[#0a0a0a] border border-white/5 hover:border-[#ff006e]/40 transition-all duration-500 overflow-hidden break-inside-avoid mb-8 inline-block w-full"
+                            transition={{ delay: idx * 0.05 }}
+                            className="break-inside-avoid mb-6 cursor-pointer group inline-block w-full"
+                            onClick={() => {
+                                if (shop.url && shop.url !== "#") {
+                                    window.open(shop.url, '_blank');
+                                }
+                            }}
                         >
-                            {/* Image Background */}
-                            <div className="w-full overflow-hidden relative">
-                                <img 
-                                    src={shop.image} 
-                                    alt={shop.shopName} 
-                                    className="w-full h-auto object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent" />
+                            {/* Image/Video Container */}
+                            <div className="relative overflow-hidden bg-[#0a0a0a] border border-white/5 group-hover:border-[#ff006e]/40 transition-all duration-300">
+                                {/* Delete Button (Only for owner) */}
+                                {isLoggedIn && shop.artistName === `USER_${user.id}` && (
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDelete(shop.id.replace('api-', ''));
+                                        }}
+                                        className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#ff006e] hover:text-white z-10"
+                                    >
+                                        <Trash2 size={12} />
+                                    </button>
+                                )}
+                                {shop.type === "VIDEO" ? (
+                                    <video 
+                                        src={shop.image} 
+                                        className="w-full h-auto object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
+                                        autoPlay 
+                                        muted 
+                                        loop
+                                    />
+                                ) : (
+                                    <img 
+                                        src={shop.image} 
+                                        alt={shop.shopName} 
+                                        className="w-full h-auto object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
+                                    />
+                                )}
                                 
-                                {/* Badge */}
-                                <div className="absolute top-4 left-4 bg-[#ff006e] text-black px-2 py-1 text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-[0_0_15px_#ff006e]">
-                                    <Star size={10} />
-                                    VERIFIED_NODE
+                                {/* Hover Overlay for Link Icon */}
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <ExternalLink size={20} className="text-[#ff006e] scale-75 group-hover:scale-100 transition-transform" />
                                 </div>
                             </div>
 
-                            {/* Content */}
-                            <div className="p-6 space-y-4">
-                                <div className="space-y-1">
-                                    <div className="text-[10px] mono text-[#ff006e] font-black uppercase tracking-widest">{shop.artistName}</div>
-                                    <h3 className="text-xl font-black text-white uppercase tracking-tighter group-hover:text-[#ff006e] transition-colors">{shop.shopName}</h3>
-                                </div>
-                                
-                                <p className="text-[10px] text-white/40 leading-relaxed uppercase tracking-wider h-8 line-clamp-2">
-                                    {shop.desc}
-                                </p>
-
-                                <a 
-                                    href={shop.url} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="w-full flex items-center justify-between p-4 bg-white/5 border border-white/10 group-hover:bg-[#ff006e] group-hover:border-[#ff006e] transition-all duration-300"
-                                >
-                                    <span className="text-[10px] font-black text-white group-hover:text-black uppercase tracking-[0.2em]">ACCESS_STORE</span>
-                                    <ArrowRight size={14} className="text-[#ff006e] group-hover:text-black transition-colors" />
-                                </a>
+                            {/* Text Info Below (Pinterest Style) */}
+                            <div className="mt-2 px-1">
+                                <div className="text-[10px] font-black text-white group-hover:text-[#ff006e] transition-colors uppercase truncate tracking-tight">{shop.shopName}</div>
+                                <div className="text-[8px] mono text-white/40 uppercase mt-0.5">{shop.artistName}</div>
                             </div>
-
-                            {/* Scanlines Effect */}
-                            <div className="absolute inset-0 bg-scanlines opacity-[0.03] pointer-events-none" />
                         </motion.div>
                     ))}
-
-                    {/* Placeholder for expansion */}
-                    <div className="border border-dashed border-white/10 flex flex-col items-center justify-center p-12 gap-4 opacity-30 hover:opacity-100 transition-opacity cursor-pointer group break-inside-avoid mb-8 inline-block w-full">
-                        <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center group-hover:border-[#ff006e] group-hover:text-[#ff006e] transition-all">
-                            <ShoppingCart size={20} />
-                        </div>
-                        <div className="text-center">
-                            <div className="text-[10px] font-black uppercase tracking-widest">SUBMIT_STORE</div>
-                            <div className="text-[8px] mono mt-1">OPEN_FOR_ARTISTS [+]</div>
-                        </div>
-                    </div>
                 </div>
             </motion.div>
+
+            {/* Upload Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-[#0a0a0a] border border-[#ff006e]/20 p-6 w-full max-w-md space-y-6 relative">
+                        <button 
+                            onClick={() => setIsModalOpen(false)}
+                            className="absolute top-4 right-4 text-white/40 hover:text-white"
+                        >
+                            <X size={20} />
+                        </button>
+                        
+                        <div className="flex items-center gap-2 text-[#ff006e]">
+                            <Upload size={18} />
+                            <h2 className="text-lg font-black uppercase tracking-tighter">SUBMIT_SHOP_NODE</h2>
+                        </div>
+
+                        <form onSubmit={handleUpload} className="space-y-4">
+                            <div className="space-y-1">
+                                <label className="text-[10px] mono text-white/40 uppercase">Shop Name</label>
+                                <input 
+                                    type="text"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 p-3 text-white text-xs mono focus:border-[#ff006e] focus:outline-none"
+                                    placeholder="e.g., MY_PERSONAL_SHOP"
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-[10px] mono text-white/40 uppercase">Redirect Link</label>
+                                <input 
+                                    type="url"
+                                    value={link}
+                                    onChange={(e) => setLink(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 p-3 text-white text-xs mono focus:border-[#ff006e] focus:outline-none"
+                                    placeholder="https://..."
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-[10px] mono text-white/40 uppercase">Media Type</label>
+                                <select 
+                                    value={mediaType}
+                                    onChange={(e) => setMediaType(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 p-3 text-white text-xs mono focus:border-[#ff006e] focus:outline-none"
+                                >
+                                    <option value="PHOTO">IMAGE</option>
+                                    <option value="VIDEO">VIDEO</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-[10px] mono text-white/40 uppercase">Media File</label>
+                                <input 
+                                    type="file"
+                                    onChange={(e) => setFile(e.target.files[0])}
+                                    className="w-full bg-white/5 border border-white/10 p-3 text-white text-xs mono focus:border-[#ff006e] focus:outline-none"
+                                    accept={mediaType === "VIDEO" ? "video/*" : "image/*"}
+                                    required
+                                />
+                            </div>
+
+                            <button 
+                                type="submit"
+                                disabled={isUploading}
+                                className="w-full flex items-center justify-center p-4 bg-[#ff006e] text-black font-black uppercase tracking-widest hover:bg-[#ff006e]/80 transition-colors disabled:opacity-50"
+                            >
+                                {isUploading ? "UPLOADING..." : "ESTABLISH_NODE"}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

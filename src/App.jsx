@@ -1652,7 +1652,7 @@ function App() {
       formData.append('File', file);
       formData.append('Type', contentType);
       formData.append('Title', file.name.split('.')[0]);
-      formData.append('IsPosted', true);
+      formData.append('IsPosted', false);
 
       try {
         console.log(`[GLOBAL_INGEST] Starting ${contentType} upload:`, file.name);

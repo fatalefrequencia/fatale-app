@@ -79,6 +79,9 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     const [communities, setCommunities] = useState([]);
     const [stations, setStations] = useState([]);
     const [youtubeResults, setYoutubeResults] = useState([]);
+    const [recentYoutubeTracks, setRecentYoutubeTracks] = useState([]);
+    const [recentYoutubeSearches, setRecentYoutubeSearches] = useState([]);
+    const [marketplaceItems, setMarketplaceItems] = useState([]);
     const [selectedPlaylist, setSelectedPlaylist] = useState(null);
     const [playlistTracks, setPlaylistTracks] = useState([]);
     const [loadingPlaylist, setLoadingPlaylist] = useState(false);
@@ -101,13 +104,14 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     const fetchAll = useCallback(async () => {
         setLoading(true);
         try {
-            const [tracksRes, artistsRes, commsRes, playlistsRes, feedRes, stationsRes] = await Promise.all([
+            const [tracksRes, artistsRes, commsRes, playlistsRes, feedRes, stationsRes, studioRes] = await Promise.all([
                 API.Tracks.getAllTracks({ sort: 'trending' }).catch(() => ({ data: [] })),
                 API.Artists.getAll().catch(() => ({ data: [] })),
                 API.Communities.getAll().catch(() => ({ data: [] })),
                 API.Playlists.getAll().catch(() => ({ data: [] })),
                 API.Feed.getGlobalFeed().catch(() => ({ data: [] })),
                 API.Stations.getAll().catch(() => ({ data: [] })),
+                API.Studio.getAllPosted().catch(() => ({ data: [] })),
             ]);
 
             setTrendingTracks(Array.isArray(tracksRes?.data) ? tracksRes.data : []);
@@ -115,6 +119,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
             setCommunities(Array.isArray(commsRes?.data) ? commsRes.data : []);
             setTrendingPlaylists(Array.isArray(playlistsRes?.data) ? playlistsRes.data : []);
             setStations(Array.isArray(stationsRes?.data) ? stationsRes.data : []);
+            setMarketplaceItems(Array.isArray(studioRes?.data) ? studioRes.data : []);
             
             if (Array.isArray(feedRes?.data)) {
                 setVisualUploads(feedRes.data.filter(i => i.type === 'studio').slice(0, 12));
@@ -146,9 +151,27 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
             try {
                 const res = await API.Youtube.getDiscoveryNodes(searchQuery).catch(() => null);
                 setYoutubeResults(Array.isArray(res?.data) ? res.data.slice(0, 10) : []);
+                
+                // Save search query to history
+                const searches = JSON.parse(localStorage.getItem('recent_youtube_searches') || '[]');
+                const filtered = searches.filter(s => s !== searchQuery);
+                filtered.unshift(searchQuery);
+                localStorage.setItem('recent_youtube_searches', JSON.stringify(filtered.slice(0, 5)));
             } catch {}
         }, 1000);
         return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    // Fetch recent YouTube searches when search is empty (from localStorage)
+    useEffect(() => {
+        if (searchQuery.length < 3) {
+            try {
+                const searches = JSON.parse(localStorage.getItem('recent_youtube_searches') || '[]');
+                setRecentYoutubeSearches(searches);
+            } catch {
+                setRecentYoutubeSearches([]);
+            }
+        }
     }, [searchQuery]);
 
     // Utility to check if an item matches the active sector
@@ -790,7 +813,28 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                     <HUDWidget title={t('YT_FREQ_SCAN')} icon={<Search size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                         <div className="space-y-4">
                             {youtubeResults.length > 0 ? youtubeResults.map(y => (
-                                <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => onPlayTrack(y)}>
+                                <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => {
+                                    onPlayTrack(y);
+                                    // Save to local storage history
+                                    try {
+                                        const history = JSON.parse(localStorage.getItem('recent_youtube_tracks') || '[]');
+                                        // Remove if already exists
+                                        const filtered = history.filter(item => item.id !== y.id);
+                                        // Add to front
+                                        filtered.unshift({
+                                            id: y.id,
+                                            title: y.title,
+                                            author: y.author || "Unknown",
+                                            thumbnailUrl: y.thumbnailUrl || `https://img.youtube.com/vi/${y.id}/hqdefault.jpg`
+                                        });
+                                        // Keep only last 10
+                                        localStorage.setItem('recent_youtube_tracks', JSON.stringify(filtered.slice(0, 10)));
+                                        // Update state
+                                        setRecentYoutubeTracks(filtered.slice(0, 10));
+                                    } catch (err) {
+                                        console.error("Failed to save to local storage:", err);
+                                    }
+                                }}>
                                     <div className="w-12 h-12 bg-black overflow-hidden relative border border-white/5 group-hover:border-[#ff006e]/40 shadow-lg">
                                          <img 
                                             src={y.thumbnailUrl || y.ThumbnailUrl || y.coverImageUrl || y.CoverImageUrl || (y.id ? `https://img.youtube.com/vi/${y.id}/hqdefault.jpg` : null)} 
@@ -805,7 +849,19 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                     </div>
                                     <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </div>
-                            )) : (
+                            )) : recentYoutubeSearches.length > 0 ? (
+                                <div className="space-y-2">
+                                    <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">BÚSQUEDAS_RECIENTES</div>
+                                    {recentYoutubeSearches.map(s => (
+                                        <div key={s} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => setSearchQuery(s)}>
+                                            <Search size={10} className="text-white/40 group-hover:text-[#ff006e]" />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{s}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
                                 <div className="flex flex-col items-center justify-center h-full opacity-40 py-10 text-center px-4 group">
                                     <div className="w-8 h-8 border border-white/20 rounded-full flex items-center justify-center mb-3 group-hover:border-[#ff006e] group-hover:text-[#ff006e] transition-all animate-pulse">
                                         <Search size={14} />
@@ -868,75 +924,33 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                         searchQuery={searchQuery} 
                         activeColor={activeSectorColor}
                     >
-                         {selectedPlaylist ? (
-                             <div className="space-y-4">
-                                 <div className="flex items-center justify-between border-b border-white/5 pb-2 mb-2">
-                                     <div className="flex flex-col">
-                                         <div className="text-[10px] font-black group-hover:text-[#ff006e] uppercase tracking-tight truncate max-w-[150px]">{selectedPlaylist.name}</div>
-                                         <div 
-                                            className="text-[7px] text-[#ff006e] opacity-60 hover:opacity-100 cursor-pointer uppercase font-bold tracking-[0.2em] mt-0.5"
-                                            onClick={(e) => { e.stopPropagation(); navigateToProfile(selectedPlaylist.userId); }}
-                                         >
-                                             {t('BY_AUTHOR')}_{selectedPlaylist.authorName || 'RETSGEN'}
-                                         </div>
-                                     </div>
-                                     
-                                     {!loadingPlaylist && playlistTracks.length > 0 && (
-                                         <div className="flex gap-2">
-                                             <button 
-                                                onClick={() => onPlayPlaylist(playlistTracks)}
-                                                className="p-1.5 bg-black border border-white/10 hover:border-[#ff006e]/40 hover:bg-[#ff006e]/10 group/btn transition-all rounded-sm shadow-lg overflow-hidden relative"
-                                                title={t('PLAY_ALL_SIGNALS')}
-                                             >
-                                                 <Play size={10} className="text-white/40 group-hover/btn:text-[#ff006e] fill-transparent group-hover/btn:fill-[#ff006e]/20 relative z-10" />
-                                             </button>
-                                             <button 
-                                                onClick={() => {
-                                                    const shuffled = [...playlistTracks].sort(() => Math.random() - 0.5);
-                                                    onPlayPlaylist(shuffled);
-                                                }}
-                                                className="p-1.5 bg-black border border-white/10 hover:border-[#ff006e]/40 hover:bg-[#ff006e]/10 group/btn transition-all rounded-sm shadow-lg overflow-hidden relative"
-                                                title={t('SHUFFLE_SIGNALS')}
-                                             >
-                                                 <Shuffle size={10} className="text-white/40 group-hover/btn:text-[#ff006e] relative z-10" />
-                                             </button>
-                                         </div>
-                                     )}
-                                 </div>
-
-                                 {loadingPlaylist ? (
-                                     <div className="flex items-center justify-center py-10 opacity-20 animate-pulse">
-                                         <Activity size={16} />
-                                     </div>
-                                 ) : (
-                                     <div className="space-y-1">
-                                         {playlistTracks.map((t, idx) => (
-                                             <div key={t.id} className="flex items-center gap-3 text-[9px] group cursor-pointer py-1.5 px-2 hover:bg-white/5 transition-all border-l border-transparent hover:border-[#ff006e]" onClick={() => onPlayTrack(t)}>
-                                                  <span className="text-[7px] opacity-20 tabular-nums">{String(idx + 1).padStart(2, '0')}</span>
-                                                  <div className="flex-1 min-w-0">
-                                                      <div className="font-bold truncate group-hover:text-[#ff006e] transition-colors uppercase">{t.title}</div>
-                                                  </div>
-                                             </div>
-                                         ))}
-                                         {playlistTracks.length === 0 && (
-                                             <div className="text-[8px] opacity-20 text-center py-4 uppercase italic">{t('NO_SIGNALS_FOUND')}</div>
-                                         )}
-                                     </div>
-                                 )}
-                             </div>
-                         ) : (
+                         {marketplaceItems.length > 0 ? (
                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in duration-500">
-                                 {filteredPlaylists.map(pl => (
-                                     <div key={pl.id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => handlePlaylistClick(pl)}>
-                                          <img src={getMediaUrl(pl.imageUrl)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
+                                 {marketplaceItems.map(item => (
+                                     <div key={item.id || item.Id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => {
+                                         const desc = item.description || item.Description;
+                                         if (desc && desc !== "#") {
+                                             window.open(desc, '_blank');
+                                         }
+                                     }}>
+                                          {((item.type || item.Type) || '').toLowerCase() === 'video' ? (
+                                              <video src={getMediaUrl(item.url || item.Url)} className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" muted loop autoPlay playsInline />
+                                          ) : (
+                                              <img src={getMediaUrl(item.url || item.Url)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
+                                          )}
                                           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
                                           <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
                                           <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5">
-                                              <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight">{pl.name}</div>
-                                              <div className="text-[7px] opacity-40 uppercase font-light tracking-[0.2em]">{pl.trackCount} {t('FILES_COUNT')}</div>
+                                              <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight">{item.title || item.Title}</div>
+                                              <div className="text-[7px] opacity-40 uppercase font-light tracking-[0.2em]">{item.description || item.Description}</div>
                                           </div>
                                      </div>
                                  ))}
+                             </div>
+                         ) : (
+                             <div className="flex flex-col items-center justify-center py-10 opacity-20">
+                                 <Layers size={16} className="mb-2" />
+                                 <div className="text-[8px] tracking-widest uppercase text-center px-4">SIN_TIENDAS_DISPONIBLES</div>
                              </div>
                          )}
                     </HUDWidget>
@@ -955,9 +969,13 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                         { themeColor: '#9d00ff', backgroundColor: '#000000' }
                                     )}
                                  >
-                                      <img src={resolveThumbnail(vis)} alt="" className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
+                                      {(vis.mediaType || vis.MediaType || '').toLowerCase() === 'video' ? (
+                                          <video src={getMediaUrl(vis.imageUrl || vis.ImageUrl)} className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000" muted loop autoPlay playsInline />
+                                      ) : (
+                                          <img src={resolveThumbnail(vis)} alt="" className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
+                                      )}
                                       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ff006e] scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
-                                      {(vis.mediaType || '').toLowerCase() === 'video' && (
+                                      {(vis.mediaType || vis.MediaType || '').toLowerCase() === 'video' && (
                                           <div className="absolute top-1 right-1">
                                               <Play size={8} className="text-[#ff006e]" />
                                           </div>

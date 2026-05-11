@@ -29,7 +29,7 @@ const SettingsView = ({ user, setUser }) => {
             formData.append('preferredLanguage', code);
             formData.append('preferred_language', code);
             
-            const response = await API.Users.updateProfile(formData);
+            const response = await API.Users.updateProfile(formData, user?.id || user?.Id);
             if (response.data?.user) {
                 setUser(response.data.user);
                 localStorage.setItem('user', JSON.stringify(response.data.user));
