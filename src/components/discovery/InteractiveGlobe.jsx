@@ -60,7 +60,8 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
     const meshRef = useRef();
     const [hovered, setHovered] = useState(false);
     const { pos } = useMemo(() => getSphericalPos(id, 2.48), [id]); // Closer to surface (2.48 instead of 2.5)
-    const opacityFactor = THREE.MathUtils.clamp((10 - cameraDist) / 4, 0.1, 1);
+    const opacityFactor = THREE.MathUtils.clamp((14 - cameraDist) / 4, 0.5, 1);
+    const scaleFactor = THREE.MathUtils.clamp(cameraDist / 6, 0.8, 2);
     
     const glowTexture = useMemo(() => createGlowTexture(color), [color]);
 
@@ -77,15 +78,14 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
         <group position={pos}>
             {/* Core Sphere */}
             <mesh 
+                scale={[scaleFactor, scaleFactor, scaleFactor]}
                 onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
                 onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
                 onPointerOut={(e) => { setHovered(false); }}
             >
                 <sphereGeometry args={[size, 16, 16]} />
-                <meshStandardMaterial 
+                <meshBasicMaterial 
                     color={color} 
-                    emissive={color} 
-                    emissiveIntensity={isSelected ? 20 : 10} 
                     transparent 
                     opacity={opacityFactor * 0.9}
                 />
@@ -94,7 +94,7 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
             {/* Mesh Glow Effect (Flat plane that rotates with the planet) */}
             {glowTexture && (
                 <mesh 
-                    scale={[size * 12, size * 12, 1]}
+                    scale={[size * 12 * scaleFactor, size * 12 * scaleFactor, 1]}
                     onUpdate={(self) => self.lookAt(0, 0, 0)} // Face the center of the globe
                 >
                     <planeGeometry />

@@ -36,7 +36,13 @@ import DJMixerPlayer from './components/DJMixerPlayer';
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
 import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack } from './services/signalr';
 
-const ShoppingView = React.lazy(() => import('./components/ShoppingView'));
+const ShoppingView = React.lazy(() => 
+  import('./components/ShoppingView').catch((err) => {
+    console.error("Failed to load ShoppingView", err);
+    window.location.reload();
+    return { default: () => <div>Loading...</div> };
+  })
+);
 
 // --- BASE DE DATOS MOCK (Sincronizada en toda la app) ---
 const TRACKS = [
@@ -1826,7 +1832,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020202] text-[#ff006e] font-mono selection:bg-[#ff006e] selection:text-black overflow-hidden">
+    <div className="h-[100dvh] flex bg-[#020202] text-[#ff006e] font-mono selection:bg-[#ff006e] selection:text-black overflow-hidden">
       {/* Hidden Global Ingest Inputs */}
       <input
         id="global-ingest-log"
@@ -2511,6 +2517,7 @@ const Dashboard = React.memo(({
                     setFollowedCommunities(updated);
                   }}
                   navigateToProfile={navigateToProfile}
+                  onMessageCommunity={(c) => { setActiveMessageUser({...c, isCommunity: true}); setView('messages'); }}
                   onPlayTrack={(track) => {
                     const tId = track.id || track.Id;
                     const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
@@ -2826,7 +2833,7 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 100, opacity: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 28 }}
-      className={`fixed bottom-0 lg:bottom-4 transition-all duration-500 left-0 right-0 ${isSidebarCollapsed ? 'lg:left-[6rem]' : 'lg:left-[17rem]'} lg:right-4 backdrop-blur-3xl p-2.5 lg:p-3 pb-6 lg:pb-3 flex items-center gap-3 z-[100] ${isMessages
+      className={`fixed bottom-0 lg:bottom-4 transition-all duration-500 left-0 right-0 ${isSidebarCollapsed ? 'lg:left-[6rem]' : 'lg:left-[17rem]'} lg:right-4 backdrop-blur-3xl p-1.5 lg:p-3 pb-3 lg:pb-3 flex items-center gap-3 z-[100] ${isMessages
         ? 'bg-black/95 border-t border-white/5 lg:border lg:rounded-sm lg:shadow-none'
         : 'bg-[#020202]/95 border-t border-white/5 lg:border-white/5 lg:rounded-md shadow-[0_-15px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_10px_60px_-15px_rgba(255,0,110,0.15)]'
         } group/player overflow-hidden`}
@@ -3577,6 +3584,22 @@ const FeedContent = React.memo(({
             <div className="w-24 h-px bg-[#ff006e]/10 border-t border-dashed border-[#ff006e]/20" />
           </div>
 
+          {/* Mobile Actions */}
+          <div className="flex lg:hidden items-center gap-2">
+            <button 
+              onClick={() => setShowGlobalIngest(true)} 
+              className="px-2 py-1 bg-[#ff006e]/10 text-[#ff006e] border border-[#ff006e]/20 text-[8px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all"
+            >
+              + POST
+            </button>
+            <button 
+              onClick={() => setShowGlobalUpload(true)} 
+              className="px-2 py-1 bg-[#ff006e]/10 text-[#ff006e] border border-[#ff006e]/20 text-[8px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all"
+            >
+              + TRACK
+            </button>
+          </div>
+
           <div className="bg-black/60 backdrop-blur-sm p-1 rounded-sm border border-[#ff006e]/10 shrink-0">
             <RefreshCw
               size={16}
@@ -3676,7 +3699,7 @@ const FeedContent = React.memo(({
 
                     const sectorColor = SECTORS[item.sectorId || item.SectorId]?.color || '#ff006e';
                     return (
-                      <div key={item.Id} className="group transition-colors hover:bg-white/[0.05] py-4 px-5 rounded border border-white/5 hover:border-white/10 relative mb-6 max-w-2xl mx-auto w-full bg-black/20 flex flex-col max-h-[80vh]" style={{ borderLeft: `2px solid ${sectorColor}` }}>
+                      <div key={item.Id} className="group transition-colors hover:bg-white/[0.05] py-2 px-3 sm:py-4 sm:px-5 rounded border border-white/5 hover:border-white/10 relative mb-3 sm:mb-6 max-w-2xl mx-auto w-full bg-black/20 flex flex-col max-h-[80vh]" style={{ borderLeft: `2px solid ${sectorColor}` }}>
                         {!isOriginal && repostedBy && (
                           <div className="flex items-center gap-2 mb-1 px-1">
                             <Repeat size={10} className="text-[#ff006e] animate-pulse" />
@@ -4285,6 +4308,7 @@ const PlayerContent = ({
         />
       ) : (
         <IPodPlayer
+          user={user}
           forceNowPlaying={forceNowPlaying}
           isLandscape={isLandscape}
           currentTrackIndex={currentTrackIndex}
@@ -4293,6 +4317,7 @@ const PlayerContent = ({
           setIsPlaying={setIsPlaying}
           tracks={tracks}
           libraryTracks={libraryTracks}
+          userPlaylists={userPlaylists}
           onMinimize={() => setView('discovery')}
           currentTime={currentTime}
           duration={duration}

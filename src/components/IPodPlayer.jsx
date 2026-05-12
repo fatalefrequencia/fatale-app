@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNotification } from '../contexts/NotificationContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import {
-    Play, Pause, SkipBack, SkipForward, Music,
-    ChevronRight, Zap, Minimize2, Download as DownloadIcon, Heart,
-    Wifi, Disc, User, List, DollarSign, Search, Video, Radio as AntennaIcon, RefreshCw
+    Play, Pause, SkipBack, SkipForward, Music, ArrowLeft,
+    ChevronRight, Zap, Minimize2, Maximize2, Download as DownloadIcon, Heart,
+    Wifi, Disc, User, List, DollarSign, Search, Video, Radio as AntennaIcon, RefreshCw,
+    Plus, X, Layers
 } from 'lucide-react';
 import skullImg from '../assets/skull_neon_fuscia.png';
 
@@ -15,6 +16,7 @@ export const IPodPlayer = ({
     isLandscape,
     tracks,
     libraryTracks = [], // New prop for full library
+    userPlaylists = [], // New prop for playlists
     currentTrackIndex,
     setCurrentTrackIndex,
     isPlaying,
@@ -61,12 +63,34 @@ export const IPodPlayer = ({
     const [playlistTracks, setPlaylistTracks] = useState([]);
     const [activePlaylistName, setActivePlaylistName] = useState('');
     const [isSearching, setIsSearching] = useState(false);
+    const [recommendedTracks, setRecommendedTracks] = useState([]);
+
+    useEffect(() => {
+        const fetchRecommendations = async () => {
+            const userId = user?.id || user?.Id;
+            const currentTrack = tracks && tracks.length > 0 ? tracks[currentTrackIndex] : null;
+            const title = currentTrack?.title || currentTrack?.Title || '';
+            const artist = currentTrack?.artist || currentTrack?.ArtistName || '';
+            const fallback = title ? `${artist || title} radio`.trim() : '';
+
+                try {
+                    const API = await import('../services/api').then(m => m.default);
+                    const res = await API.Youtube.getDiscoveryNodes('', userId, fallback).catch(() => null);
+                    setRecommendedTracks(Array.isArray(res?.data) ? res.data.slice(0, 10) : []);
+                } catch (error) {
+                    console.error("Error fetching recommendations:", error);
+                }
+        };
+        fetchRecommendations();
+    }, [currentTrackIndex, tracks, user]);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isSearchingYoutube, setIsSearchingYoutube] = useState(false);
     const [isDeletingPlaylist, setIsDeletingPlaylist] = useState(false);
     const [activePlaylistId, setActivePlaylistId] = useState(null);
     const [showResonantStations, setShowResonantStations] = useState(false);
+    const [isFullView, setIsFullView] = useState(false);
+    const [fullViewTab, setFullViewTab] = useState('playlist'); // 'playlist' | 'library' | 'favorites'
     const [resonantStations, setResonantStations] = useState([]);
     const [resonantTag, setResonantTag] = useState('');
     const [loadingStations, setLoadingStations] = useState(false);
@@ -971,6 +995,13 @@ export const IPodPlayer = ({
         }
     };
 
+    const getMediaUrl = (url) => {
+        if (!url) return '';
+        if (url.startsWith('http')) return url;
+        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        return `${API_URL}${url}`;
+    };
+
     return (
         <div className="w-full h-full flex items-center justify-center p-4">
             <input
@@ -985,11 +1016,11 @@ export const IPodPlayer = ({
 
             {/* ... Existing JSX ... */}
             {/* LARGE PREMIUM FRAME - REDUCED BORDER */}
-            <div className={`relative w-full ${isVertical ? 'max-w-[280px] h-[480px] rounded-[30px] p-4' : 'max-w-[500px] h-[700px] max-h-[95vh] sm:max-h-[700px] rounded-[55px] p-8'} bg-[#000] border-[6px] border-[#333] shadow-[0_50px_120px_rgba(255,0,110,0.2),inset_0_2px_10px_rgba(255,0,110,0.1)] flex flex-col items-center select-none shrink-0 border-t-[#333] border-l-[#222] transition-all duration-500`}>
+            <div className={`relative w-full ${isFullView ? 'max-w-full h-full rounded-[20px] p-4' : (isVertical ? 'max-w-[280px] h-[480px] rounded-[30px] p-4' : 'max-w-[500px] h-[700px] max-h-[95vh] sm:max-h-[700px] rounded-[55px] p-8')} bg-[#000] border-[6px] border-[#333] shadow-[0_50px_120px_rgba(255,0,110,0.2),inset_0_2px_10px_rgba(255,0,110,0.1)] flex flex-col items-center select-none shrink-0 border-t-[#333] border-l-[#222] transition-all duration-500`}>
                 {/* ... */}
 
                 {/* SCREEN CONTAINER */}
-                <div className={`w-full ${isVertical ? 'h-[190px]' : 'h-[320px]'} bg-black rounded-2xl border-4 border-[#f00060]/20 overflow-hidden relative shadow-[inset_0_0_50px_rgba(255,0,110,0.1)] flex flex-col transition-all duration-300`}>
+                <div className={`w-full ${isFullView ? 'flex-1' : (isVertical ? 'h-[190px]' : 'h-[320px]')} bg-black rounded-2xl border-4 border-[#f00060]/20 overflow-hidden relative shadow-[inset_0_0_50px_rgba(255,0,110,0.1)] flex flex-col transition-all duration-300`}>
 
                     {/* STATUS BAR - REDESIGNED */}
                     <div className="h-7 bg-gradient-to-b from-[#1a1a1a] to-black/40 backdrop-blur-md border-b border-[#f00060]/30 flex justify-between items-center px-4 z-20">
@@ -1007,7 +1038,238 @@ export const IPodPlayer = ({
                     {/* CONTENT AREA */}
                     <div className="flex-1 bg-[#050505] relative overflow-hidden">
                         <AnimatePresence mode="wait">
-                            {screen === 'NOW_PLAYING' ? (
+                            {isFullView ? (
+                                // --- FULL PLAYLIST VIEW ---
+                                <motion.div
+                                    key="full-list"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="fixed inset-0 z-[100] bg-[#0a0a0a] p-6 flex flex-col font-mono text-white"
+                                >
+                                    {/* Header */}
+                                    <div className="flex justify-between items-center mb-6">
+                                        <div className="flex items-center gap-4">
+                                            <button onClick={() => setIsFullView(false)} className="text-white/60 hover:text-white transition-colors">
+                                                <ArrowLeft size={24} />
+                                            </button>
+                                            <h1 className="text-xl font-black text-white tracking-tight">Tu biblioteca</h1>
+                                        </div>
+                                        <div className="flex gap-4 text-white/60">
+                                            <Search size={20} className="cursor-pointer hover:text-white" />
+                                            <Plus size={20} className="cursor-pointer hover:text-white" />
+                                        </div>
+                                    </div>
+
+                                    {/* Filter Bubbles */}
+                                    <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar pb-1">
+                                        <button onClick={() => setFullViewTab('playlist')} className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${fullViewTab === 'playlist' ? 'bg-[#f00060] text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}>En reproducción</button>
+                                        <button onClick={() => setFullViewTab('library')} className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${fullViewTab === 'library' ? 'bg-[#f00060] text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}>Playlists</button>
+                                        <button onClick={() => setFullViewTab('favorites')} className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${fullViewTab === 'favorites' ? 'bg-[#f00060] text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}>Favoritos</button>
+                                        <button onClick={() => setFullViewTab('player')} className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${fullViewTab === 'player' ? 'bg-[#f00060] text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}>Reproductor</button>
+                                    </div>
+
+                                    {/* List */}
+                                    <div className="flex-1 overflow-y-auto no-scrollbar space-y-4">
+                                        {fullViewTab === 'playlist' && (
+                                            <>
+                                                {tracks.map((t, idx) => (
+                                                    <div 
+                                                        key={idx} 
+                                                        className="flex items-center gap-3 cursor-pointer group"
+                                                        onClick={() => { setCurrentTrackIndex(idx); setIsPlaying(true); }}
+                                                    >
+                                                        <div className="w-12 h-12 bg-white/5 flex items-center justify-center rounded-sm overflow-hidden shrink-0">
+                                                            {t.ImageUrl || t.imageUrl ? (
+                                                                <img src={getMediaUrl(t.ImageUrl || t.imageUrl)} alt="" className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <Music size={20} className="text-[#f00060]/40" />
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className={`text-xs font-bold truncate ${idx === currentTrackIndex ? 'text-[#f00060]' : 'text-white'}`}>{t.title || t.Title || 'Untitled'}</div>
+                                                            <div className="text-[10px] text-white/40 truncate mt-0.5">
+                                                                {(() => {
+                                                                    const artist = t.artist || t.ArtistName || t.author || t.Author || t.channelTitle || t.ChannelTitle;
+                                                                    if (artist && artist !== 'YouTube') return artist;
+                                                                    const title = t.title || t.Title || '';
+                                                                    if (title.includes(' - ')) return title.split(' - ')[0];
+                                                                    return 'YouTube';
+                                                                })()}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+
+                                                {recommendedTracks && recommendedTracks.length > 0 && (
+                                                    <div className="mt-6 pt-4 border-t border-white/5">
+                                                        {/* Section 1: Sugerencias para hoy */}
+                                                        <h2 className="text-xs font-black text-white/60 mb-3 uppercase tracking-wider">Sugerencias para hoy</h2>
+
+
+                                                         <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+                                                             {recommendedTracks.slice(0, 5).map((t, idx) => (
+                                                                 <div 
+                                                                     key={`rec-${idx}`} 
+                                                                     className="w-32 shrink-0 cursor-pointer group"
+                                                                     onClick={() => onPlayPlaylist && onPlayPlaylist(recommendedTracks, idx)}
+                                                                 >
+                                                                     <div className="w-32 h-32 bg-white/5 flex items-center justify-center rounded-md overflow-hidden mb-2 relative">
+                                                                         {t.ImageUrl || t.imageUrl ? (
+                                                                             <img src={getMediaUrl(t.ImageUrl || t.imageUrl)} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                                                         ) : (
+                                                                             <Music size={32} className="text-[#f00060]/40" />
+                                                                         )}
+                                                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                             <Play size={24} className="text-white" />
+                                                                         </div>
+                                                                     </div>
+                                                                     <div className="text-xs font-bold text-white truncate">{t.title || t.Title || 'Untitled'}</div>
+                                                                     <div className="text-[10px] text-white/40 truncate mt-0.5">
+                                                                         {t.artist || t.ArtistName || 'YouTube'}
+                                                                     </div>
+                                                                 </div>
+                                                             ))}
+                                                         </div>
+
+                                                         {/* Section 2: Vuelve a tu música */}
+                                                         <h2 className="text-xs font-black text-white/60 mb-3 mt-6 uppercase tracking-wider">Vuelve a tu música</h2>
+                                                         <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+                                                             {tracks.slice(0, 5).map((t, idx) => (
+                                                                 <div 
+                                                                     key={`back-${idx}`} 
+                                                                     className="w-32 shrink-0 cursor-pointer group"
+                                                                     onClick={() => setCurrentTrackIndex(idx)}
+                                                                 >
+                                                                     <div className="w-32 h-32 bg-white/5 flex items-center justify-center rounded-md overflow-hidden mb-2 relative">
+                                                                         {t.ImageUrl || t.imageUrl ? (
+                                                                             <img src={getMediaUrl(t.ImageUrl || t.imageUrl)} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                                                         ) : (
+                                                                             <Music size={32} className="text-[#f00060]/40" />
+                                                                         )}
+                                                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                             <Play size={24} className="text-white" />
+                                                                         </div>
+                                                                     </div>
+                                                                     <div className="text-xs font-bold text-white truncate">{t.title || t.Title || 'Untitled'}</div>
+                                                                     <div className="text-[10px] text-white/40 truncate mt-0.5">
+                                                                         {t.artist || t.ArtistName || 'YouTube'}
+                                                                     </div>
+                                                                 </div>
+                                                             ))}
+                                                         </div>
+                                                     </div>
+                                                 )}
+                                            </>
+                                        )}
+
+                                        {fullViewTab === 'player' && (
+                                            <div className="flex-1 flex flex-col items-center justify-center space-y-6 py-10">
+                                                {/* Big Cover Art */}
+                                                <div 
+                                                    className="w-64 h-64 bg-white/5 flex items-center justify-center rounded-lg overflow-hidden shadow-2xl cursor-pointer hover:scale-[1.02] transition-transform"
+                                                    onClick={() => setFullViewTab('playlist')}
+                                                    title="Ver lista de reproducción"
+                                                >
+                                                    {tracks[currentTrackIndex]?.ImageUrl || tracks[currentTrackIndex]?.imageUrl ? (
+                                                        <img src={getMediaUrl(tracks[currentTrackIndex].ImageUrl || tracks[currentTrackIndex].imageUrl)} alt="" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <Music size={64} className="text-[#f00060]/40" />
+                                                    )}
+                                                </div>
+                                                
+                                                {/* Title and Artist */}
+                                                <div className="text-center max-w-[80%] cursor-pointer" onClick={() => setFullViewTab('playlist')}>
+                                                    <h2 className="text-xl font-black text-white truncate">{tracks[currentTrackIndex]?.title || tracks[currentTrackIndex]?.Title || 'Sin título'}</h2>
+                                                    <p className="text-sm text-white/60 mt-1 truncate">
+                                                        {(() => {
+                                                            const t = tracks[currentTrackIndex];
+                                                            if (!t) return 'Desconocido';
+                                                            const artist = t.artist || t.ArtistName || t.author || t.Author || t.channelTitle || t.ChannelTitle;
+                                                            if (artist && artist !== 'YouTube') return artist;
+                                                            const title = t.title || t.Title || '';
+                                                            if (title.includes(' - ')) return title.split(' - ')[0];
+                                                            return 'YouTube';
+                                                        })()}
+                                                    </p>
+                                                </div>
+                                                
+                                                {/* Progress Bar */}
+                                                <div className="w-[80%] max-w-md space-y-2">
+                                                    <div 
+                                                        className="relative w-full h-1 bg-white/10 rounded-full cursor-pointer"
+                                                        onClick={(e) => {
+                                                            const rect = e.currentTarget.getBoundingClientRect();
+                                                            const percent = (e.clientX - rect.left) / rect.width;
+                                                            onSeek(percent * duration);
+                                                        }}
+                                                    >
+                                                        <div className="absolute top-0 left-0 h-full bg-[#f00060] rounded-full" style={{ width: `${(currentTime / duration) * 100}%` }}></div>
+                                                        <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg" style={{ left: `${(currentTime / duration) * 100}%` }}></div>
+                                                    </div>
+                                                    <div className="flex justify-between text-[10px] text-white/40 font-mono">
+                                                        <span>{formatTime(currentTime)}</span>
+                                                        <span>{formatTime(duration)}</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Controls */}
+                                                <div className="flex items-center gap-6">
+                                                    <button className="text-white/40 hover:text-white transition-colors">
+                                                        <RefreshCw size={20} />
+                                                    </button>
+                                                    <button onClick={() => setCurrentTrackIndex(prev => Math.max(0, prev - 1))} className="text-white/60 hover:text-white transition-colors">
+                                                        <SkipBack size={32} />
+                                                    </button>
+                                                    <button onClick={() => setIsPlaying(!isPlaying)} className="w-16 h-16 bg-[#f00060] text-black rounded-full flex items-center justify-center hover:bg-[#d00050] transition-colors shadow-lg">
+                                                        {isPlaying ? <Pause size={32} /> : <Play size={32} />}
+                                                    </button>
+                                                    <button onClick={() => setCurrentTrackIndex(prev => Math.min(tracks.length - 1, prev + 1))} className="text-white/60 hover:text-white transition-colors">
+                                                        <SkipForward size={32} />
+                                                    </button>
+                                                    <button className="text-white/40 hover:text-white transition-colors">
+                                                        <Layers size={20} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {fullViewTab === 'library' && userPlaylists.map((p, idx) => (
+                                            <div 
+                                                key={idx} 
+                                                className="flex items-center gap-3 cursor-pointer group"
+                                                onClick={() => { /* Handle playlist click */ }}
+                                            >
+                                                <div className="w-12 h-12 bg-[#f00060]/10 flex items-center justify-center rounded-sm shrink-0">
+                                                    <Layers size={20} className="text-[#f00060]" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-xs font-bold text-white truncate">{p.name || p.Name || 'Untitled'}</div>
+                                                    <div className="text-[10px] text-white/40 truncate mt-0.5">Playlist • {p.tracks?.length || 0} canciones</div>
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {fullViewTab === 'favorites' && libraryTracks.filter(t => t.isLiked).map((t, idx) => (
+                                            <div 
+                                                key={idx} 
+                                                className="flex items-center gap-3 cursor-pointer group"
+                                                onClick={() => { /* Handle track click */ }}
+                                            >
+                                                <div className="w-12 h-12 bg-[#ff006e]/20 flex items-center justify-center rounded-sm shrink-0">
+                                                    <Heart size={20} className="text-[#ff006e]" fill="currentColor" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-xs font-bold text-white truncate">{t.title || t.Title || 'Untitled'}</div>
+                                                    <div className="text-[10px] text-white/40 truncate mt-0.5">Track • {t.artist || t.Artist || 'Unknown'}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+
+                                </motion.div>
+                            ) : screen === 'NOW_PLAYING' ? (
                                 // --- NOW PLAYING (THE SLEEK LOOK) ---
                                 <motion.div
                                     key="now-playing"
@@ -1125,6 +1387,16 @@ export const IPodPlayer = ({
                                                 title="Resonant Stations"
                                             >
                                                 <AntennaIcon size={isVertical ? 14 : 18} strokeWidth={3} />
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setIsFullView(true);
+                                                }}
+                                                className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1"
+                                                title="Full Playlist"
+                                            >
+                                                <Maximize2 size={isVertical ? 14 : 18} strokeWidth={3} />
                                             </button>
                                         </div>
 
@@ -1303,7 +1575,9 @@ export const IPodPlayer = ({
                 </div>
 
                 {/* CLICK WHEEL SECTION */}
-                <div className={`flex-1 w-full flex items-center justify-center relative ${isVertical ? 'pt-4 pb-1' : 'pt-10 pb-6'}`}>
+                {!isFullView && (
+                    <>
+                    <div className={`flex-1 w-full flex items-center justify-center relative ${isVertical ? 'pt-4 pb-1' : 'pt-10 pb-6'}`}>
                     {/* EVOLVE BUTTON — bottom-right of circle */}
 
                     <div
@@ -1349,10 +1623,19 @@ export const IPodPlayer = ({
                             </AnimatePresence>
                         </button>
                     </div>
+                    </div>
+                    
+                    {/* EXPAND BUTTON IN LOWER CORNER */}
+                    <button 
+                        onClick={() => setIsFullView(true)} 
+                        className="absolute bottom-4 right-4 text-[#f00060] hover:text-white transition-colors bg-black/80 border border-[#f00060]/30 rounded-full p-2 z-50 shadow-[0_0_10px_rgba(255,0,110,0.3)]"
+                        title="Expand Player"
+                    >
+                        <Maximize2 size={16} />
+                    </button>
+                    </>
+                )}
                 </div>
-
-
             </div>
-        </div>
     );
 };

@@ -305,12 +305,13 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value.slice(0, 140))}
-                    placeholder={t('TRANSMIT_SIGNAL') + '...'}
-                    className="flex-1 bg-transparent border-none text-[10px] mono text-white outline-none placeholder:text-white/10"
+                    placeholder={isMember ? (t('TRANSMIT_SIGNAL') + '...') : "[ ÚNETE AL CLIQUE PARA TRANSMITIR ]"}
+                    disabled={!isMember}
+                    className="flex-1 bg-transparent border-none text-[10px] mono text-white outline-none placeholder:text-white/10 disabled:opacity-50"
                 />
                 <div className="w-10 flex items-center justify-center">
                     <button 
-                        disabled={!newMessage.trim() || sending}
+                        disabled={!isMember || !newMessage.trim() || sending}
                         className="p-2 transition-all hover:scale-110 disabled:opacity-20"
                         style={{ color }}
                     >

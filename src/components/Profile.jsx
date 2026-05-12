@@ -1789,15 +1789,6 @@ export const ProfileView = React.memo(({
         return (
             <div 
                 className="console-container pt-12" 
-                onWheel={(e) => { if (e.deltaY > 30) setViewMode('DASHBOARD'); }}
-                onTouchStart={(e) => { touchStartY.current = e.touches[0].clientY; }}
-                onTouchEnd={(e) => {
-                    const touchEndY = e.changedTouches[0].clientY;
-                    const deltaY = touchEndY - touchStartY.current;
-                    if (deltaY > 50) {
-                        setViewMode('DASHBOARD');
-                    }
-                }}
             >
                 <motion.div 
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -1942,16 +1933,6 @@ export const ProfileView = React.memo(({
         return (
             <div 
                 className="dashboard-grid custom-scrollbar" 
-                onWheel={(e) => { if (e.currentTarget.scrollTop === 0 && e.deltaY < -30) setViewMode('CONSOLE'); }}
-                onTouchStart={(e) => { touchStartY.current = e.touches[0].clientY; }}
-                onTouchEnd={(e) => {
-                    const touchEndY = e.changedTouches[0].clientY;
-                    const deltaY = touchEndY - touchStartY.current;
-                    const isAtBottom = e.currentTarget.scrollTop + e.currentTarget.clientHeight >= e.currentTarget.scrollHeight - 10;
-                    if (isAtBottom && deltaY < -50) {
-                        setViewMode('CONSOLE');
-                    }
-                }}
             >
                 {/* Identity Core Panel (Upper Right) */}
                 <div className="identity-core-panel">

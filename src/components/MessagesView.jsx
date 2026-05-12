@@ -3,11 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Search, Edit, MoreHorizontal, Phone, Volume2, Send, ChevronLeft, User, X, Heart } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import API from '../services/api';
+import CommunityTerminal from './discovery/CommunityTerminal';
 import { API_BASE_URL, getMediaUrl } from '../constants';
 
 export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
     const { t } = useLanguage();
     const [conversations, setConversations] = useState([]);
+    const [communities, setCommunities] = useState([]);
     const [currentChat, setCurrentChat] = useState(null); // The user object we are chatting with
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
@@ -33,6 +35,18 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
             console.error("Failed to fetch conversations", err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchFollowedCommunities = async () => {
+        try {
+            const followedIds = API.Communities.getFollowed();
+            const res = await API.Communities.getAll();
+            const allComms = res.data || [];
+            const followed = allComms.filter(c => followedIds.includes(c.id));
+            setCommunities(followed);
+        } catch (err) {
+            console.error("Failed to fetch followed communities", err);
         }
     };
 
@@ -129,7 +143,11 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
 
     useEffect(() => {
         fetchConversations();
-        const interval = setInterval(fetchConversations, 5000);
+        fetchFollowedCommunities();
+        const interval = setInterval(() => {
+            fetchConversations();
+            fetchFollowedCommunities();
+        }, 5000);
         return () => clearInterval(interval);
     }, []);
 
@@ -138,7 +156,8 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
             setCurrentChat({
                 id: initialChatUser.id || initialChatUser.Id,
                 username: initialChatUser.username || initialChatUser.Username,
-                profileImageUrl: initialChatUser.profilePictureUrl || initialChatUser.ProfilePictureUrl || initialChatUser.profileImageUrl || initialChatUser.ProfileImageUrl
+                profileImageUrl: initialChatUser.profilePictureUrl || initialChatUser.ProfilePictureUrl || initialChatUser.profileImageUrl || initialChatUser.ProfileImageUrl,
+                isCommunity: initialChatUser.isCommunity
             });
         }
     }, [initialChatUser]);
@@ -173,14 +192,32 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
     };
 
     const openChat = (conv) => {
-        setCurrentChat({
-            id: conv.userId || conv.UserId,
-            username: conv.username || conv.Username,
-            profileImageUrl: conv.profileImageUrl || conv.ProfileImageUrl
-        });
+        if (conv.isCommunity) {
+            setCurrentChat({
+                isCommunity: true,
+                id: conv.id,
+                username: conv.username,
+                profileImageUrl: conv.profileImageUrl
+            });
+        } else {
+            setCurrentChat({
+                id: conv.userId || conv.UserId,
+                username: conv.username || conv.Username,
+                profileImageUrl: conv.profileImageUrl || conv.ProfileImageUrl
+            });
+        }
     };
 
     if (currentChat) {
+        if (currentChat.isCommunity) {
+            return (
+                <CommunityTerminal 
+                    community={currentChat} 
+                    user={user} 
+                    onBack={() => setCurrentChat(null)}
+                />
+            );
+        }
         return (
             <motion.div
                 initial={{ x: '100%', opacity: 0 }}
@@ -283,6 +320,17 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
             </motion.div>
         );
     }
+
+    const mappedCommunities = communities.map(c => ({
+        isCommunity: true,
+        id: c.id,
+        username: c.name,
+        profileImageUrl: c.imageUrl || c.ImageUrl,
+        unreadCount: 0,
+        timestamp: new Date(),
+        content: "Community Chat"
+    }));
+    const allConversations = [...conversations.filter(c => c && (c.userId || c.UserId)), ...mappedCommunities];
 
     return (
         <motion.div
@@ -419,7 +467,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                         <div className="w-px h-8 bg-[#ff006e]/40 animate-pulse" />
                         <div className="text-[10px] text-[#ff006e]/40 font-mono tracking-widest mt-4 uppercase">{t('CALIBRATING_FREQ')}</div>
                     </div>
-                ) : conversations.length === 0 ? (
+                ) : allConversations.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-48 text-center px-8">
                         <div className="text-white/15 font-mono uppercase tracking-widest text-[10px] mb-4">&gt; {t('NO_DATA_PULSES')}</div>
                         <button
@@ -430,7 +478,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                         </button>
                     </div>
                 ) : (
-                    conversations.filter(c => c && (c.userId || c.UserId)).map((conv) => {
+                    allConversations.map((conv) => {
                         const cid = conv.userId || conv.UserId;
                         const cusername = conv.username || conv.Username;
                         const cimg = conv.profileImageUrl || conv.ProfileImageUrl;

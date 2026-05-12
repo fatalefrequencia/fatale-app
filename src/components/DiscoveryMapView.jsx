@@ -258,7 +258,7 @@ const DiscoveryCanvas = ({
                 // Focus query specifically on high-quality professional music content
                 const baseQuery = sec.subgenres?.[0] || sec.name;
                 const query = `${baseQuery} "music video" official -playlist -relaxing -live`;
-                const res = await API.Youtube.getDiscoveryNodes(query).catch(() => null);
+                const res = await API.Youtube.getDiscoveryNodes(query, user?.id || user?.Id).catch(() => null);
 
                 // Filter for musical content and remove "noise" results
                 const items = (Array.isArray(res?.data) ? res.data : [])
@@ -533,7 +533,7 @@ const DiscoveryCanvas = ({
             try {
                 // Refine search query for music quality
                 const refinedQuery = `${query} music artist official`;
-                const res = await API.Youtube.getDiscoveryNodes(refinedQuery).catch(err => {
+                const res = await API.Youtube.getDiscoveryNodes(refinedQuery, user?.id || user?.Id).catch(err => {
                     if (err.response?.status === 403 || err.response?.data?.includes('quota')) {
                         showNotification('YouTube API quota exceeded. Try again tomorrow.', 'warning');
                     }

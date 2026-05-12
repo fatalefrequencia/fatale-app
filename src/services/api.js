@@ -162,7 +162,7 @@ const API = {
         saveTrack: (trackData) => api.post('YoutubeTracks/save', trackData),
         getTrack: (videoId) => api.get(`YoutubeTracks/by-youtube-id/${videoId}`),
         getRecentTracks: () => api.get('YoutubeTracks/recent'),
-        getDiscoveryNodes: (query) => api.get(`Youtube/discovery-nodes?query=${encodeURIComponent(query || '')}`),
+        getDiscoveryNodes: (query, userId, fallbackQuery) => api.get(`Youtube/discovery-nodes?query=${encodeURIComponent(query || '')}${userId ? `&userId=${userId}` : ''}${fallbackQuery ? `&fallbackQuery=${encodeURIComponent(fallbackQuery)}` : ''}`),
     },
     Messages: {
         getConversations: () => api.get('Messages/conversations'),

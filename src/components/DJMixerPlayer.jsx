@@ -1007,7 +1007,7 @@ const DJMixerPlayer = ({
                                 <div className="ingest-info truncate">{deckA?.title || t('NO_SIGNAL_BROADCAST')}</div>
                                 <div className="ingest-actions">
                                     <button onClick={() => onLike(deckA)} className="ingest-btn" title={t('ADD_TO_PLAYLIST')}><Plus size={10} /></button>
-                                    <button onClick={() => onPurchase(deckA)} className="ingest-btn" title={t('PURCHASE_FILE')}><DollarSign size={10} /></button>
+                                    {/* <button onClick={() => onPurchase(deckA)} className="ingest-btn" title={t('PURCHASE_FILE')}><DollarSign size={10} /></button> */}
                                 </div>
                             </div>
 
@@ -1221,7 +1221,7 @@ const DJMixerPlayer = ({
                                 <div className="ingest-info truncate">{deckB?.title || t('NO_SIGNAL_BROADCAST')}</div>
                                 <div className="ingest-actions">
                                     <button onClick={() => onLike(deckB)} className="ingest-btn" title={t('ADD_TO_PLAYLIST')}><Plus size={10} /></button>
-                                    <button onClick={() => onPurchase(deckB)} className="ingest-btn" title={t('PURCHASE_FILE')}><DollarSign size={10} /></button>
+                                    {/* <button onClick={() => onPurchase(deckB)} className="ingest-btn" title={t('PURCHASE_FILE')}><DollarSign size={10} /></button> */}
                                 </div>
                             </div>
 
@@ -1455,7 +1455,7 @@ const DJMixerPlayer = ({
                                 {isPlayingA ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
                             </button>
                             <button onClick={onNext} className="control-btn"><SkipForward size={16} /></button>
-                            <button onClick={() => onPurchase(deckA)} className="control-btn"><DollarSign size={16} /></button>
+                            {/* <button onClick={() => onPurchase(deckA)} className="control-btn"><DollarSign size={16} /></button> */}
                         </div>
 
                         <div className="listener-mode-toggle">
