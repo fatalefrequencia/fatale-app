@@ -171,6 +171,7 @@ function App() {
   const [showMixer, setShowMixer] = useState(false);
   const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
   const isMobile = window.innerWidth < 1024;
+  const [feedBackgroundImage, setFeedBackgroundImage] = useState(localStorage.getItem('feedBackgroundImage') || '');
 
   // EQ / Filter State
   const audioCtx = useRef(null);
@@ -241,6 +242,18 @@ function App() {
   }, [keyLockA]);
 
   const onEqA = (type, val) => handleEqChange(type, val);
+
+  const handleBackgroundChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFeedBackgroundImage(reader.result);
+        localStorage.setItem('feedBackgroundImage', reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => setIsLandscape(window.innerWidth > window.innerHeight);
@@ -3463,7 +3476,6 @@ const FeedContent = React.memo(({
           <div className="p-4 space-y-1">
             <button onClick={() => setShowGlobalIngest(true)} className="w-full text-left p-2 text-[10px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e10] transition-all uppercase tracking-widest">{`> NEW_POST`} </button>
             <button onClick={() => setShowGlobalUpload(true)} className="w-full text-left p-2 text-[10px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e10] transition-all uppercase tracking-widest">{`> UPLOAD_TRACK`} </button>
-            <button onClick={() => setShowGlobalGoLive(true)} className="w-full text-left p-2 text-[10px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e10] transition-all uppercase tracking-widest">{`> LIVE_STREAM`} </button>
           </div>
         </div>
 
@@ -3546,7 +3558,7 @@ const FeedContent = React.memo(({
       <div className="flex-1 flex flex-col h-full bg-[#05050a]/40 relative">
 
         {loading && (
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#ff006e]/20 z-50 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#ff006e]/20 z-50 overflow-hidden" style={{ zIndex: 100 }}>
             <motion.div
               className="h-full bg-[#ff006e] shadow-[0_0_10px_#ff006e]"
               initial={{ x: "-100%" }}
@@ -4003,7 +4015,6 @@ const FeedContent = React.memo(({
                     <div className="p-3 space-y-1">
                       <button onClick={() => { setShowGlobalIngest(true); setMobilePanelOpen(false); }} className="w-full text-left p-2 text-[9px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/10 transition-all uppercase tracking-widest">{`> NEW_POST`}</button>
                       <button onClick={() => { setShowGlobalUpload(true); setMobilePanelOpen(false); }} className="w-full text-left p-2 text-[9px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/10 transition-all uppercase tracking-widest">{`> UPLOAD_TRACK`}</button>
-                      <button onClick={() => { setShowGlobalGoLive(true); setMobilePanelOpen(false); }} className="w-full text-left p-2 text-[9px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/10 transition-all uppercase tracking-widest">{`> LIVE_STREAM`}</button>
                     </div>
                   </div>
 

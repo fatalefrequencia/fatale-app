@@ -220,28 +220,41 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                         const senderAvatar = isMe ? (user?.profilePictureUrl || user?.ProfilePictureUrl || user?.profileImageUrl || user?.ProfileImageUrl) : (currentChat.profileImageUrl || currentChat.ProfileImageUrl);
 
                         return (
-                            <div key={m.id || i} className="group flex gap-2 text-[13px] leading-relaxed items-start">
-                                <span className="text-white/20 shrink-0 select-none font-mono">
-                                    [{new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}]
-                                </span>
-                                <div className="w-5 h-5 flex-shrink-0 border border-white/10 flex items-center justify-center overflow-hidden relative bg-black mt-0.5">
-                                    {senderAvatar ? (
-                                        <img src={getMediaUrl(senderAvatar)} alt="User" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <span className="font-mono text-white/20 text-[10px] font-black">{senderUsername?.[0]?.toUpperCase()}</span>
-                                    )}
-                                </div>
-                                <div className="flex-1">
-                                    <span
-                                        onClick={() => !isMe && navigateToProfile(m.senderId || m.SenderId)}
-                                        className={`font-black uppercase tracking-tight cursor-pointer mr-2 ${isMe ? 'text-[#ff006e]' : 'text-cyan-400 hover:underline'}`}
-                                    >
-                                        [{senderUsername}]
-                                    </span>
-                                    <span className={isMe ? 'text-white/90' : 'text-white/70'}>
+                            <div key={m.id || i} className={`group flex gap-3 text-[13px] leading-relaxed items-start ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                {!isMe && (
+                                    <div className="w-6 h-6 flex-shrink-0 border border-white/10 flex items-center justify-center overflow-hidden relative bg-black mt-0.5">
+                                        {senderAvatar ? (
+                                            <img src={getMediaUrl(senderAvatar)} alt="User" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="font-mono text-white/20 text-[10px] font-black">{senderUsername?.[0]?.toUpperCase()}</span>
+                                        )}
+                                    </div>
+                                )}
+                                <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span
+                                            onClick={() => !isMe && navigateToProfile(m.senderId || m.SenderId)}
+                                            className={`font-black uppercase tracking-tight cursor-pointer text-[10px] ${isMe ? 'text-[#ff006e]' : 'text-cyan-400 hover:underline'}`}
+                                        >
+                                            {senderUsername}
+                                        </span>
+                                        <span className="text-white/20 text-[9px] font-mono">
+                                            {new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                        </span>
+                                    </div>
+                                    <div className={`p-3 border ${isMe ? 'border-[#ff006e]/20 bg-[#ff006e]/5 text-white' : 'border-white/10 bg-white/[0.02] text-white/80'} max-w-[80%] break-words`}>
                                         {content}
-                                    </span>
+                                    </div>
                                 </div>
+                                {isMe && (
+                                    <div className="w-6 h-6 flex-shrink-0 border border-[#ff006e]/20 flex items-center justify-center overflow-hidden relative bg-black mt-0.5">
+                                        {senderAvatar ? (
+                                            <img src={getMediaUrl(senderAvatar)} alt="User" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="font-mono text-[#ff006e]/40 text-[10px] font-black">{senderUsername?.[0]?.toUpperCase()}</span>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         );
                     })}

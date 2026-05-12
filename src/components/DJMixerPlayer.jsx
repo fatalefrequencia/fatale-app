@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SkipBack, SkipForward, Play, Pause, Zap, Disc, MessageSquare, List, Search, Plus, DollarSign, Users, Radio, Heart, Music, Shuffle, Settings, Check } from 'lucide-react';
+import { SkipBack, SkipForward, Play, Pause, Zap, Disc, MessageSquare, List, Search, Plus, DollarSign, Users, Radio, Heart, Music, Shuffle, Settings, Check, Star } from 'lucide-react';
 import { getMediaUrl, API_BASE_URL } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import YouTube from 'react-youtube';
@@ -109,6 +109,8 @@ const DJMixerPlayer = ({
     const [selectedTracksObjects, setSelectedTracksObjects] = useState([]);
     const [localPlaylists, setLocalPlaylists] = useState(userPlaylists || []);
     const [isSavingPlaylist, setIsSavingPlaylist] = useState(false);
+    const [selectedPlaylistsForDeletion, setSelectedPlaylistsForDeletion] = useState([]);
+    const [isShuffle, setIsShuffle] = useState(false);
 
     useEffect(() => {
         setLocalPlaylists(userPlaylists || []);
@@ -120,7 +122,39 @@ const DJMixerPlayer = ({
             const userId = userStr ? JSON.parse(userStr)?.id : null;
             if (!userId) return;
             const res = await API.Playlists.getUserPlaylists(userId);
-            setLocalPlaylists(res.data || []);
+            let backendPlaylists = res.data || [];
+            
+            if (backendPlaylists.length === 0) {
+                try {
+                    const allRes = await API.Playlists.getAll();
+                    const allPlaylists = allRes.data || [];
+                    backendPlaylists = allPlaylists.filter(p => p.userId === userId || p.UserId === userId || p.username === 'YOU' || p.Username === 'YOU');
+                    
+                    if (backendPlaylists.length === 0 && allPlaylists.length > 0) {
+                        backendPlaylists = allPlaylists;
+                    }
+                } catch (allErr) {
+                    console.error("Failed to fetch all playlists as fallback", allErr);
+                }
+            }
+            
+            setLocalPlaylists(prev => {
+                const backendIds = backendPlaylists.map(p => p.id || p.Id);
+                
+                const updatedBackend = backendPlaylists.map(bp => {
+                    const localVersion = prev.find(lp => (lp.id || lp.Id) === (bp.id || bp.Id));
+                    const bpTracks = bp.tracks || bp.Tracks || [];
+                    const lpTracks = localVersion ? (localVersion.tracks || localVersion.Tracks || []) : [];
+                    
+                    if (bpTracks.length === 0 && lpTracks.length > 0) {
+                        return { ...bp, tracks: lpTracks };
+                    }
+                    return bp;
+                });
+                
+                const localOnly = prev.filter(p => !backendIds.includes(p.id || p.Id));
+                return [...updatedBackend, ...localOnly];
+            });
         } catch (err) {
             console.error("Failed to refresh playlists", err);
         }
@@ -135,6 +169,122 @@ const DJMixerPlayer = ({
     const [chatInput, setChatInput] = useState('');
     const [viewMode, setViewMode] = useState(!isBroadcaster ? 'LISTENER' : 'MIXER');
     
+    const handleSavePlaylist = async () => {
+        if (!newPlaylistName || isSavingPlaylist) return;
+        setIsSavingPlaylist(true);
+        try {
+            let playlistId = editingPlaylistId;
+            if (!playlistId) {
+                const res = await API.Playlists.create({ name: newPlaylistName });
+                playlistId = res.id || res.Id;
+            } else {
+                await API.Playlists.update(playlistId, { name: newPlaylistName });
+            }
+
+            const currentTrackIds = (viewingPlaylist?.tracks || viewingPlaylist?.Tracks || []).map(t => t.id || t.Id);
+            
+            // Add new tracks
+            for (const trackId of selectedTracksForNewPlaylist) {
+                if (!currentTrackIds.includes(trackId)) {
+                    let effectiveTrackId = trackId;
+                    
+                    // Si es un track de YouTube (ID es string o no es un numero)
+                    if (typeof trackId === 'string' || isNaN(Number(trackId))) {
+                        const trackObj = selectedTracksObjects.find(t => (t.id || t.Id) === trackId);
+                        if (trackObj) {
+                            const youtubeId = trackObj.youtubeId || trackObj.id?.replace('yt-', '') || trackObj.Id?.replace('yt-', '');
+                            try {
+                                const existing = await API.YoutubeTracks.getByYoutubeId(youtubeId);
+                                if (existing.data) {
+                                    effectiveTrackId = existing.data.id || existing.data.Id || existing.data;
+                                } else {
+                                    const res = await API.YoutubeTracks.save({
+                                        YoutubeId: youtubeId,
+                                        Title: trackObj.title || trackObj.Title,
+                                        ChannelTitle: trackObj.artist || trackObj.Artist || "Unknown",
+                                        ThumbnailUrl: trackObj.imageUrl || trackObj.ImageUrl || trackObj.cover || trackObj.coverImageUrl || "",
+                                        ViewCount: trackObj.viewCount || 0,
+                                        Duration: trackObj.duration || "0:00"
+                                    });
+                                    effectiveTrackId = res.data.id || res.data.Id || res.data;
+                                }
+                            } catch (err) {
+                                // If get fails (404) or throws, try to save
+                                try {
+                                    const res = await API.YoutubeTracks.save({
+                                        YoutubeId: youtubeId,
+                                        Title: trackObj.title || trackObj.Title,
+                                        ChannelTitle: trackObj.artist || trackObj.Artist || "Unknown",
+                                        ThumbnailUrl: trackObj.imageUrl || trackObj.ImageUrl || trackObj.cover || trackObj.coverImageUrl || "",
+                                        ViewCount: trackObj.viewCount || 0,
+                                        Duration: trackObj.duration || "0:00"
+                                    });
+                                    effectiveTrackId = res.data.id || res.data.Id || res.data;
+                                } catch (err2) {
+                                    console.error("Failed to save YouTube track to database", err2);
+                                    continue; // Saltar si falla
+                                }
+                            }
+                        }
+                    }
+                    
+                    try {
+                        await API.Playlists.addTrack(playlistId, Number(effectiveTrackId));
+                    } catch (err) {
+                        console.error("Failed to add track using Playlists.addTrack, trying Collections.addToPlaylist", err);
+                        try {
+                            await API.Collections.addToPlaylist(playlistId, Number(effectiveTrackId));
+                        } catch (err2) {
+                            console.error("Failed to add track using Collections.addToPlaylist too", err2);
+                        }
+                    }
+                }
+            }
+
+            // Remove tracks
+            if (editingPlaylistId) {
+                for (const trackId of currentTrackIds) {
+                    if (!selectedTracksForNewPlaylist.includes(trackId)) {
+                        await API.Playlists.removeTrack(playlistId, trackId);
+                    }
+                }
+            }
+
+            const newPlaylistObj = {
+                id: playlistId,
+                name: newPlaylistName,
+                tracks: selectedTracksObjects,
+                imageUrl: playlistImage || 'https://via.placeholder.com/50?text=PL',
+                username: 'YOU'
+            };
+
+            // Update list optimistically
+            setLocalPlaylists(prev => {
+                if (editingPlaylistId) {
+                    return prev.map(p => (p.id || p.Id) === playlistId ? newPlaylistObj : p);
+                } else {
+                    return [...prev, newPlaylistObj];
+                }
+            });
+
+            setIsCreatingPlaylist(false);
+            setNewPlaylistName('');
+            setSelectedTracksForNewPlaylist([]);
+            setSelectedTracksObjects([]);
+            setPlaylistSearchQuery('');
+            setPlaylistSearchResults([]);
+            setEditingPlaylistId(null);
+            setViewingPlaylist(newPlaylistObj); // Auto-open!
+            
+            // Still refresh in background to be sure
+            refreshLocalPlaylists();
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsSavingPlaylist(false);
+        }
+    };
+
     const [deckA, setDeckA] = useState(currentTrack || null);
     const [deckB, setDeckB] = useState(null);
     const [deckBIndex, setDeckBIndex] = useState(-1); // Index in the crate for prev/next navigation
@@ -630,9 +780,11 @@ const DJMixerPlayer = ({
             setIsCrateLoading(true);
             try {
                 const tracks = await onFetchPlaylistTracks(p.id || p.Id);
-                setViewingPlaylist({ ...p, tracks });
+                const finalTracks = (tracks && tracks.length > 0) ? tracks : (p.tracks || p.Tracks || []);
+                setViewingPlaylist({ ...p, tracks: finalTracks });
             } catch (e) {
                 console.error("Signal ingestion failed", e);
+                setViewingPlaylist({ ...p, tracks: p.tracks || p.Tracks || [] });
             } finally {
                 setIsCrateLoading(false);
             }
@@ -1536,6 +1688,28 @@ const DJMixerPlayer = ({
                                                 <div className="flex gap-2">
                                                     <button 
                                                         onClick={() => {
+                                                            const tracks = viewingPlaylist.tracks || viewingPlaylist.Tracks || [];
+                                                            if (tracks.length > 0) {
+                                                                let trackToPlay = tracks[0];
+                                                                if (isShuffle) {
+                                                                    const randomIndex = Math.floor(Math.random() * tracks.length);
+                                                                    trackToPlay = tracks[randomIndex];
+                                                                }
+                                                                loadToDeck(trackToPlay, 'A');
+                                                            }
+                                                        }} 
+                                                        className="px-3 py-1 border border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)] hover:text-black transition-all font-mono text-[10px] font-black uppercase flex items-center gap-1"
+                                                    >
+                                                        <Play size={10} /> Reproducir
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => setIsShuffle(!isShuffle)} 
+                                                        className={`px-3 py-1 border ${isShuffle ? 'border-[var(--accent)] bg-[var(--accent)] text-black' : 'border-[var(--accent)]/20 text-[var(--accent)] hover:bg-[var(--accent)]/10'} transition-all font-mono text-[10px] font-black uppercase flex items-center gap-1`}
+                                                    >
+                                                        <Shuffle size={10} /> Aleatorio
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => {
                                                             setIsCreatingPlaylist(true);
                                                             setNewPlaylistName(viewingPlaylist.name || viewingPlaylist.Title);
                                                             setSelectedTracksForNewPlaylist((viewingPlaylist.tracks || viewingPlaylist.Tracks || []).map(t => t.id || t.Id));
@@ -1568,6 +1742,7 @@ const DJMixerPlayer = ({
                                                         <tr key={`pl-track-${i}`} className="signal-row">
                                                             <td className="text-white/30 font-mono text-[10px]">{i + 1}</td>
                                                             <td className="load-actions">
+                                                                <button onClick={() => { loadToDeck(t, 'A'); }} className="load-chip" style={{ marginRight: '2px' }}><Play size={8} /></button>
                                                                 <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
                                                                 <button onClick={() => loadToDeck(t, 'B')} className="load-chip">B</button>
                                                             </td>
@@ -1591,73 +1766,7 @@ const DJMixerPlayer = ({
                                                         <div className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)]">// CREAR PLAYLIST</div>
                                                         <div className="flex gap-2">
                                                             <button 
-                                                                onClick={async () => {
-                                                                    if (!newPlaylistName || isSavingPlaylist) return;
-                                                                    setIsSavingPlaylist(true);
-                                                                    try {
-                                                                        let playlistId = editingPlaylistId;
-                                                                        if (!playlistId) {
-                                                                            const res = await API.Playlists.create({ name: newPlaylistName });
-                                                                            playlistId = res.id || res.Id;
-                                                                        } else {
-                                                                            await API.Playlists.update(playlistId, { name: newPlaylistName });
-                                                                        }
-
-                                                                        const currentTrackIds = (viewingPlaylist?.tracks || viewingPlaylist?.Tracks || []).map(t => t.id || t.Id);
-                                                                        
-                                                                        // Add new tracks
-                                                                        for (const trackId of selectedTracksForNewPlaylist) {
-                                                                            if (!currentTrackIds.includes(trackId)) {
-                                                                                let effectiveTrackId = trackId;
-                                                                                
-                                                                                // Si es un track de YouTube (ID es string o no es un numero)
-                                                                                if (typeof trackId === 'string' || isNaN(Number(trackId))) {
-                                                                                    const trackObj = selectedTracksObjects.find(t => (t.id || t.Id) === trackId);
-                                                                                    if (trackObj) {
-                                                                                        try {
-                                                                                            const res = await API.YoutubeTracks.save({
-                                                                                                YoutubeId: trackObj.youtubeId || trackObj.id?.replace('yt-', '') || trackObj.Id?.replace('yt-', ''),
-                                                                                                Title: trackObj.title || trackObj.Title,
-                                                                                                ChannelTitle: trackObj.artist || trackObj.Artist || "Unknown",
-                                                                                                ThumbnailUrl: trackObj.imageUrl || trackObj.ImageUrl || trackObj.cover || trackObj.coverImageUrl || "",
-                                                                                                ViewCount: trackObj.viewCount || 0,
-                                                                                                Duration: trackObj.duration || "0:00"
-                                                                                            });
-                                                                                            effectiveTrackId = res.data.id || res.data.Id;
-                                                                                        } catch (err) {
-                                                                                            console.error("Failed to save YouTube track to database", err);
-                                                                                            continue; // Saltar si falla
-                                                                                        }
-                                                                                    }
-                                                                                }
-                                                                                
-                                                                                await API.Playlists.addTrack(playlistId, effectiveTrackId);
-                                                                            }
-                                                                        }
-
-                                                                        // Remove tracks
-                                                                        if (editingPlaylistId) {
-                                                                            for (const trackId of currentTrackIds) {
-                                                                                if (!selectedTracksForNewPlaylist.includes(trackId)) {
-                                                                                    await API.Playlists.removeTrack(playlistId, trackId);
-                                                                                }
-                                                                            }
-                                                                        }
-
-                                                                        setIsCreatingPlaylist(false);
-                                                                        setNewPlaylistName('');
-                                                                        setSelectedTracksForNewPlaylist([]);
-                                                                        setPlaylistSearchQuery('');
-                                                                        setPlaylistSearchResults([]);
-                                                                        setEditingPlaylistId(null);
-                                                                        setViewingPlaylist(null); // Return to list
-                                                                        await refreshLocalPlaylists(); // Refrescar lista!
-                                                                    } catch (err) {
-                                                                        console.error(err);
-                                                                    } finally {
-                                                                        setIsSavingPlaylist(false);
-                                                                    }
-                                                                }}
+                                                                onClick={handleSavePlaylist}
                                                                 disabled={!newPlaylistName || isSavingPlaylist}
                                                                 className={`px-2 py-0.5 border ${(!newPlaylistName || isSavingPlaylist) ? 'border-white/10 text-white/30 cursor-not-allowed' : 'border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)] hover:text-black'} transition-all font-mono text-[9px] font-black uppercase flex items-center gap-1`}
                                                             >
@@ -1826,54 +1935,11 @@ const DJMixerPlayer = ({
                                                     </div>
 
                                                     <button 
-                                                        onClick={async () => {
-                                                            if (!newPlaylistName || isSavingPlaylist) return;
-                                                            setIsSavingPlaylist(true);
-                                                            try {
-                                                                let playlistId = editingPlaylistId;
-                                                                if (!playlistId) {
-                                                                    const res = await API.Playlists.create({ name: newPlaylistName });
-                                                                    playlistId = res.id || res.Id;
-                                                                } else {
-                                                                    await API.Playlists.update(playlistId, { name: newPlaylistName });
-                                                                }
-
-                                                                const currentTrackIds = (viewingPlaylist?.tracks || viewingPlaylist?.Tracks || []).map(t => t.id || t.Id);
-                                                                
-                                                                // Add new tracks
-                                                                for (const trackId of selectedTracksForNewPlaylist) {
-                                                                    if (!currentTrackIds.includes(trackId)) {
-                                                                        await API.Playlists.addTrack(playlistId, trackId);
-                                                                    }
-                                                                }
-
-                                                                // Remove tracks
-                                                                if (editingPlaylistId) {
-                                                                    for (const trackId of currentTrackIds) {
-                                                                        if (!selectedTracksForNewPlaylist.includes(trackId)) {
-                                                                            await API.Playlists.removeTrack(playlistId, trackId);
-                                                                        }
-                                                                    }
-                                                                }
-
-                                                                setIsCreatingPlaylist(false);
-                                                                setNewPlaylistName('');
-                                                                setSelectedTracksForNewPlaylist([]);
-                                                                setPlaylistSearchQuery('');
-                                                                setPlaylistSearchResults([]);
-                                                                setEditingPlaylistId(null);
-                                                                setViewingPlaylist(null); // Return to list
-                                                                await refreshLocalPlaylists(); // Refrescar lista!
-                                                            } catch (err) {
-                                                                console.error(err);
-                                                            } finally {
-                                                                setIsSavingPlaylist(false);
-                                                            }
-                                                        }}
+                                                        onClick={handleSavePlaylist}
                                                         disabled={!newPlaylistName || isSavingPlaylist}
                                                         className={`w-full py-2 ${(!newPlaylistName || isSavingPlaylist) ? 'bg-white/10 text-white/30 cursor-not-allowed' : 'bg-[var(--accent)] text-black hover:bg-[var(--accent)]/90'} font-black uppercase text-xs transition-all`}
                                                     >
-                                                        {isSavingPlaylist ? '...' : ''}
+                                                        {isSavingPlaylist ? '...' : 'Guardar Playlist'}
                                                     </button>
                                                     {!newPlaylistName && (
                                                         <div className="text-[8px] text-[var(--accent)]/60 uppercase text-center mt-2 font-mono">
@@ -1886,20 +1952,62 @@ const DJMixerPlayer = ({
                                                 <>
                                                     <div className="flex justify-between items-center mb-2">
                                                         <div className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)]">// MIS LISTAS</div>
-                                                        <button 
-                                                            onClick={() => setIsCreatingPlaylist(true)} 
-                                                            className="px-2 py-0.5 border border-[var(--accent)]/20 text-[var(--accent)] hover:bg-[var(--accent)] hover:text-black transition-all font-mono text-[9px] font-black uppercase flex items-center gap-1"
-                                                        >
-                                                            <Plus size={8} /> Crear
-                                                        </button>
+                                                        <div className="flex gap-2">
+                                                            {selectedPlaylistsForDeletion.length > 0 && (
+                                                                <button 
+                                                                    onClick={async () => {
+                                                                        if (confirm(`¿Borrar ${selectedPlaylistsForDeletion.length} playlists seleccionadas?`)) {
+                                                                            const idsToDelete = [...selectedPlaylistsForDeletion];
+                                                                            setSelectedPlaylistsForDeletion([]);
+                                                                            
+                                                                            // Delete from state immediately
+                                                                            setLocalPlaylists(prev => prev.filter(p => !idsToDelete.includes(p.id || p.Id)));
+                                                                            
+                                                                            // Then delete in background
+                                                                            for (const id of idsToDelete) {
+                                                                                try {
+                                                                                    await API.Playlists.delete(id);
+                                                                                } catch (err) {
+                                                                                    console.error(`Failed to delete playlist ${id}`, err);
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }} 
+                                                                    className="px-2 py-0.5 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all font-mono text-[9px] font-black uppercase flex items-center gap-1"
+                                                                >
+                                                                    Borrar ({selectedPlaylistsForDeletion.length})
+                                                                </button>
+                                                            )}
+                                                            <button 
+                                                                onClick={() => setIsCreatingPlaylist(true)} 
+                                                                className="px-2 py-0.5 border border-[var(--accent)]/20 text-[var(--accent)] hover:bg-[var(--accent)] hover:text-black transition-all font-mono text-[9px] font-black uppercase flex items-center gap-1"
+                                                            >
+                                                                <Plus size={8} /> Crear
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                     <div className="space-y-2">
                                                         {(localPlaylists || []).map((p, i) => (
                                                             <div 
                                                                 key={`pl-${i}`} 
-                                                                className="flex items-center gap-3 p-2 border border-white/5 hover:border-[var(--accent)]/20 cursor-pointer transition-all bg-black/40 hover:bg-white/[0.02]"
+                                                                className={`flex items-center gap-3 p-2 border ${selectedPlaylistsForDeletion.includes(p.id || p.Id) ? 'border-red-500/50 bg-red-500/5' : 'border-white/5 hover:border-[var(--accent)]/20'} cursor-pointer transition-all bg-black/40 hover:bg-white/[0.02]`}
                                                                 onClick={() => handlePlaylistClick(p)}
                                                             >
+                                                                <div 
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        const id = p.id || p.Id;
+                                                                        if (selectedPlaylistsForDeletion.includes(id)) {
+                                                                            setSelectedPlaylistsForDeletion(selectedPlaylistsForDeletion.filter(item => item !== id));
+                                                                        } else {
+                                                                            setSelectedPlaylistsForDeletion([...selectedPlaylistsForDeletion, id]);
+                                                                        }
+                                                                    }}
+                                                                    className="w-4 h-4 border border-white/20 flex items-center justify-center cursor-pointer flex-shrink-0 hover:border-[var(--accent)]"
+                                                                >
+                                                                    {selectedPlaylistsForDeletion.includes(p.id || p.Id) && <div className="w-2 h-2 bg-[var(--accent)]" />}
+                                                                </div>
+
                                                                 <div className="w-10 h-10 bg-black border border-white/10 flex-shrink-0">
                                                                     <img src={p.imageUrl || p.ImageUrl || 'https://via.placeholder.com/50?text=PL'} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://via.placeholder.com/50?text=PL'; }} />
                                                                 </div>
@@ -1909,12 +2017,31 @@ const DJMixerPlayer = ({
                                                                 </div>
                                                                 <div className="flex items-center gap-2">
                                                                     <div className="text-[9px] text-[var(--accent)]/50 font-mono">{(p.tracks || p.Tracks || []).length} SIG</div>
+                                                                    
                                                                     <button 
                                                                         onClick={async (e) => {
                                                                             e.stopPropagation();
+                                                                            await API.Playlists.togglePin(p.id || p.Id);
+                                                                            await refreshLocalPlaylists();
+                                                                        }}
+                                                                        className={`p-1 border ${(p.isPinned || p.IsPinned) ? 'border-yellow-500/50 text-yellow-500' : 'border-white/10 text-white/30'} hover:border-yellow-500 transition-all flex items-center justify-center`}
+                                                                    >
+                                                                        <Star size={10} fill={(p.isPinned || p.IsPinned) ? "currentColor" : "none"} />
+                                                                    </button>
+
+                                                                    <button 
+                                                                        onClick={async (e) => {
+                                                                            e.stopPropagation();
+                                                                            const pId = p.id || p.Id;
                                                                             if (confirm(`¿Borrar playlist "${p.name || p.Title}"?`)) {
-                                                                                await API.Playlists.delete(p.id || p.Id);
-                                                                                await refreshLocalPlaylists();
+                                                                                try {
+                                                                                    await API.Playlists.delete(pId);
+                                                                                    setLocalPlaylists(prev => prev.filter(item => (item.id || item.Id) !== pId));
+                                                                                } catch (err) {
+                                                                                    console.error("Failed to delete playlist", err);
+                                                                                    // Remove anyway to satisfy user request immediately
+                                                                                    setLocalPlaylists(prev => prev.filter(item => (item.id || item.Id) !== pId));
+                                                                                }
                                                                             }
                                                                         }}
                                                                         className="px-1.5 py-0.5 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all font-mono text-[8px] font-black uppercase"
