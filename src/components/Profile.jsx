@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TrackActionsDropdown from './TrackActionsDropdown';
 import UploadTrackView from './UploadTrackView';
@@ -892,6 +892,8 @@ export const ProfileView = React.memo(({
     const { showNotification } = useNotification();
     const { t } = useLanguage();
     
+    const touchStartY = useRef(0);
+    
     // 1. ALL STATES
     const [profileData, setProfileData] = useState(null);
     const [activeTab, setActiveTab] = useState('Music');
@@ -934,6 +936,7 @@ export const ProfileView = React.memo(({
     const [localStatus, setLocalStatus] = useState('');
     const [isSavingStatus, setIsSavingStatus] = useState(false);
     const [showTipModal, setShowTipModal] = useState(false);
+    const [isStudioExpanded, setIsStudioExpanded] = useState(false);
     
     const [viewMode, setViewMode] = useState('CONSOLE'); // Will be corrected via useEffect once isMe is resolved
     const [cycleIndex, setCycleIndex] = useState(0); // 0: PFP, 1: Tracks, 2: Activity, 3: Social
@@ -1241,6 +1244,24 @@ export const ProfileView = React.memo(({
     React.useEffect(() => {
         fetchPlaylists();
     }, [fetchPlaylists]);
+
+    const handleEnterSystem = async () => {
+        setViewMode('DASHBOARD');
+        
+        const favPlaylist = profilePlaylists.find(p => p.isPinned);
+        if (favPlaylist) {
+            try {
+                const API = await import('../services/api').then(mod => mod.default);
+                const res = await API.Playlists.getById(favPlaylist.id || favPlaylist.Id);
+                const tracks = res.data?.Tracks || res.data?.tracks || [];
+                if (tracks.length > 0) {
+                    onPlayPlaylist?.(tracks);
+                }
+            } catch (err) {
+                console.error("Failed to play favorite playlist on enter", err);
+            }
+        }
+    };
 
     // Fetch Gear
     const fetchGear = React.useCallback(async () => {
@@ -1766,7 +1787,18 @@ export const ProfileView = React.memo(({
         const isLive = stationData?.isLive || stationData?.IsLive;
 
         return (
-            <div className="console-container pt-12">
+            <div 
+                className="console-container pt-12" 
+                onWheel={(e) => { if (e.deltaY > 30) setViewMode('DASHBOARD'); }}
+                onTouchStart={(e) => { touchStartY.current = e.touches[0].clientY; }}
+                onTouchEnd={(e) => {
+                    const touchEndY = e.changedTouches[0].clientY;
+                    const deltaY = touchEndY - touchStartY.current;
+                    if (deltaY > 50) {
+                        setViewMode('DASHBOARD');
+                    }
+                }}
+            >
                 <motion.div 
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -1802,7 +1834,7 @@ export const ProfileView = React.memo(({
                                             </div>
                                         </div>
                                         <div className="mt-3 text-center max-w-[240px]">
-                                            <div className="text-[9px] text-[var(--subsystem-accent)]/80 leading-relaxed font-medium mono uppercase tracking-wider">
+                                            <div className="text-[9px] text-white/90 leading-relaxed font-medium mono uppercase tracking-wider">
                                                 {displayUser?.biography || displayUser?.Biography || 'SIGNAL_DEVOID_OF_METADATA'}
                                             </div>
                                         </div>
@@ -1897,7 +1929,7 @@ export const ProfileView = React.memo(({
 
 
                     {/* Enter Button */}
-                    <button onClick={() => setViewMode('DASHBOARD')} className="enter-system-btn">ENTER_SYSTEM</button>
+                    <button onClick={handleEnterSystem} className="enter-system-btn">ENTER_SYSTEM</button>
                 </motion.div>
             </div>
         );
@@ -1908,7 +1940,19 @@ export const ProfileView = React.memo(({
         const pfp = displayUser?.profilePictureUrl || displayUser?.ProfilePictureUrl || displayUser?.profileImageUrl || displayUser?.ProfileImageUrl;
 
         return (
-            <div className="dashboard-grid custom-scrollbar">
+            <div 
+                className="dashboard-grid custom-scrollbar" 
+                onWheel={(e) => { if (e.currentTarget.scrollTop === 0 && e.deltaY < -30) setViewMode('CONSOLE'); }}
+                onTouchStart={(e) => { touchStartY.current = e.touches[0].clientY; }}
+                onTouchEnd={(e) => {
+                    const touchEndY = e.changedTouches[0].clientY;
+                    const deltaY = touchEndY - touchStartY.current;
+                    const isAtBottom = e.currentTarget.scrollTop + e.currentTarget.clientHeight >= e.currentTarget.scrollHeight - 10;
+                    if (isAtBottom && deltaY < -50) {
+                        setViewMode('CONSOLE');
+                    }
+                }}
+            >
                 {/* Identity Core Panel (Upper Right) */}
                 <div className="identity-core-panel">
                     <SubsystemBlock title={t('IDENTITY_CORE')} showBrackets={true} address="USR_USR_01" secondaryColor={profileSecondary}>
@@ -2073,6 +2117,15 @@ export const ProfileView = React.memo(({
                 <div className="studio-content-panel space-y-4">
                     <SubsystemBlock title={t('STUDIO_ARCHIVE')} showBrackets={true} address="VIS_CAP_09" secondaryColor={profileSecondary}>
                         <div className="p-4 max-h-[200px] overflow-y-auto custom-scrollbar">
+                            <div className="flex justify-between items-center mb-2">
+                                <div className="text-[8px] text-white/30 mono uppercase tracking-widest">// RECENT_UPLOADS</div>
+                                <button 
+                                    onClick={() => setIsStudioExpanded(true)} 
+                                    className="text-[8px] text-[var(--subsystem-accent)] font-black uppercase hover:underline flex items-center gap-1"
+                                >
+                                    <Maximize2 size={8} /> {t('EXPAND') || 'EXPANDIR'}
+                                </button>
+                            </div>
                             <div className="grid grid-cols-4 gap-2">
                                 {profileGallery.map((img, idx) => (
                                     <div key={idx} className="aspect-square bg-black border border-white/5 overflow-hidden group relative cursor-pointer" onClick={() => handleItemClick(img, 'GALLERY')}>
@@ -2090,7 +2143,7 @@ export const ProfileView = React.memo(({
                     
                     <SubsystemBlock title={t('FREQ_JOURNAL') || 'BITÁCORA'} showBrackets={true} address="LOG_CAP_01" secondaryColor={profileSecondary}>
                         <div className="p-4 max-h-[300px] overflow-y-auto custom-scrollbar">
-                            <div className="space-y-4 font-mono">
+                            <div className="space-y-2 font-mono">
                                 {isMe && !showJournalForm && (
                                     <button 
                                         onClick={() => setShowJournalForm(true)}
@@ -2145,7 +2198,7 @@ export const ProfileView = React.memo(({
                                 )}
 
                                 {profileJournal.length > 0 ? profileJournal.map((entry, idx) => (
-                                    <div key={idx} className="border-b border-white/5 py-3 cursor-pointer hover:bg-white/5 px-2 transition-colors" onClick={() => handleItemClick(entry, 'JOURNAL')}>
+                                    <div key={idx} className="border-b border-white/5 py-2 cursor-pointer hover:bg-white/5 px-2 transition-colors" onClick={() => handleItemClick(entry, 'JOURNAL')}>
                                         <div className="flex justify-between items-center mb-1">
                                             <div className="text-[10px] font-black uppercase text-white/80 truncate">{entry.title || entry.Title}</div>
                                             <Book size={10} className="text-[var(--subsystem-accent)]/40 flex-shrink-0 ml-2" />
@@ -2270,6 +2323,22 @@ export const ProfileView = React.memo(({
                                                     <div className="text-[7px] mono text-white/20 uppercase tracking-widest">ARCHIVE_0X{idx}</div>
                                                 </div>
                                             </div>
+                                            <button
+                                                onClick={async (e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    try {
+                                                        const API = await import('../services/api').then(mod => mod.default);
+                                                        await API.Playlists.togglePin(p.id || p.Id);
+                                                        fetchPlaylists(); // Refrescar lista
+                                                    } catch (err) {
+                                                        console.error("Failed to toggle pin", err);
+                                                    }
+                                                }}
+                                                className="p-2 hover:text-[var(--subsystem-accent)] transition-colors z-30"
+                                            >
+                                                <Star size={14} fill={p.isPinned ? "currentColor" : "none"} className={p.isPinned ? "text-[var(--subsystem-accent)]" : "text-white/20"} />
+                                            </button>
                                             <ChevronRight size={18} className="text-white/10 group-hover:text-[var(--subsystem-accent)] group-hover:translate-x-1 transition-all" />
                                             <div className="absolute top-0 right-0 p-1 opacity-0 group-hover:opacity-40 transition-opacity">
                                                 <div className="text-[6px] mono text-white">RECOVER_SIG</div>
@@ -2313,44 +2382,46 @@ export const ProfileView = React.memo(({
             </div>
 
             {/* Global Refined Header */}
-            <div className="fixed top-6 left-12 right-12 z-[100] flex items-center justify-between">
-                <button 
-                    onClick={handleBack}
-                    className="group flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white transition-all"
-                >
-                    <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                    {viewMode === 'DASHBOARD' ? t('BACK_LANDING') : t('RETURN_ORBIT')}
-                </button>
+            {viewMode !== 'CONSOLE' && (
+                <div className="fixed top-6 left-12 right-12 z-[100] flex items-center justify-between">
+                    <button 
+                        onClick={handleBack}
+                        className="group flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white transition-all"
+                    >
+                        <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+                        {viewMode === 'DASHBOARD' ? t('BACK_LANDING') : t('RETURN_ORBIT')}
+                    </button>
 
-                <div className="flex items-center gap-6">
-                    {isMe ? (
-                        <>
-                            <button onClick={onLogout} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-red-500/40 hover:text-red-500 transition-colors">
-                                <LogOut size={14} /> {t('LOGOUT')}
-                            </button>
-                            <button 
-                                onClick={() => {
-                                    console.log("[Profile] Triggering Identity Modification...");
-                                    showNotification("ID_MOD_START", "Initializing identity override protocol...", "info");
-                                    setShowEditProfile(true);
-                                }} 
-                                className="relative z-[200] px-4 py-1.5 bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all"
-                            >
-                                {t('MODIFY_ID')}
-                            </button>
-                        </>
-                    ) : (
-                        <>
-                            <button onClick={() => onMessageUser?.(displayUser)} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/40 hover:text-white transition-colors">
-                                <MessageSquare size={14} /> {t('MESSAGE')}
-                            </button>
-                            <button onClick={handleFollow} className={`px-6 py-1.5 border text-[9px] font-black uppercase tracking-[0.3em] transition-all ${isFollowing ? 'border-white/10 text-white/40' : 'border-[var(--subsystem-accent)] text-[var(--subsystem-accent)] hover:bg-[var(--subsystem-accent)] hover:text-black'}`}>
-                                {isFollowing ? t('FOLLOWING') : t('FOLLOW')}
-                            </button>
-                        </>
-                    )}
+                    <div className="flex items-center gap-6">
+                        {isMe ? (
+                            <>
+                                <button onClick={onLogout} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-red-500/40 hover:text-red-500 transition-colors">
+                                    <LogOut size={14} /> {t('LOGOUT')}
+                                </button>
+                                <button 
+                                    onClick={() => {
+                                        console.log("[Profile] Triggering Identity Modification...");
+                                        showNotification("ID_MOD_START", "Initializing identity override protocol...", "info");
+                                        setShowEditProfile(true);
+                                    }} 
+                                    className="relative z-[200] px-4 py-1.5 bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all"
+                                >
+                                    {t('MODIFY_ID')}
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <button onClick={() => onMessageUser?.(displayUser)} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/40 hover:text-white transition-colors">
+                                    <MessageSquare size={14} /> {t('MESSAGE')}
+                                </button>
+                                <button onClick={handleFollow} className={`px-6 py-1.5 border text-[9px] font-black uppercase tracking-[0.3em] transition-all ${isFollowing ? 'border-white/10 text-white/40' : 'border-[var(--subsystem-accent)] text-[var(--subsystem-accent)] hover:bg-[var(--subsystem-accent)] hover:text-black'}`}>
+                                    {isFollowing ? t('FOLLOWING') : t('FOLLOW')}
+                                </button>
+                            </>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             <motion.div 
                 className="flex-1 w-full h-full relative z-10 flex flex-col"
@@ -2381,6 +2452,26 @@ export const ProfileView = React.memo(({
                                 onSubmit={handleUpdateProfile}
                                 onLogout={onLogout}
                             />
+                        </div>
+                    </ContentModal>
+                )}
+
+                {isStudioExpanded && (
+                    <ContentModal onClose={() => setIsStudioExpanded(false)} title={t('STUDIO_ARCHIVE')}>
+                         <div className="p-4 md:p-8 bg-black/95 backdrop-blur-3xl border border-white/5 overflow-y-auto custom-scrollbar h-[80vh]">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
+                                {profileGallery.map((img, idx) => (
+                                    <div key={idx} className="aspect-square bg-black border border-white/10 overflow-hidden group relative cursor-pointer" onClick={() => handleItemClick(img, 'GALLERY')}>
+                                        <img src={resolveThumbnail(img)} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-700 group-hover:scale-105" />
+                                        {(img.type === 'VIDEO' || img.Type === 'VIDEO') && (
+                                            <div className="absolute top-2 right-2 p-1.5 bg-black/60 border border-cyan-500/30 backdrop-blur-sm">
+                                                <Video size={12} className="text-cyan-400" />
+                                            </div>
+                                        )}
+                                        <div className="absolute inset-0 border border-[var(--subsystem-accent)]/0 group-hover:border-[var(--subsystem-accent)]/40 transition-all duration-500" />
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </ContentModal>
                 )}

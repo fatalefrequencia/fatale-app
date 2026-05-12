@@ -727,11 +727,11 @@ const DiscoveryCanvas = ({
                 onNodeMouseLeave={() => setHoveredNodeId(null)}
                 nodeTypes={nodeTypes}
                 onMove={handleMove}
-                minZoom={0.1}
+                minZoom={0.02}
                 maxZoom={2.5}
-                defaultViewport={{ x: 0, y: 0, zoom: 0.55 }}
+                defaultViewport={{ x: 0, y: 0, zoom: 0.05 }}
                 fitView
-                fitViewOptions={{ padding: 0.15 }}
+                fitViewOptions={{ padding: 3.0 }}
                 nodesDraggable={false}
                 nodesConnectable={false}
                 elementsSelectable={false}

@@ -1330,8 +1330,26 @@
 
 .identity-core-panel { grid-column: 1; grid-row: 1; }
 .music-releases-panel { grid-column: 2; grid-row: 1; }
-.studio-content-panel { grid-column: 1; grid-row: 2 / span 2; }
-.archive-panel { grid-column: 2; grid-row: 2 / span 2; }
+.studio-content-panel { grid-column: 2; grid-row: 2 / span 2; }
+.archive-panel { grid-column: 1; grid-row: 2 / span 2; }
+
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        padding: 80px 15px 40px;
+        gap: 20px;
+        height: auto;
+    }
+
+    .identity-core-panel,
+    .music-releases-panel,
+    .studio-content-panel,
+    .archive-panel {
+        grid-column: 1 !important;
+        grid-row: auto !important;
+    }
+}
 
 /* --- GEAR RACK --- */
 .gear-rack {

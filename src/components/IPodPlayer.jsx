@@ -985,7 +985,7 @@ export const IPodPlayer = ({
 
             {/* ... Existing JSX ... */}
             {/* LARGE PREMIUM FRAME - REDUCED BORDER */}
-            <div className={`relative w-full ${isVertical ? 'max-w-[280px] h-[480px] rounded-[30px] p-4' : 'max-w-[400px] h-[700px] max-h-[95vh] sm:max-h-[700px] rounded-[55px] p-8'} bg-[#000] border-[6px] border-[#333] shadow-[0_50px_120px_rgba(255,0,110,0.2),inset_0_2px_10px_rgba(255,0,110,0.1)] flex flex-col items-center select-none shrink-0 border-t-[#333] border-l-[#222] transition-all duration-500`}>
+            <div className={`relative w-full ${isVertical ? 'max-w-[280px] h-[480px] rounded-[30px] p-4' : 'max-w-[500px] h-[700px] max-h-[95vh] sm:max-h-[700px] rounded-[55px] p-8'} bg-[#000] border-[6px] border-[#333] shadow-[0_50px_120px_rgba(255,0,110,0.2),inset_0_2px_10px_rgba(255,0,110,0.1)] flex flex-col items-center select-none shrink-0 border-t-[#333] border-l-[#222] transition-all duration-500`}>
                 {/* ... */}
 
                 {/* SCREEN CONTAINER */}
@@ -1015,7 +1015,7 @@ export const IPodPlayer = ({
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -20 }}
                                     transition={{ duration: 0.2 }}
-                                    className="flex flex-col h-full bg-[#050505] text-white p-3 pt-1 relative"
+                                    className={`flex ${isVertical ? 'flex-col' : 'flex-row'} h-full bg-[#050505] text-white p-3 pt-1 relative gap-3`}
                                 >
                                     {/* CYBERPUNK EVOLVE BUTTON */}
                                     <motion.button
@@ -1034,14 +1034,14 @@ export const IPodPlayer = ({
                                         </motion.span>
                                     </motion.button>
 
-                                    {/* COVER ART - CENTERED */}
-                                    <div className="flex items-center justify-center py-1 flex-shrink-0">
-                                        <div className={`${isVertical ? 'w-20 h-20' : 'w-36 h-36'} bg-black border-2 border-[#f00060]/30 shadow-[0_0_40px_rgba(255,0,110,0.15)] flex items-center justify-center relative overflow-hidden rounded-xl group/cover transition-all duration-300`}>
+                                    {/* LEFT/TOP: COVER ART */}
+                                    <div className={`${isVertical ? 'w-full flex justify-center py-1' : 'w-[200px] flex-shrink-0 flex items-center justify-center'}`}>
+                                        <div className={`${isVertical ? 'w-20 h-20' : 'w-[180px] h-[180px]'} bg-black border-2 border-[#f00060]/30 shadow-[0_0_40px_rgba(255,0,110,0.15)] flex items-center justify-center relative overflow-hidden rounded-xl group/cover transition-all duration-300`}>
                                         {currentTrack.cover ? (
                                             <img src={currentTrack.cover} alt="Cover" className={`w-full h-full object-cover transition-all duration-500 ${isLocked ? 'blur-md grayscale opacity-40 scale-110' : 'group-hover/cover:scale-105'}`} />
                                         ) : (
                                             <div 
-                                                className="system-skull w-20 h-20 animate-beat-pulse" 
+                                                className={`system-skull ${isVertical ? 'w-16 h-16' : 'w-32 h-32'} animate-beat-pulse`} 
                                                 style={{ 
                                                     WebkitMaskImage: `url(${skullImg})`, 
                                                     maskImage: `url(${skullImg})`,
@@ -1049,20 +1049,19 @@ export const IPodPlayer = ({
                                                 }} 
                                             />
                                         )}
-
-                                            {isLocked && (
-                                                <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/40">
-                                                    <div className="bg-[#f00060] text-black font-black text-[11px] px-3 py-1 rounded-sm leading-none mb-1 shadow-[0_0_15px_#f00060]">LOCKED</div>
-                                                    <div className="text-white font-bold text-[10px] tracking-[0.2em]">{currentTrack.price} CRD</div>
-                                                </div>
-                                            )}
-                                            <div className="absolute -inset-10 border border-[#f00060]/5 rotate-45 pointer-events-none" />
+                                        {isLocked && (
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/40">
+                                                <div className={`bg-[#f00060] text-black font-black ${isVertical ? 'text-[10px]' : 'text-[12px]'} px-3 py-1 rounded-sm leading-none mb-1 shadow-[0_0_15px_#f00060]`}>LOCKED</div>
+                                                <div className={`text-white font-bold ${isVertical ? 'text-[8px]' : 'text-[10px]'} tracking-[0.2em]`}>{currentTrack.price} CRD</div>
+                                            </div>
+                                        )}
+                                        <div className="absolute -inset-10 border border-[#f00060]/5 rotate-45 pointer-events-none" />
                                         </div>
                                     </div>
 
-                                    {/* TRACK INFO - BELOW COVER */}
-                                    <div className="flex-1 flex flex-col justify-start min-h-0 space-y-1 pt-1 px-2 text-center">
-                                        <div>
+                                    {/* RIGHT/BOTTOM: TRACK INFO & CONTROLS */}
+                                    <div className={`flex-1 flex flex-col justify-between ${isVertical ? 'text-center' : 'text-left py-2'} min-w-0`}>
+                                        <div className="space-y-1">
                                             <h3 className={`${isVertical ? 'text-[10px]' : 'text-sm'} font-black text-white truncate tracking-tighter drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] transition-all`}>
                                                 {activeStation ? (activeStation.name || activeStation.Name) : currentTrack.title}
                                             </h3>
@@ -1078,8 +1077,8 @@ export const IPodPlayer = ({
                                             </p>
                                         </div>
 
-                                        {/* ACTION BUTTONS (LIKE/DOWNLOAD/ANTENNA) - BELOW TITLE */}
-                                        <div className={`flex justify-center ${isVertical ? 'gap-2' : 'gap-6'} py-1 transition-all`}>
+                                        {/* ACTION BUTTONS */}
+                                        <div className={`flex ${isVertical ? 'justify-center gap-2' : 'justify-start gap-4'} py-1 transition-all`}>
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -1088,7 +1087,7 @@ export const IPodPlayer = ({
                                                 className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1"
                                             >
                                                 <Heart
-                                                    size={18}
+                                                    size={isVertical ? 14 : 18}
                                                     fill={currentTrack.isLiked ? "#f00060" : "transparent"}
                                                     strokeWidth={3}
                                                 />
@@ -1101,7 +1100,7 @@ export const IPodPlayer = ({
                                                 }}
                                                 className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1"
                                             >
-                                                <DownloadIcon size={18} strokeWidth={3} />
+                                                <DownloadIcon size={isVertical ? 14 : 18} strokeWidth={3} />
                                             </button>
                                             <button
                                                 onClick={async (e) => {
@@ -1125,56 +1124,13 @@ export const IPodPlayer = ({
                                                 className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1 relative"
                                                 title="Resonant Stations"
                                             >
-                                                <AntennaIcon size={18} strokeWidth={3} />
+                                                <AntennaIcon size={isVertical ? 14 : 18} strokeWidth={3} />
                                             </button>
                                         </div>
 
-                                        {/* RESONANT STATIONS SLIDE-UP PANEL */}
-                                        {showResonantStations && (
-                                            <div
-                                                className="absolute inset-0 bg-black/95 z-50 flex flex-col p-3 rounded-xl"
-                                                onClick={(e) => e.stopPropagation()}
-                                            >
-                                                <div className="flex justify-between items-center mb-2 border-b border-[#f00060]/20 pb-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <AntennaIcon size={14} className="text-[#f00060] animate-pulse" />
-                                                        <span className="text-[10px] font-black text-[#f00060] tracking-widest font-mono uppercase">RESONANT SIGNAL</span>
-                                                    </div>
-                                                    <button onClick={() => setShowResonantStations(false)} className="text-white/40 hover:text-white text-xs font-mono">✕</button>
-                                                </div>
-                                                <p className="text-white/30 text-[9px] font-mono mb-3 tracking-wider uppercase">Stations tuned to: <span className="text-[#f00060]">{resonantTag}</span></p>
-                                                {loadingStations ? (
-                                                    <div className="flex-1 flex items-center justify-center">
-                                                        <RefreshCw size={20} className="text-[#f00060] animate-spin" />
-                                                    </div>
-                                                ) : resonantStations.length === 0 ? (
-                                                    <div className="flex-1 flex flex-col items-center justify-center gap-2">
-                                                        <AntennaIcon size={32} className="text-white/10" />
-                                                        <p className="text-white/30 text-[10px] font-mono text-center">NO LIVE SIGNAL DETECTED<br />Check back when stations are broadcasting</p>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex-1 overflow-y-auto space-y-2.5">
-                                                        {resonantStations.map(station => (
-                                                            <div key={station.stationId} className="flex items-center justify-between bg-white/5 border border-[#f00060]/20 rounded-lg px-3 py-2">
-                                                                <div className="min-w-0">
-                                                                    <p className="text-white text-[11px] font-bold truncate">{station.name}</p>
-                                                                    <p className="text-[#f00060]/70 text-[9px] font-mono truncate">{station.djName} · {station.genre}</p>
-                                                                    {station.sessionTitle && <p className="text-white/30 text-[9px] truncate italic">"{station.sessionTitle}"</p>}
-                                                                </div>
-                                                                <div className="flex flex-col items-end gap-1 shrink-0 pl-2">
-                                                                    <span className="text-[8px] font-black text-green-400 font-mono tracking-wider">● LIVE</span>
-                                                                    <span className="text-[8px] text-white/30 font-mono">{station.listenerCount} listeners</span>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
                                         {/* PROGRESS BAR */}
                                         <div
-                                            className="mt-auto space-y-1 pb-1 cursor-pointer group/progress"
+                                            className="space-y-1 pb-1 cursor-pointer group/progress"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 const rect = e.currentTarget.getBoundingClientRect();
@@ -1263,45 +1219,78 @@ export const IPodPlayer = ({
                                             {isSearching ? <Minimize2 size={12} /> : <Search size={12} />}
                                         </button>
                                     </div>
-                                    <div
-                                        ref={listRef}
-                                        className="flex-1 overflow-y-auto p-1 py-3 no-scrollbar scroll-smooth"
-                                    >
-                                        {getCurrentItems().map((item, idx) => {
-                                            const isAction = ['BACK', 'BACK_SM', 'BACK_AM', 'BACK_NP', 'PLAY_ALL_FILTERED', 'SHUFFLE_ALL_FILTERED', 'PLAY_PLAYLIST', 'SHUFFLE_PLAYLIST'].includes(item.id);
-                                            const track = typeof item.id === 'number' ? tracks[item.id] : null;
-                                            const isDisabled = !isOnline && track && !track.isOwned;
+                                    <div className={`flex-1 flex ${isVertical ? 'flex-col' : 'flex-row'} overflow-hidden`}>
+                                        <div
+                                            ref={listRef}
+                                            className="flex-1 overflow-y-auto p-1 py-3 no-scrollbar scroll-smooth"
+                                        >
+                                            {getCurrentItems().map((item, idx) => {
+                                                const isAction = ['BACK', 'BACK_SM', 'BACK_AM', 'BACK_NP', 'PLAY_ALL_FILTERED', 'SHUFFLE_ALL_FILTERED', 'PLAY_PLAYLIST', 'SHUFFLE_PLAYLIST'].includes(item.id);
+                                                const track = typeof item.id === 'number' ? tracks[item.id] : null;
+                                                const isDisabled = !isOnline && track && !track.isOwned;
 
-                                            return (
-                                                <motion.div
-                                                    key={item.id + idx}
-                                                    initial={false}
-                                                    animate={{
-                                                        scale: idx === selectedIndex ? 1.02 : 1,
-                                                        x: idx === selectedIndex ? 4 : 0
-                                                    }}
-                                                    className={`flex items-center justify-between px-4 ${isVertical ? 'py-1' : 'py-3'} rounded-lg mb-1 transition-all cursor-pointer 
-                                                        ${idx === selectedIndex
-                                                            ? 'bg-gradient-to-r from-[#f00060] to-[#c70055] text-black shadow-[0_0_25px_rgba(240,0,96,0.8),inset_0_0_10px_rgba(0,0,0,0.2)] font-black'
-                                                            : isDisabled
-                                                                ? 'text-[#666] opacity-50 cursor-not-allowed'
-                                                                : isAction ? 'text-[#f00060] font-black' : 'text-[#f00060]/90 hover:text-[#f00060]'
-                                                        }`}
-                                                    onClick={(e) => {
-                                                        if (isDisabled) return;
-                                                        e.stopPropagation();
-                                                        setSelectedIndex(idx);
-                                                        handleCenterClick(e, item);
-                                                    }}
-                                                >
-                                                    <span className="text-[11px] tracking-widest truncate font-bold">
-                                                        {item.type === 'YOUTUBE_SIGNAL' && <span className="text-white/20 mr-2">[SIGNAL]</span>}
-                                                        {item.label}
-                                                    </span>
-                                                    <ChevronRight size={14} className={idx === selectedIndex ? 'text-black animate-pulse' : isDisabled ? 'text-transparent' : 'text-[#f00060]/60'} />
-                                                </motion.div>
-                                            );
-                                        })}
+                                                return (
+                                                    <motion.div
+                                                        key={item.id + idx}
+                                                        initial={false}
+                                                        animate={{
+                                                            scale: idx === selectedIndex ? 1.02 : 1,
+                                                            x: idx === selectedIndex ? 4 : 0
+                                                        }}
+                                                        className={`flex items-center justify-between px-4 ${isVertical ? 'py-1' : 'py-3'} rounded-lg mb-1 transition-all cursor-pointer 
+                                                            ${idx === selectedIndex
+                                                                ? 'bg-gradient-to-r from-[#f00060] to-[#c70055] text-black shadow-[0_0_25px_rgba(240,0,96,0.8),inset_0_0_10px_rgba(0,0,0,0.2)] font-black'
+                                                                : isDisabled
+                                                                    ? 'text-[#666] opacity-50 cursor-not-allowed'
+                                                                    : isAction ? 'text-[#f00060] font-black' : 'text-[#f00060]/90 hover:text-[#f00060]'
+                                                            }`}
+                                                        onClick={(e) => {
+                                                            if (isDisabled) return;
+                                                            e.stopPropagation();
+                                                            setSelectedIndex(idx);
+                                                            handleCenterClick(e, item);
+                                                        }}
+                                                    >
+                                                        <span className="text-[11px] tracking-widest truncate font-bold">
+                                                            {item.type === 'YOUTUBE_SIGNAL' && <span className="text-white/20 mr-2">[SIGNAL]</span>}
+                                                            {item.label}
+                                                        </span>
+                                                        <ChevronRight size={14} className={idx === selectedIndex ? 'text-black animate-pulse' : isDisabled ? 'text-transparent' : 'text-[#f00060]/60'} />
+                                                    </motion.div>
+                                                );
+                                            })}
+                                        </div>
+                                        {!isVertical && (
+                                            <div className="w-[180px] bg-black border-l border-[#f00060]/20 flex items-center justify-center p-4">
+                                                {/* Preview Art */}
+                                                {(() => {
+                                                    const selectedItem = getCurrentItems()[selectedIndex];
+                                                    const track = selectedItem?.originalTrack;
+                                                    const playlist = playlists.find(p => (p.id || p.Id) === selectedItem?.playlistId);
+                                                    let coverUrl = null;
+                                                    if (track) coverUrl = track.cover || track.coverImageUrl;
+                                                    else if (playlist) coverUrl = playlist.coverImageUrl || playlist.imageUrl;
+
+                                                    return (
+                                                        <div className="w-[140px] h-[140px] bg-black border-2 border-[#f00060]/30 shadow-[0_0_40px_rgba(255,0,110,0.15)] flex items-center justify-center relative overflow-hidden rounded-xl">
+                                                            {coverUrl ? (
+                                                                <img src={coverUrl} alt="Preview" className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <div 
+                                                                    className="system-skull w-20 h-20 animate-beat-pulse" 
+                                                                    style={{ 
+                                                                        WebkitMaskImage: `url(${skullImg})`, 
+                                                                        maskImage: `url(${skullImg})`,
+                                                                        filter: `drop-shadow(0 0 12px var(--theme-color))` 
+                                                                    }} 
+                                                                />
+                                                            )}
+                                                            <div className="absolute -inset-10 border border-[#f00060]/5 rotate-45 pointer-events-none" />
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </div>
+                                        )}
                                     </div>
                                 </motion.div>
                             )}

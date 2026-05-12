@@ -129,6 +129,7 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
 const GlobeCore = memo(({ activeSector, communities = [], artists = [], playlists = [], tracks = [], selectedId, activeView, onArtistClick, onCommunityClick, onTrackClick, isGlobeSpinning }) => {
     const { camera } = useThree();
     const [cameraDist, setCameraDist] = useState(10);
+    const [seed] = useState(() => Math.random().toString());
     const atmosphereRef = useRef();
     const innerLightRef = useRef();
 
@@ -148,18 +149,42 @@ const GlobeCore = memo(({ activeSector, communities = [], artists = [], playlist
     }, [activeSector]);
 
     const filteredCommunities = useMemo(() => {
-        if (activeSector !== null) {
-            return communities.filter(c => (c.sectorId || c.SectorId) === activeSector);
-        }
-        return communities;
-    }, [communities, activeSector]);
+        const base = activeSector !== null 
+            ? communities.filter(c => (c.sectorId || c.SectorId) === activeSector)
+            : communities;
+        return base
+            .map(item => ({ item, sortKey: hashStr((item.id || item.Id || '') + seed) }))
+            .sort((a, b) => a.sortKey - b.sortKey)
+            .map(x => x.item)
+            .slice(0, 25);
+    }, [communities, activeSector, seed]);
 
     const filteredArtists = useMemo(() => {
-        if (activeSector !== null) {
-            return artists.filter(a => (a.sectorId || a.SectorId) === activeSector);
-        }
-        return artists;
-    }, [artists, activeSector]);
+        const base = activeSector !== null 
+            ? artists.filter(a => (a.sectorId || a.SectorId) === activeSector)
+            : artists;
+        return base
+            .map(item => ({ item, sortKey: hashStr((item.id || item.Id || '') + seed) }))
+            .sort((a, b) => a.sortKey - b.sortKey)
+            .map(x => x.item)
+            .slice(0, 25);
+    }, [artists, activeSector, seed]);
+
+    const filteredPlaylists = useMemo(() => {
+        return playlists
+            .map(item => ({ item, sortKey: hashStr((item.id || item.Id || '') + seed) }))
+            .sort((a, b) => a.sortKey - b.sortKey)
+            .map(x => x.item)
+            .slice(0, 25);
+    }, [playlists, seed]);
+
+    const filteredTracks = useMemo(() => {
+        return tracks
+            .map(item => ({ item, sortKey: hashStr((item.id || item.Id || '') + seed) }))
+            .sort((a, b) => a.sortKey - b.sortKey)
+            .map(x => x.item)
+            .slice(0, 25);
+    }, [tracks, seed]);
 
     return (
         <group>
@@ -206,7 +231,7 @@ const GlobeCore = memo(({ activeSector, communities = [], artists = [], playlist
             ))}
 
             {/* Render Tracks as Blue Spheres (Size increased to 0.06) */}
-            {(activeView === 'TRACKS' || !activeView) && tracks.slice(0, 100).map(t => (
+            {(activeView === 'TRACKS' || !activeView) && filteredTracks.map(t => (
                 <LightPointNode 
                     key={`track-${t.id || t.Id}`} 
                     id={t.id || t.Id}
@@ -221,7 +246,7 @@ const GlobeCore = memo(({ activeSector, communities = [], artists = [], playlist
             ))}
 
             {/* Render Playlists as Pink Spheres (Size increased to 0.08) */}
-            {(activeView === 'PLAYLISTS' || !activeView) && playlists.map(p => (
+            {(activeView === 'PLAYLISTS' || !activeView) && filteredPlaylists.map(p => (
                 <LightPointNode 
                     key={`playlist-${p.id || p.Id}`} 
                     id={p.id || p.Id}
@@ -266,7 +291,7 @@ const InteractiveGlobe = memo(({
                 dpr={[1, 2]} 
                 gl={{ logarithmicDepthBuffer: true, antialias: true }}
             >
-                <PerspectiveCamera makeDefault position={[0, 0, isMobile ? 7 : 4.5]} fov={isMobile ? 30 : 40} />
+                <PerspectiveCamera makeDefault position={[0, 0, isMobile ? 12 : 8.0]} fov={isMobile ? 30 : 40} />
                 <fog attach="fog" args={['#000000', 8, 30]} />
                 <OrbitControls 
                     enablePan={false} 

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SkipBack, SkipForward, Play, Pause, Zap, Disc, MessageSquare, List, Search, Plus, DollarSign, Users, Radio, Heart, Music, Shuffle, Settings } from 'lucide-react';
+import { SkipBack, SkipForward, Play, Pause, Zap, Disc, MessageSquare, List, Search, Plus, DollarSign, Users, Radio, Heart, Music, Shuffle, Settings, Check } from 'lucide-react';
 import { getMediaUrl, API_BASE_URL } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import YouTube from 'react-youtube';
+import API from '../services/api';
 import './DJMixerPlayer.css';
 
 const NeuralSpectrum = ({ analyser, isActive }) => {
@@ -102,7 +103,33 @@ const DJMixerPlayer = ({
     const [searchQuery, setSearchQuery] = useState('');
     const [isAutoMixEnabled, setIsAutoMixEnabled] = useState(false);
     const [viewingPlaylist, setViewingPlaylist] = useState(null);
+    const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false);
+    const [newPlaylistName, setNewPlaylistName] = useState('');
+    const [selectedTracksForNewPlaylist, setSelectedTracksForNewPlaylist] = useState([]);
+    const [selectedTracksObjects, setSelectedTracksObjects] = useState([]);
+    const [localPlaylists, setLocalPlaylists] = useState(userPlaylists || []);
+    const [isSavingPlaylist, setIsSavingPlaylist] = useState(false);
+
+    useEffect(() => {
+        setLocalPlaylists(userPlaylists || []);
+    }, [userPlaylists]);
+
+    const refreshLocalPlaylists = async () => {
+        try {
+            const userStr = localStorage.getItem('user');
+            const userId = userStr ? JSON.parse(userStr)?.id : null;
+            if (!userId) return;
+            const res = await API.Playlists.getUserPlaylists(userId);
+            setLocalPlaylists(res.data || []);
+        } catch (err) {
+            console.error("Failed to refresh playlists", err);
+        }
+    };
+    const [playlistSearchQuery, setPlaylistSearchQuery] = useState('');
+    const [playlistSearchResults, setPlaylistSearchResults] = useState([]);
+    const [playlistImage, setPlaylistImage] = useState(null);
     const [isCrateLoading, setIsCrateLoading] = useState(false);
+    const [editingPlaylistId, setEditingPlaylistId] = useState(null);
     const [keyLockB, setKeyLockB] = useState(false);
     const [viewingArtist, setViewingArtist] = useState(null);
     const [chatInput, setChatInput] = useState('');
@@ -1506,9 +1533,23 @@ const DJMixerPlayer = ({
                                                         <span className="text-white font-bold">{viewingPlaylist.username || 'USER'}</span> • {(viewingPlaylist.tracks || viewingPlaylist.Tracks || []).length} canciones
                                                     </div>
                                                 </div>
-                                                <button onClick={() => setViewingPlaylist(null)} className="px-3 py-1 border border-[var(--accent)]/20 text-[var(--accent)] hover:bg-[var(--accent)] hover:text-black transition-all font-mono text-[10px] font-black uppercase">
-                                                    {t('BACK')}
-                                                </button>
+                                                <div className="flex gap-2">
+                                                    <button 
+                                                        onClick={() => {
+                                                            setIsCreatingPlaylist(true);
+                                                            setNewPlaylistName(viewingPlaylist.name || viewingPlaylist.Title);
+                                                            setSelectedTracksForNewPlaylist((viewingPlaylist.tracks || viewingPlaylist.Tracks || []).map(t => t.id || t.Id));
+                                                            setSelectedTracksObjects(viewingPlaylist.tracks || viewingPlaylist.Tracks || []);
+                                                            setEditingPlaylistId(viewingPlaylist.id || viewingPlaylist.Id);
+                                                        }} 
+                                                        className="px-3 py-1 border border-[var(--accent)]/20 text-[var(--accent)] hover:bg-[var(--accent)] hover:text-black transition-all font-mono text-[10px] font-black uppercase"
+                                                    >
+                                                        Editar
+                                                    </button>
+                                                    <button onClick={() => setViewingPlaylist(null)} className="px-3 py-1 border border-[var(--accent)]/20 text-[var(--accent)] hover:bg-[var(--accent)] hover:text-black transition-all font-mono text-[10px] font-black uppercase">
+                                                        {t('BACK')}
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             {/* Tracks Table */}
@@ -1543,25 +1584,349 @@ const DJMixerPlayer = ({
                                     ) : (
                                         /* LIST OF PLAYLISTS (Spotify Sidebar Style) */
                                         <div className="playlists-list space-y-4">
-                                            <div className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)] mb-2">// MIS LISTAS</div>
-                                            <div className="space-y-2">
-                                                {(userPlaylists || []).map((p, i) => (
-                                                    <div 
-                                                        key={`pl-${i}`} 
-                                                        className="flex items-center gap-3 p-2 border border-white/5 hover:border-[var(--accent)]/20 cursor-pointer transition-all bg-black/40 hover:bg-white/[0.02]"
-                                                        onClick={() => handlePlaylistClick(p)}
-                                                    >
-                                                        <div className="w-10 h-10 bg-black border border-white/10 flex-shrink-0">
-                                                            <img src={p.imageUrl || p.ImageUrl || 'https://via.placeholder.com/50?text=PL'} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://via.placeholder.com/50?text=PL'; }} />
+                                            {isCreatingPlaylist ? (
+                                                /* CREATE PLAYLIST VIEW */
+                                                <div className="create-playlist-view space-y-4 max-h-[500px] overflow-y-auto custom-scrollbar p-1">
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)]">// CREAR PLAYLIST</div>
+                                                        <div className="flex gap-2">
+                                                            <button 
+                                                                onClick={async () => {
+                                                                    if (!newPlaylistName || isSavingPlaylist) return;
+                                                                    setIsSavingPlaylist(true);
+                                                                    try {
+                                                                        let playlistId = editingPlaylistId;
+                                                                        if (!playlistId) {
+                                                                            const res = await API.Playlists.create({ name: newPlaylistName });
+                                                                            playlistId = res.id || res.Id;
+                                                                        } else {
+                                                                            await API.Playlists.update(playlistId, { name: newPlaylistName });
+                                                                        }
+
+                                                                        const currentTrackIds = (viewingPlaylist?.tracks || viewingPlaylist?.Tracks || []).map(t => t.id || t.Id);
+                                                                        
+                                                                        // Add new tracks
+                                                                        for (const trackId of selectedTracksForNewPlaylist) {
+                                                                            if (!currentTrackIds.includes(trackId)) {
+                                                                                let effectiveTrackId = trackId;
+                                                                                
+                                                                                // Si es un track de YouTube (ID es string o no es un numero)
+                                                                                if (typeof trackId === 'string' || isNaN(Number(trackId))) {
+                                                                                    const trackObj = selectedTracksObjects.find(t => (t.id || t.Id) === trackId);
+                                                                                    if (trackObj) {
+                                                                                        try {
+                                                                                            const res = await API.YoutubeTracks.save({
+                                                                                                YoutubeId: trackObj.youtubeId || trackObj.id?.replace('yt-', '') || trackObj.Id?.replace('yt-', ''),
+                                                                                                Title: trackObj.title || trackObj.Title,
+                                                                                                ChannelTitle: trackObj.artist || trackObj.Artist || "Unknown",
+                                                                                                ThumbnailUrl: trackObj.imageUrl || trackObj.ImageUrl || trackObj.cover || trackObj.coverImageUrl || "",
+                                                                                                ViewCount: trackObj.viewCount || 0,
+                                                                                                Duration: trackObj.duration || "0:00"
+                                                                                            });
+                                                                                            effectiveTrackId = res.data.id || res.data.Id;
+                                                                                        } catch (err) {
+                                                                                            console.error("Failed to save YouTube track to database", err);
+                                                                                            continue; // Saltar si falla
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                                
+                                                                                await API.Playlists.addTrack(playlistId, effectiveTrackId);
+                                                                            }
+                                                                        }
+
+                                                                        // Remove tracks
+                                                                        if (editingPlaylistId) {
+                                                                            for (const trackId of currentTrackIds) {
+                                                                                if (!selectedTracksForNewPlaylist.includes(trackId)) {
+                                                                                    await API.Playlists.removeTrack(playlistId, trackId);
+                                                                                }
+                                                                            }
+                                                                        }
+
+                                                                        setIsCreatingPlaylist(false);
+                                                                        setNewPlaylistName('');
+                                                                        setSelectedTracksForNewPlaylist([]);
+                                                                        setPlaylistSearchQuery('');
+                                                                        setPlaylistSearchResults([]);
+                                                                        setEditingPlaylistId(null);
+                                                                        setViewingPlaylist(null); // Return to list
+                                                                        await refreshLocalPlaylists(); // Refrescar lista!
+                                                                    } catch (err) {
+                                                                        console.error(err);
+                                                                    } finally {
+                                                                        setIsSavingPlaylist(false);
+                                                                    }
+                                                                }}
+                                                                disabled={!newPlaylistName || isSavingPlaylist}
+                                                                className={`px-2 py-0.5 border ${(!newPlaylistName || isSavingPlaylist) ? 'border-white/10 text-white/30 cursor-not-allowed' : 'border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)] hover:text-black'} transition-all font-mono text-[9px] font-black uppercase flex items-center gap-1`}
+                                                            >
+                                                                {isSavingPlaylist ? '...' : <Check size={8} />} {isSavingPlaylist ? 'Guardando' : 'Guardar'}
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => setIsCreatingPlaylist(false)} 
+                                                                className="px-2 py-0.5 border border-white/20 text-white/50 hover:text-white transition-all font-mono text-[9px] font-black uppercase"
+                                                            >
+                                                                {t('BACK')}
+                                                            </button>
                                                         </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="text-xs font-black text-white uppercase truncate">{p.name || p.Title || 'UNNAMED_PLAYLIST'}</div>
-                                                            <div className="text-[9px] text-white/30 font-mono">Playlist • {p.username || 'Uknown'}</div>
-                                                        </div>
-                                                        <div className="text-[9px] text-[var(--accent)]/50 font-mono">{(p.tracks || p.Tracks || []).length} SIG</div>
                                                     </div>
-                                                ))}
-                                            </div>
+                                                    
+                                                    <div className="space-y-2">
+                                                        <input 
+                                                            type="text" 
+                                                            placeholder="Nombre de la playlist..." 
+                                                            value={newPlaylistName}
+                                                            onChange={(e) => setNewPlaylistName(e.target.value)}
+                                                            className="w-full bg-black border border-white/10 px-3 py-2 text-white text-xs font-mono focus:border-[var(--accent)] outline-none"
+                                                        />
+                                                    </div>
+
+                                                    <div className="space-y-2">
+                                                        <div className="text-[9px] font-black uppercase tracking-widest text-white/50">// IMAGEN DE PORTADA</div>
+                                                        <div className="flex gap-4 items-center">
+                                                            <div className="w-20 h-20 bg-black border border-white/10 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                                                {playlistImage ? (
+                                                                    <img src={playlistImage} alt="Preview" className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    <Music size={20} className="text-white/20" />
+                                                                )}
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <label className="px-3 py-1.5 border border-white/20 text-white hover:bg-white/5 cursor-pointer transition-all font-mono text-[10px] font-black uppercase">
+                                                                    Subir Imagen
+                                                                    <input 
+                                                                        type="file" 
+                                                                        accept="image/*" 
+                                                                        className="hidden" 
+                                                                        onChange={(e) => {
+                                                                            const file = e.target.files[0];
+                                                                            if (file) {
+                                                                                const reader = new FileReader();
+                                                                                reader.onloadend = () => {
+                                                                                    setPlaylistImage(reader.result);
+                                                                                };
+                                                                                reader.readAsDataURL(file);
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                </label>
+                                                                <div className="text-[8px] text-white/30 mt-1 font-mono">Se ajustará automáticamente a un cuadrado.</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Liked Songs Section */}
+                                                    <div className="space-y-2">
+                                                        <div className="text-[9px] font-black uppercase tracking-widest text-white/50">// AGREGAR TUS LIKES</div>
+                                                        <div className="max-h-40 overflow-y-auto border border-white/5 bg-black/20 p-2 space-y-1">
+                                                            {libraryTracks.filter(t => t.isLiked).map((track, i) => (
+                                                                <div key={`liked-${i}`} className="flex items-center justify-between text-xs p-1 hover:bg-white/[0.02]">
+                                                                    <div className="truncate flex-1">
+                                                                        <span className="text-white font-bold">{track.title}</span>
+                                                                        <span className="text-white/30 ml-2">{getDisplayArtist(track)}</span>
+                                                                    </div>
+                                                                    <button 
+                                                                        onClick={() => {
+                                                                            if (selectedTracksForNewPlaylist.includes(track.id || track.Id)) {
+                                                                                setSelectedTracksForNewPlaylist(selectedTracksForNewPlaylist.filter(id => id !== (track.id || track.Id)));
+                                                                                setSelectedTracksObjects(selectedTracksObjects.filter(t => (t.id || t.Id) !== (track.id || track.Id)));
+                                                                            } else {
+                                                                                setSelectedTracksForNewPlaylist([...selectedTracksForNewPlaylist, track.id || track.Id]);
+                                                                                setSelectedTracksObjects([...selectedTracksObjects, track]);
+                                                                            }
+                                                                        }}
+                                                                        className={`px-1.5 py-0.5 border ${selectedTracksForNewPlaylist.includes(track.id || track.Id) ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-white/10 text-white/30'} text-[8px] font-black uppercase`}
+                                                                    >
+                                                                        {selectedTracksForNewPlaylist.includes(track.id || track.Id) ? 'QUITAR' : 'SUMAR'}
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Selected Tracks Section */}
+                                                    <div className="space-y-2">
+                                                        <div className="text-[9px] font-black uppercase tracking-widest text-white/50">// CANCIONES SELECCIONADAS</div>
+                                                        <div className="max-h-40 overflow-y-auto border border-white/5 bg-black/20 p-2 space-y-1">
+                                                            {selectedTracksObjects.map((track, i) => (
+                                                                <div key={`selected-${i}`} className="flex items-center justify-between text-xs p-1 hover:bg-white/[0.02]">
+                                                                    <div className="truncate flex-1">
+                                                                        <span className="text-white font-bold">{track.title || track.Title}</span>
+                                                                        <span className="text-white/30 ml-2">{track.artist || track.Artist || getDisplayArtist(track)}</span>
+                                                                    </div>
+                                                                    <button 
+                                                                        onClick={() => {
+                                                                            setSelectedTracksForNewPlaylist(selectedTracksForNewPlaylist.filter(id => id !== (track.id || track.Id)));
+                                                                            setSelectedTracksObjects(selectedTracksObjects.filter(t => (t.id || t.Id) !== (track.id || track.Id)));
+                                                                        }}
+                                                                        className="px-1.5 py-0.5 border border-[var(--accent)] text-[var(--accent)] text-[8px] font-black uppercase"
+                                                                    >
+                                                                        QUITAR
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                            {selectedTracksObjects.length === 0 && (
+                                                                <div className="text-[8px] text-white/20 uppercase py-2 text-center">No hay canciones seleccionadas</div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Search Section */}
+                                                    <div className="space-y-2">
+                                                        <div className="text-[9px] font-black uppercase tracking-widest text-white/50">// BUSCAR MAS</div>
+                                                        <div className="crate-search-box-large w-full">
+                                                            <Search size={16} className="text-[var(--accent)]" />
+                                                            <input 
+                                                                type="text" 
+                                                                placeholder={t('SEARCH_SIGNAL')} 
+                                                                value={playlistSearchQuery}
+                                                                onChange={(e) => {
+                                                                    setPlaylistSearchQuery(e.target.value);
+                                                                    // Trigger search
+                                                                    if (e.target.value.length > 2) {
+                                                                        API.Youtube.search(e.target.value).then(res => {
+                                                                            const tracks = Array.isArray(res.data) ? res.data : (res.data?.tracks || res.data?.Tracks || []);
+                                                                            setPlaylistSearchResults(tracks);
+                                                                        }).catch(err => {
+                                                                            console.error(err);
+                                                                            setPlaylistSearchResults([]);
+                                                                        });
+                                                                    } else {
+                                                                        setPlaylistSearchResults([]); // Limpiar resultados si es muy corto
+                                                                    }
+                                                                }}
+                                                                className="crate-search-input-large w-full"
+                                                            />
+                                                        </div>
+                                                        <div className="max-h-40 overflow-y-auto border border-white/5 bg-black/20 p-2 space-y-1">
+                                                            {playlistSearchResults.map((track, i) => (
+                                                                <div key={`search-${i}`} className="flex items-center justify-between text-xs p-1 hover:bg-white/[0.02]">
+                                                                    <div className="truncate flex-1">
+                                                                        <span className="text-white font-bold">{track.title || track.Title}</span>
+                                                                        <span className="text-white/30 ml-2">{track.artist || track.Artist}</span>
+                                                                    </div>
+                                                                    <button 
+                                                                        onClick={() => {
+                                                                            if (selectedTracksForNewPlaylist.includes(track.id || track.Id)) {
+                                                                                setSelectedTracksForNewPlaylist(selectedTracksForNewPlaylist.filter(id => id !== (track.id || track.Id)));
+                                                                                setSelectedTracksObjects(selectedTracksObjects.filter(t => (t.id || t.Id) !== (track.id || track.Id)));
+                                                                            } else {
+                                                                                setSelectedTracksForNewPlaylist([...selectedTracksForNewPlaylist, track.id || track.Id]);
+                                                                                setSelectedTracksObjects([...selectedTracksObjects, track]);
+                                                                            }
+                                                                        }}
+                                                                        className={`px-1.5 py-0.5 border ${selectedTracksForNewPlaylist.includes(track.id || track.Id) ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-white/10 text-white/30'} text-[8px] font-black uppercase`}
+                                                                    >
+                                                                        {selectedTracksForNewPlaylist.includes(track.id || track.Id) ? 'QUITAR' : 'SUMAR'}
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    <button 
+                                                        onClick={async () => {
+                                                            if (!newPlaylistName || isSavingPlaylist) return;
+                                                            setIsSavingPlaylist(true);
+                                                            try {
+                                                                let playlistId = editingPlaylistId;
+                                                                if (!playlistId) {
+                                                                    const res = await API.Playlists.create({ name: newPlaylistName });
+                                                                    playlistId = res.id || res.Id;
+                                                                } else {
+                                                                    await API.Playlists.update(playlistId, { name: newPlaylistName });
+                                                                }
+
+                                                                const currentTrackIds = (viewingPlaylist?.tracks || viewingPlaylist?.Tracks || []).map(t => t.id || t.Id);
+                                                                
+                                                                // Add new tracks
+                                                                for (const trackId of selectedTracksForNewPlaylist) {
+                                                                    if (!currentTrackIds.includes(trackId)) {
+                                                                        await API.Playlists.addTrack(playlistId, trackId);
+                                                                    }
+                                                                }
+
+                                                                // Remove tracks
+                                                                if (editingPlaylistId) {
+                                                                    for (const trackId of currentTrackIds) {
+                                                                        if (!selectedTracksForNewPlaylist.includes(trackId)) {
+                                                                            await API.Playlists.removeTrack(playlistId, trackId);
+                                                                        }
+                                                                    }
+                                                                }
+
+                                                                setIsCreatingPlaylist(false);
+                                                                setNewPlaylistName('');
+                                                                setSelectedTracksForNewPlaylist([]);
+                                                                setPlaylistSearchQuery('');
+                                                                setPlaylistSearchResults([]);
+                                                                setEditingPlaylistId(null);
+                                                                setViewingPlaylist(null); // Return to list
+                                                                await refreshLocalPlaylists(); // Refrescar lista!
+                                                            } catch (err) {
+                                                                console.error(err);
+                                                            } finally {
+                                                                setIsSavingPlaylist(false);
+                                                            }
+                                                        }}
+                                                        disabled={!newPlaylistName || isSavingPlaylist}
+                                                        className={`w-full py-2 ${(!newPlaylistName || isSavingPlaylist) ? 'bg-white/10 text-white/30 cursor-not-allowed' : 'bg-[var(--accent)] text-black hover:bg-[var(--accent)]/90'} font-black uppercase text-xs transition-all`}
+                                                    >
+                                                        {isSavingPlaylist ? '...' : ''}
+                                                    </button>
+                                                    {!newPlaylistName && (
+                                                        <div className="text-[8px] text-[var(--accent)]/60 uppercase text-center mt-2 font-mono">
+                                                            // Ingresa un nombre arriba para guardar
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                /* LIST VIEW */
+                                                <>
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)]">// MIS LISTAS</div>
+                                                        <button 
+                                                            onClick={() => setIsCreatingPlaylist(true)} 
+                                                            className="px-2 py-0.5 border border-[var(--accent)]/20 text-[var(--accent)] hover:bg-[var(--accent)] hover:text-black transition-all font-mono text-[9px] font-black uppercase flex items-center gap-1"
+                                                        >
+                                                            <Plus size={8} /> Crear
+                                                        </button>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        {(localPlaylists || []).map((p, i) => (
+                                                            <div 
+                                                                key={`pl-${i}`} 
+                                                                className="flex items-center gap-3 p-2 border border-white/5 hover:border-[var(--accent)]/20 cursor-pointer transition-all bg-black/40 hover:bg-white/[0.02]"
+                                                                onClick={() => handlePlaylistClick(p)}
+                                                            >
+                                                                <div className="w-10 h-10 bg-black border border-white/10 flex-shrink-0">
+                                                                    <img src={p.imageUrl || p.ImageUrl || 'https://via.placeholder.com/50?text=PL'} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://via.placeholder.com/50?text=PL'; }} />
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="text-xs font-black text-white uppercase truncate">{p.name || p.Title || 'UNNAMED_PLAYLIST'}</div>
+                                                                    <div className="text-[9px] text-white/30 font-mono">Playlist • {p.username || 'Uknown'}</div>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="text-[9px] text-[var(--accent)]/50 font-mono">{(p.tracks || p.Tracks || []).length} SIG</div>
+                                                                    <button 
+                                                                        onClick={async (e) => {
+                                                                            e.stopPropagation();
+                                                                            if (confirm(`¿Borrar playlist "${p.name || p.Title}"?`)) {
+                                                                                await API.Playlists.delete(p.id || p.Id);
+                                                                                await refreshLocalPlaylists();
+                                                                            }
+                                                                        }}
+                                                                        className="px-1.5 py-0.5 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all font-mono text-[8px] font-black uppercase"
+                                                                    >
+                                                                        Borrar
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
                                     )}
                                 </motion.div>

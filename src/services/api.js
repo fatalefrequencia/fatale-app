@@ -180,6 +180,10 @@ const API = {
         getMyCachedTracks: () => api.get('YoutubeCache/my-cached-tracks'),
         getStats: () => api.get('YoutubeCache/stats'),
     },
+    YoutubeTracks: {
+        save: (data) => api.post('YoutubeTracks/save', data),
+        getByYoutubeId: (youtubeId) => api.get(`YoutubeTracks/by-youtube-id/${youtubeId}`),
+    },
     Playlists: {
         getAll: () => api.get('Playlists'),
         getUserPlaylists: (userId) => api.get(`Playlists/user/${userId}`),
