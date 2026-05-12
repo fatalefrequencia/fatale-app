@@ -1152,11 +1152,12 @@ function App() {
       let found = libraryMap.get(pSource);
       if (!found) found = libraryMap.get(pId);
 
-      const isDiscoveryAbsolute = (pTrack.source || pTrack.Source || "").startsWith('http') || (pTrack.source || pTrack.Source || "").startsWith('youtube:');
-      const isYoutube = isDiscoveryAbsolute && (pTrack.source || pTrack.Source || "").startsWith('youtube:');
+      // Unified YouTube Resolution
+      const pureYtId = getGlobalYoutubeId(pTrack);
+      const isYoutube = !!pureYtId;
+      const isDiscoveryAbsolute = isYoutube || (pTrack.source || pTrack.Source || "").startsWith('http');
 
       // Resolve Like Status
-      const pureYtId = isYoutube ? (pTrack.source || pTrack.Source).split(':')[1] : null;
       const isLiked = isYoutube ? likedYoutubeIds.has(pureYtId) : (pTrack.isLiked || pTrack.IsLiked || found?.isLiked || found?.IsLiked);
 
       // Resolve Cover
@@ -1169,7 +1170,7 @@ function App() {
         return {
           ...found,
           id: pId || found.id || found.Id,
-          source: isDiscoveryAbsolute ? (pTrack.source || pTrack.Source) : (found.source || found.Source || pTrack.source || pTrack.Source),
+          source: isYoutube ? `youtube:${pureYtId}` : (isDiscoveryAbsolute ? (pTrack.source || pTrack.Source) : (found.source || found.Source || pTrack.source || pTrack.Source)),
           cover: resolvedCover,
           isLiked,
           isOwned: true,
@@ -1179,7 +1180,7 @@ function App() {
       return {
         ...pTrack,
         id: pId,
-        source: pTrack.source || pTrack.Source,
+        source: isYoutube ? `youtube:${pureYtId}` : (pTrack.source || pTrack.Source),
         cover: resolvedCover,
         isLiked,
         isOwned: true,

@@ -1238,7 +1238,9 @@ export const IPodPlayer = ({
                                             <div 
                                                 key={idx} 
                                                 className="flex items-center gap-3 cursor-pointer group"
-                                                onClick={() => { /* Handle playlist click */ }}
+                                                onClick={() => {
+                                                    onPlayPlaylist && onPlayPlaylist(p.tracks || [], 0);
+                                                }}
                                             >
                                                 <div className="w-12 h-12 bg-[#f00060]/10 flex items-center justify-center rounded-sm shrink-0">
                                                     <Layers size={20} className="text-[#f00060]" />
@@ -1254,7 +1256,10 @@ export const IPodPlayer = ({
                                             <div 
                                                 key={idx} 
                                                 className="flex items-center gap-3 cursor-pointer group"
-                                                onClick={() => { /* Handle track click */ }}
+                                                onClick={() => {
+                                                    const favorites = libraryTracks.filter(track => track.isLiked);
+                                                    onPlayPlaylist && onPlayPlaylist(favorites, idx);
+                                                }}
                                             >
                                                 <div className="w-12 h-12 bg-[#ff006e]/20 flex items-center justify-center rounded-sm shrink-0">
                                                     <Heart size={20} className="text-[#ff006e]" fill="currentColor" />

@@ -43,7 +43,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
     const [activeTerminalCommunity, setActiveTerminalCommunity] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isBooting, setIsBooting] = useState(true);
-    const [mobileViewMode, setMobileViewMode] = useState('globe'); // 'globe', 'stats', 'communities'
+    const [mobileViewMode, setMobileViewMode] = useState('globe'); // 'globe', 'data', 'search'
 
     const resolveThumbnail = (vis) => {
         // Handle PascalCase and camelCase variants from backend
@@ -451,104 +451,80 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                 </div>
 
                 {/* CENTRAL SEARCH */}
-                <div className="relative group w-full lg:w-[450px]">
-                    <div 
-                        className="absolute -inset-1 rounded-lg blur opacity-0 group-focus-within:opacity-100 transition duration-1000 group-focus-within:duration-200"
-                        style={{ backgroundColor: activeSectorColor || '#ff006e', opacity: activeSectorColor ? 0.3 : 0 }}
-                    ></div>
-                    <div className="relative flex items-center">
-                        <div className="absolute left-3 flex items-center pointer-events-none">
-                            <Search 
-                                size={16} 
-                                className="group-focus-within:opacity-100 transition-opacity" 
-                                style={{ color: activeSectorColor || '#ff006e', opacity: activeSector ? 1 : 0.4 }}
+                {isMobile && mobileViewMode !== 'search' ? (
+                    <button 
+                        onClick={() => setMobileViewMode('search')}
+                        className="p-2 text-[#ff006e] hover:text-white transition-colors self-center lg:hidden"
+                    >
+                        <Search size={20} />
+                    </button>
+                ) : (
+                    <div className="relative group w-full lg:w-[450px]">
+                        <div 
+                            className="absolute -inset-1 rounded-lg blur opacity-0 group-focus-within:opacity-100 transition duration-1000 group-focus-within:duration-200"
+                            style={{ backgroundColor: activeSectorColor || '#ff006e', opacity: activeSectorColor ? 0.3 : 0 }}
+                        ></div>
+                        <div className="relative flex items-center">
+                            <div className="absolute left-3 flex items-center pointer-events-none">
+                                <Search 
+                                    size={16} 
+                                    className="group-focus-within:opacity-100 transition-opacity" 
+                                    style={{ color: activeSectorColor || '#ff006e', opacity: activeSector ? 1 : 0.4 }}
+                                />
+                            </div>
+                            <input 
+                                type="text"
+                                placeholder={t('SEARCH_SIGNAL')}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-black/60 border rounded px-10 py-2.5 text-xs tracking-[0.2em] focus:outline-none focus:ring-1 transition-all placeholder:text-[#ff006e]/20"
+                                style={{ 
+                                    borderColor: activeSectorColor ? `${activeSectorColor}99` : 'rgba(255,0,110,0.3)', 
+                                    focusBorderColor: activeSectorColor || '#ff006e',
+                                    color: activeSectorColor || 'white',
+                                    '--tw-ring-color': activeSectorColor ? `${activeSectorColor}33` : 'rgba(255,0,110,0.2)'
+                                }}
                             />
+                            {searchQuery && (
+                                <button 
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-3 text-white/20 hover:text-white transition-colors"
+                                >
+                                    <X size={14} />
+                                </button>
+                            )}
                         </div>
-                        <input 
-                            type="text"
-                            placeholder={t('SEARCH_SIGNAL')}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-black/60 border rounded px-10 py-2.5 text-xs tracking-[0.2em] focus:outline-none focus:ring-1 transition-all placeholder:text-[#ff006e]/20"
-                            style={{ 
-                                borderColor: activeSectorColor ? `${activeSectorColor}99` : 'rgba(255,0,110,0.3)', 
-                                focusBorderColor: activeSectorColor || '#ff006e',
-                                color: activeSectorColor || 'white',
-                                '--tw-ring-color': activeSectorColor ? `${activeSectorColor}33` : 'rgba(255,0,110,0.2)'
-                            }}
-                        />
-                        {searchQuery && (
-                            <button 
-                                onClick={() => setSearchQuery('')}
-                                className="absolute right-3 text-white/20 hover:text-white transition-colors"
-                            >
-                                <X size={14} />
-                            </button>
-                        )}
                     </div>
+                )}
 
-                    {/* MOBILE DUAL VIEW TOGGLE */}
-                    {isMobile && (
-                        <div className="mt-4 flex bg-black/40 border border-[#ff006e]/20 rounded-sm p-1 gap-1 pointer-events-auto relative z-[70]">
-                            <button 
-                                onTouchStart={(e) => { e.stopPropagation(); setMobileViewMode('globe'); }}
-                                onClick={(e) => { e.stopPropagation(); setMobileViewMode('globe'); }}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'globe' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
-                            >
-                                <Globe size={12} /> {t('GLOBE_SENSE')}
-                            </button>
-                            <button 
-                                onTouchStart={(e) => { e.stopPropagation(); setMobileViewMode('data'); }}
-                                onClick={(e) => { e.stopPropagation(); setMobileViewMode('data'); }}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'data' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
-                            >
-                                <Activity size={12} /> {t('DATA_STREAM')}
-                            </button>
-                        </div>
-                    )}
+                {/* MOBILE VIEW TOGGLE */}
+                {isMobile && (
+                    <div className="mt-4 flex bg-black/40 border border-[#ff006e]/20 rounded-sm p-1 gap-1 pointer-events-auto relative z-[70] w-full">
+                        <button 
+                            onTouchStart={(e) => { e.stopPropagation(); setMobileViewMode('globe'); }}
+                            onClick={(e) => { e.stopPropagation(); setMobileViewMode('globe'); }}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'globe' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
+                        >
+                            <Globe size={12} /> {t('GLOBE_SENSE')}
+                        </button>
+                        <button 
+                            onTouchStart={(e) => { e.stopPropagation(); setMobileViewMode('data'); }}
+                            onClick={(e) => { e.stopPropagation(); setMobileViewMode('data'); }}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'data' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
+                        >
+                            <Activity size={12} /> {t('DATA_STREAM')}
+                        </button>
+                        <button 
+                            onTouchStart={(e) => { e.stopPropagation(); setMobileViewMode('search'); }}
+                            onClick={(e) => { e.stopPropagation(); setMobileViewMode('search'); }}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'search' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
+                        >
+                            <Search size={12} /> BÚSQUEDA
+                        </button>
+                    </div>
+                )}
 
-                    {/* MOBILE YOUTUBE SEARCH RESULTS */}
-                    {isMobile && searchQuery.length >= 3 && (
-                        <div className="mt-2 bg-black/90 border border-[#ff006e]/30 rounded-sm p-3 pointer-events-auto max-h-64 overflow-y-auto no-scrollbar relative z-[80] animate-in slide-in-from-top-2 duration-300">
-                            <div className="text-[10px] font-black uppercase text-[#ff006e] mb-2 tracking-widest flex items-center justify-between">
-                                <span>:: YT_FREQ_SCAN ::</span>
-                                <span className="text-[8px] opacity-60">{youtubeResults.length} FOUND</span>
-                            </div>
-                            <div className="space-y-2">
-                                {youtubeResults.length > 0 ? youtubeResults.map(y => (
-                                    <div key={y.id} className="flex items-center gap-3 p-1.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => {
-                                        onPlayTrack(y);
-                                        try {
-                                            const history = JSON.parse(localStorage.getItem('recent_youtube_tracks') || '[]');
-                                            const filtered = history.filter(item => item.id !== y.id);
-                                            filtered.unshift({
-                                                id: y.id,
-                                                title: y.title,
-                                                author: y.author || "Unknown",
-                                                thumbnailUrl: y.thumbnailUrl || `https://img.youtube.com/vi/${y.id}/hqdefault.jpg`
-                                            });
-                                            localStorage.setItem('recent_youtube_tracks', JSON.stringify(filtered.slice(0, 10)));
-                                            setRecentYoutubeTracks(filtered.slice(0, 10));
-                                        } catch (err) { console.error(err); }
-                                    }}>
-                                        <div className="w-10 h-10 bg-black overflow-hidden relative border border-white/5 group-hover:border-[#ff006e]/40 shrink-0">
-                                             <img 
-                                                src={y.thumbnailUrl || y.ThumbnailUrl || `https://img.youtube.com/vi/${y.id}/hqdefault.jpg`} 
-                                                alt="" 
-                                                className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" 
-                                              />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{y.title}</div>
-                                            <div className="text-[7px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">{y.author}</div>
-                                        </div>
-                                    </div>
-                                )) : (
-                                    <div className="text-[8px] opacity-40 text-center py-2">SCANNING_FREQUENCIES...</div>
-                                )}
-                            </div>
-                        </div>
-                    )}
+                    {/* MOBILE SEARCH RESULTS MOVED TO MAIN AREA */}
 
                     {/* Small frequency indicator below switch/search */}
                     {!isMobile && (
@@ -579,7 +555,6 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                     <div className="w-[1px] h-3 bg-white/10" />
                     <div className="tabular-nums">{new Date().toISOString().split('T')[0]}</div>
                 </div>
-            </div>
 
             {/* --- MAIN DASHBOARD GRID --- */}
             <motion.div 
@@ -1461,207 +1436,263 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                      </div>
                        </>
                     )}
+
+                    {isMobile && mobileViewMode === 'search' && (
+                        <div className="flex-1 pointer-events-auto flex flex-col p-4 bg-black/90 border border-[#ff006e]/20 rounded-sm mt-4 overflow-y-auto no-scrollbar">
+                            <div className="text-[10px] font-black uppercase text-[#ff006e] mb-4 tracking-widest flex items-center justify-between">
+                                <span>:: YT_FREQ_SCAN ::</span>
+                                <span className="text-[8px] opacity-60">{youtubeResults.length} FOUND</span>
+                            </div>
+                            <div className="space-y-2 flex-1">
+                                {youtubeResults.length > 0 ? youtubeResults.map(y => (
+                                    <div key={y.id} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => {
+                                        onPlayTrack(y);
+                                        setMobileViewMode('globe'); // Return to map!
+                                        try {
+                                            const history = JSON.parse(localStorage.getItem('recent_youtube_tracks') || '[]');
+                                            const filtered = history.filter(item => item.id !== y.id);
+                                            filtered.unshift({
+                                                id: y.id,
+                                                title: y.title,
+                                                author: y.author || "Unknown",
+                                                thumbnailUrl: y.thumbnailUrl || `https://img.youtube.com/vi/${y.id}/hqdefault.jpg`
+                                            });
+                                            localStorage.setItem('recent_youtube_tracks', JSON.stringify(filtered.slice(0, 10)));
+                                            setRecentYoutubeTracks(filtered.slice(0, 10));
+                                        } catch (err) { console.error(err); }
+                                    }}>
+                                        <div className="w-12 h-12 bg-black overflow-hidden relative border border-white/5 group-hover:border-[#ff006e]/40 shrink-0">
+                                             <img 
+                                                src={y.thumbnailUrl || y.ThumbnailUrl || `https://img.youtube.com/vi/${y.id}/hqdefault.jpg`} 
+                                                alt="" 
+                                                className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" 
+                                              />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{y.title}</div>
+                                            <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">{y.author}</div>
+                                        </div>
+                                    </div>
+                                )) : (
+                                    <div className="text-[8px] opacity-40 text-center py-4">SCANNING_FREQUENCIES...</div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                     
                     {isMobile && mobileViewMode === 'data' && (
                         <div className="flex flex-col gap-6 pointer-events-auto mt-4 overflow-y-auto no-scrollbar max-h-[70vh]">
-                            {/* Playlists */}
-                            <HUDWidget title={selectedPlaylist ? `${t('DESC_PL')}: ${(selectedPlaylist.name || selectedPlaylist.Name || '').toUpperCase()}` : "[ PLAYLISTS ]"} icon={selectedPlaylist ? <ChevronLeft size={14} className="cursor-pointer hover:text-white transition-colors" onClick={() => setSelectedPlaylist(null)} /> : <Music size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
-                             {selectedPlaylist ? (
-                                 loadingPlaylist ? (
-                                     <div className="text-[8px] opacity-40 text-center py-4">LOADING...</div>
-                                 ) : (
-                                     <div className="space-y-2 max-h-64 overflow-y-auto no-scrollbar">
-                                         {playlistTracks.length > 0 ? playlistTracks.map(t => (
-                                             <div key={t.id} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 cursor-pointer group" onClick={() => onPlayTrack(t)}>
-                                                 <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                 <div className="flex-1 min-w-0">
-                                                     <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] uppercase">{t.title}</div>
-                                                     <div className="text-[8px] opacity-30 truncate uppercase">{t.artist}</div>
-                                                 </div>
-                                             </div>
-                                         )) : (
-                                             <div className="text-[8px] opacity-40 text-center py-4">NO_SIGNALS_FOUND</div>
-                                         )}
-                                     </div>
-                                 )
-                             ) : (
-                                 <div className="space-y-4 animate-in fade-in duration-500">
-                                     {/* User Playlists */}
-                                     <div>
-                                         <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">TUS_PLAYLISTS</div>
-                                         {userPlaylists.length > 0 ? userPlaylists.map(p => (
-                                             <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={async () => {
-                                                 setSelectedPlaylist(p);
-                                                 setLoadingPlaylist(true);
-                                                 try {
-                                                     const res = await API.Playlists.getById(p.id || p.Id);
-                                                     setPlaylistTracks(res.data?.tracks || []);
-                                                 } catch (err) {
-                                                     console.error("Failed to fetch playlist tracks:", err);
-                                                 } finally {
-                                                     setLoadingPlaylist(false);
-                                                 }
-                                             }}>
-                                                 <div className="w-8 h-8 bg-black border border-white/10 flex items-center justify-center group-hover:border-[#ff006e]/40">
-                                                     <Layers size={12} className="text-white/40 group-hover:text-[#ff006e]" />
-                                                 </div>
-                                                 <div className="flex-1 min-w-0">
-                                                     <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
-                                                     <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">{p.tracks?.length || 0} SIGNALS</div>
-                                                 </div>
-                                                 <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
-                                             </div>
-                                         )) : (
-                                             <div className="text-[8px] opacity-30 px-2 py-1">NO_PLAYLISTS_CREATED</div>
-                                         )}
-                                     </div>
+                            <div className="space-y-2">
+                                <div className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center gap-2">
+                                    {selectedPlaylist ? <ChevronLeft size={14} className="cursor-pointer hover:text-white transition-colors" onClick={() => setSelectedPlaylist(null)} /> : <Music size={14}/>}
+                                    {selectedPlaylist ? `${t('DESC_PL')}: ${(selectedPlaylist.name || selectedPlaylist.Name || '').toUpperCase()}` : "[ PLAYLISTS ]"}
+                                </div>
+                                <div className="space-y-2">
+                                    {selectedPlaylist ? (
+                                        loadingPlaylist ? (
+                                            <div className="text-[8px] opacity-40 text-center py-4">LOADING...</div>
+                                        ) : (
+                                            <div className="space-y-2 max-h-64 overflow-y-auto no-scrollbar">
+                                                {playlistTracks.length > 0 ? playlistTracks.map(t => (
+                                                    <div key={t.id} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 cursor-pointer group" onClick={() => onPlayTrack(t)}>
+                                                        <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] uppercase">{t.title}</div>
+                                                            <div className="text-[8px] opacity-30 truncate uppercase">{t.artist}</div>
+                                                        </div>
+                                                    </div>
+                                                )) : (
+                                                    <div className="text-[8px] opacity-40 text-center py-4">NO_SIGNALS_FOUND</div>
+                                                )}
+                                            </div>
+                                        )
+                                    ) : (
+                                        <div className="space-y-4 animate-in fade-in duration-500">
+                                            {/* User Playlists */}
+                                            <div>
+                                                <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">TUS_PLAYLISTS</div>
+                                                {userPlaylists.length > 0 ? userPlaylists.map(p => (
+                                                    <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={async () => {
+                                                        setSelectedPlaylist(p);
+                                                        setLoadingPlaylist(true);
+                                                        try {
+                                                            const res = await API.Playlists.getById(p.id || p.Id);
+                                                            setPlaylistTracks(res.data?.tracks || []);
+                                                        } catch (err) {
+                                                            console.error("Failed to fetch playlist tracks:", err);
+                                                        } finally {
+                                                            setLoadingPlaylist(false);
+                                                        }
+                                                    }}>
+                                                        <div className="w-8 h-8 bg-black border border-white/10 flex items-center justify-center group-hover:border-[#ff006e]/40">
+                                                            <Layers size={12} className="text-white/40 group-hover:text-[#ff006e]" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
+                                                            <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">{p.tracks?.length || 0} SIGNALS</div>
+                                                        </div>
+                                                        <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    </div>
+                                                )) : (
+                                                    <div className="text-[8px] opacity-30 px-2 py-1">NO_PLAYLISTS_CREATED</div>
+                                                )}
+                                            </div>
 
-                                     {/* Recommended Playlists */}
-                                     <div>
-                                         <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">RECOMENDADAS</div>
-                                         {trendingPlaylists.length > 0 ? trendingPlaylists.map(p => (
-                                             <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={async () => {
-                                                 setSelectedPlaylist(p);
-                                                 setLoadingPlaylist(true);
-                                                 try {
-                                                     const res = await API.Playlists.getById(p.id || p.Id);
-                                                     setPlaylistTracks(res.data?.tracks || []);
-                                                 } catch (err) {
-                                                     console.error("Failed to fetch playlist tracks:", err);
-                                                 } finally {
-                                                     setLoadingPlaylist(false);
-                                                 }
-                                             }}>
-                                                 <div className="w-8 h-8 bg-black border border-white/10 flex items-center justify-center group-hover:border-[#ff006e]/40">
-                                                     <Layers size={12} className="text-white/40 group-hover:text-[#ff006e]" />
-                                                 </div>
-                                                 <div className="flex-1 min-w-0">
-                                                     <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
-                                                     <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">BY {p.userName || p.UserName || "UNKNOWN"}</div>
-                                                 </div>
-                                                 <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
-                                             </div>
-                                         )) : (
-                                             <div className="text-[8px] opacity-30 px-2 py-1">NO_RECOMMENDATIONS_AVAILABLE</div>
-                                         )}
-                                     </div>
-                                 </div>
-                             )}
-                            </HUDWidget>
+                                            {/* Recommended Playlists */}
+                                            <div>
+                                                <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">RECOMENDADAS</div>
+                                                {trendingPlaylists.length > 0 ? trendingPlaylists.map(p => (
+                                                    <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={async () => {
+                                                        setSelectedPlaylist(p);
+                                                        setLoadingPlaylist(true);
+                                                        try {
+                                                            const res = await API.Playlists.getById(p.id || p.Id);
+                                                            setPlaylistTracks(res.data?.tracks || []);
+                                                        } catch (err) {
+                                                            console.error("Failed to fetch playlist tracks:", err);
+                                                        } finally {
+                                                            setLoadingPlaylist(false);
+                                                        }
+                                                    }}>
+                                                        <div className="w-8 h-8 bg-black border border-white/10 flex items-center justify-center group-hover:border-[#ff006e]/40">
+                                                            <Layers size={12} className="text-white/40 group-hover:text-[#ff006e]" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
+                                                            <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">BY {p.userName || p.UserName || "UNKNOWN"}</div>
+                                                        </div>
+                                                        <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    </div>
+                                                )) : (
+                                                    <div className="text-[8px] opacity-30 px-2 py-1">NO_RECOMMENDATIONS_AVAILABLE</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                             
                             {/* Feed (Visuals) */}
-                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('feed')}>{t('STUDIO_TRANS')}</span>} icon={<Camera size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
-                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                                 {/* New Post/Track Button */}
-                                 <div 
-                                     onClick={() => { if (setIngestMode) setIngestMode('ALL'); if (setShowGlobalIngest) setShowGlobalIngest(true); }}
-                                     className="aspect-square border border-dashed border-[#ff006e]/40 flex flex-col items-center justify-center cursor-pointer hover:border-[#ff006e] hover:bg-[#ff006e]/5 transition-all group"
-                                 >
-                                     <Plus size={16} className="text-[#ff006e] opacity-60 group-hover:opacity-100 mb-1 transition-all" />
-                                     <span className="text-[8px] font-black uppercase tracking-widest text-[#ff006e] opacity-60 group-hover:opacity-100">PUBLICAR</span>
-                                 </div>
-                                 
-                                 {filteredVisuals.length > 0 ? filteredVisuals.map(vis => (
-                                     <div 
-                                        key={vis.id} 
-                                        className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-[#ff006e]/60 transition-all shadow-xl" 
-                                        onClick={() => onExpandContent(
-                                            vis, 
-                                            (vis.mediaType || '').toLowerCase() === 'video' ? 'video' : 'photo', 
-                                            { themeColor: '#9d00ff', backgroundColor: '#000000' }
-                                        )}
-                                     >
-                                          {(vis.mediaType || vis.MediaType || '').toLowerCase() === 'video' ? (
-                                              <video src={getMediaUrl(vis.imageUrl || vis.ImageUrl)} className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000" muted loop autoPlay playsInline />
-                                          ) : (
-                                              <img src={resolveThumbnail(vis)} alt="" className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
-                                          )}
-                                          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ff006e] scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
-                                          {(vis.mediaType || vis.MediaType || '').toLowerCase() === 'video' && (
-                                              <div className="absolute top-1 right-1">
-                                                  <Play size={8} className="text-[#ff006e]" />
-                                              </div>
-                                          )}
-                                     </div>
-                                 )) : (
-                                     <div 
-                                         onClick={() => setShowGlobalIngest && setShowGlobalIngest(true)}
-                                         className="col-span-full border border-dashed border-white/20 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-[#ff006e]/60 hover:bg-[#ff006e]/5 transition-all group"
-                                     >
-                                         <Camera size={20} className="opacity-40 group-hover:text-[#ff006e] group-hover:opacity-100 mb-2 transition-all" />
-                                         <span className="text-[9px] font-black uppercase tracking-widest opacity-60 group-hover:text-[#ff006e] group-hover:opacity-100">SIN_TRANSMISIONES_VISUALES</span>
-                                         <span className="text-[7px] uppercase tracking-[0.2em] opacity-40 mt-1">[ INICIAR_TRANSMISIÓN ]</span>
-                                     </div>
-                                 )}
-                             </div>
-                            </HUDWidget>
+                            <div className="space-y-2">
+                                <div className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center gap-2">
+                                    <Camera size={14}/>
+                                    <span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('feed')}>{t('STUDIO_TRANS')}</span>
+                                </div>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                                    {/* New Post/Track Button */}
+                                    <div 
+                                        onClick={() => { if (setIngestMode) setIngestMode('ALL'); if (setShowGlobalIngest) setShowGlobalIngest(true); }}
+                                        className="aspect-square border border-dashed border-[#ff006e]/40 flex flex-col items-center justify-center cursor-pointer hover:border-[#ff006e] hover:bg-[#ff006e]/5 transition-all group"
+                                    >
+                                        <Plus size={16} className="text-[#ff006e] opacity-60 group-hover:opacity-100 mb-1 transition-all" />
+                                        <span className="text-[8px] font-black uppercase tracking-widest text-[#ff006e] opacity-60 group-hover:opacity-100">PUBLICAR</span>
+                                    </div>
+                                    
+                                    {filteredVisuals.length > 0 ? filteredVisuals.map(vis => (
+                                        <div 
+                                           key={vis.id} 
+                                           className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-[#ff006e]/60 transition-all shadow-xl" 
+                                           onClick={() => onExpandContent(
+                                               vis, 
+                                               (vis.mediaType || '').toLowerCase() === 'video' ? 'video' : 'photo', 
+                                               { themeColor: '#9d00ff', backgroundColor: '#000000' }
+                                           )}
+                                        >
+                                             {(vis.mediaType || vis.MediaType || '').toLowerCase() === 'video' ? (
+                                                 <video src={getMediaUrl(vis.imageUrl || vis.ImageUrl)} className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000" muted loop autoPlay playsInline />
+                                             ) : (
+                                                 <img src={resolveThumbnail(vis)} alt="" className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
+                                             )}
+                                             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ff006e] scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+                                             {(vis.mediaType || vis.MediaType || '').toLowerCase() === 'video' && (
+                                                 <div className="absolute top-1 right-1">
+                                                     <Play size={8} className="text-[#ff006e]" />
+                                                 </div>
+                                             )}
+                                        </div>
+                                    )) : (
+                                        <div 
+                                            onClick={() => setShowGlobalIngest && setShowGlobalIngest(true)}
+                                            className="col-span-full border border-dashed border-white/20 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-[#ff006e]/60 hover:bg-[#ff006e]/5 transition-all group"
+                                        >
+                                            <Camera size={20} className="opacity-40 group-hover:text-[#ff006e] group-hover:opacity-100 mb-2 transition-all" />
+                                            <span className="text-[9px] font-black uppercase tracking-widest opacity-60 group-hover:text-[#ff006e] group-hover:opacity-100">SIN_TRANSMISIONES_VISUALES</span>
+                                            <span className="text-[7px] uppercase tracking-[0.2em] opacity-40 mt-1">[ INICIAR_TRANSMISIÓN ]</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                             
                             {/* Artists */}
-                            <HUDWidget title={t('ARTIST_NODES')} icon={<User size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
-                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-2 pt-2">
-                                 {filteredArtists.map(a => (
-                                     <div key={a.id} className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => navigateToProfile(a.userId)}>
-                                          <div className="relative w-14 h-14">
-                                              {/* Radar Node Circle */}
-                                              <div className="absolute inset-0 rounded-full border border-[#ff006e]/20 group-hover:border-[#ff006e]/60 transition-colors" />
-                                              <div className="absolute inset-[-4px] rounded-full border border-dashed border-[#ff006e]/10 group-hover:ring-1 group-hover:ring-[#ff006e]/20 group-hover:animate-spin transition-all duration-[3000ms]" />
-                                              
-                                              <div className="absolute inset-[4px] rounded-full overflow-hidden border-2 border-black z-10 bg-black">
-                                                  <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all scale-110 group-hover:scale-100" />
-                                              </div>
-                                              
-                                              {/* Scan sweep line */}
-                                              <div className="absolute inset-0 z-20 pointer-events-none rounded-full bg-gradient-to-tr from-[#ff006e]/30 via-transparent to-transparent animate-spin opacity-0 group-hover:opacity-100" style={{ animationDuration: '2s' }} />
-                                          </div>
-                                          <span className="text-[8px] text-center truncate w-full uppercase font-black tracking-widest opacity-40 group-hover:opacity-100 group-hover:text-[#ff006e] transition-all">{a.name}</span>
-                                     </div>
-                                 ))}
-                             </div>
-                            </HUDWidget>
+                            <div className="space-y-2">
+                                <div className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center gap-2">
+                                    <User size={14}/>
+                                    {t('ARTIST_NODES')}
+                                </div>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-2 pt-2">
+                                    {filteredArtists.map(a => (
+                                        <div key={a.id} className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => navigateToProfile(a.userId)}>
+                                             <div className="relative w-14 h-14">
+                                                 <div className="absolute inset-0 rounded-full border border-[#ff006e]/20 group-hover:border-[#ff006e]/60 transition-colors" />
+                                                 <div className="absolute inset-[-4px] rounded-full border border-dashed border-[#ff006e]/10 group-hover:ring-1 group-hover:ring-[#ff006e]/20 group-hover:animate-spin transition-all duration-[3000ms]" />
+                                                 
+                                                 <div className="absolute inset-[4px] rounded-full overflow-hidden border-2 border-black z-10 bg-black">
+                                                     <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all scale-110 group-hover:scale-100" />
+                                                 </div>
+                                                 
+                                                 <div className="absolute inset-0 z-20 pointer-events-none rounded-full bg-gradient-to-tr from-[#ff006e]/30 via-transparent to-transparent animate-spin opacity-0 group-hover:opacity-100" style={{ animationDuration: '2s' }} />
+                                             </div>
+                                             <span className="text-[8px] text-center truncate w-full uppercase font-black tracking-widest opacity-40 group-hover:opacity-100 group-hover:text-[#ff006e] transition-all">{a.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                             
                             {/* Marketplace */}
-                            <HUDWidget title="[ MARKETPLACE ]" icon={<Layers size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
-                             {marketplaceItems.length > 0 ? (
-                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in duration-500">
-                                     {marketplaceItems.map(item => (
-                                         <div key={item.id || item.Id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => {
-                                             const desc = item.description || item.Description;
-                                             if (desc && desc !== "#") {
-                                                 window.open(desc, '_blank');
-                                             }
-                                         }}>
-                                              {((item.type || item.Type) || '').toLowerCase() === 'video' ? (
-                                                  <video src={getMediaUrl(item.url || item.Url)} className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" muted loop autoPlay playsInline />
-                                              ) : (
-                                                  <img src={getMediaUrl(item.url || item.Url)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
-                                              )}
-                                              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                                              <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
-                                              
-                                              {/* Tag / Label */}
-                                              <div className="absolute top-2 left-2 z-10">
-                                                  <span className="text-[7px] font-mono text-[#ff006e]/80 bg-black/80 px-1.5 py-0.5 border border-[#ff006e]/30 uppercase tracking-widest">OBJ_FOUND</span>
-                                              </div>
-                                              
-                                              {/* Content Bar */}
-                                              <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5 bg-black/70 p-2 backdrop-blur-sm border border-white/5 group-hover:border-[#ff006e]/20 transition-all">
-                                                  <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight text-white transition-colors">
-                                                      {(item.description || item.Description) ? (item.description || item.Description) : ((item.title || item.Title) && !(item.title || item.Title).includes(' ') && (item.title || item.Title).length > 20 ? 'UNTITLED' : (item.title || item.Title))}
-                                                  </div>
-                                                  <div className="text-[7px] text-white/40 uppercase tracking-widest font-mono">
-                                                      LOC: SEC_{hashStr(item.id || item.Id) % 99} // ID: {String(item.id || item.Id).substring(0, 6)}
-                                                  </div>
-                                              </div>
-                                         </div>
-                                     ))}
-                                 </div>
-                             ) : (
-                                 <div className="flex flex-col items-center justify-center py-10 opacity-20">
-                                     <Layers size={16} className="mb-2" />
-                                     <div className="text-[8px] tracking-widest uppercase text-center px-4">SIN_TIENDAS_DISPONIBLES</div>
-                                 </div>
-                             )}
-                            </HUDWidget>
+                            <div className="space-y-2">
+                                <div className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center gap-2">
+                                    <Layers size={14}/>
+                                    [ MARKETPLACE ]
+                                </div>
+                                {marketplaceItems.length > 0 ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in duration-500">
+                                        {marketplaceItems.map(item => (
+                                            <div key={item.id || item.Id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => {
+                                                const desc = item.description || item.Description;
+                                                if (desc && desc !== "#") {
+                                                    window.open(desc, '_blank');
+                                                }
+                                            }}>
+                                                 {((item.type || item.Type) || '').toLowerCase() === 'video' ? (
+                                                     <video src={getMediaUrl(item.url || item.Url)} className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" muted loop autoPlay playsInline />
+                                                 ) : (
+                                                     <img src={getMediaUrl(item.url || item.Url)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
+                                                 )}
+                                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                                                 <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
+                                                 
+                                                 <div className="absolute top-2 left-2 z-10">
+                                                     <span className="text-[7px] font-mono text-[#ff006e]/80 bg-black/80 px-1.5 py-0.5 border border-[#ff006e]/30 uppercase tracking-widest">OBJ_FOUND</span>
+                                                 </div>
+                                                 
+                                                 <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5 bg-black/70 p-2 backdrop-blur-sm border border-white/5 group-hover:border-[#ff006e]/20 transition-all">
+                                                     <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight text-white transition-colors">
+                                                         {(item.description || item.Description) ? (item.description || item.Description) : ((item.title || item.Title) && !(item.title || item.Title).includes(' ') && (item.title || item.Title).length > 20 ? 'UNTITLED' : (item.title || item.Title))}
+                                                     </div>
+                                                     <div className="text-[7px] text-white/40 uppercase tracking-widest font-mono">
+                                                         LOC: SEC_{hashStr(item.id || item.Id) % 99} // ID: {String(item.id || item.Id).substring(0, 6)}
+                                                     </div>
+                                                 </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-10 opacity-20">
+                                        <Layers size={16} className="mb-2" />
+                                        <div className="text-[8px] tracking-widest uppercase text-center px-4">SIN_TIENDAS_DISPONIBLES</div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                 </motion.div>
