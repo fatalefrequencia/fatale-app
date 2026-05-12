@@ -216,19 +216,27 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                         const isMe = String(m.senderId || m.SenderId) === String(user?.id || user?.Id);
                         const timestamp = m.timestamp || m.Timestamp;
                         const content = m.content || m.Content;
-                        const otherUserInitial = (currentChat.username || "??").toUpperCase().slice(0, 2);
+                        const senderUsername = isMe ? (user?.username || user?.Username || 'YOU') : (currentChat.username || '??');
+                        const senderAvatar = isMe ? (user?.profilePictureUrl || user?.ProfilePictureUrl || user?.profileImageUrl || user?.ProfileImageUrl) : (currentChat.profileImageUrl || currentChat.ProfileImageUrl);
 
                         return (
-                            <div key={m.id || i} className="group flex gap-3 text-[13px] leading-relaxed">
-                                <span className="text-white/20 shrink-0 select-none">
+                            <div key={m.id || i} className="group flex gap-2 text-[13px] leading-relaxed items-start">
+                                <span className="text-white/20 shrink-0 select-none font-mono">
                                     [{new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}]
                                 </span>
+                                <div className="w-5 h-5 flex-shrink-0 border border-white/10 flex items-center justify-center overflow-hidden relative bg-black mt-0.5">
+                                    {senderAvatar ? (
+                                        <img src={getMediaUrl(senderAvatar)} alt="User" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="font-mono text-white/20 text-[10px] font-black">{senderUsername?.[0]?.toUpperCase()}</span>
+                                    )}
+                                </div>
                                 <div className="flex-1">
                                     <span
                                         onClick={() => !isMe && navigateToProfile(m.senderId || m.SenderId)}
                                         className={`font-black uppercase tracking-tight cursor-pointer mr-2 ${isMe ? 'text-[#ff006e]' : 'text-cyan-400 hover:underline'}`}
                                     >
-                                        [{isMe ? 'YOU' : otherUserInitial}]
+                                        [{senderUsername}]
                                     </span>
                                     <span className={isMe ? 'text-white/90' : 'text-white/70'}>
                                         {content}

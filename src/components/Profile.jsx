@@ -1985,6 +1985,7 @@ export const ProfileView = React.memo(({
                             </div>
                         )}
 
+                        {/* 
                         <GearRack 
                             gears={profileGear} 
                             isMe={isMe} 
@@ -1997,6 +1998,8 @@ export const ProfileView = React.memo(({
                             setShowForm={setShowGearForm}
                             secondaryColor={profileSecondary}
                         />
+                        */}
+                        {/* 
                         <div className="p-4 border-t border-white/5 max-h-[300px] overflow-y-auto custom-scrollbar">
                             <div className="text-[10px] font-black text-white/40 mb-3 uppercase tracking-widest">Recent Activity</div>
                             <div className="space-y-2">
@@ -2016,6 +2019,7 @@ export const ProfileView = React.memo(({
                                 ))}
                             </div>
                         </div>
+                        */}
                     </SubsystemBlock>
                 </div>
 
@@ -2066,25 +2070,97 @@ export const ProfileView = React.memo(({
                 </div>
 
                 {/* Studio Content Panel */}
-                <div className="studio-content-panel">
+                <div className="studio-content-panel space-y-4">
                     <SubsystemBlock title={t('STUDIO_ARCHIVE')} showBrackets={true} address="VIS_CAP_09" secondaryColor={profileSecondary}>
-                        <div className="p-4 grid grid-cols-4 gap-2 max-h-[300px] overflow-y-auto custom-scrollbar">
-                            {profileGallery.map((img, idx) => (
-                                <div key={idx} className="aspect-square bg-black border border-white/5 overflow-hidden group relative cursor-pointer" onClick={() => handleItemClick(img, 'GALLERY')}>
-                                    <img src={resolveThumbnail(img)} className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-all duration-500 group-hover:scale-110" />
-                                    {(img.type === 'VIDEO' || img.Type === 'VIDEO') && (
-                                        <div className="absolute top-1 right-1 p-1 bg-black/60 border border-cyan-500/30">
-                                            <Video size={10} className="text-cyan-400" />
+                        <div className="p-4 max-h-[200px] overflow-y-auto custom-scrollbar">
+                            <div className="grid grid-cols-4 gap-2">
+                                {profileGallery.map((img, idx) => (
+                                    <div key={idx} className="aspect-square bg-black border border-white/5 overflow-hidden group relative cursor-pointer" onClick={() => handleItemClick(img, 'GALLERY')}>
+                                        <img src={resolveThumbnail(img)} className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-all duration-500 group-hover:scale-110" />
+                                        {(img.type === 'VIDEO' || img.Type === 'VIDEO') && (
+                                            <div className="absolute top-1 right-1 p-1 bg-black/60 border border-cyan-500/30">
+                                                <Video size={10} className="text-cyan-400" />
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </SubsystemBlock>
+                    
+                    <SubsystemBlock title={t('FREQ_JOURNAL') || 'BITÁCORA'} showBrackets={true} address="LOG_CAP_01" secondaryColor={profileSecondary}>
+                        <div className="p-4 max-h-[300px] overflow-y-auto custom-scrollbar">
+                            <div className="space-y-4 font-mono">
+                                {isMe && !showJournalForm && (
+                                    <button 
+                                        onClick={() => setShowJournalForm(true)}
+                                        className="w-full py-2 mb-2 border border-dashed border-[var(--subsystem-accent)]/20 text-[var(--subsystem-accent)]/40 hover:text-[var(--subsystem-accent)] hover:border-[var(--subsystem-accent)]/40 transition-all text-[8px] mono uppercase tracking-[.3em]"
+                                    >
+                                        + {t('APPEND_LOG_ENTRY') || 'AGREGAR NOTA'}
+                                    </button>
+                                )}
+                                
+                                {isMe && showJournalForm && (
+                                    <div className="p-3 bg-black/40 border border-white/5 space-y-2 mb-3">
+                                        <div className="text-[6px] mono text-white/20 uppercase">NOTE_TITLE</div>
+                                        <input 
+                                            id="journal-title"
+                                            type="text"
+                                            className="w-full bg-black border border-white/10 p-2 text-[10px] text-white outline-none focus:border-[var(--subsystem-accent)] uppercase"
+                                            placeholder="TITLE..."
+                                        />
+                                        <div className="text-[6px] mono text-white/20 uppercase">CONTENT</div>
+                                        <textarea 
+                                            id="journal-content"
+                                            className="w-full bg-black border border-white/10 p-2 text-[10px] text-white outline-none focus:border-[var(--subsystem-accent)] h-20 uppercase"
+                                            placeholder="WRITE_HERE..."
+                                        />
+                                        <div className="flex gap-2">
+                                            <button 
+                                                onClick={async () => {
+                                                    const title = document.getElementById('journal-title').value;
+                                                    const content = document.getElementById('journal-content').value;
+                                                    if (!title.trim() || !content.trim()) return;
+                                                    try {
+                                                        const API = await import('../services/api').then(mod => mod.default);
+                                                        await API.Journal.create({ title, content });
+                                                        setShowJournalForm(false);
+                                                        if (typeof fetchData === 'function') fetchData();
+                                                    } catch (err) {
+                                                        console.error(err);
+                                                    }
+                                                }}
+                                                className="flex-1 py-1.5 bg-[var(--subsystem-accent)]/80 text-black text-[8px] font-black uppercase hover:bg-[var(--subsystem-accent)] transition-all"
+                                            >
+                                                SAVE_NOTE
+                                            </button>
+                                            <button 
+                                                onClick={() => setShowJournalForm(false)}
+                                                className="px-3 py-1.5 border border-white/10 text-white/40 text-[8px] font-black uppercase hover:text-white transition-all"
+                                            >
+                                                CANCEL
+                                            </button>
                                         </div>
-                                    )}
-                                </div>
-                            ))}
-                            {profileJournal.map((entry, idx) => (
-                                <div key={idx} className="aspect-square border border-white/5 bg-white/5 p-3 flex flex-col justify-between group cursor-pointer hover:bg-[var(--subsystem-accent)]/10 transition-all border-l-2 border-l-transparent hover:border-l-[var(--subsystem-accent)]" onClick={() => handleItemClick(entry, 'JOURNAL')}>
-                                    <Book size={16} className="text-white/20 group-hover:text-[var(--subsystem-accent)] transition-colors" />
-                                    <div className="text-[8px] font-black uppercase tracking-tight leading-tight line-clamp-2 text-white/60 group-hover:text-white transition-colors">{entry.title || entry.Title}</div>
-                                </div>
-                            ))}
+                                    </div>
+                                )}
+
+                                {profileJournal.length > 0 ? profileJournal.map((entry, idx) => (
+                                    <div key={idx} className="border-b border-white/5 py-3 cursor-pointer hover:bg-white/5 px-2 transition-colors" onClick={() => handleItemClick(entry, 'JOURNAL')}>
+                                        <div className="flex justify-between items-center mb-1">
+                                            <div className="text-[10px] font-black uppercase text-white/80 truncate">{entry.title || entry.Title}</div>
+                                            <Book size={10} className="text-[var(--subsystem-accent)]/40 flex-shrink-0 ml-2" />
+                                        </div>
+                                        <div className="text-[8px] text-white/50 font-mono whitespace-pre-wrap mb-1 leading-relaxed">{entry.content || entry.Content}</div>
+                                        <div className="text-[6px] text-white/20 uppercase tracking-widest">
+                                            {new Date(entry.createdAt || entry.CreatedAt).toLocaleDateString()}
+                                        </div>
+                                    </div>
+                                )) : (
+                                    <div className="text-[8px] text-white/20 uppercase py-4 text-center">
+                                        // {t('NO_LOGS_FOUND_IN_SECTOR') || 'SIN NOTAS'}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </SubsystemBlock>
                 </div>

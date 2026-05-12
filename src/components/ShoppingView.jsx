@@ -19,7 +19,8 @@ const ShoppingView = () => {
     const [isUploading, setIsUploading] = useState(false);
 
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const isLoggedIn = !!user.id;
+    const currentUserId = user.id || user.Id;
+    const isLoggedIn = !!currentUserId;
 
     useEffect(() => {
         fetchShops();
@@ -156,13 +157,13 @@ const ShoppingView = () => {
                             {/* Image/Video Container */}
                             <div className="relative overflow-hidden bg-[#0a0a0a] border border-white/5 group-hover:border-[#ff006e]/40 transition-all duration-300">
                                 {/* Delete Button (Only for owner) */}
-                                {isLoggedIn && shop.artistName === `USER_${user.id}` && (
+                                {isLoggedIn && shop.artistName === `USER_${currentUserId}` && (
                                     <button 
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             handleDelete(shop.id.replace('api-', ''));
                                         }}
-                                        className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#ff006e] hover:text-white z-10"
+                                        className="absolute top-2 right-2 p-1.5 bg-black/80 rounded-full text-[#ff006e] hover:bg-[#ff006e] hover:text-white z-10 transition-colors"
                                     >
                                         <Trash2 size={12} />
                                     </button>

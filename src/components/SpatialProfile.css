@@ -1441,14 +1441,14 @@
 .metadata-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
     padding: 12px;
 }
 
 .metadata-entry {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 8px;
 }
 
 .metadata-label {

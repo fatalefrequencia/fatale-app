@@ -1294,8 +1294,7 @@ const DJMixerPlayer = ({
                     <div className="utility-header-neon">
                         <div className="utility-tabs-neon">
                             <button onClick={() => setActiveTab('LIBRARY')} className={`util-tab ${activeTab === 'LIBRARY' ? 'active' : ''}`}><Disc size={12} /> <span>{t('SIGNAL_CRATE')}</span></button>
-                            <button onClick={() => setActiveTab('CHAT')} className={`util-tab ${activeTab === 'CHAT' ? 'active' : ''}`}><MessageSquare size={12} /> <span>{t('NEURAL_CHAT')}</span></button>
-                            <button onClick={() => setActiveTab('REQUESTS')} className={`util-tab ${activeTab === 'REQUESTS' ? 'active' : ''}`}><List size={12} /> <span>{t('REQUEST_SIGNAL')}</span></button>
+                            <button onClick={() => setActiveTab('PLAYLISTS')} className={`util-tab ${activeTab === 'PLAYLISTS' ? 'active' : ''}`}><List size={12} /> <span>{t('PLAYLISTS') || 'PLAYLISTS'}</span></button>
                         </div>
                         
                         {activeTab === 'LIBRARY' && (
@@ -1340,7 +1339,7 @@ const DJMixerPlayer = ({
                                                 <Shuffle size={10} /> {t('SHUFFLE')}
                                             </button>
                                             <div className="w-px h-4 bg-white/10 mx-1" />
-                                            {['ALL', 'PURCHASED', 'FAVORITES', 'ARTISTS', 'PLAYLISTS'].map(cat => (
+                                            {['ALL', 'PURCHASED', 'FAVORITES', 'ARTISTS'].map(cat => (
                                                 <button 
                                                     key={cat}
                                                     onClick={() => {
@@ -1420,24 +1419,45 @@ const DJMixerPlayer = ({
                                                     {viewingArtist && (
                                                         <tr className="section-header-row"><td colSpan="5">ARTIST_SEQUENCE: {viewingArtist}</td></tr>
                                                     )}
-                                                    {getFilteredTracks().collection.length > 0 && !viewingPlaylist && !viewingArtist && (
-                                                        <tr className="section-header-row"><td colSpan="5">{t('PUBLIC_COLL')}</td></tr>
+                                                    {getFilteredTracks().collection.filter(t => t.isLiked).length > 0 && !viewingPlaylist && !viewingArtist && (
+                                                        <>
+                                                            <tr className="section-header-row"><td colSpan="5">FATALE_FAVORITES</td></tr>
+                                                            {getFilteredTracks().collection.filter(t => t.isLiked).map((t, i) => (
+                                                                <tr key={`fav-${i}`} className="signal-row">
+                                                                    <td className="load-actions">
+                                                                        <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
+                                                                        <button onClick={() => loadToDeck(t, 'B')} className="load-chip">B</button>
+                                                                    </td>
+                                                                    <td className="sig-title truncate font-black flex items-center gap-2">
+                                                                        {t.title}
+                                                                        <Heart size={8} fill="var(--accent)" className="text-[var(--accent)]" />
+                                                                    </td>
+                                                                    <td className="sig-artist truncate opacity-30">{getDisplayArtist(t)}</td>
+                                                                    <td className="sig-bpm mono text-[var(--accent)]">{t.bpm || '--'}</td>
+                                                                    <td className="sig-sync mono opacity-20">{t.duration ? Math.floor(t.duration / 60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '--:--'}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </>
                                                     )}
-                                                    {getFilteredTracks().collection.map((t, i) => (
-                                                        <tr key={`col-${i}`} className="signal-row">
-                                                            <td className="load-actions">
-                                                                <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
-                                                                <button onClick={() => loadToDeck(t, 'B')} className="load-chip">B</button>
-                                                            </td>
-                                                            <td className="sig-title truncate font-black flex items-center gap-2">
-                                                                {t.title}
-                                                                {t.isLiked && <Heart size={8} fill="var(--accent)" className="text-[var(--accent)]" />}
-                                                            </td>
-                                                            <td className="sig-artist truncate opacity-30">{getDisplayArtist(t)}</td>
-                                                            <td className="sig-bpm mono text-[var(--accent)]">{t.bpm || '--'}</td>
-                                                            <td className="sig-sync mono opacity-20">{t.duration ? Math.floor(t.duration / 60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '--:--'}</td>
-                                                        </tr>
-                                                    ))}
+                                                    {getFilteredTracks().collection.filter(t => !t.isLiked).length > 0 && !viewingPlaylist && !viewingArtist && (
+                                                        <>
+                                                            <tr className="section-header-row"><td colSpan="5">{t('YOUTUBE_FAVS') || 'YOUTUBE FAVS'}</td></tr>
+                                                            {getFilteredTracks().collection.filter(t => !t.isLiked).map((t, i) => (
+                                                                <tr key={`col-${i}`} className="signal-row">
+                                                                    <td className="load-actions">
+                                                                        <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
+                                                                        <button onClick={() => loadToDeck(t, 'B')} className="load-chip">B</button>
+                                                                    </td>
+                                                                    <td className="sig-title truncate font-black flex items-center gap-2">
+                                                                        {t.title}
+                                                                    </td>
+                                                                    <td className="sig-artist truncate opacity-30">{getDisplayArtist(t)}</td>
+                                                                    <td className="sig-bpm mono text-[var(--accent)]">{t.bpm || '--'}</td>
+                                                                    <td className="sig-sync mono opacity-20">{t.duration ? Math.floor(t.duration / 60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '--:--'}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </>
+                                                    )}
 
                                                     {getFilteredTracks().network.length > 0 && !viewingPlaylist && (
                                                         <tr className="section-header-row"><td colSpan="5">{t('GLOBAL_SIGNAL')}</td></tr>
@@ -1462,86 +1482,88 @@ const DJMixerPlayer = ({
                                     </table>
                                 </motion.div>
                             )}
-                            {activeTab === 'CHAT' && (
+                            {activeTab === 'PLAYLISTS' && (
                                 <motion.div 
-                                    key="chat"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="chat-container-nano flex flex-col h-full"
+                                    key={`playlists-${viewingPlaylist?.id || 'list'}`}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                                    className="library-nano custom-scrollbar h-full w-full p-4 overflow-y-auto"
                                 >
-                                    <div className="chat-messages-scroll custom-scrollbar flex-1 overflow-y-auto p-4 space-y-4">
-                                        {chatMessages.length > 0 ? chatMessages.map((m, i) => (
-                                            <div key={i} className={`neural-msg ${m.username === (station?.artistName) ? 'artist' : ''}`}>
-                                                <div className="msg-meta flex items-center gap-2 mb-1">
-                                                    <span className="msg-user font-black tracking-tighter text-[8px] uppercase">{m.username || m.userName || 'ANON_NODE'}</span>
-                                                    <span className="msg-time opacity-20 text-[6px]">{new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    {viewingPlaylist ? (
+                                        /* PLAYLIST VIEW (Spotify Style) */
+                                        <div className="playlist-view space-y-6">
+                                            {/* Header */}
+                                            <div className="flex gap-6 items-end">
+                                                <div className="w-32 h-32 bg-black border border-white/10 shadow-2xl flex-shrink-0">
+                                                    <img src={viewingPlaylist.imageUrl || viewingPlaylist.ImageUrl || 'https://via.placeholder.com/150?text=PLAYLIST'} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://via.placeholder.com/150?text=PLAYLIST'; }} />
                                                 </div>
-                                                <div className="msg-content p-2 rounded bg-white/5 border border-white/5 text-[10px] leading-relaxed">
-                                                    {m.message || m.content}
+                                                <div className="flex-1">
+                                                    <div className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)] mb-2">// PLAYLIST</div>
+                                                    <h1 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">{viewingPlaylist.name || viewingPlaylist.Title}</h1>
+                                                    <div className="text-[11px] text-white/50 font-mono">
+                                                        <span className="text-white font-bold">{viewingPlaylist.username || 'USER'}</span> • {(viewingPlaylist.tracks || viewingPlaylist.Tracks || []).length} canciones
+                                                    </div>
                                                 </div>
+                                                <button onClick={() => setViewingPlaylist(null)} className="px-3 py-1 border border-[var(--accent)]/20 text-[var(--accent)] hover:bg-[var(--accent)] hover:text-black transition-all font-mono text-[10px] font-black uppercase">
+                                                    {t('BACK')}
+                                                </button>
                                             </div>
-                                        )) : (
-                                            <div className="h-full flex items-center justify-center opacity-20 italic text-[10px]">{t('NO_DATA_PULSES')}</div>
-                                        )}
-                                    </div>
-                                    <div className="chat-input-row p-3 border-t border-white/5 bg-black/40 flex gap-2">
-                                        <input 
-                                            type="text" 
-                                            placeholder={t('SEND_MESSAGE')} 
-                                            value={chatInput}
-                                            onChange={(e) => setChatInput(e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && (onSendMessage(chatInput), setChatInput(''))}
-                                            className="neural-chat-input flex-1 bg-white/5 border border-white/10 rounded px-3 py-2 text-[10px] focus:outline-none focus:border-[var(--accent)]/50"
-                                        />
-                                        <button 
-                                            onClick={() => { onSendMessage(chatInput); setChatInput(''); }}
-                                            className="neural-send-btn px-4 bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 rounded hover:bg-[var(--accent)]/20 transition-all"
-                                        >
-                                            <Zap size={12} />
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            )}
 
-                            {activeTab === 'REQUESTS' && (
-                                <motion.div 
-                                    key="requests"
-                                    initial={{ opacity: 0, scale: 0.98 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.98 }}
-                                    className="requests-nano custom-scrollbar h-full w-full"
-                                >
-                                    <table className="signal-table-nano">
-                                        <thead>
-                                            <tr>
-                                                <th className="w-16">{t('LOAD')}</th>
-                                                <th>{t('SIGNAL_ID')}</th>
-                                                <th>{t('TITULAR')}</th>
-                                                <th className="w-12">{t('BPM')}</th>
-                                                <th className="w-12">{t('STATUS')}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {requests.length > 0 ? requests.map((r, i) => (
-                                                <tr key={i} className="signal-row request-row">
-                                                    <td className="load-actions">
-                                                        <button onClick={() => loadToDeck(r, 'A')} className="load-chip">A</button>
-                                                        <button onClick={() => loadToDeck(r, 'B')} className="load-chip">B</button>
-                                                    </td>
-                                                    <td className="sig-title truncate font-black flex items-center gap-2">
-                                                        {r.title}
-                                                        <span className="text-[6px] px-1 bg-[var(--accent)]/20 rounded">REQ</span>
-                                                    </td>
-                                                    <td className="sig-artist truncate opacity-30">{getDisplayArtist(r)}</td>
-                                                    <td className="sig-bpm mono text-[var(--accent)]">{r.bpm || '--'}</td>
-                                                    <td className="sig-sync mono opacity-20 italic">{t('WAITING_INPUT')}</td>
-                                                </tr>
-                                            )) : (
-                                                <tr className="signal-row"><td colSpan="5" className="text-center py-12 opacity-20 italic">{t('NO_SIGNAL_BROADCAST')}</td></tr>
-                                            )}
-                                        </tbody>
-                                    </table>
+                                            {/* Tracks Table */}
+                                            <table className="signal-table-nano w-full">
+                                                <thead>
+                                                    <tr>
+                                                        <th className="w-8">#</th>
+                                                        <th className="w-16">{t('LOAD')}</th>
+                                                        <th>{t('TITULAR')}</th>
+                                                        <th>{t('ARTIST')}</th>
+                                                        <th className="w-12">{t('DURATION')}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {(viewingPlaylist.tracks || viewingPlaylist.Tracks || []).map((t, i) => (
+                                                        <tr key={`pl-track-${i}`} className="signal-row">
+                                                            <td className="text-white/30 font-mono text-[10px]">{i + 1}</td>
+                                                            <td className="load-actions">
+                                                                <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
+                                                                <button onClick={() => loadToDeck(t, 'B')} className="load-chip">B</button>
+                                                            </td>
+                                                            <td className="sig-title truncate font-black flex items-center gap-2">
+                                                                {t.title}
+                                                            </td>
+                                                            <td className="sig-artist truncate opacity-30">{getDisplayArtist(t)}</td>
+                                                            <td className="sig-sync mono opacity-20">{t.duration ? Math.floor(t.duration / 60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '--:--'}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    ) : (
+                                        /* LIST OF PLAYLISTS (Spotify Sidebar Style) */
+                                        <div className="playlists-list space-y-4">
+                                            <div className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)] mb-2">// MIS LISTAS</div>
+                                            <div className="space-y-2">
+                                                {(userPlaylists || []).map((p, i) => (
+                                                    <div 
+                                                        key={`pl-${i}`} 
+                                                        className="flex items-center gap-3 p-2 border border-white/5 hover:border-[var(--accent)]/20 cursor-pointer transition-all bg-black/40 hover:bg-white/[0.02]"
+                                                        onClick={() => handlePlaylistClick(p)}
+                                                    >
+                                                        <div className="w-10 h-10 bg-black border border-white/10 flex-shrink-0">
+                                                            <img src={p.imageUrl || p.ImageUrl || 'https://via.placeholder.com/50?text=PL'} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://via.placeholder.com/50?text=PL'; }} />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="text-xs font-black text-white uppercase truncate">{p.name || p.Title || 'UNNAMED_PLAYLIST'}</div>
+                                                            <div className="text-[9px] text-white/30 font-mono">Playlist • {p.username || 'Uknown'}</div>
+                                                        </div>
+                                                        <div className="text-[9px] text-[var(--accent)]/50 font-mono">{(p.tracks || p.Tracks || []).length} SIG</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </motion.div>
                             )}
                         </AnimatePresence>

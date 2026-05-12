@@ -298,6 +298,8 @@ function App() {
   const [showGlobalGoLive, setShowGlobalGoLive] = useState(false);
   const [showGlobalUpload, setShowGlobalUpload] = useState(false);
   const [showGlobalIngest, setShowGlobalIngest] = useState(false);
+  const [ingestMode, setIngestMode] = useState('ALL'); // 'ALL' or 'JOURNAL'
+  // Force reload to fix cache issue with setIngestMode
 
   const [goLiveFormData, setGoLiveFormData] = useState({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true });
   
@@ -1981,6 +1983,7 @@ function App() {
                setShowGlobalGoLive={setShowGlobalGoLive}
                setShowGlobalUpload={setShowGlobalUpload}
                setShowGlobalIngest={setShowGlobalIngest}
+               setIngestMode={setIngestMode}
                setActiveStation={setActiveStation}
                sendMessage={handleSendMessage}
                requestTrack={handleRequestTrack}
@@ -2097,13 +2100,15 @@ function App() {
         {/* ─── Ingest Choice Modal (NEW_POST) ─── */}
         {showGlobalIngest && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[500] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" onClick={() => setShowGlobalIngest(false)} />
+            <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" onClick={() => { setShowGlobalIngest(false); setIngestMode('ALL'); }} />
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative w-full max-w-xl text-center space-y-8 bg-black p-8 border border-white/10">
-              <button onClick={() => setShowGlobalIngest(false)} className="absolute top-4 right-4 p-2 text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300">
+              <button onClick={() => { setShowGlobalIngest(false); setIngestMode('ALL'); }} className="absolute top-4 right-4 p-2 text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300">
                 <X size={20} />
               </button>
               <div className="space-y-4">
-                <p className="text-[10px] text-[#ff006e] mono uppercase tracking-[0.6em] animate-pulse">/ New Transmission /</p>
+                <p className="text-[10px] text-[#ff006e] mono uppercase tracking-[0.6em] animate-pulse">
+                    {ingestMode === 'JOURNAL' ? '/ New Journal Entry /' : '/ New Transmission /'}
+                </p>
                 <div className="flex items-center gap-3 justify-center">
                     <div className="w-10 h-10 bg-black border border-white/10 rounded-full overflow-hidden shrink-0">
                         <img src={getMediaUrl(user?.profilePictureUrl || user?.profileImageUrl || user?.ProfilePictureUrl)} className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://via.placeholder.com/100?text=USER'; }} alt="" />
@@ -2122,15 +2127,17 @@ function App() {
                           placeholder="What's on your mind?..."
                       />
                   </div>
-                  <div className="space-y-2">
-                      <label className="text-[10px] text-[#ff006e]/60 uppercase tracking-widest">Attach Media (Optional)</label>
-                      <input 
-                          type="file"
-                          accept="image/*,video/*"
-                          onChange={(e) => setPostFile(e.target.files[0])}
-                          className="w-full bg-[#050505] border border-white/5 p-4 text-white text-xs outline-none focus:border-[#ff006e]/40 font-sans"
-                      />
-                  </div>
+                  {ingestMode !== 'JOURNAL' && (
+                      <div className="space-y-2">
+                          <label className="text-[10px] text-[#ff006e]/60 uppercase tracking-widest">Attach Media (Optional)</label>
+                          <input 
+                              type="file"
+                              accept="image/*,video/*"
+                              onChange={(e) => setPostFile(e.target.files[0])}
+                              className="w-full bg-[#050505] border border-white/5 p-4 text-white text-xs outline-none focus:border-[#ff006e]/40 font-sans"
+                          />
+                      </div>
+                  )}
                   <button
                       onClick={handleNewPostSubmit}
                       disabled={!postText.trim() || isSubmittingPost}
@@ -2309,6 +2316,7 @@ const Dashboard = React.memo(({
   setShowGlobalGoLive,
   setShowGlobalUpload,
   setShowGlobalIngest,
+  setIngestMode,
   onExpandContent,
   volume,
   setVolume,
@@ -2482,6 +2490,7 @@ const Dashboard = React.memo(({
                 <DiscoveryHUD
                   key="discovery"
                   user={user}
+                  setView={setView}
                   isLandscape={isLandscape}
                   followedCommunities={followedCommunities}
                   onFollowUpdate={() => {
@@ -2541,6 +2550,7 @@ const Dashboard = React.memo(({
                   }}
                   isPlayerActive={currentTrackIndex >= 0 && !isMiniPlayerMinimized}
                   setShowGlobalIngest={setShowGlobalIngest}
+                  setIngestMode={setIngestMode}
                 />
               </motion.div>
             )}
@@ -3457,69 +3467,7 @@ const FeedContent = React.memo(({
           </div>
         </div>
 
-        <div className="space-y-4 px-2">
-          <h3 className="text-[10px] font-black uppercase text-[#ff006e] px-2 tracking-widest">:: LIVE_FAVORITES ::</h3>
-          <div className="space-y-2">
-            {favoriteStations && favoriteStations.filter(s => s.isLive || s.IsLive).slice(0, 5).map(station => (
-              <button
-                key={`side-fav-${station.id || station.Id}`}
-                onClick={() => navigateToProfile(station.artistUserId || station.ArtistUserId)}
-                className="w-full flex items-center gap-3 px-3 py-2 bg-[#ff006e]/5 border border-[#ff006e]/20 rounded hover:bg-[#ff006e]/10 transition-all group"
-              >
-                <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e] blink shadow-[0_0_8px_#ff006e]" />
-                <div className="flex-1 min-w-0 text-left">
-                  <div className="text-[9px] font-black text-white uppercase truncate">{station.name || station.Name}</div>
-                  <div className="text-[7px] text-[#ff006e]/60 uppercase truncate">LIVE // {station.currentSessionTitle || station.CurrentSessionTitle || 'Broadcasting'}</div>
-                </div>
-              </button>
-            ))}
-            {(!favoriteStations || favoriteStations.length === 0) && (
-              <div className="px-3 py-4 border border-dashed border-white/5 rounded text-center opacity-20">
-                <div className="text-[8px] uppercase">No Signals</div>
-              </div>
-            )}
-            {favoriteStations && favoriteStations.length > 0 && favoriteStations.filter(s => s.isLive || s.IsLive).length === 0 && (
-              <div className="px-3 py-2 text-[8px] text-white/20 uppercase italic">All frequencies offline</div>
-            )}
-          </div>
-        </div>
 
-        <div className="space-y-4 px-2">
-          <div className="flex justify-between items-center px-2">
-            <h3 className="text-[10px] font-black uppercase text-[#ff006e] tracking-widest">:: SECTOR_SIGNALS ::</h3>
-            {selectedSector !== null && (
-              <button
-                onClick={() => setSelectedSector(null)}
-                className="text-[8px] text-[#ff006e]/40 hover:text-[#ff006e] uppercase tracking-tighter blink"
-              >
-                [ RESET_LINK ]
-              </button>
-            )}
-          </div>
-          <div className="space-y-1">
-            {SECTORS.map((sector, idx) => (
-              <button
-                key={sector.name}
-                onClick={() => setSelectedSector(idx)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded transition-all border ${selectedSector === idx
-                  ? 'border-opacity-30'
-                  : 'bg-black/20 border-white/5 hover:border-white/20'}`}
-                style={selectedSector === idx ? {
-                  backgroundColor: `${sector.color}20`,
-                  borderColor: `${sector.color}50`
-                } : {}}
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-1 rounded-full shadow-[0_0_5px_currentColor]" style={{ backgroundColor: sector.color, color: sector.color }} />
-                  <span className={`text-[9px] font-bold uppercase tracking-widest ${selectedSector === idx ? 'text-white' : 'text-white/40'}`}>
-                    {sector.name.replace(' ', '_')}
-                  </span>
-                </div>
-                {selectedSector === idx && <Zap size={10} className="animate-pulse" style={{ color: sector.color }} />}
-              </button>
-            ))}
-          </div>
-        </div>
 
         <div className="space-y-4 px-2">
           <div className="flex justify-between items-center px-2">
@@ -3610,49 +3558,7 @@ const FeedContent = React.memo(({
 
         {/* ── MOBILE HEADER / RELOAD CONTAINER ── */}
         <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-[#ff006e]/10 px-4 py-2 flex items-center justify-between gap-4 shrink-0">
-          <div className="lg:hidden flex-1 flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-            <button
-              id="feed-mobile-filters-btn"
-              onClick={() => { setMobilePanelTab('filters'); setMobilePanelOpen(p => mobilePanelTab === 'filters' ? !p : true); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${mobilePanelOpen && mobilePanelTab === 'filters'
-                ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
-                : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
-                }`}
-            >
-              <Zap size={11} />
-              {selectedSector !== null || selectedCommunityId !== null ? (
-                <span className="flex items-center gap-1">ACTIVE_FILTER <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] shadow-[0_0_6px_#ff006e] inline-block" /></span>
-              ) : 'FILTERS'}
-            </button>
-            <button
-              id="feed-mobile-favorites-btn"
-              onClick={() => { setMobilePanelTab('favorites'); setMobilePanelOpen(p => mobilePanelTab === 'favorites' ? !p : true); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${mobilePanelOpen && mobilePanelTab === 'favorites'
-                ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
-                : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
-                }`}
-            >
-              <Star size={11} />
-              LIVE_FAVS
-              {favoriteStations && favoriteStations.filter(s => s.isLive || s.IsLive).length > 0 && (
-                <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] shadow-[0_0_6px_#ff006e] animate-pulse" />
-              )}
-            </button>
-            <button
-              id="feed-mobile-stations-btn"
-              onClick={() => { setMobilePanelTab('stations'); setMobilePanelOpen(p => mobilePanelTab === 'stations' ? !p : true); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${mobilePanelOpen && mobilePanelTab === 'stations'
-                ? 'border-[#ff006e]/60 bg-[#ff006e]/15 text-[#ff006e]'
-                : 'border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/30'
-                }`}
-            >
-              <Radio size={11} />
-              LIVE_STATIONS
-              {liveStations && liveStations.filter(s => s.isLive || s.IsLive).length > 0 && (
-                <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] shadow-[0_0_6px_#ff006e] animate-pulse" />
-              )}
-            </button>
-          </div>
+
 
           <div className="hidden lg:flex items-center gap-2">
             <span className="text-[9px] text-white/20 font-black uppercase tracking-[0.2em]">{`TERMINAL_FEED_STREAM_V3`}</span>
@@ -3753,18 +3659,12 @@ const FeedContent = React.memo(({
                     const imageUrl = getMediaUrl(item.imageUrl || item.ImageUrl);
 
                     if (type === 'system') {
-                      return (
-                        <div key={item.Id} className="flex gap-4 p-2 bg-[#ffc300]/5 border-l-2 border-[#ffc300]/30 mb-2">
-                          <span className="text-[10px] text-[#ffc300] font-black">{getTime(createdAt)}</span>
-                          <span className="text-[10px] text-white/80 font-bold uppercase tracking-widest">{title}</span>
-                          <span className="text-[10px] text-white/40 uppercase">{content}</span>
-                        </div>
-                      );
+                      return null;
                     }
 
                     const sectorColor = SECTORS[item.sectorId || item.SectorId]?.color || '#ff006e';
                     return (
-                      <div key={item.Id} className="group transition-colors hover:bg-white/[0.05] py-4 px-5 rounded border border-white/5 hover:border-white/10 relative mb-6 max-w-2xl mx-auto w-full bg-black/20" style={{ borderLeft: `2px solid ${sectorColor}` }}>
+                      <div key={item.Id} className="group transition-colors hover:bg-white/[0.05] py-4 px-5 rounded border border-white/5 hover:border-white/10 relative mb-6 max-w-2xl mx-auto w-full bg-black/20 flex flex-col max-h-[80vh]" style={{ borderLeft: `2px solid ${sectorColor}` }}>
                         {!isOriginal && repostedBy && (
                           <div className="flex items-center gap-2 mb-1 px-1">
                             <Repeat size={10} className="text-[#ff006e] animate-pulse" />
@@ -3824,7 +3724,7 @@ const FeedContent = React.memo(({
                           {type === 'studio' && (
                             <div
                               onClick={() => handleMediaExpand(item)}
-                              className="max-w-md bg-black border border-white/5 overflow-hidden group/studio cursor-zoom-in relative active:scale-[0.98] transition-transform"
+                              className="w-full flex-1 bg-black border border-white/5 overflow-hidden group/studio cursor-zoom-in relative active:scale-[0.98] transition-transform flex items-center justify-center max-h-[50vh]"
                             >
                               {mediaType === 'VIDEO' ? (
                                 <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
@@ -3848,7 +3748,7 @@ const FeedContent = React.memo(({
                                   )}
                                 </div>
                               ) : (
-                                <img src={imageUrl} className="w-full h-auto opacity-90 group-hover/studio:opacity-100 transition-opacity" alt="" />
+                                <img src={imageUrl} className="max-w-full max-h-full object-contain opacity-90 group-hover/studio:opacity-100 transition-opacity" alt="" />
                               )}
                             </div>
                           )}
@@ -4070,7 +3970,7 @@ const FeedContent = React.memo(({
             {/* Drag handle + header */}
             <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-[#ff006e]/10 shrink-0">
               <div className="flex gap-3">
-                {[['filters', <Zap size={10} key="z" />, 'FILTERS'], ['favorites', <Star size={10} key="s" />, 'LIVE_FAVS'], ['stations', <Radio size={10} key="r" />, 'LIVE_STATIONS']].map(([tab, icon, label]) => (
+                {[['filters', <Zap size={10} key="z" />, 'FILTERS']].map(([tab, icon, label]) => (
                   <button
                     key={tab}
                     onClick={() => setMobilePanelTab(tab)}
@@ -4109,28 +4009,9 @@ const FeedContent = React.memo(({
 
                   {/* Sector filter */}
                   <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-[9px] font-black uppercase text-[#ff006e] tracking-widest">:: SECTOR_SIGNALS ::</h3>
-                      {selectedSector !== null && (
-                        <button onClick={() => { setSelectedSector(null); setMobilePanelOpen(false); }} className="text-[8px] text-[#ff006e]/40 hover:text-[#ff006e] uppercase tracking-tighter blink">[ RESET ]</button>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {SECTORS.map((sector, idx) => (
-                        <button
-                          key={sector.name}
-                          onClick={() => { setSelectedSector(selectedSector === idx ? null : idx); setMobilePanelOpen(false); }}
-                          className={`flex items-center gap-2 px-3 py-2 rounded border text-[9px] font-bold uppercase tracking-widest transition-all ${selectedSector === idx
-                            ? 'text-white'
-                            : 'bg-black/20 border-white/5 text-white/40 hover:border-white/20'
-                            }`}
-                          style={selectedSector === idx ? { backgroundColor: `${sector.color}20`, borderColor: `${sector.color}50` } : {}}
-                        >
-                          <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: sector.color }} />
-                          <span className="truncate">{sector.name.replace(' ', '_')}</span>
-                          {selectedSector === idx && <Zap size={9} className="ml-auto animate-pulse shrink-0" style={{ color: sector.color }} />}
-                        </button>
-                      ))}
+                    <h3 className="text-[9px] font-black uppercase text-[#ff006e] tracking-widest">:: SECTORES Y LIVES ::</h3>
+                    <div className="p-4 border border-dashed border-white/5 text-center opacity-40 text-[9px] uppercase tracking-widest">
+                      [ EN DESARROLLO / PENDIENTE ]
                     </div>
                   </div>
 
@@ -4183,44 +4064,9 @@ const FeedContent = React.memo(({
               {mobilePanelTab === 'favorites' && (
                 <div className="space-y-3">
                   <h3 className="text-[9px] font-black uppercase text-[#ff006e] tracking-widest">:: LIVE_FAVORITES ::</h3>
-                  {favoriteStations && favoriteStations.filter(s => s.isLive || s.IsLive).length > 0 ? (
-                    favoriteStations.filter(s => s.isLive || s.IsLive).map(station => (
-                      <button
-                        key={`mob-fav-${station.id || station.Id}`}
-                        onClick={() => { navigateToProfile(station.artistUserId || station.ArtistUserId); setMobilePanelOpen(false); }}
-                        className="w-full flex items-center gap-3 px-3 py-3 bg-[#ff006e]/5 border border-[#ff006e]/20 rounded hover:bg-[#ff006e]/10 transition-all"
-                      >
-                        <div className="w-2 h-2 rounded-full bg-[#ff006e] blink shadow-[0_0_8px_#ff006e] shrink-0" />
-                        <div className="flex-1 min-w-0 text-left">
-                          <div className="text-[10px] font-black text-white uppercase truncate">{station.name || station.Name}</div>
-                          <div className="text-[8px] text-[#ff006e]/60 uppercase truncate mt-0.5">LIVE // {station.currentSessionTitle || station.CurrentSessionTitle || 'Broadcasting'}</div>
-                        </div>
-                        <ChevronRight size={14} className="text-[#ff006e]/40 shrink-0" />
-                      </button>
-                    ))
-                  ) : favoriteStations && favoriteStations.length > 0 ? (
-                    <div>
-                      <div className="px-3 py-2 text-[8px] text-white/20 uppercase italic mb-3">All frequencies offline</div>
-                      {favoriteStations.map(station => (
-                        <button
-                          key={`mob-fav-off-${station.id || station.Id}`}
-                          onClick={() => { navigateToProfile(station.artistUserId || station.ArtistUserId); setMobilePanelOpen(false); }}
-                          className="w-full flex items-center gap-3 px-3 py-3 bg-black/40 border border-white/5 rounded opacity-50 hover:opacity-70 transition-all mb-1.5"
-                        >
-                          <div className="w-2 h-2 rounded-full bg-gray-600 shrink-0" />
-                          <div className="flex-1 min-w-0 text-left">
-                            <div className="text-[10px] font-black text-white uppercase truncate">{station.name || station.Name}</div>
-                            <div className="text-[8px] text-white/30 uppercase mt-0.5">STATUS: OFFLINE</div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="px-3 py-8 border border-dashed border-white/5 rounded text-center opacity-20">
-                      <Star size={24} className="mx-auto mb-2 opacity-50" />
-                      <div className="text-[8px] uppercase tracking-widest">No Favorited Stations</div>
-                    </div>
-                  )}
+                  <div className="px-3 py-8 border border-dashed border-white/5 rounded text-center opacity-20">
+                    <div className="text-[8px] uppercase tracking-widest">MÓDULO PENDIENTE</div>
+                  </div>
                 </div>
               )}
 
@@ -4228,51 +4074,10 @@ const FeedContent = React.memo(({
               {mobilePanelTab === 'stations' && (
                 <div className="space-y-3">
                   <h3 className="text-[9px] font-black uppercase text-[#ff006e]/60 tracking-[0.4em]">LIVE_STATIONS</h3>
-                  {liveStations && liveStations.filter(s => s.isLive || s.IsLive).length > 0 ? (
-                    liveStations.filter(s => s.isLive || s.IsLive).map(station => (
-                      <div
-                        key={`mob-stn-${station.id || station.Id}`}
-                        className={`p-4 rounded border ${(station.isLive || station.IsLive)
-                          ? 'bg-[#ff006e]/5 border-[#ff006e]/20 shadow-[0_0_15px_rgba(255,0,110,0.05)]'
-                          : 'bg-black/60 border-white/5 opacity-60'
-                          }`}
-                      >
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${(station.isLive || station.IsLive)
-                            ? 'bg-[#ff006e] blink shadow-[0_0_8px_#ff006e]'
-                            : 'bg-gray-600'
-                            }`} />
-                          <span className="text-[10px] font-black text-white uppercase tracking-wider truncate">{station.name || station.Name}</span>
-                        </div>
-                        <p className="text-[9px] text-white/40 mb-3 italic truncate">
-                          {(station.isLive || station.IsLive)
-                            ? `Live: ${station.currentSessionTitle || station.CurrentSessionTitle || 'Broadcasting'}`
-                            : 'STATUS: OFFLINE'}
-                        </p>
-                        <div className="flex justify-between items-center">
-                          <span className="text-[8px] font-bold text-[#ff006e]/40 uppercase">{station.listenerCount || station.ListenerCount || 0} CONNECTED</span>
-                          {(station.isLive || station.IsLive) && (
-                            <button
-                              onClick={() => {
-                                setActiveStation(station);
-                                import('./services/signalr').then(m => m.joinStation(station.id || station.Id));
-                                setMobilePanelOpen(false);
-                                navigateToProfile(station.artistUserId || station.ArtistUserId, 'console');
-                              }}
-                              className="px-3 py-1 border border-[#ff006e] text-[#ff006e] text-[8px] font-black rounded hover:bg-[#ff006e] hover:text-black transition-all"
-                            >
-                              TUNE_IN
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="p-8 border border-dashed border-white/5 text-center opacity-20">
-                      <Radio size={28} className="mx-auto mb-2 opacity-50" />
-                      <div className="text-[9px] uppercase tracking-widest">No Frequencies Cached</div>
-                    </div>
-                  )}
+                  <div className="p-8 border border-dashed border-white/5 text-center opacity-20">
+                    <Radio size={24} className="mx-auto mb-2 opacity-50" />
+                    <div className="text-[8px] uppercase tracking-widest">MÓDULO PENDIENTE</div>
+                  </div>
                 </div>
               )}
 
@@ -4360,46 +4165,7 @@ const FeedContent = React.memo(({
           </div>
         )}
 
-        <div className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase text-[#ff006e]/60 px-2 tracking-[0.4em]">LIVE_STATIONS</h3>
-          {liveStations && liveStations.filter(s => s.isLive || s.IsLive).length > 0 ? (
-            liveStations.filter(s => s.isLive || s.IsLive).map(station => (
-              <div key={station.id || station.Id} className={`p-4 rounded border ${(station.isLive || station.IsLive) ? 'bg-[#ff006e]/5 border-[#ff006e]/20 shadow-[0_0_15px_rgba(255,0,110,0.05)]' : 'bg-black/60 border-white/5 opacity-60'} `}>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className={`w-1.5 h-1.5 rounded-full ${(station.isLive || station.IsLive) ? 'bg-[#ff006e] blink shadow-[0_0_8px_#ff006e]' : 'bg-gray-600'} `} />
-                  <span className="text-[10px] font-black text-white uppercase tracking-wider">{station.name || station.Name}</span>
-                </div>
-                <p className="text-[9px] text-white/40 mb-3 italic truncate">
-                  {(station.isLive || station.IsLive) ? `Live: ${station.currentSessionTitle || station.CurrentSessionTitle || 'Broadcasting'}` : 'STATUS: OFFLINE'}
-                </p>
-                <div className="flex justify-between items-center">
-                  <span className="text-[8px] font-bold text-[#ff006e]/40 uppercase">{(station.listenerCount || station.ListenerCount || 0)} CONNECTED</span>
-                  {(station.isLive || station.IsLive) && (
-                    <button
-                      onClick={() => {
-                        setActiveStation(station);
-                        import('./services/signalr').then(m => m.joinStation(station.id || station.Id));
-                        if (String(station.artistUserId || station.ArtistUserId) === String(user?.id || user?.Id)) {
-                          navigateToProfile(user?.id || user?.Id, 'console');
-                        } else {
-                          navigateToProfile(station.artistUserId || station.ArtistUserId, 'console');
-                        }
-                      }}
-                      className="px-2 py-0.5 border border-[#ff006e] text-[#ff006e] text-[8px] font-black rounded hover:bg-[#ff006e] hover:text-black transition-all"
-                    >
-                      TUNE_IN
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="p-8 border border-dashed border-white/5 text-center opacity-20">
-              <Radio size={32} className="mx-auto mb-2 opacity-50" />
-              <div className="text-[9px] uppercase tracking-widest">No Frequencies Cached</div>
-            </div>
-          )}
-        </div>
+
       </div>
     </motion.div>
   );

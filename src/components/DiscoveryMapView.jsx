@@ -147,7 +147,8 @@ const DiscoveryCanvas = ({
                     data: {
                         name: a.name || a.Name || 'ARTIST',
                         imageUrl: a.imageUrl || a.ImageUrl || a.profileImageUrl || null,
-                        sectorColor: sec.color,
+                        sectorColor: '#ff006e', // Fixed color for Individuals
+                        sectorId: sec.id, // For filtering
                         isLive,
                         trackCount,
                         userId: a.userId || a.UserId || a.id || a.Id,
@@ -166,7 +167,8 @@ const DiscoveryCanvas = ({
                 String(c.id) === String(user?.communityId || user?.CommunityId)
             );
 
-            // The main Hub (Landmark)
+            // The main Hub (Landmark) - Hidden as requested
+            /*
             result.push({
                 id: `sector-hub-${sec.id}`,
                 type: 'sectorHubNode',
@@ -183,6 +185,7 @@ const DiscoveryCanvas = ({
                 },
                 zIndex: 5,
             });
+            */
 
             // Individual Community Nodes (Orbiting the hub)
             sectorCommunities.forEach((comm, cidx) => {
@@ -199,7 +202,8 @@ const DiscoveryCanvas = ({
                     position: pos,
                     data: {
                         name: comm.name || 'COMMUNITY',
-                        color: sec.color,
+                        color: '#00ffff', // Fixed color for Communities
+                        sectorId: sec.id, // For filtering
                         memberCount: comm.memberCount || 0,
                         imageUrl: comm.imageUrl,
                         zoom,
@@ -233,7 +237,8 @@ const DiscoveryCanvas = ({
                     imageUrl: pl.imageUrl || pl.ImageUrl || null,
                     trackCount: pl.trackCount || pl.TrackCount || (pl.tracks?.length ?? 0),
                     creatorName: pl.creatorName || pl.username || null,
-                    sectorColor: sec.color, // ADDED FOR FILTERING
+                    sectorColor: '#ffff00', // Fixed color for Music
+                    sectorId: sec.id, // For filtering
                     zoom,
                     pl, // pass full playlist object for click handler
                 },
@@ -283,7 +288,8 @@ const DiscoveryCanvas = ({
                             author: item.Author || item.author || item.album?.artist?.name || item.ChannelTitle || '',
                             thumbnailUrl: item.ThumbnailUrl || item.thumbnailUrl || item.coverImageUrl || item.CoverImageUrl || item.thumbnail || '',
                             id: videoId,
-                            sectorColor: sec.color,
+                            sectorColor: '#ffff00', // Fixed color for Music
+                            sectorId: sec.id, // For filtering
                             zoom: currentZoom,
                             onPlay: handleYoutubePlay,
                         },
@@ -332,7 +338,7 @@ const DiscoveryCanvas = ({
             // Fetch public playlists from all artists (grab first page)
             let playlists = [];
             try {
-                const plRes = await API.Playlists.getUserPlaylists(null).catch(() => ({ data: [] }));
+                const plRes = await API.Playlists.getAll().catch(() => ({ data: [] }));
                 playlists = Array.isArray(plRes?.data) ? plRes.data.filter(p => p.isPosted || p.IsPosted) : [];
             } catch {
                 playlists = [];
@@ -392,7 +398,8 @@ const DiscoveryCanvas = ({
                             },
                         });
 
-                        // High-Precision Sector Hub Tracer (Artist -> Hub)
+                        // High-Precision Sector Hub Tracer (Artist -> Hub) - Hidden
+                        /*
                         const hubId = `sector-hub-${cSectorId}`;
                         const isHubHighlighted = hoveredNodeId === artistNodeId || hoveredNodeId === hubId;
                         builtEdges.push({
@@ -408,9 +415,11 @@ const DiscoveryCanvas = ({
                                 opacity: hoveredNodeId ? (isHubHighlighted ? 0.6 : 0.03) : 0.15
                             },
                         });
+                        */
                     });
                 } else {
-                    // Unaffiliated Artist -> Resident Hub link (Subtle spatial context)
+                    // Unaffiliated Artist -> Resident Hub link (Subtle spatial context) - Hidden
+                    /*
                     const hubId = `sector-hub-${residentSec.id}`;
                     builtEdges.push({
                         id: `e-direct-${artistNodeId}-${hubId}`,
@@ -419,10 +428,12 @@ const DiscoveryCanvas = ({
                         type: 'simplebezier',
                         style: { stroke: residentSec.color, strokeWidth: 0.5, opacity: 0.1, strokeDasharray: '4 4' },
                     });
+                    */
                 }
             });
 
-            // 2. Community -> Hub Connections
+            // 2. Community -> Hub Connections - Hidden
+            /*
             comms.forEach(c => {
                 const commNodeId = `comm-${c.id}`;
                 const sec = SECTORS[c.sectorId] || SECTORS[0];
@@ -439,6 +450,7 @@ const DiscoveryCanvas = ({
                     style: { stroke: sec.color, strokeWidth: isHighlighted ? 3 : 2, opacity: hoveredNodeId ? (isHighlighted ? 1 : 0.1) : 0.4 },
                 });
             });
+            */
 
             setEdges(builtEdges);
 
@@ -559,7 +571,8 @@ const DiscoveryCanvas = ({
                             author,
                             thumbnailUrl: item.ThumbnailUrl || item.thumbnailUrl || item.coverImageUrl || item.CoverImageUrl || '',
                             id: videoId,
-                            sectorColor: color,
+                            sectorColor: '#ffff00', // Fixed color for Music
+                            sectorId: matchedSector ? matchedSector.id : null,
                             zoom: currentZoom,
                             onPlay: handleYoutubePlay,
                         },
@@ -588,9 +601,8 @@ const DiscoveryCanvas = ({
                 if (node.type === 'sectorLabel') return node.id === `sector-label-${activeSector}`;
                 if (node.type === 'sectorHubNode') return node.id === `sector-hub-${activeSector}`;
 
-                // Content nodes (match by color)
-                const nodeColor = node.data?.sectorColor || node.data?.color;
-                return nodeColor === sec.color;
+                // Content nodes (match by sectorId)
+                return node.data?.sectorId === sec.id;
             });
         }
 
@@ -680,73 +692,7 @@ const DiscoveryCanvas = ({
                 </button>
             </div>
 
-            {/* â”€â”€ Sector Filter Pills â”€â”€ */}
-            <div
-                className="no-scrollbar"
-                style={{
-                    position: 'absolute', bottom: isPlayerActive ? 92 : 12, left: '50%', transform: 'translateX(-50%)',
-                    zIndex: 100,
-                    display: 'flex', gap: 8, flexWrap: 'nowrap',
-                    pointerEvents: 'auto',
-                    overflowX: 'auto',
-                    maxWidth: 'calc(100vw - 40px)',
-                    padding: '8px 4px',
-                }}
-            >
-                <button
-                    onClick={() => { setActiveSector(null); fitView({ duration: 1000, padding: 0.2 }); }}
-                    style={{
-                        background: activeSector === null ? '#ff006e' : 'rgba(10,10,10,0.85)',
-                        border: '1px solid rgba(255,0,110,0.3)',
-                        borderRadius: 20,
-                        color: activeSector === null ? '#fff' : 'rgba(255,255,255,0.5)',
-                        padding: '6px 16px',
-                        fontSize: 10,
-                        fontFamily: 'monospace',
-                        fontWeight: 900,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.15em',
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                        flexShrink: 0,
-                        boxShadow: activeSector === null ? '0 0 20px rgba(255,0,110,0.3)' : 'none',
-                    }}
-                >
-                    {t('GLOBAL_VIEW')}
-                </button>
-                {SECTORS.map(sec => (
-                    <button
-                        key={sec.id}
-                        onClick={() => {
-                            const newActive = activeSector === sec.id ? null : sec.id;
-                            setActiveSector(newActive);
-                            if (newActive !== null) {
-                                setCenter(sec.x, sec.y, { zoom: 1.1, duration: 1000 });
-                            } else {
-                                fitView({ duration: 1000, padding: 0.2 });
-                            }
-                        }}
-                        style={{
-                            background: activeSector === sec.id ? sec.color : 'rgba(10,10,10,0.85)',
-                            border: `1px solid ${sec.color}60`,
-                            borderRadius: 20,
-                            color: activeSector === sec.id ? '#000' : sec.color,
-                            padding: '6px 16px',
-                            fontSize: 10,
-                            fontFamily: 'monospace',
-                            fontWeight: 900,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.1em',
-                            cursor: 'pointer',
-                            whiteSpace: 'nowrap',
-                            flexShrink: 0,
-                            boxShadow: activeSector === sec.id ? `0 0 20px ${sec.color}40` : 'none',
-                        }}
-                    >
-                        {sec.name}
-                    </button>
-                ))}
-            </div>
+
 
             {/* â”€â”€ Loading â”€â”€ */}
             {loading && (

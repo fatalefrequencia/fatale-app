@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Music, Disc, User, Users, Play, Pause, Heart, Layers, Radio, BookOpen, Camera, Zap, Share2, Activity, Globe, X, Star, ChevronLeft, Shuffle, MessageSquare } from 'lucide-react';
+import { Search, Music, Disc, User, Users, Play, Pause, Heart, Layers, Radio, BookOpen, Camera, Zap, Share2, Activity, Globe, X, Star, ChevronLeft, Shuffle, MessageSquare, Grid } from 'lucide-react';
 import API from '../services/api';
 import { SECTORS, getMediaUrl } from '../constants';
 import { useNotification } from '../contexts/NotificationContext';
@@ -8,6 +8,7 @@ import HUDWidget from './discovery/HUDWidget';
 import InteractiveGlobe from './discovery/InteractiveGlobe';
 import CommunityTerminal from './discovery/CommunityTerminal';
 import { useLanguage } from '../contexts/LanguageContext';
+import TrackActionsDropdown from './TrackActionsDropdown';
 
 const hashStr = (s) => {
     if (!s) return 0;
@@ -17,7 +18,7 @@ const hashStr = (s) => {
     return Math.abs(h);
 };
 
-const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, onPlayPlaylist, isPlayerActive, onExpandContent, onPlayStation, isLandscape, setShowGlobalIngest }) => {
+const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, onPlayPlaylist, isPlayerActive, onExpandContent, onPlayStation, isLandscape, setShowGlobalIngest, setIngestMode }) => {
     const { t } = useLanguage();
     const { showNotification } = useNotification();
     const [searchQuery, setSearchQuery] = useState('');
@@ -64,7 +65,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
             if (videoUrl.startsWith('youtube:')) {
                 id = videoUrl.split(':')[1];
             } else {
-                const match = videoUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+                const match = videoUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
                 id = (match && match[2].length === 11) ? match[2] : null;
             }
             if (id) return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
@@ -95,12 +96,15 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     const [recentYoutubeTracks, setRecentYoutubeTracks] = useState([]);
     const [recentYoutubeSearches, setRecentYoutubeSearches] = useState([]);
     const [marketplaceItems, setMarketplaceItems] = useState([]);
+    const [userPlaylists, setUserPlaylists] = useState([]);
     const [selectedPlaylist, setSelectedPlaylist] = useState(null);
+    const [activeRightPanelTab, setActiveRightPanelTab] = useState('objects'); // 'objects', 'playlists'
     const [playlistTracks, setPlaylistTracks] = useState([]);
     const [loadingPlaylist, setLoadingPlaylist] = useState(false);
     const [selectedGlobeItem, setSelectedGlobeItem] = useState(null);
-    const [activeGlobeView, setActiveGlobeView] = useState('CORE_PULSE'); 
-    const [isGlobeSpinning, setIsGlobeSpinning] = useState(false);
+    const [activeGlobeView, setActiveGlobeView] = useState(null); 
+    const [isGlobeSpinning, setIsGlobeSpinning] = useState(true);
+    const [isPinterestView, setIsPinterestView] = useState(false);
 
     // ── Centralized native-track detection (catches ALL casing variants from API) ──
     const isNativeTrack = useCallback((t) => {
@@ -136,7 +140,26 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
             
             if (Array.isArray(feedRes?.data)) {
                 setVisualUploads(feedRes.data.filter(i => i.type === 'studio').slice(0, 12));
-                setJournalEntries(feedRes.data.filter(i => i.type === 'journal').slice(0, 8));
+                
+                // Fetch my journal entries and merge with feed
+                try {
+                    const myJournalRes = await API.Journal.getMyJournal();
+                    const myJournals = Array.isArray(myJournalRes?.data) ? myJournalRes.data : [];
+                    const feedJournals = feedRes.data.filter(i => i.type === 'journal');
+                    
+                    // Combine and remove duplicates based on ID
+                    const combined = [...myJournals];
+                    feedJournals.forEach(fj => {
+                        if (!combined.some(mj => (mj.id || mj.Id) === (fj.id || fj.Id))) {
+                            combined.push(fj);
+                        }
+                    });
+                    
+                    setJournalEntries(combined.slice(0, 8));
+                } catch (e) {
+                    console.error("Failed to fetch my journal in HUD:", e);
+                    setJournalEntries(feedRes.data.filter(i => i.type === 'journal').slice(0, 8));
+                }
             }
         } catch (err) {
             console.error("Discovery HUD Fetch Error:", err);
@@ -170,22 +193,41 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 const filtered = searches.filter(s => s !== searchQuery);
                 filtered.unshift(searchQuery);
                 localStorage.setItem('recent_youtube_searches', JSON.stringify(filtered.slice(0, 5)));
-            } catch {}
+            } catch (err) { /* ignore */ }
         }, 1000);
         return () => clearTimeout(timer);
     }, [searchQuery]);
 
-    // Fetch recent YouTube searches when search is empty (from localStorage)
+    // Fetch recent YouTube searches and tracks when search is empty (from localStorage)
     useEffect(() => {
         if (searchQuery.length < 3) {
             try {
                 const searches = JSON.parse(localStorage.getItem('recent_youtube_searches') || '[]');
                 setRecentYoutubeSearches(searches);
+                
+                const tracks = JSON.parse(localStorage.getItem('recent_youtube_tracks') || '[]');
+                setRecentYoutubeTracks(tracks);
             } catch {
                 setRecentYoutubeSearches([]);
+                setRecentYoutubeTracks([]);
             }
         }
     }, [searchQuery]);
+
+    // Fetch user playlists on mount and when user changes
+    useEffect(() => {
+        const fetchUserPlaylists = async () => {
+            if (user && (user.id || user.Id)) {
+                try {
+                    const res = await API.Playlists.getUserPlaylists(user.id || user.Id);
+                    setUserPlaylists(res.data || []);
+                } catch (err) {
+                    console.error("Failed to fetch user playlists in DiscoveryHUD:", err);
+                }
+            }
+        };
+        fetchUserPlaylists();
+    }, [user]);
 
     // Utility to check if an item matches the active sector
     const matchesSector = useCallback((item) => {
@@ -201,36 +243,27 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                s.subgenres.some(sub => sub.toLowerCase() === genre || genre.includes(sub.toLowerCase()));
     }, [activeSector]);
 
-    const handlePlaylistClick = async (pl) => {
-        setSelectedPlaylist(pl);
-        setPlaylistTracks([]);
-        setLoadingPlaylist(true);
-        try {
-            const res = await API.Playlists.getById(pl.id);
-            // res.data now contains { Playlist, Tracks } - checking both cases for safety
-            const tracks = res.data.Tracks || res.data.tracks || [];
-            setPlaylistTracks(tracks);
-        } catch (err) {
-            console.error("Failed to fetch playlist tracks:", err);
-            showNotification("FETCH_ERROR", "Could not load playlist contents.", "error");
-            setSelectedPlaylist(null);
-        } finally {
-            setLoadingPlaylist(false);
-        }
-    };
 
-    const filteredTracks = useMemo(() => {
-        // Filter out YouTube/Archive tracks to keep PLATFORM_SIGS dedicated to user uploads
-        let base = trendingTracks.filter(isNativeTrack);
-        
-        if (activeSector !== null) base = base.filter(matchesSector);
-        
-        if (!searchQuery) return base.slice(0, 8);
-        return base.filter(t => 
-            (t.title || t.Title || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
-            (t.artist || t.artistName || t.ArtistName || '').toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    }, [trendingTracks, searchQuery, matchesSector, activeSector, isNativeTrack]);
+
+    const albums = useMemo(() => {
+        const map = new Map();
+        trendingTracks.forEach(t => {
+            const title = t.albumTitle || t.AlbumTitle;
+            if (title && title !== '#' && title !== 'Unknown Album') {
+                if (!map.has(title)) {
+                    map.set(title, { 
+                        id: hashStr(title), 
+                        title, 
+                        artist: t.artist || t.artistName || t.ArtistName || 'Unknown Artist',
+                        type: 'album' 
+                    });
+                }
+            }
+        });
+        return Array.from(map.values());
+    }, [trendingTracks]);
+
+
 
     const filteredArtists = useMemo(() => {
         let base = trendingArtists.filter(a => {
@@ -244,14 +277,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
         return base;
     }, [trendingArtists, searchQuery, matchesSector, activeSector]);
 
-    const filteredPlaylists = useMemo(() => {
-        let base = trendingPlaylists;
-        if (activeSector !== null) base = base.filter(matchesSector);
-        if (searchQuery) {
-            base = base.filter(p => (p.name || p.Name || '').toLowerCase().includes(searchQuery.toLowerCase()));
-        }
-        return base;
-    }, [trendingPlaylists, searchQuery, matchesSector, activeSector]);
+
 
     const filteredCommunities = useMemo(() => {
         let base = communities.filter(c => {
@@ -295,20 +321,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
         });
     }, [trendingArtists]);
 
-    const liveStations = useMemo(() => {
-        let base = stations.filter(s => {
-            if (!(s.isLive || s.IsLive)) return false;
-            const name = (s.name || s.Name || "").toLowerCase();
-            const artist = (s.artistName || s.ArtistName || "").toLowerCase();
-            const isArchive = name.includes('archive') || artist.includes('archive');
-            return !isArchive;
-        });
-        if (activeSector !== null) base = base.filter(matchesSector);
-        if (searchQuery) {
-            base = base.filter(s => (s.name || s.Name || '').toLowerCase().includes(searchQuery.toLowerCase()));
-        }
-        return base;
-    }, [stations, searchQuery, matchesSector, activeSector]);
+
 
     const filteredVisuals = useMemo(() => {
         let base = visualUploads.filter(v => {
@@ -330,7 +343,8 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
     const filteredJournals = useMemo(() => {
         let base = journalEntries.filter(j => {
             const artist = (j.artist || j.Artist || "").toLowerCase();
-            return artist !== 'the archive' && !j.isArchive && !j.IsArchive;
+            const isMine = String(j.userId || j.UserId) === String(user?.id || user?.Id);
+            return isMine && artist !== 'the archive' && !j.isArchive && !j.IsArchive;
         });
         if (activeSector !== null) base = base.filter(matchesSector);
 
@@ -339,7 +353,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
             j.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             j.artist?.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [journalEntries, searchQuery, matchesSector, activeSector]);
+    }, [journalEntries, searchQuery, matchesSector, activeSector, user]);
 
     // Calculate dynamic theme color based on active sector
     const activeSectorColor = useMemo(() => {
@@ -355,7 +369,7 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
         e.preventDefault();
         if (!newClanName.trim()) return;
         try {
-            const res = await API.Communities.create({
+            await API.Communities.create({
                 name: newClanName,
                 description: newClanDesc,
                 sectorId: newClanSector !== null ? newClanSector : (activeSector !== null ? activeSector : 0)
@@ -535,34 +549,109 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                 {/* --- CENTER: THE GLOBE OR COMMUNITY TERMINAL --- */}
                 {(!isMobile || mobileViewMode === 'globe') && (
                     <div className={`${isMobile ? 'flex-1' : 'h-[400px] lg:h-full'} lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative transition-all duration-300`}>
-                        <div className={`w-full h-full ${activeTerminalCommunity ? 'hidden' : 'flex'} items-center justify-center p-4 transition-all duration-300`}>
-                            <InteractiveGlobe 
-                                searchQuery={searchQuery}
-                                communities={communities}
-                                artists={artistsForGlobe} 
-                                stations={stations} 
-                                tracks={tracksWithColor}
-                                activeSector={activeSector}
-                                selectedId={selectedGlobeItem ? `${selectedGlobeItem.type}-${selectedGlobeItem.id || selectedGlobeItem.Id}` : null}
-                                activeView={activeGlobeView}
-                                isGlobeSpinning={isGlobeSpinning}
-                                onSectorClick={(secId) => {
-                                    setActiveSector(activeSector === secId ? null : secId);
-                                }}
-                                onArtistClick={(artist) => {
-                                    setSelectedGlobeItem({ ...artist, type: 'artist' });
-                                }}
-                                onCommunityClick={(comm) => {
-                                    setSelectedGlobeItem({ ...comm, type: 'community' });
-                                }}
-                                onTrackClick={(track) => {
-                                    setSelectedGlobeItem({ ...track, type: 'track' });
-                                }}
-                                onSelectItem={(id) => {
-                                    if (id === null) setSelectedGlobeItem(null);
-                                }}
-                            />
-                        </div>
+                        {isPinterestView ? (
+                            <div className="w-full h-full bg-black/90 backdrop-blur-xl border border-white/10 p-6 pt-20 overflow-y-auto no-scrollbar animate-in fade-in duration-500 pointer-events-auto">
+                                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[#ff006e] mb-6 border-b border-[#ff006e]/20 pb-2">SEÑALES_DESCUBIERTAS</div>
+                                
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                                    {/* Playlists */}
+                                    {trendingPlaylists.slice(0, 4).map(p => (
+                                        <div key={p.id || p.Id} className="aspect-square bg-black border border-white/5 hover:border-[#ff006e]/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => onPlayTrack(p)}>
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                                            <div className="text-[8px] font-mono text-[#ff006e] uppercase tracking-widest">PLAYLIST</div>
+                                            <div className="z-10">
+                                                <div className="text-xs font-black truncate group-hover:text-[#ff006e] uppercase">{p.name || p.Name}</div>
+                                                <div className="text-[8px] opacity-40 uppercase mt-0.5">BY {p.userName || "UNKNOWN"}</div>
+                                            </div>
+                                            <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <Play size={16} fill="#ff006e" className="text-[#ff006e]" />
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {/* Tracks */}
+                                    {trendingTracks.slice(0, 6).map(t => (
+                                        <div key={t.id} className="aspect-square bg-black border border-white/5 hover:border-[#ff006e]/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => onPlayTrack(t)}>
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                                            <div className="absolute inset-0">
+                                                <img src={getMediaUrl(t.imageUrl || t.ImageUrl || t.coverImageUrl || t.CoverImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-20 group-hover:opacity-40 group-hover:scale-110 transition-all duration-700" />
+                                            </div>
+                                            <div className="text-[8px] font-mono text-[#00ffff] uppercase tracking-widest z-10">CANCIÓN</div>
+                                            <div className="z-10">
+                                                <div className="text-xs font-black truncate group-hover:text-[#ff006e] uppercase">{t.title}</div>
+                                                <div className="text-[8px] opacity-40 uppercase mt-0.5">BY {t.artist}</div>
+                                            </div>
+                                            <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                                <Play size={16} fill="#ff006e" className="text-[#ff006e]" />
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {/* Artists */}
+                                    {trendingArtists.slice(0, 4).map(a => (
+                                        <div key={a.id} className="aspect-square bg-black border border-white/5 hover:border-[#ff006e]/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => navigateToProfile(a.userId)}>
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                                            <div className="absolute inset-0">
+                                                <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-20 group-hover:opacity-40 group-hover:scale-110 transition-all duration-700" />
+                                            </div>
+                                            <div className="text-[8px] font-mono text-[#9d00ff] uppercase tracking-widest z-10">ARTISTA</div>
+                                            <div className="z-10">
+                                                <div className="text-xs font-black truncate group-hover:text-[#ff006e] uppercase">{a.name}</div>
+                                                <div className="text-[8px] opacity-40 uppercase mt-0.5">{a.genre || "NATIVE"}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className={`w-full h-full ${activeTerminalCommunity ? 'hidden' : 'flex'} items-center justify-center p-4 transition-all duration-300`}>
+                                <InteractiveGlobe 
+                                    searchQuery={searchQuery}
+                                    communities={communities}
+                                    artists={artistsForGlobe} 
+                                    tracks={tracksWithColor}
+                                    playlists={trendingPlaylists}
+                                    albums={albums}
+                                    activeSector={activeSector}
+                                    selectedId={selectedGlobeItem ? `${selectedGlobeItem.type}-${selectedGlobeItem.id || selectedGlobeItem.Id}` : null}
+                                    activeView={activeGlobeView}
+                                    isGlobeSpinning={isGlobeSpinning}
+                                    onSectorClick={(secId) => {
+                                        setActiveSector(activeSector === secId ? null : secId);
+                                    }}
+                                    onArtistClick={(artist) => {
+                                         const prevId = selectedGlobeItem?.id || selectedGlobeItem?.Id;
+                                         const currId = artist.id || artist.Id;
+                                         if (prevId === currId) {
+                                             setSelectedGlobeItem(null);
+                                         } else {
+                                             setSelectedGlobeItem({ ...artist, type: 'artist' });
+                                         }
+                                     }}
+                                     onCommunityClick={(comm) => {
+                                         const prevId = selectedGlobeItem?.id || selectedGlobeItem?.Id;
+                                         const currId = comm.id || comm.Id;
+                                         if (prevId === currId) {
+                                             setSelectedGlobeItem(null);
+                                         } else {
+                                             setSelectedGlobeItem({ ...comm, type: 'community' });
+                                         }
+                                     }}
+                                     onTrackClick={(track) => {
+                                         const prevId = selectedGlobeItem?.id || selectedGlobeItem?.Id;
+                                         const currId = track.id || track.Id;
+                                         if (prevId === currId) {
+                                             setSelectedGlobeItem(null);
+                                         } else {
+                                             setSelectedGlobeItem({ ...track, type: 'track' });
+                                         }
+                                     }}
+                                    onSelectItem={(id) => {
+                                        if (id === null) setSelectedGlobeItem(null);
+                                    }}
+                                />
+                            </div>
+                        )}
 
                         <AnimatePresence mode="wait">
                             {activeTerminalCommunity && (
@@ -607,560 +696,733 @@ const DiscoveryHUD = ({ user, followedCommunities = [], onFollowUpdate, setUser,
                                                     {/* Corner Brackets (Desktop Only for clarity) */}
                                                     {!isMobile && (
                                                         <>
-                                                            <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
-                                                            <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
-                                                            <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
-                                                            <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
-                                                        </>
-                                                    )}
-
-                                                    <div className={`relative z-10 grid grid-cols-1 gap-4 items-center ${selectedGlobeItem.type === 'track' ? '' : 'md:grid-cols-12'}`}>
-                                                        {/* Header Section */}
-                                                        <div className={`${selectedGlobeItem.type === 'track' ? 'md:col-span-1 text-center' : 'md:col-span-5 border-r border-white/5 pr-6'}`}>
-                                                            <div className="flex justify-between items-start mb-3">
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className="flex items-center gap-3">
-                                                                        <div className="w-10 h-10 rounded-sm bg-black border border-white/10 overflow-hidden shrink-0 shadow-2xl relative">
-                                                                            <img 
-                                                                                src={getMediaUrl(selectedGlobeItem.profilePicture || selectedGlobeItem.ProfilePicture || selectedGlobeItem.imageUrl || selectedGlobeItem.ImageUrl || selectedGlobeItem.coverImageUrl || selectedGlobeItem.CoverImageUrl)} 
-                                                                                alt="" 
-                                                                                className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all"
-                                                                            />
-                                                                            <div className="absolute inset-0 border border-white/5 pointer-events-none" />
-                                                                        </div>
-                                                                        <div className={`truncate flex flex-col justify-center ${selectedGlobeItem.type === 'track' && 'items-center text-center'}`}>
-                                                                            <div className="text-[16px] font-black tracking-tight text-white uppercase leading-none truncate">
-                                                                                {selectedGlobeItem.name || selectedGlobeItem.title || selectedGlobeItem.Title}
+                                                                <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
+                                                                <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
+                                                                <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
+                                                                <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
+                                                            </>
+                                                        )}
+                                                        
+                                                        <div className={`relative z-10 grid grid-cols-1 gap-4 items-center ${selectedGlobeItem.type === 'track' ? '' : 'md:grid-cols-12'}`}>
+                                                            {/* Header Section */}
+                                                            <div className={`${selectedGlobeItem.type === 'track' ? 'md:col-span-1 text-center' : 'md:col-span-5 border-r border-white/5 pr-6'}`}>
+                                                                <div className="flex justify-between items-start mb-3">
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div className="w-10 h-10 rounded-sm bg-black border border-white/10 overflow-hidden shrink-0 shadow-2xl relative">
+                                                                                <img 
+                                                                                    src={getMediaUrl(selectedGlobeItem.profilePicture || selectedGlobeItem.ProfilePicture || selectedGlobeItem.imageUrl || selectedGlobeItem.ImageUrl || selectedGlobeItem.coverImageUrl || selectedGlobeItem.CoverImageUrl)} 
+                                                                                    alt="" 
+                                                                                    className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all"
+                                                                                />
+                                                                                <div className="absolute inset-0 border border-white/5 pointer-events-none" />
                                                                             </div>
-                                                                            {selectedGlobeItem.type === 'track' && (
-                                                                                <div className="text-[10px] font-bold text-white/40 tracking-[0.2em] uppercase mt-1">
-                                                                                    {selectedGlobeItem.artist || selectedGlobeItem.artistName || selectedGlobeItem.ArtistName || 'UNKNOWN_ARTIST'}
+                                                                            <div className={`truncate flex flex-col justify-center ${selectedGlobeItem.type === 'track' && 'items-center text-center'}`}>
+                                                                                <div className="text-[16px] font-black tracking-tight text-white uppercase leading-none truncate">
+                                                                                    {selectedGlobeItem.name || selectedGlobeItem.title || selectedGlobeItem.Title}
                                                                                 </div>
-                                                                            )}
-                                                                            <div className="text-[8px] text-[#ff006e] font-bold tracking-[0.4em] uppercase mt-1.5 flex items-center gap-2 whitespace-nowrap">
-                                                                                <Activity size={10} /> 
-                                                                                <span className="leading-none">
-                                                                                    {selectedGlobeItem.type === 'track' ? 'SIGNAL_BROADCAST_v2' : 
-                                                                                     selectedGlobeItem.type === 'community' ? 'NEURAL_CLUSTER' : 
-                                                                                     'ARTIST_IDENTITY'}
-                                                                                </span>
+                                                                                {selectedGlobeItem.type === 'track' && (
+                                                                                    <div className="text-[10px] font-bold text-white/40 tracking-[0.2em] uppercase mt-1">
+                                                                                        {selectedGlobeItem.artist || selectedGlobeItem.artistName || selectedGlobeItem.ArtistName || 'UNKNOWN_ARTIST'}
+                                                                                    </div>
+                                                                                )}
+                                                                                <div className="text-[8px] text-[#ff006e] font-bold tracking-[0.4em] uppercase mt-1.5 flex items-center gap-2 whitespace-nowrap">
+                                                                                    <Activity size={10} /> 
+                                                                                    <span className="leading-none">
+                                                                                        {selectedGlobeItem.type === 'track' ? 'SIGNAL_BROADCAST_v2' : 
+                                                                                         selectedGlobeItem.type === 'community' ? 'NEURAL_CLUSTER' : 
+                                                                                         'ARTIST_IDENTITY'}
+                                                                                    </span>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                </div>
-                                                                <button 
-                                                                    onClick={(e) => { e.stopPropagation(); setSelectedGlobeItem(null); }}
-                                                                    onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedGlobeItem(null); }}
-                                                                    className="p-2 text-white/20 hover:text-white transition-all scale-125 cursor-pointer relative z-[100]"
-                                                                >
-                                                                    <X size={16} />
-                                                                </button>
-                                                            </div>
-                                                            
-                                                            <div className="flex flex-col gap-2">
-                                                                {selectedGlobeItem.type === 'artist' && (
                                                                     <button 
-                                                                        onClick={() => navigateToProfile(selectedGlobeItem.userId || selectedGlobeItem.UserId)}
-                                                                        className="w-full bg-transparent border border-white/20 text-white/80 hover:border-white hover:text-white py-2.5 text-[10px] font-black tracking-[0.3em] uppercase transition-all relative group/btn"
+                                                                        onClick={(e) => { e.stopPropagation(); setSelectedGlobeItem(null); }}
+                                                                        onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedGlobeItem(null); }}
+                                                                        className="p-2 text-white/20 hover:text-white transition-all scale-125 cursor-pointer relative z-[100]"
                                                                     >
-                                                                        <div className="absolute inset-0 border border-white/5 transform scale-95 group-hover/btn:scale-100 transition-transform pointer-events-none" />
-                                                                        {t('VISIT_IDENTITY')}
+                                                                        <X size={16} />
                                                                     </button>
-                                                                )}
-                                                                {selectedGlobeItem.type === 'community' && (
-                                                                    <button 
-                                                                        onClick={() => setActiveTerminalCommunity(selectedGlobeItem)}
-                                                                        className="w-full bg-transparent border border-white/20 text-white/80 hover:border-white hover:text-white py-2.5 text-[10px] font-black tracking-[0.3em] uppercase transition-all relative group/btn"
-                                                                    >
-                                                                        <div className="absolute inset-0 border border-white/5 transform scale-95 group-hover/btn:scale-100 transition-transform pointer-events-none" />
-                                                                        {t('ENTER_PORTAL')}
-                                                                    </button>
-                                                                )}
-                                                                {selectedGlobeItem.type === 'track' && (
-                                                                    <button 
-                                                                        onClick={() => { onPlayTrack(selectedGlobeItem); setSelectedGlobeItem(null); }}
-                                                                        className="w-full bg-transparent border border-[#ff006e]/60 text-[#ff006e] hover:bg-[#ff006e]/10 py-2.5 text-[10px] font-black tracking-[0.3em] uppercase transition-all flex items-center justify-center gap-3 relative group/btn"
-                                                                    >
-                                                                        <div className="absolute inset-0 border border-[#ff006e]/20 transform scale-95 group-hover/btn:scale-100 transition-transform pointer-events-none" />
-                                                                        <Play size={12} fill="currentColor" /> {t('PLAY_TRACK')}
-                                                                    </button>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Dynamic Membership / Signal Section - Only for Hubs and Artists */}
-                                                        {selectedGlobeItem.type !== 'track' && (
-                                                            <div className="md:col-span-7">
-                                                                <div className="text-[8px] text-white/40 font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
-                                                                    {selectedGlobeItem.type === 'community' ? (
-                                                                        <><Users size={10} /> {t('ARTIST_MEMBERS')}</>
-                                                                    ) : (
-                                                                        <><Zap size={10} /> {t('SIGNAL_SHARES')}</>
-                                                                    )}
                                                                 </div>
                                                                 
-                                                                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
-                                                                    {selectedGlobeItem.type === 'community' ? (
-                                                                        // COMMUNITY: Show Member Artists
-                                                                        trendingArtists.filter(a => String(a.communityId || a.CommunityId) === String(selectedGlobeItem.id)).slice(0, 8).map((a, i) => (
-                                                                            <div key={i} className="flex flex-col items-center gap-2 shrink-0 group/member cursor-pointer" onClick={() => navigateToProfile(a.userId || a.UserId)}>
-                                                                                <div className="w-10 h-10 rounded-full border border-white/10 overflow-hidden group-hover/member:border-[#ff006e] transition-colors bg-white/5">
-                                                                                    <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale group-hover/member:grayscale-0 transition-all" />
-                                                                                </div>
-                                                                                <span className="text-[7px] font-bold text-white/60 tracking-wider uppercase group-hover/member:text-white">{a.name || a.Name}</span>
-                                                                            </div>
-                                                                        ))
-                                                                    ) : (
-                                                                        // ARTIST: Show Signal Previews
-                                                                        visualUploads.filter(v => {
-                                                                            const artistId = selectedGlobeItem.type === 'track' 
-                                                                                ? (selectedGlobeItem.artistId || selectedGlobeItem.ArtistId)
-                                                                                : (selectedGlobeItem.userId || selectedGlobeItem.UserId || selectedGlobeItem.id || selectedGlobeItem.Id);
-                                                                            
-                                                                            const uploadArtistId = v.userId || v.UserId || v.artistId || v.ArtistId;
-                                                                            
-                                                                            const artistName = (selectedGlobeItem.type === 'track' 
-                                                                                ? (selectedGlobeItem.artist || selectedGlobeItem.artistName)
-                                                                                : (selectedGlobeItem.name || selectedGlobeItem.Name)) || '';
-                                                                                
-                                                                            const uploadArtistName = (v.artist || v.Artist || '').toLowerCase();
-                                                                            
-                                                                            // Strict matching: If names are present and different, don't show
-                                                                            if (artistName && uploadArtistName && artistName.toLowerCase() !== uploadArtistName) return false;
-                                                                            
-                                                                            return (String(uploadArtistId) === String(artistId)) || (artistName && artistName.toLowerCase() === uploadArtistName);
-                                                                        }).slice(0, 5).map((v, i) => (
-                                                                            <div key={i} className="w-32 h-20 bg-black border border-white/10 shrink-0 relative group/img overflow-hidden rounded-sm">
-                                                                                <img src={resolveThumbnail(v)} alt="" className="w-full h-full object-cover opacity-60 group-hover/img:opacity-100 transition-opacity" />
-                                                                                <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60" />
-                                                                                <div className="absolute bottom-2 left-2 right-2 flex justify-between items-end">
-                                                                                    <span className="text-[7px] font-black truncate uppercase leading-none">{v.title}</span>
-                                                                                    <div className="p-1 bg-white/10 rounded-full"><Camera size={8} /></div>
-                                                                                </div>
-                                                                            </div>
-                                                                        ))
+                                                                <div className="flex flex-col gap-2">
+                                                                    {selectedGlobeItem.type === 'artist' && (
+                                                                        <button 
+                                                                            onClick={() => navigateToProfile(selectedGlobeItem.userId || selectedGlobeItem.UserId)}
+                                                                            className="w-full bg-transparent border border-white/20 text-white/80 hover:border-white hover:text-white py-2.5 text-[10px] font-black tracking-[0.3em] uppercase transition-all relative group/btn"
+                                                                        >
+                                                                            <div className="absolute inset-0 border border-white/5 transform scale-95 group-hover/btn:scale-100 transition-transform pointer-events-none" />
+                                                                            {t('VISIT_IDENTITY')}
+                                                                        </button>
                                                                     )}
-
-                                                                    {/* Edge Case Fallbacks */}
-                                                                    {selectedGlobeItem.type === 'community' && trendingArtists.filter(a => String(a.communityId || a.CommunityId) === String(selectedGlobeItem.id)).length === 0 && (
-                                                                        <div className="text-[9px] text-white/10 font-bold tracking-[0.2em] italic uppercase py-6">{t('NO_SIGNALS_DETECTED')}</div>
+                                                                    {selectedGlobeItem.type === 'community' && (
+                                                                        <button 
+                                                                            onClick={() => setActiveTerminalCommunity(selectedGlobeItem)}
+                                                                            className="w-full bg-transparent border border-white/20 text-white/80 hover:border-white hover:text-white py-2.5 text-[10px] font-black tracking-[0.3em] uppercase transition-all relative group/btn"
+                                                                        >
+                                                                            <div className="absolute inset-0 border border-white/5 transform scale-95 group-hover/btn:scale-100 transition-transform pointer-events-none" />
+                                                                            {t('ENTER_PORTAL')}
+                                                                        </button>
+                                                                    )}
+                                                                    {selectedGlobeItem.type === 'track' && (
+                                                                        <button 
+                                                                            onClick={() => { onPlayTrack(selectedGlobeItem); setSelectedGlobeItem(null); }}
+                                                                            className="w-full bg-transparent border border-[#ff006e]/60 text-[#ff006e] hover:bg-[#ff006e]/10 py-2.5 text-[10px] font-black tracking-[0.3em] uppercase transition-all flex items-center justify-center gap-3 relative group/btn"
+                                                                        >
+                                                                            <div className="absolute inset-0 border border-[#ff006e]/20 transform scale-95 group-hover/btn:scale-100 transition-transform pointer-events-none" />
+                                                                            <Play size={12} fill="currentColor" /> {t('PLAY_TRACK')}
+                                                                        </button>
                                                                     )}
                                                                 </div>
                                                             </div>
-                                                        )}
+                                                            
+                                                            {/* Dynamic Membership / Signal Section - Only for Hubs and Artists */}
+                                                            {selectedGlobeItem.type !== 'track' && (
+                                                                <div className="md:col-span-7">
+                                                                    <div className="text-[8px] text-white/40 font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
+                                                                        {selectedGlobeItem.type === 'community' ? (
+                                                                            <><Users size={10} /> {t('ARTIST_MEMBERS')}</>
+                                                                        ) : (
+                                                                            <><Zap size={10} /> {t('SIGNAL_SHARES')}</>
+                                                                        )}
+                                                                    </div>
+                                                                    
+                                                                    <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+                                                                        {selectedGlobeItem.type === 'community' ? (
+                                                                            // COMMUNITY: Show Member Artists
+                                                                            trendingArtists.filter(a => String(a.communityId || a.CommunityId) === String(selectedGlobeItem.id)).slice(0, 8).map((a, i) => (
+                                                                                <div key={i} className="flex flex-col items-center gap-2 shrink-0 group/member cursor-pointer" onClick={() => navigateToProfile(a.userId || a.UserId)}>
+                                                                                    <div className="w-10 h-10 rounded-full border border-white/10 overflow-hidden group-hover/member:border-[#ff006e] transition-colors bg-white/5">
+                                                                                        <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale group-hover/member:grayscale-0 transition-all" />
+                                                                                    </div>
+                                                                                    <span className="text-[7px] font-bold text-white/60 tracking-wider uppercase group-hover/member:text-white">{a.name || a.Name}</span>
+                                                                                </div>
+                                                                            ))
+                                                                        ) : (
+                                                                            // ARTIST: Show Signal Previews
+                                                                            visualUploads.filter(v => {
+                                                                                const artistId = selectedGlobeItem.type === 'track' 
+                                                                                    ? (selectedGlobeItem.artistId || selectedGlobeItem.ArtistId)
+                                                                                    : (selectedGlobeItem.userId || selectedGlobeItem.UserId || selectedGlobeItem.id || selectedGlobeItem.Id);
+                                                                                
+                                                                                const uploadArtistId = v.userId || v.UserId || v.artistId || v.ArtistId;
+                                                                                
+                                                                                const artistName = (selectedGlobeItem.type === 'track' 
+                                                                                    ? (selectedGlobeItem.artist || selectedGlobeItem.artistName)
+                                                                                    : (selectedGlobeItem.name || selectedGlobeItem.Name)) || '';
+                                                                                    
+                                                                                const uploadArtistName = (v.artist || v.Artist || '').toLowerCase();
+                                                                                
+                                                                                // Strict matching: If names are present and different, don't show
+                                                                                if (artistName && uploadArtistName && artistName.toLowerCase() !== uploadArtistName) return false;
+                                                                                
+                                                                                return (String(uploadArtistId) === String(artistId)) || (artistName && artistName.toLowerCase() === uploadArtistName);
+                                                                            }).slice(0, 5).map((v, i) => (
+                                                                                <div key={i} className="w-32 h-20 bg-black border border-white/10 shrink-0 relative group/img overflow-hidden rounded-sm">
+                                                                                    <img src={resolveThumbnail(v)} alt="" className="w-full h-full object-cover opacity-60 group-hover/img:opacity-100 transition-opacity" />
+                                                                                    <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60" />
+                                                                                    <div className="absolute bottom-2 left-2 right-2 flex justify-between items-end">
+                                                                                        <span className="text-[7px] font-black truncate uppercase leading-none">{v.title}</span>
+                                                                                        <div className="p-1 bg-white/10 rounded-full"><Camera size={8} /></div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            ))
+                                                                        )}
+
+                                                                        {/* Edge Case Fallbacks */}
+                                                                        {selectedGlobeItem.type === 'community' && trendingArtists.filter(a => String(a.communityId || a.CommunityId) === String(selectedGlobeItem.id)).length === 0 && (
+                                                                            <div className="text-[9px] text-white/10 font-bold tracking-[0.2em] italic uppercase py-6">{t('NO_SIGNALS_DETECTED')}</div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+
+                                        {/* Globe Controls - Premium Mirror Layout */}
+                                        {!activeTerminalCommunity && (
+                                            <>
+                                                <div className="absolute top-10 left-4 z-50 scale-75 lg:scale-100 flex flex-col gap-2">
+                                                     {!isPinterestView && (
+                                                    <button 
+                                                        onClick={() => setIsGlobeSpinning(!isGlobeSpinning)}
+                                                        className={`flex items-center justify-center w-10 h-10 rounded-sm border transition-all duration-300 ${isGlobeSpinning ? 'bg-[#00ffff]/10 border-[#00ffff] text-[#00ffff]' : 'bg-black/40 border-white/5 text-white/40'}`}
+                                                        title={isGlobeSpinning ? t('PAUSE_SPIN') : t('START_SPIN')}
+                                                    >
+                                                        {isGlobeSpinning ? <Pause size={14} /> : <Play size={14} />}
+                                                    </button>
+                                                     )}
+                                                    <button 
+                                                        onClick={() => setIsPinterestView(!isPinterestView)}
+                                                        className={`flex items-center justify-center w-10 h-10 rounded-sm border transition-all duration-300 ${isPinterestView ? 'bg-[#ff006e]/10 border-[#ff006e] text-[#ff006e]' : 'bg-black/40 border-white/5 text-white/40'}`}
+                                                        title={isPinterestView ? "View 3D Map" : "View Grid"}
+                                                    >
+                                                        {isPinterestView ? <Globe size={14} /> : <Grid size={14} />}
+                                                    </button>
+                                                </div>
+
+                                                 {!isPinterestView && (
+                                                <div className="absolute top-10 right-4 flex flex-col gap-3 z-50 scale-75 lg:scale-100">
+
+                                                    {[
+                                                        { id: 'ARTISTS', icon: <User size={12} />, label: 'Artistas', desc: 'Filtrar Artistas' },
+                                                        { id: 'COMMUNITIES', icon: <Globe size={12} />, label: 'Comunidades', desc: 'Filtrar Comunidades' },
+                                                        { id: 'PLAYLISTS', icon: <Music size={12} />, label: 'Playlists', desc: 'Filtrar Playlists' },
+                                                        { id: 'TRACKS', icon: <Play size={12} />, label: 'Canciones', desc: 'Filtrar Canciones' }
+                                                    ].map(v => (
+                                                        <button 
+                                                            key={v.id}
+                                                            onClick={() => setActiveGlobeView(activeGlobeView === v.id ? null : v.id)}
+                                                            className={`flex flex-col items-end gap-1 px-3 py-2 rounded-sm border transition-all duration-300 group ${activeGlobeView === v.id ? 'bg-[#ff006e]/10 border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.2)]' : 'bg-black/40 border-white/5 text-white/40 hover:border-white/20 hover:text-white'}`}
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                {v.icon}
+                                                                <span className={`text-[8px] font-black tracking-[0.2em] transition-all uppercase ${activeGlobeView === v.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto overflow-hidden'}`}>{v.label}</span>
+                                                            </div>
+                                                            {activeGlobeView === v.id && (
+                                                                <div className="text-[6px] opacity-60 font-bold tracking-tighter uppercase">{v.desc}</div>
+                                                            )}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                 )}
+                                            </>
+                                        )}
+
+                            
+
+                        </div>
+                    )}
+
+                    {/* --- LEFT COLUMN: AUDIO & ARTISTS --- */}
+                    {(!isMobile || mobileViewMode === 'data') && (
+                      <>
+                        <div className="col-span-3 row-span-2 col-start-1 row-start-1 pointer-events-auto">
+                        <HUDWidget title={t('YT_FREQ_SCAN')} icon={<Search size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <div className="space-y-4">
+                                {youtubeResults.length > 0 ? youtubeResults.map(y => (
+                                    <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => {
+                                        onPlayTrack(y);
+                                        // Save to local storage history
+                                        try {
+                                            const history = JSON.parse(localStorage.getItem('recent_youtube_tracks') || '[]');
+                                            // Remove if already exists
+                                            const filtered = history.filter(item => item.id !== y.id);
+                                            // Add to front
+                                            filtered.unshift({
+                                                id: y.id,
+                                                title: y.title,
+                                                author: y.author || "Unknown",
+                                                thumbnailUrl: y.thumbnailUrl || `https://img.youtube.com/vi/${y.id}/hqdefault.jpg`
+                                            });
+                                            // Keep only last 10
+                                            localStorage.setItem('recent_youtube_tracks', JSON.stringify(filtered.slice(0, 10)));
+                                            // Update state
+                                            setRecentYoutubeTracks(filtered.slice(0, 10));
+                                        } catch (err) {
+                                            console.error("Failed to save to local storage:", err);
+                                        }
+                                    }}>
+                                        <div className="w-12 h-12 bg-black overflow-hidden relative border border-white/5 group-hover:border-[#ff006e]/40 shadow-lg">
+                                             <img 
+                                                src={y.thumbnailUrl || y.ThumbnailUrl || y.coverImageUrl || y.CoverImageUrl || (y.id ? `https://img.youtube.com/vi/${y.id}/hqdefault.jpg` : null)} 
+                                                alt="" 
+                                                className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" 
+                                              />
+                                             <div className="absolute inset-0 bg-[#ff006e]/10 mix-blend-overlay group-hover:opacity-0" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{y.title}</div>
+                                            <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">{y.author}</div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            <div onClick={(e) => e.stopPropagation()}>
+                                                <TrackActionsDropdown 
+                                                    track={{...y, category: 'YouTube'}} 
+                                                    playlists={userPlaylists}
+                                                    onRefreshPlaylists={async () => {
+                                                        if (user && (user.id || user.Id)) {
+                                                            try {
+                                                                const res = await API.Playlists.getUserPlaylists(user.id || user.Id);
+                                                                                                                            setUserPlaylists(res.data || []);
+                                                            } catch (err) {
+                                                                console.error("Failed to fetch user playlists:", err);
+                                                            }
+                                                        }
+                                                    }}
+                                                    onLike={(track) => {
+                                                        try {
+                                                            const likes = JSON.parse(localStorage.getItem('liked_youtube_tracks') || '[]');
+                                                            const isLiked = likes.some(l => l.id === track.id);
+                                                            let newLikes = [];
+                                                            if (isLiked) {
+                                                                newLikes = likes.filter(l => l.id !== track.id);
+                                                            } else {
+                                                                newLikes = [...likes, track];
+                                                            }
+                                                            localStorage.setItem('liked_youtube_tracks', JSON.stringify(newLikes));
+                                                        } catch (err) {
+                                                            console.error("Failed to save likes:", err);
+                                                        }
+                                                    }}
+                                                    isLikedInitial={(() => {
+                                                        try {
+                                                            const likes = JSON.parse(localStorage.getItem('liked_youtube_tracks') || '[]');
+                                                            return likes.some(l => l.id === y.id);
+                                                        } catch { return false; }
+                                                    })()}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )) : recentYoutubeTracks && recentYoutubeTracks.length > 0 ? (
+                                    <div className="space-y-2">
+                                        <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">CACHÉ_YOUTUBE</div>
+                                        {recentYoutubeTracks.map(y => (
+                                            <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => {
+                                                onPlayTrack(y);
+                                            }}>
+                                                <div className="w-10 h-10 bg-black overflow-hidden relative border border-white/5 group-hover:border-[#ff006e]/40 shadow-lg">
+                                                     <img 
+                                                        src={y.thumbnailUrl || `https://img.youtube.com/vi/${y.id}/hqdefault.jpg`} 
+                                                        alt="" 
+                                                        className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" 
+                                                      />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{y.title}</div>
+                                                    <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">{y.author}</div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    <div onClick={(e) => e.stopPropagation()}>
+                                                        <TrackActionsDropdown 
+                                                            track={{...y, category: 'YouTube'}} 
+                                                            playlists={userPlaylists}
+                                                            onRefreshPlaylists={async () => {
+                                                                if (user && (user.id || user.Id)) {
+                                                                    try {
+                                                                        const res = await API.Playlists.getUserPlaylists(user.id || user.Id);
+                                                                        setUserPlaylists(res.data || []);
+                                                                    } catch (err) {
+                                                                        console.error("Failed to fetch user playlists:", err);
+                                                                    }
+                                                                }
+                                                            }}
+                                                            onLike={(track) => {
+                                                                try {
+                                                                    const likes = JSON.parse(localStorage.getItem('liked_youtube_tracks') || '[]');
+                                                                    const isLiked = likes.some(l => l.id === track.id);
+                                                                    let newLikes = [];
+                                                                    if (isLiked) {
+                                                                        newLikes = likes.filter(l => l.id !== track.id);
+                                                                    } else {
+                                                                        newLikes = [...likes, track];
+                                                                    }
+                                                                    localStorage.setItem('liked_youtube_tracks', JSON.stringify(newLikes));
+                                                                } catch (err) {
+                                                                    console.error("Failed to save likes:", err);
+                                                                }
+                                                            }}
+                                                            isLikedInitial={(() => {
+                                                                try {
+                                                                    const likes = JSON.parse(localStorage.getItem('liked_youtube_tracks') || '[]');
+                                                                    return likes.some(l => l.id === y.id);
+                                                                } catch { return false; }
+                                                            })()}
+                                                        />
                                                     </div>
                                                 </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-
-                                    {/* Globe Controls - Premium Mirror Layout */}
-                                    {!activeTerminalCommunity && (
-                                        <>
-                                            <div className="absolute top-10 left-4 z-50 scale-75 lg:scale-100">
-                                                <button 
-                                                    onClick={() => setIsGlobeSpinning(!isGlobeSpinning)}
-                                                    className={`flex items-center justify-center w-10 h-10 rounded-sm border transition-all duration-300 ${isGlobeSpinning ? 'bg-[#00ffff]/10 border-[#00ffff] text-[#00ffff]' : 'bg-black/40 border-white/5 text-white/40'}`}
-                                                    title={isGlobeSpinning ? t('PAUSE_SPIN') : t('START_SPIN')}
-                                                >
-                                                    {isGlobeSpinning ? <Pause size={14} /> : <Play size={14} />}
-                                                </button>
                                             </div>
-
-                                            <div className="absolute top-10 right-4 flex flex-col gap-3 z-50 scale-75 lg:scale-100">
-
-                                                {[
-                                                    { id: 'CORE_PULSE', icon: <Activity size={12} />, label: t('CORE_PULSE'), desc: t('REALTIME_ACTIVITY') },
-                                                    { id: 'LIVE_SIGNAL_HUB', icon: <Radio size={12} />, label: t('LIVE_SIGNAL_HUB'), desc: t('ACTIVE_TRANSMISSIONS') },
-                                                    { id: 'CLIQUE_VALENCE', icon: <Layers size={12} />, label: t('CLIQUE_VALENCE'), desc: t('TERRITORY_MAP') },
-                                                    { id: 'FREQ_PEAKS', icon: <Activity size={12} />, label: t('FREQ_DATA_PEAKS'), desc: t('DENSITY_ANALYSIS') }
-                                                ].map(v => (
-                                                    <button 
-                                                        key={v.id}
-                                                        onClick={() => setActiveGlobeView(v.id)}
-                                                        className={`flex flex-col items-end gap-1 px-3 py-2 rounded-sm border transition-all duration-300 group ${activeGlobeView === v.id ? 'bg-[#ff006e]/10 border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.2)]' : 'bg-black/40 border-white/5 text-white/40 hover:border-white/20 hover:text-white'}`}
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            {v.icon}
-                                                            <span className={`text-[8px] font-black tracking-[0.2em] transition-all uppercase ${activeGlobeView === v.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto overflow-hidden'}`}>{v.label}</span>
-                                                        </div>
-                                                        {activeGlobeView === v.id && (
-                                                            <div className="text-[6px] opacity-60 font-bold tracking-tighter uppercase">{v.desc}</div>
-                                                        )}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </>
-                                    )}
-
-                        
-                        {/* Floating Overlay for Sector Status - Hide when terminal or detail card is active */}
-                        {!activeTerminalCommunity && !selectedGlobeItem && (
-                            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/40 hover:bg-black/80 backdrop-blur-xl border border-white/5 px-4 hover:px-8 py-2 hover:pt-3 hover:pb-2 rounded-full hover:rounded-sm flex gap-3 hover:gap-10 z-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] scale-75 lg:scale-100 transition-all duration-500 group/overlay cursor-default">
-                                {SECTORS.map(s => (
-                                    <div key={s.id} className="flex flex-col items-center justify-end gap-1 hover:gap-1.5 cursor-pointer group/item px-2 py-1" onClick={() => setActiveSector(activeSector === s.id ? null : s.id)}>
-                                        <div 
-                                            className="text-[8px] tracking-[0.2em] font-black transition-all duration-500 overflow-hidden max-h-0 opacity-0 group-hover/overlay:max-h-4 group-hover/overlay:opacity-30 group-hover/item:!opacity-100" 
-                                            style={{ color: activeSector === s.id ? (s.id === 0 ? "#ff33aa" : s.color) : s.color }}
-                                        >
-                                            {s.name.split(' ')[0]}
-                                        </div>
-                                        <div 
-                                            className={`w-1.5 rounded-full transition-all duration-500 ${activeSector === s.id ? 'opacity-100 h-4 scale-y-125' : 'opacity-40 h-1.5 group-hover/overlay:h-4 group-hover/item:translate-y-1 group-hover/item:opacity-100'}`} 
-                                            style={{ 
-                                                backgroundColor: s.id === 0 && activeSector === 0 ? "#ff33aa" : s.color, 
-                                                boxShadow: activeSector === s.id ? `0 0 10px ${s.id === 0 ? "#ff33aa" : s.color}` : 'none' 
-                                            }} 
-                                        />
+                                        ))}
                                     </div>
-                                ))}
+                                ) : recentYoutubeSearches.length > 0 ? (
+                                    <div className="space-y-2">
+                                        <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">BÚSQUEDAS_RECIENTES</div>
+                                        {recentYoutubeSearches.map(s => (
+                                            <div key={s} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => setSearchQuery(s)}>
+                                                <Search size={10} className="text-white/40 group-hover:text-[#ff006e]" />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{s}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center h-full opacity-40 py-10 text-center px-4 group">
+                                        <div className="w-8 h-8 border border-white/20 rounded-full flex items-center justify-center mb-3 group-hover:border-[#ff006e] group-hover:text-[#ff006e] transition-all animate-pulse">
+                                            <Search size={14} />
+                                        </div>
+                                        <div className="text-[10px] font-black tracking-widest uppercase mb-1">RADAR_YOUTUBE_ESPERANDO</div>
+                                        <div className="text-[7px] tracking-[0.2em] uppercase opacity-60">INGRESA UNA FRECUENCIA EN LA BARRA SUPERIOR PARA INTERCEPTAR SEÑALES</div>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </HUDWidget>
                     </div>
-                )}
 
-                {/* --- LEFT COLUMN: AUDIO & ARTISTS --- */}
-                {(!isMobile || mobileViewMode === 'data') && (
-                  <>
-                    <div className="col-span-3 row-span-2 col-start-1 row-start-1 pointer-events-auto">
-                    <HUDWidget title={t('YT_FREQ_SCAN')} icon={<Search size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
-                        <div className="space-y-4">
-                            {youtubeResults.length > 0 ? youtubeResults.map(y => (
-                                <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => {
-                                    onPlayTrack(y);
-                                    // Save to local storage history
-                                    try {
-                                        const history = JSON.parse(localStorage.getItem('recent_youtube_tracks') || '[]');
-                                        // Remove if already exists
-                                        const filtered = history.filter(item => item.id !== y.id);
-                                        // Add to front
-                                        filtered.unshift({
-                                            id: y.id,
-                                            title: y.title,
-                                            author: y.author || "Unknown",
-                                            thumbnailUrl: y.thumbnailUrl || `https://img.youtube.com/vi/${y.id}/hqdefault.jpg`
-                                        });
-                                        // Keep only last 10
-                                        localStorage.setItem('recent_youtube_tracks', JSON.stringify(filtered.slice(0, 10)));
-                                        // Update state
-                                        setRecentYoutubeTracks(filtered.slice(0, 10));
-                                    } catch (err) {
-                                        console.error("Failed to save to local storage:", err);
-                                    }
-                                }}>
-                                    <div className="w-12 h-12 bg-black overflow-hidden relative border border-white/5 group-hover:border-[#ff006e]/40 shadow-lg">
-                                         <img 
-                                            src={y.thumbnailUrl || y.ThumbnailUrl || y.coverImageUrl || y.CoverImageUrl || (y.id ? `https://img.youtube.com/vi/${y.id}/hqdefault.jpg` : null)} 
-                                            alt="" 
-                                            className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" 
-                                          />
-                                         <div className="absolute inset-0 bg-[#ff006e]/10 mix-blend-overlay group-hover:opacity-0" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{y.title}</div>
-                                        <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">{y.author}</div>
-                                    </div>
-                                    <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </div>
-                            )) : recentYoutubeSearches.length > 0 ? (
-                                <div className="space-y-2">
-                                    <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">BÚSQUEDAS_RECIENTES</div>
-                                    {recentYoutubeSearches.map(s => (
-                                        <div key={s} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => setSearchQuery(s)}>
-                                            <Search size={10} className="text-white/40 group-hover:text-[#ff006e]" />
-                                            <div className="flex-1 min-w-0">
-                                                <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{s}</div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center h-full opacity-40 py-10 text-center px-4 group">
-                                    <div className="w-8 h-8 border border-white/20 rounded-full flex items-center justify-center mb-3 group-hover:border-[#ff006e] group-hover:text-[#ff006e] transition-all animate-pulse">
-                                        <Search size={14} />
-                                    </div>
-                                    <div className="text-[10px] font-black tracking-widest uppercase mb-1">RADAR_YOUTUBE_ESPERANDO</div>
-                                    <div className="text-[7px] tracking-[0.2em] uppercase opacity-60">INGRESA UNA FRECUENCIA EN LA BARRA SUPERIOR PARA INTERCEPTAR SEÑALES</div>
-                                </div>
-                            )}
-                        </div>
-                    </HUDWidget>
-                </div>
 
-                <div className="col-span-3 row-span-2 col-start-1 row-start-3 pointer-events-auto">
-                    <HUDWidget title={t('PLATFORM_SIGS')} icon={<Music size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
-                         <div className="space-y-1">
-                             {filteredTracks.map((t, idx) => (
-                                 <div key={t.id} className="flex items-center gap-4 text-[10px] group cursor-pointer py-2 px-2 hover:bg-white/5 transition-all border-l border-transparent hover:border-[#ff006e]" onClick={() => onPlayTrack(t)}>
-                                     <div className="w-8 h-8 rounded-sm bg-black border border-white/10 shrink-0 overflow-hidden relative">
-                                         <img src={getMediaUrl(t.imageUrl || t.ImageUrl || t.coverImageUrl || t.CoverImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
+                    <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-1 lg:row-start-3 pointer-events-auto">
+                        <HUDWidget 
+                            title={selectedPlaylist ? `${t('DESC_PL')}: ${(selectedPlaylist.name || selectedPlaylist.Name || '').toUpperCase()}` : "[ PLAYLISTS ]"} 
+                            icon={selectedPlaylist ? <ChevronLeft size={14} className="cursor-pointer hover:text-white transition-colors" onClick={() => setSelectedPlaylist(null)} /> : <Music size={14}/>} 
+                            searchQuery={searchQuery} 
+                            activeColor={activeSectorColor}
+                        >
+                             {selectedPlaylist ? (
+                                 loadingPlaylist ? (
+                                     <div className="text-[8px] opacity-40 text-center py-4">LOADING...</div>
+                                 ) : (
+                                     <div className="space-y-2 max-h-64 overflow-y-auto no-scrollbar">
+                                         {playlistTracks.length > 0 ? playlistTracks.map(t => (
+                                             <div key={t.id} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 cursor-pointer group" onClick={() => onPlayTrack(t)}>
+                                                 <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                 <div className="flex-1 min-w-0">
+                                                     <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] uppercase">{t.title}</div>
+                                                     <div className="text-[8px] opacity-30 truncate uppercase">{t.artist}</div>
+                                                 </div>
+                                             </div>
+                                         )) : (
+                                             <div className="text-[8px] opacity-40 text-center py-4">NO_SIGNALS_FOUND</div>
+                                         )}
                                      </div>
-                                     <div className="flex-1 truncate">
-                                         <div className="font-bold truncate group-hover:text-[#ff006e] transition-colors uppercase">{t.title}</div>
-                                         <div className="text-[8px] opacity-30 uppercase tracking-widest font-light">{t.artist}</div>
+                                 )
+                             ) : (
+                                 <div className="space-y-4 animate-in fade-in duration-500">
+                                     {/* User Playlists */}
+                                     <div>
+                                         <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">TUS_PLAYLISTS</div>
+                                         {userPlaylists.length > 0 ? userPlaylists.map(p => (
+                                             <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={async () => {
+                                                 setSelectedPlaylist(p);
+                                                 setLoadingPlaylist(true);
+                                                 try {
+                                                     const res = await API.Playlists.getById(p.id || p.Id);
+                                                     setPlaylistTracks(res.data?.tracks || []);
+                                                 } catch (err) {
+                                                     console.error("Failed to fetch playlist tracks:", err);
+                                                 } finally {
+                                                     setLoadingPlaylist(false);
+                                                 }
+                                             }}>
+                                                 <div className="w-8 h-8 bg-black border border-white/10 flex items-center justify-center group-hover:border-[#ff006e]/40">
+                                                     <Layers size={12} className="text-white/40 group-hover:text-[#ff006e]" />
+                                                 </div>
+                                                 <div className="flex-1 min-w-0">
+                                                     <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
+                                                     <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">{p.tracks?.length || 0} SIGNALS</div>
+                                                 </div>
+                                                 <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                             </div>
+                                         )) : (
+                                             <div className="text-[8px] opacity-30 px-2 py-1">NO_PLAYLISTS_CREATED</div>
+                                         )}
+                                     </div>
+
+                                     {/* Recommended Playlists */}
+                                     <div>
+                                         <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">RECOMENDADAS</div>
+                                         {trendingPlaylists.length > 0 ? trendingPlaylists.map(p => (
+                                             <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={async () => {
+                                                 setSelectedPlaylist(p);
+                                                 setLoadingPlaylist(true);
+                                                 try {
+                                                     const res = await API.Playlists.getById(p.id || p.Id);
+                                                     setPlaylistTracks(res.data?.tracks || []);
+                                                 } catch (err) {
+                                                     console.error("Failed to fetch playlist tracks:", err);
+                                                 } finally {
+                                                     setLoadingPlaylist(false);
+                                                 }
+                                             }}>
+                                                 <div className="w-8 h-8 bg-black border border-white/10 flex items-center justify-center group-hover:border-[#ff006e]/40">
+                                                     <Layers size={12} className="text-white/40 group-hover:text-[#ff006e]" />
+                                                 </div>
+                                                 <div className="flex-1 min-w-0">
+                                                     <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
+                                                     <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">BY {p.userName || p.UserName || "UNKNOWN"}</div>
+                                                 </div>
+                                                 <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                             </div>
+                                         )) : (
+                                             <div className="text-[8px] opacity-30 px-2 py-1">NO_RECOMMENDATIONS_AVAILABLE</div>
+                                         )}
                                      </div>
                                  </div>
-                             ))}
-                         </div>
-                    </HUDWidget>
-                </div>
+                             )}
+                        </HUDWidget>
+                    </div>
 
-                <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-1 lg:row-start-5 pointer-events-auto">
-                    <HUDWidget title={t('ARTIST_NODES')} icon={<User size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
-                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-2 pt-2">
-                             {filteredArtists.map(a => (
-                                 <div key={a.id} className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => navigateToProfile(a.userId)}>
-                                      <div className="relative w-14 h-14">
-                                          {/* Radar Node Circle */}
-                                          <div className="absolute inset-0 rounded-full border border-[#ff006e]/20 group-hover:border-[#ff006e]/60 transition-colors" />
-                                          <div className="absolute inset-[-4px] rounded-full border border-dashed border-[#ff006e]/10 group-hover:ring-1 group-hover:ring-[#ff006e]/20 group-hover:animate-spin transition-all duration-[3000ms]" />
-                                          
-                                          <div className="absolute inset-[4px] rounded-full overflow-hidden border-2 border-black z-10 bg-black">
-                                              <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all scale-110 group-hover:scale-100" />
-                                          </div>
-                                          
-                                          {/* Scan sweep line */}
-                                          <div className="absolute inset-0 z-20 pointer-events-none rounded-full bg-gradient-to-tr from-[#ff006e]/30 via-transparent to-transparent animate-spin opacity-0 group-hover:opacity-100" style={{ animationDuration: '2s' }} />
-                                      </div>
-                                      <span className="text-[8px] text-center truncate w-full uppercase font-black tracking-widest opacity-40 group-hover:opacity-100 group-hover:text-[#ff006e] transition-all">{a.name}</span>
-                                 </div>
-                             ))}
-                         </div>
-                    </HUDWidget>
-                </div>
-
-                {/* --- RIGHT COLUMN: PLAYLISTS, VISUALS, JOURNALS --- */}
-                <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-1 pointer-events-auto">
-                    <HUDWidget 
-                        title={selectedPlaylist ? `${t('DESC_PL')}: ${selectedPlaylist.name.toUpperCase()}` : t('PUBLIC_COLL')} 
-                        icon={selectedPlaylist ? <ChevronLeft size={14} className="cursor-pointer hover:text-white transition-colors" onClick={() => setSelectedPlaylist(null)} /> : <Layers size={14}/>} 
-                        searchQuery={searchQuery} 
-                        activeColor={activeSectorColor}
-                    >
-                         {marketplaceItems.length > 0 ? (
-                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in duration-500">
-                                 {marketplaceItems.map(item => (
-                                     <div key={item.id || item.Id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => {
-                                         const desc = item.description || item.Description;
-                                         if (desc && desc !== "#") {
-                                             window.open(desc, '_blank');
-                                         }
-                                     }}>
-                                          {((item.type || item.Type) || '').toLowerCase() === 'video' ? (
-                                              <video src={getMediaUrl(item.url || item.Url)} className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" muted loop autoPlay playsInline />
-                                          ) : (
-                                              <img src={getMediaUrl(item.url || item.Url)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
-                                          )}
-                                          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                                          <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
-                                          <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5">
-                                              <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight">
-                                                  {(item.description || item.Description) ? (item.description || item.Description) : ((item.title || item.Title) && !(item.title || item.Title).includes(' ') && (item.title || item.Title).length > 20 ? 'UNTITLED' : (item.title || item.Title))}
+                    <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-1 lg:row-start-5 pointer-events-auto">
+                        <HUDWidget title={t('ARTIST_NODES')} icon={<User size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-2 pt-2">
+                                 {filteredArtists.map(a => (
+                                     <div key={a.id} className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => navigateToProfile(a.userId)}>
+                                          <div className="relative w-14 h-14">
+                                              {/* Radar Node Circle */}
+                                              <div className="absolute inset-0 rounded-full border border-[#ff006e]/20 group-hover:border-[#ff006e]/60 transition-colors" />
+                                              <div className="absolute inset-[-4px] rounded-full border border-dashed border-[#ff006e]/10 group-hover:ring-1 group-hover:ring-[#ff006e]/20 group-hover:animate-spin transition-all duration-[3000ms]" />
+                                              
+                                              <div className="absolute inset-[4px] rounded-full overflow-hidden border-2 border-black z-10 bg-black">
+                                                  <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all scale-110 group-hover:scale-100" />
                                               </div>
+                                              
+                                              {/* Scan sweep line */}
+                                              <div className="absolute inset-0 z-20 pointer-events-none rounded-full bg-gradient-to-tr from-[#ff006e]/30 via-transparent to-transparent animate-spin opacity-0 group-hover:opacity-100" style={{ animationDuration: '2s' }} />
                                           </div>
+                                          <span className="text-[8px] text-center truncate w-full uppercase font-black tracking-widest opacity-40 group-hover:opacity-100 group-hover:text-[#ff006e] transition-all">{a.name}</span>
                                      </div>
                                  ))}
                              </div>
-                         ) : (
-                             <div className="flex flex-col items-center justify-center py-10 opacity-20">
-                                 <Layers size={16} className="mb-2" />
-                                 <div className="text-[8px] tracking-widest uppercase text-center px-4">SIN_TIENDAS_DISPONIBLES</div>
+                        </HUDWidget>
+                    </div>
+
+                    {/* --- RIGHT COLUMN: PLAYLISTS, VISUALS, JOURNALS --- */}
+                    <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-1 pointer-events-auto">
+                        <HUDWidget title="[ MARKETPLACE ]" icon={<Layers size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                             {marketplaceItems.length > 0 ? (
+                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in duration-500">
+                                     {marketplaceItems.map(item => (
+                                         <div key={item.id || item.Id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => {
+                                             const desc = item.description || item.Description;
+                                             if (desc && desc !== "#") {
+                                                 window.open(desc, '_blank');
+                                             }
+                                         }}>
+                                              {((item.type || item.Type) || '').toLowerCase() === 'video' ? (
+                                                  <video src={getMediaUrl(item.url || item.Url)} className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" muted loop autoPlay playsInline />
+                                              ) : (
+                                                  <img src={getMediaUrl(item.url || item.Url)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
+                                              )}
+                                              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                                              <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
+                                              
+                                              {/* Tag / Label */}
+                                              <div className="absolute top-2 left-2 z-10">
+                                                  <span className="text-[7px] font-mono text-[#ff006e]/80 bg-black/80 px-1.5 py-0.5 border border-[#ff006e]/30 uppercase tracking-widest">OBJ_FOUND</span>
+                                              </div>
+                                              
+                                              {/* Content Bar */}
+                                              <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5 bg-black/70 p-2 backdrop-blur-sm border border-white/5 group-hover:border-[#ff006e]/20 transition-all">
+                                                  <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight text-white transition-colors">
+                                                      {(item.description || item.Description) ? (item.description || item.Description) : ((item.title || item.Title) && !(item.title || item.Title).includes(' ') && (item.title || item.Title).length > 20 ? 'UNTITLED' : (item.title || item.Title))}
+                                                  </div>
+                                                  <div className="text-[7px] text-white/40 uppercase tracking-widest font-mono">
+                                                      LOC: SEC_{hashStr(item.id || item.Id) % 99} // ID: {String(item.id || item.Id).substring(0, 6)}
+                                                  </div>
+                                              </div>
+                                         </div>
+                                     ))}
+                                 </div>
+                             ) : (
+                                 <div className="flex flex-col items-center justify-center py-10 opacity-20">
+                                     <Layers size={16} className="mb-2" />
+                                     <div className="text-[8px] tracking-widest uppercase text-center px-4">SIN_TIENDAS_DISPONIBLES</div>
+                                 </div>
+                             )}
+                        </HUDWidget>
+                    </div>
+
+                    <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-3 pointer-events-auto">
+                        <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('feed')}>{t('STUDIO_TRANS')}</span>} icon={<Camera size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                                 {filteredVisuals.length > 0 ? filteredVisuals.map(vis => (
+                                     <div 
+                                        key={vis.id} 
+                                        className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-[#ff006e]/60 transition-all shadow-xl" 
+                                        onClick={() => onExpandContent(
+                                            vis, 
+                                            (vis.mediaType || '').toLowerCase() === 'video' ? 'video' : 'photo', 
+                                            { themeColor: '#9d00ff', backgroundColor: '#000000' }
+                                        )}
+                                     >
+                                          {(vis.mediaType || vis.MediaType || '').toLowerCase() === 'video' ? (
+                                              <video src={getMediaUrl(vis.imageUrl || vis.ImageUrl)} className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000" muted loop autoPlay playsInline />
+                                          ) : (
+                                              <img src={resolveThumbnail(vis)} alt="" className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
+                                          )}
+                                          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ff006e] scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+                                          {(vis.mediaType || vis.MediaType || '').toLowerCase() === 'video' && (
+                                              <div className="absolute top-1 right-1">
+                                                  <Play size={8} className="text-[#ff006e]" />
+                                              </div>
+                                          )}
+                                     </div>
+                                 )) : (
+                                     <div 
+                                         onClick={() => setShowGlobalIngest && setShowGlobalIngest(true)}
+                                         className="col-span-full border border-dashed border-white/20 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-[#ff006e]/60 hover:bg-[#ff006e]/5 transition-all group"
+                                     >
+                                         <Camera size={20} className="opacity-40 group-hover:text-[#ff006e] group-hover:opacity-100 mb-2 transition-all" />
+                                         <span className="text-[9px] font-black uppercase tracking-widest opacity-60 group-hover:text-[#ff006e] group-hover:opacity-100">SIN_TRANSMISIONES_VISUALES</span>
+                                         <span className="text-[7px] uppercase tracking-[0.2em] opacity-40 mt-1">[ INICIAR_TRANSMISIÓN ]</span>
+                                     </div>
+                                 )}
                              </div>
-                         )}
-                    </HUDWidget>
-                </div>
+                        </HUDWidget>
+                    </div>
 
-                <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-3 pointer-events-auto">
-                    <HUDWidget title={t('STUDIO_TRANS')} icon={<Camera size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
-                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                             {filteredVisuals.length > 0 ? filteredVisuals.map(vis => (
-                                 <div 
-                                    key={vis.id} 
-                                    className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-[#ff006e]/60 transition-all shadow-xl" 
-                                    onClick={() => onExpandContent(
-                                        vis, 
-                                        (vis.mediaType || '').toLowerCase() === 'video' ? 'video' : 'photo', 
-                                        { themeColor: '#9d00ff', backgroundColor: '#000000' }
-                                    )}
-                                 >
-                                      {(vis.mediaType || vis.MediaType || '').toLowerCase() === 'video' ? (
-                                          <video src={getMediaUrl(vis.imageUrl || vis.ImageUrl)} className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-1000" muted loop autoPlay playsInline />
-                                      ) : (
-                                          <img src={resolveThumbnail(vis)} alt="" className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
-                                      )}
-                                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ff006e] scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
-                                      {(vis.mediaType || vis.MediaType || '').toLowerCase() === 'video' && (
-                                          <div className="absolute top-1 right-1">
-                                              <Play size={8} className="text-[#ff006e]" />
+                    <div className="col-span-3 row-span-2 col-start-10 row-start-5 pointer-events-auto">
+                        <HUDWidget title={t('FREQ_JOURNAL')} icon={<BookOpen size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <div className="space-y-4">
+                                 {filteredJournals.length > 0 ? filteredJournals.map(j => (
+                                     <div 
+                                        key={j.id} 
+                                        className="border-l border-[#ff006e]/10 pl-4 py-2 relative group cursor-pointer hover:bg-white/[0.02] transition-all" 
+                                        onClick={() => onExpandContent(j, 'journal', { themeColor: '#9d00ff', backgroundColor: '#000000' })}
+                                     >
+                                         <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-[#ff006e] scale-y-0 group-hover:scale-y-100 transition-transform" />
+                                         <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase mb-1 tracking-tight">{j.title}</div>
+                                         <div className="text-[8px] opacity-30 line-clamp-2 italic font-light leading-relaxed">{j.content?.substring(0, 80)}...</div>
+                                         <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                              <div className="text-[7px] text-[#ff006e] font-black uppercase">{t('READ_SIGNAL')} {">"}{">"}</div>
+                                         </div>
+                                     </div>
+                                 )) : (
+                                     <div 
+                                         onClick={() => { if (setIngestMode) setIngestMode('JOURNAL'); if (setShowGlobalIngest) setShowGlobalIngest(true); }}
+                                         className="border-l-2 border-[#ff006e]/20 pl-4 py-4 cursor-pointer hover:border-[#ff006e] group transition-all"
+                                     >
+                                         <div className="text-[10px] font-black text-white/60 group-hover:text-white tracking-widest uppercase mb-1">BITÁCORA_VACÍA</div>
+                                         <div className="text-[8px] opacity-40 group-hover:text-[#ff006e] transition-colors">[+] AÑADIR_NUEVA_ENTRADA</div>
+                                     </div>
+                                 )}
+                            </div>
+                        </HUDWidget>
+                    </div>
+
+                    {/* --- BOTTOM CENTER: MESSAGES --- */}
+                    <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-4 lg:row-start-5 pointer-events-auto">
+                        <HUDWidget title={t('MESSAGES') || 'MENSAJES'} icon={<MessageSquare size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                             <div className="space-y-4">
+                                  {conversations.length > 0 ? conversations.map(c => (
+                                      <div key={c.conversationId || c.id} className="group cursor-pointer border-b border-white/5 pb-2 flex items-center gap-3" onClick={() => {
+                                          navigateToProfile(c.userId || c.UserId, 'messages');
+                                      }}>
+                                          <div className="w-6 h-6 bg-black border border-white/10 rounded-full overflow-hidden shrink-0">
+                                              <img src={getMediaUrl(c.profileImageUrl || c.ProfileImageUrl || c.profilePictureUrl || c.ProfilePictureUrl || c.imageUrl || c.ImageUrl)} className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://via.placeholder.com/100?text=USER'; }} alt="" />
                                           </div>
-                                      )}
-                                 </div>
-                             )) : (
-                                 <div 
-                                     onClick={() => setShowGlobalIngest && setShowGlobalIngest(true)}
-                                     className="col-span-full border border-dashed border-white/20 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-[#ff006e]/60 hover:bg-[#ff006e]/5 transition-all group"
-                                 >
-                                     <Camera size={20} className="opacity-40 group-hover:text-[#ff006e] group-hover:opacity-100 mb-2 transition-all" />
-                                     <span className="text-[9px] font-black uppercase tracking-widest opacity-60 group-hover:text-[#ff006e] group-hover:opacity-100">SIN_TRANSMISIONES_VISUALES</span>
-                                     <span className="text-[7px] uppercase tracking-[0.2em] opacity-40 mt-1">[ INICIAR_TRANSMISIÓN ]</span>
-                                 </div>
-                             )}
-                         </div>
-                    </HUDWidget>
-                </div>
-
-                <div className="col-span-3 row-span-2 col-start-10 row-start-5 pointer-events-auto">
-                    <HUDWidget title={t('FREQ_JOURNAL')} icon={<BookOpen size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
-                        <div className="space-y-4">
-                             {filteredJournals.length > 0 ? filteredJournals.map(j => (
-                                 <div 
-                                    key={j.id} 
-                                    className="border-l border-[#ff006e]/10 pl-4 py-2 relative group cursor-pointer hover:bg-white/[0.02] transition-all" 
-                                    onClick={() => onExpandContent(j, 'journal', { themeColor: '#9d00ff', backgroundColor: '#000000' })}
-                                 >
-                                     <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-[#ff006e] scale-y-0 group-hover:scale-y-100 transition-transform" />
-                                     <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase mb-1 tracking-tight">{j.title}</div>
-                                     <div className="text-[8px] opacity-30 line-clamp-2 italic font-light leading-relaxed">{j.content?.substring(0, 80)}...</div>
-                                     <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                          <div className="text-[7px] text-[#ff006e] font-black uppercase">{t('READ_SIGNAL')} {">"}{">"}</div>
-                                     </div>
-                                 </div>
-                             )) : (
-                                 <div 
-                                     onClick={() => setShowGlobalIngest && setShowGlobalIngest(true)}
-                                     className="border-l-2 border-[#ff006e]/20 pl-4 py-4 cursor-pointer hover:border-[#ff006e] group transition-all"
-                                 >
-                                     <div className="text-[10px] font-black text-white/60 group-hover:text-white tracking-widest uppercase mb-1">BITÁCORA_VACÍA</div>
-                                     <div className="text-[8px] opacity-40 group-hover:text-[#ff006e] transition-colors">[+] AÑADIR_NUEVA_ENTRADA</div>
-                                 </div>
-                             )}
-                        </div>
-                    </HUDWidget>
-                </div>
-
-                {/* --- BOTTOM CENTER: MESSAGES & COMMUNITIES --- */}
-                <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-4 lg:row-start-5 pointer-events-auto">
-                    <HUDWidget title={t('MESSAGES') || 'MENSAJES'} icon={<MessageSquare size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
-                         <div className="space-y-4">
-                             {conversations.length > 0 ? conversations.map(c => (
-                                 <div key={c.conversationId || c.id} className="group cursor-pointer border-b border-white/5 pb-2" onClick={() => {
-                                     navigateToProfile(c.userId || c.UserId, 'messages');
-                                 }}>
-                                     <div className="flex items-center justify-between mb-1">
-                                         <div className="text-[10px] font-black group-hover:text-[#ff006e] transition-colors uppercase tracking-tight truncate flex-1">{c.username || c.Username}</div>
-                                         {c.unreadCount > 0 && (
-                                             <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                                                  <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse" />
-                                                  <span className="text-[7px] font-black text-[#ff006e]">{c.unreadCount} NEW</span>
-                                             </div>
-                                         )}
-                                     </div>
-                                     <div className="text-[8px] opacity-30 truncate uppercase tracking-widest">{c.lastMessage || 'No messages yet'}</div>
-                                 </div>
-                             )) : (
-                                 <div className="flex flex-col items-center justify-center py-6 opacity-20">
-                                     <MessageSquare size={16} className="mb-2" />
-                                     <div className="text-[8px] tracking-widest uppercase text-center px-4">SIN_MENSAJES_NUEVOS</div>
-                                 </div>
-                             )}
-                         </div>
-                    </HUDWidget>
-                </div>
-
-
-                <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-7 lg:row-start-5 pointer-events-auto">
-                     <HUDWidget title={t('SECTOR_CLIQUES')} icon={<Globe size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
-                          <div className="space-y-4">
-                              {/* Create Clique Trigger */}
-                              <div 
-                                onClick={() => {
-                                    setIsFounding(!isFounding);
-                                    setNewClanSector(activeSector);
-                                }}
-                                className="flex items-center gap-2 p-2 border border-dashed border-white/10 hover:border-white/30 cursor-pointer group transition-all"
-                              >
-                                  <Zap size={10} className="text-[#ff006e] group-hover:animate-pulse" />
-                                  <span className="text-[9px] font-black tracking-[0.2em] opacity-40 group-hover:opacity-100">{t('FOUND_CLIQUE')} [+]</span>
-                              </div>
-
-                              {isFounding && (
-                                  <form onSubmit={handleFoundCommunity} className="p-3 bg-white/5 border border-white/10 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                                      <div className="space-y-1">
-                                          <div className="text-[7px] opacity-40 mono">{t('NAME_REQUIRED')}</div>
-                                          <input 
-                                            value={newClanName}
-                                            onChange={(e) => setNewClanName(e.target.value)}
-                                            placeholder="..."
-                                            className="w-full bg-black/40 border border-white/10 p-1.5 text-[9px] mono outline-none focus:border-[#ff006e]/50"
-                                            autoFocus
-                                          />
-                                      </div>
-                                      <div className="space-y-1">
-                                          <div className="text-[7px] opacity-40 mono">{t('SECTOR_ALLOCATION')}</div>
-                                          <select 
-                                            value={newClanSector !== null ? newClanSector : (activeSector !== null ? activeSector : 0)}
-                                            onChange={(e) => setNewClanSector(parseInt(e.target.value))}
-                                            className="w-full bg-black/40 border border-white/10 p-1.5 text-[9px] mono outline-none"
-                                          >
-                                              {SECTORS.map(s => (
-                                                  <option key={s.id} value={s.id} className="bg-black text-[9px]">{s.name}</option>
-                                              ))}
-                                          </select>
-                                      </div>
-                                      <button 
-                                        type="submit"
-                                        disabled={!newClanName.trim()}
-                                        className="w-full bg-[#ff006e]/80 hover:bg-[#ff006e] text-white text-[8px] font-black py-1.5 rounded-sm transition-all disabled:opacity-20"
-                                      >
-                                          {t('ESTABLISH_SIGNAL')}
-                                      </button>
-                                  </form>
-                              )}
-
-                              <div className="space-y-3">
-                                  {filteredCommunities.map(c => {
-                                      const isJoined = (user?.communityId || user?.CommunityId) === c.id;
-                                      return (
-                                          <div key={c.id} className="flex items-center gap-3 p-2 hover:bg-white/5 border border-transparent hover:border-white/10 transition-all group cursor-pointer" onClick={() => {
-                                              setActiveTerminalCommunity(c);
-                                              if (isMobile) setMobileViewMode('globe');
-                                          }}>
-                                              <div className="w-8 h-8 rounded-sm bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center shrink-0 relative overflow-hidden">
-                                                  { (c.imageUrl || c.ImageUrl || c.profilePicture || c.ProfilePicture) ? (
-                                                      <img src={getMediaUrl(c.imageUrl || c.ImageUrl || c.profilePicture || c.ProfilePicture)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
-                                                   ) : (
-                                                      <Globe size={12} className="text-[#ff006e] opacity-40 group-hover:opacity-100 transition-opacity" />
-                                                   )}
-                                                  {(isJoined || followedCommunities.includes(c.id)) && (
-                                                     <div className="absolute top-0.5 right-0.5">
-                                                         <Star size={10} className="text-yellow-400 fill-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]" />
-                                                     </div>
+                                          <div className="flex-1 min-w-0">
+                                              <div className="flex items-center justify-between mb-0.5">
+                                                  <div className="text-[10px] font-black group-hover:text-[#ff006e] transition-colors uppercase tracking-tight truncate flex-1">{c.username || c.Username}</div>
+                                                  {c.unreadCount > 0 && (
+                                                      <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                                           <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse" />
+                                                           <span className="text-[7px] font-black text-[#ff006e]">{c.unreadCount} NEW</span>
+                                                      </div>
                                                   )}
                                               </div>
-                                              <div className="min-w-0 flex-1">
-                                                  <div className="text-[10px] font-black group-hover:text-[#ff006e] transition-colors uppercase tracking-tight truncate flex items-center gap-2">
-                                                      {c.name}
-                                                      {isJoined && <span className="text-[7px] text-yellow-400/60 mono font-normal border border-yellow-400/20 px-1">{t('HOME')}</span>}
-                                                  </div>
-                                                  <div className="text-[7px] opacity-30 tracking-[0.2em] font-light uppercase mt-0.5">{c.memberCount || 0} {t('CLIQUE_AGENTS')}</div>
-                                              </div>
+                                              <div className="text-[8px] opacity-30 truncate uppercase tracking-widest">{c.lastMessage || 'No messages yet'}</div>
                                           </div>
-                                      );
-                                  })}
-                              </div>
-                           </div>
-                      </HUDWidget>
-                 </div>
-                   </>
-                )}
-            </motion.div>
-            
-            {/* --- SCANLINE OVERLAY --- */}
-            <div className="fixed inset-0 pointer-events-none z-[100] opacity-[0.03] select-none overflow-hidden h-screen w-screen">
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]" />
-            </div>
-        </div>
-    );
-};
+                                      </div>
+                                  )) : (
+                                      <div className="flex flex-col items-center justify-center py-6 opacity-20">
+                                          <MessageSquare size={16} className="mb-2" />
+                                          <div className="text-[8px] tracking-widest uppercase text-center px-4">SIN_MENSAJES_NUEVOS</div>
+                                      </div>
+                                  )}
+                             </div>
+                        </HUDWidget>
+                    </div>
 
-export default DiscoveryHUD;
+                    <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-7 lg:row-start-5 pointer-events-auto">
+                         <HUDWidget title={t('SECTOR_CLIQUES')} icon={<Globe size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                              <div className="space-y-4">
+                                  {/* Create Clique Trigger */}
+                                  <div 
+                                    onClick={() => {
+                                        setIsFounding(!isFounding);
+                                        setNewClanSector(activeSector);
+                                    }}
+                                    className="flex items-center gap-2 p-2 border border-dashed border-white/10 hover:border-white/30 cursor-pointer group transition-all"
+                                  >
+                                      <Zap size={10} className="text-[#ff006e] group-hover:animate-pulse" />
+                                      <span className="text-[9px] font-black tracking-[0.2em] opacity-40 group-hover:opacity-100">{t('FOUND_CLIQUE')} [+]</span>
+                                  </div>
+
+                                  {isFounding && (
+                                      <form onSubmit={handleFoundCommunity} className="p-3 bg-white/5 border border-white/10 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                          <div className="space-y-1">
+                                              <div className="text-[7px] opacity-40 mono">{t('NAME_REQUIRED')}</div>
+                                              <input 
+                                                value={newClanName}
+                                                onChange={(e) => setNewClanName(e.target.value)}
+                                                placeholder="..."
+                                                className="w-full bg-black/40 border border-white/10 p-1.5 text-[9px] mono outline-none focus:border-[#ff006e]/50"
+                                                autoFocus
+                                              />
+                                          </div>
+                                          <div className="space-y-1">
+                                              <div className="text-[7px] opacity-40 mono">{t('SECTOR_ALLOCATION')}</div>
+                                              <select 
+                                                value={newClanSector !== null ? newClanSector : (activeSector !== null ? activeSector : 0)}
+                                                onChange={(e) => setNewClanSector(parseInt(e.target.value))}
+                                                className="w-full bg-black/40 border border-white/10 p-1.5 text-[9px] mono outline-none"
+                                              >
+                                                  {SECTORS.map(s => (
+                                                      <option key={s.id} value={s.id} className="bg-black text-[9px]">{s.name}</option>
+                                                  ))}
+                                              </select>
+                                          </div>
+                                          <button 
+                                            type="submit"
+                                            disabled={!newClanName.trim()}
+                                            className="w-full bg-[#ff006e]/80 hover:bg-[#ff006e] text-white text-[8px] font-black py-1.5 rounded-sm transition-all disabled:opacity-20"
+                                          >
+                                              {t('ESTABLISH_SIGNAL')}
+                                          </button>
+                                      </form>
+                                  )}
+
+                                  <div className="space-y-3">
+                                      {filteredCommunities.map(c => {
+                                          const isJoined = (user?.communityId || user?.CommunityId) === c.id;
+                                          return (
+                                              <div key={c.id} className="flex items-center gap-3 p-2 hover:bg-white/5 border border-transparent hover:border-white/10 transition-all group cursor-pointer" onClick={() => {
+                                                  setActiveTerminalCommunity(c);
+                                                  if (isMobile) setMobileViewMode('globe');
+                                              }}>
+                                                  <div className="w-8 h-8 rounded-sm bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center shrink-0 relative overflow-hidden">
+                                                      { (c.imageUrl || c.ImageUrl || c.profilePicture || c.ProfilePicture) ? (
+                                                          <img src={getMediaUrl(c.imageUrl || c.ImageUrl || c.profilePicture || c.ProfilePicture)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
+                                                       ) : (
+                                                          <Globe size={12} className="text-[#ff006e] opacity-40 group-hover:opacity-100 transition-opacity" />
+                                                       )}
+                                                      {(isJoined || followedCommunities.includes(c.id)) && (
+                                                         <div className="absolute top-0.5 right-0.5">
+                                                             <Star size={10} className="text-yellow-400 fill-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]" />
+                                                         </div>
+                                                      )}
+                                                  </div>
+                                                  <div className="min-w-0 flex-1">
+                                                      <div className="text-[10px] font-black group-hover:text-[#ff006e] transition-colors uppercase tracking-tight truncate flex items-center gap-2">
+                                                          {c.name}
+                                                          {isJoined && <span className="text-[7px] text-yellow-400/60 mono font-normal border border-yellow-400/20 px-1">{t('HOME')}</span>}
+                                                      </div>
+                                                      <div className="text-[7px] opacity-30 tracking-[0.2em] font-light uppercase mt-0.5">{c.memberCount || 0} {t('CLIQUE_AGENTS')}</div>
+                                                  </div>
+                                              </div>
+                                          );
+                                      })}
+                                  </div>
+                               </div>
+                          </HUDWidget>
+                     </div>
+                       </>
+                    )}
+                </motion.div>
+                
+                {/* --- SCANLINE OVERLAY --- */}
+                <div className="fixed inset-0 pointer-events-none z-[100] opacity-[0.03] select-none overflow-hidden h-screen w-screen">
+                    <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]" />
+                </div>
+            </div>
+        );
+    };
+
+    export default DiscoveryHUD;

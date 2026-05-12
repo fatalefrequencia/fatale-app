@@ -13,38 +13,23 @@ const hashStr = (s) => {
     return Math.abs(h);
 };
 
-const getSphericalPos = (id, radius = 2.5, offset = 0, parentId = null, type = 'default') => {
-    const samples = 1000; 
-    const baseH = hashStr(parentId || id);
-    // 1. BASE COORDINATE CALCULATION
-    // Synchronized tiering (0.35) for both Artists and Tracks for consistent spatial gaps
-    const typeOffset = (type === 'track' || type === 'artist') ? 0.35 : 0.0;
-    const i = (baseH % samples) + (parentId ? 0 : typeOffset);
+// Uniform distribution on sphere with Sin-based PRNG to break sequential patterns
+const getSphericalPos = (id, radius = 2.5, offset = 0) => {
+    const h = hashStr(id);
     
-    const phi = Math.acos(1 - 2 * (i + 0.5) / samples);
-    const theta = Math.PI * (1 + Math.sqrt(5)) * (i + 0.5);
+    // Use Math.sin for deterministic but wildly different values for sequential inputs
+    const rand1 = (Math.abs(Math.sin(h)) * 10000) % 1;
+    const rand2 = (Math.abs(Math.sin(h + 100)) * 10000) % 1;
     
-    let lat = phi - Math.PI / 2;
-    let lon = theta % (Math.PI * 2);
+    // theta between 0 and 2*PI
+    const theta = rand1 * Math.PI * 2;
+    // u between -1 and 1
+    const u = rand2 * 2 - 1;
+    const phi = Math.acos(u);
+    
+    const lat = phi - Math.PI / 2;
+    const lon = theta;
 
-    // Add some noise to break clusters and spread all over the globe
-    const h2 = hashStr(id + "noise");
-    lat += ((h2 % 100) / 100 - 0.5) * 0.4;
-    lon += ((h2 % 100) / 100 - 0.5) * 0.4;
-
-    // 2. ORBITAL AVOIDANCE LOGIC
-    if (parentId) {
-        // Strict orbital clustering: hugged around parent monolith
-        const h = hashStr(id);
-        const minClearance = 0.08; 
-        const rOffset = minClearance + (h % 5) * 0.015;
-        const angle = (h % 360) * (Math.PI / 180);
-        
-        lat += Math.cos(angle) * rOffset;
-        lon += Math.sin(angle) * rOffset;
-    }
-
-    // 3. SPATIAL RESOLUTION
     const r = radius + offset;
     const x = r * Math.cos(lat) * Math.cos(lon);
     const y = r * Math.sin(lat);
@@ -53,311 +38,106 @@ const getSphericalPos = (id, radius = 2.5, offset = 0, parentId = null, type = '
     return { pos: [x, y, z], lat, lon };
 };
 
+// Helper to create a radial gradient texture for the glow
+const createGlowTexture = (color) => {
+    if (typeof document === 'undefined') return null;
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gradient.addColorStop(0, color);
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(canvas);
+};
+
 // --- COMPONENTS ---
 
-// 2. DATA FLOW TRAIL (Subtle Vertical Crawl)
-const DataFlowTrail = ({ h, color, isActive }) => {
+// Generic Light Point Component (Sphere of Light)
+const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, onClick, cameraDist }) => {
     const meshRef = useRef();
-    useFrame((state) => {
-        if (!meshRef.current) return;
-        const t = state.clock.getElapsedTime();
-        // Subtle vertical crawl along the height
-        const speed = 0.4;
-        meshRef.current.position.z = -h/2 + ((t * speed) % h);
-    });
-
-    return (
-        <mesh ref={meshRef}>
-            <sphereGeometry args={[0.008, 8, 8]} />
-            <meshBasicMaterial color={color} transparent opacity={isActive ? 0.8 : 0.2} />
-            <pointLight distance={0.2} intensity={2} color={color} />
-        </mesh>
-    );
-};
-
-// 1. COMMUNITY BUILDINGS (High-Density Monoliths)
-const CommunityBuilding = ({ id, name, color, memberCount = 0, isActive, isSelected, onClick, cameraDist }) => {
-    const meshRef = useRef();
-    // Scale height by population density (memberCount)
-    const h = Math.min(0.20 + (memberCount * 0.12), 2.0);
-
-    // Calculate position with offset so base is on surface
-    const { pos, lat, lon } = useMemo(() => getSphericalPos(id, 2.5, h/2, null, 'community'), [id, h]);
-
-    // Label visibility logic
-    const showLabel = cameraDist < 10;
-    const labelOpacity = THREE.MathUtils.clamp((10 - cameraDist) / 3, 0, 1);
-
-    return (
-        <group position={pos}>
-            <group rotation={[0, -lon, lat]}>
-                {/* DECORATIVE VISUALS ONLY (No Raycast) */}
-                <lineSegments>
-                    <edgesGeometry args={[new THREE.BoxGeometry(0.07, 0.07, h)]} />
-                    <lineBasicMaterial 
-                        color={color} 
-                        transparent 
-                        opacity={isActive ? 1.0 : 0.3} 
-                        linewidth={isActive ? 2 : 1}
-                    />
-                </lineSegments>
-
-                {/* Subtle base marker */}
-                <mesh position={[0, 0, -h/2]}>
-                    <planeGeometry args={[0.02, 0.02]} />
-                    <meshBasicMaterial color={color} transparent opacity={0.1} />
-                </mesh>
-
-                {/* Vertical Data Crawl - Subtly moving light bits */}
-                <DataFlowTrail h={h} color={color} isActive={isActive} />
-                <group position={[0.035, 0.035, 0]}>
-                    <DataFlowTrail h={h} color={color} isActive={isActive} />
-                </group>
-                <group position={[-0.035, -0.035, 0]}>
-                    <DataFlowTrail h={h} color={color} isActive={isActive} />
-                </group>
-
-                {/* Full Tower Click Boundary - MATCHES VISUAL (0.07) */}
-                <mesh visible={false} position={[0, 0, 0]} onClick={(e) => { e.stopPropagation(); onClick(); }}>
-                    <boxGeometry args={[0.07, 0.07, h]} />
-                </mesh>
-            </group>
-
-            {/* Single Selection Pin - Premium Style */}
-            {isSelected && (
-                <Html position={[0, h/2 + 0.1, 0]} center>
-                    <div className="pointer-events-none select-none flex flex-col items-center animate-in fade-in zoom-in duration-300">
-                        <div className="px-2 py-0.5 bg-black/80 backdrop-blur-md border border-white/20 text-[7px] font-black tracking-[0.2em] text-white uppercase shadow-2xl">
-                            {name}
-                        </div>
-                        <div className="w-[1px] h-4 bg-gradient-to-b from-white to-transparent" />
-                    </div>
-                </Html>
-            )}
-        </group>
-    );
-};
-
-// 2. ARTIST NODES (Discrete Shards)
-const ArtistNode = ({ id, name, color, isLive, isSelected, communityId, cameraDist, isGlobeSpinning, onClick }) => {
-    const meshRef = useRef();
-    const materialRef = useRef();
-    const { pos } = useMemo(() => getSphericalPos(id, 2.48, 0.05, communityId, 'artist'), [id, communityId]);
+    const [hovered, setHovered] = useState(false);
+    const { pos } = useMemo(() => getSphericalPos(id, 2.48), [id]); // Closer to surface (2.48 instead of 2.5)
+    const opacityFactor = THREE.MathUtils.clamp((10 - cameraDist) / 4, 0.1, 1);
     
-    // Apple-style LOD Threshholds
-    const importance = isLive ? 1.0 : 0.6;
-    const isVisible = cameraDist < (12 + importance * 3);
-    const opacityFactor = THREE.MathUtils.clamp((14 - cameraDist) / 4, 0, 1) * (isLive ? 1 : 0.9);
+    const glowTexture = useMemo(() => createGlowTexture(color), [color]);
 
-    useFrame((state) => {
-        if (isSelected || !isGlobeSpinning) return; // Full stabilization halt
-
-        const t = state.clock.getElapsedTime();
-        meshRef.current.rotation.y += 0.012;
-        meshRef.current.rotation.z += 0.005;
-
-        // Subtle drift animation
-        meshRef.current.position.y += Math.sin(t * 1.5 + hashStr(id)) * 0.0002;
-
-        if (isLive) {
-            const pulse = (Math.sin(t * 6) + 1) / 2;
-            meshRef.current.scale.setScalar(0.8 + pulse * 0.4);
-            if (materialRef.current) {
-                materialRef.current.emissiveIntensity = 6 + pulse * 12;
-            }
+    useEffect(() => {
+        if (hovered) {
+            document.body.style.cursor = 'pointer';
         } else {
-            meshRef.current.scale.setScalar(isVisible ? 0.6 : 0);
-            if (materialRef.current) {
-                materialRef.current.emissiveIntensity = 3.0;
-            }
+            document.body.style.cursor = 'auto';
         }
-    });
-
-    return (
-        <group 
-            position={pos}
-            onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
-        >
-            <mesh ref={meshRef}>
-                <octahedronGeometry args={[0.02, 0]} />
-                <meshStandardMaterial 
-                    ref={materialRef}
-                    color={color} 
-                    emissive={color} 
-                    emissiveIntensity={isSelected ? 5 : (isLive ? 3 : 1)} 
-                    transparent 
-                    opacity={opacityFactor}
-                />
-            </mesh>
-            {/* Node Click Target - EXACT VISUAL SCALE */}
-            <mesh visible={false} onClick={(e) => { e.stopPropagation(); onClick(); }}>
-                <octahedronGeometry args={[0.022, 0]} />
-            </mesh>
-
-            {/* Selection Visuals */}
-            {isSelected && (
-                <group>
-                    <mesh rotation={[-Math.PI / 2, 0, 0]}>
-                        <ringGeometry args={[0.04, 0.045, 32]} />
-                        <meshBasicMaterial color="#fff" transparent opacity={0.8} />
-                    </mesh>
-                    <Html position={[0, 0.1, 0]} center>
-                        <div className="pointer-events-none select-none flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <div className="px-1.5 py-0.5 bg-white text-black text-[7px] font-black tracking-widest uppercase shadow-2xl">
-                                {name}
-                            </div>
-                        </div>
-                    </Html>
-                </group>
-            )}
-        </group>
-    );
-};
-
-// 4. SIGNAL BEACONS (For LIVE_SIGNAL_HUB)
-const SignalBeacon = ({ pos, color }) => {
-    const meshRef = useRef();
-    useFrame((state) => {
-        const t = state.clock.getElapsedTime();
-        meshRef.current.scale.y = 1 + Math.sin(t * 2) * 0.2;
-    });
+        return () => { document.body.style.cursor = 'auto'; };
+    }, [hovered]);
 
     return (
         <group position={pos}>
-            <mesh ref={meshRef} position={[0, 0.5, 0]}>
-                <cylinderGeometry args={[0.01, 0.04, 1.0, 8]} />
+            {/* Core Sphere */}
+            <mesh 
+                onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
+                onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
+                onPointerOut={(e) => { setHovered(false); }}
+            >
+                <sphereGeometry args={[size, 16, 16]} />
                 <meshStandardMaterial 
                     color={color} 
                     emissive={color} 
-                    emissiveIntensity={10} 
-                    transparent 
-                    opacity={0.3} 
-                />
-            </mesh>
-            <mesh position={[0, 0, 0]} rotation={[-Math.PI/2, 0, 0]}>
-                <ringGeometry args={[0.05, 0.1, 16]} />
-                <meshBasicMaterial color={color} transparent opacity={0.2} />
-            </mesh>
-        </group>
-    );
-};
-
-// 5. NEURAL CONSTELLATION (Connection Lines)
-const NeuralConstellation = ({ communities, artists, activeView }) => {
-    const lines = useMemo(() => {
-        const segments = [];
-        
-        // Connect artists to their communities
-        artists.forEach(a => {
-            if (!a.communityId) return;
-            const comm = communities.find(c => String(c.id || c.Id) === String(a.communityId));
-            if (!comm) return;
-
-            const aPos = getSphericalPos(a.id, 2.48, 0.05, a.communityId, 'artist').pos;
-            // Community base is at radius 2.5
-            const cPos = getSphericalPos(comm.id, 2.5, 0, null, 'community').pos;
-
-            segments.push(new THREE.Vector3(...aPos), new THREE.Vector3(...cPos));
-        });
-
-        // Connect major artists in same sector if in valence mode
-        if (activeView === 'CLIQUE_VALENCE') {
-            const sectorGroups = {};
-            artists.slice(0, 40).forEach(a => {
-                const s = a.sectorId || 0;
-                if (!sectorGroups[s]) sectorGroups[s] = [];
-                sectorGroups[s].push(a);
-            });
-
-            Object.values(sectorGroups).forEach(group => {
-                for (let i = 0; i < group.length - 1; i++) {
-                    const p1 = getSphericalPos(group[i].id, 2.48, 0.05, group[i].communityId, 'artist').pos;
-                    const p2 = getSphericalPos(group[(i+1)%group.length].id, 2.48, 0.05, group[(i+1)%group.length].communityId, 'artist').pos;
-                    segments.push(new THREE.Vector3(...p1), new THREE.Vector3(...p2));
-                }
-            });
-        }
-
-        return segments;
-    }, [communities, artists, activeView]);
-
-    if (lines.length === 0) return null;
-
-    return (
-        <lineSegments>
-            <bufferGeometry attach="geometry" onUpdate={self => self.setFromPoints(lines)} />
-            <lineBasicMaterial attach="material" color="#ff006e" transparent opacity={0.05} />
-        </lineSegments>
-    );
-};
-
-// 3. TRACK NODES (Neural Signal Sparks)
-const TrackNode = ({ id, title, artist, color, isSelected, cameraDist, onClick }) => {
-    const meshRef = useRef();
-    // Docked to surface (2.48 + 0.05) to match artists and clear buildings
-    const { pos } = useMemo(() => getSphericalPos(id, 2.48, 0.05, null, 'track'), [id]);
-    
-    const opacityFactor = THREE.MathUtils.clamp((9 - cameraDist) / 3, 0, 1);
-
-    return (
-        <group position={pos}>
-            <mesh ref={meshRef} onClick={onClick}>
-                <sphereGeometry args={[0.015, 12, 12]} />
-                <meshStandardMaterial 
-                    color={color || "#fff"} 
-                    emissive={color || "#fff"} 
-                    emissiveIntensity={isSelected ? 10 : 4} 
+                    emissiveIntensity={isSelected ? 20 : 10} 
                     transparent 
                     opacity={opacityFactor * 0.9}
                 />
             </mesh>
-            {/* Steady Glow Aura */}
-            <mesh scale={2.5}>
-                <sphereGeometry args={[0.015, 8, 8]} />
-                <meshBasicMaterial color={color || "#fff"} transparent opacity={opacityFactor * 0.15} />
-            </mesh>
-            {/* Track Hit Target - EXACT VISUAL SCALE */}
-            <mesh visible={false} onClick={(e) => { e.stopPropagation(); onClick(); }}>
-                <sphereGeometry args={[0.016, 8, 8]} />
-            </mesh>
+            
+            {/* Mesh Glow Effect (Flat plane that rotates with the planet) */}
+            {glowTexture && (
+                <mesh 
+                    scale={[size * 12, size * 12, 1]}
+                    onUpdate={(self) => self.lookAt(0, 0, 0)} // Face the center of the globe
+                >
+                    <planeGeometry />
+                    <meshBasicMaterial 
+                        map={glowTexture} 
+                        transparent={true} 
+                        blending={THREE.AdditiveBlending} 
+                        opacity={opacityFactor * 0.8}
+                        side={THREE.DoubleSide}
+                        depthWrite={false} // Prevent z-fighting and blocking
+                    />
+                </mesh>
+            )}
+            
             {isSelected && (
-                <Html position={[0, 0.08, 0]} center>
-                    <div className="pointer-events-none select-none px-2 py-0.5 bg-black/90 border-l border-[#ff006e] backdrop-blur-xl animate-in fade-in zoom-in duration-300 shadow-2xl font-mono">
-                        <div className="text-[7px] text-[#ff006e] font-black uppercase tracking-widest">{title}</div>
-                        <div className="text-[5px] text-white/40 uppercase tracking-widest mt-0.5">{artist}</div>
-                    </div>
-                </Html>
+                <>
+                    <pointLight distance={1.0} intensity={5} color={color} />
+                    <Html position={[0, size + 0.05, 0]} center>
+                        <div className="pointer-events-none select-none px-2 py-0.5 bg-black/90 border-l backdrop-blur-xl animate-in fade-in zoom-in duration-300 shadow-2xl font-mono" style={{ borderColor: color }}>
+                            <div className="text-[7px] font-black uppercase tracking-widest" style={{ color: color }}>{name}</div>
+                            {subtitle && (
+                                <div className="text-[5px] text-white/40 uppercase tracking-widest mt-0.5">{subtitle}</div>
+                            )}
+                        </div>
+                    </Html>
+                </>
             )}
         </group>
     );
 };
 
-const GlobeCore = memo(({ activeSector, communities = [], artists = [], stations = [], tracks = [], selectedId, activeView, onArtistClick, onCommunityClick, onTrackClick, isGlobeSpinning }) => {
-    const groupRef = useRef();
+const GlobeCore = memo(({ activeSector, communities = [], artists = [], playlists = [], tracks = [], selectedId, activeView, onArtistClick, onCommunityClick, onTrackClick, isGlobeSpinning }) => {
     const { camera } = useThree();
     const [cameraDist, setCameraDist] = useState(10);
-
-    const scanlineRef = useRef();
     const atmosphereRef = useRef();
     const innerLightRef = useRef();
 
     useFrame((state) => {
         const t = state.clock.getElapsedTime();
         setCameraDist(camera.position.length());
-
-        // Animate Scanline sweep
-        if (scanlineRef.current) {
-            scanlineRef.current.position.y = Math.sin(t * 0.5) * 2.5;
-            scanlineRef.current.scale.x = 0.8 + Math.cos(scanlineRef.current.position.y * 0.4) * 0.2;
-            scanlineRef.current.scale.z = 0.8 + Math.cos(scanlineRef.current.position.y * 0.4) * 0.2;
-        }
-
-        // Atmosphere breathing
         if (atmosphereRef.current) {
             atmosphereRef.current.scale.setScalar(1 + Math.sin(t * 1.2) * 0.005);
         }
-
-        // Inner light pulse
         if (innerLightRef.current) {
             innerLightRef.current.intensity = 1.0 + Math.sin(t * 2) * 0.5;
         }
@@ -378,160 +158,94 @@ const GlobeCore = memo(({ activeSector, communities = [], artists = [], stations
         if (activeSector !== null) {
             return artists.filter(a => (a.sectorId || a.SectorId) === activeSector);
         }
-        if (activeView === 'LIVE_SIGNAL_HUB') {
-            return artists.filter(a => {
-                const isArtistLive = a.isLive || a.IsLive;
-                const hasLiveStation = stations.some(s => 
-                    (String(s.artistId || s.ArtistId || s.userId || s.UserId) === String(a.id || a.Id || a.userId || a.UserId)) && (s.isLive || s.IsLive)
-                );
-                const hasTracks = tracks.some(t => String(t.artistId || t.ArtistId) === String(a.id || a.Id));
-                return isArtistLive || hasLiveStation || (hasTracks && activeView === 'LIVE_SIGNAL_HUB');
-            });
-        }
         return artists;
-    }, [artists, activeView, stations, tracks]);
-
-    const filteredTracks = useMemo(() => {
-        if (activeView === 'LIVE_SIGNAL_HUB') {
-            return tracks.filter(t => {
-                const artistId = t.artistId || t.ArtistId;
-                const isArtistLive = artists.some(a => String(a.id || a.Id) === String(artistId) && (a.isLive || a.IsLive));
-                const isStationLive = stations.some(s => String(s.artistId || s.ArtistId) === String(artistId) && (s.isLive || s.IsLive));
-                return isArtistLive || isStationLive;
-            });
-        }
-        return tracks.slice(0, 50);
-    }, [tracks, activeView, stations, artists]);
+    }, [artists, activeSector]);
 
     return (
-        <group ref={groupRef}>
-            {/* PULSING INNER CORE LIGHT */}
-            <pointLight 
-                ref={innerLightRef}
-                color={activeSectorColor || "#ff006e"} 
-                intensity={1} 
-                distance={5} 
-            />
-            {/* --- GLOBE LAYERS --- */}
-            
-            {/* 1. DEEP CORE - Dark, sleek, and slightly reflective */}
+        <group>
+            <pointLight ref={innerLightRef} color={activeSectorColor || "#ff006e"} intensity={1} distance={5} />
             <Sphere args={[2.45, 64, 64]}>
-                <meshStandardMaterial 
-                    color="#0a0a0a" 
-                    roughness={0.15} 
-                    metalness={0.9}
-                    envMapIntensity={1.5}
-                />
+                <meshStandardMaterial color="#0a0a0a" roughness={0.15} metalness={0.9} envMapIntensity={1.5} />
             </Sphere>
-
-            {/* 2. INNER ENERGY SHELL - Subtle internal glow */}
             <Sphere args={[2.46, 32, 32]}>
-                <meshStandardMaterial 
-                    color={activeSectorColor || "#ff006e"} 
-                    transparent 
-                    opacity={0.08} 
-                    emissive={activeSectorColor || "#ff006e"}
-                    emissiveIntensity={0.8}
-                />
+                <meshStandardMaterial color={activeSectorColor || "#ff006e"} transparent opacity={0.05} emissive={activeSectorColor || "#ff006e"} emissiveIntensity={0.5} />
             </Sphere>
-
-            {/* 3. STRUCTURAL GRID - High-tech wireframe */}
             <Sphere args={[2.52, 48, 48]}>
-                <meshStandardMaterial 
-                    color={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (activeSectorColor || "#ff006e")} 
-                    wireframe 
-                    transparent 
-                    opacity={activeView === 'CLIQUE_VALENCE' ? 0.25 : (activeSector !== null ? 0.18 : 0.08)} 
-                    emissive={activeView === 'CLIQUE_VALENCE' ? "#00ffff" : (activeSectorColor || "#ff006e")}
-                    emissiveIntensity={activeView === 'CORE_PULSE' ? 1.5 : 0.5}
-                />
+                <meshStandardMaterial color={activeSectorColor || "#ff006e"} wireframe transparent opacity={0.05} emissive={activeSectorColor || "#ff006e"} emissiveIntensity={0.3} />
             </Sphere>
-
-            {/* 4. ATMOSPHERIC HALO - Separates globe from space background */}
             <Sphere ref={atmosphereRef} args={[2.58, 64, 64]}>
-                <meshBasicMaterial 
-                    color={activeSectorColor || "#ff006e"} 
-                    transparent 
-                    opacity={0.18} 
-                    side={THREE.BackSide}
-                />
+                <meshBasicMaterial color={activeSectorColor || "#ff006e"} transparent opacity={0.1} side={THREE.BackSide} />
             </Sphere>
 
-            {/* 5. TOPOGRAPHIC SCANLINE - Slow vertical sweep */}
-            <mesh ref={scanlineRef} rotation={[Math.PI / 2, 0, 0]}>
-                <torusGeometry args={[2.53, 0.004, 16, 100]} />
-                <meshBasicMaterial color={activeSectorColor || "#ff006e"} transparent opacity={0.3} />
-            </mesh>
-
-            {/* LIVE_SIGNAL_HUB Beacons */}
-            {activeView === 'LIVE_SIGNAL_HUB' && filteredArtists.map(a => (
-                <SignalBeacon key={`beacon-${a.id}`} pos={getSphericalPos(a.id, 2.5).pos} color="#00ffff" />
-            ))}
-
-            {filteredCommunities.map(c => (
-                <CommunityBuilding 
+            {/* Render Communities as Orange Spheres (Size increased to 0.1) */}
+            {(activeView === 'COMMUNITIES' || !activeView) && filteredCommunities.map(c => (
+                <LightPointNode 
                     key={`comm-${c.id || c.Id}`} 
                     id={c.id || c.Id}
                     name={c.name || c.Name}
-                    memberCount={activeView === 'FREQ_PEAKS' ? (c.memberCount || 0) * 3 : (c.memberCount || 0)}
-                    color={SECTORS.find(s => s.id === (c.sectorId || c.SectorId || 0))?.color || "#ff006e"}
-                    isActive={activeSector === (c.sectorId || c.SectorId)}
+                    color="#ffaa00"
+                    size={0.1}
                     isSelected={selectedId === `community-${c.id || c.Id}`}
                     cameraDist={cameraDist}
                     onClick={() => onCommunityClick?.(c)}
                 />
             ))}
 
-            {filteredArtists.map(a => {
-                const isLive = (a.isLive || a.IsLive) || stations.some(s => 
-                    (s.artistId || s.ArtistId) === (a.id || a.Id) && (s.isLive || s.IsLive)
-                );
+            {/* Render Artists as Green Spheres (Size increased to 0.08) */}
+            {(activeView === 'ARTISTS' || !activeView) && filteredArtists.map(a => (
+                <LightPointNode 
+                    key={`artist-${a.id || a.Id}`} 
+                    id={a.id || a.Id}
+                    name={a.name || a.Name}
+                    color="#00ffaa"
+                    size={0.08}
+                    isSelected={selectedId === `artist-${a.id || a.Id}`}
+                    cameraDist={cameraDist}
+                    onClick={() => onArtistClick?.(a)}
+                />
+            ))}
 
-                return (
-                    <ArtistNode 
-                        key={`artist-${a.id || a.Id}`} 
-                        id={a.id || a.Id}
-                        name={a.name || a.Name}
-                        color={activeView === 'CLIQUE_VALENCE' ? (a.communityId || a.CommunityId ? "#00ffff" : "#333") : (SECTORS.find(s => s.id === (a.sectorId || a.SectorId || 0))?.color || "#ff006e")}
-                        isLive={isLive}
-                        communityId={a.communityId || a.CommunityId}
-                        isSelected={selectedId === `artist-${a.id || a.Id}`}
-                        cameraDist={cameraDist}
-                        isGlobeSpinning={isGlobeSpinning}
-                        onClick={() => onArtistClick?.(a)}
-                    />
-                );
-            })}
-
-            {/* Neural Constellation Beams */}
-            <NeuralConstellation communities={communities} artists={artists} activeView={activeView} />
-
-            {filteredTracks.map(t => (
-                <TrackNode 
+            {/* Render Tracks as Blue Spheres (Size increased to 0.06) */}
+            {(activeView === 'TRACKS' || !activeView) && tracks.slice(0, 100).map(t => (
+                <LightPointNode 
                     key={`track-${t.id || t.Id}`} 
                     id={t.id || t.Id}
-                    title={t.title || t.Title}
-                    artist={t.artist || t.Artist}
-                    color={activeView === 'LIVE_SIGNAL_HUB' ? "#00ffff" : (SECTORS.find(s => s.id === (t.sectorId || t.SectorId || 0))?.color || "#00ffff")}
+                    name={t.title || t.Title}
+                    subtitle={t.artist || t.Artist}
+                    color="#00aaff"
+                    size={0.06}
                     isSelected={selectedId === `track-${t.id || t.Id}`}
                     cameraDist={cameraDist}
                     onClick={() => onTrackClick?.(t)}
                 />
             ))}
+
+            {/* Render Playlists as Pink Spheres (Size increased to 0.08) */}
+            {(activeView === 'PLAYLISTS' || !activeView) && playlists.map(p => (
+                <LightPointNode 
+                    key={`playlist-${p.id || p.Id}`} 
+                    id={p.id || p.Id}
+                    name={p.name || p.Name}
+                    color="#ff006e"
+                    size={0.08}
+                    isSelected={selectedId === `playlist-${p.id || p.Id}`}
+                    cameraDist={cameraDist}
+                    onClick={() => {}}
+                />
+            ))}
         </group>
     );
 });
-;
 
 const InteractiveGlobe = memo(({ 
     activeSector, 
     onSectorClick,
     communities = [], 
     artists = [], 
-    stations = [], 
     selectedId, 
     activeView, 
     tracks = [],
+    playlists = [],
     isGlobeSpinning = false,
     onArtistClick, 
     onCommunityClick, 
@@ -540,13 +254,19 @@ const InteractiveGlobe = memo(({
 }) => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
     
+    const [initialRotation] = useState(() => [
+        Math.random() * Math.PI * 2,
+        Math.random() * Math.PI * 2,
+        0
+    ]);
+    
     return (
         <div className="w-full h-full cursor-grab active:cursor-grabbing">
             <Canvas 
                 dpr={[1, 2]} 
                 gl={{ logarithmicDepthBuffer: true, antialias: true }}
-                camera={{ position: [0, 0, isMobile ? 12 : 10.5], fov: isMobile ? 30 : 40 }}
             >
+                <PerspectiveCamera makeDefault position={[0, 0, isMobile ? 7 : 4.5]} fov={isMobile ? 30 : 40} />
                 <fog attach="fog" args={['#000000', 8, 30]} />
                 <OrbitControls 
                     enablePan={false} 
@@ -555,7 +275,7 @@ const InteractiveGlobe = memo(({
                     maxDistance={25}
                     autoRotate={isGlobeSpinning && !selectedId}
                     autoRotateSpeed={isGlobeSpinning ? 0.5 : 0}
-                    dampingFactor={0.1} // Lower damping for smoother manual but explicit auto-stop
+                    dampingFactor={0.1}
                     enableDamping={true}
                     rotateSpeed={0.5}
                 />
@@ -570,19 +290,21 @@ const InteractiveGlobe = memo(({
                     rotationIntensity={isGlobeSpinning && !selectedId ? (activeSector !== null ? 0.02 : 0.3) : 0} 
                     floatIntensity={isGlobeSpinning && !selectedId ? 0.2 : 0}
                 >
-                    <GlobeCore 
-                        activeSector={activeSector}
-                        communities={communities}
-                        artists={artists}
-                        stations={stations}
-                        tracks={tracks}
-                        selectedId={selectedId}
-                        activeView={activeView}
-                        onArtistClick={onArtistClick}
-                        onCommunityClick={onCommunityClick}
-                        onTrackClick={onTrackClick}
-                        isGlobeSpinning={isGlobeSpinning}
-                    />
+                    <group rotation={initialRotation}>
+                        <GlobeCore 
+                            activeSector={activeSector}
+                            communities={communities}
+                            artists={artists}
+                            playlists={playlists}
+                            tracks={tracks}
+                            selectedId={selectedId}
+                            activeView={activeView}
+                            onArtistClick={onArtistClick}
+                            onCommunityClick={onCommunityClick}
+                            onTrackClick={onTrackClick}
+                            isGlobeSpinning={isGlobeSpinning}
+                        />
+                    </group>
                 </Float>
 
                 <Stars radius={150} depth={60} count={1200} factor={6} saturation={0.5} fade speed={isGlobeSpinning ? 0.8 : 0} />

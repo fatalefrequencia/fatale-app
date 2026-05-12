@@ -1684,3 +1684,92 @@
     max-width: 100%;
     max-height: 100%;
 }
+
+/* ==========================================================================
+   PREMIUM REDESIGN (Aesthetics Overhaul)
+   ========================================================================== */
+
+.glass-pane {
+    background: rgba(10, 10, 15, 0.6) !important;
+    backdrop-filter: blur(30px) saturate(200%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+}
+
+.deck-module-nano {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-radius: 16px !important;
+    padding: 16px !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+
+.deck-module-nano:hover {
+    border-color: rgba(255, 0, 110, 0.2) !important;
+    box-shadow: 0 4px 20px rgba(255, 0, 110, 0.1) !important;
+}
+
+.jog-wheel-nano {
+    background: radial-gradient(circle, #1c1c24, #0a0a0f) !important;
+    border: 2px solid rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 0 15px rgba(0,0,0,0.8) !important;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+.deck-module-nano.active .jog-wheel-nano {
+    border-color: rgba(255, 0, 110, 0.3) !important;
+    box-shadow: 0 0 20px rgba(255, 0, 110, 0.15), inset 0 0 15px rgba(0,0,0,0.8) !important;
+}
+
+.nano-knob {
+    background: #16161a !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 1px 2px rgba(255,255,255,0.05) !important;
+}
+
+.nano-knob.interactive:hover {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 10px rgba(255, 0, 110, 0.2), inset 0 2px 5px rgba(0,0,0,0.5) !important;
+}
+
+.nano-slider {
+    background: rgba(255, 255, 255, 0.05) !important;
+    height: 4px !important;
+    border-radius: 2px !important;
+}
+
+.nano-slider::-webkit-slider-thumb {
+    background: var(--accent) !important;
+    border: 2px solid #16161a !important;
+    border-radius: 50% !important;
+    width: 16px !important;
+    height: 16px !important;
+    box-shadow: 0 0 10px var(--accent) !important;
+}
+
+.signal-ingest-bar {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+}
+
+.transport-btn-sq {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease !important;
+}
+
+.transport-btn-sq:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.transport-btn-sq.active {
+    background: var(--accent) !important;
+    color: black !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 15px var(--accent) !important;
+}
