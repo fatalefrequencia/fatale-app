@@ -461,6 +461,13 @@ function App() {
             if (state !== 1 && state !== 3) { // 1=playing, 3=buffering
               youtubePlayer.playVideo();
             }
+            // Capture time immediately on play to prevent jumps/stutter
+            if (typeof youtubePlayer.getCurrentTime === 'function') {
+              const time = youtubePlayer.getCurrentTime();
+              const dur = youtubePlayer.getDuration();
+              if (dur && dur > 0 && dur !== duration) setDuration(dur);
+              setCurrentTime(time);
+            }
           }
         }
       } catch (e) { console.warn("YouTube PlayVideo Error:", e); }
@@ -2863,7 +2870,7 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
           className="h-full bg-[#ff006e] shadow-[0_0_10px_#ff006e]"
           initial={{ width: 0 }}
           animate={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%' }}
-          transition={{ duration: 0.25, ease: "linear" }}
+          transition={{ type: "tween", duration: 0.25, ease: "linear" }}
         />
       </div>
 
