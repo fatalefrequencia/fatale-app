@@ -145,25 +145,25 @@ const AuthView = ({ onLoginSuccess }) => {
         }
     };
 
-    // Inject custom CSS styling with authentic CRT green-like text glow in neon red tint
+    // Inject custom CSS styling with authentic CRT-glowing text shadow in deep raspberry red-pink (#d60036)
     const customStyles = `
       @keyframes cyberPulse {
-        0%, 100% { box-shadow: 0 0 15px rgba(255, 30, 30, 0.15), inset 0 0 15px rgba(255, 30, 30, 0.05); }
-        50% { box-shadow: 0 0 35px rgba(255, 30, 30, 0.32), inset 0 0 25px rgba(255, 30, 30, 0.12); }
+        0%, 100% { box-shadow: 0 0 15px rgba(214, 0, 54, 0.15), inset 0 0 15px rgba(214, 0, 54, 0.05); }
+        50% { box-shadow: 0 0 35px rgba(214, 0, 54, 0.32), inset 0 0 25px rgba(214, 0, 54, 0.12); }
       }
       .crt-text-glow {
-        color: #ff1e1e;
+        color: #d60036;
         text-shadow: 
-          0 0 2px rgba(255, 30, 30, 0.95), 
-          0 0 8px rgba(255, 30, 30, 0.75), 
-          0 0 15px rgba(255, 30, 30, 0.5);
+          0 0 2px rgba(214, 0, 54, 0.95), 
+          0 0 8px rgba(214, 0, 54, 0.75), 
+          0 0 15px rgba(214, 0, 54, 0.5);
       }
       .crt-cursor-glow {
-        color: #ff1e1e;
+        color: #d60036;
         text-shadow: 
-          0 0 2px rgba(255, 30, 30, 0.95), 
-          0 0 10px rgba(255, 30, 30, 0.8), 
-          0 0 18px rgba(255, 30, 30, 0.55);
+          0 0 2px rgba(214, 0, 54, 0.95), 
+          0 0 10px rgba(214, 0, 54, 0.8), 
+          0 0 18px rgba(214, 0, 54, 0.55);
       }
       .corner-bracket::before {
         content: '';
@@ -172,11 +172,11 @@ const AuthView = ({ onLoginSuccess }) => {
         left: -1px;
         width: 20px;
         height: 20px;
-        border-top: 3px solid #ff1e1e;
-        border-left: 3px solid #ff1e1e;
+        border-top: 3px solid #d60036;
+        border-left: 3px solid #d60036;
         z-index: 10;
         pointer-events: none;
-        filter: drop-shadow(0 0 3px rgba(255, 30, 30, 0.6));
+        filter: drop-shadow(0 0 3px rgba(214, 0, 54, 0.6));
       }
       .corner-bracket::after {
         content: '';
@@ -185,11 +185,11 @@ const AuthView = ({ onLoginSuccess }) => {
         right: -1px;
         width: 20px;
         height: 20px;
-        border-top: 3px solid #ff1e1e;
-        border-right: 3px solid #ff1e1e;
+        border-top: 3px solid #d60036;
+        border-right: 3px solid #d60036;
         z-index: 10;
         pointer-events: none;
-        filter: drop-shadow(0 0 3px rgba(255, 30, 30, 0.6));
+        filter: drop-shadow(0 0 3px rgba(214, 0, 54, 0.6));
       }
       .corner-bracket-bottom::before {
         content: '';
@@ -198,11 +198,11 @@ const AuthView = ({ onLoginSuccess }) => {
         left: -1px;
         width: 20px;
         height: 20px;
-        border-bottom: 3px solid #ff1e1e;
-        border-left: 3px solid #ff1e1e;
+        border-bottom: 3px solid #d60036;
+        border-left: 3px solid #d60036;
         z-index: 10;
         pointer-events: none;
-        filter: drop-shadow(0 0 3px rgba(255, 30, 30, 0.6));
+        filter: drop-shadow(0 0 3px rgba(214, 0, 54, 0.6));
       }
       .corner-bracket-bottom::after {
         content: '';
@@ -211,16 +211,16 @@ const AuthView = ({ onLoginSuccess }) => {
         right: -1px;
         width: 20px;
         height: 20px;
-        border-bottom: 3px solid #ff1e1e;
-        border-right: 3px solid #ff1e1e;
+        border-bottom: 3px solid #d60036;
+        border-right: 3px solid #d60036;
         z-index: 10;
         pointer-events: none;
-        filter: drop-shadow(0 0 3px rgba(255, 30, 30, 0.6));
+        filter: drop-shadow(0 0 3px rgba(214, 0, 54, 0.6));
       }
     `;
 
     return (
-        <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 relative bg-[#020202] overflow-hidden font-mono text-[#ff1e1e]">
+        <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 relative bg-[#020202] overflow-hidden font-mono text-[#d60036]">
             {/* Inject styled definitions */}
             <style>{customStyles}</style>
 
@@ -232,12 +232,12 @@ const AuthView = ({ onLoginSuccess }) => {
                 }}
             />
 
-            {/* Dark, red-tinted backdrop vignettes to push that underground dark web ambiance */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-[#ff1e1e]/06 to-[#020202] pointer-events-none z-0" />
+            {/* Dark, raspberry-tinted backdrop vignettes to push that underground dark web ambiance */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-[#d60036]/06 to-[#020202] pointer-events-none z-0" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_30%,_rgba(10,0,0,0.85)_100%)] pointer-events-none z-0 mix-blend-multiply" />
 
-            {/* Floating ambient radial red glow */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,30,30,0.15)_0%,_transparent_75%)] animate-pulse pointer-events-none z-0" />
+            {/* Floating ambient radial raspberry-red glow */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(214,0,54,0.15)_0%,_transparent_75%)] animate-pulse pointer-events-none z-0" />
 
             <motion.div
                 initial={{ opacity: 0, y: 15 }}
@@ -255,25 +255,25 @@ const AuthView = ({ onLoginSuccess }) => {
 
                 {/* Main Cyber Terminal Card */}
                 <div 
-                    className="bg-black/85 border border-[#ff1e1e]/35 rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(255,30,30,0.22)] relative backdrop-blur-xl corner-bracket corner-bracket-bottom"
+                    className="bg-black/85 border border-[#d60036]/35 rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(214,0,54,0.22)] relative backdrop-blur-xl corner-bracket corner-bracket-bottom"
                     style={{ animation: 'cyberPulse 6s infinite' }}
                 >
                     {/* Tabs / Subsystem selectors */}
-                    <div className="flex border-b border-[#ff1e1e]/25 bg-black/40">
+                    <div className="flex border-b border-[#d60036]/25 bg-black/40">
                         <button
                             onClick={() => { setActiveTab('login'); setError(''); }}
                             type="button"
-                            className={`flex-1 py-3.5 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'login' ? 'text-black bg-[#ff1e1e]' : 'text-[#ff1e1e]/60 hover:text-[#ff1e1e] hover:bg-[#ff1e1e]/5'}`}
+                            className={`flex-1 py-3.5 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'login' ? 'text-black bg-[#d60036]' : 'text-[#d60036]/60 hover:text-[#d60036] hover:bg-[#d60036]/5'}`}
                         >
-                            {activeTab === 'login' && <div className="absolute inset-0 bg-[#ff1e1e]/20 blur-sm" />}
+                            {activeTab === 'login' && <div className="absolute inset-0 bg-[#d60036]/20 blur-sm" />}
                             <span className="relative z-10">LOGIN</span>
                         </button>
                         <button
                             onClick={() => { setActiveTab('register'); setError(''); }}
                             type="button"
-                            className={`flex-1 py-3.5 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'register' ? 'text-black bg-[#ff1e1e]' : 'text-[#ff1e1e]/60 hover:text-[#ff1e1e] hover:bg-[#ff1e1e]/5'}`}
+                            className={`flex-1 py-3.5 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'register' ? 'text-black bg-[#d60036]' : 'text-[#d60036]/60 hover:text-[#d60036] hover:bg-[#d60036]/5'}`}
                         >
-                            {activeTab === 'register' && <div className="absolute inset-0 bg-[#ff1e1e]/20 blur-sm" />}
+                            {activeTab === 'register' && <div className="absolute inset-0 bg-[#d60036]/20 blur-sm" />}
                             <span className="relative z-10">CREATE ACCOUNT</span>
                         </button>
                     </div>
@@ -303,9 +303,9 @@ const AuthView = ({ onLoginSuccess }) => {
 
                             {/* Username Input Field */}
                             <div className="space-y-1.5">
-                                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#ff1e1e]/75 pl-1">USERNAME</label>
+                                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#d60036]/75 pl-1">USERNAME</label>
                                 <div className="relative group">
-                                    <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ff1e1e]/40 group-focus-within:text-[#ff1e1e] transition-colors" />
+                                    <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#d60036]/40 group-focus-within:text-[#d60036] transition-colors" />
                                     <input
                                         type="text"
                                         name="username"
@@ -313,9 +313,9 @@ const AuthView = ({ onLoginSuccess }) => {
                                         value={formData.username}
                                         onChange={handleChange}
                                         required
-                                        className="w-full bg-black/60 border border-[#ff1e1e]/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-[#ff1e1e] focus:shadow-[0_0_15px_rgba(255,30,30,0.3)] transition-all placeholder:text-[#ff1e1e]/25"
+                                        className="w-full bg-black/60 border border-[#d60036]/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-[#d60036] focus:shadow-[0_0_15px_rgba(214,0,54,0.3)] transition-all placeholder:text-[#d60036]/25"
                                     />
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#ff1e1e]/10 group-focus-within:bg-[#ff1e1e] rounded-full transition-all" />
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#d60036]/10 group-focus-within:bg-[#d60036] rounded-full transition-all" />
                                 </div>
                             </div>
 
@@ -330,9 +330,9 @@ const AuthView = ({ onLoginSuccess }) => {
                                         className="overflow-hidden"
                                     >
                                         <div className="space-y-1.5">
-                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#ff1e1e]/75 pl-1">EMAIL ADDRESS</label>
+                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#d60036]/75 pl-1">EMAIL ADDRESS</label>
                                             <div className="relative group">
-                                                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ff1e1e]/40 group-focus-within:text-[#ff1e1e] transition-colors" />
+                                                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#d60036]/40 group-focus-within:text-[#d60036] transition-colors" />
                                                 <input
                                                     type="email"
                                                     name="email"
@@ -340,9 +340,9 @@ const AuthView = ({ onLoginSuccess }) => {
                                                     value={formData.email}
                                                     onChange={handleChange}
                                                     required
-                                                    className="w-full bg-black/60 border border-[#ff1e1e]/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-[#ff1e1e] focus:shadow-[0_0_15px_rgba(255,30,30,0.3)] transition-all placeholder:text-[#ff1e1e]/25"
+                                                    className="w-full bg-black/60 border border-[#d60036]/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-[#d60036] focus:shadow-[0_0_15px_rgba(214,0,54,0.3)] transition-all placeholder:text-[#d60036]/25"
                                                 />
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#ff1e1e]/10 group-focus-within:bg-[#ff1e1e] rounded-full transition-all" />
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#d60036]/10 group-focus-within:bg-[#d60036] rounded-full transition-all" />
                                             </div>
                                         </div>
                                     </motion.div>
@@ -351,9 +351,9 @@ const AuthView = ({ onLoginSuccess }) => {
 
                             {/* Password Field */}
                             <div className="space-y-1.5">
-                                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#ff1e1e]/75 pl-1">PASSWORD</label>
+                                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#d60036]/75 pl-1">PASSWORD</label>
                                 <div className="relative group">
-                                    <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ff1e1e]/40 group-focus-within:text-[#ff1e1e] transition-colors" />
+                                    <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#d60036]/40 group-focus-within:text-[#d60036] transition-colors" />
                                     <input
                                         type="password"
                                         name="password"
@@ -361,9 +361,9 @@ const AuthView = ({ onLoginSuccess }) => {
                                         value={formData.password}
                                         onChange={handleChange}
                                         required
-                                        className="w-full bg-black/60 border border-[#ff1e1e]/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-[#ff1e1e] focus:shadow-[0_0_15px_rgba(255,30,30,0.3)] transition-all placeholder:text-[#ff1e1e]/25"
+                                        className="w-full bg-black/60 border border-[#d60036]/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-[#d60036] focus:shadow-[0_0_15px_rgba(214,0,54,0.3)] transition-all placeholder:text-[#d60036]/25"
                                     />
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#ff1e1e]/10 group-focus-within:bg-[#ff1e1e] rounded-full transition-all" />
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#d60036]/10 group-focus-within:bg-[#d60036] rounded-full transition-all" />
                                 </div>
                             </div>
 
@@ -372,7 +372,7 @@ const AuthView = ({ onLoginSuccess }) => {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full bg-[#ff1e1e] hover:bg-white text-black font-black py-3.5 rounded-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2.5 uppercase tracking-[0.12em] text-xs shadow-[0_0_20px_rgba(255,30,30,0.4)] hover:shadow-[0_0_25px_rgba(255,255,255,0.45)] disabled:opacity-50 disabled:cursor-not-allowed group border border-transparent hover:border-[#ff1e1e]/40"
+                                    className="w-full bg-[#d60036] hover:bg-white text-black font-black py-3.5 rounded-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2.5 uppercase tracking-[0.12em] text-xs shadow-[0_0_20px_rgba(214,0,54,0.4)] hover:shadow-[0_0_25px_rgba(255,255,255,0.45)] disabled:opacity-50 disabled:cursor-not-allowed group border border-transparent hover:border-[#d60036]/40"
                                 >
                                     {loading ? (
                                         <Loader2 size={16} className="animate-spin text-black" />
@@ -389,7 +389,7 @@ const AuthView = ({ onLoginSuccess }) => {
                                 <div className="text-center pt-2">
                                     <button 
                                         type="button" 
-                                        className="text-[9px] uppercase font-bold text-[#ff1e1e]/50 hover:text-[#ff1e1e] tracking-[0.2em] transition-colors"
+                                        className="text-[9px] uppercase font-bold text-[#d60036]/50 hover:text-[#d60036] tracking-[0.2em] transition-colors"
                                     >
                                         Forgot Password?
                                     </button>
@@ -399,9 +399,9 @@ const AuthView = ({ onLoginSuccess }) => {
                     </div>
 
                     {/* Security Signature Footer */}
-                    <div className="bg-[#ff1e1e]/5 p-3 text-center border-t border-[#ff1e1e]/20 flex items-center justify-center gap-2">
-                        <ShieldCheck size={12} className="text-[#ff1e1e]/45 animate-pulse" />
-                        <p className="text-[8px] text-[#ff1e1e]/50 uppercase tracking-[0.22em] font-black">
+                    <div className="bg-[#d60036]/5 p-3 text-center border-t border-[#d60036]/20 flex items-center justify-center gap-2">
+                        <ShieldCheck size={12} className="text-[#d60036]/45 animate-pulse" />
+                        <p className="text-[8px] text-[#d60036]/50 uppercase tracking-[0.22em] font-black">
                             PROTECTED BY CYBERSEC v9.0
                         </p>
                     </div>
