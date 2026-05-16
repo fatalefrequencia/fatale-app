@@ -4327,7 +4327,6 @@ const PlayerContent = ({
           onPrev={onPrev}
           onLike={onLike}
           togglePlay={togglePlay}
-          user={user}
           onPurchase={onPurchase}
           onDownload={onDownload}
           onAddCredits={onAddCredits}
