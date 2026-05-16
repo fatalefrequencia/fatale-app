@@ -48,7 +48,7 @@ const SettingsView = ({ user, setUser }) => {
             {/* Header */}
             <div className="space-y-2 border-b border-[#ff006e]/10 pb-6">
                 <h1 className="text-3xl font-black italic text-white tracking-tighter uppercase">
-                    System_<span className="text-[#ff006e]">Settings</span>
+                    {t('SYS_CONF')}
                 </h1>
                 <p className="text-[10px] mono text-white/30 uppercase tracking-[0.4em]">{t('CALIBRATING_SENSORS')}...</p>
             </div>
@@ -137,8 +137,8 @@ const SettingsView = ({ user, setUser }) => {
                     </div>
 
                     <div className="flex justify-end gap-3">
-                         <button className="px-6 py-2 border border-white/10 text-white/20 text-[9px] font-black uppercase tracking-widest hover:text-white transition-all">Restore_Defaults</button>
-                         <button className="px-8 py-2 bg-[#ff006e] text-black text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_20px_#ff006e40]">Save_Changes</button>
+                         <button className="px-6 py-2 border border-white/10 text-white/20 text-[9px] font-black uppercase tracking-widest hover:text-white transition-all">{t('CANCEL')}</button>
+                         <button className="px-8 py-2 bg-[#ff006e] text-black text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_20px_#ff006e40]">{t('UPDATE')}</button>
                     </div>
                 </div>
             </div>

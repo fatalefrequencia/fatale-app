@@ -3,10 +3,12 @@ import { motion } from 'framer-motion';
 import { ShoppingBag, ExternalLink, ArrowRight, ShoppingCart, Tag, Star, Plus, X, Upload, Trash2 } from 'lucide-react';
 import { getMediaUrl } from '../constants';
 import API from '../services/api';
+import { useLanguage } from '../contexts/LanguageContext';
 
 
 
 const ShoppingView = () => {
+    const { t } = useLanguage();
     const [shops, setShops] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -115,7 +117,7 @@ const ShoppingView = () => {
                     <div className="space-y-2">
                         <div className="flex items-center gap-3 text-[#ff006e]">
                             <ShoppingBag size={24} className="animate-pulse" />
-                            <h1 className="text-4xl font-black tracking-tighter uppercase italic">MARKET_SIGNAL</h1>
+                            <h1 className="text-4xl font-black tracking-tighter uppercase italic">{t('PUBLIC_COLL')}</h1>
                         </div>
                         <p className="text-xs mono text-white/40 tracking-[0.3em] uppercase">Authorized_Merchant_Network // v1.0.4</p>
                     </div>
@@ -136,7 +138,7 @@ const ShoppingView = () => {
                             <Plus size={16} className="text-[#ff006e]" />
                         </div>
                         <div className="text-center">
-                            <div className="text-[10px] font-black uppercase tracking-widest text-[#ff006e]">SUBMIT_STORE</div>
+                            <div className="text-[10px] font-black uppercase tracking-widest text-[#ff006e]">SUBMIT_NODE</div>
                             <div className="text-[8px] mono mt-1 text-white/40">{isLoggedIn ? "OPEN_FOR_ARTISTS [+]" : "LOGIN_REQUIRED"}</div>
                         </div>
                     </div>

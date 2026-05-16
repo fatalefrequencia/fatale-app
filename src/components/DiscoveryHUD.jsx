@@ -1322,7 +1322,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                     {/* --- BOTTOM CENTER: MESSAGES --- */}
                     <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-4 lg:row-start-5 pointer-events-auto">
-                        <HUDWidget title={t('MESSAGES') || 'MENSAJES'} icon={<MessageSquare size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                        <HUDWidget title={t('MSG_SYNC')} icon={<MessageSquare size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                              <div className="space-y-4">
                                   {conversations.length > 0 ? conversations.map(c => (
                                       <div key={c.conversationId || c.id} className="group cursor-pointer border-b border-white/5 pb-2 flex items-center gap-3" onClick={() => {
@@ -1347,7 +1347,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                   )) : (
                                       <div className="flex flex-col items-center justify-center py-6 opacity-20">
                                           <MessageSquare size={16} className="mb-2" />
-                                          <div className="text-[8px] tracking-widest uppercase text-center px-4">SIN_MENSAJES_NUEVOS</div>
+                                          <div className="text-[8px] tracking-widest uppercase text-center px-4">{t('EMPTY') || 'NO_NEW_MESSAGES'}</div>
                                       </div>
                                   )}
                              </div>
