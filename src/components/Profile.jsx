@@ -1669,45 +1669,27 @@ export const ProfileView = React.memo(({
                 }
                 const artistId = artistRes.data?.id || artistRes.data?.Id;
                 // Tracks & Following logic
-                setIsLoadingTracks(true);
-                let filtered = [];
-                if (isMe && allTracks?.length > 0) {
-                    // Use tracks already in memory for Current User
-                    filtered = allTracks.filter(t => {
-                        const tUserId = t.artistUserId || t.ArtistUserId || t.userId || t.UserId;
-                        return String(tUserId) === String(effectiveId);
-                    }).map(t => ({
-                        ...t,
-                        id: t.id || t.Id,
-                        title: t.title || t.Title || 'UNKNOWN_SIGNAL',
-                        artist: t.artist || t.ArtistName || t.Artist || 'UNKNOWN_SOURCE',
-                        source: getMediaUrl(t.source || t.Source || t.filePath || t.FilePath),
-                        cover: getMediaUrl(t.coverImageUrl || t.CoverImageUrl)
-                    }));
-                    setIsLoadingTracks(false);
-                } else {
-                    const [tracksRes, followingRes] = await Promise.all([
-                        API.Tracks.getAllTracks(),
-                        API.Users.getFollowing(currentUser?.id || currentUser?.Id).catch(() => ({ data: [] }))
-                    ]);
+                const [tracksRes, followingRes] = await Promise.all([
+                    API.Tracks.getAllTracks(),
+                    API.Users.getFollowing(currentUser?.id || currentUser?.Id).catch(() => ({ data: [] }))
+                ]);
 
-                    const following = followingRes.data || [];
-                    setIsFollowing(following.some(a => String(a.id || a.Id) === String(effectiveId)));
+                const following = followingRes.data || [];
+                setIsFollowing(following.some(a => String(a.id || a.Id) === String(effectiveId)));
 
-                    const tracks = tracksRes.data || [];
-                    filtered = tracks.filter(t => {
-                        const tUserId = t.artistUserId || t.ArtistUserId || t.userId || t.UserId;
-                        return String(tUserId) === String(effectiveId);
-                    }).map(t => ({
-                        ...t,
-                        id: t.id || t.Id,
-                        title: t.title || t.Title || 'UNKNOWN_SIGNAL',
-                        artist: t.artist || t.ArtistName || t.Artist || 'UNKNOWN_SOURCE',
-                        source: getMediaUrl(t.source || t.Source || t.filePath || t.FilePath),
-                        cover: getMediaUrl(t.coverImageUrl || t.CoverImageUrl)
-                    }));
-                    setIsLoadingTracks(false);
-                }
+                const tracks = tracksRes.data || [];
+                const filtered = tracks.filter(t => {
+                    const tUserId = t.artistUserId || t.ArtistUserId || t.userId || t.UserId;
+                    return String(tUserId) === String(effectiveId);
+                }).map(t => ({
+                    ...t,
+                    id: t.id || t.Id,
+                    title: t.title || t.Title || 'UNKNOWN_SIGNAL',
+                    artist: t.artist || t.ArtistName || t.Artist || 'UNKNOWN_SOURCE',
+                    source: getMediaUrl(t.source || t.Source || t.filePath || t.FilePath),
+                    cover: getMediaUrl(t.coverImageUrl || t.CoverImageUrl)
+                }));
+                setIsLoadingTracks(false);
                 setProfileTracks(filtered);
 
                 try {
@@ -1752,7 +1734,7 @@ export const ProfileView = React.memo(({
         };
 
         fetchTargetProfileInternal();
-    }, [targetUserId, isMe, currentUser]);
+    }, [targetUserId, isMe, currentUser, allTracks]);
 
 
     const handleFollow = async () => {
