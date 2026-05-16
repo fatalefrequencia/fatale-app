@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, User, Mail, Lock, ChevronRight, AlertCircle, Loader2, Cpu, ShieldCheck } from 'lucide-react';
+import { Zap, User, Mail, Lock, ChevronRight, AlertCircle, Loader2, ShieldCheck } from 'lucide-react';
 import API from '../services/api';
 import loginBg from '../assets/login_bg.png';
 
@@ -94,10 +94,6 @@ const AuthView = ({ onLoginSuccess }) => {
 
     // Inject custom CSS styling
     const customStyles = `
-      @keyframes scanline {
-        0% { transform: translateY(-100%); }
-        100% { transform: translateY(100%); }
-      }
       @keyframes cyberPulse {
         0%, 100% { box-shadow: 0 0 15px rgba(255, 0, 110, 0.15), inset 0 0 15px rgba(255, 0, 110, 0.05); }
         50% { box-shadow: 0 0 35px rgba(255, 0, 110, 0.35), inset 0 0 25px rgba(255, 0, 110, 0.15); }
@@ -105,10 +101,6 @@ const AuthView = ({ onLoginSuccess }) => {
       @keyframes laserSweep {
         0% { top: -10%; }
         100% { top: 110%; }
-      }
-      @keyframes flicker {
-        0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% { opacity: 0.99; }
-        20%, 21.999%, 63%, 63.999%, 65%, 69.999% { opacity: 0.45; }
       }
       .cyber-grid {
         background-size: 40px 40px;
@@ -164,19 +156,6 @@ const AuthView = ({ onLoginSuccess }) => {
         z-index: 10;
         pointer-events: none;
       }
-      .scanline-overlay {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-          to bottom,
-          rgba(255, 0, 110, 0) 0%,
-          rgba(255, 0, 110, 0.08) 50%,
-          rgba(255, 0, 110, 0) 100%
-        );
-        animation: scanline 6s linear infinite;
-        pointer-events: none;
-        z-index: 3;
-      }
     `;
 
     return (
@@ -195,7 +174,7 @@ const AuthView = ({ onLoginSuccess }) => {
             {/* Dark fuchsia tint overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-[#020202]/70 to-[#020202] pointer-events-none z-0" />
 
-            {/* Futuristic Tech Grid & scan lines */}
+            {/* Futuristic Tech Grid */}
             <div className="absolute inset-0 cyber-grid opacity-30 pointer-events-none z-0" />
             
             {/* Dynamic laser scanning line */}
@@ -211,20 +190,10 @@ const AuthView = ({ onLoginSuccess }) => {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: 'easeOut' }}
-                className="z-10 w-full max-w-[440px]"
+                className="z-10 w-full max-w-[420px]"
             >
                 {/* Header */}
-                <div className="text-center mb-6 space-y-2">
-                    <motion.div
-                        initial={{ scale: 0.95 }}
-                        animate={{ scale: 1 }}
-                        className="inline-flex items-center gap-2 px-3 py-1 border border-[#ff006e]/25 bg-black/60 rounded-full backdrop-blur-md"
-                        style={{ animation: 'flicker 4s infinite' }}
-                    >
-                        <Cpu size={12} className="text-[#ff006e] animate-pulse" />
-                        <span className="text-[9px] font-black tracking-[0.25em] uppercase opacity-85">LINK_SECURE_ESTABLISHED // NODE:0xDF1A</span>
-                    </motion.div>
-
+                <div className="text-center mb-6">
                     <h1 className="text-4xl md:text-5xl font-black italic tracking-tighter text-white drop-shadow-[0_0_15px_#ff006e] uppercase">
                         FATALE<span className="text-[#ff006e]">_GATEWAY</span>
                     </h1>
@@ -235,35 +204,23 @@ const AuthView = ({ onLoginSuccess }) => {
                     className="bg-black/85 border border-[#ff006e]/35 rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(255,0,110,0.18)] relative backdrop-blur-xl corner-bracket corner-bracket-bottom"
                     style={{ animation: 'cyberPulse 6s infinite' }}
                 >
-                    {/* Retro Scanline shader */}
-                    <div className="scanline-overlay" />
-
-                    {/* Console Info Bar */}
-                    <div className="flex justify-between items-center bg-[#ff006e]/10 border-b border-[#ff006e]/25 px-4 py-2 text-[9px] font-black uppercase tracking-[0.15em] text-[#ff006e]/80">
-                        <div className="flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 bg-[#ff006e] rounded-full animate-ping" />
-                            <span>SYS_STATUS: READY</span>
-                        </div>
-                        <div>MEM_LOC: C000:0F12</div>
-                    </div>
-
                     {/* Tabs / Subsystem selectors */}
                     <div className="flex border-b border-[#ff006e]/20 bg-black/40">
                         <button
                             onClick={() => { setActiveTab('login'); setError(''); }}
                             type="button"
-                            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'login' ? 'text-black bg-[#ff006e]' : 'text-[#ff006e]/60 hover:text-[#ff006e] hover:bg-[#ff006e]/5'}`}
+                            className={`flex-1 py-3.5 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'login' ? 'text-black bg-[#ff006e]' : 'text-[#ff006e]/60 hover:text-[#ff006e] hover:bg-[#ff006e]/5'}`}
                         >
                             {activeTab === 'login' && <div className="absolute inset-0 bg-[#ff006e]/15 blur-sm" />}
-                            <span className="relative z-10">[ 01. INITIALISE_LINK ]</span>
+                            <span className="relative z-10">LOGIN</span>
                         </button>
                         <button
                             onClick={() => { setActiveTab('register'); setError(''); }}
                             type="button"
-                            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'register' ? 'text-black bg-[#ff006e]' : 'text-[#ff006e]/60 hover:text-[#ff006e] hover:bg-[#ff006e]/5'}`}
+                            className={`flex-1 py-3.5 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'register' ? 'text-black bg-[#ff006e]' : 'text-[#ff006e]/60 hover:text-[#ff006e] hover:bg-[#ff006e]/5'}`}
                         >
                             {activeTab === 'register' && <div className="absolute inset-0 bg-[#ff006e]/15 blur-sm" />}
-                            <span className="relative z-10">[ 02. CREATE_NODE ]</span>
+                            <span className="relative z-10">CREATE ACCOUNT</span>
                         </button>
                     </div>
 
@@ -271,7 +228,7 @@ const AuthView = ({ onLoginSuccess }) => {
                     <div className="p-6 relative z-10">
                         <form onSubmit={handleSubmit} className="space-y-4">
 
-                            {/* Error Warning Terminal Block */}
+                            {/* Error Warning Block */}
                             <AnimatePresence mode="wait">
                                 {error && (
                                     <motion.div
@@ -283,7 +240,7 @@ const AuthView = ({ onLoginSuccess }) => {
                                     >
                                         <AlertCircle size={16} className="mt-0.5 shrink-0 text-red-500 animate-bounce" />
                                         <div className="space-y-1">
-                                            <p className="font-black uppercase tracking-widest text-[9px] text-red-500">WARNING: TRANSACTION_DENIED</p>
+                                            <p className="font-black uppercase tracking-widest text-[9px] text-red-500">AUTHENTICATION ERROR</p>
                                             <p className="opacity-90">{error}</p>
                                         </div>
                                     </motion.div>
@@ -292,13 +249,13 @@ const AuthView = ({ onLoginSuccess }) => {
 
                             {/* Username Input Field */}
                             <div className="space-y-1.5">
-                                <label className="text-[8px] font-black uppercase tracking-[0.2em] text-[#ff006e]/70 pl-1">01_USER_IDENTIFIER</label>
+                                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#ff006e]/70 pl-1">USERNAME</label>
                                 <div className="relative group">
                                     <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ff006e]/40 group-focus-within:text-[#ff006e] transition-colors" />
                                     <input
                                         type="text"
                                         name="username"
-                                        placeholder="INPUT USERNAME..."
+                                        placeholder="Enter Username"
                                         value={formData.username}
                                         onChange={handleChange}
                                         required
@@ -319,13 +276,13 @@ const AuthView = ({ onLoginSuccess }) => {
                                         className="overflow-hidden"
                                     >
                                         <div className="space-y-1.5">
-                                            <label className="text-[8px] font-black uppercase tracking-[0.2em] text-[#ff006e]/70 pl-1">02_COMMS_LINK</label>
+                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#ff006e]/70 pl-1">EMAIL ADDRESS</label>
                                             <div className="relative group">
                                                 <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ff006e]/40 group-focus-within:text-[#ff006e] transition-colors" />
                                                 <input
                                                     type="email"
                                                     name="email"
-                                                    placeholder="INPUT EMAIL ADDRESS..."
+                                                    placeholder="Enter Email Address"
                                                     value={formData.email}
                                                     onChange={handleChange}
                                                     required
@@ -340,15 +297,13 @@ const AuthView = ({ onLoginSuccess }) => {
 
                             {/* Password Field */}
                             <div className="space-y-1.5">
-                                <div className="flex justify-between items-center px-1">
-                                    <label className="text-[8px] font-black uppercase tracking-[0.2em] text-[#ff006e]/70">03_ACCESS_CODE</label>
-                                </div>
+                                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#ff006e]/70 pl-1">PASSWORD</label>
                                 <div className="relative group">
                                     <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#ff006e]/40 group-focus-within:text-[#ff006e] transition-colors" />
                                     <input
                                         type="password"
                                         name="password"
-                                        placeholder="INPUT PASS CODE..."
+                                        placeholder="Enter Password"
                                         value={formData.password}
                                         onChange={handleChange}
                                         required
@@ -358,7 +313,7 @@ const AuthView = ({ onLoginSuccess }) => {
                                 </div>
                             </div>
 
-                            {/* Secure Authentication Trigger Button */}
+                            {/* Submit Button */}
                             <div className="pt-4">
                                 <button
                                     type="submit"
@@ -369,7 +324,7 @@ const AuthView = ({ onLoginSuccess }) => {
                                         <Loader2 size={16} className="animate-spin text-black" />
                                     ) : (
                                         <>
-                                            <span>{activeTab === 'login' ? 'INITIALISE LINK' : 'ESTABLISH IDENTITY'}</span>
+                                            <span>{activeTab === 'login' ? 'LOGIN' : 'CREATE ACCOUNT'}</span>
                                             <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform text-black" />
                                         </>
                                     )}
@@ -382,7 +337,7 @@ const AuthView = ({ onLoginSuccess }) => {
                                         type="button" 
                                         className="text-[9px] uppercase font-bold text-[#ff006e]/40 hover:text-[#ff006e] tracking-[0.2em] transition-colors"
                                     >
-                                        [ OVERRIDE_ACCESS_CODES? ]
+                                        Forgot Password?
                                     </button>
                                 </div>
                             )}
@@ -393,7 +348,7 @@ const AuthView = ({ onLoginSuccess }) => {
                     <div className="bg-[#ff006e]/5 p-3 text-center border-t border-[#ff006e]/15 flex items-center justify-center gap-2">
                         <ShieldCheck size={12} className="text-[#ff006e]/40 animate-pulse" />
                         <p className="text-[8px] text-[#ff006e]/45 uppercase tracking-[0.22em] font-black">
-                            ENCRYPTED SECURE LINK v9.12 // PROTOCOL: AES_256
+                            PROTECTED BY CYBERSEC v9.0
                         </p>
                     </div>
                 </div>
