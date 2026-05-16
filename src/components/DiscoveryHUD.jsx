@@ -534,13 +534,6 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         >
                             <Activity size={12} /> {t('DATA_STREAM')}
                         </button>
-                        <button 
-                            onTouchStart={(e) => { e.stopPropagation(); setMobileViewMode('search'); }}
-                            onClick={(e) => { e.stopPropagation(); setMobileViewMode('search'); }}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'search' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
-                        >
-                            <Search size={12} />
-                        </button>
                     </div>
                 )}
 
