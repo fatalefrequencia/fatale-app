@@ -3983,9 +3983,11 @@ const FeedContent = React.memo(({
         </AnimatePresence>
 
         {/* Scanline Overlay */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.03]">
-          <div className="absolute inset-0 bg-[repeating-linear-gradient(rgba(255,0,110,0.1)_0px,transparent_1px,rgba(255,0,110,0.1)_2px)] bg-[length:100%_3px]" />
-        </div>
+        {activeView !== 'login' && (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.03]">
+            <div className="absolute inset-0 bg-[repeating-linear-gradient(rgba(255,0,110,0.1)_0px,transparent_1px,rgba(255,0,110,0.1)_2px)] bg-[length:100%_3px]" />
+          </div>
+        )}
       </div>
 
       {/* ── MOBILE SLIDE-UP PANEL ── */}

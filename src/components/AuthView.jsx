@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, User, Mail, Lock, ChevronRight, AlertCircle, Loader2, ShieldCheck } from 'lucide-react';
+import { User, Mail, Lock, ChevronRight, AlertCircle, Loader2, ShieldCheck } from 'lucide-react';
 import API from '../services/api';
 import loginBg from '../assets/login_bg.png';
 
@@ -15,6 +15,59 @@ const AuthView = ({ onLoginSuccess }) => {
         email: '',
         password: ''
     });
+
+    // Typewriter States for "fatale.fm" title animation
+    const [displayText, setDisplayText] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [blinkCount, setBlinkCount] = useState(0);
+    const [showCursor, setShowCursor] = useState(true);
+
+    const fullText = "fatale.fm";
+
+    useEffect(() => {
+        let timer;
+        
+        // If we are in blinking phase
+        if (blinkCount > 0) {
+            timer = setTimeout(() => {
+                setShowCursor(prev => !prev);
+                setBlinkCount(prev => prev - 1);
+            }, 350);
+            return () => clearTimeout(timer);
+        }
+
+        // When fully typed
+        if (!isDeleting && displayText === fullText) {
+            setShowCursor(true);
+            setBlinkCount(6); // Blink 6 times (3 complete cycles)
+            setIsDeleting(true);
+            return;
+        }
+
+        // When fully deleted
+        if (isDeleting && displayText === '') {
+            timer = setTimeout(() => {
+                setIsDeleting(false);
+                setShowCursor(true);
+            }, 1000); // Pause before starting typing again
+            return () => clearTimeout(timer);
+        }
+
+        // Typing and backspacing speeds
+        const speed = isDeleting ? 80 : 150;
+        
+        timer = setTimeout(() => {
+            if (!isDeleting) {
+                // Type next character
+                setDisplayText(fullText.substring(0, displayText.length + 1));
+            } else {
+                // Delete last character
+                setDisplayText(fullText.substring(0, displayText.length - 1));
+            }
+        }, speed);
+
+        return () => clearTimeout(timer);
+    }, [displayText, isDeleting, blinkCount]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -98,16 +151,6 @@ const AuthView = ({ onLoginSuccess }) => {
         0%, 100% { box-shadow: 0 0 15px rgba(255, 0, 110, 0.15), inset 0 0 15px rgba(255, 0, 110, 0.05); }
         50% { box-shadow: 0 0 35px rgba(255, 0, 110, 0.35), inset 0 0 25px rgba(255, 0, 110, 0.15); }
       }
-      @keyframes laserSweep {
-        0% { top: -10%; }
-        100% { top: 110%; }
-      }
-      .cyber-grid {
-        background-size: 40px 40px;
-        background-image: 
-          linear-gradient(to right, rgba(255, 0, 110, 0.02) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(255, 0, 110, 0.02) 1px, transparent 1px);
-      }
       .corner-bracket::before {
         content: '';
         position: absolute;
@@ -174,15 +217,6 @@ const AuthView = ({ onLoginSuccess }) => {
             {/* Dark fuchsia tint overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-[#020202]/70 to-[#020202] pointer-events-none z-0" />
 
-            {/* Futuristic Tech Grid */}
-            <div className="absolute inset-0 cyber-grid opacity-30 pointer-events-none z-0" />
-            
-            {/* Dynamic laser scanning line */}
-            <div 
-                className="absolute left-0 right-0 h-[2px] bg-[#ff006e]/30 shadow-[0_0_15px_#ff006e] pointer-events-none z-1"
-                style={{ animation: 'laserSweep 8s ease-in-out infinite' }}
-            />
-
             {/* Floating ambient radial glow */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,0,110,0.12)_0%,_transparent_75%)] animate-pulse pointer-events-none z-0" />
 
@@ -192,10 +226,11 @@ const AuthView = ({ onLoginSuccess }) => {
                 transition={{ duration: 0.8, ease: 'easeOut' }}
                 className="z-10 w-full max-w-[420px]"
             >
-                {/* Header */}
-                <div className="text-center mb-6">
-                    <h1 className="text-4xl md:text-5xl font-black italic tracking-tighter text-white drop-shadow-[0_0_15px_#ff006e] uppercase">
-                        FATALE<span className="text-[#ff006e]">_GATEWAY</span>
+                {/* Header with Typewriter "fatale.fm" */}
+                <div className="text-center mb-6 h-12 flex items-center justify-center">
+                    <h1 className="text-4xl md:text-5xl font-black italic tracking-tighter text-white drop-shadow-[0_0_15px_#ff006e] uppercase font-mono">
+                        {displayText}
+                        <span className={`text-[#ff006e] ${showCursor ? 'opacity-100' : 'opacity-0'} transition-opacity duration-75 font-normal ml-0.5`}>|</span>
                     </h1>
                 </div>
 
