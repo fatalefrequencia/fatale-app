@@ -440,64 +440,84 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#ff006e]/10 z-[60] shadow-[0_0_20px_#ff006e]" />
             
             {/* --- TOP HUD BAR --- */}
-            <div className="z-50 flex flex-col lg:flex-row items-center justify-between gap-4 mb-4 px-2">
-                <div className="flex items-center gap-4 self-start lg:self-auto">
-                    <div className="flex items-center gap-2">
-                        <Activity size={14} className="text-[#ff006e] animate-pulse" />
-                        <div className="text-[#ff006e] text-[10px] font-black tracking-widest opacity-70">
-                            {t('KERNEL_PULSE')}: <span className="text-green-500">{t('SYNC_OK')}</span>
+            <div className="z-50 flex flex-col lg:flex-row items-center justify-between gap-4 mb-4 px-2 relative">
+                {/* LEFT: KERNEL PULSE */}
+                <div className="flex-1 flex justify-start w-full lg:w-auto">
+                    <div className="flex items-center gap-4 self-start lg:self-auto">
+                        <div className="flex items-center gap-2">
+                            <Activity size={14} className="text-[#ff006e] animate-pulse" />
+                            <div className="text-[#ff006e] text-[10px] font-black tracking-widest opacity-70">
+                                {t('KERNEL_PULSE')}: <span className="text-green-500">{t('SYNC_OK')}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* CENTRAL SEARCH */}
-                {isMobile && mobileViewMode !== 'search' ? (
-                    <button 
-                        onClick={() => setMobileViewMode('search')}
-                        className="p-2 text-[#ff006e] hover:text-white transition-colors self-center lg:hidden"
-                    >
-                        <Search size={20} />
-                    </button>
-                ) : (
-                    <div className="relative group w-full lg:w-[450px]">
-                        <div 
-                            className="absolute -inset-1 rounded-lg blur opacity-0 group-focus-within:opacity-100 transition duration-1000 group-focus-within:duration-200"
-                            style={{ backgroundColor: activeSectorColor || '#ff006e', opacity: activeSectorColor ? 0.3 : 0 }}
-                        ></div>
-                        <div className="relative flex items-center">
-                            <div className="absolute left-3 flex items-center pointer-events-none">
-                                <Search 
-                                    size={16} 
-                                    className="group-focus-within:opacity-100 transition-opacity" 
-                                    style={{ color: activeSectorColor || '#ff006e', opacity: activeSector ? 1 : 0.4 }}
+                {/* CENTER: SEARCH */}
+                <div className="w-full lg:w-[450px] flex justify-center relative">
+                    {isMobile && mobileViewMode !== 'search' ? (
+                        <button 
+                            onClick={() => setMobileViewMode('search')}
+                            className="p-2 text-[#ff006e] hover:text-white transition-colors self-center lg:hidden"
+                        >
+                            <Search size={20} />
+                        </button>
+                    ) : (
+                        <div className="relative group w-full">
+                            <div 
+                                className="absolute -inset-1 rounded-lg blur opacity-0 group-focus-within:opacity-100 transition duration-1000 group-focus-within:duration-200"
+                                style={{ backgroundColor: activeSectorColor || '#ff006e', opacity: activeSectorColor ? 0.3 : 0 }}
+                            ></div>
+                            <div className="relative flex items-center">
+                                <div className="absolute left-3 flex items-center pointer-events-none">
+                                    <Search 
+                                        size={16} 
+                                        className="group-focus-within:opacity-100 transition-opacity" 
+                                        style={{ color: activeSectorColor || '#ff006e', opacity: activeSector ? 1 : 0.4 }}
+                                    />
+                                </div>
+                                <input 
+                                    type="text"
+                                    placeholder={t('SEARCH_SIGNAL')}
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full bg-black/60 border rounded px-10 py-2.5 text-xs tracking-[0.2em] focus:outline-none focus:ring-1 transition-all placeholder:text-[#ff006e]/20"
+                                    style={{ 
+                                        borderColor: activeSectorColor ? `${activeSectorColor}99` : 'rgba(255,0,110,0.3)', 
+                                        focusBorderColor: activeSectorColor || '#ff006e',
+                                        color: activeSectorColor || 'white',
+                                        '--tw-ring-color': activeSectorColor ? `${activeSectorColor}33` : 'rgba(255,0,110,0.2)'
+                                    }}
                                 />
+                                {searchQuery && (
+                                    <button 
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute right-3 text-white/20 hover:text-white transition-colors"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                )}
                             </div>
-                            <input 
-                                type="text"
-                                placeholder={t('SEARCH_SIGNAL')}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-black/60 border rounded px-10 py-2.5 text-xs tracking-[0.2em] focus:outline-none focus:ring-1 transition-all placeholder:text-[#ff006e]/20"
-                                style={{ 
-                                    borderColor: activeSectorColor ? `${activeSectorColor}99` : 'rgba(255,0,110,0.3)', 
-                                    focusBorderColor: activeSectorColor || '#ff006e',
-                                    color: activeSectorColor || 'white',
-                                    '--tw-ring-color': activeSectorColor ? `${activeSectorColor}33` : 'rgba(255,0,110,0.2)'
-                                }}
-                            />
-                            {searchQuery && (
-                                <button 
-                                    onClick={() => setSearchQuery('')}
-                                    className="absolute right-3 text-white/20 hover:text-white transition-colors"
-                                >
-                                    <X size={14} />
-                                </button>
-                            )}
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
 
-                {/* MOBILE VIEW TOGGLE */}
+                {/* RIGHT: DATE / LOCATION */}
+                <div className="flex-1 hidden lg:flex items-center justify-end gap-6 text-[10px] text-white/40 tracking-tighter">
+                    <div className="hidden xl:flex items-center gap-2">
+                        <span className="opacity-30">{t('LOC')}:</span>
+                        <span 
+                            className="transition-all duration-500 font-black tracking-widest"
+                            style={{ color: activeSectorColor || '#ff006e' }}
+                        >
+                            {activeSector !== null ? SECTORS.find(s => s.id === activeSector)?.name : t('GLOBAL_SIGNAL')}
+                        </span>
+                    </div>
+                    <div className="w-[1px] h-3 bg-white/10" />
+                    <div className="tabular-nums">{new Date().toISOString().split('T')[0]}</div>
+                </div>
+
+                {/* MOBILE VIEW TOGGLE - BELOW SEARCH ON MOBILE */}
                 {isMobile && (
                     <div className="mt-4 flex bg-black/40 border border-[#ff006e]/20 rounded-sm p-1 gap-1 pointer-events-auto relative z-[70] w-full">
                         <button 
@@ -519,42 +539,27 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             onClick={(e) => { e.stopPropagation(); setMobileViewMode('search'); }}
                             className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'search' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
                         >
-                            <Search size={12} /> BÚSQUEDA
+                            <Search size={12} />
                         </button>
                     </div>
                 )}
 
-                    {/* MOBILE SEARCH RESULTS MOVED TO MAIN AREA */}
-
-                    {/* Small frequency indicator below switch/search */}
-                    {!isMobile && (
-                        <div className="absolute -bottom-4 left-0 right-0 flex justify-center gap-[2px]">
-                            {[...Array(20)].map((_, i) => (
-                                <motion.div 
-                                    key={i}
-                                    animate={{ height: [2, 8, 2, 4, 2] }}
-                                    transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.05 }}
-                                    className="w-[2px] transition-colors duration-500"
-                                    style={{ backgroundColor: activeSectorColor ? `${activeSectorColor}66` : 'rgba(255, 0, 110, 0.3)' }}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                <div className="flex items-center gap-6 text-[10px] text-white/40 tracking-tighter self-end lg:self-auto">
-                    <div className="hidden xl:flex items-center gap-2">
-                            <span className="opacity-30">{t('LOC')}:</span>
-                            <span 
-                                className="transition-all duration-500 font-black tracking-widest"
-                                style={{ color: activeSectorColor || '#ff006e' }}
-                            >
-                                {activeSector !== null ? SECTORS.find(s => s.id === activeSector)?.name : t('GLOBAL_SIGNAL')}
-                            </span>
+                {/* Small frequency indicator below switch/search */}
+                {!isMobile && (
+                    <div className="absolute -bottom-4 left-0 right-0 flex justify-center gap-[2px]">
+                        {[...Array(20)].map((_, i) => (
+                            <motion.div 
+                                key={i}
+                                animate={{ height: [2, 8, 2, 4, 2] }}
+                                transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.05 }}
+                                className="w-[2px] transition-colors duration-500"
+                                style={{ backgroundColor: activeSectorColor ? `${activeSectorColor}66` : 'rgba(255, 0, 110, 0.3)' }}
+                            />
+                        ))}
                     </div>
-                    <div className="w-[1px] h-3 bg-white/10" />
-                    <div className="tabular-nums">{new Date().toISOString().split('T')[0]}</div>
-                </div>
+                )}
+            </div>
+
 
             {/* --- MAIN DASHBOARD GRID --- */}
             <motion.div 
