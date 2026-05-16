@@ -1685,7 +1685,7 @@ function App() {
       formData.append('File', file);
       formData.append('Type', contentType);
       formData.append('Title', file.name.split('.')[0]);
-      formData.append('IsPosted', false);
+      formData.append('IsPosted', true);
 
       try {
         console.log(`[GLOBAL_INGEST] Starting ${contentType} upload:`, file.name);
@@ -1709,7 +1709,7 @@ function App() {
         formData.append('Type', postFile.type.startsWith('video') ? 'VIDEO' : 'PHOTO');
         formData.append('Title', postText.slice(0, 20));
         formData.append('Description', postText);
-        formData.append('IsPosted', false);
+        formData.append('IsPosted', true);
         
         await API.Studio.upload(formData);
         showNotification("INGEST_COMPLETE", "Visual post transmitted successfully.", "success");
@@ -1717,7 +1717,7 @@ function App() {
         await API.Journal.create({
           Title: postText.slice(0, 20),
           Content: postText,
-          IsPosted: false,
+          IsPosted: true,
           IsPinned: false
         });
         showNotification("INGEST_COMPLETE", "Journal post transmitted successfully.", "success");

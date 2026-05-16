@@ -138,9 +138,30 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
             setStations(Array.isArray(stationsRes?.data) ? stationsRes.data : []);
             setMarketplaceItems(Array.isArray(studioRes?.data) ? studioRes.data : []);
             
+            if (Array.isArray(studioRes?.data)) {
+                const mappedVisuals = studioRes.data.map(item => ({
+                    ...item,
+                    id: item.id || item.Id,
+                    Id: item.id || item.Id,
+                    type: 'studio',
+                    Type: 'studio',
+                    artist: item.artist || item.Artist || item.user?.username || 'UNKNOWN_SIGNAL',
+                    Artist: item.artist || item.Artist || item.user?.username || 'UNKNOWN_SIGNAL',
+                    artistUserId: item.userId || item.UserId,
+                    ArtistUserId: item.userId || item.UserId,
+                    imageUrl: item.url || item.Url,
+                    ImageUrl: item.url || item.Url,
+                    mediaType: (item.type || item.Type || '').toUpperCase(),
+                    MediaType: (item.type || item.Type || '').toUpperCase(),
+                    thumbnailUrl: item.thumbnailUrl || item.ThumbnailUrl,
+                    ThumbnailUrl: item.thumbnailUrl || item.ThumbnailUrl,
+                    createdAt: item.createdAt || item.CreatedAt,
+                    CreatedAt: item.createdAt || item.CreatedAt,
+                }));
+                setVisualUploads(mappedVisuals.slice(0, 12));
+            }
+            
             if (Array.isArray(feedRes?.data)) {
-                setVisualUploads(feedRes.data.filter(i => i.type === 'studio').slice(0, 12));
-                
                 // Fetch my journal entries and merge with feed
                 try {
                     const myJournalRes = await API.Journal.getMyJournal();

@@ -33,7 +33,26 @@ const ContentModal = ({
 
     const mediaType = (content?.mediaType || content?.MediaType || content?.type || content?.Type || type || '').toUpperCase();
     const normalizedType = mediaType;
-    const isSplitLayout = ['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY', 'VIDEO', 'MEDIA'].includes(normalizedType) && !children;
+
+    const isVideo = (
+        content?.mediaType?.toUpperCase() === 'VIDEO' ||
+        content?.MediaType?.toUpperCase() === 'VIDEO' ||
+        content?.type?.toUpperCase() === 'VIDEO' ||
+        content?.Type?.toUpperCase() === 'VIDEO' ||
+        type?.toUpperCase() === 'VIDEO' ||
+        normalizedType === 'VIDEO'
+    );
+
+    const isPhoto = !isVideo && (
+        ['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) ||
+        content?.mediaType?.toUpperCase() === 'IMAGE' ||
+        content?.MediaType?.toUpperCase() === 'IMAGE' ||
+        content?.MediaType?.toUpperCase() === 'PHOTO' ||
+        content?.mediaType?.toUpperCase() === 'PHOTO' ||
+        !!(content?.Url || content?.url || content?.imageUrl || content?.ImageUrl || content?.thumbnailUrl || content?.ThumbnailUrl)
+    );
+
+    const isSplitLayout = (isVideo || isPhoto || normalizedType === 'STUDIO') && !children;
 
     React.useEffect(() => {
         const fetchComments = async () => {
@@ -131,8 +150,8 @@ const ContentModal = ({
                 {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-white/5 bg-black/40 relative z-10">
                     <div className="flex items-center gap-3" style={{ color: activeTheme }}>
-                        {['VIDEO', 'MEDIA', 'GALLERY'].includes(normalizedType) && (content.mediaType === 'VIDEO' || content.type === 'VIDEO') && <Video size={18} />}
-                        {['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) && (content.mediaType !== 'VIDEO' && content.type !== 'VIDEO') && <Camera size={18} />}
+                        {isVideo && <Video size={18} />}
+                        {!isVideo && <Camera size={18} />}
                         <div className="flex flex-col">
                             <span className="mono text-[10px] font-black tracking-[0.3em] uppercase">
                                 {title === t('MODIFY_IDENTITY') ? t('CORE_IDENTITY_MGMT') : ['JOURNAL', 'TEXT'].includes(normalizedType) ? t('ARCHIVED_LOG_ENTRY') : ['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) ? t('VISUAL_DATA_FRAGMENT') : t('SIGNAL_FEED_RECORDING')}
@@ -152,7 +171,7 @@ const ContentModal = ({
                             <>
                                 {/* Left Column: Media */}
                                 <div className="flex-1 bg-black/60 flex items-center justify-center p-4 min-h-[300px]">
-                                    {['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) && (content?.mediaType?.toUpperCase() !== 'VIDEO' && content?.type?.toUpperCase() !== 'VIDEO') && (
+                                    {!isVideo && (
                                         <div className="relative group">
                                             <img
                                                 src={getMediaUrl(content.Url || content.url || content.imageUrl || content.ImageUrl || content.thumbnailUrl || content.ThumbnailUrl)}
@@ -162,7 +181,7 @@ const ContentModal = ({
                                         </div>
                                     )}
 
-                                    {['VIDEO', 'MEDIA', 'GALLERY'].includes(normalizedType) && (content?.mediaType?.toUpperCase() === 'VIDEO' || content?.type?.toUpperCase() === 'VIDEO') && (() => {
+                                    {isVideo && (() => {
                                         const videoUrl = content.url || content.Url || content.videoUrl || content.VideoUrl;
                                         const isYoutube = videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') || videoUrl.startsWith('youtube:'));
                                         
@@ -185,7 +204,7 @@ const ContentModal = ({
                                         }
 
                                         return (
-                                            <video src={getMediaUrl(videoUrl)} controls autoPlay muted playsInline className="max-w-full max-h-[70vh] object-contain" />
+                                            <video src={getMediaUrl(videoUrl)} controls autoPlay muted playsInline className="w-full h-full max-w-full max-h-[70vh] object-contain" />
                                         );
                                     })()}
                                 </div>
