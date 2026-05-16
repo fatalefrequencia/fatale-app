@@ -2803,6 +2803,9 @@ const Dashboard = React.memo(({
                 }
                 setShowMixer(true);
               }}
+              youtubePlayer={youtubePlayer}
+              audioRef={audioRef}
+              isYoutubeMode={isYoutubeMode}
             />
           )
         )}
@@ -2812,7 +2815,34 @@ const Dashboard = React.memo(({
 });
 
 // --- MINI PLAYER COMPONENT ---
-const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView, isMuted, onToggleMute, currentTime, duration, isSidebarCollapsed, volume, setVolume, isMinimized, onToggleMinimize, isBroadcasting, onOpenMixer }) => {
+const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView, isMuted, onToggleMute, currentTime, duration, isSidebarCollapsed, volume, setVolume, isMinimized, onToggleMinimize, isBroadcasting, onOpenMixer, youtubePlayer, audioRef, isYoutubeMode }) => {
+  const progressBarRef = React.useRef(null);
+  const rafRef = React.useRef(null);
+
+  // Drive the progress bar directly via rAF — no React state, no transitions
+  React.useEffect(() => {
+    const tick = () => {
+      try {
+        let t = 0;
+        let d = 0;
+        if (isYoutubeMode && youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
+          if (youtubePlayer.getIframe && youtubePlayer.getIframe()) {
+            t = youtubePlayer.getCurrentTime() || 0;
+            d = youtubePlayer.getDuration() || 0;
+          }
+        } else if (audioRef?.current) {
+          t = audioRef.current.currentTime || 0;
+          d = audioRef.current.duration || 0;
+        }
+        if (progressBarRef.current && d > 0) {
+          progressBarRef.current.style.width = `${(t / d) * 100}%`;
+        }
+      } catch (e) { /* ignore */ }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [isYoutubeMode, youtubePlayer, audioRef]);
   const isMessages = activeView === 'messages';
 
   if (isMinimized) {
@@ -2864,11 +2894,12 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
         <Minus size={14} className="group-hover/minitoggle:translate-y-0.5 transition-transform" />
       </button>
 
-      {/* Progress Bar - Minimal Pink Glow */}
-      <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-white/5 overflow-hidden z-10 group-hover/player:h-[3px] transition-all duration-300">
+      {/* Progress Bar - rAF driven, no transitions */}
+      <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-white/5 overflow-hidden z-10 group-hover/player:h-[3px] transition-[height] duration-300">
         <div
-          className="h-full bg-[#ff006e] shadow-[0_0_10px_#ff006e] transition-[width] duration-250 ease-out"
-          style={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%' }}
+          ref={progressBarRef}
+          className="h-full bg-[#ff006e] shadow-[0_0_10px_#ff006e]"
+          style={{ width: '0%', willChange: 'width' }}
         />
       </div>
 
