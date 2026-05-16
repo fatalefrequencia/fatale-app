@@ -228,7 +228,7 @@ const AuthView = ({ onLoginSuccess }) => {
             >
                 {/* Header with Typewriter "fatale.fm" */}
                 <div className="text-center mb-6 h-12 flex items-center justify-center">
-                    <h1 className="text-4xl md:text-5xl font-black italic tracking-tighter text-white drop-shadow-[0_0_15px_#ff006e] uppercase font-mono">
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-widest text-[#ff006e] drop-shadow-[0_0_10px_#ff006e] font-mono lowercase">
                         {displayText}
                         <span className={`text-[#ff006e] ${showCursor ? 'opacity-100' : 'opacity-0'} transition-opacity duration-75 font-normal ml-0.5`}>|</span>
                     </h1>
