@@ -175,6 +175,7 @@ const ShoppingView = () => {
                                         autoPlay 
                                         muted 
                                         loop
+                                        playsInline
                                     />
                                 ) : (
                                     <img 
