@@ -478,7 +478,7 @@ function App() {
         } catch (e) {
           console.warn("YouTube Polling Error:", e);
         }
-      }, 1000);
+      }, 250);
     }
     return () => {
       if (interval) clearInterval(interval);
@@ -2863,7 +2863,7 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
           className="h-full bg-[#ff006e] shadow-[0_0_10px_#ff006e]"
           initial={{ width: 0 }}
           animate={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%' }}
-          transition={{ duration: 0.5, ease: "linear" }}
+          transition={{ duration: 0.25, ease: "linear" }}
         />
       </div>
 
