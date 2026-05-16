@@ -2036,7 +2036,7 @@ export const ProfileView = React.memo(({
                                 <button className="p-1 hover:text-white text-white/20 transition-all hover:scale-110"><ChevronRight size={16} /></button>
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-6 p-6 max-h-[600px] overflow-y-auto custom-scrollbar">
+                        <div className="grid grid-cols-2 xl:grid-cols-3 gap-6 p-6 max-h-[750px] overflow-y-auto custom-scrollbar">
                             {profileTracks.filter(t => musicFilter === 'ALL' || (musicFilter === 'ALBUMS' ? (t.isAlbum || t.IsAlbum) : !(t.isAlbum || t.IsAlbum))).map((t, idx) => (
                                 <div key={idx} className="group cursor-pointer" onClick={() => onPlayTrack(t)}>
                                     <div className="aspect-square bg-black border border-white/10 overflow-hidden relative mb-3 p-1">
@@ -2091,7 +2091,7 @@ export const ProfileView = React.memo(({
                     </SubsystemBlock>
                     
                     <SubsystemBlock title={t('FREQ_JOURNAL') || 'BITÁCORA'} showBrackets={true} address="LOG_CAP_01" secondaryColor={profileSecondary}>
-                        <div className="p-4 max-h-[300px] overflow-y-auto custom-scrollbar">
+                        <div className="p-4 max-h-[450px] overflow-y-auto custom-scrollbar">
                             <div className="space-y-2 font-mono">
                                 {isMe && !showJournalForm && (
                                     <button 
