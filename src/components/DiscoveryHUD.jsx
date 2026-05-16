@@ -493,8 +493,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 />
                                 {searchQuery && (
                                     <button 
-                                        onTouchStart={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                                        onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                                        onTouchStart={(e) => { e.stopPropagation(); setSearchQuery(''); }}
                                         onClick={(e) => { e.stopPropagation(); setSearchQuery(''); }}
                                         className="absolute right-3 text-white/20 hover:text-white transition-colors"
                                     >
