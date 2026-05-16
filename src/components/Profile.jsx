@@ -2350,6 +2350,7 @@ export const ProfileView = React.memo(({
                         autoPlay 
                         muted 
                         loop 
+                        playsInline
                         className={`w-full h-full object-cover transition-all duration-1000 ${viewMode === 'CONSOLE' ? 'opacity-20 grayscale brightness-50' : 'opacity-50'}`}
                     />
                 ) : (displayUser?.bannerUrl || displayUser?.BannerUrl) ? (
@@ -2879,6 +2880,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                                     autoPlay 
                                                     muted 
                                                     loop 
+                                                    playsInline
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
