@@ -1946,7 +1946,7 @@ function App() {
 
       <AnimatePresence mode="wait">
         {activeView === 'login' ? (
-          <AuthView onLoginSuccess={handleAuthSuccess} />
+          <AuthView onLoginSuccess={handleAuthSuccess} onBackToOrbit={() => setView('discovery')} />
         ) : (
           <>
             {console.log("[App] Rendering Dashboard. Redirect Trigger:", redirectTrigger)}
