@@ -136,10 +136,20 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
             setCommunities(Array.isArray(commsRes?.data) ? commsRes.data : []);
             setTrendingPlaylists(Array.isArray(playlistsRes?.data) ? playlistsRes.data : []);
             setStations(Array.isArray(stationsRes?.data) ? stationsRes.data : []);
-            setMarketplaceItems(Array.isArray(studioRes?.data) ? studioRes.data : []);
-            
+            let marketplaceList = [];
+            let standardStudioList = [];
+
             if (Array.isArray(studioRes?.data)) {
-                const mappedVisuals = studioRes.data.map(item => ({
+                const isUrl = (str) => {
+                    if (!str) return false;
+                    const trimmed = str.trim().toLowerCase();
+                    return trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('www.');
+                };
+
+                standardStudioList = studioRes.data.filter(item => !isUrl(item.description || item.Description));
+                marketplaceList = studioRes.data.filter(item => isUrl(item.description || item.Description));
+                
+                const mappedVisuals = standardStudioList.map(item => ({
                     ...item,
                     id: item.id || item.Id,
                     Id: item.id || item.Id,
@@ -160,6 +170,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                 }));
                 setVisualUploads(mappedVisuals.slice(0, 12));
             }
+            setMarketplaceItems(marketplaceList);
             
             if (Array.isArray(feedRes?.data)) {
                 // Fetch my journal entries and merge with feed
