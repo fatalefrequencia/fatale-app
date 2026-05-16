@@ -440,7 +440,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#ff006e]/10 z-[60] shadow-[0_0_20px_#ff006e]" />
             
             {/* --- TOP HUD BAR --- */}
-            <div className="z-50 flex flex-col lg:flex-row items-center justify-between gap-4 mb-4 px-2 relative">
+            <div className="z-[80] flex flex-col lg:flex-row items-center justify-between gap-4 mb-4 px-2 relative">
                 {/* LEFT: KERNEL PULSE */}
                 <div className="flex-1 flex justify-start w-full lg:w-auto">
                     <div className="flex items-center gap-4 self-start lg:self-auto">
@@ -481,6 +481,8 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     placeholder={t('SEARCH_SIGNAL')}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
+                                    onTouchStart={(e) => e.stopPropagation()}
+                                    onTouchEnd={(e) => e.stopPropagation()}
                                     className="w-full bg-black/60 border rounded px-10 py-2.5 text-xs tracking-[0.2em] focus:outline-none focus:ring-1 transition-all placeholder:text-[#ff006e]/20"
                                     style={{ 
                                         borderColor: activeSectorColor ? `${activeSectorColor}99` : 'rgba(255,0,110,0.3)', 
@@ -491,7 +493,9 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 />
                                 {searchQuery && (
                                     <button 
-                                        onClick={() => setSearchQuery('')}
+                                        onTouchStart={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                                        onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                                        onClick={(e) => { e.stopPropagation(); setSearchQuery(''); }}
                                         className="absolute right-3 text-white/20 hover:text-white transition-colors"
                                     >
                                         <X size={14} />
@@ -519,17 +523,22 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                 {/* MOBILE VIEW TOGGLE - BELOW SEARCH ON MOBILE */}
                 {isMobile && (
-                    <div className="mt-4 flex bg-black/40 border border-[#ff006e]/20 rounded-sm p-1 gap-1 pointer-events-auto relative z-[70] w-full">
+                    <div 
+                        className="mt-4 flex bg-black/40 border border-[#ff006e]/20 rounded-sm p-1 gap-1 pointer-events-auto relative z-[90] w-full"
+                        onTouchStart={(e) => e.stopPropagation()}
+                        onTouchEnd={(e) => e.stopPropagation()}
+                    >
+
                         <button 
-                            onTouchStart={(e) => { e.stopPropagation(); setMobileViewMode('globe'); }}
-                            onClick={(e) => { e.stopPropagation(); setMobileViewMode('globe'); }}
+                            onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('globe'); }}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('globe'); }}
                             className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'globe' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
                         >
                             <Globe size={12} /> {t('GLOBE_SENSE')}
                         </button>
                         <button 
-                            onTouchStart={(e) => { e.stopPropagation(); setMobileViewMode('data'); }}
-                            onClick={(e) => { e.stopPropagation(); setMobileViewMode('data'); }}
+                            onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('data'); }}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('data'); }}
                             className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'data' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
                         >
                             <Activity size={12} /> {t('DATA_STREAM')}
@@ -1449,7 +1458,10 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             </div>
                                             <div className="grid grid-cols-2 gap-3">
                                                 {filteredArtists.slice(0, 4).map(a => (
-                                                    <div key={a.id} className="flex items-center gap-2 p-2 bg-[#00ffaa]/5 border border-[#00ffaa]/10 rounded-sm" onClick={() => navigateToProfile(a.userId)}>
+                                                    <div key={a.id} className="flex items-center gap-2 p-2 bg-[#00ffaa]/5 border border-[#00ffaa]/10 rounded-sm" 
+                                                        onTouchStart={(e) => e.stopPropagation()}
+                                                        onClick={() => navigateToProfile(a.userId)}
+                                                    >
                                                         <div className="w-8 h-8 rounded-full border border-[#00ffaa]/30 overflow-hidden bg-black shrink-0">
                                                             <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} className="w-full h-full object-cover grayscale" />
                                                         </div>
@@ -1469,10 +1481,13 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             </div>
                                             <div className="space-y-2">
                                                 {filteredCommunities.slice(0, 3).map(c => (
-                                                    <div key={c.id} className="flex items-center gap-3 p-2 bg-[#ffaa00]/5 border border-[#ffaa00]/10 rounded-sm" onClick={() => {
-                                                        if (onMessageCommunity) onMessageCommunity(c);
-                                                        else setActiveTerminalCommunity(c);
-                                                    }}>
+                                                    <div key={c.id} className="flex items-center gap-3 p-2 bg-[#ffaa00]/5 border border-[#ffaa00]/10 rounded-sm" 
+                                                        onTouchStart={(e) => e.stopPropagation()}
+                                                        onClick={() => {
+                                                            if (onMessageCommunity) onMessageCommunity(c);
+                                                            else setActiveTerminalCommunity(c);
+                                                        }}
+                                                    >
                                                         <div className="w-6 h-6 rounded-sm bg-[#ffaa00]/10 border border-[#ffaa00]/30 flex items-center justify-center shrink-0">
                                                             <Globe size={10} className="text-[#ffaa00]" />
                                                         </div>
@@ -1495,9 +1510,11 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             </div>
                             <div className="space-y-2 flex-1">
                                 {youtubeResults.length > 0 ? youtubeResults.map(y => (
-                                    <div key={y.id} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => {
-                                        onPlayTrack(y);
-                                        setMobileViewMode('globe'); // Return to map!
+                                    <div key={y.id} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" 
+                                        onTouchStart={(e) => e.stopPropagation()}
+                                        onClick={() => {
+                                            onPlayTrack(y);
+                                            setMobileViewMode('globe'); // Return to map!
                                         try {
                                             const history = JSON.parse(localStorage.getItem('recent_youtube_tracks') || '[]');
                                             const filtered = history.filter(item => item.id !== y.id);
