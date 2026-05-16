@@ -455,7 +455,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                 {/* CENTER: SEARCH */}
                 <div className="w-full lg:w-[450px] flex justify-center relative">
-                    {isMobile && mobileViewMode !== 'search' ? (
+                    {isMobile && mobileViewMode !== 'search' && !searchQuery ? (
                         <button 
                             onClick={() => setMobileViewMode('search')}
                             className="p-2 text-[#ff006e] hover:text-white transition-colors self-center lg:hidden"
