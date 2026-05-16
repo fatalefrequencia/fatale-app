@@ -1247,20 +1247,6 @@ export const ProfileView = React.memo(({
 
     const handleEnterSystem = async () => {
         setViewMode('DASHBOARD');
-        
-        const favPlaylist = profilePlaylists.find(p => p.isPinned);
-        if (favPlaylist) {
-            try {
-                const API = await import('../services/api').then(mod => mod.default);
-                const res = await API.Playlists.getById(favPlaylist.id || favPlaylist.Id);
-                const tracks = res.data?.Tracks || res.data?.tracks || [];
-                if (tracks.length > 0) {
-                    onPlayPlaylist?.(tracks, 0, false);
-                }
-            } catch (err) {
-                console.error("Failed to play favorite playlist on enter", err);
-            }
-        }
     };
 
     // Fetch Gear
