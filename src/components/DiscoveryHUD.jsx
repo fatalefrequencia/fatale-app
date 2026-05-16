@@ -1437,6 +1437,58 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                     {isMobile && mobileViewMode === 'search' && (
                         <div className="flex-1 pointer-events-auto flex flex-col p-4 bg-black/90 border border-[#ff006e]/20 rounded-sm mt-4 overflow-y-auto no-scrollbar">
+                            {/* NATIVE RESULTS INTEGRATION */}
+                            {searchQuery.length >= 2 && (
+                                <div className="space-y-6 mb-8 border-b border-white/10 pb-6">
+                                    {/* Artists */}
+                                    {filteredArtists.length > 0 && (
+                                        <div>
+                                            <div className="text-[10px] font-black uppercase text-[#00ffaa] mb-3 tracking-widest flex items-center justify-between">
+                                                <span>:: ARTIST_NODES ::</span>
+                                                <span className="text-[8px] opacity-60">{filteredArtists.length} FOUND</span>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {filteredArtists.slice(0, 4).map(a => (
+                                                    <div key={a.id} className="flex items-center gap-2 p-2 bg-[#00ffaa]/5 border border-[#00ffaa]/10 rounded-sm" onClick={() => navigateToProfile(a.userId)}>
+                                                        <div className="w-8 h-8 rounded-full border border-[#00ffaa]/30 overflow-hidden bg-black shrink-0">
+                                                            <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} className="w-full h-full object-cover grayscale" />
+                                                        </div>
+                                                        <div className="text-[8px] font-black uppercase truncate leading-none">{a.name}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Communities */}
+                                    {filteredCommunities.length > 0 && (
+                                        <div>
+                                            <div className="text-[10px] font-black uppercase text-[#ffaa00] mb-3 tracking-widest flex items-center justify-between">
+                                                <span>:: NEURAL_CLUSTERS ::</span>
+                                                <span className="text-[8px] opacity-60">{filteredCommunities.length} FOUND</span>
+                                            </div>
+                                            <div className="space-y-2">
+                                                {filteredCommunities.slice(0, 3).map(c => (
+                                                    <div key={c.id} className="flex items-center gap-3 p-2 bg-[#ffaa00]/5 border border-[#ffaa00]/10 rounded-sm" onClick={() => {
+                                                        if (onMessageCommunity) onMessageCommunity(c);
+                                                        else setActiveTerminalCommunity(c);
+                                                    }}>
+                                                        <div className="w-6 h-6 rounded-sm bg-[#ffaa00]/10 border border-[#ffaa00]/30 flex items-center justify-center shrink-0">
+                                                            <Globe size={10} className="text-[#ffaa00]" />
+                                                        </div>
+                                                        <div className="text-[9px] font-black uppercase truncate">{c.name}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {filteredArtists.length === 0 && filteredCommunities.length === 0 && (
+                                        <div className="text-[8px] opacity-30 italic text-center py-2 uppercase tracking-widest">No native signals detected for this frequency</div>
+                                    )}
+                                </div>
+                            )}
+
                             <div className="text-[10px] font-black uppercase text-[#ff006e] mb-4 tracking-widest flex items-center justify-between">
                                 <span>:: YT_FREQ_SCAN ::</span>
                                 <span className="text-[8px] opacity-60">{youtubeResults.length} FOUND</span>

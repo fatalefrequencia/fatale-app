@@ -126,7 +126,7 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
     );
 };
 
-const GlobeCore = memo(({ activeSector, communities = [], artists = [], playlists = [], tracks = [], selectedId, activeView, onArtistClick, onCommunityClick, onTrackClick, isGlobeSpinning }) => {
+const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists = [], playlists = [], tracks = [], selectedId, activeView, onArtistClick, onCommunityClick, onTrackClick, isGlobeSpinning }) => {
     const { camera } = useThree();
     const [cameraDist, setCameraDist] = useState(10);
     const [seed] = useState(() => Math.random().toString());
@@ -149,42 +149,67 @@ const GlobeCore = memo(({ activeSector, communities = [], artists = [], playlist
     }, [activeSector]);
 
     const filteredCommunities = useMemo(() => {
-        const base = activeSector !== null 
+        let base = activeSector !== null 
             ? communities.filter(c => (c.sectorId || c.SectorId) === activeSector)
             : communities;
+        
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            base = base.filter(c => (c.name || c.Name || '').toLowerCase().includes(q));
+        }
+
         return base
             .map(item => ({ item, sortKey: hashStr((item.id || item.Id || '') + seed) }))
             .sort((a, b) => a.sortKey - b.sortKey)
             .map(x => x.item)
             .slice(0, 25);
-    }, [communities, activeSector, seed]);
+    }, [communities, activeSector, seed, searchQuery]);
 
     const filteredArtists = useMemo(() => {
-        const base = activeSector !== null 
+        let base = activeSector !== null 
             ? artists.filter(a => (a.sectorId || a.SectorId) === activeSector)
             : artists;
+
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            base = base.filter(a => (a.name || a.Name || '').toLowerCase().includes(q));
+        }
+
         return base
             .map(item => ({ item, sortKey: hashStr((item.id || item.Id || '') + seed) }))
             .sort((a, b) => a.sortKey - b.sortKey)
             .map(x => x.item)
             .slice(0, 25);
-    }, [artists, activeSector, seed]);
+    }, [artists, activeSector, seed, searchQuery]);
 
     const filteredPlaylists = useMemo(() => {
-        return playlists
+        let base = playlists;
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            base = base.filter(p => (p.name || p.Name || '').toLowerCase().includes(q));
+        }
+        return base
             .map(item => ({ item, sortKey: hashStr((item.id || item.Id || '') + seed) }))
             .sort((a, b) => a.sortKey - b.sortKey)
             .map(x => x.item)
             .slice(0, 25);
-    }, [playlists, seed]);
+    }, [playlists, seed, searchQuery]);
 
     const filteredTracks = useMemo(() => {
-        return tracks
+        let base = tracks;
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            base = base.filter(t => 
+                (t.title || t.Title || '').toLowerCase().includes(q) || 
+                (t.artist || t.Artist || '').toLowerCase().includes(q)
+            );
+        }
+        return base
             .map(item => ({ item, sortKey: hashStr((item.id || item.Id || '') + seed) }))
             .sort((a, b) => a.sortKey - b.sortKey)
             .map(x => x.item)
             .slice(0, 25);
-    }, [tracks, seed]);
+    }, [tracks, seed, searchQuery]);
 
     return (
         <group>
@@ -265,6 +290,7 @@ const GlobeCore = memo(({ activeSector, communities = [], artists = [], playlist
 const InteractiveGlobe = memo(({ 
     activeSector, 
     onSectorClick,
+    searchQuery,
     communities = [], 
     artists = [], 
     selectedId, 
@@ -318,6 +344,7 @@ const InteractiveGlobe = memo(({
                     <group rotation={initialRotation}>
                         <GlobeCore 
                             activeSector={activeSector}
+                            searchQuery={searchQuery}
                             communities={communities}
                             artists={artists}
                             playlists={playlists}
