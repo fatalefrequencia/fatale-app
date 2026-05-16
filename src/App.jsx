@@ -2841,7 +2841,7 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 100, opacity: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 28 }}
-      className={`fixed bottom-0 lg:bottom-4 transition-all duration-500 left-0 right-0 ${isSidebarCollapsed ? 'lg:left-[6rem]' : 'lg:left-[17rem]'} lg:right-4 backdrop-blur-3xl p-1.5 lg:p-3 pb-3 lg:pb-3 flex items-center gap-3 z-[100] ${isMessages
+      className={`fixed bottom-0 lg:bottom-4 transition-[left] duration-500 left-0 right-0 ${isSidebarCollapsed ? 'lg:left-[6rem]' : 'lg:left-[17rem]'} lg:right-4 backdrop-blur-3xl p-1.5 lg:p-3 pb-3 lg:pb-3 flex items-center gap-3 z-[100] ${isMessages
         ? 'bg-black/95 border-t border-white/5 lg:border lg:rounded-sm lg:shadow-none'
         : 'bg-[#020202]/95 border-t border-white/5 lg:border-white/5 lg:rounded-md shadow-[0_-15px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_10px_60px_-15px_rgba(255,0,110,0.15)]'
         } group/player overflow-hidden`}
@@ -2866,11 +2866,9 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
 
       {/* Progress Bar - Minimal Pink Glow */}
       <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-white/5 overflow-hidden z-10 group-hover/player:h-[3px] transition-all duration-300">
-        <motion.div
-          className="h-full bg-[#ff006e] shadow-[0_0_10px_#ff006e]"
-          initial={{ width: 0 }}
-          animate={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%' }}
-          transition={{ type: "tween", duration: 0.25, ease: "linear" }}
+        <div
+          className="h-full bg-[#ff006e] shadow-[0_0_10px_#ff006e] transition-[width] duration-250 ease-out"
+          style={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%' }}
         />
       </div>
 
