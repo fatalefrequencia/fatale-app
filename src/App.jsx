@@ -3947,7 +3947,7 @@ const FeedContent = React.memo(({
                                   <span className="text-[9px] text-white/40">{getTime(createdAt)}</span>
                               </div>
                               <div className="text-[11px] text-white/90 leading-relaxed mt-0.5">
-                                {type === 'track' && `Liked track "${title}"`}
+                                {type === 'track' && `Uploaded track "${title}"`}
                                 {type === 'studio' && (content || title)}
                                 {type === 'journal' && (content || title)}
                               </div>
