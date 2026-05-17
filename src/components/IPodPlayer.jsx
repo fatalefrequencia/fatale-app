@@ -351,6 +351,8 @@ export const IPodPlayer = ({
                 ] : []),
                 { id: 'GOTO_ADD_PLAYLIST', label: t('ADD_TO_PLAYLIST') },
                 { id: 'GOTO_TIP', label: t('TIP_ARTIST') },
+                /*
+                // Temporarily hidden for the beta launch
                 ...(currentTrack.source && currentTrack.source.startsWith('youtube:')
                     ? [{ id: 'CACHE_TRACK', label: currentTrack.isCached ? t('REMOVE_CACHE') : t('DOWNLOAD_CACHE') }]
                     : []
@@ -358,6 +360,11 @@ export const IPodPlayer = ({
                 ...(currentTrack.isOwned
                     ? [{ id: 'DOWNLOAD_FILE', label: currentTrack.isCached ? 'REMOVE OFFLINE' : t('DOWNLOAD_FILE') }]
                     : [{ id: 'PURCHASE_FILE', label: `${t('PURCHASE_FILE')} (${currentTrack.price || 0} CRD)` }]
+                )
+                */
+                ...(!currentTrack.isOwned
+                    ? [{ id: 'PURCHASE_FILE', label: `${t('PURCHASE_FILE')} (${currentTrack.price || 0} CRD)` }]
+                    : []
                 )
             ];
         }
