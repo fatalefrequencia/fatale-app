@@ -460,7 +460,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                     </div>
                 )}
 
-                {!isStandalone && !deferredPrompt && !isIOS && (
+                {/* {!isStandalone && !deferredPrompt && !isIOS && (
                     <div className="w-full mt-4 bg-black/85 border border-[#d60036]/35 rounded-2xl p-4 text-center shadow-[0_0_20px_rgba(214,0,54,0.15)] backdrop-blur-xl relative corner-bracket corner-bracket-bottom flex flex-col items-center">
                         <div className="text-[10px] font-black uppercase tracking-[0.25em] mb-1.5 text-white animate-pulse">
                             [ DESKTOP_SYSTEM_SHELL ]
@@ -476,7 +476,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                             [ DOWNLOAD CLIENT TO DESKTOP ]
                         </a>
                     </div>
-                )}
+                )} */}
             </motion.div>
         </div>
     );
