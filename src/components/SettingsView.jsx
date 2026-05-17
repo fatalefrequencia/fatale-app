@@ -43,6 +43,49 @@ const SettingsView = ({ user, setUser }) => {
         }
     };
 
+    const handleForceUpdate = async () => {
+        setIsSaving(true);
+        showNotification("RECALIBRATING", "Purging local memory cache and unregistering network nodes...", "info");
+        
+        try {
+            // Unregister all service workers
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (let registration of registrations) {
+                    await registration.unregister();
+                }
+            }
+            
+            // Delete all service worker caches
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                for (let name of cacheNames) {
+                    await caches.delete(name);
+                }
+            }
+
+            // Clear non-essential localStorage items but preserve login identity
+            const token = localStorage.getItem('token');
+            const userItem = localStorage.getItem('user');
+            localStorage.clear();
+            sessionStorage.clear();
+            if (token) localStorage.setItem('token', token);
+            if (userItem) localStorage.setItem('user', userItem);
+            
+            showNotification("SYNC_COMPLETE", "Recalibration complete. Reloading system matrix...", "success");
+            
+            // Hard reload with cache-busting timestamp
+            setTimeout(() => {
+                window.location.href = window.location.origin + '?u=' + Date.now();
+            }, 1200);
+        } catch (error) {
+            console.error("Force Update Error:", error);
+            showNotification("SYNC_FAILURE", "Recalibration failed. Please clear browser cache manually.", "error");
+            setIsSaving(false);
+        }
+    };
+
+
     return (
         <div className="max-w-4xl mx-auto p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header */}
@@ -136,9 +179,30 @@ const SettingsView = ({ user, setUser }) => {
                         </div>
                     </div>
 
-                    <div className="flex justify-end gap-3">
-                         <button className="px-6 py-2 border border-white/10 text-white/20 text-[9px] font-black uppercase tracking-widest hover:text-white transition-all">{t('CANCEL')}</button>
-                         <button className="px-8 py-2 bg-[#ff006e] text-black text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_20px_#ff006e40]">{t('UPDATE')}</button>
+                    {/* Dedicated Programmatic Force Update Card */}
+                    <div className="bg-black/40 border border-[#ff006e]/20 p-6 space-y-4 shadow-[0_0_35px_rgba(255,0,110,0.03)] relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[#ff006e]/5 to-transparent pointer-events-none" />
+                        <div className="space-y-1">
+                            <h2 className="text-[10px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                                <Activity size={14} className="text-[#ff006e] animate-pulse" />
+                                [ SYSTEM_FORCE_UPDATE ]
+                            </h2>
+                            <p className="text-[8px] text-white/30 uppercase tracking-[0.3em] font-mono">RECALIBRATE CORE SERVICE WORKER NODES</p>
+                        </div>
+                        
+                        <p className="text-[9px] text-white/50 leading-relaxed uppercase tracking-wider">
+                            Purges cached local application shell memory, unregisters all background service worker network layers, and re-fetches the absolute latest production deployment directly from the primary server. Keeps your active session identity authenticated.
+                        </p>
+
+                        <div className="pt-2 flex justify-start">
+                             <button 
+                                 disabled={isSaving}
+                                 onClick={handleForceUpdate}
+                                 className={`px-6 py-2.5 bg-[#ff006e] text-black text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_20px_rgba(255,0,110,0.3)] hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] active:scale-95 ${isSaving ? 'opacity-50 cursor-wait' : ''}`}
+                             >
+                                 {isSaving ? 'RECALIBRATING...' : 'RECALIBRATE & FORCE UPDATE'}
+                             </button>
+                        </div>
                     </div>
                 </div>
             </div>
