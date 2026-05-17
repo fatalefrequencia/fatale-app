@@ -12,6 +12,7 @@ function createWindow() {
         frame: false, // frameless window for that premium borderless cyberpunk HUD look!
         transparent: false,
         backgroundColor: '#020202', // deep pitch-black backplane
+        icon: path.join(__dirname, 'dist', 'app-icon.png'), // Premium custom app taskbar & window icon!
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,

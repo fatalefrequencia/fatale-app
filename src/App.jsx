@@ -108,42 +108,96 @@ const GLOBAL_IS_LANDSCAPE = typeof window !== 'undefined' && window.innerWidth >
 // Premium Borderless Electron Window Control Titlebar
 const ElectronTitleBar = () => {
   const [isMaximized, setIsMaximized] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
-  if (typeof window === 'undefined' || !window.electron) return null;
+  if (typeof window === 'undefined') return null;
 
-  const handleMinimize = () => window.electron.minimize();
-  const handleMaximize = () => {
-    window.electron.maximize();
-    setIsMaximized(prev => !prev);
+  const isElectron = window.electron || (navigator.userAgent && navigator.userAgent.toLowerCase().includes('electron'));
+  if (!isElectron) return null;
+
+  // Track fullscreen changes natively
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
+
+  const handleMinimize = () => {
+    if (window.electron) {
+      window.electron.minimize();
+    } else {
+      console.log("Minimize requested on legacy client.");
+    }
   };
-  const handleClose = () => window.electron.close();
+
+  const handleMaximize = () => {
+    if (window.electron) {
+      window.electron.maximize();
+      setIsMaximized(prev => !prev);
+    } else {
+      handleFullscreenToggle();
+    }
+  };
+
+  const handleFullscreenToggle = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  const handleClose = () => {
+    if (window.electron) {
+      window.electron.close();
+    } else {
+      if (window.confirm("Do you want to exit the application?")) {
+        window.close();
+      }
+    }
+  };
 
   return (
     <div 
-      className="h-[28px] bg-[#020202] border-b border-[#d60036]/10 flex items-center justify-between px-3 select-none pointer-events-auto relative z-[999999] shrink-0" 
+      className="h-[28px] bg-[#020202] border-b border-[#d60036]/15 flex items-center justify-between px-3 select-none pointer-events-auto relative z-[999999] shrink-0" 
       style={{ WebkitAppRegion: 'drag' }}
     >
       <div className="flex items-center gap-2">
-        <span className="text-[8px] font-black uppercase tracking-[0.3em] text-[#d60036] select-none">
-          [ FATALE DESKTOP v1.0.0 ]
+        <span className="w-1.5 h-1.5 rounded-full bg-[#d60036] animate-pulse" />
+        <span className="text-[8px] font-black uppercase tracking-[0.3em] text-[#d60036]/80 select-none">
+          [ FATALE DESKTOP SHELL v1.0.0 ]
         </span>
       </div>
 
       <div className="flex items-center gap-1" style={{ WebkitAppRegion: 'no-drag' }}>
         <button 
+          onClick={handleFullscreenToggle}
+          title="Toggle Fullscreen Mode"
+          className="w-8 h-5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all rounded cursor-pointer"
+        >
+          {isFullscreen ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
+        </button>
+        <button 
+          onClick={handleMaximize}
+          title="Maximize Window"
+          className="w-8 h-5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all rounded cursor-pointer"
+        >
+          <Globe size={10} />
+        </button>
+        <button 
           onClick={handleMinimize}
+          title="Minimize Window"
           className="w-8 h-5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all rounded cursor-pointer"
         >
           <Minus size={10} />
         </button>
         <button 
-          onClick={handleMaximize}
-          className="w-8 h-5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all rounded cursor-pointer"
-        >
-          {isMaximized ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
-        </button>
-        <button 
           onClick={handleClose}
+          title="Exit Application"
           className="w-8 h-5 flex items-center justify-center text-white/40 hover:text-[#d60036] hover:bg-[#d60036]/10 transition-all rounded cursor-pointer"
         >
           <X size={10} />
@@ -2026,7 +2080,9 @@ function App() {
   };
 
   return (
-    <div className="h-[100dvh] flex bg-[#020202] text-[#ff006e] font-mono selection:bg-[#ff006e] selection:text-black overflow-hidden">
+    <div className="h-[100dvh] flex flex-col bg-[#020202] text-[#ff006e] font-mono selection:bg-[#ff006e] selection:text-black overflow-hidden">
+      <ElectronTitleBar />
+      <div className="flex-1 flex overflow-hidden relative">
       {/* Hidden Global Ingest Inputs */}
       <input
         id="global-ingest-log"
@@ -4595,8 +4651,7 @@ const PlayerContent = ({
   const showFullMixer = isDesktop; // Force Cyberpod on mobile
 
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden bg-[#020202]">
-      <ElectronTitleBar />
+    <div className="flex flex-col h-full w-full overflow-hidden bg-transparent">
       <div className="flex-1 flex items-center justify-center relative overflow-hidden">
       {showFullMixer ? (
         <DJMixerPlayer 
@@ -4686,6 +4741,7 @@ const PlayerContent = ({
           onRequestTrack={onRequestTrack}
         />
       )}
+      </div>
       </div>
     </div>
   );
