@@ -369,9 +369,18 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
         return trendingTracks
             .filter(isNativeTrack)
             .map(t => {
-                const artist = trendingArtists.find(a => String(a.id || a.Id) === String(t.artistId || t.ArtistId));
+                const artist = trendingArtists.find(a => 
+                    (t.artistUserId || t.ArtistUserId) ? String(a.userId || a.UserId) === String(t.artistUserId || t.ArtistUserId) :
+                    (t.artistId || t.ArtistId) ? String(a.id || a.Id) === String(t.artistId || t.ArtistId) :
+                    (a.name || a.Name || '').toLowerCase() === (t.artistName || t.ArtistName || t.artist || t.Artist || '').toLowerCase()
+                );
                 const sector = artist ? SECTORS.find(s => s.id === (artist.sectorId || artist.SectorId)) : null;
-                return { ...t, color: sector ? sector.color : "#ffffff" };
+                return { 
+                    ...t, 
+                    artistId: artist ? (artist.id || artist.Id) : null,
+                    artist: artist ? (artist.name || artist.Name) : (t.artistName || t.ArtistName),
+                    color: sector ? sector.color : "#ffffff" 
+                };
             });
     }, [trendingTracks, trendingArtists, isNativeTrack]);
 

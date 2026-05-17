@@ -312,7 +312,8 @@ const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists =
             const q = searchQuery.toLowerCase();
             base = base.filter(t => 
                 (t.title || t.Title || '').toLowerCase().includes(q) || 
-                (t.artist || t.Artist || '').toLowerCase().includes(q)
+                (t.artist || t.Artist || '').toLowerCase().includes(q) ||
+                (t.artistName || t.ArtistName || '').toLowerCase().includes(q)
             );
         }
         return base
