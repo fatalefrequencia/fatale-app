@@ -1501,7 +1501,7 @@ export const IPodPlayer = ({
                 </div>
 
                 {/* SCREEN CONTAINER */}
-                <div className={`w-full ${isVertical ? 'h-[215px]' : 'h-[320px]'} bg-black rounded-2xl border-4 border-[#f00060]/20 overflow-hidden relative shadow-[inset_0_0_50px_rgba(255,0,110,0.1)] flex flex-col transition-all duration-300 z-10`}>
+                <div className={`w-full ${isVertical ? 'h-[222px]' : 'h-[320px]'} bg-black rounded-2xl border-4 border-[#f00060]/20 overflow-hidden relative shadow-[inset_0_0_50px_rgba(255,0,110,0.1)] flex flex-col transition-all duration-300 z-10`}>
 
                     {/* STATUS BAR - REDESIGNED */}
                     <div className="h-7 bg-gradient-to-b from-[#1a1a1a] to-black/40 backdrop-blur-md border-b border-[#f00060]/30 flex justify-between items-center px-4 z-20">
@@ -1527,7 +1527,7 @@ export const IPodPlayer = ({
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -20 }}
                                     transition={{ duration: 0.2 }}
-                                    className={`flex ${isVertical ? 'flex-col' : 'flex-row'} h-full bg-[#050505] text-white p-3 pt-1 relative gap-3`}
+                                    className={`flex ${isVertical ? 'flex-col' : 'flex-row'} h-full bg-[#050505] text-white ${isVertical ? 'p-2.5 pt-1 gap-2' : 'p-3 pt-1 gap-3'} relative`}
                                 >
                                     {/* CYBERPUNK EVOLVE BUTTON */}
                                     <motion.button
@@ -1696,7 +1696,7 @@ export const IPodPlayer = ({
 
                                         {/* PROGRESS BAR */}
                                         <div
-                                            className="space-y-1 pb-1 cursor-pointer group/progress"
+                                            className="space-y-0.5 pb-0.5 cursor-pointer group/progress"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 const rect = e.currentTarget.getBoundingClientRect();
