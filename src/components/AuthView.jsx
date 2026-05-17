@@ -11,12 +11,15 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
 
     const [isIOS, setIsIOS] = useState(false);
     const [isStandalone, setIsStandalone] = useState(false);
+    const [isDesktop, setIsDesktop] = useState(false);
 
     useEffect(() => {
         const checkIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const checkAndroid = /Android/.test(navigator.userAgent);
         const checkStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
         setIsIOS(checkIOS);
         setIsStandalone(!!checkStandalone);
+        setIsDesktop(!checkIOS && !checkAndroid && !checkStandalone);
     }, []);
 
     // Form States
@@ -442,7 +445,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                 </motion.div>
             )}
 
-            {isIOS && !isStandalone && (
+             {isIOS && !isStandalone && (
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -454,6 +457,22 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                     </div>
                     <p className="text-[9px] text-[#d60035]/75 leading-relaxed uppercase tracking-wider max-w-[340px]">
                         To install on iOS: Tap <span className="text-white font-black">Share</span> at the bottom of Safari, then select <span className="text-white font-black">"Add to Home Screen"</span>.
+                    </p>
+                </motion.div>
+            )}
+
+            {isDesktop && !deferredPrompt && (
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="z-10 w-full max-w-[420px] mt-4 bg-black/85 border border-[#d60036]/35 rounded-2xl p-4 text-center shadow-[0_0_20px_rgba(214,0,54,0.15)] backdrop-blur-xl relative corner-bracket corner-bracket-bottom flex flex-col items-center"
+                >
+                    <div className="text-[10px] font-black uppercase tracking-[0.25em] mb-1.5 text-white">
+                        [ DESKTOP_SYSTEM_SHELL ]
+                    </div>
+                    <p className="text-[9px] text-[#d60036]/75 leading-relaxed uppercase tracking-wider max-w-[340px]">
+                        Run fatale as a high-performance, borderless desktop app. To install: Click the <span className="text-white font-black">Install [＋]</span> or <span className="text-white font-black">Download</span> icon in your browser's address bar at the top!
                     </p>
                 </motion.div>
             )}
