@@ -283,13 +283,19 @@ const ContentModal = ({
                         ) : (
                             <div className="p-8 md:p-12 relative">
                                 {['JOURNAL', 'TEXT'].includes(normalizedType) && (
-                                    <div className="space-y-8">
-                                        <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter italic leading-tight">
-                                            {content.Title || content.title || t('UNTITLED_LOG')}
+                                    <div className="space-y-6 relative p-2">
+                                        <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-[#ff006e]/50"></div>
+                                        <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[#ff006e]/50"></div>
+                                        
+                                        <h2 className="text-2xl md:text-3xl font-mono text-[#ff006e] lowercase tracking-widest leading-tight" style={{ textShadow: '0 0 15px rgba(255,0,110,0.8)' }}>
+                                            &gt; {content.Title || content.title || t('UNTITLED_LOG')}
+                                            <span className="inline-block w-3 h-5 bg-[#ff006e] ml-2 animate-pulse align-middle" style={{ boxShadow: '0 0 10px rgba(255,0,110,0.8)' }}></span>
                                         </h2>
-                                        <div className="w-24 h-1 bg-gradient-to-r from-[#ff006e] to-transparent"></div>
-                                        <div className="prose prose-invert max-w-none">
-                                            <p className="text-sm md:text-base text-white/80 leading-relaxed font-mono whitespace-pre-wrap tracking-wide">
+                                        
+                                        <div className="w-full h-[1px] bg-gradient-to-r from-[#ff006e]/80 via-[#ff006e]/20 to-transparent"></div>
+                                        
+                                        <div className="bg-[#ff006e]/[0.02] border border-[#ff006e]/10 p-6 md:p-8 rounded-sm shadow-[inset_0_0_30px_rgba(255,0,110,0.05)] relative overflow-hidden backdrop-blur-sm">
+                                            <p className="text-sm md:text-base text-[#ff006e]/90 leading-relaxed font-mono whitespace-pre-wrap tracking-wide lowercase" style={{ textShadow: '0 0 8px rgba(255,0,110,0.4)' }}>
                                                 {content.Content || content.content || content.Text || content.text}
                                             </p>
                                         </div>
