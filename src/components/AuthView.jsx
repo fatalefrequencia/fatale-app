@@ -461,7 +461,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                 </motion.div>
             )}
 
-            {isDesktop && !deferredPrompt && (
+            {!isStandalone && !deferredPrompt && !isIOS && (
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
