@@ -461,6 +461,13 @@ function App() {
             if (state !== 1 && state !== 3) { // 1=playing, 3=buffering
               youtubePlayer.playVideo();
             }
+            // Capture time immediately on play to prevent jumps/stutter
+            if (typeof youtubePlayer.getCurrentTime === 'function') {
+              const time = youtubePlayer.getCurrentTime();
+              const dur = youtubePlayer.getDuration();
+              if (dur && dur > 0 && dur !== duration) setDuration(dur);
+              setCurrentTime(time);
+            }
           }
         }
       } catch (e) { console.warn("YouTube PlayVideo Error:", e); }
@@ -478,7 +485,7 @@ function App() {
         } catch (e) {
           console.warn("YouTube Polling Error:", e);
         }
-      }, 1000);
+      }, 250);
     }
     return () => {
       if (interval) clearInterval(interval);
@@ -1678,7 +1685,7 @@ function App() {
       formData.append('File', file);
       formData.append('Type', contentType);
       formData.append('Title', file.name.split('.')[0]);
-      formData.append('IsPosted', false);
+      formData.append('IsPosted', true);
 
       try {
         console.log(`[GLOBAL_INGEST] Starting ${contentType} upload:`, file.name);
@@ -1702,7 +1709,7 @@ function App() {
         formData.append('Type', postFile.type.startsWith('video') ? 'VIDEO' : 'PHOTO');
         formData.append('Title', postText.slice(0, 20));
         formData.append('Description', postText);
-        formData.append('IsPosted', false);
+        formData.append('IsPosted', true);
         
         await API.Studio.upload(formData);
         showNotification("INGEST_COMPLETE", "Visual post transmitted successfully.", "success");
@@ -1710,7 +1717,7 @@ function App() {
         await API.Journal.create({
           Title: postText.slice(0, 20),
           Content: postText,
-          IsPosted: false,
+          IsPosted: true,
           IsPinned: false
         });
         showNotification("INGEST_COMPLETE", "Journal post transmitted successfully.", "success");
@@ -1939,7 +1946,7 @@ function App() {
 
       <AnimatePresence mode="wait">
         {activeView === 'login' ? (
-          <AuthView onLoginSuccess={handleAuthSuccess} />
+          <AuthView onLoginSuccess={handleAuthSuccess} onBackToOrbit={() => setView('discovery')} />
         ) : (
           <>
             {console.log("[App] Rendering Dashboard. Redirect Trigger:", redirectTrigger)}
@@ -2834,7 +2841,7 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 100, opacity: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 28 }}
-      className={`fixed bottom-0 lg:bottom-4 transition-all duration-500 left-0 right-0 ${isSidebarCollapsed ? 'lg:left-[6rem]' : 'lg:left-[17rem]'} lg:right-4 backdrop-blur-3xl p-1.5 lg:p-3 pb-3 lg:pb-3 flex items-center gap-3 z-[100] ${isMessages
+      className={`fixed bottom-0 lg:bottom-4 transition-[left] duration-500 left-0 right-0 ${isSidebarCollapsed ? 'lg:left-[6rem]' : 'lg:left-[17rem]'} lg:right-4 backdrop-blur-3xl p-1.5 lg:p-3 pb-3 lg:pb-3 flex items-center gap-3 z-[100] ${isMessages
         ? 'bg-black/95 border-t border-white/5 lg:border lg:rounded-sm lg:shadow-none'
         : 'bg-[#020202]/95 border-t border-white/5 lg:border-white/5 lg:rounded-md shadow-[0_-15px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_10px_60px_-15px_rgba(255,0,110,0.15)]'
         } group/player overflow-hidden`}
@@ -2856,16 +2863,6 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
       >
         <Minus size={14} className="group-hover/minitoggle:translate-y-0.5 transition-transform" />
       </button>
-
-      {/* Progress Bar - Minimal Pink Glow */}
-      <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-white/5 overflow-hidden z-10 group-hover/player:h-[3px] transition-all duration-300">
-        <motion.div
-          className="h-full bg-[#ff006e] shadow-[0_0_10px_#ff006e]"
-          initial={{ width: 0 }}
-          animate={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%' }}
-          transition={{ duration: 0.5, ease: "linear" }}
-        />
-      </div>
 
       {/* Track Info (Click to expand) */}
       <div className="flex items-center gap-3 lg:gap-4 flex-1 cursor-pointer group/info min-w-0 z-10 relative" onClick={onExpand}>
@@ -4327,7 +4324,6 @@ const PlayerContent = ({
           onPrev={onPrev}
           onLike={onLike}
           togglePlay={togglePlay}
-          user={user}
           onPurchase={onPurchase}
           onDownload={onDownload}
           onAddCredits={onAddCredits}

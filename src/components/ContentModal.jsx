@@ -33,7 +33,26 @@ const ContentModal = ({
 
     const mediaType = (content?.mediaType || content?.MediaType || content?.type || content?.Type || type || '').toUpperCase();
     const normalizedType = mediaType;
-    const isSplitLayout = ['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY', 'VIDEO', 'MEDIA'].includes(normalizedType) && !children;
+
+    const isVideo = (
+        content?.mediaType?.toUpperCase() === 'VIDEO' ||
+        content?.MediaType?.toUpperCase() === 'VIDEO' ||
+        content?.type?.toUpperCase() === 'VIDEO' ||
+        content?.Type?.toUpperCase() === 'VIDEO' ||
+        type?.toUpperCase() === 'VIDEO' ||
+        normalizedType === 'VIDEO'
+    );
+
+    const isPhoto = !isVideo && (
+        ['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) ||
+        content?.mediaType?.toUpperCase() === 'IMAGE' ||
+        content?.MediaType?.toUpperCase() === 'IMAGE' ||
+        content?.MediaType?.toUpperCase() === 'PHOTO' ||
+        content?.mediaType?.toUpperCase() === 'PHOTO' ||
+        !!(content?.Url || content?.url || content?.imageUrl || content?.ImageUrl || content?.thumbnailUrl || content?.ThumbnailUrl)
+    );
+
+    const isSplitLayout = (isVideo || isPhoto || normalizedType === 'STUDIO') && !children;
 
     React.useEffect(() => {
         const fetchComments = async () => {
@@ -131,8 +150,8 @@ const ContentModal = ({
                 {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-white/5 bg-black/40 relative z-10">
                     <div className="flex items-center gap-3" style={{ color: activeTheme }}>
-                        {['VIDEO', 'MEDIA', 'GALLERY'].includes(normalizedType) && (content.mediaType === 'VIDEO' || content.type === 'VIDEO') && <Video size={18} />}
-                        {['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) && (content.mediaType !== 'VIDEO' && content.type !== 'VIDEO') && <Camera size={18} />}
+                        {isVideo && <Video size={18} />}
+                        {!isVideo && <Camera size={18} />}
                         <div className="flex flex-col">
                             <span className="mono text-[10px] font-black tracking-[0.3em] uppercase">
                                 {title === t('MODIFY_IDENTITY') ? t('CORE_IDENTITY_MGMT') : ['JOURNAL', 'TEXT'].includes(normalizedType) ? t('ARCHIVED_LOG_ENTRY') : ['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) ? t('VISUAL_DATA_FRAGMENT') : t('SIGNAL_FEED_RECORDING')}
@@ -152,7 +171,7 @@ const ContentModal = ({
                             <>
                                 {/* Left Column: Media */}
                                 <div className="flex-1 bg-black/60 flex items-center justify-center p-4 min-h-[300px]">
-                                    {['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) && (content?.mediaType?.toUpperCase() !== 'VIDEO' && content?.type?.toUpperCase() !== 'VIDEO') && (
+                                    {!isVideo && (
                                         <div className="relative group">
                                             <img
                                                 src={getMediaUrl(content.Url || content.url || content.imageUrl || content.ImageUrl || content.thumbnailUrl || content.ThumbnailUrl)}
@@ -162,7 +181,7 @@ const ContentModal = ({
                                         </div>
                                     )}
 
-                                    {['VIDEO', 'MEDIA', 'GALLERY'].includes(normalizedType) && (content?.mediaType?.toUpperCase() === 'VIDEO' || content?.type?.toUpperCase() === 'VIDEO') && (() => {
+                                    {isVideo && (() => {
                                         const videoUrl = content.url || content.Url || content.videoUrl || content.VideoUrl;
                                         const isYoutube = videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') || videoUrl.startsWith('youtube:'));
                                         
@@ -185,7 +204,7 @@ const ContentModal = ({
                                         }
 
                                         return (
-                                            <video src={getMediaUrl(videoUrl)} controls autoPlay muted playsInline className="max-w-full max-h-[70vh] object-contain" />
+                                            <video src={getMediaUrl(videoUrl)} controls autoPlay muted playsInline className="w-full h-full max-w-full max-h-[70vh] object-contain" />
                                         );
                                     })()}
                                 </div>
@@ -264,15 +283,31 @@ const ContentModal = ({
                         ) : (
                             <div className="p-8 md:p-12 relative">
                                 {['JOURNAL', 'TEXT'].includes(normalizedType) && (
-                                    <div className="space-y-8">
-                                        <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter italic leading-tight">
-                                            {content.Title || content.title || t('UNTITLED_LOG')}
-                                        </h2>
-                                        <div className="w-24 h-1 bg-gradient-to-r from-[#ff006e] to-transparent"></div>
-                                        <div className="prose prose-invert max-w-none">
-                                            <p className="text-sm md:text-base text-white/80 leading-relaxed font-mono whitespace-pre-wrap tracking-wide">
+                                    <div className="p-2 md:p-4">
+                                        <div className="border-2 border-[#9d00ff]/30 bg-black/40 p-6 md:p-8 rounded-sm shadow-[0_0_20px_rgba(157,0,255,0.15)] font-mono">
+                                            <div className="mb-6 flex flex-col md:flex-row md:items-center gap-2 border-b border-[#9d00ff]/20 pb-4">
+                                                <div className="flex items-center text-[#9d00ff] text-xs md:text-sm tracking-widest" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>
+                                                    <span className="mr-2">root@fatale.fm:~#</span>
+                                                    <span>cat log_{content.Id || content.id || 'sys'}.txt</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <h2 className="text-xl md:text-2xl text-white font-bold mb-4 break-words whitespace-normal" style={{ textShadow: '0 0 10px rgba(255,255,255,0.5)' }}>
+                                                {content.Title || content.title || t('UNTITLED_LOG')}
+                                            </h2>
+                                            
+                                            <div className="text-[#9d00ff]/70 text-xs mb-8 tracking-widest" style={{ textShadow: '0 0 5px rgba(157,0,255,0.3)' }}>
+                                                [TIMESTAMP: {content.CreatedAt ? new Date(content.CreatedAt).toLocaleString() : 'UNKNOWN'}]
+                                            </div>
+                                            
+                                            <div className="text-white/90 whitespace-pre-wrap text-sm md:text-base leading-relaxed tracking-wide" style={{ textShadow: '0 0 8px rgba(255,255,255,0.4)' }}>
                                                 {content.Content || content.content || content.Text || content.text}
-                                            </p>
+                                            </div>
+
+                                            <div className="mt-8 flex items-center pt-6 border-t border-[#9d00ff]/20">
+                                                <span className="text-[#9d00ff] mr-2 text-xs md:text-sm tracking-widest" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>root@fatale.fm:~#</span>
+                                                <span className="inline-block w-2.5 h-4 bg-[#9d00ff] animate-pulse align-middle" style={{ boxShadow: '0 0 10px rgba(157,0,255,0.8)' }}></span>
+                                            </div>
                                         </div>
                                     </div>
                                 )}

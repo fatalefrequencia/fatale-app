@@ -136,16 +136,48 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
             setCommunities(Array.isArray(commsRes?.data) ? commsRes.data : []);
             setTrendingPlaylists(Array.isArray(playlistsRes?.data) ? playlistsRes.data : []);
             setStations(Array.isArray(stationsRes?.data) ? stationsRes.data : []);
-            setMarketplaceItems(Array.isArray(studioRes?.data) ? studioRes.data : []);
+            let marketplaceList = [];
+            let standardStudioList = [];
+
+            if (Array.isArray(studioRes?.data)) {
+                const isUrl = (str) => {
+                    if (!str) return false;
+                    const trimmed = str.trim().toLowerCase();
+                    return trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('www.');
+                };
+
+                standardStudioList = studioRes.data.filter(item => !isUrl(item.description || item.Description));
+                marketplaceList = studioRes.data.filter(item => isUrl(item.description || item.Description));
+                
+                const mappedVisuals = standardStudioList.map(item => ({
+                    ...item,
+                    id: item.id || item.Id,
+                    Id: item.id || item.Id,
+                    type: 'studio',
+                    Type: 'studio',
+                    artist: item.artist || item.Artist || item.user?.username || 'UNKNOWN_SIGNAL',
+                    Artist: item.artist || item.Artist || item.user?.username || 'UNKNOWN_SIGNAL',
+                    artistUserId: item.userId || item.UserId,
+                    ArtistUserId: item.userId || item.UserId,
+                    imageUrl: item.url || item.Url,
+                    ImageUrl: item.url || item.Url,
+                    mediaType: (item.type || item.Type || '').toUpperCase(),
+                    MediaType: (item.type || item.Type || '').toUpperCase(),
+                    thumbnailUrl: item.thumbnailUrl || item.ThumbnailUrl,
+                    ThumbnailUrl: item.thumbnailUrl || item.ThumbnailUrl,
+                    createdAt: item.createdAt || item.CreatedAt,
+                    CreatedAt: item.createdAt || item.CreatedAt,
+                }));
+                setVisualUploads(mappedVisuals.slice(0, 12));
+            }
+            setMarketplaceItems(marketplaceList);
             
             if (Array.isArray(feedRes?.data)) {
-                setVisualUploads(feedRes.data.filter(i => i.type === 'studio').slice(0, 12));
-                
                 // Fetch my journal entries and merge with feed
                 try {
                     const myJournalRes = await API.Journal.getMyJournal();
                     const myJournals = Array.isArray(myJournalRes?.data) ? myJournalRes.data : [];
-                    const feedJournals = feedRes.data.filter(i => i.type === 'journal');
+                    const feedJournals = feedRes.data.filter(i => i.type === 'journal' || i.Type === 'journal');
                     
                     // Combine and remove duplicates based on ID
                     const combined = [...myJournals];
@@ -158,7 +190,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                     setJournalEntries(combined.slice(0, 8));
                 } catch (e) {
                     console.error("Failed to fetch my journal in HUD:", e);
-                    setJournalEntries(feedRes.data.filter(i => i.type === 'journal').slice(0, 8));
+                    setJournalEntries(feedRes.data.filter(i => i.type === 'journal' || i.Type === 'journal').slice(0, 8));
                 }
             }
         } catch (err) {
@@ -285,6 +317,17 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
             // Strict check for real communities
             return name && !name.toLowerCase().includes('placeholder') && name.length > 2;
         });
+
+        // Filter out system node (FATALE_CORE)
+        base = base.filter(c => 
+            !c.isSystem && 
+            !c.IsSystem && 
+            c.id !== 4 && 
+            c.Id !== 4 && 
+            c.name?.toUpperCase() !== 'FATALE_CORE' && 
+            c.Name?.toUpperCase() !== 'FATALE_CORE'
+        );
+
         if (activeSector !== null) base = base.filter(matchesSector);
 
         // Sort Joined community to top (Formal Membership)
@@ -343,8 +386,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
     const filteredJournals = useMemo(() => {
         let base = journalEntries.filter(j => {
             const artist = (j.artist || j.Artist || "").toLowerCase();
-            const isMine = String(j.userId || j.UserId) === String(user?.id || user?.Id);
-            return isMine && artist !== 'the archive' && !j.isArchive && !j.IsArchive;
+            return artist !== 'the archive' && artist !== 'archive' && !j.isArchive && !j.IsArchive;
         });
         if (activeSector !== null) base = base.filter(matchesSector);
 
@@ -440,121 +482,127 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#ff006e]/10 z-[60] shadow-[0_0_20px_#ff006e]" />
             
             {/* --- TOP HUD BAR --- */}
-            <div className="z-50 flex flex-col lg:flex-row items-center justify-between gap-4 mb-4 px-2">
-                <div className="flex items-center gap-4 self-start lg:self-auto">
-                    <div className="flex items-center gap-2">
-                        <Activity size={14} className="text-[#ff006e] animate-pulse" />
-                        <div className="text-[#ff006e] text-[10px] font-black tracking-widest opacity-70">
-                            {t('KERNEL_PULSE')}: <span className="text-green-500">{t('SYNC_OK')}</span>
+            <div className="z-[80] flex flex-col lg:flex-row items-center justify-between gap-4 mb-4 px-2 relative">
+                {/* LEFT: KERNEL PULSE */}
+                <div className="flex-1 flex justify-start w-full lg:w-auto">
+                    <div className="flex items-center gap-4 self-start lg:self-auto">
+                        <div className="flex items-center gap-2">
+                            <Activity size={14} className="text-[#ff006e] animate-pulse" />
+                            <div className="text-[#ff006e] text-[10px] font-black tracking-widest opacity-70">
+                                {t('KERNEL_PULSE')}: <span className="text-green-500">{t('SYNC_OK')}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* CENTRAL SEARCH */}
-                {isMobile && mobileViewMode !== 'search' ? (
-                    <button 
-                        onClick={() => setMobileViewMode('search')}
-                        className="p-2 text-[#ff006e] hover:text-white transition-colors self-center lg:hidden"
-                    >
-                        <Search size={20} />
-                    </button>
-                ) : (
-                    <div className="relative group w-full lg:w-[450px]">
-                        <div 
-                            className="absolute -inset-1 rounded-lg blur opacity-0 group-focus-within:opacity-100 transition duration-1000 group-focus-within:duration-200"
-                            style={{ backgroundColor: activeSectorColor || '#ff006e', opacity: activeSectorColor ? 0.3 : 0 }}
-                        ></div>
-                        <div className="relative flex items-center">
-                            <div className="absolute left-3 flex items-center pointer-events-none">
-                                <Search 
-                                    size={16} 
-                                    className="group-focus-within:opacity-100 transition-opacity" 
-                                    style={{ color: activeSectorColor || '#ff006e', opacity: activeSector ? 1 : 0.4 }}
-                                />
-                            </div>
-                            <input 
-                                type="text"
-                                placeholder={t('SEARCH_SIGNAL')}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-black/60 border rounded px-10 py-2.5 text-xs tracking-[0.2em] focus:outline-none focus:ring-1 transition-all placeholder:text-[#ff006e]/20"
-                                style={{ 
-                                    borderColor: activeSectorColor ? `${activeSectorColor}99` : 'rgba(255,0,110,0.3)', 
-                                    focusBorderColor: activeSectorColor || '#ff006e',
-                                    color: activeSectorColor || 'white',
-                                    '--tw-ring-color': activeSectorColor ? `${activeSectorColor}33` : 'rgba(255,0,110,0.2)'
-                                }}
-                            />
-                            {searchQuery && (
-                                <button 
-                                    onClick={() => setSearchQuery('')}
-                                    className="absolute right-3 text-white/20 hover:text-white transition-colors"
-                                >
-                                    <X size={14} />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* MOBILE VIEW TOGGLE */}
-                {isMobile && (
-                    <div className="mt-4 flex bg-black/40 border border-[#ff006e]/20 rounded-sm p-1 gap-1 pointer-events-auto relative z-[70] w-full">
+                {/* CENTER: SEARCH */}
+                <div className="w-full lg:w-[450px] flex justify-center relative">
+                    {isMobile && mobileViewMode !== 'search' && !searchQuery ? (
                         <button 
-                            onTouchStart={(e) => { e.stopPropagation(); setMobileViewMode('globe'); }}
-                            onClick={(e) => { e.stopPropagation(); setMobileViewMode('globe'); }}
+                            onClick={() => setMobileViewMode('search')}
+                            className="p-2 text-[#ff006e] hover:text-white transition-colors self-center lg:hidden"
+                        >
+                            <Search size={20} />
+                        </button>
+                    ) : (
+                        <div className="relative group w-full">
+                            <div 
+                                className="absolute -inset-1 rounded-lg blur opacity-0 group-focus-within:opacity-100 transition duration-1000 group-focus-within:duration-200"
+                                style={{ backgroundColor: activeSectorColor || '#ff006e', opacity: activeSectorColor ? 0.3 : 0 }}
+                            ></div>
+                            <div className="relative flex items-center">
+                                <div className="absolute left-3 flex items-center pointer-events-none">
+                                    <Search 
+                                        size={16} 
+                                        className="group-focus-within:opacity-100 transition-opacity" 
+                                        style={{ color: activeSectorColor || '#ff006e', opacity: activeSector ? 1 : 0.4 }}
+                                    />
+                                </div>
+                                <input 
+                                    type="text"
+                                    placeholder={t('SEARCH_SIGNAL')}
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onTouchStart={(e) => e.stopPropagation()}
+                                    onTouchEnd={(e) => e.stopPropagation()}
+                                    className="w-full bg-black/60 border rounded px-10 py-2.5 text-xs tracking-[0.2em] focus:outline-none focus:ring-1 transition-all placeholder:text-[#ff006e]/20"
+                                    style={{ 
+                                        borderColor: activeSectorColor ? `${activeSectorColor}99` : 'rgba(255,0,110,0.3)', 
+                                        focusBorderColor: activeSectorColor || '#ff006e',
+                                        color: activeSectorColor || 'white',
+                                        '--tw-ring-color': activeSectorColor ? `${activeSectorColor}33` : 'rgba(255,0,110,0.2)'
+                                    }}
+                                />
+                                {searchQuery && (
+                                    <button 
+                                        onTouchStart={(e) => { e.stopPropagation(); setSearchQuery(''); }}
+                                        onClick={(e) => { e.stopPropagation(); setSearchQuery(''); }}
+                                        className="absolute right-3 text-white/20 hover:text-white transition-colors"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* RIGHT: DATE / LOCATION */}
+                <div className="flex-1 hidden lg:flex items-center justify-end gap-6 text-[10px] text-white/40 tracking-tighter">
+                    <div className="hidden xl:flex items-center gap-2">
+                        <span className="opacity-30">{t('LOC')}:</span>
+                        <span 
+                            className="transition-all duration-500 font-black tracking-widest"
+                            style={{ color: activeSectorColor || '#ff006e' }}
+                        >
+                            {activeSector !== null ? SECTORS.find(s => s.id === activeSector)?.name : t('GLOBAL_SIGNAL')}
+                        </span>
+                    </div>
+                    <div className="w-[1px] h-3 bg-white/10" />
+                    <div className="tabular-nums">{new Date().toISOString().split('T')[0]}</div>
+                </div>
+
+                {/* MOBILE VIEW TOGGLE - BELOW SEARCH ON MOBILE */}
+                {isMobile && (
+                    <div 
+                        className="mt-4 flex bg-black/40 border border-[#ff006e]/20 rounded-sm p-1 gap-1 pointer-events-auto relative z-[90] w-full"
+                        onTouchStart={(e) => e.stopPropagation()}
+                        onTouchEnd={(e) => e.stopPropagation()}
+                    >
+
+                        <button 
+                            onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('globe'); }}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('globe'); }}
                             className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'globe' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
                         >
                             <Globe size={12} /> {t('GLOBE_SENSE')}
                         </button>
                         <button 
-                            onTouchStart={(e) => { e.stopPropagation(); setMobileViewMode('data'); }}
-                            onClick={(e) => { e.stopPropagation(); setMobileViewMode('data'); }}
+                            onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('data'); }}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('data'); }}
                             className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'data' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
                         >
                             <Activity size={12} /> {t('DATA_STREAM')}
                         </button>
-                        <button 
-                            onTouchStart={(e) => { e.stopPropagation(); setMobileViewMode('search'); }}
-                            onClick={(e) => { e.stopPropagation(); setMobileViewMode('search'); }}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'search' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
-                        >
-                            <Search size={12} /> BÚSQUEDA
-                        </button>
                     </div>
                 )}
 
-                    {/* MOBILE SEARCH RESULTS MOVED TO MAIN AREA */}
-
-                    {/* Small frequency indicator below switch/search */}
-                    {!isMobile && (
-                        <div className="absolute -bottom-4 left-0 right-0 flex justify-center gap-[2px]">
-                            {[...Array(20)].map((_, i) => (
-                                <motion.div 
-                                    key={i}
-                                    animate={{ height: [2, 8, 2, 4, 2] }}
-                                    transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.05 }}
-                                    className="w-[2px] transition-colors duration-500"
-                                    style={{ backgroundColor: activeSectorColor ? `${activeSectorColor}66` : 'rgba(255, 0, 110, 0.3)' }}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                <div className="flex items-center gap-6 text-[10px] text-white/40 tracking-tighter self-end lg:self-auto">
-                    <div className="hidden xl:flex items-center gap-2">
-                            <span className="opacity-30">{t('LOC')}:</span>
-                            <span 
-                                className="transition-all duration-500 font-black tracking-widest"
-                                style={{ color: activeSectorColor || '#ff006e' }}
-                            >
-                                {activeSector !== null ? SECTORS.find(s => s.id === activeSector)?.name : t('GLOBAL_SIGNAL')}
-                            </span>
+                {/* Small frequency indicator below switch/search */}
+                {!isMobile && (
+                    <div className="absolute -bottom-4 left-0 right-0 flex justify-center gap-[2px]">
+                        {[...Array(20)].map((_, i) => (
+                            <motion.div 
+                                key={i}
+                                animate={{ height: [2, 8, 2, 4, 2] }}
+                                transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.05 }}
+                                className="w-[2px] transition-colors duration-500"
+                                style={{ backgroundColor: activeSectorColor ? `${activeSectorColor}66` : 'rgba(255, 0, 110, 0.3)' }}
+                            />
+                        ))}
                     </div>
-                    <div className="w-[1px] h-3 bg-white/10" />
-                    <div className="tabular-nums">{new Date().toISOString().split('T')[0]}</div>
-                </div>
+                )}
+            </div>
+
 
             {/* --- MAIN DASHBOARD GRID --- */}
             <motion.div 
@@ -631,7 +679,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     playlists={trendingPlaylists}
                                     albums={albums}
                                     activeSector={activeSector}
-                                    selectedId={selectedGlobeItem ? `${selectedGlobeItem.type}-${selectedGlobeItem.id || selectedGlobeItem.Id}` : null}
+                                    selectedId={selectedGlobeItem ? (selectedGlobeItem.isSystem ? 'system-fatale_core' : `${selectedGlobeItem.type}-${selectedGlobeItem.id || selectedGlobeItem.Id}`) : (activeTerminalCommunity?.isSystem ? 'system-fatale_core' : null)}
                                     activeView={activeGlobeView}
                                     isGlobeSpinning={isGlobeSpinning}
                                     onSectorClick={(secId) => {
@@ -647,6 +695,11 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                          }
                                      }}
                                      onCommunityClick={(comm) => {
+                                         // System nodes open the terminal directly
+                                         if (comm.isSystem) {
+                                             setActiveTerminalCommunity({ ...comm, type: 'community' });
+                                             return;
+                                         }
                                          const prevId = selectedGlobeItem?.id || selectedGlobeItem?.Id;
                                          const currId = comm.id || comm.Id;
                                          if (prevId === currId) {
@@ -1332,7 +1385,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                     {/* --- BOTTOM CENTER: MESSAGES --- */}
                     <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-4 lg:row-start-5 pointer-events-auto">
-                        <HUDWidget title={t('MESSAGES') || 'MENSAJES'} icon={<MessageSquare size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                        <HUDWidget title={t('MSG_SYNC')} icon={<MessageSquare size={14}/>} searchQuery={searchQuery} activeColor={activeSectorColor}>
                              <div className="space-y-4">
                                   {conversations.length > 0 ? conversations.map(c => (
                                       <div key={c.conversationId || c.id} className="group cursor-pointer border-b border-white/5 pb-2 flex items-center gap-3" onClick={() => {
@@ -1357,7 +1410,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                   )) : (
                                       <div className="flex flex-col items-center justify-center py-6 opacity-20">
                                           <MessageSquare size={16} className="mb-2" />
-                                          <div className="text-[8px] tracking-widest uppercase text-center px-4">SIN_MENSAJES_NUEVOS</div>
+                                          <div className="text-[8px] tracking-widest uppercase text-center px-4">{t('EMPTY') || 'NO_NEW_MESSAGES'}</div>
                                       </div>
                                   )}
                              </div>
@@ -1455,15 +1508,75 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                     {isMobile && mobileViewMode === 'search' && (
                         <div className="flex-1 pointer-events-auto flex flex-col p-4 bg-black/90 border border-[#ff006e]/20 rounded-sm mt-4 overflow-y-auto no-scrollbar">
+                            {/* NATIVE RESULTS INTEGRATION */}
+                            {searchQuery.length >= 2 && (
+                                <div className="space-y-6 mb-8 border-b border-white/10 pb-6">
+                                    {/* Artists */}
+                                    {filteredArtists.length > 0 && (
+                                        <div>
+                                            <div className="text-[10px] font-black uppercase text-[#00ffaa] mb-3 tracking-widest flex items-center justify-between">
+                                                <span>:: ARTIST_NODES ::</span>
+                                                <span className="text-[8px] opacity-60">{filteredArtists.length} FOUND</span>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {filteredArtists.slice(0, 4).map(a => (
+                                                    <div key={a.id} className="flex items-center gap-2 p-2 bg-[#00ffaa]/5 border border-[#00ffaa]/10 rounded-sm" 
+                                                        onTouchStart={(e) => e.stopPropagation()}
+                                                        onClick={() => navigateToProfile(a.userId)}
+                                                    >
+                                                        <div className="w-8 h-8 rounded-full border border-[#00ffaa]/30 overflow-hidden bg-black shrink-0">
+                                                            <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} className="w-full h-full object-cover grayscale" />
+                                                        </div>
+                                                        <div className="text-[8px] font-black uppercase truncate leading-none">{a.name}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Communities */}
+                                    {filteredCommunities.length > 0 && (
+                                        <div>
+                                            <div className="text-[10px] font-black uppercase text-[#ffaa00] mb-3 tracking-widest flex items-center justify-between">
+                                                <span>:: NEURAL_CLUSTERS ::</span>
+                                                <span className="text-[8px] opacity-60">{filteredCommunities.length} FOUND</span>
+                                            </div>
+                                            <div className="space-y-2">
+                                                {filteredCommunities.slice(0, 3).map(c => (
+                                                    <div key={c.id} className="flex items-center gap-3 p-2 bg-[#ffaa00]/5 border border-[#ffaa00]/10 rounded-sm" 
+                                                        onTouchStart={(e) => e.stopPropagation()}
+                                                        onClick={() => {
+                                                            if (onMessageCommunity) onMessageCommunity(c);
+                                                            else setActiveTerminalCommunity(c);
+                                                        }}
+                                                    >
+                                                        <div className="w-6 h-6 rounded-sm bg-[#ffaa00]/10 border border-[#ffaa00]/30 flex items-center justify-center shrink-0">
+                                                            <Globe size={10} className="text-[#ffaa00]" />
+                                                        </div>
+                                                        <div className="text-[9px] font-black uppercase truncate">{c.name}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {filteredArtists.length === 0 && filteredCommunities.length === 0 && (
+                                        <div className="text-[8px] opacity-30 italic text-center py-2 uppercase tracking-widest">No native signals detected for this frequency</div>
+                                    )}
+                                </div>
+                            )}
+
                             <div className="text-[10px] font-black uppercase text-[#ff006e] mb-4 tracking-widest flex items-center justify-between">
                                 <span>:: YT_FREQ_SCAN ::</span>
                                 <span className="text-[8px] opacity-60">{youtubeResults.length} FOUND</span>
                             </div>
                             <div className="space-y-2 flex-1">
                                 {youtubeResults.length > 0 ? youtubeResults.map(y => (
-                                    <div key={y.id} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => {
-                                        onPlayTrack(y);
-                                        setMobileViewMode('globe'); // Return to map!
+                                    <div key={y.id} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" 
+                                        onTouchStart={(e) => e.stopPropagation()}
+                                        onClick={() => {
+                                            onPlayTrack(y);
+                                            setMobileViewMode('globe'); // Return to map!
                                         try {
                                             const history = JSON.parse(localStorage.getItem('recent_youtube_tracks') || '[]');
                                             const filtered = history.filter(item => item.id !== y.id);

@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import en from '../translations/en';
 import es from '../translations/es';
+import jp from '../translations/jp';
+import ru from '../translations/ru';
 
-const translations = { en, es };
+const translations = { en, es, jp, ru };
 
 const LanguageContext = createContext();
 

@@ -1315,13 +1315,13 @@
 /* --- DASHBOARD VIEW --- */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    grid-template-rows: auto auto auto;
-    gap: 30px;
+    grid-template-columns: 360px 1fr 380px;
+    grid-template-rows: auto 1fr;
+    gap: 24px;
     width: 100%;
-    max-width: 1600px;
+    max-width: 1700px;
     margin: 0 auto;
-    padding: 100px 60px 60px;
+    padding: 95px 30px 40px;
     height: 100vh;
     overflow-y: auto;
     position: relative;
@@ -1329,9 +1329,9 @@
 }
 
 .identity-core-panel { grid-column: 1; grid-row: 1; }
-.music-releases-panel { grid-column: 2; grid-row: 1; }
-.studio-content-panel { grid-column: 2; grid-row: 2 / span 2; }
-.archive-panel { grid-column: 1; grid-row: 2 / span 2; }
+.archive-panel { grid-column: 1; grid-row: 2; }
+.music-releases-panel { grid-column: 2; grid-row: 1 / span 2; }
+.studio-content-panel { grid-column: 3; grid-row: 1 / span 2; }
 
 @media (max-width: 1024px) {
     .dashboard-grid {
@@ -1348,6 +1348,39 @@
     .archive-panel {
         grid-column: 1 !important;
         grid-row: auto !important;
+    }
+
+    /* Console View Mobile Adjustments */
+    .console-container {
+        position: relative;
+        width: 100%;
+        height: auto;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        padding: 95px 16px 40px; /* Safe padding for top header */
+        overflow-y: auto;
+        box-sizing: border-box;
+        top: 0;
+        left: 0;
+    }
+
+    .console-outer-frame {
+        padding: 30px 32px 100px; /* Extra bottom padding for enter button */
+        flex-direction: column;
+        gap: 30px;
+        width: 100%;
+        max-width: 440px;
+        box-sizing: border-box;
+    }
+
+    .console-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: auto;
+        box-sizing: border-box;
     }
 }
 

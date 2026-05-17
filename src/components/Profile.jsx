@@ -989,12 +989,8 @@ export const ProfileView = React.memo(({
 
     // Set viewMode correctly once isMe is resolved (can't use isMe in useState initializer — it's defined after)
     useEffect(() => {
-        if (initialModal === 'console') {
-            setViewMode('CONSOLE');
-        } else if (!isMe) {
-            setViewMode('DASHBOARD');
-        }
-    }, [isMe, initialModal]);
+        setViewMode('CONSOLE');
+    }, [isMe, targetUserId, initialModal]);
 
     const sortedJournal = React.useMemo(() => {
         return [...(profileJournal || [])].sort((a, b) => 
@@ -1247,20 +1243,6 @@ export const ProfileView = React.memo(({
 
     const handleEnterSystem = async () => {
         setViewMode('DASHBOARD');
-        
-        const favPlaylist = profilePlaylists.find(p => p.isPinned);
-        if (favPlaylist) {
-            try {
-                const API = await import('../services/api').then(mod => mod.default);
-                const res = await API.Playlists.getById(favPlaylist.id || favPlaylist.Id);
-                const tracks = res.data?.Tracks || res.data?.tracks || [];
-                if (tracks.length > 0) {
-                    onPlayPlaylist?.(tracks);
-                }
-            } catch (err) {
-                console.error("Failed to play favorite playlist on enter", err);
-            }
-        }
     };
 
     // Fetch Gear
@@ -1683,45 +1665,27 @@ export const ProfileView = React.memo(({
                 }
                 const artistId = artistRes.data?.id || artistRes.data?.Id;
                 // Tracks & Following logic
-                setIsLoadingTracks(true);
-                let filtered = [];
-                if (isMe && allTracks?.length > 0) {
-                    // Use tracks already in memory for Current User
-                    filtered = allTracks.filter(t => {
-                        const tUserId = t.artistUserId || t.ArtistUserId || t.userId || t.UserId;
-                        return String(tUserId) === String(effectiveId);
-                    }).map(t => ({
-                        ...t,
-                        id: t.id || t.Id,
-                        title: t.title || t.Title || 'UNKNOWN_SIGNAL',
-                        artist: t.artist || t.ArtistName || t.Artist || 'UNKNOWN_SOURCE',
-                        source: getMediaUrl(t.source || t.Source || t.filePath || t.FilePath),
-                        cover: getMediaUrl(t.coverImageUrl || t.CoverImageUrl)
-                    }));
-                    setIsLoadingTracks(false);
-                } else {
-                    const [tracksRes, followingRes] = await Promise.all([
-                        API.Tracks.getAllTracks(),
-                        API.Users.getFollowing(currentUser?.id || currentUser?.Id).catch(() => ({ data: [] }))
-                    ]);
+                const [tracksRes, followingRes] = await Promise.all([
+                    API.Tracks.getAllTracks(),
+                    API.Users.getFollowing(currentUser?.id || currentUser?.Id).catch(() => ({ data: [] }))
+                ]);
 
-                    const following = followingRes.data || [];
-                    setIsFollowing(following.some(a => String(a.id || a.Id) === String(effectiveId)));
+                const following = followingRes.data || [];
+                setIsFollowing(following.some(a => String(a.id || a.Id) === String(effectiveId)));
 
-                    const tracks = tracksRes.data || [];
-                    filtered = tracks.filter(t => {
-                        const tUserId = t.artistUserId || t.ArtistUserId || t.userId || t.UserId;
-                        return String(tUserId) === String(effectiveId);
-                    }).map(t => ({
-                        ...t,
-                        id: t.id || t.Id,
-                        title: t.title || t.Title || 'UNKNOWN_SIGNAL',
-                        artist: t.artist || t.ArtistName || t.Artist || 'UNKNOWN_SOURCE',
-                        source: getMediaUrl(t.source || t.Source || t.filePath || t.FilePath),
-                        cover: getMediaUrl(t.coverImageUrl || t.CoverImageUrl)
-                    }));
-                    setIsLoadingTracks(false);
-                }
+                const tracks = tracksRes.data || [];
+                const filtered = tracks.filter(t => {
+                    const tUserId = t.artistUserId || t.ArtistUserId || t.userId || t.UserId;
+                    return String(tUserId) === String(effectiveId);
+                }).map(t => ({
+                    ...t,
+                    id: t.id || t.Id,
+                    title: t.title || t.Title || 'UNKNOWN_SIGNAL',
+                    artist: t.artist || t.ArtistName || t.Artist || 'UNKNOWN_SOURCE',
+                    source: getMediaUrl(t.source || t.Source || t.filePath || t.FilePath),
+                    cover: getMediaUrl(t.coverImageUrl || t.CoverImageUrl)
+                }));
+                setIsLoadingTracks(false);
                 setProfileTracks(filtered);
 
                 try {
@@ -1766,7 +1730,7 @@ export const ProfileView = React.memo(({
         };
 
         fetchTargetProfileInternal();
-    }, [targetUserId, isMe, currentUser]);
+    }, [targetUserId, isMe, currentUser, allTracks]);
 
 
     const handleFollow = async () => {
@@ -1801,7 +1765,7 @@ export const ProfileView = React.memo(({
 
 
                     {/* Center: Dynamic Core */}
-                    <div className="console-panel w-[380px]">
+                    <div className="console-panel w-full max-w-[380px]">
                         <AnimatePresence mode="wait">
                             <motion.div 
                                 key={cycleIndex}
@@ -2068,7 +2032,7 @@ export const ProfileView = React.memo(({
                                 <button className="p-1 hover:text-white text-white/20 transition-all hover:scale-110"><ChevronRight size={16} /></button>
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-6 p-6 max-h-[600px] overflow-y-auto custom-scrollbar">
+                        <div className="grid grid-cols-2 xl:grid-cols-3 gap-6 p-6 max-h-[750px] overflow-y-auto custom-scrollbar">
                             {profileTracks.filter(t => musicFilter === 'ALL' || (musicFilter === 'ALBUMS' ? (t.isAlbum || t.IsAlbum) : !(t.isAlbum || t.IsAlbum))).map((t, idx) => (
                                 <div key={idx} className="group cursor-pointer" onClick={() => onPlayTrack(t)}>
                                     <div className="aspect-square bg-black border border-white/10 overflow-hidden relative mb-3 p-1">
@@ -2123,7 +2087,7 @@ export const ProfileView = React.memo(({
                     </SubsystemBlock>
                     
                     <SubsystemBlock title={t('FREQ_JOURNAL') || 'BITÁCORA'} showBrackets={true} address="LOG_CAP_01" secondaryColor={profileSecondary}>
-                        <div className="p-4 max-h-[300px] overflow-y-auto custom-scrollbar">
+                        <div className="p-4 max-h-[450px] overflow-y-auto custom-scrollbar">
                             <div className="space-y-2 font-mono">
                                 {isMe && !showJournalForm && (
                                     <button 
@@ -2350,6 +2314,7 @@ export const ProfileView = React.memo(({
                         autoPlay 
                         muted 
                         loop 
+                        playsInline
                         className={`w-full h-full object-cover transition-all duration-1000 ${viewMode === 'CONSOLE' ? 'opacity-20 grayscale brightness-50' : 'opacity-50'}`}
                     />
                 ) : (displayUser?.bannerUrl || displayUser?.BannerUrl) ? (
@@ -2363,46 +2328,55 @@ export const ProfileView = React.memo(({
             </div>
 
             {/* Global Refined Header */}
-            {viewMode !== 'CONSOLE' && (
-                <div className="fixed top-6 left-12 right-12 z-[100] flex items-center justify-between">
-                    <button 
-                        onClick={handleBack}
-                        className="group flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white transition-all"
-                    >
-                        <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                        {viewMode === 'DASHBOARD' ? t('BACK_LANDING') : t('RETURN_ORBIT')}
-                    </button>
+            <div className="fixed top-4 md:top-6 left-4 right-4 md:left-12 md:right-12 z-[100] flex flex-row items-center justify-between gap-4">
+                <button 
+                    onClick={handleBack}
+                    className="group flex items-center gap-1.5 text-[8px] md:text-[9px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white transition-all shrink-0"
+                >
+                    <ChevronLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+                    <span>{viewMode === 'DASHBOARD' ? t('BACK_LANDING') : t('RETURN_ORBIT')}</span>
+                </button>
 
-                    <div className="flex items-center gap-6">
-                        {isMe ? (
-                            <>
-                                <button onClick={onLogout} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-red-500/40 hover:text-red-500 transition-colors">
-                                    <LogOut size={14} /> {t('LOGOUT')}
-                                </button>
-                                <button 
-                                    onClick={() => {
-                                        console.log("[Profile] Triggering Identity Modification...");
-                                        showNotification("ID_MOD_START", "Initializing identity override protocol...", "info");
-                                        setShowEditProfile(true);
-                                    }} 
-                                    className="relative z-[200] px-4 py-1.5 bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all"
-                                >
-                                    {t('MODIFY_ID')}
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <button onClick={() => onMessageUser?.(displayUser)} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/40 hover:text-white transition-colors">
-                                    <MessageSquare size={14} /> {t('MESSAGE')}
-                                </button>
-                                <button onClick={handleFollow} className={`px-6 py-1.5 border text-[9px] font-black uppercase tracking-[0.3em] transition-all ${isFollowing ? 'border-white/10 text-white/40' : 'border-[var(--subsystem-accent)] text-[var(--subsystem-accent)] hover:bg-[var(--subsystem-accent)] hover:text-black'}`}>
-                                    {isFollowing ? t('FOLLOWING') : t('FOLLOW')}
-                                </button>
-                            </>
-                        )}
-                    </div>
+                <div className="flex items-center gap-3 md:gap-6 shrink-0">
+                    {isMe ? (
+                        <>
+                            <button 
+                                onClick={onLogout} 
+                                className="flex items-center gap-1 text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] text-red-500/40 hover:text-red-500 transition-colors"
+                            >
+                                <LogOut size={12} /> 
+                                <span className="hidden xs:inline">{t('LOGOUT')}</span>
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    console.log("[Profile] Triggering Identity Modification...");
+                                    showNotification("ID_MOD_START", "Initializing identity override protocol...", "info");
+                                    setShowEditProfile(true);
+                                }} 
+                                className="relative z-[200] px-2.5 py-1 md:px-4 md:py-1.5 bg-white/5 border border-white/10 text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all"
+                            >
+                                {t('MODIFY_ID')}
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <button 
+                                onClick={() => onMessageUser?.(displayUser)} 
+                                className="flex items-center gap-1 text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] text-white/40 hover:text-white transition-colors"
+                            >
+                                <MessageSquare size={12} /> 
+                                <span className="hidden xs:inline">{t('MESSAGE')}</span>
+                            </button>
+                            <button 
+                                onClick={handleFollow} 
+                                className={`px-3 py-1 md:px-6 md:py-1.5 border text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] transition-all ${isFollowing ? 'border-white/10 text-white/40' : 'border-[var(--subsystem-accent)] text-[var(--subsystem-accent)] hover:bg-[var(--subsystem-accent)] hover:text-black'}`}
+                            >
+                                {isFollowing ? t('FOLLOWING') : t('FOLLOW')}
+                            </button>
+                        </>
+                    )}
                 </div>
-            )}
+            </div>
 
             <motion.div 
                 className="flex-1 w-full h-full relative z-10 flex flex-col"
@@ -2879,6 +2853,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                                     autoPlay 
                                                     muted 
                                                     loop 
+                                                    playsInline
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
