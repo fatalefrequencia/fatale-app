@@ -404,6 +404,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit }) => {
                         <p className="text-[8px] text-[#d60036]/50 uppercase tracking-[0.22em] font-black">
                             PROTECTED BY CYBERSEC v9.0
                         </p>
+                    </div>
                 </div>
             </motion.div>
         </div>
