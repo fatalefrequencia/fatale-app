@@ -227,7 +227,7 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist }) => {
     );
 };
 
-const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists = [], playlists = [], tracks = [], selectedId, activeView, onArtistClick, onCommunityClick, onTrackClick, isGlobeSpinning }) => {
+const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists = [], playlists = [], tracks = [], selectedId, activeView, onArtistClick, onCommunityClick, onTrackClick, onPlaylistClick, isGlobeSpinning }) => {
     const { camera } = useThree();
     const [cameraDist, setCameraDist] = useState(10);
     const [seed] = useState(() => Math.random().toString());
@@ -392,7 +392,7 @@ const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists =
                     size={0.08}
                     isSelected={selectedId === `playlist-${p.id || p.Id}`}
                     cameraDist={cameraDist}
-                    onClick={() => {}}
+                    onClick={() => onPlaylistClick?.(p)}
                 />
             ))}
 
@@ -420,6 +420,7 @@ const InteractiveGlobe = memo(({
     onArtistClick, 
     onCommunityClick, 
     onTrackClick,
+    onPlaylistClick,
     onSelectItem
 }) => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
@@ -473,6 +474,7 @@ const InteractiveGlobe = memo(({
                             onArtistClick={onArtistClick}
                             onCommunityClick={onCommunityClick}
                             onTrackClick={onTrackClick}
+                            onPlaylistClick={onPlaylistClick}
                             isGlobeSpinning={isGlobeSpinning}
                         />
                     </group>

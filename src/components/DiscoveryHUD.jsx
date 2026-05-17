@@ -745,6 +745,26 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             setSelectedGlobeItem({ ...track, type: 'track' });
                                         }
                                     }}
+                                    onPlaylistClick={async (playlist) => {
+                                        const prevId = selectedGlobeItem?.id || selectedGlobeItem?.Id;
+                                        const currId = playlist.id || playlist.Id;
+                                        if (prevId === currId && selectedGlobeItem?.type === 'playlist') {
+                                            setSelectedGlobeItem(null);
+                                            setSelectedPlaylist(null);
+                                        } else {
+                                            setSelectedGlobeItem({ ...playlist, type: 'playlist' });
+                                            setSelectedPlaylist(playlist);
+                                            setLoadingPlaylist(true);
+                                            try {
+                                                const res = await API.Playlists.getById(playlist.id || playlist.Id);
+                                                setPlaylistTracks(res.data?.tracks || []);
+                                            } catch (err) {
+                                                console.error("Failed to fetch playlist tracks from globe:", err);
+                                            } finally {
+                                                setLoadingPlaylist(false);
+                                            }
+                                        }
+                                    }}
                                     onSelectItem={(id) => {
                                         if (id === null) setSelectedGlobeItem(null);
                                     }}
@@ -830,6 +850,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                                     <span className="leading-none">
                                                                         {selectedGlobeItem.type === 'track' ? 'SIGNAL_BROADCAST_v2' :
                                                                             selectedGlobeItem.type === 'community' ? 'NEURAL_CLUSTER' :
+                                                                            selectedGlobeItem.type === 'playlist' ? 'CURATED_PLAYLIST' :
                                                                                 'ARTIST_IDENTITY'}
                                                                     </span>
                                                                 </div>
@@ -842,6 +863,11 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                                 {selectedGlobeItem.type === 'artist' && (
                                                                     <div className="text-[8px] text-[#00ffff] font-bold mt-1 uppercase tracking-widest">
                                                                         GENRE: {(selectedGlobeItem.genre || "NATIVE").toUpperCase()}
+                                                                    </div>
+                                                                )}
+                                                                {selectedGlobeItem.type === 'playlist' && (
+                                                                    <div className="text-[8px] text-[#00ffff] font-bold mt-1 uppercase tracking-widest">
+                                                                        CAPACITY: {playlistTracks.length || selectedGlobeItem.trackCount || 0} _SIGNALS
                                                                     </div>
                                                                 )}
                                                                 {selectedGlobeItem.type === 'track' && (
@@ -889,15 +915,31 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                             <Play size={12} fill="currentColor" /> {t('PLAY_TRACK')}
                                                         </button>
                                                     )}
+                                                    {selectedGlobeItem.type === 'playlist' && (
+                                                        <button
+                                                            onClick={() => {
+                                                                if (playlistTracks && playlistTracks.length > 0) {
+                                                                    onPlayTrack(playlistTracks[0]);
+                                                                }
+                                                                setSelectedGlobeItem(null);
+                                                            }}
+                                                            className="w-full bg-transparent border border-[#ff006e]/60 text-[#ff006e] hover:bg-[#ff006e]/10 py-2.5 text-[10px] font-black tracking-[0.3em] uppercase transition-all flex items-center justify-center gap-3 relative group/btn"
+                                                        >
+                                                            <div className="absolute inset-0 border border-[#ff006e]/20 transform scale-95 group-hover/btn:scale-100 transition-transform pointer-events-none" />
+                                                            <Play size={12} fill="currentColor" /> {t('PLAY_PLAYLIST') || 'PLAY_PLAYLIST'}
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
 
-                                            {/* Dynamic Membership / Signal Section - Only for Hubs and Artists */}
+                                            {/* Dynamic Membership / Signal Section - Only for Hubs, Artists and Playlists */}
                                             {selectedGlobeItem.type !== 'track' && (
                                                 <div className="md:col-span-7">
                                                     <div className="text-[8px] text-white/40 font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
                                                         {selectedGlobeItem.type === 'community' ? (
                                                             <><Users size={10} /> {t('ARTIST_MEMBERS')}</>
+                                                        ) : selectedGlobeItem.type === 'playlist' ? (
+                                                            <><Music size={10} /> PLAYLIST_TRACKS</>
                                                         ) : (
                                                             <><Zap size={10} /> {t('SIGNAL_SHARES')}</>
                                                         )}
@@ -912,6 +954,20 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                                         <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale group-hover/member:grayscale-0 transition-all" />
                                                                     </div>
                                                                     <span className="text-[7px] font-bold text-white/60 tracking-wider uppercase group-hover/member:text-white">{a.name || a.Name}</span>
+                                                                </div>
+                                                            ))
+                                                        ) : selectedGlobeItem.type === 'playlist' ? (
+                                                            // PLAYLIST: Show Tracks
+                                                            playlistTracks.slice(0, 8).map((track, i) => (
+                                                                <div key={i} className="flex flex-col items-center gap-2 shrink-0 group/member cursor-pointer" onClick={() => onPlayTrack(track)}>
+                                                                    <div className="w-10 h-10 rounded-sm border border-white/10 overflow-hidden group-hover/member:border-[#ff006e] transition-all bg-black flex items-center justify-center shadow-lg">
+                                                                        {track.coverImageUrl || track.CoverImageUrl ? (
+                                                                            <img src={getMediaUrl(track.coverImageUrl || track.CoverImageUrl)} alt="" className="w-full h-full object-cover" />
+                                                                        ) : (
+                                                                            <Music size={14} className="text-white/40" />
+                                                                        )}
+                                                                    </div>
+                                                                    <span className="text-[7px] font-bold text-white/60 tracking-wider uppercase group-hover/member:text-white truncate w-16 text-center">{track.title || track.Title}</span>
                                                                 </div>
                                                             ))
                                                         ) : (
@@ -948,6 +1004,9 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                         {/* Edge Case Fallbacks */}
                                                         {selectedGlobeItem.type === 'community' && trendingArtists.filter(a => String(a.communityId || a.CommunityId) === String(selectedGlobeItem.id)).length === 0 && (
                                                             <div className="text-[9px] text-white/10 font-bold tracking-[0.2em] italic uppercase py-6">{t('NO_SIGNALS_DETECTED')}</div>
+                                                        )}
+                                                        {selectedGlobeItem.type === 'playlist' && playlistTracks.length === 0 && (
+                                                            <div className="text-[9px] text-white/10 font-bold tracking-[0.2em] italic uppercase py-6">NO_SIGNALS_FOUND</div>
                                                         )}
                                                     </div>
                                                 </div>
