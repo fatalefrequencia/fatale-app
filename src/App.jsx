@@ -107,7 +107,16 @@ const GLOBAL_IS_LANDSCAPE = typeof window !== 'undefined' && window.innerWidth >
 
 // --- COMPONENTE PRINCIPAL ---
 function App() {
-  const [activeView, setViewOriginal] = useState(() => localStorage.getItem('activeView') || 'login');
+  const [activeView, setViewOriginal] = useState(() => {
+    // Session Guard: If no session, always start on login
+    const hasSession = localStorage.getItem('token') && localStorage.getItem('user');
+    if (!hasSession) return 'login';
+
+    const hash = window.location.hash.replace('#', '');
+    const validViews = ['discovery', 'feed', 'profile', 'player', 'messages', 'shopping', 'settings', 'wallet'];
+    if (validViews.includes(hash)) return hash;
+    return localStorage.getItem('activeView') || 'login';
+  });
   const [previousView, setPreviousView] = useState('discovery');
   const [viewingUserId, setViewingUserId] = useState(null);
   const [hasNewMessages, setHasNewMessages] = useState(false);
@@ -599,7 +608,14 @@ function App() {
         const parsed = JSON.parse(savedUser);
         if (parsed && (parsed.id || parsed.Id)) {
           setUser(parsed);
-          setView('discovery'); // Default to discovery if we have a valid session
+          // Check hash or default to discovery on initialization
+          const hash = window.location.hash.replace('#', '');
+          const validViews = ['discovery', 'feed', 'profile', 'player', 'messages', 'shopping', 'settings', 'wallet'];
+          if (validViews.includes(hash)) {
+            setView(hash);
+          } else {
+            setView('discovery');
+          }
         } else {
           console.warn("[App] Corrupt user object in localStorage, clearing.");
           localStorage.removeItem('user');
@@ -688,11 +704,41 @@ function App() {
     }
   }, []);
 
-  // --- PERSISTENCE LOOPS ---
+  // --- PERSISTENCE & ROUTING LOOPS ---
   useEffect(() => {
     if (activeView && activeView !== 'login') {
       localStorage.setItem('activeView', activeView);
+      // Sync state to URL hash for browser history & back button support
+      if (window.location.hash !== `#${activeView}`) {
+        window.location.hash = activeView;
+      }
+    } else if (activeView === 'login') {
+      if (window.location.hash) {
+        window.location.hash = '';
+      }
     }
+  }, [activeView]);
+
+  // URL Hash Listener for browser back/forward buttons navigation
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hasSession = localStorage.getItem('token') && localStorage.getItem('user');
+      if (!hasSession) {
+        setViewOriginal('login');
+        return;
+      }
+
+      const hash = window.location.hash.replace('#', '');
+      const validViews = ['discovery', 'feed', 'profile', 'player', 'messages', 'shopping', 'settings', 'wallet'];
+      if (validViews.includes(hash)) {
+        setViewOriginal(hash);
+      } else if (!hash && activeView !== 'login') {
+        setViewOriginal('discovery');
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, [activeView]);
 
   useEffect(() => {
