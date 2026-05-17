@@ -967,7 +967,12 @@ function App() {
         .filter(Boolean)
       );
 
-      const cachedIds = new Set(cachedTracks.map(t => t.youtubeTrackId || t.YoutubeTrackId));
+      const localCachedKey = `cached_native_${uid || 'anon'}`;
+      const cachedNative = JSON.parse(localStorage.getItem(localCachedKey) || "[]");
+      const cachedIds = new Set([
+        ...cachedTracks.map(t => String(t.youtubeTrackId || t.YoutubeTrackId)),
+        ...cachedNative.map(String)
+      ]);
       setCachedTrackIds(cachedIds);
 
       const ownedTrackIds = new Set(purchases.map(p => String(p.trackId || p.TrackId || p.id || p.Id)));
@@ -1647,9 +1652,50 @@ function App() {
       return;
     }
     if (!track.source) return;
+
+    showNotification("DOWNLOADING", `Downloading "${track.title}" directly into offline app shell...`, "info");
+
     try {
+      // 1. Fetch file to get audio blob
       const response = await fetch(track.source);
       const blob = await response.blob();
+      
+      // 2. Put fetched response directly into the browser PWA Cache Storage!
+      if ('caches' in window) {
+        const audioCache = await caches.open('fatale-audio-cache');
+        await audioCache.put(track.source, new Response(blob, {
+          headers: {
+            'Content-Type': blob.type || 'audio/mpeg',
+            'Content-Length': String(blob.size)
+          }
+        }));
+      }
+
+      // 3. Persist this cached status locally in localStorage
+      const uid = currentUserId || user?.id || user?.Id;
+      const localCachedKey = `cached_native_${uid || 'anon'}`;
+      let cachedNative = JSON.parse(localStorage.getItem(localCachedKey) || "[]");
+      const trackDbId = track.dbId || track.id || track.Id;
+      if (trackDbId && !cachedNative.includes(String(trackDbId))) {
+        cachedNative.push(String(trackDbId));
+        localStorage.setItem(localCachedKey, JSON.stringify(cachedNative));
+      }
+
+      // 4. Update frontend states in real-time
+      setCachedTrackIds(prev => {
+        const next = new Set(prev);
+        if (trackDbId) next.add(String(trackDbId));
+        return next;
+      });
+
+      setTracks(prev => prev.map(t => {
+        const tId = t.dbId || t.id || t.Id;
+        return String(tId) === String(trackDbId) ? { ...t, isCached: true } : t;
+      }));
+
+      showNotification("DOWNLOAD_COMPLETE", `"${track.title}" is now saved in your app shell! Access it offline anytime.`, "success");
+
+      // 5. Trigger the physical device download as a fallback/user convenience
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -1659,7 +1705,10 @@ function App() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Download failed, using fallback:", error);
+      console.error("In-app download & cache failed:", error);
+      showNotification("DOWNLOAD_ERROR", "Failed to cache track for offline access.", "error");
+      
+      // Device download fallback
       const link = document.createElement('a');
       link.href = track.source;
       link.download = `${track.artist} - ${track.title}.mp3`;
