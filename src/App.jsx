@@ -2571,8 +2571,8 @@ const Dashboard = React.memo(({
         className="flex-1 flex flex-col h-full bg-transparent relative overflow-hidden z-10"
       >
         {/* TOP NAV (Móvil) */}
-        <header className="lg:hidden flex items-center justify-center p-4 border-b border-[var(--theme-color)]/10 bg-black/90 backdrop-blur-md z-40 relative">
-          <div className="flex gap-2">
+        <header className="lg:hidden flex items-center justify-center px-1 py-3 border-b border-[var(--theme-color)]/10 bg-black/90 backdrop-blur-md z-40 relative">
+          <div className="flex gap-[3px] sm:gap-2">
             <NavButton icon={<Radio size={20} />} active={activeView === 'discovery'} onClick={() => setView('discovery')} />
             <NavButton icon={<Hash size={20} />} active={activeView === 'feed'} onClick={() => setView('feed')} />
             <NavButton icon={<Play size={20} />} active={activeView === 'player'} onClick={() => setView('player')} />
@@ -4603,7 +4603,7 @@ const SidebarLink = React.memo(({ icon, label, active, onClick, collapsed, hasNo
 ));
 
 const NavButton = React.memo(({ icon, active, onClick, hasNotification }) => (
-  <button onClick={onClick} className={`relative p-3.5 outline-none group rounded-sm ${active ? 'text-[var(--theme-color)]' : 'text-white/20 hover:text-[var(--theme-color)]'}`}>
+  <button onClick={onClick} className={`relative px-2.5 sm:px-3.5 py-3 outline-none group rounded-sm ${active ? 'text-[var(--theme-color)]' : 'text-white/20 hover:text-[var(--theme-color)]'}`}>
     {/* Active Background Layer */}
     <div className={`absolute inset-0 hud-panel transition-opacity duration-300 pointer-events-none ${active ? 'opacity-100' : 'opacity-0'}`} />
 

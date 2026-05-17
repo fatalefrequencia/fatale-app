@@ -105,28 +105,28 @@ const FataleCorePanel = ({ user, onBack }) => {
                 <span className="ml-auto opacity-50">SYS_NODE_04</span>
             </div>
 
-            {/* Pinned System Transmission */}
-            <div className="flex-none mx-4 mt-4 p-3 border relative overflow-hidden bg-red-950/20" style={{ borderColor: `${COLOR}40` }}>
-                {/* Glowing subtle background pulse */}
-                <div className="absolute inset-0 opacity-10 bg-gradient-to-r from-red-500/0 via-red-500 to-red-500/0 animate-pulse" />
-                <div className="relative z-10 flex gap-3">
-                    <div className="p-1.5 shrink-0 bg-red-500/10 border border-red-500/30 flex items-center justify-center h-8 w-8">
-                        <Bug size={14} className="text-red-500" />
-                    </div>
-                    <div>
-                        <div className="text-[9px] font-black uppercase tracking-wider text-red-500 flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                            PINNED TRANSMISSION // FATALE_SYSTEM_CORE
-                        </div>
-                        <p className="text-[10px] text-white/70 leading-relaxed mt-1">
-                            Welcome to the official feedback & diagnostic relay. Use this unjoinable node to directly transmit bug reports, suggestions, and application reviews to the development deck. All feeds are actively monitored.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
             {/* Scrollable log feed */}
             <div className="flex-1 overflow-y-auto p-4 space-y-2 no-scrollbar">
+                {/* Pinned System Transmission */}
+                <div className="p-3 border relative overflow-hidden bg-red-950/20 mb-4" style={{ borderColor: `${COLOR}40` }}>
+                    {/* Glowing subtle background pulse */}
+                    <div className="absolute inset-0 opacity-10 bg-gradient-to-r from-red-500/0 via-red-500 to-red-500/0 animate-pulse" />
+                    <div className="relative z-10 flex gap-3">
+                        <div className="p-1.5 shrink-0 bg-red-500/10 border border-red-500/30 flex items-center justify-center h-8 w-8">
+                            <Bug size={14} className="text-red-500" />
+                        </div>
+                        <div>
+                            <div className="text-[9px] font-black uppercase tracking-wider text-red-500 flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                                PINNED TRANSMISSION // FATALE_SYSTEM_CORE
+                            </div>
+                            <p className="text-[10px] text-white/70 leading-relaxed mt-1">
+                                Welcome to the official feedback & diagnostic relay. Use this unjoinable node to directly transmit bug reports, suggestions, and application reviews to the development deck. All feeds are actively monitored.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 {loadingLogs && (
                     <div className="flex items-center justify-center h-16 text-[8px] mono text-white/20 uppercase tracking-widest">
                         LOADING_LOGS...
@@ -156,7 +156,7 @@ const FataleCorePanel = ({ user, onBack }) => {
             </div>
 
             {/* Submission form */}
-            <form onSubmit={handleSubmit} className="flex-none border-t border-white/10 bg-black/80 p-4 space-y-3">
+            <form onSubmit={handleSubmit} className="flex-none border-t border-white/10 bg-black/80 p-4 space-y-3 pb-[88px] md:pb-4">
                 {/* Category tabs */}
                 <div className="flex gap-2 flex-wrap">
                     {CATEGORIES.map(({ id, label, icon: Icon }) => (
@@ -533,7 +533,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
             </div>
 
             {/* Input Overlay */}
-            <form onSubmit={handleSend} className="flex-none h-16 px-4 bg-black/80 border-t border-white/10 flex items-center gap-3">
+            <form onSubmit={handleSend} className="flex-none px-4 bg-black/80 border-t border-white/10 flex items-center gap-3 pb-[88px] md:pb-0 h-[140px] md:h-16">
                 <input 
                     type="text"
                     value={newMessage}
