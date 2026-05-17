@@ -9,6 +9,39 @@ const SettingsView = ({ user, setUser }) => {
     const { language, setLanguage, t } = useLanguage();
     const { showNotification } = useNotification();
     const [isSaving, setIsSaving] = React.useState(false);
+    const [updateAvailable, setUpdateAvailable] = React.useState(false);
+
+    React.useEffect(() => {
+        if ('serviceWorker' in navigator) {
+            // Check registrations
+            navigator.serviceWorker.getRegistrations().then((registrations) => {
+                for (let registration of registrations) {
+                    if (registration.waiting) {
+                        setUpdateAvailable(true);
+                    }
+                    
+                    // Listen for future updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        if (newWorker) {
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed') {
+                                    setUpdateAvailable(true);
+                                }
+                            });
+                        }
+                    });
+
+                    // Trigger a network update check
+                    registration.update().catch(err => console.debug("SW check skipped", err));
+                }
+            });
+
+            // Also check for standard cache-busting index.html updates for non-sw environments (optional check)
+            // But SW registration is the core standard
+        }
+    }, []);
+
 
     const languages = [
         { code: 'en', name: 'English (US)', flag: '🇺🇸' },
@@ -180,27 +213,50 @@ const SettingsView = ({ user, setUser }) => {
                     </div>
 
                     {/* Dedicated Programmatic Force Update Card */}
-                    <div className="bg-black/40 border border-[#ff006e]/20 p-6 space-y-4 shadow-[0_0_35px_rgba(255,0,110,0.03)] relative overflow-hidden">
+                    <div className={`border p-6 space-y-4 relative overflow-hidden transition-all duration-700 ${
+                        updateAvailable 
+                        ? 'border-[#ff006e] bg-[#ff006e]/5 shadow-[0_0_35px_rgba(255,0,110,0.12),inset_0_0_15px_rgba(255,0,110,0.05)]' 
+                        : 'border-white/5 bg-black/40 shadow-[0_0_15px_rgba(255,0,110,0.01)]'
+                    }`}>
                         <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[#ff006e]/5 to-transparent pointer-events-none" />
                         <div className="space-y-1">
                             <h2 className="text-[10px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
-                                <Activity size={14} className="text-[#ff006e] animate-pulse" />
+                                <Activity size={14} className={`text-[#ff006e] ${updateAvailable ? 'animate-bounce' : 'animate-pulse opacity-40'}`} />
                                 [ SYSTEM_FORCE_UPDATE ]
+                                {updateAvailable && (
+                                    <span className="ml-2 text-[7px] font-black bg-[#ff006e] text-black px-1.5 py-0.5 rounded-sm animate-pulse tracking-widest leading-none">
+                                        UPDATE AVAILABLE
+                                    </span>
+                                )}
                             </h2>
                             <p className="text-[8px] text-white/30 uppercase tracking-[0.3em] font-mono">RECALIBRATE CORE SERVICE WORKER NODES</p>
                         </div>
                         
-                        <p className="text-[9px] text-white/50 leading-relaxed uppercase tracking-wider">
-                            Purges cached local application shell memory, unregisters all background service worker network layers, and re-fetches the absolute latest production deployment directly from the primary server. Keeps your active session identity authenticated.
+                        <p className="text-[9px] text-white/50 leading-relaxed uppercase tracking-wider font-mono">
+                            {updateAvailable 
+                                ? 'A newer version of the application shell has been detected on the network nodes! Apply recalibration to synchronize immediately.'
+                                : 'Purges cached local application shell memory, unregisters all background service worker network layers, and re-fetches the absolute latest production deployment directly from the primary server.'
+                            }
                         </p>
 
                         <div className="pt-2 flex justify-start">
                              <button 
                                  disabled={isSaving}
                                  onClick={handleForceUpdate}
-                                 className={`px-6 py-2.5 bg-[#ff006e] text-black text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_20px_rgba(255,0,110,0.3)] hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] active:scale-95 ${isSaving ? 'opacity-50 cursor-wait' : ''}`}
+                                 className={`px-6 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 ${
+                                     isSaving 
+                                     ? 'bg-[#ff006e]/20 text-white/40 cursor-wait' 
+                                     : updateAvailable 
+                                       ? 'bg-[#ff006e] text-black shadow-[0_0_25px_rgba(255,0,110,0.4)] hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]'
+                                       : 'bg-transparent border border-white/10 text-white/40 hover:text-white hover:border-[#ff006e] hover:bg-[#ff006e]/5 hover:shadow-[0_0_15px_rgba(255,0,110,0.1)]'
+                                 }`}
                              >
-                                 {isSaving ? 'RECALIBRATING...' : 'RECALIBRATE & FORCE UPDATE'}
+                                 {isSaving 
+                                     ? 'RECALIBRATING...' 
+                                     : updateAvailable 
+                                       ? 'INSTALL UPDATE NOW' 
+                                       : 'RECALIBRATE & FORCE UPDATE'
+                                 }
                              </button>
                         </div>
                     </div>
