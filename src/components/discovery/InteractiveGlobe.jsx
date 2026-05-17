@@ -118,7 +118,7 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
             {isSelected && (
                 <>
                     <pointLight distance={1.0} intensity={5} color={color} />
-                    <Html position={[0, size + 0.05, 0]} center>
+                    <Html position={[0, size + 0.05, 0]} center zIndexRange={[0, 5]}>
                         <div className="pointer-events-none select-none px-2 py-0.5 bg-black/90 border-l backdrop-blur-xl animate-in fade-in zoom-in duration-300 shadow-2xl font-mono" style={{ borderColor: color }}>
                             <div className="text-[7px] font-black uppercase tracking-widest" style={{ color: color }}>{name}</div>
                             {subtitle && (
@@ -207,7 +207,7 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
 
             {/* Always-visible label (not just when selected) */}
             {!hideLabel && (
-                <Html position={[0, 0.28, 0]} center>
+                <Html position={[0, 0.28, 0]} center zIndexRange={[0, 5]}>
                     <div
                         className="pointer-events-none select-none px-2 py-0.5 backdrop-blur-xl font-mono border-l"
                         style={{
