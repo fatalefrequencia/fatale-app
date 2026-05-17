@@ -1501,7 +1501,7 @@ export const IPodPlayer = ({
                 </div>
 
                 {/* SCREEN CONTAINER */}
-                <div className={`w-full ${isVertical ? 'h-[190px]' : 'h-[320px]'} bg-black rounded-2xl border-4 border-[#f00060]/20 overflow-hidden relative shadow-[inset_0_0_50px_rgba(255,0,110,0.1)] flex flex-col transition-all duration-300 z-10`}>
+                <div className={`w-full ${isVertical ? 'h-[215px]' : 'h-[320px]'} bg-black rounded-2xl border-4 border-[#f00060]/20 overflow-hidden relative shadow-[inset_0_0_50px_rgba(255,0,110,0.1)] flex flex-col transition-all duration-300 z-10`}>
 
                     {/* STATUS BAR - REDESIGNED */}
                     <div className="h-7 bg-gradient-to-b from-[#1a1a1a] to-black/40 backdrop-blur-md border-b border-[#f00060]/30 flex justify-between items-center px-4 z-20">
@@ -1590,7 +1590,7 @@ export const IPodPlayer = ({
                                         </div>
 
                                         {/* NEURO-COGNITIVE VIBE SCANNER HUD */}
-                                        {vibeFeatures && (
+                                        {vibeFeatures && !isVertical && (
                                             <div className="my-1.5 p-1.5 bg-black/40 border border-[#f00060]/10 rounded-sm font-mono text-[6.5px] text-[#f00060]/85 uppercase tracking-[0.05em] space-y-1 select-none">
                                                 <div className="flex justify-between items-center text-[7.5px] border-b border-[#f00060]/15 pb-0.5 mb-1 text-white/90">
                                                     <span className="flex items-center gap-1">
@@ -1878,7 +1878,7 @@ export const IPodPlayer = ({
                         ref={wheelRef}
                         onMouseDown={onStart}
                         onTouchStart={onStart}
-                        className={`${isVertical ? 'w-42 h-42' : 'w-64 h-64'} rounded-full bg-[#111] border-2 border-[#333] shadow-[0_15px_60px_rgba(0,0,0,1),inset_0_2px_10px_rgba(255,255,255,0.05)] relative flex items-center justify-center cursor-pointer active:scale-[0.99] transition-all duration-300 group touch-none`}
+                        className={`${isVertical ? 'w-40 h-40' : 'w-64 h-64'} rounded-full bg-[#111] border-2 border-[#333] shadow-[0_15px_60px_rgba(0,0,0,1),inset_0_2px_10px_rgba(255,255,255,0.05)] relative flex items-center justify-center cursor-pointer active:scale-[0.99] transition-all duration-300 group touch-none`}
                     >
                         {/* WHEEL BUTTONS - POLISHED */}
                         <button onClick={handleMenuClick} className={`absolute ${isVertical ? 'top-4' : 'top-6'} text-xs font-black text-[#f00060]/40 hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] tracking-widest transition-all font-mono uppercase z-50`}>MENU</button>
