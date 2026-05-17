@@ -97,7 +97,7 @@ const FataleCorePanel = ({ user, onBack }) => {
 
             {/* Status strip */}
             <div
-                className="flex-none px-4 py-2 border-b border-white/5 flex items-center gap-3 text-[8px] mono uppercase tracking-widest"
+                className="hidden md:flex flex-none px-4 py-2 border-b border-white/5 items-center gap-3 text-[8px] mono uppercase tracking-widest"
                 style={{ background: `${COLOR}08`, color: `${COLOR}80` }}
             >
                 <AlertTriangle size={9} />
@@ -108,7 +108,7 @@ const FataleCorePanel = ({ user, onBack }) => {
             {/* Scrollable log feed */}
             <div className="flex-1 overflow-y-auto p-4 space-y-2 no-scrollbar">
                 {/* Pinned System Transmission */}
-                <div className="p-3 border relative overflow-hidden bg-red-950/20 mb-4" style={{ borderColor: `${COLOR}40` }}>
+                <div className="hidden md:block p-3 border relative overflow-hidden bg-red-950/20 mb-4" style={{ borderColor: `${COLOR}40` }}>
                     {/* Glowing subtle background pulse */}
                     <div className="absolute inset-0 opacity-10 bg-gradient-to-r from-red-500/0 via-red-500 to-red-500/0 animate-pulse" />
                     <div className="relative z-10 flex gap-3">
@@ -158,7 +158,7 @@ const FataleCorePanel = ({ user, onBack }) => {
             {/* Submission form */}
             <form onSubmit={handleSubmit} className="flex-none border-t border-white/10 bg-black/80 p-4 space-y-3 pb-[88px] md:pb-4">
                 {/* Category tabs */}
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-2 overflow-x-auto no-scrollbar flex-nowrap pb-1 w-full">
                     {CATEGORIES.map(({ id, label, icon: Icon }) => (
                         <button
                             key={id}
@@ -198,7 +198,7 @@ const FataleCorePanel = ({ user, onBack }) => {
                 <div className="flex items-start gap-3">
                     <textarea
                         className="flex-1 bg-transparent border text-[10px] mono text-white outline-none placeholder:text-white/20 resize-none p-2"
-                        style={{ borderColor: `${COLOR}30`, minHeight: '60px' }}
+                        style={{ borderColor: `${COLOR}30`, minHeight: window.innerWidth < 768 ? '44px' : '60px' }}
                         placeholder={`Describe your ${category.toLowerCase().replace('_', ' ')}...`}
                         value={message}
                         onChange={e => setMessage(e.target.value.slice(0, 500))}
