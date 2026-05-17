@@ -45,7 +45,20 @@ try {
         fs.rmSync(outDir, { recursive: true, force: true });
     }
 
-    execSync(`npx electron-packager "${tempDir}" fatale --platform=win32 --arch=x64 --out="${outDir}" --overwrite`, { stdio: 'inherit' });
+    execSync(`npx electron-packager "${tempDir}" fatale --platform=win32 --arch=x64 --icon="public/app-icon.ico" --out="${outDir}" --overwrite`, { stdio: 'inherit' });
+
+    // 5.5 Create descriptive startup guide for users
+    console.log('[DESKTOP BUILD] Writing startup instructions...');
+    const instructions = `FATALE DESKTOP SHELL - STARTUP GUIDE
+------------------------------------
+To run the application, double-click:
+  fatale.exe
+
+Controls:
+  - Fullscreen Toggle: Click [Toggle Fullscreen Mode] in the top-right corner.
+  - Exit Application: Click [Exit Application] (the X button) in the top-right corner.
+`;
+    fs.writeFileSync(path.join(outDir, 'fatale-win32-x64', 'HOW_TO_START.txt'), instructions);
 
     // 6. Clean up temp folder
     console.log('[DESKTOP BUILD] Cleaning up build workspace...');

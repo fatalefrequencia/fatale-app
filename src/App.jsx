@@ -2512,6 +2512,7 @@ function App() {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 };
@@ -4741,7 +4742,6 @@ const PlayerContent = ({
           onRequestTrack={onRequestTrack}
         />
       )}
-      </div>
       </div>
     </div>
   );
