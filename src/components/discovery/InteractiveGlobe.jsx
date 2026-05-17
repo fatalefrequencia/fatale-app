@@ -325,6 +325,19 @@ const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists =
             .slice(0, 25);
     }, [tracks, seed, searchQuery]);
 
+    const totalVisibleNodes = useMemo(() => {
+        let count = 0;
+        if (activeView === 'COMMUNITIES' || !activeView) count += filteredCommunities.length;
+        if (activeView === 'ARTISTS' || !activeView) count += filteredArtists.length;
+        if (activeView === 'PLAYLISTS' || !activeView) count += filteredPlaylists.length;
+        if (activeView === 'TRACKS' || !activeView) count += filteredTracks.length;
+        return count;
+    }, [filteredCommunities, filteredArtists, filteredPlaylists, filteredTracks, activeView]);
+
+    const densityMultiplier = useMemo(() => {
+        return Math.max(0.4, 1 / (1 + 0.015 * totalVisibleNodes));
+    }, [totalVisibleNodes]);
+
     return (
         <group>
             <pointLight ref={innerLightRef} color={activeSectorColor || "#ff006e"} intensity={1} distance={5} />
@@ -348,7 +361,7 @@ const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists =
                     id={c.id || c.Id}
                     name={c.name || c.Name}
                     color="#ffaa00"
-                    size={0.1}
+                    size={0.1 * densityMultiplier}
                     isSelected={selectedId === `community-${c.id || c.Id}`}
                     cameraDist={cameraDist}
                     onClick={() => onCommunityClick?.(c)}
@@ -362,7 +375,7 @@ const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists =
                     id={a.id || a.Id}
                     name={a.name || a.Name}
                     color="#00ffaa"
-                    size={0.08}
+                    size={0.08 * densityMultiplier}
                     isSelected={selectedId === `artist-${a.id || a.Id}`}
                     cameraDist={cameraDist}
                     onClick={() => onArtistClick?.(a)}
@@ -377,7 +390,7 @@ const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists =
                     name={t.title || t.Title}
                     subtitle={t.artist || t.Artist}
                     color="#00aaff"
-                    size={0.06}
+                    size={0.06 * densityMultiplier}
                     isSelected={selectedId === `track-${t.id || t.Id}`}
                     cameraDist={cameraDist}
                     onClick={() => onTrackClick?.(t)}
@@ -391,7 +404,7 @@ const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists =
                     id={p.id || p.Id}
                     name={p.name || p.Name}
                     color="#ff006e"
-                    size={0.08}
+                    size={0.08 * densityMultiplier}
                     isSelected={selectedId === `playlist-${p.id || p.Id}`}
                     cameraDist={cameraDist}
                     onClick={() => onPlaylistClick?.(p)}
