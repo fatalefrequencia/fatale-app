@@ -1,6 +1,6 @@
 {
-  "name": "FATALE SYSTEM CORE",
-  "short_name": "Fatale",
+  "name": "fatale system core",
+  "short_name": "fatale",
   "description": "Next-Gen Cyberpunk Audiovisual Neural Network Terminal",
   "start_url": "/",
   "display": "standalone",
