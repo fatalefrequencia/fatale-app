@@ -318,40 +318,14 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
     const filteredArtists = useMemo(() => {
         let base = trendingArtists.filter(a => {
             const name = (a.name || a.Name || "").toLowerCase();
-            const isValid = name && !name.includes('placeholder') && name.length > 1 && name !== 'the archive' && name !== 'youtube' && !a.isArchive;
-            if (!isValid) return false;
-
-            const artistIdStr = String(a.id || a.Id);
-            const userIdStr = String(a.userId || a.UserId);
-
-            // Check if artist has any posted native tracks
-            const hasTracks = trendingTracks.some(t => {
-                const isNative = isNativeTrack(t);
-                const matchesArtist = String(t.artistId || t.ArtistId) === artistIdStr || (t.Album?.ArtistId && String(t.Album.ArtistId) === artistIdStr);
-                return isNative && matchesArtist;
-            });
-
-            // Check if has playlists
-            const hasPlaylists = trendingPlaylists.some(p => String(p.userId || p.UserId) === userIdStr);
-
-            // Check if has visual/studio uploads
-            const hasVisuals = visualUploads.some(v => String(v.userId || v.UserId) === userIdStr);
-
-            // Check if has journal entries
-            const hasJournals = journalEntries.some(j => String(j.userId || j.UserId) === userIdStr);
-
-            // Check if is system node or is logged-in user
-            const isSystem = (a.name || a.Name || '').toUpperCase() === 'FATALE_CORE' || (a.name || a.Name || '').toUpperCase() === 'FATALE-CORE';
-            const isSelf = user && String(user.id || user.Id) === userIdStr;
-
-            return hasTracks || hasPlaylists || hasVisuals || hasJournals || isSystem || isSelf;
+            return name && !name.includes('placeholder') && name.length > 1 && name !== 'the archive' && name !== 'youtube' && !a.isArchive;
         });
         if (activeSector !== null) base = base.filter(matchesSector);
         if (searchQuery) {
             base = base.filter(a => (a.name || a.Name || '').toLowerCase().includes(searchQuery.toLowerCase()));
         }
         return base;
-    }, [trendingArtists, trendingTracks, trendingPlaylists, visualUploads, journalEntries, isNativeTrack, user, searchQuery, matchesSector, activeSector]);
+    }, [trendingArtists, searchQuery, matchesSector, activeSector]);
 
 
 
@@ -404,35 +378,9 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
     const artistsForGlobe = useMemo(() => {
         return trendingArtists.filter(a => {
             const name = (a.name || a.Name || "").toLowerCase();
-            const isValid = name !== 'the archive' && name !== 'youtube' && !a.isArchive;
-            if (!isValid) return false;
-
-            const artistIdStr = String(a.id || a.Id);
-            const userIdStr = String(a.userId || a.UserId);
-
-            // Check if artist has any posted native tracks
-            const hasTracks = trendingTracks.some(t => {
-                const isNative = isNativeTrack(t);
-                const matchesArtist = String(t.artistId || t.ArtistId) === artistIdStr || (t.Album?.ArtistId && String(t.Album.ArtistId) === artistIdStr);
-                return isNative && matchesArtist;
-            });
-
-            // Check if has playlists
-            const hasPlaylists = trendingPlaylists.some(p => String(p.userId || p.UserId) === userIdStr);
-
-            // Check if has visual/studio uploads
-            const hasVisuals = visualUploads.some(v => String(v.userId || v.UserId) === userIdStr);
-
-            // Check if has journal entries
-            const hasJournals = journalEntries.some(j => String(j.userId || j.UserId) === userIdStr);
-
-            // Check if is system node or is logged-in user
-            const isSystem = (a.name || a.Name || '').toUpperCase() === 'FATALE_CORE' || (a.name || a.Name || '').toUpperCase() === 'FATALE-CORE';
-            const isSelf = user && String(user.id || user.Id) === userIdStr;
-
-            return hasTracks || hasPlaylists || hasVisuals || hasJournals || isSystem || isSelf;
+            return name !== 'the archive' && name !== 'youtube' && !a.isArchive;
         });
-    }, [trendingArtists, trendingTracks, trendingPlaylists, visualUploads, journalEntries, isNativeTrack, user]);
+    }, [trendingArtists]);
 
 
 
