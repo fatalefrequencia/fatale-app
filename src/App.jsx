@@ -1653,6 +1653,50 @@ function App() {
     }
     if (!track.source) return;
 
+    // Check if YouTube track
+    const isYoutube = track.source && track.source.startsWith('youtube:');
+    if (isYoutube) {
+      await handleCache(track);
+      return;
+    }
+
+    const trackDbId = track.dbId || track.id || track.Id;
+    const uid = user?.id || user?.Id || 'anon';
+    const localCachedKey = `cached_native_${uid}`;
+    let cachedNative = JSON.parse(localStorage.getItem(localCachedKey) || "[]");
+
+    // REMOVE CACHE IF ALREADY CACHED
+    if (track.isCached) {
+      showNotification("REMOVING", `Removing "${track.title}" from offline cache...`, "info");
+      try {
+        if ('caches' in window) {
+          const audioCache = await caches.open('fatale-audio-cache');
+          await audioCache.delete(track.source);
+        }
+        
+        cachedNative = cachedNative.filter(id => String(id) !== String(trackDbId));
+        localStorage.setItem(localCachedKey, JSON.stringify(cachedNative));
+
+        setCachedTrackIds(prev => {
+          const next = new Set(prev);
+          if (trackDbId) next.delete(String(trackDbId));
+          return next;
+        });
+
+        setTracks(prev => prev.map(t => {
+          const tId = t.dbId || t.id || t.Id;
+          return String(tId) === String(trackDbId) ? { ...t, isCached: false } : t;
+        }));
+
+        showNotification("REMOVED", `"${track.title}" removed from offline storage.`, "success");
+      } catch (err) {
+        console.error("Failed to delete offline cache:", err);
+        showNotification("SYSTEM_ERROR", "Failed to clear offline cached track.", "error");
+      }
+      return;
+    }
+
+    // DOWNLOAD & CACHE DIRECTLY IN-APP SHELL
     showNotification("DOWNLOADING", `Downloading "${track.title}" directly into offline app shell...`, "info");
 
     try {
@@ -1671,11 +1715,7 @@ function App() {
         }));
       }
 
-      // 3. Persist this cached status locally in localStorage
-      const uid = currentUserId || user?.id || user?.Id;
-      const localCachedKey = `cached_native_${uid || 'anon'}`;
-      let cachedNative = JSON.parse(localStorage.getItem(localCachedKey) || "[]");
-      const trackDbId = track.dbId || track.id || track.Id;
+      // 3. Persist cached status locally in localStorage
       if (trackDbId && !cachedNative.includes(String(trackDbId))) {
         cachedNative.push(String(trackDbId));
         localStorage.setItem(localCachedKey, JSON.stringify(cachedNative));
@@ -1694,27 +1734,9 @@ function App() {
       }));
 
       showNotification("DOWNLOAD_COMPLETE", `"${track.title}" is now saved in your app shell! Access it offline anytime.`, "success");
-
-      // 5. Trigger the physical device download as a fallback/user convenience
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `${track.artist} - ${track.title}.mp3`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("In-app download & cache failed:", error);
       showNotification("DOWNLOAD_ERROR", "Failed to cache track for offline access.", "error");
-      
-      // Device download fallback
-      const link = document.createElement('a');
-      link.href = track.source;
-      link.download = `${track.artist} - ${track.title}.mp3`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
     }
   };
 

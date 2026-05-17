@@ -356,7 +356,7 @@ export const IPodPlayer = ({
                     : []
                 ),
                 ...(currentTrack.isOwned
-                    ? [{ id: 'DOWNLOAD_FILE', label: t('DOWNLOAD_FILE') }]
+                    ? [{ id: 'DOWNLOAD_FILE', label: currentTrack.isCached ? 'REMOVE OFFLINE' : t('DOWNLOAD_FILE') }]
                     : [{ id: 'PURCHASE_FILE', label: `${t('PURCHASE_FILE')} (${currentTrack.price || 0} CRD)` }]
                 )
             ];
