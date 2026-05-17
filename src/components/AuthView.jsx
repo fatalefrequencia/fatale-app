@@ -419,63 +419,48 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                         </p>
                     </div>
                 </div>
+
+                {/* Render PWA Prompts INSIDE the motion.div container to ensure perfect rendering constraints */}
+                {deferredPrompt && (
+                    <div className="w-full mt-4 bg-black/85 border border-[#d60036]/35 rounded-2xl p-4 text-center shadow-[0_0_20px_rgba(214,0,54,0.15)] backdrop-blur-xl relative corner-bracket corner-bracket-bottom flex flex-col items-center">
+                        <div className="text-[10px] font-black uppercase tracking-[0.25em] mb-1.5 text-white">
+                            [ INSTALL_SYSTEM_SHELL ]
+                        </div>
+                        <p className="text-[9px] text-[#d60036]/70 leading-relaxed mb-3.5 uppercase tracking-wider max-w-[340px]">
+                            Download Fatale directly to your device for standalone immersive HUD execution and faster loading times.
+                        </p>
+                        <button
+                            onClick={onInstall}
+                            type="button"
+                            className="w-full bg-[#d60036] hover:bg-white text-black font-black py-3 rounded-xl transition-all uppercase tracking-[0.15em] text-[10px] shadow-[0_0_15px_rgba(214,0,54,0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.4)]"
+                        >
+                            INSTALL APP
+                        </button>
+                    </div>
+                )}
+
+                {isIOS && !isStandalone && (
+                    <div className="w-full mt-4 bg-black/85 border border-[#d60036]/35 rounded-2xl p-4 text-center shadow-[0_0_20px_rgba(214,0,54,0.15)] backdrop-blur-xl relative corner-bracket corner-bracket-bottom flex flex-col items-center">
+                        <div className="text-[10px] font-black uppercase tracking-[0.25em] mb-1.5 text-white">
+                            [ INSTALL_SYSTEM_SHELL ]
+                        </div>
+                        <p className="text-[9px] text-[#d60035]/75 leading-relaxed uppercase tracking-wider max-w-[340px]">
+                            To install on iOS: Tap <span className="text-white font-black">Share</span> at the bottom of Safari, then select <span className="text-white font-black">"Add to Home Screen"</span>.
+                        </p>
+                    </div>
+                )}
+
+                {!isStandalone && !deferredPrompt && !isIOS && (
+                    <div className="w-full mt-4 bg-black/85 border border-[#d60036]/35 rounded-2xl p-4 text-center shadow-[0_0_20px_rgba(214,0,54,0.15)] backdrop-blur-xl relative corner-bracket corner-bracket-bottom flex flex-col items-center">
+                        <div className="text-[10px] font-black uppercase tracking-[0.25em] mb-1.5 text-white animate-pulse">
+                            [ DESKTOP_SYSTEM_SHELL ]
+                        </div>
+                        <p className="text-[9px] text-[#d60036]/75 leading-relaxed uppercase tracking-wider max-w-[340px]">
+                            Run fatale as a high-performance, borderless desktop app. To install: Click the <span className="text-white font-black">Install [＋]</span> or <span className="text-white font-black">Download</span> icon in your browser's address bar at the top!
+                        </p>
+                    </div>
+                )}
             </motion.div>
-
-            {/* PWA Installation Prompts */}
-            {deferredPrompt && (
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="z-10 w-full max-w-[420px] mt-4 bg-black/85 border border-[#d60036]/35 rounded-2xl p-4 text-center shadow-[0_0_20px_rgba(214,0,54,0.15)] backdrop-blur-xl relative corner-bracket corner-bracket-bottom flex flex-col items-center"
-                >
-                    <div className="text-[10px] font-black uppercase tracking-[0.25em] mb-1.5 text-white">
-                        [ INSTALL_SYSTEM_SHELL ]
-                    </div>
-                    <p className="text-[9px] text-[#d60036]/70 leading-relaxed mb-3.5 uppercase tracking-wider max-w-[340px]">
-                        Download Fatale directly to your device for standalone immersive HUD execution and faster loading times.
-                    </p>
-                    <button
-                        onClick={onInstall}
-                        type="button"
-                        className="w-full bg-[#d60036] hover:bg-white text-black font-black py-3 rounded-xl transition-all uppercase tracking-[0.15em] text-[10px] shadow-[0_0_15px_rgba(214,0,54,0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.4)]"
-                    >
-                        INSTALL APP
-                    </button>
-                </motion.div>
-            )}
-
-             {isIOS && !isStandalone && (
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="z-10 w-full max-w-[420px] mt-4 bg-black/85 border border-[#d60036]/35 rounded-2xl p-4 text-center shadow-[0_0_20px_rgba(214,0,54,0.15)] backdrop-blur-xl relative corner-bracket corner-bracket-bottom flex flex-col items-center"
-                >
-                    <div className="text-[10px] font-black uppercase tracking-[0.25em] mb-1.5 text-white">
-                        [ INSTALL_SYSTEM_SHELL ]
-                    </div>
-                    <p className="text-[9px] text-[#d60035]/75 leading-relaxed uppercase tracking-wider max-w-[340px]">
-                        To install on iOS: Tap <span className="text-white font-black">Share</span> at the bottom of Safari, then select <span className="text-white font-black">"Add to Home Screen"</span>.
-                    </p>
-                </motion.div>
-            )}
-
-            {!isStandalone && !deferredPrompt && !isIOS && (
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="z-10 w-full max-w-[420px] mt-4 bg-black/85 border border-[#d60036]/35 rounded-2xl p-4 text-center shadow-[0_0_20px_rgba(214,0,54,0.15)] backdrop-blur-xl relative corner-bracket corner-bracket-bottom flex flex-col items-center"
-                >
-                    <div className="text-[10px] font-black uppercase tracking-[0.25em] mb-1.5 text-white">
-                        [ DESKTOP_SYSTEM_SHELL ]
-                    </div>
-                    <p className="text-[9px] text-[#d60036]/75 leading-relaxed uppercase tracking-wider max-w-[340px]">
-                        Run fatale as a high-performance, borderless desktop app. To install: Click the <span className="text-white font-black">Install [＋]</span> or <span className="text-white font-black">Download</span> icon in your browser's address bar at the top!
-                    </p>
-                </motion.div>
-            )}
         </div>
     );
 };
