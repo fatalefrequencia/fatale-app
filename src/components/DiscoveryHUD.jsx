@@ -317,6 +317,17 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
             // Strict check for real communities
             return name && !name.toLowerCase().includes('placeholder') && name.length > 2;
         });
+
+        // Filter out system node (FATALE_CORE)
+        base = base.filter(c => 
+            !c.isSystem && 
+            !c.IsSystem && 
+            c.id !== 4 && 
+            c.Id !== 4 && 
+            c.name?.toUpperCase() !== 'FATALE_CORE' && 
+            c.Name?.toUpperCase() !== 'FATALE_CORE'
+        );
+
         if (activeSector !== null) base = base.filter(matchesSector);
 
         // Sort Joined community to top (Formal Membership)

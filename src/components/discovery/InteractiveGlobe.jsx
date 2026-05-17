@@ -254,6 +254,16 @@ const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists =
             ? communities.filter(c => (c.sectorId || c.SectorId) === activeSector)
             : communities;
         
+        // Filter out system node (FATALE_CORE)
+        base = base.filter(c => 
+            !c.isSystem && 
+            !c.IsSystem && 
+            c.id !== 4 && 
+            c.Id !== 4 && 
+            c.name?.toUpperCase() !== 'FATALE_CORE' && 
+            c.Name?.toUpperCase() !== 'FATALE_CORE'
+        );
+
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
             base = base.filter(c => (c.name || c.Name || '').toLowerCase().includes(q));
