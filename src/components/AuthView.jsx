@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Mail, Lock, ChevronRight, AlertCircle, Loader2, ShieldCheck, X } from 'lucide-react';
+import { User, Mail, Lock, ChevronRight, AlertCircle, Loader2, ShieldCheck } from 'lucide-react';
 import API from '../services/api';
 import loginBg from '../assets/login_bg.png';
 
@@ -8,7 +8,6 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
     const [activeTab, setActiveTab] = useState('login'); // 'login' | 'register'
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [showDesktopGuide, setShowDesktopGuide] = useState(false);
 
     const [isIOS, setIsIOS] = useState(false);
     const [isStandalone, setIsStandalone] = useState(false);
@@ -22,6 +21,20 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
         setIsStandalone(!!checkStandalone);
         setIsDesktop(!checkIOS && !checkAndroid && !checkStandalone);
     }, []);
+
+    const handleDownloadShortcut = () => {
+        const currentOrigin = window.location.origin;
+        const shortcutContent = `[InternetShortcut]\nURL=${currentOrigin}\nIconIndex=0\n`;
+        const blob = new Blob([shortcutContent], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'fatale.url';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
 
     // Form States
     const [formData, setFormData] = useState({
@@ -456,85 +469,19 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                         <div className="text-[10px] font-black uppercase tracking-[0.25em] mb-1.5 text-white animate-pulse">
                             [ DESKTOP_SYSTEM_SHELL ]
                         </div>
-                        <p className="text-[9px] text-[#d60036]/70 leading-relaxed mb-3.5 uppercase tracking-wider max-w-[340px]">
+                        <p className="text-[9px] text-[#d60036]/70 leading-relaxed mb-1 uppercase tracking-wider max-w-[340px]">
                             Run fatale as a high-performance, borderless desktop application directly on your workstation.
                         </p>
                         <button
-                            onClick={() => setShowDesktopGuide(true)}
+                            onClick={handleDownloadShortcut}
                             type="button"
-                            className="w-full bg-[#d60036] hover:bg-white text-black font-black py-3 rounded-xl transition-all uppercase tracking-[0.15em] text-[10px] shadow-[0_0_15px_rgba(214,0,54,0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.4)]"
+                            className="mt-3.5 text-[9px] font-black uppercase tracking-[0.25em] text-[#d60036] hover:text-white transition-all duration-300 underline underline-offset-4 cursor-pointer hover:drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]"
                         >
-                            INSTALL APP
+                            [ DOWNLOAD CLIENT TO DESKTOP ]
                         </button>
                     </div>
                 )}
             </motion.div>
-
-            {/* Interactive Cyberpunk Manual Install Guide Modal */}
-            <AnimatePresence>
-                {showDesktopGuide && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[10000] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 pointer-events-auto"
-                        onClick={() => setShowDesktopGuide(false)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            className="bg-black border border-[#d60036]/50 rounded-2xl p-6 max-w-md w-full shadow-[0_0_50px_rgba(214,0,54,0.3)] relative overflow-hidden"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {/* CRT scanlines overlay */}
-                            <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%] pointer-events-none z-10 opacity-30" />
-                            
-                            <div className="flex justify-between items-center mb-4 border-b border-[#d60036]/30 pb-3">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-white">// MANUAL_DESKTOP_INSTALL</h3>
-                                <button onClick={() => setShowDesktopGuide(false)} className="text-[#d60036] hover:text-white transition-colors">
-                                    <X size={16} />
-                                </button>
-                            </div>
-
-                            <p className="text-[9px] text-white/70 leading-relaxed uppercase tracking-wider mb-4">
-                                Modern browsers have relocated direct installation icons. Follow these quick steps to deploy fatale locally:
-                            </p>
-
-                            <div className="space-y-3 text-left">
-                                <div className="p-3 bg-[#d60036]/5 border border-[#d60036]/20 rounded-xl">
-                                    <div className="text-[9px] font-black text-[#d60036] uppercase tracking-widest mb-1">
-                                        Option A: Google Chrome / Microsoft Edge
-                                    </div>
-                                    <p className="text-[8px] text-white/60 leading-relaxed uppercase">
-                                        1. Click the <span className="text-[#d60036] font-black">Three Dots [ ⋮ ]</span> at the top-right of your window.<br />
-                                        2. Hover over <span className="text-white font-black">"Save and share"</span>.<br />
-                                        3. Click <span className="text-white font-black">"Install page as app"</span> or <span className="text-white font-black">"Install fatale"</span>!
-                                    </p>
-                                </div>
-
-                                <div className="p-3 bg-[#d60036]/5 border border-[#d60036]/20 rounded-xl">
-                                    <div className="text-[9px] font-black text-[#d60036] uppercase tracking-widest mb-1">
-                                        Option B: Apple Safari (macOS)
-                                    </div>
-                                    <p className="text-[8px] text-white/60 leading-relaxed uppercase">
-                                        1. Click <span className="text-[#d60036] font-black">"File"</span> in the top Mac menu bar.<br />
-                                        2. Select <span className="text-white font-black">"Add to Dock..."</span>.<br />
-                                        3. Launch directly from your macOS dock as a borderless client!
-                                    </p>
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={() => setShowDesktopGuide(false)}
-                                className="w-full mt-5 bg-[#d60036] hover:bg-white text-black font-black py-3 rounded-xl transition-all uppercase tracking-widest text-[9px] shadow-[0_0_15px_rgba(214,0,54,0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.4)]"
-                            >
-                                SYSTEM_ACKNOWLEDGED
-                            </button>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </div>
     );
 };
