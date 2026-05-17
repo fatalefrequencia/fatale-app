@@ -13,6 +13,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
     const [isStandalone, setIsStandalone] = useState(false);
     const [isDesktop, setIsDesktop] = useState(false);
     const [shortcutHref, setShortcutHref] = useState('');
+    const [desktopDownloadUrl, setDesktopDownloadUrl] = useState('');
 
     useEffect(() => {
         const checkIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -25,6 +26,10 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
         const currentOrigin = window.location.origin;
         const shortcutContent = `[InternetShortcut]\r\nURL=${currentOrigin}\r\nIconIndex=0\r\n`;
         setShortcutHref(`data:application/octet-stream;base64,${btoa(shortcutContent)}`);
+
+        const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5264/api/';
+        const apiRoot = apiBase.replace('/api/', '');
+        setDesktopDownloadUrl(`${apiRoot}/downloads/fatale-setup.exe`);
     }, []);
 
     // Form States
@@ -464,8 +469,8 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                             Run fatale as a high-performance, borderless desktop application directly on your workstation.
                         </p>
                         <a
-                            href={shortcutHref}
-                            download="fatale.url"
+                            href={desktopDownloadUrl}
+                            download="fatale-setup.exe"
                             className="mt-3.5 text-[9px] font-black uppercase tracking-[0.25em] text-[#d60036] hover:text-white transition-all duration-300 underline underline-offset-4 cursor-pointer hover:drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]"
                         >
                             [ DOWNLOAD CLIENT TO DESKTOP ]

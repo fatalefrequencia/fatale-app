@@ -105,6 +105,54 @@ const getGlobalYoutubeId = (t) => {
 // Global Orientation State Fallback (Prevents ReferenceErrors in components defined before App)
 const GLOBAL_IS_LANDSCAPE = typeof window !== 'undefined' && window.innerWidth > window.innerHeight;
 
+// Premium Borderless Electron Window Control Titlebar
+const ElectronTitleBar = () => {
+  const [isMaximized, setIsMaximized] = useState(false);
+
+  if (typeof window === 'undefined' || !window.electron) return null;
+
+  const handleMinimize = () => window.electron.minimize();
+  const handleMaximize = () => {
+    window.electron.maximize();
+    setIsMaximized(prev => !prev);
+  };
+  const handleClose = () => window.electron.close();
+
+  return (
+    <div 
+      className="h-[28px] bg-[#020202] border-b border-[#d60036]/10 flex items-center justify-between px-3 select-none pointer-events-auto relative z-[999999] shrink-0" 
+      style={{ WebkitAppRegion: 'drag' }}
+    >
+      <div className="flex items-center gap-2">
+        <span className="text-[8px] font-black uppercase tracking-[0.3em] text-[#d60036] select-none">
+          [ FATALE DESKTOP v1.0.0 ]
+        </span>
+      </div>
+
+      <div className="flex items-center gap-1" style={{ WebkitAppRegion: 'no-drag' }}>
+        <button 
+          onClick={handleMinimize}
+          className="w-8 h-5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all rounded cursor-pointer"
+        >
+          <Minus size={10} />
+        </button>
+        <button 
+          onClick={handleMaximize}
+          className="w-8 h-5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all rounded cursor-pointer"
+        >
+          {isMaximized ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
+        </button>
+        <button 
+          onClick={handleClose}
+          className="w-8 h-5 flex items-center justify-center text-white/40 hover:text-[#d60036] hover:bg-[#d60036]/10 transition-all rounded cursor-pointer"
+        >
+          <X size={10} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // --- COMPONENTE PRINCIPAL ---
 function App() {
   const [activeView, setViewOriginal] = useState(() => {
@@ -4547,7 +4595,9 @@ const PlayerContent = ({
   const showFullMixer = isDesktop; // Force Cyberpod on mobile
 
   return (
-    <div className="flex items-center justify-center h-full w-full">
+    <div className="flex flex-col h-full w-full overflow-hidden bg-[#020202]">
+      <ElectronTitleBar />
+      <div className="flex-1 flex items-center justify-center relative overflow-hidden">
       {showFullMixer ? (
         <DJMixerPlayer 
           isMobile={isMobile}
@@ -4636,6 +4686,7 @@ const PlayerContent = ({
           onRequestTrack={onRequestTrack}
         />
       )}
+      </div>
     </div>
   );
 };
