@@ -132,6 +132,101 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
     );
 };
 
+// ── FATALE_CORE System Node: Always pinned to north pole ──────────────────────
+const FataleCoreNode = ({ isSelected, onClick, cameraDist }) => {
+    const meshRef = useRef();
+    const ringRef = useRef();
+    const [hovered, setHovered] = useState(false);
+    const COLOR = '#ff0033';
+    const GLOW_COLOR = '#ff003380';
+    const POS = [0, 2.48, 0]; // North pole surface
+    const scaleFactor = THREE.MathUtils.clamp(cameraDist / 6, 0.8, 2);
+    const glowTex = useMemo(() => createGlowTexture(COLOR), []);
+
+    useFrame((state) => {
+        const t = state.clock.getElapsedTime();
+        if (meshRef.current) {
+            // Subtle pulse
+            const pulse = 1 + Math.sin(t * 3) * 0.15;
+            meshRef.current.scale.setScalar(scaleFactor * pulse);
+        }
+        if (ringRef.current) {
+            ringRef.current.rotation.z += 0.01;
+        }
+    });
+
+    useEffect(() => {
+        document.body.style.cursor = hovered ? 'pointer' : 'auto';
+        return () => { document.body.style.cursor = 'auto'; };
+    }, [hovered]);
+
+    return (
+        <group position={POS}>
+            {/* Core sphere */}
+            <mesh
+                ref={meshRef}
+                onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
+                onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
+                onPointerOut={() => setHovered(false)}
+            >
+                <sphereGeometry args={[0.12, 32, 32]} />
+                <meshStandardMaterial
+                    color={COLOR}
+                    emissive={COLOR}
+                    emissiveIntensity={3}
+                    toneMapped={false}
+                    roughness={0.05}
+                    metalness={0.9}
+                />
+            </mesh>
+
+            {/* Orbit ring */}
+            <mesh ref={ringRef} rotation={[Math.PI / 2, 0, 0]}>
+                <torusGeometry args={[0.22, 0.008, 8, 64]} />
+                <meshBasicMaterial color={COLOR} toneMapped={false} transparent opacity={0.6} />
+            </mesh>
+
+            {/* Additive glow halo */}
+            {glowTex && (
+                <mesh
+                    scale={[0.12 * 14 * scaleFactor, 0.12 * 14 * scaleFactor, 1]}
+                    onUpdate={(self) => self.lookAt(0, 0, 0)}
+                >
+                    <planeGeometry />
+                    <meshBasicMaterial
+                        map={glowTex}
+                        transparent
+                        blending={THREE.AdditiveBlending}
+                        opacity={0.9}
+                        side={THREE.DoubleSide}
+                        depthWrite={false}
+                        toneMapped={false}
+                    />
+                </mesh>
+            )}
+
+            {/* Always-visible label (not just when selected) */}
+            <Html position={[0, 0.28, 0]} center>
+                <div
+                    className="pointer-events-none select-none px-2 py-0.5 backdrop-blur-xl font-mono border-l"
+                    style={{
+                        background: 'rgba(0,0,0,0.85)',
+                        borderColor: COLOR,
+                        boxShadow: `0 0 12px ${GLOW_COLOR}`,
+                    }}
+                >
+                    <div className="text-[7px] font-black uppercase tracking-widest" style={{ color: COLOR, textShadow: `0 0 8px ${COLOR}` }}>
+                        FATALE_CORE
+                    </div>
+                    <div className="text-[5px] text-white/40 uppercase tracking-widest mt-0.5">SYS_NODE // FEEDBACK</div>
+                </div>
+            </Html>
+
+            {isSelected && <pointLight distance={1.5} intensity={8} color={COLOR} />}
+        </group>
+    );
+};
+
 const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists = [], playlists = [], tracks = [], selectedId, activeView, onArtistClick, onCommunityClick, onTrackClick, isGlobeSpinning }) => {
     const { camera } = useThree();
     const [cameraDist, setCameraDist] = useState(10);
@@ -289,6 +384,13 @@ const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists =
                     onClick={() => {}}
                 />
             ))}
+
+            {/* ── FATALE_CORE: Permanent System Node at North Pole ── */}
+            <FataleCoreNode
+                isSelected={selectedId === 'system-fatale_core'}
+                cameraDist={cameraDist}
+                onClick={() => onCommunityClick?.({ id: 'fatale_core', name: 'FATALE_CORE', isSystem: true, description: 'The official Fatale system node. Share feedback, bug reports and reviews.' })}
+            />
         </group>
     );
 });

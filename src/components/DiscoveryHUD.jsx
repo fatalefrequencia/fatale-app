@@ -668,7 +668,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     playlists={trendingPlaylists}
                                     albums={albums}
                                     activeSector={activeSector}
-                                    selectedId={selectedGlobeItem ? `${selectedGlobeItem.type}-${selectedGlobeItem.id || selectedGlobeItem.Id}` : null}
+                                    selectedId={selectedGlobeItem ? (selectedGlobeItem.isSystem ? 'system-fatale_core' : `${selectedGlobeItem.type}-${selectedGlobeItem.id || selectedGlobeItem.Id}`) : (activeTerminalCommunity?.isSystem ? 'system-fatale_core' : null)}
                                     activeView={activeGlobeView}
                                     isGlobeSpinning={isGlobeSpinning}
                                     onSectorClick={(secId) => {
@@ -684,6 +684,11 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                          }
                                      }}
                                      onCommunityClick={(comm) => {
+                                         // System nodes open the terminal directly
+                                         if (comm.isSystem) {
+                                             setActiveTerminalCommunity({ ...comm, type: 'community' });
+                                             return;
+                                         }
                                          const prevId = selectedGlobeItem?.id || selectedGlobeItem?.Id;
                                          const currId = comm.id || comm.Id;
                                          if (prevId === currId) {

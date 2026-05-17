@@ -1,11 +1,211 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Users, Zap, Globe, Shield, Star, MoveLeft, MessageSquare, ImagePlus } from 'lucide-react';
+import { X, Send, Users, Zap, Globe, Shield, Star, MoveLeft, MessageSquare, ImagePlus, AlertTriangle, CheckCircle, Terminal, Bug } from 'lucide-react';
 import API from '../../services/api';
 import { SECTORS, getMediaUrl } from '../../constants';
 import { useNotification } from '../../contexts/NotificationContext';
 
+// ── FATALE_CORE Feedback Panel ────────────────────────────────────────────────
+const FataleCorePanel = ({ user, onBack }) => {
+    const { showNotification } = useNotification();
+    const [category, setCategory] = useState('BUG_REPORT');
+    const [message, setMessage] = useState('');
+    const [rating, setRating] = useState(0);
+    const [sending, setSending] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
+    const [logs, setLogs] = useState([]);
+    const [loadingLogs, setLoadingLogs] = useState(false);
+
+    const SYSTEM_COMMUNITY_ID = 4; // FATALE_CORE db id
+    const COLOR = '#ff0033';
+
+    const fetchLogs = useCallback(async () => {
+        setLoadingLogs(true);
+        try {
+            const res = await API.CommunityChat.getMessages(SYSTEM_COMMUNITY_ID);
+            setLogs(Array.isArray(res.data) ? res.data : []);
+        } catch (e) {
+            console.error('[FATALE_CORE_FETCH]', e);
+        } finally {
+            setLoadingLogs(false);
+        }
+    }, []);
+
+    useEffect(() => { fetchLogs(); }, [fetchLogs]);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!message.trim() || sending) return;
+        setSending(true);
+        const prefix = category === 'REVIEW' && rating > 0
+            ? `[${category}][${rating}/5★] `
+            : `[${category}] `;
+        const full = prefix + message.trim();
+        try {
+            await API.CommunityChat.sendMessage(SYSTEM_COMMUNITY_ID, full);
+            setSubmitted(true);
+            setMessage('');
+            setRating(0);
+            showNotification('SIGNAL_RECEIVED', 'Your transmission has been logged by the Fatale team.', 'success');
+            setTimeout(() => { setSubmitted(false); fetchLogs(); }, 2500);
+        } catch (err) {
+            console.error('[FATALE_CORE_SEND]', err);
+            showNotification('SYNC_ERROR', 'Failed to transmit signal. Try again.', 'error');
+        } finally {
+            setSending(false);
+        }
+    };
+
+    const CATEGORIES = [
+        { id: 'BUG_REPORT', label: 'Bug Report', icon: Bug },
+        { id: 'REVIEW', label: 'Review', icon: Star },
+        { id: 'FEATURE_REQUEST', label: 'Feature Request', icon: Terminal },
+        { id: 'OTHER', label: 'Other', icon: MessageSquare },
+    ];
+
+    return (
+        <div
+            className="w-full h-full flex flex-col relative overflow-hidden backdrop-blur-xl"
+            style={{ background: 'rgba(0,0,0,0.92)', borderColor: `${COLOR}30`, border: `1px solid ${COLOR}30` }}
+        >
+            {/* Header */}
+            <div className="flex-none flex items-center justify-between px-4 h-14 border-b border-white/5 bg-black/60">
+                <button
+                    onClick={onBack}
+                    className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] transition-all hover:scale-105"
+                    style={{ color: COLOR }}
+                >
+                    <MoveLeft size={14} /> BACK_TO_ORBIT
+                </button>
+                <div className="flex items-center gap-3">
+                    <div
+                        className="w-8 h-8 flex items-center justify-center border"
+                        style={{ borderColor: `${COLOR}40`, background: `${COLOR}10` }}
+                    >
+                        <Terminal size={14} style={{ color: COLOR }} />
+                    </div>
+                    <div className="flex flex-col items-end">
+                        <div className="text-[10px] font-black uppercase tracking-tight" style={{ color: COLOR, textShadow: `0 0 10px ${COLOR}` }}>
+                            FATALE_CORE
+                        </div>
+                        <div className="text-[7px] text-white/30 mono tracking-widest">SYSTEM_NODE // READ-ONLY</div>
+                    </div>
+                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: COLOR, boxShadow: `0 0 8px ${COLOR}` }} />
+                </div>
+            </div>
+
+            {/* Status strip */}
+            <div
+                className="flex-none px-4 py-2 border-b border-white/5 flex items-center gap-3 text-[8px] mono uppercase tracking-widest"
+                style={{ background: `${COLOR}08`, color: `${COLOR}80` }}
+            >
+                <AlertTriangle size={9} />
+                <span>OFFICIAL FEEDBACK CHANNEL — MONITORED BY THE FATALE TEAM</span>
+                <span className="ml-auto opacity-50">SYS_NODE_04</span>
+            </div>
+
+            {/* Scrollable log feed */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 no-scrollbar">
+                {loadingLogs && (
+                    <div className="flex items-center justify-center h-16 text-[8px] mono text-white/20 uppercase tracking-widest">
+                        LOADING_LOGS...
+                    </div>
+                )}
+                {!loadingLogs && logs.length === 0 && (
+                    <div className="flex flex-col items-center justify-center h-24 opacity-20 text-center space-y-2">
+                        <Terminal size={20} />
+                        <div className="text-[8px] uppercase tracking-[0.3em]">NO_TRANSMISSIONS_YET</div>
+                    </div>
+                )}
+                {logs.map((m, i) => {
+                    const isBug = m.content?.startsWith('[BUG');
+                    const isReview = m.content?.startsWith('[REVIEW');
+                    const isFeature = m.content?.startsWith('[FEATURE');
+                    const tagColor = isBug ? '#ff4444' : isReview ? '#ffaa00' : isFeature ? '#00ffaa' : '#aaaaff';
+                    return (
+                        <div key={m.id || i} className="flex flex-col gap-1 border-l-2 pl-3 py-1" style={{ borderColor: `${tagColor}50` }}>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[8px] font-black uppercase tracking-tight" style={{ color: tagColor }}>{m.username}</span>
+                                <span className="text-[7px] text-white/20 mono">{new Date(m.sentAt).toLocaleString()}</span>
+                            </div>
+                            <div className="text-[10px] text-white/70 leading-relaxed">{m.content}</div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Submission form */}
+            <form onSubmit={handleSubmit} className="flex-none border-t border-white/10 bg-black/80 p-4 space-y-3">
+                {/* Category tabs */}
+                <div className="flex gap-2 flex-wrap">
+                    {CATEGORIES.map(({ id, label, icon: Icon }) => (
+                        <button
+                            key={id}
+                            type="button"
+                            onClick={() => setCategory(id)}
+                            className="flex items-center gap-1 px-2 py-1 text-[8px] font-black uppercase tracking-widest border transition-all"
+                            style={category === id ? {
+                                borderColor: COLOR, color: COLOR, background: `${COLOR}15`,
+                                boxShadow: `0 0 8px ${COLOR}40`
+                            } : { borderColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)' }}
+                        >
+                            <Icon size={8} /> {label}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Star rating (reviews only) */}
+                {category === 'REVIEW' && (
+                    <div className="flex items-center gap-2">
+                        <span className="text-[8px] mono text-white/30 uppercase tracking-widest">RATING:</span>
+                        {[1, 2, 3, 4, 5].map(n => (
+                            <button
+                                key={n} type="button"
+                                onClick={() => setRating(n)}
+                                className="transition-all hover:scale-125"
+                            >
+                                <Star
+                                    size={14}
+                                    style={n <= rating ? { color: '#ffaa00', fill: '#ffaa00', filter: 'drop-shadow(0 0 6px #ffaa00)' } : { color: 'rgba(255,255,255,0.15)' }}
+                                />
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* Message input */}
+                <div className="flex items-start gap-3">
+                    <textarea
+                        className="flex-1 bg-transparent border text-[10px] mono text-white outline-none placeholder:text-white/20 resize-none p-2"
+                        style={{ borderColor: `${COLOR}30`, minHeight: '60px' }}
+                        placeholder={`Describe your ${category.toLowerCase().replace('_', ' ')}...`}
+                        value={message}
+                        onChange={e => setMessage(e.target.value.slice(0, 500))}
+                        rows={3}
+                    />
+                    <button
+                        type="submit"
+                        disabled={!message.trim() || sending}
+                        className="px-3 py-2 border font-black text-[9px] uppercase tracking-widest transition-all disabled:opacity-20 self-end"
+                        style={{ borderColor: COLOR, color: COLOR, background: `${COLOR}10` }}
+                    >
+                        {submitted ? <CheckCircle size={14} /> : sending ? <Zap size={14} className="animate-spin" /> : <Send size={14} />}
+                    </button>
+                </div>
+
+                <div className="text-[7px] text-white/15 mono uppercase tracking-widest">
+                    {message.length}/500 chars — TRANSMITTING AS: {user?.username || 'ANONYMOUS'}
+                </div>
+            </form>
+
+            {/* Scanline overlay */}
+            <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-scanlines mix-blend-overlay animate-scanlines" />
+        </div>
+    );
+};
+
+// ── Standard Community Terminal ───────────────────────────────────────────────
 const CommunityTerminal = ({ community, user, followedCommunities = [], onFollowUpdate, setUser, onBack, sectorColor }) => {
     const { t } = useLanguage();
     const { showNotification } = useNotification();
@@ -19,6 +219,11 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
     const [sending, setSending] = useState(false);
     const [messages, setMessages] = useState([]);
     const [isAtBottom, setIsAtBottom] = useState(true);
+
+    // Route system nodes to the special panel
+    if (community.isSystem) {
+        return <FataleCorePanel user={user} onBack={onBack} />;
+    }
 
     const isJoined = (user?.communityId || user?.CommunityId) === community.id;
     const color = sectorColor || community.color || '#ff006e';
@@ -55,7 +260,6 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
         if (isAtBottom) {
             const container = chatContainerRef.current;
             if (container) {
-                // Use requestAnimationFrame to ensure DOM has updated and avoid jitter
                 requestAnimationFrame(() => {
                     container.scrollTop = container.scrollHeight;
                 });
@@ -172,7 +376,6 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
             console.error('[TERMINAL_SEND_ERROR]', e);
             setNewMessage(text);
         } finally {
-            // Keep sending true for a short cooldown to prevent doubles, then clear
             setTimeout(() => setSending(false), 500);
         }
     };
