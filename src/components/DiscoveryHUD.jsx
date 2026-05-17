@@ -1040,7 +1040,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 </div>
 
                                 {!isPinterestView && (
-                                    <div className="absolute top-10 right-4 flex flex-col gap-3 z-50 scale-95 lg:scale-100">
+                                    <div className={`absolute right-4 flex flex-col gap-3 z-50 scale-95 lg:scale-100 transition-all duration-300 ${selectedGlobeItem ? 'top-2 opacity-0 pointer-events-none md:top-10 md:opacity-100 md:pointer-events-auto' : 'top-10'}`}>
 
                                         {[
                                             { id: 'ARTISTS', icon: <User size={12} />, label: 'Artistas', desc: 'Filtrar Artistas' },
