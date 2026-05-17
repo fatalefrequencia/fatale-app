@@ -7,6 +7,15 @@
     --theme-color-rgb: 255, 0, 110;
 }
 
+html, body {
+    background-color: #020202 !important;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
+}
+
 body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

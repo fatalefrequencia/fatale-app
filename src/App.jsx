@@ -2554,7 +2554,7 @@ const Dashboard = React.memo(({
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden relative bg-black bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-[#1a1a1a] via-[#050505] to-[#000000]">
+    <div className="flex h-screen h-[100dvh] w-full overflow-hidden relative bg-black bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-[#1a1a1a] via-[#050505] to-[#000000]">
       {/* Global Noise Texture */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-0" />
 
@@ -2641,7 +2641,10 @@ const Dashboard = React.memo(({
         className="flex-1 flex flex-col h-full bg-transparent relative overflow-hidden z-10"
       >
         {/* TOP NAV (Móvil) */}
-        <header className="lg:hidden flex items-center justify-center px-1 py-3 border-b border-[var(--theme-color)]/10 bg-black/90 backdrop-blur-md z-40 relative">
+        <header 
+          className="lg:hidden flex items-center justify-center px-1 py-3 border-b border-[var(--theme-color)]/10 bg-black/90 backdrop-blur-md z-40 relative"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
+        >
           <div className="flex gap-[3px] sm:gap-2">
             <NavButton icon={<Radio size={20} />} active={activeView === 'discovery'} onClick={() => setView('discovery')} />
             <NavButton icon={<Hash size={20} />} active={activeView === 'feed'} onClick={() => setView('feed')} />
