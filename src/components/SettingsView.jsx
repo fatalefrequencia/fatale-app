@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Globe, Shield, User, Bell, ChevronRight, Check, Activity } from 'lucide-react';
+import { Globe, Shield, User, Bell, ChevronRight, Check, Activity, Zap, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNotification } from '../contexts/NotificationContext';
 import API from '../services/api';
@@ -10,8 +10,15 @@ const SettingsView = ({ user, setUser }) => {
     const { showNotification } = useNotification();
     const [isSaving, setIsSaving] = React.useState(false);
     const [updateAvailable, setUpdateAvailable] = React.useState(false);
+    const [isOnline, setIsOnline] = React.useState(navigator.onLine);
 
     React.useEffect(() => {
+        const handleOnline = () => setIsOnline(true);
+        const handleOffline = () => setIsOnline(false);
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
         // 1. Core Native SW check
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then((registrations) => {
@@ -33,8 +40,9 @@ const SettingsView = ({ user, setUser }) => {
             });
         }
 
-        // 2. Client-side Byte-Difference Check (Works even when sw calls skipWaiting() instantly!)
+        // 2. Client-side Byte-Difference Check with 30s Polling
         const checkByteDifference = async () => {
+            if (!navigator.onLine) return; // Skip checking if offline
             try {
                 const res = await fetch(`/sw.js?t=${Date.now()}`, { cache: 'no-store' });
                 if (!res.ok) return;
@@ -65,6 +73,15 @@ const SettingsView = ({ user, setUser }) => {
         };
 
         checkByteDifference();
+
+        // Setup 30 second polling interval
+        const checkInterval = setInterval(checkByteDifference, 30000);
+
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+            clearInterval(checkInterval);
+        };
     }, []);
 
 
@@ -255,6 +272,19 @@ const SettingsView = ({ user, setUser }) => {
                                 )}
                             </h2>
                             <p className="text-[8px] text-white/30 uppercase tracking-[0.3em] font-mono">RECALIBRATE CORE SERVICE WORKER NODES</p>
+                            <div className="flex items-center gap-2 mt-1">
+                                {isOnline ? (
+                                    <div className="flex items-center gap-1.5 text-green-500 text-[8px] uppercase tracking-wider font-mono bg-green-500/5 px-2 py-0.5 rounded border border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.1)]">
+                                        <Zap size={10} className="text-green-500 fill-green-500 animate-[pulse_1.5s_infinite]" />
+                                        <span>CONNECTED // LISTENING FOR UPDATES (30S INTERVAL)</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-1.5 text-rose-500 text-[8px] uppercase tracking-wider font-mono bg-rose-500/5 px-2 py-0.5 rounded border border-rose-500/20">
+                                        <AlertTriangle size={10} className="text-rose-500 fill-rose-500/20" />
+                                        <span>DISCONNECTED // LISTENING PAUSED</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         
                         <p className="text-[9px] text-white/50 leading-relaxed uppercase tracking-wider font-mono">
