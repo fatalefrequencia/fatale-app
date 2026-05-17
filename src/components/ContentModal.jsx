@@ -283,28 +283,30 @@ const ContentModal = ({
                         ) : (
                             <div className="p-8 md:p-12 relative">
                                 {['JOURNAL', 'TEXT'].includes(normalizedType) && (
-                                    <div className="space-y-6 p-4">
-                                        <div className="font-mono text-white/90 text-sm md:text-base leading-relaxed tracking-wide">
-                                            <div className="mb-4">
-                                                <span className="text-[#9d00ff] mr-2">root@fatale.fm:~#</span>
-                                                <span>cat log_{content.Id || content.id || 'sys'}.txt</span>
+                                    <div className="p-2 md:p-4">
+                                        <div className="border-2 border-[#9d00ff]/30 bg-black/40 p-6 md:p-8 rounded-sm shadow-[0_0_20px_rgba(157,0,255,0.15)] font-mono">
+                                            <div className="mb-6 flex flex-col md:flex-row md:items-center gap-2 border-b border-[#9d00ff]/20 pb-4">
+                                                <div className="flex items-center text-[#9d00ff] text-xs md:text-sm tracking-widest" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>
+                                                    <span className="mr-2">root@fatale.fm:~#</span>
+                                                    <span>cat log_{content.Id || content.id || 'sys'}.txt</span>
+                                                </div>
                                             </div>
                                             
-                                            <h2 className="text-xl md:text-2xl text-white font-bold mb-2">
+                                            <h2 className="text-xl md:text-2xl text-white font-bold mb-4 break-words whitespace-normal" style={{ textShadow: '0 0 10px rgba(255,255,255,0.5)' }}>
                                                 {content.Title || content.title || t('UNTITLED_LOG')}
                                             </h2>
                                             
-                                            <div className="text-white/50 text-xs mb-8 border-b border-white/10 pb-4">
-                                                {content.CreatedAt ? new Date(content.CreatedAt).toLocaleString() : 'UNKNOWN_TIMESTAMP'}
+                                            <div className="text-[#9d00ff]/70 text-xs mb-8 tracking-widest" style={{ textShadow: '0 0 5px rgba(157,0,255,0.3)' }}>
+                                                [TIMESTAMP: {content.CreatedAt ? new Date(content.CreatedAt).toLocaleString() : 'UNKNOWN'}]
                                             </div>
                                             
-                                            <p className="text-white/80 whitespace-pre-wrap">
+                                            <div className="text-white/90 whitespace-pre-wrap text-sm md:text-base leading-relaxed tracking-wide" style={{ textShadow: '0 0 8px rgba(255,255,255,0.4)' }}>
                                                 {content.Content || content.content || content.Text || content.text}
-                                            </p>
+                                            </div>
 
-                                            <div className="mt-8 flex items-center">
-                                                <span className="text-[#9d00ff] mr-2">root@fatale.fm:~#</span>
-                                                <span className="inline-block w-2.5 h-4 bg-white/80 animate-pulse align-middle"></span>
+                                            <div className="mt-8 flex items-center pt-6 border-t border-[#9d00ff]/20">
+                                                <span className="text-[#9d00ff] mr-2 text-xs md:text-sm tracking-widest" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>root@fatale.fm:~#</span>
+                                                <span className="inline-block w-2.5 h-4 bg-[#9d00ff] animate-pulse align-middle" style={{ boxShadow: '0 0 10px rgba(157,0,255,0.8)' }}></span>
                                             </div>
                                         </div>
                                     </div>
