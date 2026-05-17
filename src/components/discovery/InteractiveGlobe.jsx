@@ -291,7 +291,7 @@ const InteractiveGlobe = memo(({
                 dpr={[1, 2]} 
                 gl={{ logarithmicDepthBuffer: true, antialias: true }}
             >
-                <PerspectiveCamera makeDefault position={[0, 0, isMobile ? 12 : 8.0]} fov={isMobile ? 30 : 40} />
+                <PerspectiveCamera makeDefault position={[0, 0, isMobile ? 7.5 : 8.0]} fov={isMobile ? 30 : 40} />
                 <fog attach="fog" args={['#000000', 8, 30]} />
                 <OrbitControls 
                     enablePan={false} 

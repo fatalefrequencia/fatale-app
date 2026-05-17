@@ -727,7 +727,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                                 <div className="flex justify-between items-start mb-3">
                                                                     <div className="flex-1 min-w-0">
                                                                         <div className="flex items-center gap-3">
-                                                                            <div className="w-10 h-10 rounded-sm bg-black border border-white/10 overflow-hidden shrink-0 shadow-2xl relative">
+                                                                            <div className="w-16 h-16 rounded-sm bg-black border border-white/10 overflow-hidden shrink-0 shadow-2xl relative">
                                                                                 <img 
                                                                                     src={getMediaUrl(selectedGlobeItem.profilePicture || selectedGlobeItem.ProfilePicture || selectedGlobeItem.imageUrl || selectedGlobeItem.ImageUrl || selectedGlobeItem.coverImageUrl || selectedGlobeItem.CoverImageUrl)} 
                                                                                     alt="" 
@@ -752,6 +752,22 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                                                          'ARTIST_IDENTITY'}
                                                                                     </span>
                                                                                 </div>
+                                                                                {/* Cool Info */}
+                                                                                {selectedGlobeItem.type === 'community' && (
+                                                                                    <div className="text-[8px] text-[#00ffff] font-bold mt-1 uppercase tracking-widest">
+                                                                                        POPULATION: {selectedGlobeItem.memberCount || 0} _UNITS
+                                                                                    </div>
+                                                                                )}
+                                                                                {selectedGlobeItem.type === 'artist' && (
+                                                                                    <div className="text-[8px] text-[#00ffff] font-bold mt-1 uppercase tracking-widest">
+                                                                                        GENRE: {(selectedGlobeItem.genre || "NATIVE").toUpperCase()}
+                                                                                    </div>
+                                                                                )}
+                                                                                {selectedGlobeItem.type === 'track' && (
+                                                                                    <div className="text-[8px] text-[#00ffff] font-bold mt-1 uppercase tracking-widest">
+                                                                                        STATUS: STREAMING_ACTIVE
+                                                                                    </div>
+                                                                                )}
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -884,7 +900,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                 </div>
 
                                                  {!isPinterestView && (
-                                                <div className="absolute top-10 right-4 flex flex-col gap-3 z-50 scale-75 lg:scale-100">
+                                                <div className="absolute top-10 right-4 flex flex-col gap-3 z-50 scale-95 lg:scale-100">
 
                                                     {[
                                                         { id: 'ARTISTS', icon: <User size={12} />, label: 'Artistas', desc: 'Filtrar Artistas' },
@@ -899,7 +915,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                         >
                                                             <div className="flex items-center gap-3">
                                                                 {v.icon}
-                                                                <span className={`text-[8px] font-black tracking-[0.2em] transition-all uppercase ${activeGlobeView === v.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto overflow-hidden'}`}>{v.label}</span>
+                                                                <span className={`text-[10px] font-black tracking-[0.2em] transition-all uppercase ${activeGlobeView === v.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto overflow-hidden'}`}>{v.label}</span>
                                                             </div>
                                                             {activeGlobeView === v.id && (
                                                                 <div className="text-[6px] opacity-60 font-bold tracking-tighter uppercase">{v.desc}</div>
@@ -1648,51 +1664,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 </div>
                             </div>
                             
-                            {/* Marketplace */}
-                            <div className="space-y-2">
-                                <div className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center gap-2">
-                                    <Layers size={14}/>
-                                    [ MARKETPLACE ]
-                                </div>
-                                {marketplaceItems.length > 0 ? (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in duration-500">
-                                        {marketplaceItems.map(item => (
-                                            <div key={item.id || item.Id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => {
-                                                const desc = item.description || item.Description;
-                                                if (desc && desc !== "#") {
-                                                    window.open(desc, '_blank');
-                                                }
-                                            }}>
-                                                 {((item.type || item.Type) || '').toLowerCase() === 'video' ? (
-                                                     <video src={getMediaUrl(item.url || item.Url)} className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" muted loop autoPlay playsInline />
-                                                 ) : (
-                                                     <img src={getMediaUrl(item.url || item.Url)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
-                                                 )}
-                                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                                                 <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
-                                                 
-                                                 <div className="absolute top-2 left-2 z-10">
-                                                     <span className="text-[7px] font-mono text-[#ff006e]/80 bg-black/80 px-1.5 py-0.5 border border-[#ff006e]/30 uppercase tracking-widest">OBJ_FOUND</span>
-                                                 </div>
-                                                 
-                                                 <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5 bg-black/70 p-2 backdrop-blur-sm border border-white/5 group-hover:border-[#ff006e]/20 transition-all">
-                                                     <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight text-white transition-colors">
-                                                         {(item.description || item.Description) ? (item.description || item.Description) : ((item.title || item.Title) && !(item.title || item.Title).includes(' ') && (item.title || item.Title).length > 20 ? 'UNTITLED' : (item.title || item.Title))}
-                                                     </div>
-                                                     <div className="text-[7px] text-white/40 uppercase tracking-widest font-mono">
-                                                         LOC: SEC_{hashStr(item.id || item.Id) % 99} // ID: {String(item.id || item.Id).substring(0, 6)}
-                                                     </div>
-                                                 </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center py-10 opacity-20">
-                                        <Layers size={16} className="mb-2" />
-                                        <div className="text-[8px] tracking-widest uppercase text-center px-4">SIN_TIENDAS_DISPONIBLES</div>
-                                    </div>
-                                )}
-                            </div>
+
                         </div>
                     )}
                 </motion.div>
