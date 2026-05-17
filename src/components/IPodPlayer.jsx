@@ -229,6 +229,39 @@ export const IPodPlayer = ({
         fetchPlaylists();
     }, [user]);
 
+    const extractArtistName = (t) => {
+        if (!t) return '';
+        if (t.artistName) return t.artistName;
+        if (t.ArtistName) return t.ArtistName;
+        if (t.artist) {
+            if (typeof t.artist === 'string') return t.artist;
+            if (typeof t.artist === 'object') {
+                if (t.artist.name) return t.artist.name;
+                if (t.artist.Name) return t.artist.Name;
+            }
+        }
+        if (t.Artist) {
+            if (typeof t.Artist === 'string') return t.Artist;
+            if (typeof t.Artist === 'object') {
+                if (t.Artist.name) return t.Artist.name;
+                if (t.Artist.Name) return t.Artist.Name;
+            }
+        }
+        if (t.album?.artist) {
+            if (t.album.artist.name) return t.album.artist.name;
+            if (t.album.artist.Name) return t.album.artist.Name;
+        }
+        if (t.Album?.Artist) {
+            if (t.Album.Artist.name) return t.Album.Artist.name;
+            if (t.Album.Artist.Name) return t.Album.Artist.Name;
+        }
+        if (t.author) return t.author;
+        if (t.Author) return t.Author;
+        if (t.channelTitle) return t.channelTitle;
+        if (t.ChannelTitle) return t.ChannelTitle;
+        return '';
+    };
+
     // Wheel Logic Refs
     const wheelRef = useRef(null);
     const [isDragging, setIsDragging] = useState(false);
@@ -243,7 +276,7 @@ export const IPodPlayer = ({
         ...rawTrack,
         id: rawTrack.user_id || rawTrack.id || rawTrack.Id,
         title: rawTrack.title || rawTrack.Title || 'Untitled',
-        artist: rawTrack.artist || rawTrack.ArtistName || 'Unknown Artist',
+        artist: extractArtistName(rawTrack) || 'Unknown Artist',
         source: rawTrack.source || rawTrack.Source,
         cover: rawTrack.cover || rawTrack.coverImageUrl || rawTrack.CoverImageUrl,
         isLiked: rawTrack.isLiked !== undefined ? rawTrack.isLiked : (rawTrack.IsLiked !== undefined ? rawTrack.IsLiked : false),

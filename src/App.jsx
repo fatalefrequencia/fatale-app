@@ -398,6 +398,39 @@ function App() {
   }, []);
 
   // --- AUDIO LOGIC (Unified Manager) ---
+  const extractArtistName = (t) => {
+    if (!t) return '';
+    if (t.artistName) return t.artistName;
+    if (t.ArtistName) return t.ArtistName;
+    if (t.artist) {
+      if (typeof t.artist === 'string') return t.artist;
+      if (typeof t.artist === 'object') {
+        if (t.artist.name) return t.artist.name;
+        if (t.artist.Name) return t.artist.Name;
+      }
+    }
+    if (t.Artist) {
+      if (typeof t.Artist === 'string') return t.Artist;
+      if (typeof t.Artist === 'object') {
+        if (t.Artist.name) return t.Artist.name;
+        if (t.Artist.Name) return t.Artist.Name;
+      }
+    }
+    if (t.album?.artist) {
+      if (t.album.artist.name) return t.album.artist.name;
+      if (t.album.artist.Name) return t.album.artist.Name;
+    }
+    if (t.Album?.Artist) {
+      if (t.Album.Artist.name) return t.Album.Artist.name;
+      if (t.Album.Artist.Name) return t.Album.Artist.Name;
+    }
+    if (t.author) return t.author;
+    if (t.Author) return t.Author;
+    if (t.channelTitle) return t.channelTitle;
+    if (t.ChannelTitle) return t.ChannelTitle;
+    return '';
+  };
+
   const currentTrack = React.useMemo(() => {
     const raw = (currentTrackIndex >= 0 && tracks[currentTrackIndex])
       ? tracks[currentTrackIndex]
@@ -407,7 +440,7 @@ function App() {
       ...raw,
       id: raw.id || raw.Id,
       title: raw.title || raw.Title,
-      artist: raw.artist || raw.ArtistName || raw.Artist || 'Unknown Artist',
+      artist: extractArtistName(raw) || 'Unknown Artist',
       source: raw.source || raw.Source,
       cover: raw.cover || raw.coverImageUrl || raw.CoverImageUrl,
       isLiked: raw.isLiked ?? (raw.IsLiked ?? false),
@@ -1006,7 +1039,7 @@ function App() {
 
           if (!resolvedSource || resolvedSource === API_BASE_URL || resolvedSource === `${API_BASE_URL}/`) return;
 
-          const artistName = t.album?.artist?.name || t.Album?.Artist?.Name || '';
+          const artistName = extractArtistName(t);
           if (artistName === 'The Archive') return;
 
           const isLiked = likedTrackIds.has(trackId);
