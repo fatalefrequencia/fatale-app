@@ -404,18 +404,6 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit }) => {
                         <p className="text-[8px] text-[#d60036]/50 uppercase tracking-[0.22em] font-black">
                             PROTECTED BY CYBERSEC v9.0
                         </p>
-                    </div>
-                </div>
-
-                {/* Back to Orbit Button */}
-                <div className="text-center mt-6">
-                    <button
-                        onClick={onBackToOrbit}
-                        type="button"
-                        className="text-[10px] uppercase font-black tracking-[0.3em] text-[#d60036]/60 hover:text-white px-6 py-2.5 rounded-xl border border-[#d60036]/20 hover:border-[#d60036]/80 bg-black/40 hover:bg-[#d60036]/10 transition-all duration-300 hover:shadow-[0_0_20px_rgba(214,0,54,0.3)]"
-                    >
-                        ← BACK TO ORBIT
-                    </button>
                 </div>
             </motion.div>
         </div>
