@@ -133,7 +133,7 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
 };
 
 // ── FATALE_CORE System Node: Always pinned to north pole ──────────────────────
-const FataleCoreNode = ({ isSelected, onClick, cameraDist }) => {
+const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
     const meshRef = useRef();
     const ringRef = useRef();
     const [hovered, setHovered] = useState(false);
@@ -206,21 +206,23 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist }) => {
             )}
 
             {/* Always-visible label (not just when selected) */}
-            <Html position={[0, 0.28, 0]} center>
-                <div
-                    className="pointer-events-none select-none px-2 py-0.5 backdrop-blur-xl font-mono border-l"
-                    style={{
-                        background: 'rgba(0,0,0,0.85)',
-                        borderColor: COLOR,
-                        boxShadow: `0 0 12px ${GLOW_COLOR}`,
-                    }}
-                >
-                    <div className="text-[7px] font-black uppercase tracking-widest" style={{ color: COLOR, textShadow: `0 0 8px ${COLOR}` }}>
-                        FATALE_CORE
+            {!hideLabel && (
+                <Html position={[0, 0.28, 0]} center>
+                    <div
+                        className="pointer-events-none select-none px-2 py-0.5 backdrop-blur-xl font-mono border-l"
+                        style={{
+                            background: 'rgba(0,0,0,0.85)',
+                            borderColor: COLOR,
+                            boxShadow: `0 0 12px ${GLOW_COLOR}`,
+                        }}
+                    >
+                        <div className="text-[7px] font-black uppercase tracking-widest" style={{ color: COLOR, textShadow: `0 0 8px ${COLOR}` }}>
+                            FATALE_CORE
+                        </div>
+                        <div className="text-[5px] text-white/40 uppercase tracking-widest mt-0.5">SYS_NODE // FEEDBACK</div>
                     </div>
-                    <div className="text-[5px] text-white/40 uppercase tracking-widest mt-0.5">SYS_NODE // FEEDBACK</div>
-                </div>
-            </Html>
+                </Html>
+            )}
 
             {isSelected && <pointLight distance={1.5} intensity={8} color={COLOR} />}
         </group>
@@ -400,6 +402,7 @@ const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists =
             <FataleCoreNode
                 isSelected={selectedId === 'system-fatale_core'}
                 cameraDist={cameraDist}
+                hideLabel={!!selectedId}
                 onClick={() => onCommunityClick?.({ id: 'fatale_core', name: 'FATALE_CORE', isSystem: true, description: 'The official Fatale system node. Share feedback, bug reports and reviews.' })}
             />
         </group>
