@@ -33,7 +33,15 @@ const ShoppingView = () => {
         try {
             const response = await API.Studio.getAllPosted();
             console.log("MARKETPLACE_RESPONSE:", response.data);
-            const apiShops = response.data.map(item => {
+            const isUrl = (str) => {
+                if (!str) return false;
+                const trimmed = str.trim().toLowerCase();
+                return trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('www.');
+            };
+
+            const filteredData = response.data.filter(item => isUrl(item.description || item.Description));
+
+            const apiShops = filteredData.map(item => {
                 const url = item.url || item.Url || '';
                 const desc = item.description || item.Description || '';
                 const title = item.title || item.Title || '';
