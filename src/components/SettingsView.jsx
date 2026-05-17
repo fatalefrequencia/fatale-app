@@ -12,15 +12,13 @@ const SettingsView = ({ user, setUser }) => {
     const [updateAvailable, setUpdateAvailable] = React.useState(false);
 
     React.useEffect(() => {
+        // 1. Core Native SW check
         if ('serviceWorker' in navigator) {
-            // Check registrations
             navigator.serviceWorker.getRegistrations().then((registrations) => {
                 for (let registration of registrations) {
                     if (registration.waiting) {
                         setUpdateAvailable(true);
                     }
-                    
-                    // Listen for future updates
                     registration.addEventListener('updatefound', () => {
                         const newWorker = registration.installing;
                         if (newWorker) {
@@ -31,15 +29,42 @@ const SettingsView = ({ user, setUser }) => {
                             });
                         }
                     });
-
-                    // Trigger a network update check
-                    registration.update().catch(err => console.debug("SW check skipped", err));
                 }
             });
-
-            // Also check for standard cache-busting index.html updates for non-sw environments (optional check)
-            // But SW registration is the core standard
         }
+
+        // 2. Client-side Byte-Difference Check (Works even when sw calls skipWaiting() instantly!)
+        const checkByteDifference = async () => {
+            try {
+                const res = await fetch(`/sw.js?t=${Date.now()}`, { cache: 'no-store' });
+                if (!res.ok) return;
+                const text = await res.text();
+                if (!text || text.length < 100) return;
+
+                // Simple robust hash function
+                let hash = 0;
+                for (let i = 0; i < text.length; i++) {
+                    hash = (hash << 5) - hash + text.charCodeAt(i);
+                    hash |= 0;
+                }
+                const serverHash = String(hash);
+                
+                const localHashKey = 'fatale_sw_hash';
+                const localHash = localStorage.getItem(localHashKey);
+                
+                if (localHash && localHash !== serverHash) {
+                    console.log("[PWA Update] Server service worker bytecode changed! Update ready.");
+                    setUpdateAvailable(true);
+                } else if (!localHash) {
+                    // Initialize baseline
+                    localStorage.setItem(localHashKey, serverHash);
+                }
+            } catch (e) {
+                console.debug("PWA build check skipped:", e);
+            }
+        };
+
+        checkByteDifference();
     }, []);
 
 
