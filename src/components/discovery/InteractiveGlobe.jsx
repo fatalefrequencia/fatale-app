@@ -83,11 +83,16 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
                 onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
                 onPointerOut={(e) => { setHovered(false); }}
             >
-                <sphereGeometry args={[size, 16, 16]} />
-                <meshBasicMaterial 
+                <sphereGeometry args={[size, 32, 32]} />
+                <meshStandardMaterial 
                     color={color} 
+                    emissive={color}
+                    emissiveIntensity={2}
+                    toneMapped={false}
                     transparent 
-                    opacity={opacityFactor * 0.9}
+                    opacity={opacityFactor}
+                    roughness={0.1}
+                    metalness={0.8}
                 />
             </mesh>
             
@@ -104,7 +109,8 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
                         blending={THREE.AdditiveBlending} 
                         opacity={opacityFactor * 0.8}
                         side={THREE.DoubleSide}
-                        depthWrite={false} // Prevent z-fighting and blocking
+                        depthWrite={false}
+                        toneMapped={false}
                     />
                 </mesh>
             )}
