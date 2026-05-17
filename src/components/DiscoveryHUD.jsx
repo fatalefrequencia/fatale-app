@@ -177,7 +177,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                 try {
                     const myJournalRes = await API.Journal.getMyJournal();
                     const myJournals = Array.isArray(myJournalRes?.data) ? myJournalRes.data : [];
-                    const feedJournals = feedRes.data.filter(i => i.type === 'journal');
+                    const feedJournals = feedRes.data.filter(i => i.type === 'journal' || i.Type === 'journal');
                     
                     // Combine and remove duplicates based on ID
                     const combined = [...myJournals];
@@ -190,7 +190,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                     setJournalEntries(combined.slice(0, 8));
                 } catch (e) {
                     console.error("Failed to fetch my journal in HUD:", e);
-                    setJournalEntries(feedRes.data.filter(i => i.type === 'journal').slice(0, 8));
+                    setJournalEntries(feedRes.data.filter(i => i.type === 'journal' || i.Type === 'journal').slice(0, 8));
                 }
             }
         } catch (err) {
