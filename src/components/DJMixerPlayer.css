@@ -315,6 +315,7 @@
 /* Nano Slider */
 .nano-slider {
     -webkit-appearance: none;
+    appearance: none;
     width: 80px;
     height: 2px;
     background: rgba(255, 255, 255, 0.05);
@@ -445,6 +446,9 @@
     -webkit-mask: 
        linear-gradient(#fff 0 0) padding-box, 
        linear-gradient(#fff 0 0);
+    mask: 
+       linear-gradient(#fff 0 0) padding-box, 
+       linear-gradient(#fff 0 0);
     -webkit-mask-composite: destination-out;
     mask-composite: exclude;
     opacity: 0.95;
@@ -564,6 +568,7 @@
 
 .crossfader-nano {
     -webkit-appearance: none;
+    appearance: none;
     width: 140px;
     height: 4px;
     background: rgba(255,255,255,0.05);
@@ -1046,6 +1051,7 @@
 
 .vertical-fader-nano {
     -webkit-appearance: none;
+    appearance: none;
     width: 100px;
     height: 4px;
     background: rgba(255, 255, 255, 0.05);

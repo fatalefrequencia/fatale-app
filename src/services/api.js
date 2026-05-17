@@ -296,6 +296,10 @@ const API = {
         add: (data) => api.post('Gear', data),
         update: (id, data) => api.put(`Gear/${id}`, data),
         remove: (id) => api.delete(`Gear/${id}`),
+    },
+    Spotify: {
+        search: (query) => api.get(`Spotify/search?query=${encodeURIComponent(query)}`),
+        getAudioFeatures: (id) => api.get(`Spotify/audio-features/${id}`)
     }
 };
 

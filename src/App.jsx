@@ -9,7 +9,7 @@ import {
   MapPin, Calendar, Users, Edit3, Library,
   ChevronDown, Camera, Video, PenTool, BookOpen,
   MessageSquare, Repeat, MoreHorizontal, RefreshCw,
-  Frown, Star, Volume2, VolumeX, Plus, Minus, Globe, Maximize2, Minimize2, LogOut, Wallet, ShoppingBag
+  Frown, Star, Volume2, VolumeX, Plus, Minus, Globe, Maximize2, Minimize2, LogOut, Wallet, ShoppingBag, ExternalLink
 } from 'lucide-react';
 import YouTube from 'react-youtube';
 
@@ -295,6 +295,88 @@ function App() {
   // YouTube Player State
   const [youtubePlayer, setYoutubePlayer] = useState(null);
   const [isYoutubeMode, setIsYoutubeMode] = useState(false);
+  const [vibeFeatures, setVibeFeatures] = useState(null);
+
+  // Dynamic Spotify track resolver (resolves Spotify metadata to YouTube video ID under the hood)
+  useEffect(() => {
+    const resolveSpotifyTrack = async () => {
+      const track = tracks[currentTrackIndex];
+      if (!track) return;
+      const source = track.source || track.Source;
+      if (source && source.startsWith('spotify:') && !track.resolvedYoutubeId) {
+        try {
+          console.log(`[SPOTIFY_RESOLVER] Resolving: "${track.artist} - ${track.title}" to YouTube...`);
+          const res = await API.Youtube.search(`${track.artist} - ${track.title} audio`);
+          if (res.data && res.data.length > 0) {
+            const ytId = res.data[0].id || res.data[0].Id || res.data[0].videoId;
+            track.resolvedYoutubeId = ytId;
+            // Force re-trigger play
+            setTracks([...tracks]); 
+            console.log(`[SPOTIFY_RESOLVER] Resolved successfully to YouTube ID: ${ytId}`);
+          }
+        } catch (err) {
+          console.error("[SPOTIFY_RESOLVER] Failed to resolve Spotify track:", err);
+        }
+      }
+    };
+    resolveSpotifyTrack();
+  }, [currentTrackIndex, tracks]);
+
+  // Fetch Spotify Vibe Features or generate mock features for other tracks
+  useEffect(() => {
+    const fetchVibes = async () => {
+      if (!currentTrack || (!currentTrack.id && !currentTrack.title)) {
+        setVibeFeatures(null);
+        return;
+      }
+      
+      const trackSource = currentTrack.source || currentTrack.Source;
+      if (trackSource && trackSource.startsWith('spotify:')) {
+        const spotifyId = trackSource.split(':')[1]?.trim();
+        if (spotifyId) {
+          try {
+            console.log(`[VIBES] Fetching Spotify Audio Features for: ${currentTrack.title}...`);
+            const res = await API.Spotify.getAudioFeatures(spotifyId);
+            if (res.data) {
+              setVibeFeatures(res.data);
+              return;
+            }
+          } catch (err) {
+            console.warn("[VIBES] Failed to fetch Spotify features, falling back to mock:", err);
+          }
+        }
+      }
+
+      // Generate consistent beautiful mock features for non-Spotify tracks
+      const title = currentTrack.title || 'Unknown Signal';
+      let hash = 0;
+      for (let i = 0; i < title.length; i++) {
+        hash = title.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const seededRandom = (seed) => {
+        const x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
+      };
+      
+      const valence = Math.round((seededRandom(hash) * 0.9 + 0.05) * 1000) / 1000;
+      const energy = Math.round((seededRandom(hash + 1) * 0.9 + 0.05) * 1000) / 1000;
+      const danceability = Math.round((seededRandom(hash + 2) * 0.8 + 0.1) * 1000) / 1000;
+      const tempo = Math.round((seededRandom(hash + 3) * 80 + 75) * 10) / 10;
+      const acousticness = Math.round(seededRandom(hash + 4) * 1000) / 1000;
+
+      setVibeFeatures({
+        valence,
+        energy,
+        danceability,
+        tempo,
+        acousticness,
+        key: Math.abs(hash) % 12,
+        mode: Math.abs(hash + 1) % 2
+      });
+    };
+    
+    fetchVibes();
+  }, [currentTrack?.id, currentTrack?.title]);
 
   // Discovery Analytics State
   const [globalStats, setGlobalStats] = useState(null);
@@ -364,12 +446,10 @@ function App() {
     }
     if (youtubePlayer && typeof youtubePlayer.mute === 'function') {
       try {
-        if (youtubePlayer.getIframe?.()) {
-          if (isMuted) youtubePlayer.mute();
-          else {
-            youtubePlayer.unMute();
-            youtubePlayer.setVolume(volume * 100);
-          }
+        if (isMuted) youtubePlayer.mute();
+        else {
+          youtubePlayer.unMute();
+          youtubePlayer.setVolume(volume * 100);
         }
       } catch (e) {
         console.warn("YouTube Volume Sync Error (Suppressed):", e);
@@ -435,10 +515,8 @@ function App() {
   const handleSeek = (newTime) => {
     try {
       if (isYoutubeMode && youtubePlayer && typeof youtubePlayer.seekTo === 'function') {
-        if (youtubePlayer.getIframe?.()) {
-          youtubePlayer.seekTo(newTime, true);
-          setCurrentTime(newTime);
-        }
+        youtubePlayer.seekTo(newTime, true);
+        setCurrentTime(newTime);
       } else if (audioRef.current) {
         audioRef.current.currentTime = newTime;
         setCurrentTime(newTime);
@@ -455,19 +533,16 @@ function App() {
       // ── Ensure it's actually playing if the state suggests it
       try {
         if (typeof youtubePlayer.getPlayerState === 'function') {
-          // Safeguard to prevent "this.g is null"
-          if (youtubePlayer.getIframe && youtubePlayer.getIframe()) {
-            const state = youtubePlayer.getPlayerState();
-            if (state !== 1 && state !== 3) { // 1=playing, 3=buffering
-              youtubePlayer.playVideo();
-            }
-            // Capture time immediately on play to prevent jumps/stutter
-            if (typeof youtubePlayer.getCurrentTime === 'function') {
-              const time = youtubePlayer.getCurrentTime();
-              const dur = youtubePlayer.getDuration();
-              if (dur && dur > 0 && dur !== duration) setDuration(dur);
-              setCurrentTime(time);
-            }
+          const state = youtubePlayer.getPlayerState();
+          if (state !== 1 && state !== 3) { // 1=playing, 3=buffering
+            youtubePlayer.playVideo();
+          }
+          // Capture time immediately on play to prevent jumps/stutter
+          if (typeof youtubePlayer.getCurrentTime === 'function') {
+            const time = youtubePlayer.getCurrentTime();
+            const dur = youtubePlayer.getDuration();
+            if (dur && dur > 0 && dur !== duration) setDuration(dur);
+            setCurrentTime(time);
           }
         }
       } catch (e) { console.warn("YouTube PlayVideo Error:", e); }
@@ -475,12 +550,10 @@ function App() {
       interval = setInterval(() => {
         try {
           if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
-            if (youtubePlayer.getIframe && youtubePlayer.getIframe()) {
-              const time = youtubePlayer.getCurrentTime();
-              const dur = youtubePlayer.getDuration();
-              if (dur && dur > 0 && dur !== duration) setDuration(dur);
-              setCurrentTime(time);
-            }
+            const time = youtubePlayer.getCurrentTime();
+            const dur = youtubePlayer.getDuration();
+            if (dur && dur > 0 && dur !== duration) setDuration(dur);
+            setCurrentTime(time);
           }
         } catch (e) {
           console.warn("YouTube Polling Error:", e);
@@ -1898,7 +1971,12 @@ function App() {
         }}
       >
         {(() => {
-          const ytId = currentTrack?.source?.startsWith('youtube:') ? currentTrack.source.split(':')[1]?.trim() : null;
+          let ytId = null;
+          if (currentTrack?.source?.startsWith('youtube:')) {
+            ytId = currentTrack.source.split(':')[1]?.trim();
+          } else if (currentTrack?.source?.startsWith('spotify:')) {
+            ytId = currentTrack.resolvedYoutubeId;
+          }
           if (!ytId) return null;
 
           return (
@@ -2030,6 +2108,7 @@ function App() {
                analyserA={analyserA}
                station={activeStation}
                isLandscape={isLandscape}
+               vibeFeatures={vibeFeatures}
            />
           </>
         )}
@@ -2237,7 +2316,7 @@ function App() {
                 const enriched = {
                   ...track,
                   id: tId,
-                  source: isYoutube ? sourceStr : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null),
+                  source: isYoutube ? sourceStr : (rawSource ? ((rawSource.startsWith('http') || rawSource.startsWith('spotify:')) ? rawSource : getMediaUrl(rawSource)) : null),
                   isLiked: isYoutube ? likedYoutubeIds.has(pureYtId) : (track.isLiked || track.IsLiked),
                   isOwned: true,
                   isLocked: false
@@ -2287,6 +2366,7 @@ const Dashboard = React.memo(({
   setKeyLockA,
   activeView,
   setView,
+  vibeFeatures,
   onLogout, 
   currentTrackIndex, 
   setCurrentTrackIndex, 
@@ -2552,7 +2632,7 @@ const Dashboard = React.memo(({
                     const enriched = {
                       ...track,
                       id: tId,
-                      source: isYoutube ? sourceStr : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null),
+                      source: isYoutube ? sourceStr : (rawSource ? ((rawSource.startsWith('http') || rawSource.startsWith('spotify:')) ? rawSource : getMediaUrl(rawSource)) : null),
                       cover: isYoutube ? (rawCover || `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg`) : (rawCover ? (rawCover.startsWith('http') ? rawCover : getMediaUrl(rawCover)) : null),
                       isLiked,
                       isOwned,
@@ -2674,7 +2754,7 @@ const Dashboard = React.memo(({
                     const enriched = {
                       ...track,
                       id: tId,
-                      source: isYoutube ? sourceStr : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null),
+                      source: isYoutube ? sourceStr : (rawSource ? ((rawSource.startsWith('http') || rawSource.startsWith('spotify:')) ? rawSource : getMediaUrl(rawSource)) : null),
                       isLiked: isYoutube ? likedYoutubeIds.has(pureYtId) : (track.isLiked || track.IsLiked),
                       isOwned: true,
                       isLocked: false
@@ -2749,6 +2829,7 @@ const Dashboard = React.memo(({
                   analyserA={analyserA}
                   keyLockA={keyLockA}
                   setKeyLockA={setKeyLockA}
+                  vibeFeatures={vibeFeatures}
                 />
               </motion.div>
             )}
@@ -3077,6 +3158,7 @@ const FeedContent = React.memo(({
   onExpandContent,
   libraryTracks
 }) => {
+  const { language } = useLanguage();
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSector, setSelectedSector] = useState(null);
@@ -3695,6 +3777,149 @@ const FeedContent = React.memo(({
                       return null;
                     }
 
+                    const isUrl = (str) => {
+                      if (!str) return false;
+                      const trimmed = str.trim().toLowerCase();
+                      const checkStr = trimmed.includes('|') ? trimmed.split('|')[0] : trimmed;
+                      return checkStr.startsWith('http://') || checkStr.startsWith('https://') || checkStr.startsWith('www.');
+                    };
+
+                    const isMarketplace = type === 'studio' && isUrl(content);
+
+                    // Parse name, price, link, desc
+                    let parsedName = title || '';
+                    let parsedPrice = null;
+                    let parsedLink = '';
+                    let parsedDesc = '';
+
+                    if (isMarketplace) {
+                      const rawTitle = title || '';
+                      const priceMatch = rawTitle.match(/(.*)\s*\[([^\]]+)\]$/);
+                      if (priceMatch) {
+                        parsedName = priceMatch[1].trim();
+                        parsedPrice = priceMatch[2].trim();
+                      }
+                      
+                      const desc = content || '';
+                      if (desc.includes('|')) {
+                        const parts = desc.split('|');
+                        parsedLink = parts[0].trim();
+                        parsedDesc = parts.slice(1).join('|').trim();
+                      } else {
+                        parsedLink = desc.trim();
+                      }
+                    }
+
+                    const formatPriceDisplay = (p) => {
+                      if (!p) return '';
+                      const cleaned = p.replace(/[\[\]]/g, '').trim();
+                      if (cleaned.toUpperCase() === 'FREE' || cleaned.toUpperCase() === 'GRATIS') {
+                        return cleaned.toUpperCase();
+                      }
+                      if (!isNaN(cleaned) && !cleaned.startsWith('$') && !cleaned.startsWith('€') && !cleaned.startsWith('£')) {
+                        return `$${cleaned}`;
+                      }
+                      return cleaned;
+                    };
+
+                    if (isMarketplace) {
+                      const sectorColor = SECTORS[item.sectorId || item.SectorId]?.color || '#ff006e';
+                      return (
+                        <div key={item.Id} className="group transition-colors hover:bg-white/[0.05] py-2 px-3 sm:py-4 sm:px-5 rounded border border-white/5 hover:border-white/10 relative mb-3 sm:mb-6 max-w-2xl mx-auto w-full bg-black/20 flex flex-col max-h-[80vh]" style={{ borderLeft: `2px solid ${sectorColor}` }}>
+                          {!isOriginal && repostedBy && (
+                            <div className="flex items-center gap-2 mb-1 px-1">
+                              <Repeat size={10} className="text-[#ff006e] animate-pulse" />
+                              <span className="text-[8px] font-black text-[#ff006e] uppercase tracking-[0.2em] bg-[#ff006e]/5 px-2 border border-[#ff006e]/20">
+                                [ RE_SIGNAL_FROM // @{repostedBy} ]
+                              </span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-8 h-8 bg-black border border-white/10 rounded-full overflow-hidden shrink-0">
+                                <img src={getMediaUrl(item.profilePictureUrl || item.ProfilePictureUrl)} className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://via.placeholder.com/100?text=USER'; }} alt="" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => navigateToProfile(item.ArtistUserId || item.artistUserId)}
+                                      className="text-[12px] text-white font-black uppercase tracking-tighter hover:text-[#ff006e] transition-colors"
+                                    >
+                                      {artist}
+                                    </button>
+                                    <span className="text-[9px] text-white/40">{getTime(createdAt)}</span>
+                                    <span className="text-[7px] text-[#00f0ff] uppercase tracking-wider font-mono px-1.5 py-0.5 bg-[#00f0ff]/5 border border-[#00f0ff]/20 rounded-sm">
+                                      {language === 'es' ? 'PRODUCTO' : 'PRODUCT'}
+                                    </span>
+                                </div>
+                                <div className="text-[11px] text-white/90 leading-relaxed mt-1 flex items-center gap-2 flex-wrap">
+                                  <span className="font-bold text-white uppercase">{parsedName}</span>
+                                  {parsedPrice && (
+                                    <span className="text-[#00f0ff] font-mono text-[9px]">
+                                      [{formatPriceDisplay(parsedPrice)}]
+                                    </span>
+                                  )}
+                                </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-1 space-y-3">
+                            {parsedDesc && (
+                              <div className="text-[11px] text-white/80 leading-relaxed font-mono px-1">
+                                {parsedDesc}
+                              </div>
+                            )}
+
+                            <div
+                              onClick={() => handleMediaExpand(item)}
+                              className="w-full flex-1 bg-black border border-white/5 overflow-hidden group/studio cursor-zoom-in relative active:scale-[0.98] transition-transform flex items-center justify-center max-h-[45vh] rounded-sm"
+                            >
+                              {mediaType === 'VIDEO' ? (
+                                <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden w-full h-full">
+                                  {item.ThumbnailUrl ? (
+                                    <div className="absolute inset-0 z-0">
+                                      <img src={getMediaUrl(item.ThumbnailUrl)} className="w-full h-full object-cover opacity-60" alt="" />
+                                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover/studio:bg-black/10 transition-all">
+                                        <div className="w-12 h-12 rounded-full border-2 border-white/20 flex items-center justify-center bg-black/40">
+                                          <Play size={20} className="text-white ml-1" fill="currentColor" />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <video src={imageUrl} className="w-full h-full object-cover opacity-70" muted loop onMouseEnter={e => e.target.play()} onMouseLeave={e => e.target.pause()} />
+                                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover/studio:bg-black/20 transition-all">
+                                        <Video size={30} className="text-white/60" />
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              ) : (
+                                <img src={imageUrl} className="max-w-full max-h-full object-contain opacity-90 group-hover/studio:opacity-100 transition-opacity" alt="" />
+                              )}
+                            </div>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (parsedLink) {
+                                  let cleanLink = parsedLink.trim();
+                                  if (!cleanLink.startsWith('http://') && !cleanLink.startsWith('https://')) {
+                                    cleanLink = 'https://' + cleanLink;
+                                  }
+                                  window.open(cleanLink, '_blank');
+                                }
+                              }}
+                              className="w-full bg-white/[0.03] hover:bg-white/[0.08] text-white/70 hover:text-white border border-white/10 hover:border-white/20 py-2 text-[9px] font-black tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-1.5 rounded-sm cursor-pointer"
+                            >
+                              <ExternalLink size={10} />
+                              {language === 'es' ? 'IR A LA TIENDA' : 'VISIT STORE'}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
+
                     const sectorColor = SECTORS[item.sectorId || item.SectorId]?.color || '#ff006e';
                     return (
                       <div key={item.Id} className="group transition-colors hover:bg-white/[0.05] py-2 px-3 sm:py-4 sm:px-5 rounded border border-white/5 hover:border-white/10 relative mb-3 sm:mb-6 max-w-2xl mx-auto w-full bg-black/20 flex flex-col max-h-[80vh]" style={{ borderLeft: `2px solid ${sectorColor}` }}>
@@ -4206,6 +4431,7 @@ const FeedContent = React.memo(({
 // --- CONTENIDO: PLAYER (PANTALLA COMPLETA) ---
 const PlayerContent = ({
   setView,
+  vibeFeatures,
   keyLockA,
   setKeyLockA,
   currentTrackIndex,
@@ -4293,7 +4519,7 @@ const PlayerContent = ({
             const enriched = {
               ...track,
               id: tId,
-              source: isYoutube ? sourceStr : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null),
+              source: isYoutube ? sourceStr : (rawSource ? ((rawSource.startsWith('http') || rawSource.startsWith('spotify:')) ? rawSource : getMediaUrl(rawSource)) : null),
               cover: track.cover || track.imageUrl || track.CoverImageUrl || (isYoutube ? `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg` : null),
             };
 
@@ -4307,6 +4533,7 @@ const PlayerContent = ({
       ) : (
         <IPodPlayer
           user={user}
+          vibeFeatures={vibeFeatures}
           forceNowPlaying={forceNowPlaying}
           isLandscape={isLandscape}
           currentTrackIndex={currentTrackIndex}
