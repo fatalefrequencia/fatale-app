@@ -29,7 +29,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
 
         const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5264/api/';
         const apiRoot = apiBase.replace('/api/', '');
-        setDesktopDownloadUrl(`${apiRoot}/downloads/fatale-setup.exe`);
+        setDesktopDownloadUrl(`${apiRoot}/downloads/fatale-desktop.zip`);
     }, []);
 
     // Form States
@@ -470,7 +470,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                         </p>
                         <a
                             href={desktopDownloadUrl}
-                            download="fatale-setup.exe"
+                            download="fatale-desktop.zip"
                             className="mt-3.5 text-[9px] font-black uppercase tracking-[0.25em] text-[#d60036] hover:text-white transition-all duration-300 underline underline-offset-4 cursor-pointer hover:drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]"
                         >
                             [ DOWNLOAD CLIENT TO DESKTOP ]

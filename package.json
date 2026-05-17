@@ -12,7 +12,7 @@
     "deploy": "npx wrangler pages deploy dist --project-name=fatale-app",
     "desktop": "electron .",
     "desktop:dev": "concurrently \"vite\" \"cross-env DESKTOP_URL=http://localhost:5173 electron .\"",
-    "desktop:build": "vite build && electron-builder"
+    "desktop:build": "vite build && electron-packager . fatale --platform=win32 --arch=x64 --out=dist-desktop --overwrite"
   },
   "dependencies": {
     "@microsoft/signalr": "^10.0.0",
@@ -38,6 +38,7 @@
     "cross-env": "^7.0.3",
     "electron": "^30.0.1",
     "electron-builder": "^24.13.3",
+    "electron-packager": "^17.1.2",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
