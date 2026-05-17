@@ -122,6 +122,25 @@ function App() {
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const { showNotification } = useNotification();
 
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`[PWA] Install outcome: ${outcome}`);
+    setDeferredPrompt(null);
+  };
+
   // Navigation Wrapper
   const setView = (newView) => {
     if (activeView !== newView && activeView !== 'login') {
@@ -2070,7 +2089,12 @@ function App() {
 
       <AnimatePresence mode="wait">
         {activeView === 'login' ? (
-          <AuthView onLoginSuccess={handleAuthSuccess} onBackToOrbit={() => setView('discovery')} />
+          <AuthView 
+             onLoginSuccess={handleAuthSuccess} 
+             onBackToOrbit={() => setView('discovery')} 
+             deferredPrompt={deferredPrompt}
+             onInstall={handleInstallApp}
+           />
         ) : (
           <>
             {console.log("[App] Rendering Dashboard. Redirect Trigger:", redirectTrigger)}
