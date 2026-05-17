@@ -27,9 +27,8 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
         const shortcutContent = `[InternetShortcut]\r\nURL=${currentOrigin}\r\nIconIndex=0\r\n`;
         setShortcutHref(`data:application/octet-stream;base64,${btoa(shortcutContent)}`);
 
-        const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5264/api/';
-        const apiRoot = apiBase.replace('/api/', '');
-        setDesktopDownloadUrl(`${apiRoot}/downloads/fatale-desktop.zip`);
+        // Desktop client hosted as a GitHub Release asset (2GB limit, CDN-backed, no server required)
+        setDesktopDownloadUrl('https://github.com/fatalefrequencia/FataleCore/releases/download/v1.0.0/fatale-desktop.zip');
     }, []);
 
     // Form States
