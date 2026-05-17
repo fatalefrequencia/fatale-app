@@ -375,8 +375,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
     const filteredJournals = useMemo(() => {
         let base = journalEntries.filter(j => {
             const artist = (j.artist || j.Artist || "").toLowerCase();
-            const isMine = String(j.userId || j.UserId) === String(user?.id || user?.Id);
-            return isMine && artist !== 'the archive' && !j.isArchive && !j.IsArchive;
+            return artist !== 'the archive' && artist !== 'archive' && !j.isArchive && !j.IsArchive;
         });
         if (activeSector !== null) base = base.filter(matchesSector);
 
