@@ -12,6 +12,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
     const [isIOS, setIsIOS] = useState(false);
     const [isStandalone, setIsStandalone] = useState(false);
     const [isDesktop, setIsDesktop] = useState(false);
+    const [shortcutHref, setShortcutHref] = useState('');
 
     useEffect(() => {
         const checkIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -20,21 +21,11 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
         setIsIOS(checkIOS);
         setIsStandalone(!!checkStandalone);
         setIsDesktop(!checkIOS && !checkAndroid && !checkStandalone);
-    }, []);
 
-    const handleDownloadShortcut = () => {
         const currentOrigin = window.location.origin;
-        const shortcutContent = `[InternetShortcut]\nURL=${currentOrigin}\nIconIndex=0\n`;
-        const blob = new Blob([shortcutContent], { type: 'application/octet-stream' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'fatale.url';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    };
+        const shortcutContent = `[InternetShortcut]\r\nURL=${currentOrigin}\r\nIconIndex=0\r\n`;
+        setShortcutHref(`data:application/octet-stream;base64,${btoa(shortcutContent)}`);
+    }, []);
 
     // Form States
     const [formData, setFormData] = useState({
@@ -472,13 +463,13 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                         <p className="text-[9px] text-[#d60036]/70 leading-relaxed mb-1 uppercase tracking-wider max-w-[340px]">
                             Run fatale as a high-performance, borderless desktop application directly on your workstation.
                         </p>
-                        <button
-                            onClick={handleDownloadShortcut}
-                            type="button"
+                        <a
+                            href={shortcutHref}
+                            download="fatale.url"
                             className="mt-3.5 text-[9px] font-black uppercase tracking-[0.25em] text-[#d60036] hover:text-white transition-all duration-300 underline underline-offset-4 cursor-pointer hover:drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]"
                         >
                             [ DOWNLOAD CLIENT TO DESKTOP ]
-                        </button>
+                        </a>
                     </div>
                 )}
             </motion.div>
