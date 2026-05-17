@@ -1688,6 +1688,11 @@ function App() {
           return String(tId) === String(trackDbId) ? { ...t, isCached: false } : t;
         }));
 
+        setLibraryTracks(prev => prev.map(t => {
+          const tId = t.dbId || t.id || t.Id;
+          return String(tId) === String(trackDbId) ? { ...t, isCached: false } : t;
+        }));
+
         showNotification("REMOVED", `"${track.title}" removed from offline storage.`, "success");
       } catch (err) {
         console.error("Failed to delete offline cache:", err);
@@ -1729,6 +1734,11 @@ function App() {
       });
 
       setTracks(prev => prev.map(t => {
+        const tId = t.dbId || t.id || t.Id;
+        return String(tId) === String(trackDbId) ? { ...t, isCached: true } : t;
+      }));
+
+      setLibraryTracks(prev => prev.map(t => {
         const tId = t.dbId || t.id || t.Id;
         return String(tId) === String(trackDbId) ? { ...t, isCached: true } : t;
       }));
