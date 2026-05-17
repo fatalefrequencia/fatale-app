@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { User, Mail, Lock, ChevronRight, AlertCircle, Loader2, ShieldCheck } from 'lucide-react';
 import API from '../services/api';
 import loginBg from '../assets/login_bg.png';
+import { API_BASE_URL } from '../constants';
 
 const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) => {
     const [activeTab, setActiveTab] = useState('login'); // 'login' | 'register'
@@ -27,8 +28,8 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
         const shortcutContent = `[InternetShortcut]\r\nURL=${currentOrigin}\r\nIconIndex=0\r\n`;
         setShortcutHref(`data:application/octet-stream;base64,${btoa(shortcutContent)}`);
 
-        // Desktop client hosted as a GitHub Release asset (2GB limit, CDN-backed, no server required)
-        setDesktopDownloadUrl('https://github.com/fatalefrequencia/FataleCore/releases/download/v1.0.0/fatale-desktop.zip');
+        // Desktop client hosted locally on backend server static path /downloads
+        setDesktopDownloadUrl(`${API_BASE_URL}downloads/fatale-desktop.zip`);
     }, []);
 
     // Form States
