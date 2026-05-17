@@ -989,12 +989,8 @@ export const ProfileView = React.memo(({
 
     // Set viewMode correctly once isMe is resolved (can't use isMe in useState initializer — it's defined after)
     useEffect(() => {
-        if (initialModal === 'console') {
-            setViewMode('CONSOLE');
-        } else if (!isMe) {
-            setViewMode('DASHBOARD');
-        }
-    }, [isMe, initialModal]);
+        setViewMode('CONSOLE');
+    }, [isMe, targetUserId, initialModal]);
 
     const sortedJournal = React.useMemo(() => {
         return [...(profileJournal || [])].sort((a, b) => 
@@ -1769,7 +1765,7 @@ export const ProfileView = React.memo(({
 
 
                     {/* Center: Dynamic Core */}
-                    <div className="console-panel w-[380px]">
+                    <div className="console-panel w-full max-w-[380px]">
                         <AnimatePresence mode="wait">
                             <motion.div 
                                 key={cycleIndex}
@@ -2332,46 +2328,55 @@ export const ProfileView = React.memo(({
             </div>
 
             {/* Global Refined Header */}
-            {viewMode !== 'CONSOLE' && (
-                <div className="fixed top-6 left-12 right-12 z-[100] flex items-center justify-between">
-                    <button 
-                        onClick={handleBack}
-                        className="group flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white transition-all"
-                    >
-                        <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                        {viewMode === 'DASHBOARD' ? t('BACK_LANDING') : t('RETURN_ORBIT')}
-                    </button>
+            <div className="fixed top-4 md:top-6 left-4 right-4 md:left-12 md:right-12 z-[100] flex flex-row items-center justify-between gap-4">
+                <button 
+                    onClick={handleBack}
+                    className="group flex items-center gap-1.5 text-[8px] md:text-[9px] font-black uppercase tracking-[0.4em] text-white/40 hover:text-white transition-all shrink-0"
+                >
+                    <ChevronLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+                    <span>{viewMode === 'DASHBOARD' ? t('BACK_LANDING') : t('RETURN_ORBIT')}</span>
+                </button>
 
-                    <div className="flex items-center gap-6">
-                        {isMe ? (
-                            <>
-                                <button onClick={onLogout} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-red-500/40 hover:text-red-500 transition-colors">
-                                    <LogOut size={14} /> {t('LOGOUT')}
-                                </button>
-                                <button 
-                                    onClick={() => {
-                                        console.log("[Profile] Triggering Identity Modification...");
-                                        showNotification("ID_MOD_START", "Initializing identity override protocol...", "info");
-                                        setShowEditProfile(true);
-                                    }} 
-                                    className="relative z-[200] px-4 py-1.5 bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all"
-                                >
-                                    {t('MODIFY_ID')}
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <button onClick={() => onMessageUser?.(displayUser)} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/40 hover:text-white transition-colors">
-                                    <MessageSquare size={14} /> {t('MESSAGE')}
-                                </button>
-                                <button onClick={handleFollow} className={`px-6 py-1.5 border text-[9px] font-black uppercase tracking-[0.3em] transition-all ${isFollowing ? 'border-white/10 text-white/40' : 'border-[var(--subsystem-accent)] text-[var(--subsystem-accent)] hover:bg-[var(--subsystem-accent)] hover:text-black'}`}>
-                                    {isFollowing ? t('FOLLOWING') : t('FOLLOW')}
-                                </button>
-                            </>
-                        )}
-                    </div>
+                <div className="flex items-center gap-3 md:gap-6 shrink-0">
+                    {isMe ? (
+                        <>
+                            <button 
+                                onClick={onLogout} 
+                                className="flex items-center gap-1 text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] text-red-500/40 hover:text-red-500 transition-colors"
+                            >
+                                <LogOut size={12} /> 
+                                <span className="hidden xs:inline">{t('LOGOUT')}</span>
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    console.log("[Profile] Triggering Identity Modification...");
+                                    showNotification("ID_MOD_START", "Initializing identity override protocol...", "info");
+                                    setShowEditProfile(true);
+                                }} 
+                                className="relative z-[200] px-2.5 py-1 md:px-4 md:py-1.5 bg-white/5 border border-white/10 text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all"
+                            >
+                                {t('MODIFY_ID')}
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <button 
+                                onClick={() => onMessageUser?.(displayUser)} 
+                                className="flex items-center gap-1 text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] text-white/40 hover:text-white transition-colors"
+                            >
+                                <MessageSquare size={12} /> 
+                                <span className="hidden xs:inline">{t('MESSAGE')}</span>
+                            </button>
+                            <button 
+                                onClick={handleFollow} 
+                                className={`px-3 py-1 md:px-6 md:py-1.5 border text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] transition-all ${isFollowing ? 'border-white/10 text-white/40' : 'border-[var(--subsystem-accent)] text-[var(--subsystem-accent)] hover:bg-[var(--subsystem-accent)] hover:text-black'}`}
+                            >
+                                {isFollowing ? t('FOLLOWING') : t('FOLLOW')}
+                            </button>
+                        </>
+                    )}
                 </div>
-            )}
+            </div>
 
             <motion.div 
                 className="flex-1 w-full h-full relative z-10 flex flex-col"
