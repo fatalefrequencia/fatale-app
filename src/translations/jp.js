@@ -211,4 +211,11 @@ export default {
     "SIGNAL_LOADED": "シグナルロード済み",
     "NEURAL_BROADCAST": "ニューラル放送",
     "FAVORITES": "お気に入り"
+    "RADAR_YOUTUBE_ESPERANDO": "YOUTUBEレーダー待機中",
+    "RADAR_YOUTUBE_HELP": "信号を受信するには上部のバーに周波数を入力してください",
+    "RECENT_SEARCHES": "最近の検索",
+    "YOUTUBE_CACHE": "YOUTUBEキャッシュ",
+    "START_TRANSMISSION": "配信開始",
+    "EMPTY_JOURNAL": "ジャーナルは空です",
+    "ADD_NEW_ENTRY": "新しいエントリーを追加",
 };

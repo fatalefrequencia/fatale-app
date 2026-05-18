@@ -1161,7 +1161,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         </div>
                                     )) : recentYoutubeTracks && recentYoutubeTracks.length > 0 ? (
                                         <div className="space-y-2">
-                                            <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">CACHÉ_YOUTUBE</div>
+                                            <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">{t('YOUTUBE_CACHE')}</div>
                                             {recentYoutubeTracks.map(y => (
                                                 <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => {
                                                     onPlayTrack(y);
@@ -1222,7 +1222,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         </div>
                                     ) : recentYoutubeSearches.length > 0 ? (
                                         <div className="space-y-2">
-                                            <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">BÚSQUEDAS_RECIENTES</div>
+                                            <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">{t('RECENT_SEARCHES')}</div>
                                             {recentYoutubeSearches.map(s => (
                                                 <div key={s} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => setSearchQuery(s)}>
                                                     <Search size={10} className="text-white/40 group-hover:text-[#ff006e]" />
@@ -1237,8 +1237,8 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             <div className="w-8 h-8 border border-white/20 rounded-full flex items-center justify-center mb-3 group-hover:border-[#ff006e] group-hover:text-[#ff006e] transition-all animate-pulse">
                                                 <Search size={14} />
                                             </div>
-                                            <div className="text-[10px] font-black tracking-widest uppercase mb-1">RADAR_YOUTUBE_ESPERANDO</div>
-                                            <div className="text-[7px] tracking-[0.2em] uppercase opacity-60">INGRESA UNA FRECUENCIA EN LA BARRA SUPERIOR PARA INTERCEPTAR SEÑALES</div>
+                                            <div className="text-[10px] font-black tracking-widest uppercase mb-1">{t('RADAR_YOUTUBE_ESPERANDO')}</div>
+                                            <div className="text-[7px] tracking-[0.2em] uppercase opacity-60">{t('RADAR_YOUTUBE_HELP')}</div>
                                         </div>
                                     )}
                                 </div>
@@ -1439,7 +1439,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         >
                                             <Camera size={20} className="opacity-40 group-hover:text-[#ff006e] group-hover:opacity-100 mb-2 transition-all" />
                                             <span className="text-[9px] font-black uppercase tracking-widest opacity-60 group-hover:text-[#ff006e] group-hover:opacity-100">SIN_TRANSMISIONES_VISUALES</span>
-                                            <span className="text-[7px] uppercase tracking-[0.2em] opacity-40 mt-1">[ INICIAR_TRANSMISIÓN ]</span>
+                                            <span className="text-[7px] uppercase tracking-[0.2em] opacity-40 mt-1">[ {t('START_TRANSMISSION')} ]</span>
                                         </div>
                                     )}
                                 </div>
@@ -1467,8 +1467,8 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             onClick={() => { if (setIngestMode) setIngestMode('JOURNAL'); if (setShowGlobalIngest) setShowGlobalIngest(true); }}
                                             className="border-l-2 border-[#ff006e]/20 pl-4 py-4 cursor-pointer hover:border-[#ff006e] group transition-all"
                                         >
-                                            <div className="text-[10px] font-black text-white/60 group-hover:text-white tracking-widest uppercase mb-1">BITÁCORA_VACÍA</div>
-                                            <div className="text-[8px] opacity-40 group-hover:text-[#ff006e] transition-colors">[+] AÑADIR_NUEVA_ENTRADA</div>
+                                            <div className="text-[10px] font-black text-white/60 group-hover:text-white tracking-widest uppercase mb-1">{t('EMPTY_JOURNAL')}</div>
+                                            <div className="text-[8px] opacity-40 group-hover:text-[#ff006e] transition-colors">[+] {t('ADD_NEW_ENTRY')}</div>
                                         </div>
                                     )}
                                 </div>
@@ -1807,7 +1807,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         {(selectedSearchCategory === 'ALL' || selectedSearchCategory === 'ALBUMS') && uniqueAlbums.length > 0 && (
                                             <div className="mt-3" onTouchStart={(e) => e.stopPropagation()}>
                                                 {selectedSearchCategory === 'ALL' && (
-                                                    <div className="text-[8px] font-black text-white/40 uppercase tracking-[0.3em] mb-2 px-1">:: ÁLBUMES ::</div>
+                                                    <div className="text-[8px] font-black text-white/40 uppercase tracking-[0.3em] mb-2 px-1">:: {t('ALBUMS')} ::</div>
                                                 )}
                                                 <div className="grid grid-cols-2 gap-2">
                                                     {uniqueAlbums.map((a, idx) => (
@@ -2004,7 +2004,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     >
                                         <Camera size={20} className="opacity-40 group-hover:text-[#ff006e] group-hover:opacity-100 mb-2 transition-all" />
                                         <span className="text-[9px] font-black uppercase tracking-widest opacity-60 group-hover:text-[#ff006e] group-hover:opacity-100">SIN_TRANSMISIONES_VISUALES</span>
-                                        <span className="text-[7px] uppercase tracking-[0.2em] opacity-40 mt-1">[ INICIAR_TRANSMISIÓN ]</span>
+                                        <span className="text-[7px] uppercase tracking-[0.2em] opacity-40 mt-1">[ {t('START_TRANSMISSION')} ]</span>
                                     </div>
                                 )}
                             </div>
