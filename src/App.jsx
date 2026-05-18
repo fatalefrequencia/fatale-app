@@ -4125,7 +4125,7 @@ const FeedContent = React.memo(({
 
                     if (isMarketplace) {
                       return (
-                        <div key={item.Id} className="group transition-colors hover:bg-white/[0.05] py-2 px-3 sm:py-4 sm:px-5 rounded border border-white/5 hover:border-white/10 relative mb-3 sm:mb-6 max-w-2xl mx-auto w-full bg-black/20 flex flex-col max-h-[80vh]" style={{ borderLeft: `2px solid ${accent.color}`, boxShadow: `0 0 8px ${accent.glow}` }}>
+                        <div key={item.Id} className="group transition-colors hover:bg-white/[0.05] py-2 px-3 sm:py-4 sm:px-5 rounded border border-white/5 hover:border-white/10 relative mb-3 sm:mb-6 max-w-2xl mx-auto w-full bg-black/20 flex flex-col max-h-[80vh]" style={{ borderLeft: `1px solid ${accent.color}`, boxShadow: `0 0 9px ${accent.glow}` }}>
                           {!isOriginal && repostedBy && (
                             <div className="flex items-center gap-2 mb-1 px-1">
                               <Repeat size={10} className="text-[#ff006e] animate-pulse" />
@@ -4221,7 +4221,7 @@ const FeedContent = React.memo(({
                     }
 
                     return (
-                      <div key={item.Id} className="group transition-colors hover:bg-white/[0.05] py-2 px-3 sm:py-4 sm:px-5 rounded border border-white/5 hover:border-white/10 relative mb-3 sm:mb-6 max-w-2xl mx-auto w-full bg-black/20 flex flex-col max-h-[80vh]" style={{ borderLeft: `2px solid ${accent.color}`, boxShadow: `0 0 8px ${accent.glow}` }}>
+                      <div key={item.Id} className="group transition-colors hover:bg-white/[0.05] py-2 px-3 sm:py-4 sm:px-5 rounded border border-white/5 hover:border-white/10 relative mb-3 sm:mb-6 max-w-2xl mx-auto w-full bg-black/20 flex flex-col max-h-[80vh]" style={{ borderLeft: `1px solid ${accent.color}`, boxShadow: `0 0 9px ${accent.glow}` }}>
                         {!isOriginal && repostedBy && (
                           <div className="flex items-center gap-2 mb-1 px-1">
                             <Repeat size={10} className="text-[#ff006e] animate-pulse" />
