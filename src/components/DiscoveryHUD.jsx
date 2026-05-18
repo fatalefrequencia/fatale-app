@@ -645,7 +645,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                     <div className={`${isMobile ? 'flex-1' : 'h-[400px] lg:h-full'} lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative transition-all duration-300`}>
                         {isPinterestView ? (
                             <div className="w-full h-full bg-black/90 backdrop-blur-xl border border-white/10 p-6 pt-20 overflow-y-auto no-scrollbar animate-in fade-in duration-500 pointer-events-auto">
-                                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[#ff006e] mb-6 border-b border-[#ff006e]/20 pb-2">SEÑALES_DESCUBIERTAS</div>
+                                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[#ff006e] mb-6 border-b border-[#ff006e]/20 pb-2">{t('DISCOVERED_SIGNALS')}</div>
 
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                                     {/* Playlists */}
@@ -670,7 +670,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             <div className="absolute inset-0">
                                                 <img src={getMediaUrl(t.imageUrl || t.ImageUrl || t.coverImageUrl || t.CoverImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-20 group-hover:opacity-40 group-hover:scale-110 transition-all duration-700" />
                                             </div>
-                                            <div className="text-[8px] font-mono text-[#00ffff] uppercase tracking-widest z-10">CANCIÓN</div>
+                                            <div className="text-[8px] font-mono text-[#00ffff] uppercase tracking-widest z-10">{t('SONG')}</div>
                                             <div className="z-10">
                                                 <div className="text-xs font-black truncate group-hover:text-[#ff006e] uppercase">{t.title}</div>
                                                 <div className="text-[8px] opacity-40 uppercase mt-0.5">BY {t.artist}</div>
@@ -688,7 +688,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             <div className="absolute inset-0">
                                                 <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-20 group-hover:opacity-40 group-hover:scale-110 transition-all duration-700" />
                                             </div>
-                                            <div className="text-[8px] font-mono text-[#9d00ff] uppercase tracking-widest z-10">ARTISTA</div>
+                                            <div className="text-[8px] font-mono text-[#9d00ff] uppercase tracking-widest z-10">{t('ARTIST')}</div>
                                             <div className="z-10">
                                                 <div className="text-xs font-black truncate group-hover:text-[#ff006e] uppercase">{a.name}</div>
                                                 <div className="text-[8px] opacity-40 uppercase mt-0.5">{a.genre || "NATIVE"}</div>
@@ -1043,10 +1043,10 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     <div className={`absolute right-4 flex flex-col gap-3 z-50 scale-95 lg:scale-100 transition-all duration-300 ${selectedGlobeItem ? 'top-2 opacity-0 pointer-events-none md:top-10 md:opacity-100 md:pointer-events-auto' : 'top-10'}`}>
 
                                         {[
-                                            { id: 'ARTISTS', icon: <User size={12} />, label: 'Artistas', desc: 'Filtrar Artistas' },
-                                            { id: 'COMMUNITIES', icon: <Globe size={12} />, label: 'Comunidades', desc: 'Filtrar Comunidades' },
-                                            { id: 'PLAYLISTS', icon: <Music size={12} />, label: 'Playlists', desc: 'Filtrar Playlists' },
-                                            { id: 'TRACKS', icon: <Play size={12} />, label: 'Canciones', desc: 'Filtrar Canciones' }
+                                            { id: 'ARTISTS', icon: <User size={12} />, label: t('ARTISTS'), desc: t('ARTISTS') },
+                                            { id: 'COMMUNITIES', icon: <Globe size={12} />, label: t('SECTOR_CLIQUES'), desc: t('SECTOR_CLIQUES') },
+                                            { id: 'PLAYLISTS', icon: <Music size={12} />, label: t('PLAYLISTS'), desc: t('PLAYLISTS') },
+                                            { id: 'TRACKS', icon: <Play size={12} />, label: t('SONGS'), desc: t('SONGS') }
                                         ].map(v => (
                                             <button
                                                 key={v.id}
@@ -1705,7 +1705,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                             : 'text-white/40 hover:text-white hover:bg-white/5 border border-white/5'
                                                     }`}
                                                 >
-                                                    {cat === 'ALL' ? 'TODO' : cat === 'SONGS' ? 'CANCIONES' : cat === 'ALBUMS' ? 'ÁLBUMES' : 'ARTISTAS'}
+                                                    {cat === 'ALL' ? t('ALL') : cat === 'SONGS' ? t('SONGS') : cat === 'ALBUMS' ? t('ALBUMS') : t('ARTISTS')}
                                                 </button>
                                             ))}
                                         </div>
@@ -1763,7 +1763,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         {(selectedSearchCategory === 'ALL' || selectedSearchCategory === 'SONGS') && (
                                             <div className="space-y-2" onTouchStart={(e) => e.stopPropagation()}>
                                                 {selectedSearchCategory === 'ALL' && (
-                                                    <div className="text-[8px] font-black text-white/40 uppercase tracking-[0.3em] mb-1 px-1">:: CANCIONES ::</div>
+                                                    <div className="text-[8px] font-black text-white/40 uppercase tracking-[0.3em] mb-1 px-1">:: {t('SONGS')} ::</div>
                                                 )}
                                                 {(selectedSearchCategory === 'SONGS' ? youtubeResults : youtubeResults.slice(0, 5)).map(y => (
                                                     <div key={y.id} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => {

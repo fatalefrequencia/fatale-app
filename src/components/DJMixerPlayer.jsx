@@ -1682,7 +1682,7 @@ const DJMixerPlayer = ({
                                                     <div className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)] mb-2">// PLAYLIST</div>
                                                     <h1 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">{viewingPlaylist.name || viewingPlaylist.Title}</h1>
                                                     <div className="text-[11px] text-white/50 font-mono">
-                                                        <span className="text-white font-bold">{viewingPlaylist.username || 'USER'}</span> • {(viewingPlaylist.tracks || viewingPlaylist.Tracks || []).length} canciones
+                                                        <span className="text-white font-bold">{viewingPlaylist.username || 'USER'}</span> • {(viewingPlaylist.tracks || viewingPlaylist.Tracks || []).length} {t('SONGS').toLowerCase()}
                                                     </div>
                                                 </div>
                                                 <div className="flex gap-2">
@@ -1847,7 +1847,7 @@ const DJMixerPlayer = ({
                                                                         }}
                                                                         className={`px-1.5 py-0.5 border ${selectedTracksForNewPlaylist.includes(track.id || track.Id) ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-white/10 text-white/30'} text-[8px] font-black uppercase`}
                                                                     >
-                                                                        {selectedTracksForNewPlaylist.includes(track.id || track.Id) ? 'QUITAR' : 'SUMAR'}
+                                                                        {selectedTracksForNewPlaylist.includes(track.id || track.Id) ? t('REMOVE') : t('ADD')}
                                                                     </button>
                                                                 </div>
                                                             ))}
@@ -1856,7 +1856,7 @@ const DJMixerPlayer = ({
 
                                                     {/* Selected Tracks Section */}
                                                     <div className="space-y-2">
-                                                        <div className="text-[9px] font-black uppercase tracking-widest text-white/50">// CANCIONES SELECCIONADAS</div>
+                                                        <div className="text-[9px] font-black uppercase tracking-widest text-white/50">// {t('SELECTED_SONGS')}</div>
                                                         <div className="max-h-40 overflow-y-auto border border-white/5 bg-black/20 p-2 space-y-1">
                                                             {selectedTracksObjects.map((track, i) => (
                                                                 <div key={`selected-${i}`} className="flex items-center justify-between text-xs p-1 hover:bg-white/[0.02]">
@@ -1871,19 +1871,19 @@ const DJMixerPlayer = ({
                                                                         }}
                                                                         className="px-1.5 py-0.5 border border-[var(--accent)] text-[var(--accent)] text-[8px] font-black uppercase"
                                                                     >
-                                                                        QUITAR
+                                                                        {t('REMOVE')}
                                                                     </button>
                                                                 </div>
                                                             ))}
                                                             {selectedTracksObjects.length === 0 && (
-                                                                <div className="text-[8px] text-white/20 uppercase py-2 text-center">No hay canciones seleccionadas</div>
+                                                                <div className="text-[8px] text-white/20 uppercase py-2 text-center">{t('NO_SONGS_SELECTED')}</div>
                                                             )}
                                                         </div>
                                                     </div>
 
                                                     {/* Search Section */}
                                                     <div className="space-y-2">
-                                                        <div className="text-[9px] font-black uppercase tracking-widest text-white/50">// BUSCAR MAS</div>
+                                                        <div className="text-[9px] font-black uppercase tracking-widest text-white/50">// {t('SEARCH_MORE')}</div>
                                                         <div className="crate-search-box-large w-full">
                                                             <Search size={16} className="text-[var(--accent)]" />
                                                             <input 
