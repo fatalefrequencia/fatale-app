@@ -328,7 +328,7 @@ export const IPodPlayer = ({
                     return sourceList.map((t, i) => ({ ...t, originalIndex: i })).filter(t => t.isLiked);
                 }
                 if (screen === 'SONGS_PURCHASED') return sourceList.map((t, i) => ({ ...t, originalIndex: i })).filter(t => t.isCached);
-                return sourceList.map((t, i) => ({ ...t, originalIndex: i }));
+                return sourceList.map((t, i) => ({ ...t, originalIndex: i })).filter(t => t.isCached || t.isLiked);
             };
             const filtered = getFiltered();
 
