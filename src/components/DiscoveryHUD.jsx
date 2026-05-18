@@ -1055,10 +1055,10 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             >
                                                 <div className="flex items-center">
                                                     {v.icon}
-                                                    <span className={`text-[10px] font-black tracking-[0.2em] transition-all uppercase inline-block ${
+                                                    <span className={`text-[10px] font-black tracking-[0.2em] transition-all uppercase inline-block whitespace-nowrap ${
                                                         activeGlobeView === v.id 
-                                                            ? 'opacity-100 max-w-[150px] ml-3' 
-                                                            : 'opacity-0 group-hover:opacity-100 max-w-0 group-hover:max-w-[150px] overflow-hidden ml-0 group-hover:ml-3'
+                                                            ? 'opacity-100 max-w-[150px] ml-3 w-auto' 
+                                                            : 'opacity-0 group-hover:opacity-100 w-0 group-hover:w-auto max-w-0 group-hover:max-w-[150px] overflow-hidden ml-0 group-hover:ml-3'
                                                     }`}>{v.label}</span>
                                                 </div>
                                                 {activeGlobeView === v.id && (
