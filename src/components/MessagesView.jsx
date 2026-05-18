@@ -32,32 +32,17 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
             setVisualHeight(window.visualViewport.height);
             setVisualViewportOffsetTop(window.visualViewport.offsetTop);
             setIsKeyboardOpen(window.visualViewport.height < window.innerHeight - 150);
-            
-            // Proactively reset body/document scroll to 0,0 to prevent keyboard layout displacement
-            const resetScroll = () => {
-                window.scrollTo(0, 0);
-                document.body.scrollTop = 0;
-                if (document.documentElement) {
-                    document.documentElement.scrollTop = 0;
-                }
-            };
-            resetScroll();
-            requestAnimationFrame(resetScroll);
-            setTimeout(resetScroll, 30);
-            setTimeout(resetScroll, 100);
-            setTimeout(resetScroll, 200);
         };
+        
         window.visualViewport.addEventListener('resize', handleResize);
-        window.visualViewport.addEventListener('scroll', handleResize);
         
         // Initial trigger
         handleResize();
         
         return () => {
             window.visualViewport.removeEventListener('resize', handleResize);
-            window.visualViewport.removeEventListener('scroll', handleResize);
         };
-    }, [currentChat]);
+    }, []);
 
     // Auto-scroll to bottom of chat when visualHeight resizes (keyboard opens)
     useEffect(() => {
@@ -283,11 +268,6 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                         isKeyboardOpen={isKeyboardOpen}
                         onBack={() => {
                             setCurrentChat(null);
-                            window.scrollTo(0, 0);
-                            document.body.scrollTop = 0;
-                            if (document.documentElement) {
-                                document.documentElement.scrollTop = 0;
-                            }
                         }}
                     />
                 ) : (
@@ -298,11 +278,6 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                         <button 
                             onClick={() => {
                                 setCurrentChat(null);
-                                window.scrollTo(0, 0);
-                                document.body.scrollTop = 0;
-                                if (document.documentElement) {
-                                    document.documentElement.scrollTop = 0;
-                                }
                             }} 
                             className="p-1 hover:bg-[#ff006e] hover:text-black text-[#ff006e] transition-all border border-[#ff006e]/20"
                         >
