@@ -17,19 +17,29 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
 
     // Sizing states to handle dynamic visual viewport height
     const [visualHeight, setVisualHeight] = useState(window.innerHeight);
+    const [visualViewportOffsetTop, setVisualViewportOffsetTop] = useState(0);
     const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
     useEffect(() => {
         if (!window.visualViewport) return;
         const handleResize = () => {
             setVisualHeight(window.visualViewport.height);
+            setVisualViewportOffsetTop(window.visualViewport.offsetTop);
             setIsKeyboardOpen(window.visualViewport.height < window.innerHeight - 150);
+            
             // Proactively reset body/document scroll to 0,0 to prevent keyboard layout displacement
-            window.scrollTo(0, 0);
-            document.body.scrollTop = 0;
-            if (document.documentElement) {
-                document.documentElement.scrollTop = 0;
-            }
+            const resetScroll = () => {
+                window.scrollTo(0, 0);
+                document.body.scrollTop = 0;
+                if (document.documentElement) {
+                    document.documentElement.scrollTop = 0;
+                }
+            };
+            resetScroll();
+            requestAnimationFrame(resetScroll);
+            setTimeout(resetScroll, 30);
+            setTimeout(resetScroll, 100);
+            setTimeout(resetScroll, 200);
         };
         window.visualViewport.addEventListener('resize', handleResize);
         window.visualViewport.addEventListener('scroll', handleResize);
@@ -254,8 +264,8 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: '100%', opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="fixed md:absolute inset-x-0 bottom-0 z-[100] flex flex-col bg-black overflow-hidden"
-                style={{ height: `${visualHeight}px` }}
+                className="fixed md:absolute inset-x-0 top-0 z-[100] flex flex-col bg-black overflow-hidden"
+                style={{ height: `${visualHeight}px`, top: `${visualViewportOffsetTop}px` }}
             >
                 {currentChat.isCommunity ? (
                     <CommunityTerminal 
