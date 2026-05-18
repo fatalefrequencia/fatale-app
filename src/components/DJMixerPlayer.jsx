@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SkipBack, SkipForward, Play, Pause, Zap, Disc, MessageSquare, List, Search, Plus, DollarSign, Users, Radio, Heart, Music, Shuffle, Settings, Check, Star } from 'lucide-react';
+import { SkipBack, SkipForward, Play, Pause, Zap, Disc, MessageSquare, List, Search, Plus, DollarSign, Users, Radio, Heart, Music, Shuffle, Settings, Check, Star, Coins } from 'lucide-react';
+import CreditTransferModal from './CreditTransferModal';
+import { useNotification } from '../contexts/NotificationContext';
 import { getMediaUrl, API_BASE_URL } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import YouTube from 'react-youtube';
@@ -95,9 +97,12 @@ const DJMixerPlayer = ({
     onKeyLockAChange,
     setTracks,
     setCurrentTrackIndex,
-    isMobile = false
+    isMobile = false,
+    user
 }) => {
     const { t, language } = useLanguage();
+    const { showNotification } = useNotification();
+    const [showTipModal, setShowTipModal] = useState(false);
     const [activeTab, setActiveTab] = useState('LIBRARY'); // LIBRARY, CHAT, REQUESTS
     const [crateCategory, setCrateCategory] = useState('ALL'); // ALL, PURCHASED, FAVORITES, ARTISTS, PLAYLISTS
     const [searchQuery, setSearchQuery] = useState('');
@@ -1449,13 +1454,13 @@ const DJMixerPlayer = ({
                         </div>
 
                         <div className="listener-controls">
-                            <button onClick={() => onLike(deckA)} className="control-btn"><Heart size={16} /></button>
-                            <button onClick={onPrev} className="control-btn"><SkipBack size={16} /></button>
+                            <button onClick={() => onLike(deckA)} className="control-btn" title="Like"><Heart size={16} /></button>
+                            <button onClick={onPrev} className="control-btn" title="Previous"><SkipBack size={16} /></button>
                             <button onClick={handleTogglePlayA} className={`control-btn play-btn ${isPlayingA ? 'active' : ''}`}>
                                 {isPlayingA ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
                             </button>
-                            <button onClick={onNext} className="control-btn"><SkipForward size={16} /></button>
-                            {/* <button onClick={() => onPurchase(deckA)} className="control-btn"><DollarSign size={16} /></button> */}
+                            <button onClick={onNext} className="control-btn" title="Next"><SkipForward size={16} /></button>
+                            <button onClick={() => setShowTipModal(true)} className="control-btn" title={t('TIP_ARTIST')}><Coins size={16} /></button>
                         </div>
 
                         <div className="listener-mode-toggle">
@@ -2065,6 +2070,16 @@ const DJMixerPlayer = ({
                 {/* Tactical Decals */}
                 <div className="cyber-label-fx top-right">SYSTEM_STABLE_4.2.0</div>
                 <div className="cyber-label-fx bottom-left">NEURAL_DECK_PRO_V5</div>
+                
+                {showTipModal && (
+                    <CreditTransferModal 
+                        user={user}
+                        initialTargetId={station?.artistUserId || station?.userId || station?.OwnerId || station?.ownerId || deckA?.artistUserId || deckA?.ArtistUserId || deckA?.userId || deckA?.UserId || deckA?.OwnerId || deckA?.ownerId || ''}
+                        initialTargetName={station?.artistName || station?.ArtistName || station?.name || station?.Name || deckA?.artist || deckA?.Artist || deckA?.artistName || deckA?.username || deckA?.Username || 'UNKNOWN_SIGNAL'}
+                        onClose={() => setShowTipModal(false)}
+                        onRefresh={() => showNotification("TIP_SENT", "Signal of appreciation transmitted.", "success")}
+                    />
+                )}
             </div>
             </div>
         </div>

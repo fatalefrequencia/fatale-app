@@ -2646,6 +2646,7 @@ function App() {
               setTracks={setTracks}
               setCurrentTrackIndex={setCurrentTrackIndex}
               onPlayTrack={handlePlayTrack}
+              user={user}
             />
             
             {/* Close Mixer Toggle */}

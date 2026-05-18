@@ -210,7 +210,7 @@ export default {
     "MASTER_OUTPUT": "ГЛАВНЫЙ_ВЫХОД",
     "SIGNAL_LOADED": "СИГНАЛ_ЗАГРУЖЕН",
     "NEURAL_BROADCAST": "НЕЙРОННАЯ_ТРАНСЛЯЦИЯ",
-    "FAVORITES": "ИЗБРАННЫЕ"
+    "FAVORITES": "ИЗБРАННЫЕ",
     "RADAR_YOUTUBE_ESPERANDO": "РАДАР YOUTUBE В ОЖИДАНИИ",
     "RADAR_YOUTUBE_HELP": "ВВЕДИТЕ ЧАСТОТУ В ВЕРХНЕЙ ПАНЕЛИ ДЛЯ ПЕРЕХВАТА СИГНАЛОВ",
     "RECENT_SEARCHES": "ПОСЛЕДНИЕ ЗАПРОСЫ",
