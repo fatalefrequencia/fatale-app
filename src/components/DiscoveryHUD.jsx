@@ -645,17 +645,17 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                     <div className={`${isMobile ? 'flex-1' : 'h-[400px] lg:h-full'} lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative transition-all duration-300`}>
                         {isPinterestView ? (
                             <div className="w-full h-full bg-black/95 backdrop-blur-xl border border-white/10 p-5 pt-16 overflow-y-auto no-scrollbar animate-in fade-in duration-500 pointer-events-auto">
-                                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[#ff006e] mb-6 border-b border-[#ff006e]/20 pb-2">{t('DISCOVERED_SIGNALS')}</div>
+                                <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[#ff006e] mb-6 border-b border-[#ff006e]/20 pb-2">DISCOVERED_SIGNALS</div>
 
                                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                                     {/* Playlists */}
                                     {trendingPlaylists.slice(0, 4).map(p => (
                                         <div key={p.id || p.Id} className="aspect-square bg-black border border-white/5 hover:border-[#ff006e]/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => onPlayTrack(p)}>
                                             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                                            <div className="text-[8px] font-mono text-[#ff006e] uppercase tracking-widest">{t('PLAYLIST') || 'PLAYLIST'}</div>
+                                            <div className="text-[8px] font-mono text-[#ff006e] uppercase tracking-widest">PLAYLIST</div>
                                             <div className="z-10">
                                                 <div className="text-xs font-black truncate group-hover:text-[#ff006e] uppercase">{p.name || p.Name}</div>
-                                                <div className="text-[8px] opacity-40 uppercase mt-0.5">{t('BY_AUTHOR') || 'BY'} {p.userName || "UNKNOWN"}</div>
+                                                <div className="text-[8px] opacity-40 uppercase mt-0.5">BY {p.userName || "UNKNOWN"}</div>
                                             </div>
                                             <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <Play size={16} fill="#ff006e" className="text-[#ff006e]" />
@@ -670,10 +670,10 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             <div className="absolute inset-0">
                                                 <img src={getMediaUrl(trk.imageUrl || trk.ImageUrl || trk.coverImageUrl || trk.CoverImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-20 group-hover:opacity-40 group-hover:scale-110 transition-all duration-700" />
                                             </div>
-                                            <div className="text-[8px] font-mono text-[#00ffff] uppercase tracking-widest z-10">{t('SONG')}</div>
+                                            <div className="text-[8px] font-mono text-[#00ffff] uppercase tracking-widest z-10">SONG</div>
                                             <div className="z-10">
                                                 <div className="text-xs font-black truncate group-hover:text-[#ff006e] uppercase">{trk.title}</div>
-                                                <div className="text-[8px] opacity-40 uppercase mt-0.5">{t('BY_AUTHOR') || 'BY'} {trk.artist}</div>
+                                                <div className="text-[8px] opacity-40 uppercase mt-0.5">BY {trk.artist}</div>
                                             </div>
                                             <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                                 <Play size={16} fill="#ff006e" className="text-[#ff006e]" />
@@ -688,7 +688,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             <div className="absolute inset-0">
                                                 <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-20 group-hover:opacity-40 group-hover:scale-110 transition-all duration-700" />
                                             </div>
-                                            <div className="text-[8px] font-mono text-[#9d00ff] uppercase tracking-widest z-10">{t('ARTIST')}</div>
+                                            <div className="text-[8px] font-mono text-[#9d00ff] uppercase tracking-widest z-10">ARTIST</div>
                                             <div className="z-10">
                                                 <div className="text-xs font-black truncate group-hover:text-[#ff006e] uppercase">{a.name}</div>
                                                 <div className="text-[8px] opacity-40 uppercase mt-0.5">{a.genre || "NATIVE"}</div>
