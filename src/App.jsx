@@ -4079,11 +4079,11 @@ const FeedContent = React.memo(({
                     const isMarketplace = type === 'studio' && isUrl(content);
 
                     const getPostAccent = () => {
-                      if (isMarketplace) return { color: '#ffaa00', glow: 'rgba(255, 170, 0, 0.12)' };
-                      if (type === 'track') return { color: '#00f0ff', glow: 'rgba(0, 240, 255, 0.12)' };
-                      if (type === 'studio') return { color: '#ff006e', glow: 'rgba(255, 0, 110, 0.12)' };
-                      if (type === 'journal') return { color: '#9d00ff', glow: 'rgba(157, 0, 255, 0.12)' };
-                      return { color: '#ffffff', glow: 'rgba(255, 255, 255, 0.05)' };
+                      if (isMarketplace) return { color: '#ffaa00', glow: 'rgba(255, 170, 0, 0.18)' };
+                      if (type === 'track') return { color: '#00f0ff', glow: 'rgba(0, 240, 255, 0.18)' };
+                      if (type === 'studio') return { color: '#ff006e', glow: 'rgba(255, 0, 110, 0.18)' };
+                      if (type === 'journal') return { color: '#9d00ff', glow: 'rgba(157, 0, 255, 0.18)' };
+                      return { color: '#ffffff', glow: 'rgba(255, 255, 255, 0.08)' };
                     };
                     const accent = getPostAccent();
 
