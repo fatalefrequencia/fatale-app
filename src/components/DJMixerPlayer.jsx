@@ -1454,7 +1454,19 @@ const DJMixerPlayer = ({
                         </div>
 
                         <div className="listener-controls">
-                            <button onClick={() => onLike(deckA)} className="control-btn" title="Like"><Heart size={16} /></button>
+                            <button 
+                                onClick={() => {
+                                    if (deckA) {
+                                        onLike?.(deckA);
+                                        setDeckA(prev => prev ? { ...prev, isLiked: !prev.isLiked } : null);
+                                    }
+                                }} 
+                                className="control-btn" 
+                                title="Like"
+                                style={{ color: deckA?.isLiked ? '#f00060' : 'rgba(255, 255, 255, 0.5)' }}
+                            >
+                                <Heart size={16} fill={deckA?.isLiked ? '#f00060' : 'transparent'} />
+                            </button>
                             <button onClick={onPrev} className="control-btn" title="Previous"><SkipBack size={16} /></button>
                             <button onClick={handleTogglePlayA} className={`control-btn play-btn ${isPlayingA ? 'active' : ''}`}>
                                 {isPlayingA ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
