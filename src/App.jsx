@@ -5,7 +5,7 @@ import {
   Play, Pause, SkipBack, SkipForward, Heart,
   Search, User, Radio, Hash, LogIn, Bell,
   Flame, Zap, Settings, Share2, List,
-  Music, ChevronRight, Menu as MenuIcon, X,
+  Music, ChevronRight, ChevronLeft, Menu as MenuIcon, X,
   MapPin, Calendar, Users, Edit3, Library,
   ChevronDown, Camera, Video, PenTool, BookOpen,
   MessageSquare, Repeat, MoreHorizontal, RefreshCw,
@@ -2899,15 +2899,37 @@ const Dashboard = React.memo(({
           className="lg:hidden flex items-center justify-center px-1 py-3 border-b border-[var(--theme-color)]/10 bg-black/90 backdrop-blur-md z-40 relative"
           style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
         >
-          <div className="flex gap-[3px] sm:gap-2">
-            <NavButton icon={<Radio size={20} />} active={activeView === 'discovery'} onClick={() => setView('discovery')} />
-            <NavButton icon={<Hash size={20} />} active={activeView === 'feed'} onClick={() => setView('feed')} />
-            <NavButton icon={<Play size={20} />} active={activeView === 'player'} onClick={() => setView('player')} />
-            <NavButton icon={<ShoppingBag size={20} />} active={activeView === 'shopping'} onClick={() => setView('shopping')} />
-            <NavButton icon={<MessageSquare size={20} />} active={activeView === 'messages'} onClick={() => setView('messages')} hasNotification={hasNewMessages} />
-            <NavButton icon={<User size={20} />} active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => navigateToProfile(null)} />
-            <NavButton icon={<Settings size={20} />} active={activeView === 'settings'} onClick={() => setView('settings')} />
-          </div>
+          {activeView === 'messages' && activeMessageUser ? (
+            <div className="w-full flex items-center justify-between px-4">
+              <button 
+                onClick={() => {
+                  setActiveMessageUser(null);
+                }} 
+                className="p-1.5 border border-[var(--theme-color)]/20 text-white/50 hover:text-[var(--theme-color)] hover:border-[var(--theme-color)] transition-all flex items-center justify-center bg-black/40"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <div className="flex flex-col items-center flex-1 mx-4 min-w-0">
+                <span className="text-[10px] text-white font-black tracking-widest uppercase mono truncate max-w-full">
+                  :: {activeMessageUser.isCommunity ? (activeMessageUser.name || activeMessageUser.Name) : (activeMessageUser.username || activeMessageUser.Username || activeMessageUser.title || activeMessageUser.Title)} ::
+                </span>
+                <span className="text-[6px] text-green-500 uppercase tracking-widest mono mt-0.5 truncate">
+                  ■ {activeMessageUser.isCommunity ? 'ESTABLECIENDO CONEXIÓN' : t('STABLE_CONNECTION')}
+                </span>
+              </div>
+              <div className="w-8" />
+            </div>
+          ) : (
+            <div className="flex gap-[3px] sm:gap-2">
+              <NavButton icon={<Radio size={20} />} active={activeView === 'discovery'} onClick={() => setView('discovery')} />
+              <NavButton icon={<Hash size={20} />} active={activeView === 'feed'} onClick={() => setView('feed')} />
+              <NavButton icon={<Play size={20} />} active={activeView === 'player'} onClick={() => setView('player')} />
+              <NavButton icon={<ShoppingBag size={20} />} active={activeView === 'shopping'} onClick={() => setView('shopping')} />
+              <NavButton icon={<MessageSquare size={20} />} active={activeView === 'messages'} onClick={() => setView('messages')} hasNotification={hasNewMessages} />
+              <NavButton icon={<User size={20} />} active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => navigateToProfile(null)} />
+              <NavButton icon={<Settings size={20} />} active={activeView === 'settings'} onClick={() => setView('settings')} />
+            </div>
+          )}
         </header>
 
         <div className={`flex-1 relative ${activeView === 'discovery' ? 'overflow-hidden' : activeView === 'messages' ? (currentTrackIndex >= 0 && !isMiniPlayerMinimized ? 'overflow-hidden lg:pb-24 pb-[60px]' : 'overflow-hidden pb-0') : 'overflow-y-auto no-scrollbar pb-24'}`}>
@@ -3106,7 +3128,16 @@ const Dashboard = React.memo(({
                 />
               </motion.div>
             )}
-            {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} initialChatUser={activeMessageUser} isMiniPlayerActive={currentTrackIndex >= 0 && !isMiniPlayerMinimized} />}
+            {activeView === 'messages' && (
+              <MessagesView 
+                key="messages" 
+                user={user} 
+                navigateToProfile={navigateToProfile} 
+                initialChatUser={activeMessageUser} 
+                isMiniPlayerActive={currentTrackIndex >= 0 && !isMiniPlayerMinimized} 
+                onChatChange={setActiveMessageUser}
+              />
+            )}
 
           </AnimatePresence>
         </div>

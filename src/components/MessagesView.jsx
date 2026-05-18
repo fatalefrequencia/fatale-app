@@ -6,7 +6,7 @@ import API from '../services/api';
 import CommunityTerminal from './discovery/CommunityTerminal';
 import { API_BASE_URL, getMediaUrl } from '../constants';
 
-export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniPlayerActive }) => {
+export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniPlayerActive, onChatChange }) => {
     const { t } = useLanguage();
     const [conversations, setConversations] = useState([]);
     const [communities, setCommunities] = useState([]);
@@ -14,6 +14,12 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (onChatChange) {
+            onChatChange(currentChat);
+        }
+    }, [currentChat, onChatChange]);
 
     // Sizing states to handle dynamic visual viewport height
     const [visualHeight, setVisualHeight] = useState(window.innerHeight);
@@ -207,6 +213,8 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                 profileImageUrl: initialChatUser.profilePictureUrl || initialChatUser.ProfilePictureUrl || initialChatUser.profileImageUrl || initialChatUser.ProfileImageUrl,
                 isCommunity: initialChatUser.isCommunity
             });
+        } else {
+            setCurrentChat(null);
         }
     }, [initialChatUser]);
 
@@ -264,8 +272,8 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: '100%', opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="fixed md:absolute inset-x-0 top-0 z-[100] flex flex-col bg-black overflow-hidden"
-                style={{ height: `${visualHeight}px`, top: `${visualViewportOffsetTop}px` }}
+                className="absolute inset-0 z-[50] flex flex-col bg-black overflow-hidden"
+                style={{ height: `${visualHeight}px` }}
             >
                 {currentChat.isCommunity ? (
                     <CommunityTerminal 
@@ -285,7 +293,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                 ) : (
                     <div className="h-full flex flex-col bg-black relative overflow-hidden">
                 {/* Terminal Window Header */}
-                <div className="px-6 py-4 border-b border-white/10 bg-black flex items-center justify-between">
+                <div className="hidden lg:flex px-6 py-4 border-b border-white/10 bg-black items-center justify-between">
                     <div className="flex items-center gap-4">
                         <button 
                             onClick={() => {

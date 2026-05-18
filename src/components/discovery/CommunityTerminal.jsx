@@ -70,7 +70,7 @@ const FataleCorePanel = ({ user, onBack, isMiniPlayerActive, isKeyboardOpen }) =
             style={{ background: 'rgba(0,0,0,0.92)', borderColor: `${COLOR}30`, border: `1px solid ${COLOR}30` }}
         >
             {/* Header */}
-            <div className="flex-none flex items-center justify-between px-4 h-14 border-b border-white/5 bg-black/60">
+            <div className="flex-none hidden lg:flex items-center justify-between px-4 h-14 border-b border-white/5 bg-black/60">
                 <button
                     onClick={onBack}
                     className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] transition-all hover:scale-105"
@@ -413,7 +413,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
     return (
         <div className="w-full h-full flex flex-col bg-black/40 border border-white/10 relative overflow-hidden backdrop-blur-xl" style={{ borderColor: `${color}30` }}>
             {/* Header / Nav Section */}
-            <div className="flex-none flex items-center justify-between px-4 h-14 border-b border-white/5 bg-white/5 backdrop-blur-md relative">
+            <div className="flex-none hidden lg:flex items-center justify-between px-4 h-14 border-b border-white/5 bg-white/5 backdrop-blur-md relative">
                 <button 
                     onClick={onBack}
                     className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] transition-all hover:scale-105"
