@@ -655,7 +655,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         <div className="text-[8px] font-mono text-[#ff006e] uppercase tracking-widest">PLAYLIST</div>
                                         <div className="z-10">
                                             <div className="text-xs font-black truncate group-hover:text-[#ff006e] uppercase">{p.name || p.Name}</div>
-                                            <div className="text-[8px] opacity-40 uppercase mt-0.5">BY {p.userName || "UNKNOWN"}</div>
+                                            <div className="text-[8px] opacity-40 uppercase mt-0.5">BY {p.authorName || p.AuthorName || p.userName || p.UserName || "UNKNOWN"}</div>
                                         </div>
                                         <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <Play size={16} fill="#ff006e" className="text-[#ff006e]" />
@@ -1324,7 +1324,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
-                                                        <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">BY {p.userName || p.UserName || "UNKNOWN"}</div>
+                                                        <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">BY {p.authorName || p.AuthorName || p.userName || p.UserName || "UNKNOWN"}</div>
                                                     </div>
                                                     <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 </div>
@@ -1946,7 +1946,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
-                                                        <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">BY {p.userName || p.UserName || "UNKNOWN"}</div>
+                                                        <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">BY {p.authorName || p.AuthorName || p.userName || p.UserName || "UNKNOWN"}</div>
                                                     </div>
                                                     <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 </div>

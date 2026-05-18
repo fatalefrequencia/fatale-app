@@ -71,7 +71,7 @@ export const IPodPlayer = ({
             const userId = user?.id || user?.Id;
             const currentTrack = tracks && tracks.length > 0 ? tracks[currentTrackIndex] : null;
             const title = currentTrack?.title || currentTrack?.Title || '';
-            const artist = currentTrack?.artist || currentTrack?.ArtistName || '';
+            const artist = currentTrack?.artist || currentTrack?.artistName || currentTrack?.ArtistName || '';
             const fallback = title ? `${artist || title} radio`.trim() : '';
 
                 try {
@@ -303,7 +303,7 @@ export const IPodPlayer = ({
             const lowerQ = searchQuery.toLowerCase();
             const results = tracks.map((trk, i) => ({ ...trk, originalIndex: i }))
                 .filter(trk => (trk.title || trk.Title || '').toLowerCase().includes(lowerQ) ||
-                    (trk.artist || trk.ArtistName || '').toLowerCase().includes(lowerQ))
+                    (trk.artist || trk.artistName || trk.ArtistName || '').toLowerCase().includes(lowerQ))
                 .map(trk => ({ id: trk.originalIndex, label: trk.title || trk.Title || 'Untitled Track', originalTrack: trk }));
 
             const combined = [...results, ...searchResults];
@@ -1184,7 +1184,7 @@ export const IPodPlayer = ({
                                                 {(() => {
                                                     const filteredPlaylist = tracks.filter(trk => {
                                                         const title = (trk.title || trk.Title || '').toLowerCase();
-                                                        const artist = (trk.artist || trk.ArtistName || trk.author || trk.Author || trk.channelTitle || trk.ChannelTitle || '').toLowerCase();
+                                                        const artist = (trk.artist || trk.artistName || trk.ArtistName || trk.author || trk.Author || trk.channelTitle || trk.ChannelTitle || '').toLowerCase();
                                                         return title.includes(librarySearchQuery.toLowerCase()) || artist.includes(librarySearchQuery.toLowerCase());
                                                     });
 
@@ -1237,7 +1237,7 @@ export const IPodPlayer = ({
                                                                     <div className={`text-xs font-bold truncate tracking-wide ${isActive ? 'text-[#f00060]' : 'text-white/90 group-hover/row:text-white'}`}>{t.title || t.Title || 'Untitled'}</div>
                                                                     <div className="text-[10px] text-white/40 truncate mt-0.5 flex items-center gap-1.5 font-mono">
                                                                         {(() => {
-                                                                            const artist = t.artist || t.ArtistName || t.author || t.Author || t.channelTitle || t.ChannelTitle;
+                                                                            const artist = t.artist || t.artistName || t.ArtistName || t.author || t.Author || t.channelTitle || t.ChannelTitle;
                                                                             if (artist && artist !== 'YouTube') return <span className="truncate">{artist}</span>;
                                                                             const title = t.title || t.Title || '';
                                                                             if (title.includes(' - ')) return <span className="truncate">{title.split(' - ')[0]}</span>;
@@ -1275,7 +1275,7 @@ export const IPodPlayer = ({
                                                                         </div>
                                                                     </div>
                                                                     <div className="text-[11px] font-bold text-white truncate px-1">{t.title || t.Title || 'Untitled'}</div>
-                                                                    <div className="text-[9px] text-white/40 truncate mt-0.5 px-1 font-mono">{t.artist || t.ArtistName || 'YouTube'}</div>
+                                                                    <div className="text-[9px] text-white/40 truncate mt-0.5 px-1 font-mono">{t.artist || t.artistName || t.ArtistName || 'YouTube'}</div>
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -1302,7 +1302,7 @@ export const IPodPlayer = ({
                                                                         </div>
                                                                     </div>
                                                                     <div className="text-[11px] font-bold text-white truncate px-1">{t.title || t.Title || 'Untitled'}</div>
-                                                                    <div className="text-[9px] text-white/40 truncate mt-0.5 px-1 font-mono">{t.artist || t.ArtistName || 'YouTube'}</div>
+                                                                    <div className="text-[9px] text-white/40 truncate mt-0.5 px-1 font-mono">{t.artist || t.artistName || t.ArtistName || 'YouTube'}</div>
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -1451,7 +1451,7 @@ export const IPodPlayer = ({
                                                         {(() => {
                                                             const t = tracks[currentTrackIndex];
                                                             if (!t) return 'Desconocido';
-                                                            const artist = t.artist || t.ArtistName || t.author || t.Author || t.channelTitle || t.ChannelTitle;
+                                                            const artist = t.artist || t.artistName || t.ArtistName || t.author || t.Author || t.channelTitle || t.ChannelTitle;
                                                             if (artist && artist !== 'YouTube') return artist;
                                                             const title = t.title || t.Title || '';
                                                             if (title.includes(' - ')) return title.split(' - ')[0];

@@ -973,6 +973,52 @@ function App() {
     }
   }, [currentUserId]);
 
+  // Unified Play Track handler with full deep reconciliation (artist & artistName)
+  const handlePlayTrack = React.useCallback((track) => {
+    if (!track) return;
+    const tId = track.id || track.Id;
+    const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
+
+    // Unified YouTube Resolution
+    const pureYtId = getGlobalYoutubeId(track);
+    const isYoutube = !!pureYtId;
+    const sourceStr = isYoutube ? `youtube:${pureYtId}` : (rawSource || "");
+
+    // --- DEEP RECONCILIATION: Inherit State from Library ---
+    const libraryMatch = libraryTracks.find(lt =>
+      String(lt.id || lt.Id) === String(tId) ||
+      (lt.source && lt.source === sourceStr)
+    );
+
+    const isLiked = isYoutube
+      ? likedYoutubeIds.has(pureYtId)
+      : (libraryMatch ? libraryMatch.isLiked : (track.isLiked || track.IsLiked));
+
+    const isOwned = (libraryMatch ? libraryMatch.isOwned : track.isOwned) || true;
+
+    const rawCover = track.coverImageUrl || track.CoverImageUrl || track.imageUrl || track.ImageUrl || track.thumbnailUrl || track.ThumbnailUrl || track.cover || track.Cover || libraryMatch?.cover;
+
+    const artist = libraryMatch ? (libraryMatch.artist || extractArtistName(libraryMatch)) : (track.artist || extractArtistName(track) || 'Unknown Artist');
+    const artistName = libraryMatch ? (libraryMatch.artistName || libraryMatch.ArtistName || extractArtistName(libraryMatch)) : (track.artistName || track.ArtistName || extractArtistName(track) || 'Unknown Artist');
+
+    const enriched = {
+      ...track,
+      id: tId,
+      source: isYoutube ? sourceStr : (rawSource ? ((rawSource.startsWith('http') || rawSource.startsWith('spotify:')) ? rawSource : getMediaUrl(rawSource)) : null),
+      cover: isYoutube ? (rawCover || `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg`) : (rawCover ? (rawCover.startsWith('http') ? rawCover : getMediaUrl(rawCover)) : null),
+      isLiked,
+      isOwned,
+      isLocked: false,
+      artist,
+      artistName
+    };
+
+    setTracks([enriched]);
+    setCurrentTrackIndex(0);
+    setIsPlaying(true);
+    if (isYoutube) setIsYoutubeMode(true);
+  }, [libraryTracks, likedYoutubeIds]);
+
   // Fetch Tracks, Purchases, Likes (Local & YouTube), Subscription
   const fetchTracks = async () => {
     try {
@@ -1022,7 +1068,7 @@ function App() {
 
       const getMetaKey = (t) => {
         const title = (t.title || t.Title || "").toLowerCase().trim();
-        const artist = (t.artist || t.ArtistName || t.album?.artist?.name || "").toLowerCase().trim();
+        const artist = (t.artist || t.artistName || t.ArtistName || t.album?.artist?.name || "").toLowerCase().trim();
         return title ? `${artist} - ${title}` : null;
       };
 
@@ -1112,14 +1158,18 @@ function App() {
           
           let isLiked = yId ? localLikedYtIds.has(yId) : likedTrackIds.has(tId);
           // If not found by primary keys, try matching libraryTracks meta (fallthrough)
-          if (!isLiked) {
-             const matched = finalTracks.find(ft => ft.id === tId || (yId && getGlobalYoutubeId(ft) === yId));
-             if (matched) isLiked = matched.isLiked;
+          const matched = finalTracks.find(ft => String(ft.id) === tId || (yId && getGlobalYoutubeId(ft) === yId));
+          if (!isLiked && matched) {
+             isLiked = matched.isLiked;
           }
 
           const isOwned = ownedTrackIds.has(tId) || t.isOwned || t.IsOwned || (uid && String(t.artistUserId) === String(uid));
           
-          return { ...t, isLiked, isOwned };
+          // Ensure correct artist and artistName mapping to get rid of "Unknown Artist" saved in queue/local storage
+          const artist = matched ? (matched.artist || extractArtistName(matched)) : (t.artist || extractArtistName(t) || 'Unknown Artist');
+          const artistName = matched ? (matched.artistName || matched.ArtistName || extractArtistName(matched)) : (t.artistName || t.ArtistName || extractArtistName(t) || 'Unknown Artist');
+
+          return { ...t, isLiked, isOwned, artist, artistName };
         });
       });
     } catch (error) {
@@ -2595,25 +2645,7 @@ function App() {
               onKeyLockAChange={setKeyLockA}
               setTracks={setTracks}
               setCurrentTrackIndex={setCurrentTrackIndex}
-              onPlayTrack={(track) => {
-                const tId = track.id || track.Id;
-                const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
-                const pureYtId = getGlobalYoutubeId(track);
-                const isYoutube = !!pureYtId;
-                const sourceStr = isYoutube ? `youtube:${pureYtId}` : (rawSource || "");
-                const enriched = {
-                  ...track,
-                  id: tId,
-                  source: isYoutube ? sourceStr : (rawSource ? ((rawSource.startsWith('http') || rawSource.startsWith('spotify:')) ? rawSource : getMediaUrl(rawSource)) : null),
-                  isLiked: isYoutube ? likedYoutubeIds.has(pureYtId) : (track.isLiked || track.IsLiked),
-                  isOwned: true,
-                  isLocked: false
-                };
-                setTracks([enriched]);
-                setCurrentTrackIndex(0);
-                setIsPlaying(true);
-                if (isYoutube) setIsYoutubeMode(true);
-              }}
+              onPlayTrack={handlePlayTrack}
             />
             
             {/* Close Mixer Toggle */}
@@ -2898,44 +2930,7 @@ const Dashboard = React.memo(({
                   }}
                   navigateToProfile={navigateToProfile}
                   onMessageCommunity={(c) => { setActiveMessageUser({...c, isCommunity: true}); setView('messages'); }}
-                  onPlayTrack={(track) => {
-                    const tId = track.id || track.Id;
-                    const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
-                    
-                    // Unified YouTube Resolution
-                    const pureYtId = getGlobalYoutubeId(track);
-                    const isYoutube = !!pureYtId;
-                    const sourceStr = isYoutube ? `youtube:${pureYtId}` : (rawSource || "");
-
-                    // --- DEEP RECONCILIATION: Inherit State from Library ---
-                    const libraryMatch = libraryTracks.find(lt => 
-                      String(lt.id || lt.Id) === String(tId) || 
-                      (lt.source && lt.source === sourceStr)
-                    );
-
-                    const isLiked = isYoutube 
-                      ? likedYoutubeIds.has(pureYtId) 
-                      : (libraryMatch ? libraryMatch.isLiked : (track.isLiked || track.IsLiked));
-                    
-                    const isOwned = (libraryMatch ? libraryMatch.isOwned : track.isOwned) || true;
-
-                    const rawCover = track.coverImageUrl || track.CoverImageUrl || track.imageUrl || track.ImageUrl || track.thumbnailUrl || track.ThumbnailUrl || track.cover || track.Cover || libraryMatch?.cover;
-
-                    const enriched = {
-                      ...track,
-                      id: tId,
-                      source: isYoutube ? sourceStr : (rawSource ? ((rawSource.startsWith('http') || rawSource.startsWith('spotify:')) ? rawSource : getMediaUrl(rawSource)) : null),
-                      cover: isYoutube ? (rawCover || `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg`) : (rawCover ? (rawCover.startsWith('http') ? rawCover : getMediaUrl(rawCover)) : null),
-                      isLiked,
-                      isOwned,
-                      isLocked: false
-                    };
-                    
-                    setTracks([enriched]);
-                    setCurrentTrackIndex(0);
-                    setIsPlaying(true);
-                    if (isYoutube) setIsYoutubeMode(true);
-                  }}
+                  onPlayTrack={handlePlayTrack}
                   onPlayPlaylist={(list, startIdx = 0) => handlePlayPlaylist(list, startIdx, false)}
                   onExpandContent={onExpandContent}
                   setUser={setUser}
@@ -3037,25 +3032,7 @@ const Dashboard = React.memo(({
                   onLike={onLike}
                   navigateToProfile={navigateToProfile}
                   onPlayPlaylist={handlePlayPlaylist}
-                  onPlayTrack={(track) => {
-                    const tId = track.id || track.Id;
-                    const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
-                    const pureYtId = getGlobalYoutubeId(track);
-                    const isYoutube = !!pureYtId;
-                    const sourceStr = isYoutube ? `youtube:${pureYtId}` : (rawSource || "");
-                    const enriched = {
-                      ...track,
-                      id: tId,
-                      source: isYoutube ? sourceStr : (rawSource ? ((rawSource.startsWith('http') || rawSource.startsWith('spotify:')) ? rawSource : getMediaUrl(rawSource)) : null),
-                      isLiked: isYoutube ? likedYoutubeIds.has(pureYtId) : (track.isLiked || track.IsLiked),
-                      isOwned: true,
-                      isLocked: false
-                    };
-                    setTracks([enriched]);
-                    setCurrentTrackIndex(0);
-                    setIsPlaying(true);
-                    if (isYoutube) setIsYoutubeMode(true);
-                  }}
+                  onPlayTrack={handlePlayTrack}
                   activeStation={activeStation}
                   stationChat={stationChat}
                   stationQueue={stationQueue}
@@ -3248,7 +3225,7 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
         </div>
         <div className="flex-1 min-w-0 overflow-hidden flex flex-col justify-center gap-0.5">
           <h4 className={`text-[11px] lg:text-[13px] font-black uppercase truncate transition-colors leading-none tracking-wide ${isMessages ? 'text-white' : 'text-white group-hover/info:text-transparent group-hover/info:bg-clip-text group-hover/info:bg-gradient-to-r group-hover/info:from-white group-hover/info:to-[#ff006e]'}`}>{track?.title || 'No Track'}</h4>
-          <p className={`text-[9px] lg:text-[10px] font-bold uppercase truncate tracking-widest leading-none ${isMessages ? 'text-white/40' : 'text-[#ff006e]/50 group-hover/info:text-[#ff006e]/90'}`}>{track?.artist || 'Unknown'}</p>
+          <p className={`text-[9px] lg:text-[10px] font-bold uppercase truncate tracking-widest leading-none ${isMessages ? 'text-white/40' : 'text-[#ff006e]/50 group-hover/info:text-[#ff006e]/90'}`}>{track?.artist || track?.artistName || track?.ArtistName || 'Unknown'}</p>
         </div>
       </div>
 
@@ -4808,26 +4785,7 @@ const PlayerContent = ({
           analyserA={analyserA}
           keyLockA={keyLockA}
           onKeyLockAChange={setKeyLockA}
-          onPlayTrack={(track) => {
-            const tId = track.id || track.Id;
-            const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
-            const pureYtId = getGlobalYoutubeId(track);
-            const isYoutube = !!pureYtId;
-            const sourceStr = isYoutube ? `youtube:${pureYtId}` : (rawSource || "");
-
-            // Enrichment logic for Mixer
-            const enriched = {
-              ...track,
-              id: tId,
-              source: isYoutube ? sourceStr : (rawSource ? ((rawSource.startsWith('http') || rawSource.startsWith('spotify:')) ? rawSource : getMediaUrl(rawSource)) : null),
-              cover: track.cover || track.imageUrl || track.CoverImageUrl || (isYoutube ? `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg` : null),
-            };
-
-            setTracks([enriched]);
-            setCurrentTrackIndex(0);
-            setIsPlaying(true);
-            if (isYoutube) setIsYoutubeMode(true);
-          }}
+          onPlayTrack={handlePlayTrack}
           user={user}
         />
       ) : (

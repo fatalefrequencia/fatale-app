@@ -228,7 +228,7 @@ const ContentModal = ({
                                     <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                                         {/* Caption */}
                                         {(content.caption || content.Caption || content.description || content.Description || content.Content || content.content) && (
-                                            <div className="text-[10px] text-white/80 leading-relaxed mono border-b border-white/5 pb-4">
+                                            <div className="text-[10px] text-white/80 leading-relaxed mono border-b border-white/5 pb-4 break-words break-all">
                                                 <span className="text-[#ff006e] font-black mr-2">
                                                     @{content.artist || content.Artist || content.artistName || 'user'}:
                                                 </span>
@@ -249,7 +249,7 @@ const ContentModal = ({
                                                             <span className="text-[#00ffff] font-black">@{comment.Username || 'anon'}</span>
                                                             <span className="text-[7px] text-white/30">{new Date(comment.CreatedAt).toLocaleString()}</span>
                                                         </div>
-                                                        <p className="text-white/90">{comment.Content}</p>
+                                                        <p className="text-white/90 break-words">{comment.Content}</p>
                                                     </div>
                                                 ))
                                             ) : (
@@ -300,7 +300,7 @@ const ContentModal = ({
                                                 [TIMESTAMP: {content.CreatedAt ? new Date(content.CreatedAt).toLocaleString() : 'UNKNOWN'}]
                                             </div>
                                             
-                                            <div className="text-white/90 whitespace-pre-wrap text-sm md:text-base leading-relaxed tracking-wide" style={{ textShadow: '0 0 8px rgba(255,255,255,0.4)' }}>
+                                            <div className="text-white/90 whitespace-pre-wrap text-sm md:text-base leading-relaxed tracking-wide break-words" style={{ textShadow: '0 0 8px rgba(255,255,255,0.4)' }}>
                                                 {content.Content || content.content || content.Text || content.text}
                                             </div>
 

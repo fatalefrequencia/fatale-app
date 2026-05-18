@@ -352,7 +352,7 @@ const ProfileIdentityHeader = ({
                         </div>
                     </div>
                     <div>
-                        <div className="text-[20px] font-black text-[var(--subsystem-accent)] uppercase tracking-[0.2em] leading-tight flex items-center gap-2">
+                        <div className="text-[20px] font-black text-[var(--subsystem-accent)] uppercase tracking-[0.2em] leading-tight flex items-center gap-2 break-words max-w-full">
                             {displayUser?.username || displayUser?.Username || 'GUEST_USER'}
                             <div className={`w-2 h-2 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)] ${isLive ? 'bg-red-500' : 'bg-green-500'}`} />
                         </div>
@@ -404,7 +404,7 @@ const ProfileIdentityHeader = ({
                             )}
                         </div>
                     </div>
-                    <div className="text-[9px] mono text-white/40 leading-relaxed max-h-[40px] overflow-hidden">
+                    <div className="text-[9px] mono text-white/40 leading-relaxed max-h-[40px] overflow-hidden break-words">
                         {displayUser?.biography || displayUser?.Biography || '// NO_BIOGRAPHIC_METADATA_LOADED'}
                     </div>
                 </div>
@@ -1681,7 +1681,7 @@ export const ProfileView = React.memo(({
                     ...t,
                     id: t.id || t.Id,
                     title: t.title || t.Title || 'UNKNOWN_SIGNAL',
-                    artist: t.artist || t.ArtistName || t.Artist || 'UNKNOWN_SOURCE',
+                    artist: t.artist || t.artistName || t.ArtistName || t.Artist || 'UNKNOWN_SOURCE',
                     source: getMediaUrl(t.source || t.Source || t.filePath || t.FilePath),
                     cover: getMediaUrl(t.coverImageUrl || t.CoverImageUrl)
                 }));
@@ -1789,7 +1789,7 @@ export const ProfileView = React.memo(({
                                             </div>
                                         </div>
                                         <div className="mt-3 text-center max-w-[240px]">
-                                            <div className="text-[9px] text-white/90 leading-relaxed font-medium mono uppercase tracking-wider">
+                                            <div className="text-[9px] text-white/90 leading-relaxed font-medium mono uppercase tracking-wider break-words w-full">
                                                 {displayUser?.biography || displayUser?.Biography || 'SIGNAL_DEVOID_OF_METADATA'}
                                             </div>
                                         </div>
@@ -1913,8 +1913,8 @@ export const ProfileView = React.memo(({
                                 </div>
                             </div>
                             <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
-                                <div className="text-[18px] font-black uppercase tracking-widest leading-none mb-1 text-[var(--subsystem-accent)]">{displayUser?.username}</div>
-                                <div className="text-[10px] text-white leading-relaxed font-medium mono mb-2">
+                                <div className="text-[18px] font-black uppercase tracking-widest leading-none mb-1 text-[var(--subsystem-accent)] break-words w-full">{displayUser?.username}</div>
+                                <div className="text-[10px] text-white leading-relaxed font-medium mono mb-2 break-words w-full">
                                     {displayUser?.biography || displayUser?.Biography || 'No biography available.'}
                                 </div>
                                 <div className="flex items-center justify-between">
@@ -2148,7 +2148,7 @@ export const ProfileView = React.memo(({
                                             <div className="text-[10px] font-black uppercase text-white/80 truncate">{entry.title || entry.Title}</div>
                                             <Book size={10} className="text-[var(--subsystem-accent)]/40 flex-shrink-0 ml-2" />
                                         </div>
-                                        <div className="text-[8px] text-white/50 font-mono whitespace-pre-wrap mb-1 leading-relaxed">{entry.content || entry.Content}</div>
+                                        <div className="text-[8px] text-white/50 font-mono whitespace-pre-wrap mb-1 leading-relaxed break-words w-full">{entry.content || entry.Content}</div>
                                         <div className="text-[6px] text-white/20 uppercase tracking-widest">
                                             {new Date(entry.createdAt || entry.CreatedAt).toLocaleDateString()}
                                         </div>
@@ -2563,7 +2563,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             .filter(t => {
                 if (!search) return false; // Don't show tracks if not searching
                 const title = (t.title || t.Title || '').toLowerCase();
-                const artist = (t.artist || t.ArtistName || t.Artist || '').toLowerCase();
+                const artist = (t.artist || t.artistName || t.ArtistName || t.Artist || '').toLowerCase();
                 return title.includes(search) || artist.includes(search);
             });
     }, [tracks, searchTerm]);
@@ -2772,7 +2772,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                                                 className={`p-4 text-[9px] font-bold uppercase tracking-wider cursor-pointer border-b border-[var(--text-color)]/5 transition-all flex flex-col gap-1 ${isSelected ? 'bg-[var(--theme-color)]/10 border-l-4 border-l-[var(--text-color)] text-[var(--text-color)]' : 'text-[var(--text-color)]/60 hover:bg-white/5 hover:text-[var(--text-color)]'}`}
                                                             >
                                                                 <span className={isSelected ? 'text-[var(--theme-color)]' : 'text-[var(--text-color)]/80'}>{t.title || 'UNKNOWN'}</span>
-                                                                <span className="text-[8px] opacity-40">BY {(t.artist || t.ArtistName || 'UNKNOWN')}</span>
+                                                                <span className="text-[8px] opacity-40">BY {(t.artist || t.artistName || t.ArtistName || 'UNKNOWN')}</span>
                                                             </div>
                                                         );
                                                     })

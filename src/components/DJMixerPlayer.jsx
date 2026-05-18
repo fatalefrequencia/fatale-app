@@ -863,7 +863,7 @@ const DJMixerPlayer = ({
             return "YouTube Tracks";
         }
         
-        let artist = t.artist || t.ArtistName || t.Artist;
+        let artist = t.artist || t.artistName || t.ArtistName || t.Artist;
         if (!artist || artist === 'Unknown Artist' || artist === 'Unknown') {
             if (station?.artistName) return station.artistName;
             return "Unknown Artist";

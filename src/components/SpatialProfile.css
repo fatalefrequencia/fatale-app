@@ -1517,6 +1517,9 @@
     color: #fff;
     text-transform: uppercase;
     letter-spacing: 0.1em;
+    word-break: break-all;
+    overflow-wrap: break-word;
+    white-space: normal;
 }
 
 /* Status Action within Identity Core */
