@@ -4079,11 +4079,11 @@ const FeedContent = React.memo(({
                     const isMarketplace = type === 'studio' && isUrl(content);
 
                     const getPostAccent = () => {
-                      if (isMarketplace) return { color: '#ffaa00', glow: 'rgba(255, 170, 0, 0.25)' };
-                      if (type === 'track') return { color: '#00f0ff', glow: 'rgba(0, 240, 255, 0.25)' };
-                      if (type === 'studio') return { color: '#ff006e', glow: 'rgba(255, 0, 110, 0.25)' };
-                      if (type === 'journal') return { color: '#9d00ff', glow: 'rgba(157, 0, 255, 0.25)' };
-                      return { color: '#ffffff', glow: 'rgba(255, 255, 255, 0.1)' };
+                      if (isMarketplace) return { color: '#ffaa00', glow: 'rgba(255, 170, 0, 0.12)' };
+                      if (type === 'track') return { color: '#00f0ff', glow: 'rgba(0, 240, 255, 0.12)' };
+                      if (type === 'studio') return { color: '#ff006e', glow: 'rgba(255, 0, 110, 0.12)' };
+                      if (type === 'journal') return { color: '#9d00ff', glow: 'rgba(157, 0, 255, 0.12)' };
+                      return { color: '#ffffff', glow: 'rgba(255, 255, 255, 0.05)' };
                     };
                     const accent = getPostAccent();
 
@@ -4125,7 +4125,7 @@ const FeedContent = React.memo(({
 
                     if (isMarketplace) {
                       return (
-                        <div key={item.Id} className="group transition-colors hover:bg-white/[0.05] py-2 px-3 sm:py-4 sm:px-5 rounded border border-white/5 hover:border-white/10 relative mb-3 sm:mb-6 max-w-2xl mx-auto w-full bg-black/20 flex flex-col max-h-[80vh]" style={{ borderLeft: `3px solid ${accent.color}`, boxShadow: `0 0 15px ${accent.glow}` }}>
+                        <div key={item.Id} className="group transition-colors hover:bg-white/[0.05] py-2 px-3 sm:py-4 sm:px-5 rounded border border-white/5 hover:border-white/10 relative mb-3 sm:mb-6 max-w-2xl mx-auto w-full bg-black/20 flex flex-col max-h-[80vh]" style={{ borderLeft: `2px solid ${accent.color}`, boxShadow: `0 0 8px ${accent.glow}` }}>
                           {!isOriginal && repostedBy && (
                             <div className="flex items-center gap-2 mb-1 px-1">
                               <Repeat size={10} className="text-[#ff006e] animate-pulse" />
@@ -4221,7 +4221,7 @@ const FeedContent = React.memo(({
                     }
 
                     return (
-                      <div key={item.Id} className="group transition-colors hover:bg-white/[0.05] py-2 px-3 sm:py-4 sm:px-5 rounded border border-white/5 hover:border-white/10 relative mb-3 sm:mb-6 max-w-2xl mx-auto w-full bg-black/20 flex flex-col max-h-[80vh]" style={{ borderLeft: `3px solid ${accent.color}`, boxShadow: `0 0 15px ${accent.glow}` }}>
+                      <div key={item.Id} className="group transition-colors hover:bg-white/[0.05] py-2 px-3 sm:py-4 sm:px-5 rounded border border-white/5 hover:border-white/10 relative mb-3 sm:mb-6 max-w-2xl mx-auto w-full bg-black/20 flex flex-col max-h-[80vh]" style={{ borderLeft: `2px solid ${accent.color}`, boxShadow: `0 0 8px ${accent.glow}` }}>
                         {!isOriginal && repostedBy && (
                           <div className="flex items-center gap-2 mb-1 px-1">
                             <Repeat size={10} className="text-[#ff006e] animate-pulse" />
