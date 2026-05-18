@@ -324,7 +324,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
                             placeholder={t('WAITING_INPUT')}
-                            className="w-full bg-[#080808] border border-white/5 py-4 pl-10 pr-16 text-white text-[13px] outline-none focus:border-[#ff006e]/40 transition-all font-mono tracking-widest placeholder:text-white/5"
+                            className="w-full bg-[#080808] border border-white/5 py-4 pl-10 pr-16 text-white text-[16px] md:text-[13px] outline-none focus:border-[#ff006e]/40 transition-all font-mono tracking-widest placeholder:text-white/5"
                         />
                         <button
                             type="submit"
@@ -395,7 +395,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                                 value={searchQuery}
                                 onChange={handleSearch}
                                 placeholder={t('IDENTIFY_TARGET')}
-                                className="w-full bg-black border border-white/10 py-4 pl-12 pr-6 text-white text-sm outline-none focus:border-[#ff006e]/40 transition-all font-mono tracking-widest uppercase placeholder:text-white/10 placeholder:tracking-widest"
+                                className="w-full bg-black border border-white/10 py-4 pl-12 pr-6 text-white text-[16px] md:text-sm outline-none focus:border-[#ff006e]/40 transition-all font-mono tracking-widest uppercase placeholder:text-white/10 placeholder:tracking-widest"
                             />
                         </div>
 

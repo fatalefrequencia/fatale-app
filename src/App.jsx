@@ -2910,7 +2910,7 @@ const Dashboard = React.memo(({
           </div>
         </header>
 
-        <div className={`flex-1 relative ${activeView === 'discovery' ? 'overflow-hidden' : activeView === 'messages' ? 'overflow-hidden pb-24' : 'overflow-y-auto no-scrollbar pb-24'}`}>
+        <div className={`flex-1 relative ${activeView === 'discovery' ? 'overflow-hidden' : activeView === 'messages' ? (currentTrackIndex >= 0 && !isMiniPlayerMinimized ? 'overflow-hidden lg:pb-24 pb-[60px]' : 'overflow-hidden pb-0') : 'overflow-y-auto no-scrollbar pb-24'}`}>
           <AnimatePresence mode="wait" initial={false}>
             {activeView === 'discovery' && (
               <motion.div
