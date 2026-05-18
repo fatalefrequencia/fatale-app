@@ -258,7 +258,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                 exit={{ x: '100%', opacity: 0 }}
                 transition={{ duration: 0.3 }}
                 className="absolute inset-0 z-[50] flex flex-col bg-black overflow-hidden"
-                style={{ height: `${visualHeight}px` }}
+                style={{ paddingBottom: isKeyboardOpen ? `${window.innerHeight - visualHeight}px` : '0px' }}
             >
                 {currentChat.isCommunity ? (
                     <CommunityTerminal 
