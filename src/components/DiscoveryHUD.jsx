@@ -222,18 +222,18 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                 const tracks = res && Array.isArray(res.data) ? res.data.slice(0, 10) : [];
 
                 // Map Spotify tracks to the UI results
-                const mapped = tracks.map(t => ({
-                    id: t.id,
-                    title: t.title,
-                    author: t.artist,
-                    artist: t.artist,
-                    thumbnailUrl: t.coverImageUrl,
-                    coverImageUrl: t.coverImageUrl,
-                    cover: t.coverImageUrl,
-                    imageUrl: t.coverImageUrl,
-                    source: `spotify:${t.id}`,
-                    duration: t.durationSeconds,
-                    originalTrack: t
+                const mapped = tracks.map(trk => ({
+                    id: trk.id,
+                    title: trk.title,
+                    author: trk.artist,
+                    artist: trk.artist,
+                    thumbnailUrl: trk.coverImageUrl,
+                    coverImageUrl: trk.coverImageUrl,
+                    cover: trk.coverImageUrl,
+                    imageUrl: trk.coverImageUrl,
+                    source: `spotify:${trk.id}`,
+                    duration: trk.durationSeconds,
+                    originalTrack: trk
                 }));
 
                 setYoutubeResults(mapped);
@@ -297,14 +297,14 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
     const albums = useMemo(() => {
         const map = new Map();
-        trendingTracks.forEach(t => {
-            const title = t.albumTitle || t.AlbumTitle;
+        trendingTracks.forEach(trk => {
+            const title = trk.albumTitle || trk.AlbumTitle;
             if (title && title !== '#' && title !== 'Unknown Album') {
                 if (!map.has(title)) {
                     map.set(title, {
                         id: hashStr(title),
                         title,
-                        artist: t.artist || t.artistName || t.ArtistName || 'Unknown Artist',
+                        artist: trk.artist || trk.artistName || trk.ArtistName || 'Unknown Artist',
                         type: 'album'
                     });
                 }
@@ -368,17 +368,17 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
     const tracksWithColor = useMemo(() => {
         return trendingTracks
             .filter(isNativeTrack)
-            .map(t => {
+            .map(trk => {
                 const artist = trendingArtists.find(a => 
-                    (t.artistUserId || t.ArtistUserId) ? String(a.userId || a.UserId) === String(t.artistUserId || t.ArtistUserId) :
-                    (t.artistId || t.ArtistId) ? String(a.id || a.Id) === String(t.artistId || t.ArtistId) :
-                    (a.name || a.Name || '').toLowerCase() === (t.artistName || t.ArtistName || t.artist || t.Artist || '').toLowerCase()
+                    (trk.artistUserId || trk.ArtistUserId) ? String(a.userId || a.UserId) === String(trk.artistUserId || trk.ArtistUserId) :
+                    (trk.artistId || trk.ArtistId) ? String(a.id || a.Id) === String(trk.artistId || trk.ArtistId) :
+                    (a.name || a.Name || '').toLowerCase() === (trk.artistName || trk.ArtistName || trk.artist || trk.Artist || '').toLowerCase()
                 );
                 const sector = artist ? SECTORS.find(s => s.id === (artist.sectorId || artist.SectorId)) : null;
                 return { 
-                    ...t, 
+                    ...trk, 
                     artistId: artist ? (artist.id || artist.Id) : null,
-                    artist: artist ? (artist.name || artist.Name) : (t.artistName || t.ArtistName),
+                    artist: artist ? (artist.name || artist.Name) : (trk.artistName || trk.ArtistName),
                     color: sector ? sector.color : "#ffffff" 
                 };
             });
@@ -644,18 +644,18 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                 {(!isMobile || mobileViewMode === 'globe') && (
                     <div className={`${isMobile ? 'flex-1' : 'h-[400px] lg:h-full'} lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative transition-all duration-300`}>
                         {isPinterestView ? (
-                            <div className="w-full h-full bg-black/90 backdrop-blur-xl border border-white/10 p-6 pt-20 overflow-y-auto no-scrollbar animate-in fade-in duration-500 pointer-events-auto">
+                            <div className="w-full h-full bg-black/95 backdrop-blur-xl border border-white/10 p-5 pt-16 overflow-y-auto no-scrollbar animate-in fade-in duration-500 pointer-events-auto">
                                 <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[#ff006e] mb-6 border-b border-[#ff006e]/20 pb-2">{t('DISCOVERED_SIGNALS')}</div>
 
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                                     {/* Playlists */}
                                     {trendingPlaylists.slice(0, 4).map(p => (
                                         <div key={p.id || p.Id} className="aspect-square bg-black border border-white/5 hover:border-[#ff006e]/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => onPlayTrack(p)}>
                                             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                                            <div className="text-[8px] font-mono text-[#ff006e] uppercase tracking-widest">PLAYLIST</div>
+                                            <div className="text-[8px] font-mono text-[#ff006e] uppercase tracking-widest">{t('PLAYLIST') || 'PLAYLIST'}</div>
                                             <div className="z-10">
                                                 <div className="text-xs font-black truncate group-hover:text-[#ff006e] uppercase">{p.name || p.Name}</div>
-                                                <div className="text-[8px] opacity-40 uppercase mt-0.5">BY {p.userName || "UNKNOWN"}</div>
+                                                <div className="text-[8px] opacity-40 uppercase mt-0.5">{t('BY_AUTHOR') || 'BY'} {p.userName || "UNKNOWN"}</div>
                                             </div>
                                             <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <Play size={16} fill="#ff006e" className="text-[#ff006e]" />
@@ -664,16 +664,16 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     ))}
 
                                     {/* Tracks */}
-                                    {trendingTracks.slice(0, 6).map(t => (
-                                        <div key={t.id} className="aspect-square bg-black border border-white/5 hover:border-[#ff006e]/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => onPlayTrack(t)}>
+                                    {trendingTracks.slice(0, 6).map(trk => (
+                                        <div key={trk.id} className="aspect-square bg-black border border-white/5 hover:border-[#ff006e]/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => onPlayTrack(trk)}>
                                             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
                                             <div className="absolute inset-0">
-                                                <img src={getMediaUrl(t.imageUrl || t.ImageUrl || t.coverImageUrl || t.CoverImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-20 group-hover:opacity-40 group-hover:scale-110 transition-all duration-700" />
+                                                <img src={getMediaUrl(trk.imageUrl || trk.ImageUrl || trk.coverImageUrl || trk.CoverImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-20 group-hover:opacity-40 group-hover:scale-110 transition-all duration-700" />
                                             </div>
                                             <div className="text-[8px] font-mono text-[#00ffff] uppercase tracking-widest z-10">{t('SONG')}</div>
                                             <div className="z-10">
-                                                <div className="text-xs font-black truncate group-hover:text-[#ff006e] uppercase">{t.title}</div>
-                                                <div className="text-[8px] opacity-40 uppercase mt-0.5">BY {t.artist}</div>
+                                                <div className="text-xs font-black truncate group-hover:text-[#ff006e] uppercase">{trk.title}</div>
+                                                <div className="text-[8px] opacity-40 uppercase mt-0.5">{t('BY_AUTHOR') || 'BY'} {trk.artist}</div>
                                             </div>
                                             <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                                 <Play size={16} fill="#ff006e" className="text-[#ff006e]" />
@@ -1258,12 +1258,12 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         <div className="text-[8px] opacity-40 text-center py-4">LOADING...</div>
                                     ) : (
                                         <div className="space-y-2 max-h-64 overflow-y-auto no-scrollbar">
-                                            {playlistTracks.length > 0 ? playlistTracks.map(t => (
-                                                <div key={t.id} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 cursor-pointer group" onClick={() => onPlayTrack(t)}>
+                                            {playlistTracks.length > 0 ? playlistTracks.map(trk => (
+                                                <div key={trk.id} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 cursor-pointer group" onClick={() => onPlayTrack(trk)}>
                                                     <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] uppercase">{t.title}</div>
-                                                        <div className="text-[8px] opacity-30 truncate uppercase">{t.artist}</div>
+                                                        <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] uppercase">{trk.title}</div>
+                                                        <div className="text-[8px] opacity-30 truncate uppercase">{trk.artist}</div>
                                                     </div>
                                                 </div>
                                             )) : (
@@ -1734,7 +1734,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                     <div className="flex gap-2 mt-3 relative z-10">
                                                         <button 
                                                             onClick={() => {
-                                                                const artistTracks = youtubeResults.filter(t => t.author === topResult.author);
+                                                                const artistTracks = youtubeResults.filter(trk => trk.author === topResult.author);
                                                                 if (artistTracks.length > 0) {
                                                                     const randomTrack = artistTracks[Math.floor(Math.random() * artistTracks.length)];
                                                                     onPlayTrack(randomTrack);
@@ -1812,7 +1812,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                 <div className="grid grid-cols-2 gap-2">
                                                     {uniqueAlbums.map((a, idx) => (
                                                         <div key={idx} className="hud-panel p-1.5 border border-white/5 bg-black/40 hover:border-[#ff006e]/40 cursor-pointer group transition-all" onClick={() => {
-                                                            const albumTrack = youtubeResults.find(t => (t.originalTrack?.album || t.originalTrack?.Album || "").toLowerCase() === a.title.toLowerCase());
+                                                            const albumTrack = youtubeResults.find(trk => (trk.originalTrack?.album || t.originalTrack?.Album || "").toLowerCase() === a.title.toLowerCase());
                                                             if (albumTrack) {
                                                                 onPlayTrack(albumTrack);
                                                                 setMobileViewMode('globe');
@@ -1838,7 +1838,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             <div className="space-y-2 mt-1" onTouchStart={(e) => e.stopPropagation()}>
                                                 {uniqueArtists.map((art, idx) => (
                                                     <div key={idx} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => {
-                                                        const artistTrack = youtubeResults.find(t => t.author.toLowerCase() === art.name.toLowerCase());
+                                                        const artistTrack = youtubeResults.find(trk => trk.author.toLowerCase() === art.name.toLowerCase());
                                                         if (artistTrack) {
                                                             onPlayTrack(artistTrack);
                                                             setMobileViewMode('globe');
@@ -1880,12 +1880,12 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         <div className="text-[8px] opacity-40 text-center py-4">LOADING...</div>
                                     ) : (
                                         <div className="space-y-2 max-h-64 overflow-y-auto no-scrollbar">
-                                            {playlistTracks.length > 0 ? playlistTracks.map(t => (
-                                                <div key={t.id} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 cursor-pointer group" onClick={() => onPlayTrack(t)}>
+                                            {playlistTracks.length > 0 ? playlistTracks.map(trk => (
+                                                <div key={trk.id} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 cursor-pointer group" onClick={() => onPlayTrack(trk)}>
                                                     <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] uppercase">{t.title}</div>
-                                                        <div className="text-[8px] opacity-30 truncate uppercase">{t.artist}</div>
+                                                        <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] uppercase">{trk.title}</div>
+                                                        <div className="text-[8px] opacity-30 truncate uppercase">{trk.artist}</div>
                                                     </div>
                                                 </div>
                                             )) : (

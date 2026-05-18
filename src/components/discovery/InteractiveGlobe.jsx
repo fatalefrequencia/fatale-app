@@ -21,14 +21,12 @@ const getSphericalPos = (id, radius = 2.5, offset = 0) => {
     const rand1 = (Math.abs(Math.sin(h)) * 10000) % 1;
     const rand2 = (Math.abs(Math.sin(h + 100)) * 10000) % 1;
     
-    // theta between 0 and 2*PI
-    const theta = rand1 * Math.PI * 2;
-    // u between -1 and 1
-    const u = rand2 * 2 - 1;
-    const phi = Math.acos(u);
+    // Constrain longitude (lon) to be on the front hemisphere directly facing the camera (centered at Math.PI / 2)
+    // We vary it between Math.PI/2 - Math.PI/3.5 and Math.PI/2 + Math.PI/3.5 for a beautiful wide spread
+    const lon = Math.PI / 2 + (rand1 * 2 - 1) * (Math.PI / 3.5);
     
-    const lat = phi - Math.PI / 2;
-    const lon = theta;
+    // Constrain latitude (lat) to be in a comfortable range around the equator (between -Math.PI/4 and Math.PI/4)
+    const lat = (rand2 * 2 - 1) * (Math.PI / 4);
 
     const r = radius + offset;
     const x = r * Math.cos(lat) * Math.cos(lon);
@@ -442,8 +440,8 @@ const InteractiveGlobe = memo(({
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
     
     const [initialRotation] = useState(() => [
-        Math.random() * Math.PI * 2,
-        Math.random() * Math.PI * 2,
+        0.1, // Subtle aesthetic X-tilt down
+        -0.2, // Subtle aesthetic Y-tilt left
         0
     ]);
     

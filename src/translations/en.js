@@ -131,6 +131,7 @@ export default {
     "SONGS": "SONGS",
     "FAVORITOS": "FAVORITOS",
     "PLAYLISTS": "PLAYLISTS",
+    "PLAYLIST": "PLAYLIST",
     "ARTISTS": "ARTISTS",
     "ALL_TRACKS": "ALL_TRACKS",
     "PURCHASED": "PURCHASED",
