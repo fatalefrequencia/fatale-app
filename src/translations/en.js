@@ -134,6 +134,7 @@ export default {
     "ARTISTS": "ARTISTS",
     "ALL_TRACKS": "ALL_TRACKS",
     "PURCHASED": "PURCHASED",
+    "SAVED": "SAVED",
     "BACK": "BACK",
     "PLAY_ALL": "PLAY_ALL",
     "SHUFFLE_ALL": "SHUFFLE_ALL",

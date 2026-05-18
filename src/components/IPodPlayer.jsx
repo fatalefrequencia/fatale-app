@@ -52,7 +52,6 @@ export const IPodPlayer = ({
     const MENU_ITEMS = [
         { id: 'NOW_PLAYING', label: t('NOW_PLAYING') },
         { id: 'SONGS', label: t('SONGS') },
-        { id: 'SONGS_LIKED', label: t('FAVORITOS') },
         { id: 'PLAYLISTS', label: t('PLAYLISTS') },
         { id: 'ARTISTS', label: t('ARTISTS') },
         { id: 'SETTINGS', label: t('SETTINGS') }
@@ -317,6 +316,7 @@ export const IPodPlayer = ({
             return [
                 { id: 'BACK', label: '.. ' + t('BACK') },
                 { id: 'SONGS_PURCHASED', label: t('PURCHASED') },
+                { id: 'SONGS_LIKED', label: t('SAVED') },
                 { id: 'SONGS_ALL', label: t('ALL_TRACKS') }
             ];
         }
@@ -1800,9 +1800,9 @@ export const IPodPlayer = ({
                                                     screen === 'ACTION_MENU' ? 'OPTIONS' :
                                                         screen === 'TIP_MENU' ? 'SELECT TIP' :
                                                             screen === 'SONGS' ? 'MUSIC' :
-                                                                screen === 'SONGS_LIKED' ? 'LIKED' :
-                                                                    screen === 'SONGS_PURCHASED' ? 'PURCHASED' :
-                                                                        screen === 'SONGS_ALL' ? 'ALL TRACKS' :
+                                                                screen === 'SONGS_LIKED' ? t('SAVED') :
+                                                                    screen === 'SONGS_PURCHASED' ? t('PURCHASED') :
+                                                                        screen === 'SONGS_ALL' ? t('ALL_TRACKS') :
                                                                             screen === 'PURCHASE_CONFIRM' ? 'PURCHASE?' :
                                                                                 screen === 'STATION_CHAT' ? 'LIVE COMM' :
                                                                                     screen === 'STATION_QUEUE' ? 'REQ. QUEUE' :
