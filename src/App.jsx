@@ -2431,6 +2431,7 @@ function App() {
                sendMessage={handleSendMessage}
                requestTrack={handleRequestTrack}
                setUser={setUser}
+               onPlayTrack={handlePlayTrack}
                onExpandContent={(content, type, themeData) => {
                  setGlobalExpandedContent(content);
                  setGlobalExpandedType(type);
@@ -2645,7 +2646,7 @@ function App() {
               onKeyLockAChange={setKeyLockA}
               setTracks={setTracks}
               setCurrentTrackIndex={setCurrentTrackIndex}
-              onPlayTrack={handlePlayTrack}
+              onPlayTrack={onPlayTrack}
               user={user}
             />
             
@@ -2755,7 +2756,8 @@ const Dashboard = React.memo(({
   onPlaybackRateChange,
   onEqA,
   analyserA,
-  isLandscape
+  isLandscape,
+  onPlayTrack
 }) => {
   const { t } = useLanguage();
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
@@ -2931,7 +2933,7 @@ const Dashboard = React.memo(({
                   }}
                   navigateToProfile={navigateToProfile}
                   onMessageCommunity={(c) => { setActiveMessageUser({...c, isCommunity: true}); setView('messages'); }}
-                  onPlayTrack={handlePlayTrack}
+                  onPlayTrack={onPlayTrack}
                   onPlayPlaylist={(list, startIdx = 0) => handlePlayPlaylist(list, startIdx, false)}
                   onExpandContent={onExpandContent}
                   setUser={setUser}
@@ -3033,7 +3035,7 @@ const Dashboard = React.memo(({
                   onLike={onLike}
                   navigateToProfile={navigateToProfile}
                   onPlayPlaylist={handlePlayPlaylist}
-                  onPlayTrack={handlePlayTrack}
+                  onPlayTrack={onPlayTrack}
                   activeStation={activeStation}
                   stationChat={stationChat}
                   stationQueue={stationQueue}
