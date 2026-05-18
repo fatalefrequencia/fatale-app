@@ -3102,7 +3102,7 @@ const Dashboard = React.memo(({
                   keyLockA={keyLockA}
                   setKeyLockA={setKeyLockA}
                   vibeFeatures={vibeFeatures}
-                  onPlayTrack={handlePlayTrack}
+                  onPlayTrack={onPlayTrack}
                 />
               </motion.div>
             )}
