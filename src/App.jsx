@@ -2896,8 +2896,13 @@ const Dashboard = React.memo(({
       >
         {/* TOP NAV (Móvil) */}
         <header 
-          className="lg:hidden flex items-center justify-center px-1 py-3 border-b border-[var(--theme-color)]/10 bg-black/90 backdrop-blur-md z-40 relative"
-          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
+          className="lg:hidden flex items-center justify-center px-1 border-b border-[var(--theme-color)]/10 bg-black/90 backdrop-blur-md z-40 relative"
+          style={{ 
+            paddingTop: activeView === 'messages' && activeMessageUser 
+              ? 'calc(env(safe-area-inset-top, 0px) + 24px)' 
+              : 'calc(env(safe-area-inset-top, 0px) + 12px)',
+            paddingBottom: activeView === 'messages' && activeMessageUser ? '16px' : '12px'
+          }}
         >
           {activeView === 'messages' && activeMessageUser ? (
             <div className="w-full flex items-center justify-between px-4">
