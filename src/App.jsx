@@ -3106,7 +3106,7 @@ const Dashboard = React.memo(({
                 />
               </motion.div>
             )}
-            {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} initialChatUser={activeMessageUser} />}
+            {activeView === 'messages' && <MessagesView key="messages" user={user} navigateToProfile={navigateToProfile} initialChatUser={activeMessageUser} isMiniPlayerActive={currentTrackIndex >= 0 && !isMiniPlayerMinimized} />}
 
           </AnimatePresence>
         </div>

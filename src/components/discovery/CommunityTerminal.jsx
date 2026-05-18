@@ -7,7 +7,7 @@ import { SECTORS, getMediaUrl } from '../../constants';
 import { useNotification } from '../../contexts/NotificationContext';
 
 // ── FATALE_CORE Feedback Panel ────────────────────────────────────────────────
-const FataleCorePanel = ({ user, onBack }) => {
+const FataleCorePanel = ({ user, onBack, isMiniPlayerActive, isKeyboardOpen }) => {
     const { showNotification } = useNotification();
     const [category, setCategory] = useState('BUG_REPORT');
     const [message, setMessage] = useState('');
@@ -156,7 +156,7 @@ const FataleCorePanel = ({ user, onBack }) => {
             </div>
 
             {/* Submission form */}
-            <form onSubmit={handleSubmit} className="flex-none border-t border-white/10 bg-black/80 p-4 space-y-3 pb-[88px] md:pb-4">
+            <form onSubmit={handleSubmit} className={`flex-none border-t border-white/10 bg-black/80 p-4 space-y-3 ${isMiniPlayerActive && !isKeyboardOpen ? 'pb-[72px]' : 'pb-4'} md:pb-4`}>
                 {/* Category tabs */}
                 <div className="flex gap-2 overflow-x-auto no-scrollbar flex-nowrap pb-1 w-full">
                     {CATEGORIES.map(({ id, label, icon: Icon }) => (
@@ -197,7 +197,7 @@ const FataleCorePanel = ({ user, onBack }) => {
                 {/* Message input */}
                 <div className="flex items-start gap-3">
                     <textarea
-                        className="flex-1 bg-transparent border text-[10px] mono text-white outline-none placeholder:text-white/20 resize-none p-2"
+                        className="flex-1 bg-transparent border text-[16px] md:text-[10px] mono text-white outline-none placeholder:text-white/20 resize-none p-2"
                         style={{ borderColor: `${COLOR}30`, minHeight: window.innerWidth < 768 ? '44px' : '60px' }}
                         placeholder={`Describe your ${category.toLowerCase().replace('_', ' ')}...`}
                         value={message}
@@ -226,7 +226,7 @@ const FataleCorePanel = ({ user, onBack }) => {
 };
 
 // ── Standard Community Terminal ───────────────────────────────────────────────
-const CommunityTerminal = ({ community, user, followedCommunities = [], onFollowUpdate, setUser, onBack, sectorColor }) => {
+const CommunityTerminal = ({ community, user, followedCommunities = [], onFollowUpdate, setUser, onBack, sectorColor, isMiniPlayerActive, isKeyboardOpen }) => {
     const { t } = useLanguage();
     const { showNotification } = useNotification();
     const lastTickRef = useRef(0);
@@ -252,7 +252,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
         community?.Name?.toUpperCase() === 'FATALE_CORE';
 
     if (isSystemNode) {
-        return <FataleCorePanel user={user} onBack={onBack} />;
+        return <FataleCorePanel user={user} onBack={onBack} isMiniPlayerActive={isMiniPlayerActive} isKeyboardOpen={isKeyboardOpen} />;
     }
 
     const isJoined = (user?.communityId || user?.CommunityId) === community.id;
@@ -533,14 +533,14 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
             </div>
 
             {/* Input Overlay */}
-            <form onSubmit={handleSend} className="flex-none px-4 bg-black/80 border-t border-white/10 flex items-center gap-3 pb-[88px] md:pb-0 h-[140px] md:h-16">
+            <form onSubmit={handleSend} className={`flex-none px-4 bg-black/80 border-t border-white/10 flex items-center gap-3 md:pb-0 ${isMiniPlayerActive && !isKeyboardOpen ? 'pb-[64px] h-[120px]' : 'pb-2 h-16'} md:h-16`}>
                 <input 
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value.slice(0, 140))}
                     placeholder={isMember ? (t('TRANSMIT_SIGNAL') + '...') : "[ ÚNETE AL CLIQUE PARA TRANSMITIR ]"}
                     disabled={!isMember}
-                    className="flex-1 bg-transparent border-none text-[10px] mono text-white outline-none placeholder:text-white/10 disabled:opacity-50"
+                    className="flex-1 bg-transparent border-none text-[16px] md:text-[10px] mono text-white outline-none placeholder:text-white/10 disabled:opacity-50"
                 />
                 <div className="w-10 flex items-center justify-center">
                     <button 

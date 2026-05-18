@@ -6,7 +6,7 @@ import API from '../services/api';
 import CommunityTerminal from './discovery/CommunityTerminal';
 import { API_BASE_URL, getMediaUrl } from '../constants';
 
-export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
+export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniPlayerActive }) => {
     const { t } = useLanguage();
     const [conversations, setConversations] = useState([]);
     const [communities, setCommunities] = useState([]);
@@ -14,6 +14,44 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
+
+    // Sizing states to handle dynamic visual viewport height
+    const [visualHeight, setVisualHeight] = useState(window.innerHeight);
+    const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+
+    useEffect(() => {
+        if (!window.visualViewport) return;
+        const handleResize = () => {
+            setVisualHeight(window.visualViewport.height);
+            setIsKeyboardOpen(window.visualViewport.height < window.innerHeight - 150);
+            // Proactively reset body/document scroll to 0,0 to prevent keyboard layout displacement
+            window.scrollTo(0, 0);
+            document.body.scrollTop = 0;
+            if (document.documentElement) {
+                document.documentElement.scrollTop = 0;
+            }
+        };
+        window.visualViewport.addEventListener('resize', handleResize);
+        window.visualViewport.addEventListener('scroll', handleResize);
+        
+        // Initial trigger
+        handleResize();
+        
+        return () => {
+            window.visualViewport.removeEventListener('resize', handleResize);
+            window.visualViewport.removeEventListener('scroll', handleResize);
+        };
+    }, [currentChat]);
+
+    // Auto-scroll to bottom of chat when visualHeight resizes (keyboard opens)
+    useEffect(() => {
+        if (currentChat) {
+            const timer = setTimeout(() => {
+                scrollToBottom();
+            }, 80);
+            return () => clearTimeout(timer);
+        }
+    }, [visualHeight, messages]);
 
     // Search functionality state
     const [isSearching, setIsSearching] = useState(false);
@@ -209,30 +247,33 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
     };
 
     if (currentChat) {
-        if (currentChat.isCommunity) {
-            return (
-                <CommunityTerminal 
-                    community={currentChat} 
-                    user={user} 
-                    onBack={() => {
-                        setCurrentChat(null);
-                        window.scrollTo(0, 0);
-                        document.body.scrollTop = 0;
-                        if (document.documentElement) {
-                            document.documentElement.scrollTop = 0;
-                        }
-                    }}
-                />
-            );
-        }
+        const padBottom = (isMiniPlayerActive && !isKeyboardOpen) ? 'pb-[60px]' : 'pb-0';
         return (
             <motion.div
                 initial={{ x: '100%', opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: '100%', opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="h-full flex flex-col bg-black z-50 relative"
+                className="fixed md:absolute inset-x-0 bottom-0 z-[100] flex flex-col bg-black overflow-hidden"
+                style={{ height: `${visualHeight}px` }}
             >
+                {currentChat.isCommunity ? (
+                    <CommunityTerminal 
+                        community={currentChat} 
+                        user={user} 
+                        isMiniPlayerActive={isMiniPlayerActive}
+                        isKeyboardOpen={isKeyboardOpen}
+                        onBack={() => {
+                            setCurrentChat(null);
+                            window.scrollTo(0, 0);
+                            document.body.scrollTop = 0;
+                            if (document.documentElement) {
+                                document.documentElement.scrollTop = 0;
+                            }
+                        }}
+                    />
+                ) : (
+                    <div className="h-full flex flex-col bg-black relative overflow-hidden">
                 {/* Terminal Window Header */}
                 <div className="px-6 py-4 border-b border-white/10 bg-black flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -316,24 +357,27 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                 </div>
 
                 {/* Terminal Input Area */}
-                <form onSubmit={handleSendMessage} className="px-6 py-6 bg-black border-t border-white/5">
-                    <div className="relative flex items-center">
-                        <div className="absolute left-4 text-[#ff006e] font-mono text-xs select-none">&gt;</div>
-                        <input
-                            type="text"
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            placeholder={t('WAITING_INPUT')}
-                            className="w-full bg-[#080808] border border-white/5 py-4 pl-10 pr-16 text-white text-[16px] md:text-[13px] outline-none focus:border-[#ff006e]/40 transition-all font-mono tracking-widest placeholder:text-white/5"
-                        />
-                        <button
-                            type="submit"
-                            className="absolute right-4 px-4 py-2 bg-[#ff006e]/10 text-[#ff006e] border border-[#ff006e]/20 hover:bg-[#ff006e] hover:text-black transition-all font-mono text-[10px] font-black uppercase tracking-widest"
-                        >
-                            {t('SEND')}
-                        </button>
+                        {/* Terminal Input Area */}
+                        <form onSubmit={handleSendMessage} className={`px-6 pt-6 ${padBottom} lg:pb-6 bg-black border-t border-white/5`}>
+                            <div className="relative flex items-center">
+                                <div className="absolute left-4 text-[#ff006e] font-mono text-xs select-none">&gt;</div>
+                                <input
+                                    type="text"
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    placeholder={t('WAITING_INPUT')}
+                                    className="w-full bg-[#080808] border border-white/5 py-4 pl-10 pr-16 text-white text-[16px] md:text-[13px] outline-none focus:border-[#ff006e]/40 transition-all font-mono tracking-widest placeholder:text-white/5"
+                                />
+                                <button
+                                    type="submit"
+                                    className="absolute right-4 px-4 py-2 bg-[#ff006e]/10 text-[#ff006e] border border-[#ff006e]/20 hover:bg-[#ff006e] hover:text-black transition-all font-mono text-[10px] font-black uppercase tracking-widest"
+                                >
+                                    {t('SEND')}
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                </form>
+                )}
             </motion.div>
         );
     }
