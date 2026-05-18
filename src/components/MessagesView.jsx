@@ -214,7 +214,14 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                 <CommunityTerminal 
                     community={currentChat} 
                     user={user} 
-                    onBack={() => setCurrentChat(null)}
+                    onBack={() => {
+                        setCurrentChat(null);
+                        window.scrollTo(0, 0);
+                        document.body.scrollTop = 0;
+                        if (document.documentElement) {
+                            document.documentElement.scrollTop = 0;
+                        }
+                    }}
                 />
             );
         }
@@ -229,7 +236,17 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser }) => {
                 {/* Terminal Window Header */}
                 <div className="px-6 py-4 border-b border-white/10 bg-black flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => setCurrentChat(null)} className="p-1 hover:bg-[#ff006e] hover:text-black text-[#ff006e] transition-all border border-[#ff006e]/20">
+                        <button 
+                            onClick={() => {
+                                setCurrentChat(null);
+                                window.scrollTo(0, 0);
+                                document.body.scrollTop = 0;
+                                if (document.documentElement) {
+                                    document.documentElement.scrollTop = 0;
+                                }
+                            }} 
+                            className="p-1 hover:bg-[#ff006e] hover:text-black text-[#ff006e] transition-all border border-[#ff006e]/20"
+                        >
                             <ChevronLeft size={14} />
                         </button>
                         <div className="text-[10px] font-mono text-white tracking-[0.2em] font-black uppercase">
