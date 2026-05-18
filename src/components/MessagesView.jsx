@@ -17,9 +17,11 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
 
     useEffect(() => {
         if (onChatChange) {
+            // Prevent upward sync race-condition if App explicitly commanded us to close the chat
+            if (!initialChatUser && currentChat) return;
             onChatChange(currentChat);
         }
-    }, [currentChat, onChatChange]);
+    }, [currentChat, onChatChange, initialChatUser]);
 
     // Sizing states to handle dynamic visual viewport height
     const [visualHeight, setVisualHeight] = useState(window.innerHeight);
@@ -263,7 +265,10 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                 exit={{ x: '100%', opacity: 0 }}
                 transition={{ duration: 0.3 }}
                 className="absolute inset-0 z-[50] flex flex-col bg-black overflow-hidden"
-                style={{ paddingBottom: isKeyboardOpen ? `${window.innerHeight - visualHeight}px` : '0px' }}
+                style={{ 
+                    paddingBottom: isKeyboardOpen ? `${window.innerHeight - visualHeight}px` : 'env(safe-area-inset-bottom, 0px)',
+                    transition: 'padding-bottom 0.15s ease-out'
+                }}
             >
                 {currentChat.isCommunity ? (
                     <CommunityTerminal 
