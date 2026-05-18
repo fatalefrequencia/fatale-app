@@ -83,7 +83,12 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
 
     // Scroll to bottom when messages arrive
     useEffect(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (chatEndRef.current) {
+            const parent = chatEndRef.current.parentElement;
+            if (parent) {
+                parent.scrollTo({ top: parent.scrollHeight, behavior: 'smooth' });
+            }
+        }
     }, [messages]);
 
     // ── Send ──

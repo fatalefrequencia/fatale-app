@@ -63,7 +63,12 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
     const messagesEndRef = useRef(null);
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (messagesEndRef.current) {
+            const parent = messagesEndRef.current.parentElement;
+            if (parent) {
+                parent.scrollTo({ top: parent.scrollHeight, behavior: 'smooth' });
+            }
+        }
     };
 
     const fetchConversations = async () => {
