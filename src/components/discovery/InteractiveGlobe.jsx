@@ -113,14 +113,43 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
                 </mesh>
             )}
             
-            {isSelected && (
+            {(isSelected || hovered) && (
                 <>
-                    <pointLight distance={1.0} intensity={5} color={color} />
-                    <Html position={[0, size + 0.05, 0]} center zIndexRange={[0, 5]}>
-                        <div className="pointer-events-none select-none px-2 py-0.5 bg-black/90 border-l backdrop-blur-xl animate-in fade-in zoom-in duration-300 shadow-2xl font-mono" style={{ borderColor: color }}>
-                            <div className="text-[7px] font-black uppercase tracking-widest" style={{ color: color }}>{name}</div>
+                    <pointLight distance={1.2} intensity={6} color={color} />
+                    <Html position={[0, size + 0.08, 0]} center zIndexRange={[0, 10]}>
+                        <div 
+                            className="pointer-events-none select-none px-3 py-1.5 bg-black/95 border border-white/15 rounded backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200 shadow-2xl font-mono flex flex-col items-center justify-center relative min-w-[90px]"
+                            style={{ 
+                                borderColor: `${color}40`,
+                                boxShadow: `0 0 20px ${color}35, inset 0 0 10px ${color}20`
+                            }}
+                        >
+                            {/* Holographic Magnifying Scanner Reticle Brackets */}
+                            <div 
+                                className="absolute -inset-1.5 border border-dashed rounded pointer-events-none opacity-40 animate-[pulse_2s_infinite]" 
+                                style={{ borderColor: color }} 
+                            />
+                            
+                            {/* Scanning Scope Corner Brackets */}
+                            <div className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l" style={{ borderColor: color }} />
+                            <div className="absolute top-0 right-0 w-1.5 h-1.5 border-t border-r" style={{ borderColor: color }} />
+                            <div className="absolute bottom-0 left-0 w-1.5 h-1.5 border-b border-l" style={{ borderColor: color }} />
+                            <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r" style={{ borderColor: color }} />
+
+                            {/* Node Metadata */}
+                            <div 
+                                className="text-[8px] font-black uppercase tracking-widest text-center" 
+                                style={{ 
+                                    color: color, 
+                                    textShadow: `0 0 5px ${color}` 
+                                }}
+                            >
+                                {name}
+                            </div>
                             {subtitle && (
-                                <div className="text-[5px] text-white/40 uppercase tracking-widest mt-0.5">{subtitle}</div>
+                                <div className="text-[5.5px] text-white/50 uppercase tracking-widest mt-1 text-center font-bold">
+                                    {subtitle}
+                                </div>
                             )}
                         </div>
                     </Html>
