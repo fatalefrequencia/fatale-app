@@ -301,10 +301,10 @@ export const IPodPlayer = ({
         if (isSearching) {
             if (!searchQuery) return [{ id: 'INFO', label: 'Type to search...' }];
             const lowerQ = searchQuery.toLowerCase();
-            const results = tracks.map((t, i) => ({ ...t, originalIndex: i }))
-                .filter(t => (t.title || t.Title || '').toLowerCase().includes(lowerQ) ||
-                    (t.artist || t.ArtistName || '').toLowerCase().includes(lowerQ))
-                .map(t => ({ id: t.originalIndex, label: t.title || t.Title || 'Untitled Track', originalTrack: t }));
+            const results = tracks.map((trk, i) => ({ ...trk, originalIndex: i }))
+                .filter(trk => (trk.title || trk.Title || '').toLowerCase().includes(lowerQ) ||
+                    (trk.artist || trk.ArtistName || '').toLowerCase().includes(lowerQ))
+                .map(trk => ({ id: trk.originalIndex, label: trk.title || trk.Title || 'Untitled Track', originalTrack: trk }));
 
             const combined = [...results, ...searchResults];
             if (combined.length === 0) return [{ id: 'INFO', label: isSearchingYoutube ? 'Searching Youtube...' : 'No results' }];
@@ -325,10 +325,10 @@ export const IPodPlayer = ({
             const getFiltered = () => {
                 const sourceList = libraryTracks.length > 0 ? libraryTracks : tracks;
                 if (screen === 'SONGS_LIKED') {
-                    return sourceList.map((t, i) => ({ ...t, originalIndex: i })).filter(t => t.isLiked);
+                    return sourceList.map((trk, i) => ({ ...trk, originalIndex: i })).filter(trk => trk.isLiked);
                 }
-                if (screen === 'SONGS_PURCHASED') return sourceList.map((t, i) => ({ ...t, originalIndex: i })).filter(t => t.isCached);
-                return sourceList.map((t, i) => ({ ...t, originalIndex: i })).filter(t => t.isCached || t.isLiked);
+                if (screen === 'SONGS_PURCHASED') return sourceList.map((trk, i) => ({ ...trk, originalIndex: i })).filter(trk => trk.isCached);
+                return sourceList.map((trk, i) => ({ ...trk, originalIndex: i })).filter(trk => trk.isCached || trk.isLiked);
             };
             const filtered = getFiltered();
 
@@ -336,10 +336,10 @@ export const IPodPlayer = ({
                 { id: 'BACK_SM', label: '.. ' + t('BACK') },
                 { id: 'PLAY_ALL_FILTERED', label: t('PLAY_ALL'), tracks: filtered, action: true },
                 { id: 'SHUFFLE_ALL_FILTERED', label: t('SHUFFLE_ALL'), tracks: filtered, action: true },
-                ...filtered.map(t => ({
-                    id: t.originalIndex,
-                    label: t.title || t.Title || 'Untitled Track',
-                    originalTrack: t
+                ...filtered.map(trk => ({
+                    id: trk.originalIndex,
+                    label: trk.title || trk.Title || 'Untitled Track',
+                    originalTrack: trk
                 }))
             ];
         }
@@ -528,17 +528,17 @@ export const IPodPlayer = ({
                     : [item.originalTrack];
 
                 if (item.type === 'YOUTUBE_SIGNAL' || item.type === 'SPOTIFY_SIGNAL') {
-                    const ctxIdx = contextList.findIndex(t => t.id === item.originalTrack.id);
+                    const ctxIdx = contextList.findIndex(trk => trk.id === item.originalTrack.id);
                     onPlayPlaylist && onPlayPlaylist(contextList, ctxIdx !== -1 ? ctxIdx : 0);
                     setScreen('NOW_PLAYING');
                     setIsSearching(false);
                     setSearchQuery('');
                 } else {
-                    const mainIndex = sourceList.findIndex(t => (t.id || t.Id) === (item.originalTrack.id || item.originalTrack.Id));
+                    const mainIndex = sourceList.findIndex(trk => (trk.id || trk.Id) === (item.originalTrack.id || item.originalTrack.Id));
                     if (mainIndex !== -1) {
                         // If playing from search, treat like a playlist of search results for sequential play
                         if (item.isFromSearch && item.searchContext) {
-                            const ctxIdx = contextList.findIndex(t => (t.id || t.Id) === (item.originalTrack.id || item.originalTrack.Id));
+                            const ctxIdx = contextList.findIndex(trk => (trk.id || trk.Id) === (item.originalTrack.id || item.originalTrack.Id));
                             onPlayPlaylist && onPlayPlaylist(contextList, ctxIdx !== -1 ? ctxIdx : 0);
                         } else {
                             // If it's a direct browse play, we want to play from the source list (All Tracks / Liked etc)
@@ -595,19 +595,19 @@ export const IPodPlayer = ({
                 setSelectedIndex(0);
             } else if (item.id === 'PLAY_ALL_FILTERED') {
                 if (item.tracks.length > 0) {
-                    onPlayPlaylist && onPlayPlaylist(item.tracks.map(t => t.originalTrack || t), 0);
+                    onPlayPlaylist && onPlayPlaylist(item.tracks.map(trk => trk.originalTrack || trk), 0);
                     setScreen('NOW_PLAYING');
                 }
             } else if (item.id === 'SHUFFLE_ALL_FILTERED') {
                 if (item.tracks.length > 0) {
                     const shuffled = [...item.tracks].sort(() => Math.random() - 0.5);
-                    onPlayPlaylist && onPlayPlaylist(shuffled.map(t => t.originalTrack || t), 0);
+                    onPlayPlaylist && onPlayPlaylist(shuffled.map(trk => trk.originalTrack || trk), 0);
                     setScreen('NOW_PLAYING');
                 }
             } else if (typeof item.id === 'number') {
                 const sourceList = item.isFromSearch && item.searchContext ? item.searchContext : (libraryTracks.length > 0 ? libraryTracks : tracks);
                 const filtered = getCurrentItems().filter(i => i.originalTrack).map(i => i.originalTrack);
-                const clickedIdxInFiltered = filtered.findIndex(t => (t.id || t.Id) === (item.originalTrack?.id || item.originalTrack?.Id));
+                const clickedIdxInFiltered = filtered.findIndex(trk => (trk.id || trk.Id) === (item.originalTrack?.id || item.originalTrack?.Id));
 
                 if (onPlayPlaylist) {
                     onPlayPlaylist(filtered, clickedIdxInFiltered !== -1 ? clickedIdxInFiltered : 0);
@@ -634,17 +634,17 @@ export const IPodPlayer = ({
                         const res = await API.Playlists.getById(item.playlistId);
                         const plData = res.data;
                         const tracks = plData.tracks || plData.Tracks || [];
-                        const normalizedTracks = tracks.map(t => ({
-                            ...t,
-                            id: t.id || t.Id,
-                            title: t.title || t.Title,
-                            artistName: t.artistName || t.ArtistName,
-                            coverImageUrl: t.coverImageUrl || t.CoverImageUrl,
-                            source: t.source || t.Source
+                        const normalizedTracks = tracks.map(trk => ({
+                            ...trk,
+                            id: trk.id || trk.Id,
+                            title: trk.title || trk.Title,
+                            artistName: trk.artistName || trk.ArtistName,
+                            coverImageUrl: trk.coverImageUrl || trk.CoverImageUrl,
+                            source: trk.source || trk.Source
                         }));
                         const name = plData.name || plData.Name || item.label;
 
-                        setPlaylistTracks(normalizedTracks.map(t => ({ ...t, isOwned: true })));
+                        setPlaylistTracks(normalizedTracks.map(trk => ({ ...trk, isOwned: true })));
                         setActivePlaylistName(name);
                         setActivePlaylistId(plData.id || plData.Id);
                     } catch (e) { console.error(e); }
@@ -693,7 +693,7 @@ export const IPodPlayer = ({
                     } else {
                         // Fallback fallback
                         const firstTrackId = playlistTracks[0].id;
-                        const mainIndex = tracks.findIndex(t => t.id === firstTrackId);
+                        const mainIndex = tracks.findIndex(trk => trk.id === firstTrackId);
                         if (mainIndex !== -1) {
                             setCurrentTrackIndex(mainIndex);
                             setIsPlaying(true);
@@ -720,7 +720,7 @@ export const IPodPlayer = ({
                     onPlayPlaylist(playlistTracks, item.id); // 'id' in this menu is the index
                     setScreen('NOW_PLAYING');
                 } else {
-                    const mainIndex = tracks.findIndex(t => t.id === item.originalTrack.id);
+                    const mainIndex = tracks.findIndex(trk => trk.id === item.originalTrack.id);
                     if (mainIndex !== -1) {
                         setCurrentTrackIndex(mainIndex);
                         setIsPlaying(true);
@@ -907,7 +907,7 @@ export const IPodPlayer = ({
                     const req = stationQueue[reqIdx];
                     if (req && req.trackId) {
                         const targetSource = libraryTracks.length > 0 ? libraryTracks : tracks;
-                        const matchIdx = targetSource.findIndex(t => t.id === req.trackId || t.Id === req.trackId);
+                        const matchIdx = targetSource.findIndex(trk => trk.id === req.trackId || trk.Id === req.trackId);
                         if (matchIdx !== -1) {
                             if (onPlayPlaylist) {
                                 onPlayPlaylist(targetSource, matchIdx);
@@ -1158,7 +1158,7 @@ export const IPodPlayer = ({
                                     >
                                         <Heart size={14} className={fullViewTab === 'favorites' ? 'text-[#f00060]' : ''} />
                                         <span className="flex-1 tracking-wider uppercase">Favoritos</span>
-                                        <span className="text-[9px] bg-white/10 px-1.5 py-0.5 rounded font-mono text-white/60">{libraryTracks.filter(t => t.isLiked).length}</span>
+                                        <span className="text-[9px] bg-white/10 px-1.5 py-0.5 rounded font-mono text-white/60">{libraryTracks.filter(trk => trk.isLiked).length}</span>
                                     </button>
                                     
                                     <button 
@@ -1182,9 +1182,9 @@ export const IPodPlayer = ({
                                         {fullViewTab === 'playlist' && (
                                             <>
                                                 {(() => {
-                                                    const filteredPlaylist = tracks.filter(t => {
-                                                        const title = (t.title || t.Title || '').toLowerCase();
-                                                        const artist = (t.artist || t.ArtistName || t.author || t.Author || t.channelTitle || t.ChannelTitle || '').toLowerCase();
+                                                    const filteredPlaylist = tracks.filter(trk => {
+                                                        const title = (trk.title || trk.Title || '').toLowerCase();
+                                                        const artist = (trk.artist || trk.ArtistName || trk.author || trk.Author || trk.channelTitle || trk.ChannelTitle || '').toLowerCase();
                                                         return title.includes(librarySearchQuery.toLowerCase()) || artist.includes(librarySearchQuery.toLowerCase());
                                                     });
 
@@ -1353,9 +1353,9 @@ export const IPodPlayer = ({
                                         {fullViewTab === 'favorites' && (
                                             <>
                                                 {(() => {
-                                                    const filteredFavs = libraryTracks.filter(t => t.isLiked).filter(t => {
-                                                        const title = (t.title || t.Title || '').toLowerCase();
-                                                        const artist = (t.artist || t.Artist || '').toLowerCase();
+                                                    const filteredFavs = libraryTracks.filter(trk => trk.isLiked).filter(trk => {
+                                                        const title = (trk.title || trk.Title || '').toLowerCase();
+                                                        const artist = (trk.artist || trk.Artist || '').toLowerCase();
                                                         return title.includes(librarySearchQuery.toLowerCase()) || artist.includes(librarySearchQuery.toLowerCase());
                                                     });
 
@@ -1367,13 +1367,13 @@ export const IPodPlayer = ({
                                                         );
                                                     }
 
-                                                    return filteredFavs.map((t, idx) => (
+                                                    return filteredFavs.map((trk, idx) => (
                                                         <div 
                                                             key={idx} 
                                                             className="flex items-center gap-4 p-3 rounded-xl border border-white/5 bg-black/20 hover:bg-white/[0.03] hover:border-[#f00060]/30 transition-all duration-300 group/row cursor-pointer"
                                                             onClick={() => {
                                                                 const favorites = libraryTracks.filter(track => track.isLiked);
-                                                                const favIndex = favorites.findIndex(original => original === t);
+                                                                const favIndex = favorites.findIndex(original => original === trk);
                                                                 onPlayPlaylist && onPlayPlaylist(favorites, favIndex >= 0 ? favIndex : 0);
                                                                 setFullViewTab('playlist');
                                                             }}
@@ -1382,8 +1382,8 @@ export const IPodPlayer = ({
                                                                 <Heart size={18} className="text-[#ff006e]" fill="currentColor" />
                                                             </div>
                                                             <div className="flex-1 min-w-0">
-                                                                <div className="text-xs font-bold text-white group-hover/row:text-[#ff006e] transition-colors tracking-wide">{t.title || t.Title || 'Untitled'}</div>
-                                                                <div className="text-[10px] text-white/40 mt-1 font-mono">SEÑAL // {t.artist || t.Artist || 'Desconocido'}</div>
+                                                                <div className="text-xs font-bold text-white group-hover/row:text-[#ff006e] transition-colors tracking-wide">{trk.title || trk.Title || 'Untitled'}</div>
+                                                                <div className="text-[10px] text-white/40 mt-1 font-mono">SEÑAL // {trk.artist || trk.Artist || 'Desconocido'}</div>
                                                             </div>
                                                         </div>
                                                     ));
@@ -1706,7 +1706,7 @@ export const IPodPlayer = ({
                                                     try {
                                                         const API = await import('../services/api').then(m => m.default);
                                                         const trackTags = (currentTrack.tags || currentTrack.Tags || '').toLowerCase();
-                                                        const tagGuess = trackTags.split(/[,\s]+/).find(t => t.length > 2) || 'music';
+                                                        const tagGuess = trackTags.split(/[,\s]+/).find(tag => tag.length > 2) || 'music';
                                                         setResonantTag(tagGuess);
                                                         const res = await API.Pulse.getResonantStations(tagGuess);
                                                         setResonantStations(res.data?.stations || []);
