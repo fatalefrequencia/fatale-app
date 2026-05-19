@@ -370,7 +370,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}
                                     placeholder={t('WAITING_INPUT')}
-                                    className="w-full bg-[#080808] border border-white/5 py-4 pl-10 pr-16 text-white text-[16px] md:text-[13px] outline-none focus:border-[#ff006e]/40 transition-all font-mono tracking-widest placeholder:text-[10px] md:placeholder:text-[10px] placeholder:text-white/10"
+                                    className="w-full bg-[#080808] border border-white/5 py-4 pl-10 pr-24 text-white text-[16px] md:text-[13px] outline-none focus:border-[#ff006e]/40 transition-all font-mono tracking-widest placeholder:text-[10px] md:placeholder:text-[10px] placeholder:text-white/10"
                                 />
                                 <button
                                     type="submit"
