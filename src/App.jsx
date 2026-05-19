@@ -1288,6 +1288,12 @@ function App() {
 
     // 2. Playback State Sync
     if (isPlaying && !isLocked) {
+      // Ensure AudioContext is initialized and active for seamless playback on any interaction
+      initAudioCtx();
+      if (audioCtx.current && audioCtx.current.state === 'suspended') {
+        audioCtx.current.resume().catch(e => console.warn("[PLAYER] Resume AudioContext blocked:", e));
+      }
+
       if (isYT) {
         if (youtubePlayer && typeof youtubePlayer.playVideo === 'function') {
           try {
@@ -2329,8 +2335,6 @@ function App() {
               onStateChange={(e) => {
                 console.log("[YOUTUBE] State Change:", e.data);
                 if (e.data === 0) playNext();
-                if (e.data === 1 && !isPlaying) setIsPlaying(true);
-                if (e.data === 2 && isPlaying) setIsPlaying(false);
               }}
               onError={(e) => {
                 console.error("[YOUTUBE] Error detected:", e.data);
