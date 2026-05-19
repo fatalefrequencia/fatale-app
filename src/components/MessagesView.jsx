@@ -15,13 +15,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (onChatChange) {
-            // Prevent upward sync race-condition if App explicitly commanded us to close the chat
-            if (!initialChatUser && currentChat) return;
-            onChatChange(currentChat);
-        }
-    }, [currentChat, onChatChange, initialChatUser]);
+    // Synchronize initial chat state from App.jsx, but DO NOT infinitely sync upwards.
 
     // Sizing states to handle dynamic visual viewport height
     const [visualHeight, setVisualHeight] = useState(window.innerHeight);
@@ -229,12 +223,12 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
         if (!newMessage.trim() || !currentChat) return;
 
         try {
-            const res = await API.Messages.sendMessage({
+            await API.Messages.sendMessage({
                 receiverId: currentChat.id,
                 content: newMessage
             });
-            setMessages([...messages, res.data]);
             setNewMessage('');
+            fetchChatHistory(currentChat.id); // Instantly pull canonical history
             fetchConversations(); // Update inbox snippet
         } catch (err) {
             console.error("Failed to send", err);
