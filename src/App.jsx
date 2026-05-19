@@ -1002,7 +1002,7 @@ function App() {
     const sourceStr = pureYtId
       ? (isCached
           ? `${API_BASE_URL}cache/${currentUserId}_${pureYtId}.mp3`
-          : `${API_BASE_URL}Youtube/stream?videoId=${pureYtId}&userId=${currentUserId}`)
+          : `${API_BASE_URL}api/Youtube/stream?videoId=${pureYtId}&userId=${currentUserId}`)
       : (rawSource || "");
 
     // --- DEEP RECONCILIATION: Inherit State from Library ---
@@ -1128,7 +1128,7 @@ function App() {
           const resolvedSource = yId
             ? (isCached
                 ? `${API_BASE_URL}cache/${uid}_${yId}.mp3`
-                : `${API_BASE_URL}Youtube/stream?videoId=${yId}&userId=${uid}`)
+                : `${API_BASE_URL}api/Youtube/stream?videoId=${yId}&userId=${uid}`)
             : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null);
 
           if (!resolvedSource || resolvedSource === API_BASE_URL || resolvedSource === `${API_BASE_URL}/`) return;
@@ -1171,7 +1171,7 @@ function App() {
             const isCached = cachedIds.has(String(yId));
             const sourceKey = isCached
               ? `${API_BASE_URL}cache/${uid}_${yId}.mp3`
-              : `${API_BASE_URL}Youtube/stream?videoId=${yId}&userId=${uid}`;
+              : `${API_BASE_URL}api/Youtube/stream?videoId=${yId}&userId=${uid}`;
             if (uniqueTracksMap.has(sourceKey)) {
               const existing = uniqueTracksMap.get(sourceKey);
               uniqueTracksMap.set(sourceKey, { ...existing, isLiked: true });
@@ -1224,7 +1224,7 @@ function App() {
           const resolvedSource = yId
             ? (isCached
                 ? `${API_BASE_URL}cache/${uid}_${yId}.mp3`
-                : `${API_BASE_URL}Youtube/stream?videoId=${yId}&userId=${uid}`)
+                : `${API_BASE_URL}api/Youtube/stream?videoId=${yId}&userId=${uid}`)
             : (t.source || t.Source);
 
           return { ...t, isLiked, isOwned, artist, artistName, source: resolvedSource, isCached };
@@ -1471,7 +1471,7 @@ function App() {
             source: rec.trackType === 'youtube'
               ? (isCached
                   ? `${API_BASE_URL}cache/${currentUserId}_${rec.trackId}.mp3`
-                  : `${API_BASE_URL}Youtube/stream?videoId=${rec.trackId}&userId=${currentUserId}`)
+                  : `${API_BASE_URL}api/Youtube/stream?videoId=${rec.trackId}&userId=${currentUserId}`)
               : rec.trackId,
             cover: rec.thumbnailUrl,
             tags: rec.tags,
@@ -1680,7 +1680,7 @@ function App() {
       const resolvedSource = pureYtId
         ? (isCached
             ? `${API_BASE_URL}cache/${currentUserId}_${pureYtId}.mp3`
-            : `${API_BASE_URL}Youtube/stream?videoId=${pureYtId}&userId=${currentUserId}`)
+            : `${API_BASE_URL}api/Youtube/stream?videoId=${pureYtId}&userId=${currentUserId}`)
         : (isDiscoveryAbsolute ? (pTrack.source || pTrack.Source) : (found?.source || found?.Source || pTrack.source || pTrack.Source));
 
       if (found) {
