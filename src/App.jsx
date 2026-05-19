@@ -490,6 +490,44 @@ function App() {
     resolveSpotifyTrack();
   }, [currentTrackIndex, tracks]);
 
+  // Effect to load and play YouTube track when it changes
+  useEffect(() => {
+    if (!youtubePlayer) return;
+
+    let ytId = null;
+    if (currentTrack?.source?.startsWith('youtube:')) {
+      ytId = currentTrack.source.split(':')[1]?.trim();
+    } else if (currentTrack?.source?.startsWith('spotify:')) {
+      ytId = currentTrack.resolvedYoutubeId;
+    }
+
+    if (isYoutubeMode && ytId) {
+      try {
+        const currentVideoUrl = youtubePlayer.getVideoUrl ? youtubePlayer.getVideoUrl() : '';
+        const isSameVideo = currentVideoUrl && currentVideoUrl.includes(ytId);
+        
+        if (!isSameVideo) {
+          console.log(`[YOUTUBE] Programmatic load of video ID: ${ytId}`);
+          youtubePlayer.loadVideoById({
+            videoId: ytId,
+            startSeconds: 0
+          });
+          youtubePlayer.setVolume(volume * 100);
+          youtubePlayer.setPlaybackRate(globalPlaybackRate);
+        }
+        
+        // Ensure play state is synchronized
+        if (isPlaying) {
+          youtubePlayer.playVideo();
+        } else {
+          youtubePlayer.pauseVideo();
+        }
+      } catch (err) {
+        console.warn("[YOUTUBE] Programmatic track change play/load failed (retrying on ready/state):", err);
+      }
+    }
+  }, [currentTrack?.id, currentTrack?.source, currentTrack?.resolvedYoutubeId, isYoutubeMode, youtubePlayer, isPlaying, volume, globalPlaybackRate]);
+
   // Fetch Spotify Vibe Features or generate mock features for other tracks
   useEffect(() => {
     const fetchVibes = async () => {
@@ -1164,7 +1202,7 @@ function App() {
               id: String(lik.id || lik.Id || `yt-${yId}`),
               videoId: yId,
               title: lik.title || lik.Title,
-              artist: lik.channelTitle || lik.artist || "Unknown Artist",
+              artist: lik.channelTitle || lik.artistName || lik.ArtistName || lik.artist || "Unknown Artist",
               source: sourceKey,
               isLiked: true,
               isOwned: false,
@@ -1281,6 +1319,13 @@ function App() {
     setCurrentTime(0);
   }, [currentTrackIndex]);
 
+  // Auto-play/initialize index to 0 if playback is enabled but no track is selected
+  useEffect(() => {
+    if (isPlaying && currentTrackIndex < 0 && tracks.length > 0) {
+      setCurrentTrackIndex(0);
+    }
+  }, [isPlaying, currentTrackIndex, tracks]);
+
   // Efecto para manejar el audio
   useEffect(() => {
     if (!audioRef.current || currentTrackIndex < 0) return;
@@ -1291,7 +1336,7 @@ function App() {
 
     const trackSource = track.source || track.Source;
     const isLocked = (track.isLocked ?? false) && !(track.isOwned ?? true);
-    const isYT = trackSource && trackSource.startsWith('youtube:');
+    const isYT = trackSource && (trackSource.startsWith('youtube:') || trackSource.startsWith('spotify:'));
 
     // 1. Mode Switching
     if (isYT) {
@@ -1317,6 +1362,13 @@ function App() {
       }
     } else {
       if (isYoutubeMode) setIsYoutubeMode(false);
+
+      // Ensure YouTube is paused when switching to native
+      if (youtubePlayer && typeof youtubePlayer.pauseVideo === 'function') {
+        try {
+          youtubePlayer.pauseVideo();
+        } catch (e) {}
+      }
 
       // Handle Local Audio Source Change
       const currentSrc = audio.getAttribute('data-playing-src') || audio.src;
@@ -1555,6 +1607,12 @@ function App() {
     initAudioCtx();
     if (audioCtx.current?.state === 'suspended') {
       audioCtx.current.resume().catch(e => console.warn("AudioContext resume failed:", e));
+    }
+    
+    if (currentTrackIndex < 0 && tracks.length > 0) {
+      setCurrentTrackIndex(0);
+      setIsPlaying(true);
+      return;
     }
     
     if (isYoutubeMode && youtubePlayer) {
@@ -2498,17 +2556,18 @@ function App() {
           } else if (currentTrack?.source?.startsWith('spotify:')) {
             ytId = currentTrack.resolvedYoutubeId;
           }
-          if (!ytId) return null;
+          const activeYtId = ytId || "7wtfhZwyrcc";
 
           return (
             <YouTube
-              key={ytId} // Force fresh instance for new videos to avoid internal state corruption
-              videoId={ytId}
+              key="global-youtube-player"
+              videoId={activeYtId}
               onReady={(e) => {
                 console.log("[YOUTUBE] Player Ready");
                 setYoutubePlayer(e.target);
-                if (isPlaying && isYoutubeMode) {
+                if (isPlaying && isYoutubeMode && ytId) {
                   try {
+                    e.target.setVolume(volume * 100);
                     e.target.playVideo();
                     e.target.setPlaybackRate(globalPlaybackRate);
                   } catch (err) { console.warn("YT Play onReady failure:", err); }
@@ -2521,13 +2580,13 @@ function App() {
               onError={(e) => {
                 console.error("[YOUTUBE] Error detected:", e.data);
                 // Handle private/deleted videos by skipping
-                if (isPlaying) playNext();
+                if (isPlaying && ytId) playNext();
               }}
               opts={{
                 height: '1',
                 width: '1',
                 playerVars: {
-                  autoplay: isPlaying ? 1 : 0,
+                  autoplay: 0,
                   controls: 0,
                   disablekb: 1,
                   fs: 0,
