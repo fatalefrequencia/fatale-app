@@ -504,27 +504,13 @@ function App() {
     resolveSpotifyTrack();
   }, [currentTrackIndex, tracks]);
 
-  // Helper to trigger autoplay, with a fallback to muted autoplay if browser blocks playback
+  // Helper to trigger autoplay
   const playYtVideo = (player) => {
     if (!player) return;
     try {
       player.playVideo();
-      const checkTime = Date.now();
-      lastPlayRequestTime.current = checkTime;
-      
-      setTimeout(() => {
-        if (lastPlayRequestTime.current === checkTime) {
-          const state = player.getPlayerState ? player.getPlayerState() : -1;
-          // If the player is not playing (1) or buffering (3), trigger muted autoplay fallback
-          if (state !== 1 && state !== 3) {
-            console.log("[YOUTUBE_AUTOPLAY] Autoplay blocked, falling back to muted play");
-            player.mute();
-            player.playVideo();
-          }
-        }
-      }, 350);
     } catch (e) {
-      console.warn("[YOUTUBE_AUTOPLAY] Error starting YouTube video:", e);
+      console.warn("[YOUTUBE] Error starting YouTube video:", e);
     }
   };
 
@@ -554,6 +540,7 @@ function App() {
 
     if (isYoutubeMode && ytId) {
       try {
+        let loadedThisTick = false;
         if (lastLoadedYtId.current !== ytId) {
           console.log(`[YOUTUBE] Programmatic load of video ID: ${ytId}`);
           lastLoadedYtId.current = ytId;
@@ -564,12 +551,13 @@ function App() {
           });
           youtubePlayer.setVolume(volume * 100);
           youtubePlayer.setPlaybackRate(globalPlaybackRate);
+          loadedThisTick = true;
         }
         
         // Ensure play state is synchronized without redundant calls that cause audio stutters
         const ytState = youtubePlayer.getPlayerState ? youtubePlayer.getPlayerState() : null;
         if (isPlaying) {
-          if (ytState !== 1 && ytState !== 3) {
+          if (!loadedThisTick && ytState !== 1 && ytState !== 3) {
             playYtVideo(youtubePlayer);
           }
         } else {
@@ -2608,15 +2596,21 @@ function App() {
           return (
             <YouTube
               key="global-youtube-player"
-              videoId={activeYtId}
+              videoId="7wtfhZwyrcc"
               onReady={(e) => {
                 console.log("[YOUTUBE] Player Ready");
                 setYoutubePlayer(e.target);
-                if (isPlaying && isYoutubeMode && ytId) {
+                if (isYoutubeMode && ytId) {
                   try {
                     e.target.setVolume(volume * 100);
-                    playYtVideo(e.target);
                     e.target.setPlaybackRate(globalPlaybackRate);
+                    if (isPlaying) {
+                      e.target.loadVideoById({ videoId: ytId, startSeconds: 0 });
+                      lastLoadedYtId.current = ytId;
+                    } else {
+                      e.target.cueVideoById({ videoId: ytId, startSeconds: 0 });
+                      lastLoadedYtId.current = ytId;
+                    }
                   } catch (err) { console.warn("YT Play onReady failure:", err); }
                 }
               }}
@@ -2625,15 +2619,6 @@ function App() {
                 if (e.data === 0) playNext();
                 if (e.data === 1) {
                   hasStartedPlayingYt.current = true;
-                  // Auto-unmute if we started muted to bypass autoplay policy
-                  if (e.target.isMuted && e.target.isMuted() && !isMuted) {
-                    try {
-                      e.target.unMute();
-                      e.target.setVolume(volume * 100);
-                    } catch (err) {
-                      console.warn("[YOUTUBE_AUTOPLAY] Failed to unmute:", err);
-                    }
-                  }
                 }
                 if (isPlaying && (e.data === 5 || e.data === -1 || (e.data === 2 && !hasStartedPlayingYt.current))) {
                   try {
