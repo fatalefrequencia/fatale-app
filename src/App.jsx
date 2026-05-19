@@ -1317,50 +1317,24 @@ function App() {
     const track = tracks[currentTrackIndex];
     if (!track) return;
 
-    const trackSource = track.source || track.Source;
     const isLocked = (track.isLocked ?? false) && !(track.isOwned ?? true);
-    const isYT = trackSource && trackSource.startsWith('youtube:');
 
-    // 1. Mode Switching
-    if (isYT) {
-      if (!isYoutubeMode) setIsYoutubeMode(true);
-      
-      // Play silent audio on native element to keep background session alive on mobile
-      const silentSrc = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
-      if (audio.src !== silentSrc && audio.getAttribute('data-playing-src') !== 'silent') {
-        audio.src = silentSrc;
-        audio.loop = true;
-        audio.setAttribute('data-playing-src', 'silent');
-        audio.load();
-      }
-      
-      if (isPlaying) {
-        if (audio.paused) {
-          audio.play().catch(err => console.warn("[PLAYER] Failed to play silent audio", err));
-        }
-      } else {
-        if (!audio.paused) {
-          audio.pause();
-        }
-      }
-    } else {
-      if (isYoutubeMode) setIsYoutubeMode(false);
+    // Treat all tracks as native HTML5 audio tracks using resolveTrackSource
+    if (isYoutubeMode) setIsYoutubeMode(false);
 
-      // Handle Local Audio Source Change
-      const currentSrc = audio.getAttribute('data-playing-src') || audio.src;
-      const targetSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
-      const isAlreadyLoaded = audio.src && (audio.src === targetSrc || audio.src.endsWith(trackSource) || currentSrc === targetSrc || currentSrc === trackSource);
-      if (trackSource && !isAlreadyLoaded) {
-        console.log(`[PLAYER] Loading new local source: ${targetSrc}`);
-        audio.src = targetSrc;
-        audio.loop = false; // Ensure it doesn't loop so onEnded fires
-        audio.setAttribute('data-playing-src', targetSrc);
-        audio.load();
-        setCurrentTime(0);
-      }
+    const currentSrc = audio.getAttribute('data-playing-src') || audio.src;
+    const targetSrc = resolveTrackSource(track, currentUserId, cachedTrackIds);
+    const isAlreadyLoaded = audio.src && (audio.src === targetSrc || currentSrc === targetSrc);
+    if (targetSrc && !isAlreadyLoaded) {
+      console.log(`[PLAYER] Loading track source: ${targetSrc}`);
+      audio.src = targetSrc;
+      audio.loop = false; // Ensure it doesn't loop so onEnded fires
+      audio.setAttribute('data-playing-src', targetSrc);
+      audio.load();
+      setCurrentTime(0);
     }
 
-    // 2. Playback State Sync
+    // Playback State Sync
     if (isPlaying && !isLocked) {
       // Ensure AudioContext is initialized and active for seamless playback on any interaction
       initAudioCtx();
@@ -1368,33 +1342,16 @@ function App() {
         audioCtx.current.resume().catch(e => console.warn("[PLAYER] Resume AudioContext blocked:", e));
       }
 
-      if (isYT) {
-        if (youtubePlayer && typeof youtubePlayer.playVideo === 'function') {
-          try {
-            const state = youtubePlayer.getPlayerState();
-            if (state !== 1 && state !== 3) youtubePlayer.playVideo();
-          } catch (e) { }
-        }
-      } else {
-        if (audio.paused && audio.src) {
-          audio.play().catch(e => {
-            if (e.name !== 'AbortError') console.warn("Auto-play blocked", e);
-          });
-        }
+      if (audio.paused && audio.src) {
+        audio.play().catch(e => {
+          if (e.name !== 'AbortError') console.warn("Auto-play blocked", e);
+        });
       }
     } else {
       // Paused
-      if (isYT) {
-        if (youtubePlayer && typeof youtubePlayer.pauseVideo === 'function') {
-          try {
-            if (youtubePlayer.getPlayerState() === 1) youtubePlayer.pauseVideo();
-          } catch (e) { }
-        }
-      } else {
-        if (!audio.paused) audio.pause();
-      }
+      if (!audio.paused) audio.pause();
     }
-  }, [currentTrackIndex, tracks, isPlaying, isYoutubeMode, youtubePlayer]);
+  }, [currentTrackIndex, tracks, isPlaying, isYoutubeMode, currentUserId, cachedTrackIds]);
 
   const finalizeListenEvent = () => {
     if (listenEventRef.current.id && listenEventRef.current.startTime) {
@@ -1619,25 +1576,18 @@ function App() {
     }
     
     const track = tracks[index];
-    const trackSource = track.source || track.Source;
-    const isYTTrack = trackSource && trackSource.startsWith('youtube:');
     
     if (audioRef.current) {
-      if (isYTTrack) {
-        audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
-        audioRef.current.loop = true;
-      } else {
-        const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
-        audioRef.current.src = resolvedSrc;
-        audioRef.current.loop = false;
-      }
+      const resolvedSrc = resolveTrackSource(track, currentUserId, cachedTrackIds);
+      audioRef.current.src = resolvedSrc;
+      audioRef.current.loop = false;
       audioRef.current.load();
       audioRef.current.play().catch(e => console.warn("[MOBILE GESTURE] Play index failed:", e));
     }
     
     setCurrentTrackIndex(index);
     setIsPlaying(true);
-    if (isYTTrack) setIsYoutubeMode(true);
+    if (isYoutubeMode) setIsYoutubeMode(false);
   };
 
   // Modified to use main library tracks for correct Like status
@@ -1706,7 +1656,6 @@ function App() {
 
     // 3. Set states
     const firstTrack = enrichedQueue[startIndex];
-    const isYT = (firstTrack?.source || firstTrack?.Source)?.startsWith('youtube:');
 
     // Synchronous mobile gesture unblocking:
     if (audioRef.current) {
@@ -1714,16 +1663,9 @@ function App() {
       if (audioCtx.current && audioCtx.current.state === 'suspended') {
         audioCtx.current.resume().catch(e => console.warn("[MOBILE GESTURE] Resume AudioContext blocked:", e));
       }
-      const trackSource = firstTrack?.source || firstTrack?.Source;
-      const isYTTrack = trackSource && trackSource.startsWith('youtube:');
-      if (isYTTrack) {
-        audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
-        audioRef.current.loop = true;
-      } else {
-        const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
-        audioRef.current.src = resolvedSrc;
-        audioRef.current.loop = false;
-      }
+      const resolvedSrc = resolveTrackSource(firstTrack, currentUserId, cachedTrackIds);
+      audioRef.current.src = resolvedSrc;
+      audioRef.current.loop = false;
       audioRef.current.load();
       audioRef.current.play().catch(e => console.warn("[MOBILE GESTURE] Play failed:", e));
     }
@@ -1731,8 +1673,7 @@ function App() {
     setTracks(enrichedQueue);
     setCurrentTrackIndex(startIndex);
     setIsPlaying(true);
-    if (isYT) setIsYoutubeMode(true);
-    else setIsYoutubeMode(false);
+    if (isYoutubeMode) setIsYoutubeMode(false);
 
     if (shouldRedirect && typeof setRedirectTrigger === 'function') {
       setRedirectTrigger(Date.now());
