@@ -464,6 +464,7 @@ function App() {
   const [youtubePlayer, setYoutubePlayer] = useState(null);
   const [isYoutubeMode, setIsYoutubeMode] = useState(false);
   const [vibeFeatures, setVibeFeatures] = useState(null);
+  const lastLoadedYtId = useRef(null);
 
   // Dynamic Spotify track resolver (resolves Spotify metadata to YouTube video ID under the hood)
   useEffect(() => {
@@ -473,6 +474,13 @@ function App() {
       const source = track.source || track.Source;
       if (source && source.startsWith('spotify:') && !track.resolvedYoutubeId) {
         try {
+          const spotifyId = source.split(':')[1]?.trim();
+          if (spotifyId && spotifyId.length === 11) {
+            track.resolvedYoutubeId = spotifyId;
+            setTracks([...tracks]);
+            console.log(`[SPOTIFY_RESOLVER] Directly resolved 11-char YouTube ID from source: ${spotifyId}`);
+            return;
+          }
           console.log(`[SPOTIFY_RESOLVER] Resolving: "${track.artist} - ${track.title}" to YouTube...`);
           const res = await API.Youtube.search(`${track.artist} - ${track.title} audio`);
           if (res.data && res.data.length > 0) {
@@ -503,11 +511,9 @@ function App() {
 
     if (isYoutubeMode && ytId) {
       try {
-        const currentVideoUrl = youtubePlayer.getVideoUrl ? youtubePlayer.getVideoUrl() : '';
-        const isSameVideo = currentVideoUrl && currentVideoUrl.includes(ytId);
-        
-        if (!isSameVideo) {
+        if (lastLoadedYtId.current !== ytId) {
           console.log(`[YOUTUBE] Programmatic load of video ID: ${ytId}`);
+          lastLoadedYtId.current = ytId;
           youtubePlayer.loadVideoById({
             videoId: ytId,
             startSeconds: 0
@@ -525,6 +531,8 @@ function App() {
       } catch (err) {
         console.warn("[YOUTUBE] Programmatic track change play/load failed (retrying on ready/state):", err);
       }
+    } else {
+      lastLoadedYtId.current = null;
     }
   }, [currentTrack?.id, currentTrack?.source, currentTrack?.resolvedYoutubeId, isYoutubeMode, youtubePlayer, isPlaying, volume, globalPlaybackRate]);
 
@@ -2576,7 +2584,7 @@ function App() {
               onStateChange={(e) => {
                 console.log("[YOUTUBE] State Change:", e.data);
                 if (e.data === 0) playNext();
-                if (isPlaying && (e.data === 5 || e.data === -1)) {
+                if (isPlaying && (e.data === 5 || e.data === -1 || e.data === 2)) {
                   try {
                     e.target.playVideo();
                   } catch (err) { console.warn("Failed to autoplay on state change:", err); }
@@ -2591,7 +2599,7 @@ function App() {
                 height: '1',
                 width: '1',
                 playerVars: {
-                  autoplay: isPlaying ? 1 : 0,
+                  autoplay: 1,
                   controls: 0,
                   disablekb: 1,
                   fs: 0,
