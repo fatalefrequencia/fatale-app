@@ -1523,16 +1523,7 @@ export const IPodPlayer = ({
 
             {/* LARGE PREMIUM FRAME - REDUCED BORDER (NEVER DISTORTS WHEN LIBRARY IS OPEN!) */}
             <div className={`relative w-full ${isVertical ? 'max-w-[280px] h-[480px] rounded-[30px] p-4' : 'max-w-[500px] h-[700px] max-h-[95vh] sm:max-h-[700px] rounded-[55px] p-8'} bg-[#000] border-[6px] border-[#333] shadow-[0_50px_120px_rgba(255,0,110,0.2),inset_0_2px_10px_rgba(255,0,110,0.1)] flex flex-col items-center select-none shrink-0 border-t-[#333] border-l-[#222] transition-all duration-500`}>
-                <div 
-                    onClick={() => {
-                        const fileInput = fileInputRef.current;
-                        if (fileInput) {
-                            fileInput.click();
-                        }
-                    }} 
-                    className="absolute inset-0 bg-transparent cursor-pointer z-0" 
-                    title={t('IPOD_STICKER_HELP')}
-                />
+
 
                 {/* STATUS BAR - REDESIGNED */}
                 <div className="absolute inset-x-8 top-12 h-6 flex justify-between items-center z-10 select-none pointer-events-none">
@@ -1798,20 +1789,23 @@ export const IPodPlayer = ({
                                                 />
                                             </div>
                                         ) : (
-                                            <h2 className={`text-[11px] font-black text-[#f00060] tracking-[0.3em] font-mono ${screen === 'PLAYLIST_DETAILS' ? '' : 'uppercase'} truncate max-w-[180px]`}>
-                                                {screen === 'MAIN' ? t('BUSCA_ALGO') :
-                                                    screen === 'ACTION_MENU' ? 'OPTIONS' :
-                                                        screen === 'TIP_MENU' ? 'SELECT TIP' :
-                                                            screen === 'SONGS' ? 'MUSIC' :
-                                                                screen === 'SONGS_LIKED' ? t('SAVED') :
-                                                                    screen === 'SONGS_PURCHASED' ? t('PURCHASED') :
-                                                                        screen === 'SONGS_ALL' ? t('ALL_TRACKS') :
-                                                                            screen === 'PURCHASE_CONFIRM' ? 'PURCHASE?' :
-                                                                                screen === 'STATION_CHAT' ? 'LIVE COMM' :
-                                                                                    screen === 'STATION_QUEUE' ? 'REQ. QUEUE' :
-                                                                                        screen === 'PLAYLIST_DETAILS' ? activePlaylistName :
-                                                                                            screen}
-                                            </h2>
+                                            <div className="flex items-center gap-1.5 min-w-0">
+                                                {screen === 'MAIN' && <Search size={11} className="text-[#f00060] shrink-0" />}
+                                                <h2 className={`text-[11px] font-black text-[#f00060] tracking-[0.3em] font-mono ${screen === 'PLAYLIST_DETAILS' ? '' : 'uppercase'} truncate max-w-[180px]`}>
+                                                    {screen === 'MAIN' ? t('BUSCA_ALGO') + '...' :
+                                                        screen === 'ACTION_MENU' ? 'OPTIONS' :
+                                                            screen === 'TIP_MENU' ? 'SELECT TIP' :
+                                                                screen === 'SONGS' ? 'MUSIC' :
+                                                                    screen === 'SONGS_LIKED' ? t('SAVED') :
+                                                                        screen === 'SONGS_PURCHASED' ? t('PURCHASED') :
+                                                                            screen === 'SONGS_ALL' ? t('ALL_TRACKS') :
+                                                                                screen === 'PURCHASE_CONFIRM' ? 'PURCHASE?' :
+                                                                                    screen === 'STATION_CHAT' ? 'LIVE COMM' :
+                                                                                        screen === 'STATION_QUEUE' ? 'REQ. QUEUE' :
+                                                                                            screen === 'PLAYLIST_DETAILS' ? activePlaylistName :
+                                                                                                screen}
+                                                </h2>
+                                            </div>
                                         )}
                                         <button
                                             onClick={() => {

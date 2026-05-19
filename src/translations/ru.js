@@ -211,7 +211,7 @@ export default {
     "SIGNAL_LOADED": "СИГНАЛ_ЗАГРУЖЕН",
     "NEURAL_BROADCAST": "НЕЙРОННАЯ_ТРАНСЛЯЦИЯ",
     "FAVORITES": "ИЗБРАННЫЕ",
-    "BUSCA_ALGO": "НАЙТИ ЧТО-ТО",
+    "BUSCA_ALGO": "ПОИСК",
     "RADAR_YOUTUBE_ESPERANDO": "РАДАР YOUTUBE В ОЖИДАНИИ",
     "RADAR_YOUTUBE_HELP": "ВВЕДИТЕ ЧАСТОТУ В ВЕРХНЕЙ ПАНЕЛИ ДЛЯ ПЕРЕХВАТА СИГНАЛОВ",
     "RECENT_SEARCHES": "ПОСЛЕДНИЕ ЗАПРОСЫ",

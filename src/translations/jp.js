@@ -211,7 +211,7 @@ export default {
     "SIGNAL_LOADED": "シグナルロード済み",
     "NEURAL_BROADCAST": "ニューラル放送",
     "FAVORITES": "お気に入り",
-    "BUSCA_ALGO": "何か検索",
+    "BUSCA_ALGO": "検索",
     "RADAR_YOUTUBE_ESPERANDO": "YOUTUBEレーダー待機中",
     "RADAR_YOUTUBE_HELP": "信号を受信するには上部のバーに周波数を入力してください",
     "RECENT_SEARCHES": "最近の検索",
