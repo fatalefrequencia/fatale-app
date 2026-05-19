@@ -3271,6 +3271,7 @@ const Dashboard = React.memo(({
                   setKeyLockA={setKeyLockA}
                   vibeFeatures={vibeFeatures}
                   onPlayTrack={onPlayTrack}
+                  onPlayTrackAtIndex={handlePlayTrackAtIndex}
                 />
               </motion.div>
             )}
@@ -4925,7 +4926,8 @@ const PlayerContent = ({
   onEqA,
   analyserA,
   isLandscape,
-  onPlayTrack
+  onPlayTrack,
+  onPlayTrackAtIndex
 }) => {
   const isDesktop = window.innerWidth >= 1024;
   const isMobile = !isDesktop;
@@ -4973,7 +4975,7 @@ const PlayerContent = ({
       ) : (
         <IPodPlayer
           onPlayTrack={onPlayTrack}
-          onPlayTrackAtIndex={handlePlayTrackAtIndex}
+          onPlayTrackAtIndex={onPlayTrackAtIndex}
           user={user}
           vibeFeatures={vibeFeatures}
           forceNowPlaying={forceNowPlaying}
