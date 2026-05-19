@@ -84,7 +84,7 @@ const getGlobalYoutubeId = (t) => {
   // Handle nested track objects if t is a Like or Purchase record
   const track = t.track || t.Track || t;
   const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
-  const id = track.youtubeId || track.YoutubeId || track.videoId || track.VideoId || track.id || track.Id;
+  const id = track.youtubeId || track.YoutubeId || track.videoId || track.VideoId || track.resolvedYoutubeId || track.ResolvedYoutubeId || track.id || track.Id;
   
   if (typeof rawSource === 'string' && rawSource.startsWith('youtube:')) return rawSource.split(':')[1];
   
@@ -1123,8 +1123,7 @@ function App() {
       setSubscription(subRes.data);
 
       const localLikedYtIds = new Set(likes
-        .filter(t => t && (t.source || t.Source)?.startsWith('youtube:'))
-        .map(t => (t.source || t.Source).split(':')[1])
+        .map(t => getGlobalYoutubeId(t))
         .filter(Boolean)
       );
 
@@ -2117,17 +2116,10 @@ function App() {
       return;
     }
 
-    // FIX: Use ONLY source-based detection. typeof trackId === 'string' was too broad
-    // because JSON deserializes numeric DB IDs as strings (e.g., "42"), falsely
-    // triggering YouTube logic for local tracks that were saved to DB.
-    const isYoutube = track.source?.startsWith('youtube:') || track.source?.startsWith('spotify:');
+    // FIX: Use getGlobalYoutubeId to robustly detect YouTube tracks, even if source prefix is missing (e.g. search results)
+    const pureYoutubeId = getGlobalYoutubeId(track);
+    const isYoutube = !!pureYoutubeId;
     const isLiking = !track.isLiked;
-
-    // FIX: Always derive pureYoutubeId from track.source or resolvedYoutubeId, never from trackId
-    let pureYoutubeId = null;
-    if (isYoutube) {
-      pureYoutubeId = track.source?.startsWith('youtube:') ? track.source.split(':')[1] : track.resolvedYoutubeId;
-    }
 
     console.log(`[handleLike] ${isLiking ? 'LIKE' : 'UNLIKE'} | Type: ${isYoutube ? 'YouTube' : 'Local'} | trackId: ${trackId} | ytId: ${pureYoutubeId}`);
 
