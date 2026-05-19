@@ -1100,7 +1100,7 @@ export const IPodPlayer = ({
                                         <ArrowLeft size={18} />
                                     </button>
                                     <h1 className="text-lg sm:text-xl font-black text-white tracking-[0.2em] uppercase drop-shadow-[0_0_10px_rgba(240,0,96,0.3)]">
-                                        Tu biblioteca
+                                        {t('YOUR_LIBRARY')}
                                     </h1>
                                 </div>
                                 <div className="flex items-center gap-4">
@@ -1115,7 +1115,7 @@ export const IPodPlayer = ({
                                             type="text"
                                             value={librarySearchQuery}
                                             onChange={(e) => setLibrarySearchQuery(e.target.value)}
-                                            placeholder="FILTRAR..."
+                                            placeholder={t('FILTER')}
                                             className="bg-transparent border-none outline-none text-[10px] font-mono text-white w-full uppercase tracking-widest placeholder:text-white/20"
                                         />
                                         {librarySearchQuery && (
@@ -1139,7 +1139,7 @@ export const IPodPlayer = ({
                                         className={`px-4 py-3 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-3 w-full border text-left ${fullViewTab === 'playlist' ? 'bg-[#f00060]/10 border-[#f00060] text-white shadow-[0_0_15px_rgba(240,0,96,0.15)] font-black' : 'bg-white/[0.02] border-white/5 text-white/50 hover:text-white/80 hover:bg-white/[0.04]'}`}
                                     >
                                         <List size={14} className={fullViewTab === 'playlist' ? 'text-[#f00060]' : ''} />
-                                        <span className="flex-1 tracking-wider uppercase">En reproducción</span>
+                                        <span className="flex-1 tracking-wider uppercase">{t('NOW_PLAYING_EXPANDED')}</span>
                                         <span className="text-[9px] bg-white/10 px-1.5 py-0.5 rounded font-mono text-white/60">{tracks.length}</span>
                                     </button>
                                     
@@ -1148,7 +1148,7 @@ export const IPodPlayer = ({
                                         className={`px-4 py-3 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-3 w-full border text-left ${fullViewTab === 'library' ? 'bg-[#f00060]/10 border-[#f00060] text-white shadow-[0_0_15px_rgba(240,0,96,0.15)] font-black' : 'bg-white/[0.02] border-white/5 text-white/50 hover:text-white/80 hover:bg-white/[0.04]'}`}
                                     >
                                         <Layers size={14} className={fullViewTab === 'library' ? 'text-[#f00060]' : ''} />
-                                        <span className="flex-1 tracking-wider uppercase">Playlists</span>
+                                        <span className="flex-1 tracking-wider uppercase">{t('PLAYLISTS')}</span>
                                         <span className="text-[9px] bg-white/10 px-1.5 py-0.5 rounded font-mono text-white/60">{userPlaylists.length}</span>
                                     </button>
                                     
@@ -1157,7 +1157,7 @@ export const IPodPlayer = ({
                                         className={`px-4 py-3 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-3 w-full border text-left ${fullViewTab === 'favorites' ? 'bg-[#f00060]/10 border-[#f00060] text-white shadow-[0_0_15px_rgba(240,0,96,0.15)] font-black' : 'bg-white/[0.02] border-white/5 text-white/50 hover:text-white/80 hover:bg-white/[0.04]'}`}
                                     >
                                         <Heart size={14} className={fullViewTab === 'favorites' ? 'text-[#f00060]' : ''} />
-                                        <span className="flex-1 tracking-wider uppercase">Favoritos</span>
+                                        <span className="flex-1 tracking-wider uppercase">{t('FAVORITES')}</span>
                                         <span className="text-[9px] bg-white/10 px-1.5 py-0.5 rounded font-mono text-white/60">{libraryTracks.filter(trk => trk.isLiked).length}</span>
                                     </button>
                                     
@@ -1166,7 +1166,7 @@ export const IPodPlayer = ({
                                         className={`px-4 py-3 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-3 w-full border text-left ${fullViewTab === 'player' ? 'bg-[#f00060]/10 border-[#f00060] text-white shadow-[0_0_15px_rgba(240,0,96,0.15)] font-black' : 'bg-white/[0.02] border-white/5 text-white/50 hover:text-white/80 hover:bg-white/[0.04]'}`}
                                     >
                                         <Disc size={14} className={`${fullViewTab === 'player' ? 'text-[#f00060]' : ''} ${isPlaying && fullViewTab === 'player' ? 'animate-spin' : ''}`} />
-                                        <span className="flex-1 tracking-wider uppercase">Reproductor</span>
+                                        <span className="flex-1 tracking-wider uppercase">{t('PLAYER_EXPANDED')}</span>
                                     </button>
                                 </div>
 
@@ -1191,7 +1191,8 @@ export const IPodPlayer = ({
                                                     if (filteredPlaylist.length === 0) {
                                                         return (
                                                             <div className="text-center py-12 text-white/30 text-xs">
-                                                                [ NINGÚN DISPOSITIVO / PISTA ENCONTRADA ]
+                                                                {t('NO_TRACKS_FOUND')}
+                                                                {/* NINGÚN DISPOSITIVO / PISTA ENCONTRADA */}
                                                             </div>
                                                         );
                                                     }
@@ -1255,7 +1256,7 @@ export const IPodPlayer = ({
                                                     <div className="mt-8 pt-6 border-t border-white/5">
                                                         <h2 className="text-[10px] font-black text-white/50 mb-4 uppercase tracking-[0.2em] flex items-center gap-2">
                                                             <Zap size={10} className="text-[#f00060] animate-pulse" />
-                                                            Sugerencias para hoy
+                                                            {t('SUGGESTIONS_TODAY')}
                                                         </h2>
                                                         <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
                                                             {recommendedTracks.slice(0, 5).map((t, idx) => (
@@ -1282,7 +1283,7 @@ export const IPodPlayer = ({
 
                                                         <h2 className="text-[10px] font-black text-white/50 mb-4 mt-8 uppercase tracking-[0.2em] flex items-center gap-2">
                                                             <Disc size={10} className="text-[#f00060] animate-pulse" />
-                                                            Vuelve a tu música
+                                                            {t('BACK_TO_MUSIC')}
                                                         </h2>
                                                         <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
                                                             {tracks.slice(0, 5).map((t, idx) => (
@@ -1322,7 +1323,8 @@ export const IPodPlayer = ({
                                                     if (filteredPlaylists.length === 0) {
                                                         return (
                                                             <div className="text-center py-12 text-white/30 text-xs">
-                                                                [ NINGUNA LISTA ENCONTRADA ]
+                                                                {t('NO_PLAYLISTS_FOUND')}
+                                                                {/* NINGUNA LISTA ENCONTRADA */}
                                                             </div>
                                                         );
                                                     }
@@ -1341,7 +1343,7 @@ export const IPodPlayer = ({
                                                             </div>
                                                             <div className="flex-1 min-w-0">
                                                                 <div className="text-xs font-bold text-white group-hover/row:text-[#f00060] transition-colors tracking-wide uppercase">{p.name || p.Name || 'Untitled'}</div>
-                                                                <div className="text-[10px] text-white/40 mt-1 font-mono">PLAYLIST // {p.tracks?.length || 0} SEÑALES</div>
+                                                                <div className="text-[10px] text-white/40 mt-1 font-mono">PLAYLIST // {p.tracks?.length || 0} {t('SIGNALS')}</div>
                                                             </div>
                                                         </div>
                                                     ));
@@ -1362,7 +1364,8 @@ export const IPodPlayer = ({
                                                     if (filteredFavs.length === 0) {
                                                         return (
                                                             <div className="text-center py-12 text-white/30 text-xs">
-                                                                [ NINGÚN FAVORITO ENCONTRADO ]
+                                                                {t('NO_FAVORITES_FOUND')}
+                                                                {/* NINGÚN FAVORITO ENCONTRADO */}
                                                             </div>
                                                         );
                                                     }
@@ -1383,7 +1386,7 @@ export const IPodPlayer = ({
                                                             </div>
                                                             <div className="flex-1 min-w-0">
                                                                 <div className="text-xs font-bold text-white group-hover/row:text-[#ff006e] transition-colors tracking-wide">{trk.title || trk.Title || 'Untitled'}</div>
-                                                                <div className="text-[10px] text-white/40 mt-1 font-mono">SEÑAL // {trk.artist || trk.Artist || 'Desconocido'}</div>
+                                                                <div className="text-[10px] text-white/40 mt-1 font-mono">{t('SIGNAL')} // {trk.artist || trk.Artist || t('UNKNOWN')}</div>
                                                             </div>
                                                         </div>
                                                     ));
@@ -1446,11 +1449,11 @@ export const IPodPlayer = ({
                                                 
                                                 {/* Title, Artist and Progress metadata */}
                                                 <div className="text-center max-w-[90%] z-10 shrink-0">
-                                                    <h2 className="text-sm sm:text-base font-black text-white tracking-wide truncate">{tracks[currentTrackIndex]?.title || tracks[currentTrackIndex]?.Title || 'Sin título'}</h2>
+                                                    <h2 className="text-sm sm:text-base font-black text-white tracking-wide truncate">{tracks[currentTrackIndex]?.title || tracks[currentTrackIndex]?.Title || t('UNTITLED')}</h2>
                                                     <p className="text-[10px] sm:text-xs text-white/50 mt-1.5 uppercase font-mono tracking-widest truncate">
                                                         {(() => {
                                                             const t = tracks[currentTrackIndex];
-                                                            if (!t) return 'Desconocido';
+                                                            if (!t) return t('UNKNOWN');
                                                             const artist = t.artist || t.artistName || t.ArtistName || t.author || t.Author || t.channelTitle || t.ChannelTitle;
                                                             if (artist && artist !== 'YouTube') return artist;
                                                             const title = t.title || t.Title || '';
@@ -1528,7 +1531,7 @@ export const IPodPlayer = ({
                         }
                     }} 
                     className="absolute inset-0 bg-transparent cursor-pointer z-0" 
-                    title="Haga clic en los bordes para cambiar la calcomanía del iPod"
+                    title={t('IPOD_STICKER_HELP')}
                 />
 
                 {/* STATUS BAR - REDESIGNED */}
@@ -1796,7 +1799,7 @@ export const IPodPlayer = ({
                                             </div>
                                         ) : (
                                             <h2 className={`text-[11px] font-black text-[#f00060] tracking-[0.3em] font-mono ${screen === 'PLAYLIST_DETAILS' ? '' : 'uppercase'} truncate max-w-[180px]`}>
-                                                {screen === 'MAIN' ? 'BUSCA ALGO' :
+                                                {screen === 'MAIN' ? t('BUSCA_ALGO') :
                                                     screen === 'ACTION_MENU' ? 'OPTIONS' :
                                                         screen === 'TIP_MENU' ? 'SELECT TIP' :
                                                             screen === 'SONGS' ? 'MUSIC' :
