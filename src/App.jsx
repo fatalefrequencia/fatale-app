@@ -110,19 +110,23 @@ const ElectronTitleBar = () => {
   const [isMaximized, setIsMaximized] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  if (typeof window === 'undefined') return null;
-
-  const isElectron = window.electron || (navigator.userAgent && navigator.userAgent.toLowerCase().includes('electron'));
-  if (!isElectron) return null;
-
   // Track fullscreen changes natively
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const isElectron = window.electron || (navigator.userAgent && navigator.userAgent.toLowerCase().includes('electron'));
+    if (!isElectron) return;
+
     const handleFsChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
     document.addEventListener('fullscreenchange', handleFsChange);
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, []);
+
+  if (typeof window === 'undefined') return null;
+
+  const isElectron = window.electron || (navigator.userAgent && navigator.userAgent.toLowerCase().includes('electron'));
+  if (!isElectron) return null;
 
   const handleMinimize = () => {
     if (window.electron) {
@@ -265,7 +269,7 @@ function App() {
     } catch (e) { return null; }
   });
 
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
 
   useEffect(() => {
     const userLang = user?.preferredLanguage || user?.PreferredLanguage;
@@ -349,6 +353,14 @@ function App() {
         filters.current.high.connect(analyser.current);
         analyser.current.connect(audioCtx.current.destination);
     }
+  };
+
+  const onOpenMixer = () => {
+    initAudioCtx();
+    if (audioCtx.current?.state === 'suspended') {
+      audioCtx.current.resume().catch(e => console.warn("Failed to resume AudioContext on open mixer:", e));
+    }
+    setShowMixer(true);
   };
 
   const handleEqChange = (type, val) => {
@@ -504,13 +516,27 @@ function App() {
     resolveSpotifyTrack();
   }, [currentTrackIndex, tracks]);
 
-  // Helper to trigger autoplay
+  // Helper to trigger autoplay, with a fallback to muted autoplay if browser blocks playback
   const playYtVideo = (player) => {
     if (!player) return;
     try {
       player.playVideo();
+      const checkTime = Date.now();
+      lastPlayRequestTime.current = checkTime;
+      
+      setTimeout(() => {
+        if (lastPlayRequestTime.current === checkTime) {
+          const state = player.getPlayerState ? player.getPlayerState() : -1;
+          // If the player is not playing (1) or buffering (3), trigger muted autoplay fallback
+          if (state !== 1 && state !== 3) {
+            console.log("[YOUTUBE_AUTOPLAY] Autoplay blocked, falling back to muted play");
+            player.mute();
+            player.playVideo();
+          }
+        }
+      }, 350);
     } catch (e) {
-      console.warn("[YOUTUBE] Error starting YouTube video:", e);
+      console.warn("[YOUTUBE_AUTOPLAY] Error starting YouTube video:", e);
     }
   };
 
@@ -894,7 +920,7 @@ function App() {
         // Use timeout to allow React to render the new track element before playing
         setTimeout(() => {
           if (hostIsPlaying) {
-            const isYtLocal = trackData.source?.startsWith('youtube:');
+            const isYtLocal = !!getGlobalYoutubeId(trackData);
             if (isYtLocal) {
               // Try to seek youtube player if it exists. Note: youtube player state is hard to access here from effect without deps 
               // This relies on the useEffect `[isYoutubeMode, isPlaying, youtubePlayer]` picking up the seek and track change later.
@@ -1379,7 +1405,7 @@ function App() {
 
     const trackSource = track.source || track.Source;
     const isLocked = (track.isLocked ?? false) && !(track.isOwned ?? true);
-    const isYT = trackSource && (trackSource.startsWith('youtube:') || trackSource.startsWith('spotify:'));
+    const isYT = !!getGlobalYoutubeId(track);
 
     // 1. Mode Switching
     if (isYT) {
@@ -1490,8 +1516,9 @@ function App() {
 
     if (!track || !user) return;
     try {
-      const isYT = (track.source || track.Source)?.startsWith('youtube:') || (track.source || track.Source)?.startsWith('spotify:');
-      const trackId = isYT ? ((track.source || track.Source)?.startsWith('youtube:') ? (track.source || track.Source).split(':')[1] : track.resolvedYoutubeId) : (track.id || track.Id);
+      const pureYtId = getGlobalYoutubeId(track);
+      const isYT = !!pureYtId;
+      const trackId = isYT ? pureYtId : (track.id || track.Id);
 
       const res = await API.Organic.logEvent({
         trackType: isYT ? 'youtube' : 'local',
@@ -1517,8 +1544,7 @@ function App() {
       // Synchronous mobile unblocking:
       if (audioRef.current) {
         const nextTrack = tracks[nextIndex];
-        const trackSource = nextTrack?.source || nextTrack?.Source;
-        const isYTTrack = trackSource && (trackSource.startsWith('youtube:') || trackSource.startsWith('spotify:'));
+        const isYTTrack = !!getGlobalYoutubeId(nextTrack);
         if (isYTTrack) {
           playSilentAudioIfNecessary();
         } else {
@@ -1536,11 +1562,8 @@ function App() {
       console.log("[ORGANIC] Queue exhausted. Fetching recommendations...");
       try {
         const lastTrack = tracks[currentTrackIndex];
-        const isYT = (lastTrack?.source || lastTrack?.Source)?.startsWith('youtube:') || (lastTrack?.source || lastTrack?.Source)?.startsWith('spotify:');
-        let lastVideoId = null;
-        if (isYT) {
-          lastVideoId = (lastTrack.source || lastTrack.Source)?.startsWith('youtube:') ? (lastTrack.source || lastTrack.Source).split(':')[1] : lastTrack.resolvedYoutubeId;
-        }
+        const lastVideoId = getGlobalYoutubeId(lastTrack);
+        const isYT = !!lastVideoId;
 
         const res = await API.Organic.getNextRecommendation(
           lastVideoId || 'COLD_START',
@@ -1639,8 +1662,7 @@ function App() {
     // Synchronous mobile unblocking:
     if (audioRef.current) {
       const prevTrack = tracks[prevIndex];
-      const trackSource = prevTrack?.source || prevTrack?.Source;
-      const isYTTrack = trackSource && (trackSource.startsWith('youtube:') || trackSource.startsWith('spotify:'));
+      const isYTTrack = !!getGlobalYoutubeId(prevTrack);
       if (isYTTrack) {
         playSilentAudioIfNecessary();
       } else {
@@ -1710,8 +1732,7 @@ function App() {
     }
     
     const track = tracks[index];
-    const trackSource = track.source || track.Source;
-    const isYTTrack = trackSource && (trackSource.startsWith('youtube:') || trackSource.startsWith('spotify:'));
+    const isYTTrack = !!getGlobalYoutubeId(track);
     
     if (audioRef.current) {
       if (isYTTrack) {
@@ -1794,7 +1815,7 @@ function App() {
 
     // 3. Set states
     const firstTrack = enrichedQueue[startIndex];
-    const isYT = (firstTrack?.source || firstTrack?.Source)?.startsWith('youtube:') || (firstTrack?.source || firstTrack?.Source)?.startsWith('spotify:');
+    const isYT = !!getGlobalYoutubeId(firstTrack);
 
     // Synchronous mobile gesture unblocking:
     if (audioRef.current) {
@@ -1802,8 +1823,7 @@ function App() {
       if (audioCtx.current && audioCtx.current.state === 'suspended') {
         audioCtx.current.resume().catch(e => console.warn("[MOBILE GESTURE] Resume AudioContext blocked:", e));
       }
-      const trackSource = firstTrack?.source || firstTrack?.Source;
-      const isYTTrack = trackSource && (trackSource.startsWith('youtube:') || trackSource.startsWith('spotify:'));
+      const isYTTrack = isYT;
       if (isYTTrack) {
         playSilentAudioIfNecessary();
       } else {
@@ -2024,7 +2044,7 @@ function App() {
     if (!track.source) return;
 
     // Check if YouTube track
-    const isYoutube = track.source && (track.source.startsWith('youtube:') || track.source.startsWith('spotify:'));
+    const isYoutube = !!getGlobalYoutubeId(track);
     if (isYoutube) {
       await handleCache(track);
       return;
@@ -2134,8 +2154,8 @@ function App() {
         source: t.source || t.Source
       }));
       const ytIds = new Set(normalized
-        .filter(t => t.source?.startsWith('youtube:'))
-        .map(t => t.source.split(':')[1])
+        .map(t => getGlobalYoutubeId(t))
+        .filter(Boolean)
       );
       setLikedYoutubeIds(ytIds);
     } catch (err) {
@@ -2585,12 +2605,7 @@ function App() {
         }}
       >
         {(() => {
-          let ytId = null;
-          if (currentTrack?.source?.startsWith('youtube:')) {
-            ytId = currentTrack.source.split(':')[1]?.trim();
-          } else if (currentTrack?.source?.startsWith('spotify:')) {
-            ytId = currentTrack.resolvedYoutubeId;
-          }
+          const ytId = getGlobalYoutubeId(currentTrack);
           const activeYtId = ytId || "7wtfhZwyrcc";
 
           return (
@@ -2619,6 +2634,15 @@ function App() {
                 if (e.data === 0) playNext();
                 if (e.data === 1) {
                   hasStartedPlayingYt.current = true;
+                  // Auto-unmute if we started muted to bypass autoplay policy
+                  if (e.target.isMuted && e.target.isMuted() && !isMuted) {
+                    try {
+                      e.target.unMute();
+                      e.target.setVolume(volume * 100);
+                    } catch (err) {
+                      console.warn("[YOUTUBE_AUTOPLAY] Failed to unmute:", err);
+                    }
+                  }
                 }
                 if (isPlaying && (e.data === 5 || e.data === -1 || (e.data === 2 && !hasStartedPlayingYt.current))) {
                   try {
@@ -2727,6 +2751,7 @@ function App() {
                setUser={setUser}
                onPlayTrack={handlePlayTrack}
                onPlayTrackAtIndex={handlePlayTrackAtIndex}
+               onOpenMixer={onOpenMixer}
                onExpandContent={(content, type, themeData) => {
                  setGlobalExpandedContent(content);
                  setGlobalExpandedType(type);
@@ -2929,10 +2954,10 @@ function App() {
               requests={stationQueue}
               tracks={tracks}
               libraryTracks={libraryTracks}
-              userPlaylists={playlists}
-              onLike={onLike}
-              onPurchase={onPurchase}
-              onPlayPlaylist={onPlayPlaylist}
+              userPlaylists={userPlaylists}
+              onLike={handleLike}
+              onPurchase={handlePurchase}
+              onPlayPlaylist={handlePlayPlaylist}
               onFetchPlaylistTracks={handleFetchPlaylistTracks}
               onPlaybackRateChange={handlePlaybackRateChange}
               onEqA={onEqA}
@@ -2941,7 +2966,7 @@ function App() {
               onKeyLockAChange={setKeyLockA}
               setTracks={setTracks}
               setCurrentTrackIndex={setCurrentTrackIndex}
-              onPlayTrack={onPlayTrack}
+              onPlayTrack={handlePlayTrack}
               user={user}
             />
             
@@ -3053,9 +3078,11 @@ const Dashboard = React.memo(({
   analyserA,
   isLandscape,
   onPlayTrack,
-  onPlayTrackAtIndex
+  onPlayTrackAtIndex,
+  onOpenMixer
 }) => {
   const { t } = useLanguage();
+  const { showNotification } = useNotification();
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -3248,10 +3275,7 @@ const Dashboard = React.memo(({
                   setView={setView}
                   isLandscape={isLandscape}
                   followedCommunities={followedCommunities}
-                  onFollowUpdate={() => {
-                    const updated = API.Communities.getFollowed();
-                    setFollowedCommunities(updated);
-                  }}
+                  onFollowUpdate={onFollowUpdate}
                   navigateToProfile={navigateToProfile}
                   onMessageCommunity={(c) => { setActiveMessageUser({...c, isCommunity: true}); setView('messages'); }}
                   onPlayTrack={onPlayTrack}
@@ -3261,11 +3285,7 @@ const Dashboard = React.memo(({
                   onPlayStation={(station) => {
                     setActiveStation(station);
                     joinStation(station.id || station.Id);
-                    showNotification({ 
-                      title: 'RADIO_LINK_ESTABLISHED', 
-                      message: `SIGNAL_LOCKED: ${station.name}`, 
-                      type: 'success' 
-                    });
+                    showNotification("RADIO_LINK_ESTABLISHED", `SIGNAL_LOCKED: ${station.name}`, "success");
                   }}
                   isPlayerActive={currentTrackIndex >= 0 && !isMiniPlayerMinimized}
                   setShowGlobalIngest={setShowGlobalIngest}
@@ -3481,13 +3501,7 @@ const Dashboard = React.memo(({
                 setIsMiniPlayerMinimized(newState);
                 localStorage.setItem('isMiniPlayerMinimized', newState);
               }}
-              onOpenMixer={() => {
-                initAudioCtx();
-                if (audioCtx.current?.state === 'suspended') {
-                  audioCtx.current.resume();
-                }
-                setShowMixer(true);
-              }}
+              onOpenMixer={onOpenMixer}
             />
           )
         )}
