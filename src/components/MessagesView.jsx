@@ -170,11 +170,13 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
     };
 
     const startNewChat = (targetUser) => {
-        setCurrentChat({
+        const chatUser = {
             id: targetUser.id || targetUser.Id,
             username: targetUser.username || targetUser.Username,
             profileImageUrl: targetUser.profilePictureUrl || targetUser.ProfilePictureUrl
-        });
+        };
+        setCurrentChat(chatUser);
+        if (onChatChange) onChatChange(chatUser);
         setIsSearching(false);
         setSearchQuery('');
         setSearchResults([]);
@@ -240,24 +242,27 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
     };
 
     const openChat = (conv) => {
+        let chatUser;
         if (conv.isCommunity) {
-            setCurrentChat({
+            chatUser = {
                 isCommunity: true,
                 id: conv.id,
                 username: conv.username,
                 profileImageUrl: conv.profileImageUrl
-            });
+            };
         } else {
-            setCurrentChat({
+            chatUser = {
                 id: conv.userId || conv.UserId,
                 username: conv.username || conv.Username,
                 profileImageUrl: conv.profileImageUrl || conv.ProfileImageUrl
-            });
+            };
         }
+        setCurrentChat(chatUser);
+        if (onChatChange) onChatChange(chatUser);
     };
 
     if (currentChat) {
-        const padBottom = (isMiniPlayerActive && !isKeyboardOpen) ? 'pb-[60px]' : 'pb-0';
+        const padBottom = (isMiniPlayerActive && !isKeyboardOpen) ? 'pb-[60px]' : 'pb-6';
         return (
             <motion.div
                 initial={{ x: '100%', opacity: 0 }}
@@ -278,6 +283,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                         isKeyboardOpen={isKeyboardOpen}
                         onBack={() => {
                             setCurrentChat(null);
+                            if (onChatChange) onChatChange(null);
                         }}
                     />
                 ) : (
@@ -288,6 +294,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                         <button 
                             onClick={() => {
                                 setCurrentChat(null);
+                                if (onChatChange) onChatChange(null);
                             }} 
                             className="p-1 hover:bg-[#ff006e] hover:text-black text-[#ff006e] transition-all border border-[#ff006e]/20"
                         >
@@ -369,7 +376,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}
                                     placeholder={t('WAITING_INPUT')}
-                                    className="w-full bg-[#080808] border border-white/5 py-4 pl-10 pr-16 text-white text-[16px] md:text-[13px] outline-none focus:border-[#ff006e]/40 transition-all font-mono tracking-widest placeholder:text-white/5"
+                                    className="w-full bg-[#080808] border border-white/5 py-4 pl-10 pr-16 text-white text-[16px] md:text-[13px] outline-none focus:border-[#ff006e]/40 transition-all font-mono tracking-widest placeholder:text-[10px] md:placeholder:text-[10px] placeholder:text-white/10"
                                 />
                                 <button
                                     type="submit"
