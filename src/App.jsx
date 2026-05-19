@@ -207,6 +207,18 @@ const ElectronTitleBar = () => {
   );
 };
 
+const parseDurationToSeconds = (durationStr) => {
+  if (!durationStr) return 0;
+  const parts = durationStr.split(':').map(Number);
+  if (parts.some(isNaN)) return 0;
+  if (parts.length === 2) {
+    return parts[0] * 60 + parts[1];
+  } else if (parts.length === 3) {
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  }
+  return parts[0] || 0;
+};
+
 // --- COMPONENTE PRINCIPAL ---
 function App() {
   const [activeView, setViewOriginal] = useState(() => {
@@ -466,6 +478,7 @@ function App() {
   const [vibeFeatures, setVibeFeatures] = useState(null);
   const lastLoadedYtId = useRef(null);
   const hasStartedPlayingYt = useRef(false);
+  const hasRestoredTime = useRef(false);
 
   // Dynamic Spotify track resolver (resolves Spotify metadata to YouTube video ID under the hood)
   useEffect(() => {
@@ -485,11 +498,28 @@ function App() {
           console.log(`[SPOTIFY_RESOLVER] Resolving: "${track.artist} - ${track.title}" to YouTube...`);
           const res = await API.Youtube.search(`${track.artist} - ${track.title} audio`);
           if (res.data && res.data.length > 0) {
-            const ytId = res.data[0].id || res.data[0].Id || res.data[0].videoId;
+            let bestMatch = res.data[0];
+            const spotifyDurationSec = track.DurationSeconds || track.durationSeconds || parseDurationToSeconds(track.duration || track.Duration);
+            
+            if (spotifyDurationSec > 0) {
+              let minDiff = Infinity;
+              for (const ytTrack of res.data) {
+                const ytDurationSec = parseDurationToSeconds(ytTrack.duration || ytTrack.Duration);
+                if (ytDurationSec > 0) {
+                  const diff = Math.abs(ytDurationSec - spotifyDurationSec);
+                  if (diff < minDiff) {
+                    minDiff = diff;
+                    bestMatch = ytTrack;
+                  }
+                }
+              }
+            }
+            
+            const ytId = bestMatch.id || bestMatch.Id || bestMatch.videoId;
             track.resolvedYoutubeId = ytId;
             // Force re-trigger play
             setTracks([...tracks]); 
-            console.log(`[SPOTIFY_RESOLVER] Resolved successfully to YouTube ID: ${ytId}`);
+            console.log(`[SPOTIFY_RESOLVER] Resolved successfully to YouTube ID: ${ytId} (diff: ${Math.abs(parseDurationToSeconds(bestMatch.duration || bestMatch.Duration) - spotifyDurationSec)}s)`);
           }
         } catch (err) {
           console.error("[SPOTIFY_RESOLVER] Failed to resolve Spotify track:", err);
@@ -499,49 +529,68 @@ function App() {
     resolveSpotifyTrack();
   }, [currentTrackIndex, tracks]);
 
+  // Calculate current YouTube ID (if any) to stabilize dependencies
+  const [activeYoutubeId, setActiveYoutubeId] = useState(null);
+
+  useEffect(() => {
+    if (!currentTrack) return;
+    const trackSource = currentTrack.source || currentTrack.Source;
+    let ytId = null;
+    if (trackSource?.startsWith('youtube:')) {
+      ytId = trackSource.split(':')[1]?.trim();
+    } else if (trackSource?.startsWith('spotify:')) {
+      ytId = currentTrack.resolvedYoutubeId;
+    }
+    
+    if (ytId) {
+      setActiveYoutubeId(ytId);
+    }
+  }, [currentTrack?.id, currentTrack?.source, currentTrack?.Source, currentTrack?.resolvedYoutubeId]);
+
   // Effect to load and play YouTube track when it changes
   useEffect(() => {
     if (!youtubePlayer) return;
 
-    let ytId = null;
-    if (currentTrack?.source?.startsWith('youtube:')) {
-      ytId = currentTrack.source.split(':')[1]?.trim();
-    } else if (currentTrack?.source?.startsWith('spotify:')) {
-      ytId = currentTrack.resolvedYoutubeId;
-    }
-
-    if (isYoutubeMode && ytId) {
+    if (isYoutubeMode && activeYoutubeId) {
       try {
-        if (lastLoadedYtId.current !== ytId) {
-          console.log(`[YOUTUBE] Programmatic load of video ID: ${ytId}`);
-          lastLoadedYtId.current = ytId;
+        if (lastLoadedYtId.current !== activeYoutubeId) {
+          console.log(`[YOUTUBE] Programmatic load of video ID: ${activeYoutubeId}`);
+          lastLoadedYtId.current = activeYoutubeId;
           hasStartedPlayingYt.current = false;
-          youtubePlayer.loadVideoById({
-            videoId: ytId,
-            startSeconds: 0
-          });
+          
+          if (isPlaying) {
+            youtubePlayer.loadVideoById({
+              videoId: activeYoutubeId,
+              startSeconds: 0
+            });
+          } else {
+            youtubePlayer.cueVideoById({
+              videoId: activeYoutubeId,
+              startSeconds: 0
+            });
+          }
           youtubePlayer.setVolume(volume * 100);
           youtubePlayer.setPlaybackRate(globalPlaybackRate);
-        }
-        
-        // Ensure play state is synchronized without redundant calls that cause audio stutters
-        const ytState = youtubePlayer.getPlayerState ? youtubePlayer.getPlayerState() : null;
-        if (isPlaying) {
-          if (ytState !== 1 && ytState !== 3) {
-            youtubePlayer.playVideo();
-          }
         } else {
-          if (ytState !== 2) {
-            youtubePlayer.pauseVideo();
+          // Video is already loaded/cued. Just sync the playing state.
+          const ytState = youtubePlayer.getPlayerState ? youtubePlayer.getPlayerState() : null;
+          if (isPlaying) {
+            if (ytState !== 1 && ytState !== 3) {
+              youtubePlayer.playVideo();
+            }
+          } else {
+            if (ytState !== 2 && ytState !== 5) {
+              youtubePlayer.pauseVideo();
+            }
           }
         }
       } catch (err) {
-        console.warn("[YOUTUBE] Programmatic track change play/load failed (retrying on ready/state):", err);
+        console.warn("[YOUTUBE] Programmatic track change play/load/sync failed:", err);
       }
     } else {
       lastLoadedYtId.current = null;
     }
-  }, [currentTrack?.id, currentTrack?.source, currentTrack?.resolvedYoutubeId, isYoutubeMode, youtubePlayer, isPlaying, volume, globalPlaybackRate]);
+  }, [activeYoutubeId, isYoutubeMode, youtubePlayer, isPlaying, volume, globalPlaybackRate]);
 
   // Fetch Spotify Vibe Features or generate mock features for other tracks
   useEffect(() => {
@@ -977,11 +1026,13 @@ function App() {
 
   // Restoration Seek Effect
   useEffect(() => {
+    if (hasRestoredTime.current) return;
     if (currentTime > 0 && (audioRef.current || youtubePlayer)) {
       console.log(`[Persistence] Restoring playback to: ${currentTime}s`);
       handleSeek(currentTime);
+      hasRestoredTime.current = true;
     }
-  }, [currentTrack?.id, !!youtubePlayer]);
+  }, [!!youtubePlayer, currentTime]);
 
   // --- HOST BROADCASTING LOGIC ---
   useEffect(() => {
@@ -1105,7 +1156,12 @@ function App() {
   const fetchTracks = async () => {
     try {
       const uid = currentUserId;
-      if (!uid) return;
+      if (!uid) {
+        console.log("[App] No user ID, loading default mock tracks.");
+        setLibraryTracks(TRACKS);
+        setTracks(prev => prev.length === 0 ? TRACKS : prev);
+        return;
+      }
       console.log("[App] Fetching tracks for user:", uid);
 
       const [tracksRes, purchasesRes, likesRes, subRes, cachedRes] = await Promise.all([
@@ -1225,6 +1281,77 @@ function App() {
               isCached: isCached || cachedIds.has(lik.id) || cachedIds.has(lik.Id)
             };
             uniqueTracksMap.set(sourceKey, mappedYt);
+          } else {
+            // It's a liked NATIVE track!
+            const trackId = String(lik.id || lik.Id);
+            const sourceKey = lik.source || lik.Source || lik.filePath || lik.FilePath || trackId;
+            if (uniqueTracksMap.has(sourceKey)) {
+              const existing = uniqueTracksMap.get(sourceKey);
+              uniqueTracksMap.set(sourceKey, { ...existing, isLiked: true });
+              return;
+            }
+            const mappedNative = {
+              ...lik,
+              id: trackId,
+              title: lik.title || lik.Title || 'Unknown Title',
+              artist: lik.artistName || lik.ArtistName || lik.artist || 'Unknown Artist',
+              album: lik.albumTitle || lik.AlbumTitle || lik.album?.title || 'Unknown Album',
+              duration: lik.duration || lik.Duration || '3:00',
+              cover: getMediaUrl(lik.coverImageUrl || lik.CoverImageUrl),
+              source: sourceKey,
+              isOwned: ownedTrackIds.has(trackId) || (uid && String(lik.artistUserId) === String(uid)),
+              isLiked: true,
+              isCached: cachedIds.has(trackId)
+            };
+            uniqueTracksMap.set(sourceKey, mappedNative);
+          }
+        });
+      }
+
+      if (purchases.length > 0) {
+        purchases.forEach(pur => {
+          const trackObj = pur.track || pur.Track || pur;
+          const trackId = String(trackObj.id || trackObj.Id || pur.trackId || pur.TrackId);
+          if (!trackId || trackId === "undefined" || trackId === "null") return;
+
+          const sourceKey = trackObj.source || trackObj.Source || trackObj.filePath || trackObj.FilePath || trackId;
+
+          if (uniqueTracksMap.has(sourceKey)) {
+            const existing = uniqueTracksMap.get(sourceKey);
+            uniqueTracksMap.set(sourceKey, { ...existing, isOwned: true });
+            return;
+          }
+
+          const yId = getGlobalYoutubeId(trackObj);
+          if (yId) {
+            const isCached = cachedIds.has(String(yId));
+            const mappedYt = {
+              id: String(trackObj.id || trackObj.Id || `yt-${yId}`),
+              videoId: yId,
+              title: trackObj.title || trackObj.Title || 'Unknown Title',
+              artist: trackObj.channelTitle || trackObj.artistName || trackObj.ArtistName || trackObj.artist || "Unknown Artist",
+              source: sourceKey,
+              isLiked: likedTrackIds.has(trackId) || localLikedYtIds.has(yId),
+              isOwned: true,
+              isLocked: false,
+              isCached: isCached || cachedIds.has(trackObj.id) || cachedIds.has(trackObj.Id)
+            };
+            uniqueTracksMap.set(sourceKey, mappedYt);
+          } else {
+            const mappedNative = {
+              ...trackObj,
+              id: trackId,
+              title: trackObj.title || trackObj.Title || 'Unknown Title',
+              artist: trackObj.artistName || trackObj.ArtistName || trackObj.artist || 'Unknown Artist',
+              album: trackObj.albumTitle || trackObj.AlbumTitle || trackObj.album?.title || 'Unknown Album',
+              duration: trackObj.duration || trackObj.Duration || '3:00',
+              cover: getMediaUrl(trackObj.coverImageUrl || trackObj.CoverImageUrl),
+              source: sourceKey,
+              isOwned: true,
+              isLiked: likedTrackIds.has(trackId),
+              isCached: cachedIds.has(trackId)
+            };
+            uniqueTracksMap.set(sourceKey, mappedNative);
           }
         });
       }
@@ -1407,14 +1534,7 @@ function App() {
         audioCtx.current.resume().catch(e => console.warn("[PLAYER] Resume AudioContext blocked:", e));
       }
 
-      if (isYT) {
-        if (youtubePlayer && typeof youtubePlayer.playVideo === 'function') {
-          try {
-            const state = youtubePlayer.getPlayerState();
-            if (state !== 1 && state !== 3) youtubePlayer.playVideo();
-          } catch (e) { }
-        }
-      } else {
+      if (!isYT) {
         if (audio.paused && audio.src) {
           audio.play().catch(e => {
             if (e.name !== 'AbortError') console.warn("Auto-play blocked", e);
@@ -1423,13 +1543,7 @@ function App() {
       }
     } else {
       // Paused
-      if (isYT) {
-        if (youtubePlayer && typeof youtubePlayer.pauseVideo === 'function') {
-          try {
-            if (youtubePlayer.getPlayerState() === 1) youtubePlayer.pauseVideo();
-          } catch (e) { }
-        }
-      } else {
+      if (!isYT) {
         if (!audio.paused) audio.pause();
       }
     }
@@ -2129,21 +2243,55 @@ function App() {
       pureYoutubeId = track.source?.startsWith('youtube:') ? track.source.split(':')[1] : track.resolvedYoutubeId;
     }
 
-    console.log(`[handleLike] ${isLiking ? 'LIKE' : 'UNLIKE'} | Type: ${isYoutube ? 'YouTube' : 'Local'} | trackId: ${trackId} | ytId: ${pureYoutubeId}`);
+    let dbId = Number.isInteger(Number(trackId)) ? Number(trackId) : null;
+    let resolvedYtId = pureYoutubeId;
+
+    if (isYoutube && !resolvedYtId) {
+      console.log(`[handleLike] Spotify track needs YouTube ID resolution: "${track.artist} - ${track.title}"`);
+      try {
+        const res = await API.Youtube.search(`${track.artist} - ${track.title} audio`);
+        if (res.data && res.data.length > 0) {
+          let bestMatch = res.data[0];
+          const durationSec = track.DurationSeconds || track.durationSeconds || parseDurationToSeconds(track.duration || track.Duration);
+          if (durationSec > 0) {
+            let minDiff = Infinity;
+            for (const ytTrack of res.data) {
+              const ytDurationSec = parseDurationToSeconds(ytTrack.duration || ytTrack.Duration);
+              if (ytDurationSec > 0) {
+                const diff = Math.abs(ytDurationSec - durationSec);
+                if (diff < minDiff) {
+                  minDiff = diff;
+                  bestMatch = ytTrack;
+                }
+              }
+            }
+          }
+          resolvedYtId = bestMatch.id || bestMatch.Id || bestMatch.videoId;
+          console.log(`[handleLike] Resolved Spotify track to YouTube ID: ${resolvedYtId}`);
+        } else {
+          throw new Error("Could not resolve Spotify track to YouTube ID");
+        }
+      } catch (err) {
+        console.error("[handleLike] YouTube resolution error:", err);
+        return; // Exits to prevent crashing
+      }
+    }
+
+    console.log(`[handleLike] ${isLiking ? 'LIKE' : 'UNLIKE'} | Type: ${isYoutube ? 'YouTube' : 'Local'} | trackId: ${trackId} | ytId: ${resolvedYtId}`);
 
     // Optimistic Update Tracks State
     setTracks(prev => prev.map(t => {
       const isMatch = String(t.id || t.Id) === String(trackId) || 
-                      (pureYoutubeId && getGlobalYoutubeId(t) === pureYoutubeId);
+                      (resolvedYtId && getGlobalYoutubeId(t) === resolvedYtId);
       return isMatch ? { ...t, isLiked: isLiking } : t;
     }));
 
     // Optimistic Update Liked Set for YouTube
-    if (isYoutube && pureYoutubeId) {
+    if (isYoutube && resolvedYtId) {
       setLikedYoutubeIds(prev => {
         const next = new Set(prev);
-        if (isLiking) next.add(pureYoutubeId);
-        else next.delete(pureYoutubeId);
+        if (isLiking) next.add(resolvedYtId);
+        else next.delete(resolvedYtId);
         // Persist immediately
         localStorage.setItem('liked_youtube_ids', JSON.stringify(Array.from(next)));
         return next;
@@ -2151,13 +2299,10 @@ function App() {
     }
 
     try {
-      // Resolve the numeric database ID needed for the Social API
-      let dbId = Number.isInteger(Number(trackId)) ? Number(trackId) : null;
-
       if (isYoutube && !dbId) {
         // YouTube track without a numeric DB ID — save it to DB first
         const trackData = {
-          youtubeId: pureYoutubeId,
+          youtubeId: resolvedYtId,
           title: track.title,
           channelTitle: track.artist || track.channelTitle || "Unknown",
           thumbnailUrl: track.cover || track.thumbnail || "",
@@ -2170,7 +2315,7 @@ function App() {
 
         // FIX: Backfill the new DB ID into the queue so future operations use it
         setTracks(prev => prev.map(t => {
-          if (pureYoutubeId && getGlobalYoutubeId(t) === pureYoutubeId) {
+          if (resolvedYtId && getGlobalYoutubeId(t) === resolvedYtId) {
             return { ...t, id: String(dbId) };
           }
           return t;
@@ -2195,7 +2340,7 @@ function App() {
       setTracks(prev => prev.map(t => {
         const isMatch = String(t.id || t.Id) === String(trackId) || 
                         String(t.id || t.Id) === String(dbId) ||
-                        (pureYoutubeId && getGlobalYoutubeId(t) === pureYoutubeId);
+                        (resolvedYtId && getGlobalYoutubeId(t) === resolvedYtId);
         return isMatch ? { ...t, isLiked: isLiking } : t;
       }));
     } catch (error) {
@@ -2203,7 +2348,7 @@ function App() {
       // Rollback on error
       setTracks(prev => prev.map(t => {
         const isMatch = String(t.id || t.Id) === String(trackId) || 
-                        (pureYoutubeId && getGlobalYoutubeId(t) === pureYoutubeId);
+                        (resolvedYtId && getGlobalYoutubeId(t) === resolvedYtId);
         return isMatch ? { ...t, isLiked: !isLiking } : t;
       }));
     }
@@ -2568,13 +2713,7 @@ function App() {
         }}
       >
         {(() => {
-          let ytId = null;
-          if (currentTrack?.source?.startsWith('youtube:')) {
-            ytId = currentTrack.source.split(':')[1]?.trim();
-          } else if (currentTrack?.source?.startsWith('spotify:')) {
-            ytId = currentTrack.resolvedYoutubeId;
-          }
-          const activeYtId = ytId || "7wtfhZwyrcc";
+          const activeYtId = activeYoutubeId || "7wtfhZwyrcc";
 
           return (
             <YouTube
@@ -2583,7 +2722,7 @@ function App() {
               onReady={(e) => {
                 console.log("[YOUTUBE] Player Ready");
                 setYoutubePlayer(e.target);
-                if (isPlaying && isYoutubeMode && ytId) {
+                if (isPlaying && isYoutubeMode && activeYoutubeId) {
                   try {
                     e.target.setVolume(volume * 100);
                     e.target.playVideo();
@@ -2606,7 +2745,7 @@ function App() {
               onError={(e) => {
                 console.error("[YOUTUBE] Error detected:", e.data);
                 // Handle private/deleted videos by skipping
-                if (isPlaying && ytId) playNext();
+                if (isPlaying && activeYoutubeId) playNext();
               }}
               opts={{
                 height: '1',
