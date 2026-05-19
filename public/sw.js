@@ -1,4 +1,4 @@
-const CACHE_NAME = "fatale-system-cache-v1";
+const CACHE_NAME = "fatale-system-cache-v3";
 const ASSETS_TO_CACHE = [
   "/",
   "/index.html",
@@ -36,6 +36,31 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   // Only handle GET requests to avoid API mutations failing
   if (event.request.method !== "GET") return;
+
+  const requestUrl = new URL(event.request.url);
+  const isHtmlDoc = event.request.mode === "navigate" || 
+                    requestUrl.pathname === "/" || 
+                    requestUrl.pathname.endsWith("/index.html");
+
+  if (isHtmlDoc) {
+    // Network-first for html documents to ensure instant updates
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(event.request);
+        })
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
