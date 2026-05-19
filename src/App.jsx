@@ -2431,6 +2431,8 @@ function App() {
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         preload="auto"
+        playsInline={true}
+        autoPlay={isPlaying}
       />
 
       {/* PERSISTENT YOUTUBE PLAYER */}
