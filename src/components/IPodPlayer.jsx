@@ -1862,16 +1862,6 @@ export const IPodPlayer = ({
                                             >
                                                 <AntennaIcon size={isVertical ? 14 : 18} strokeWidth={3} />
                                             </button>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setIsFullView(true);
-                                                }}
-                                                className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1"
-                                                title="Full Playlist"
-                                            >
-                                                <Maximize2 size={isVertical ? 14 : 18} strokeWidth={3} />
-                                            </button>
                                         </div>
 
                                         {/* PROGRESS BAR */}

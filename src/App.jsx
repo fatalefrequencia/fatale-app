@@ -1008,16 +1008,35 @@ function App() {
       cover: isYoutube ? (rawCover || `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg`) : (rawCover ? (rawCover.startsWith('http') ? rawCover : getMediaUrl(rawCover)) : null),
       isLiked,
       isOwned,
-      isLocked: false,
-      artist,
-      artistName
-    };
+    isLocked: false,
+    artist,
+    artistName
+  };
 
-    setTracks([enriched]);
-    setCurrentTrackIndex(0);
-    setIsPlaying(true);
-    if (isYoutube) setIsYoutubeMode(true);
-  }, [libraryTracks, likedYoutubeIds]);
+  // Synchronous mobile gesture unblocking:
+  if (audioRef.current) {
+    initAudioCtx();
+    if (audioCtx.current && audioCtx.current.state === 'suspended') {
+      audioCtx.current.resume().catch(e => console.warn("[MOBILE GESTURE] Resume AudioContext blocked:", e));
+    }
+    if (isYoutube) {
+      audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+      audioRef.current.loop = true;
+    } else {
+      const rawSource = enriched.source;
+      const resolvedSrc = rawSource ? (rawSource.startsWith('http') ? rawSource : (typeof getMediaUrl === 'function' ? getMediaUrl(rawSource) : rawSource)) : "";
+      audioRef.current.src = resolvedSrc;
+      audioRef.current.loop = false;
+    }
+    audioRef.current.load();
+    audioRef.current.play().catch(e => console.warn("[MOBILE GESTURE] Play failed:", e));
+  }
+
+  setTracks([enriched]);
+  setCurrentTrackIndex(0);
+  setIsPlaying(true);
+  if (isYoutube) setIsYoutubeMode(true);
+}, [libraryTracks, likedYoutubeIds]);
 
   // Fetch Tracks, Purchases, Likes (Local & YouTube), Subscription
   const fetchTracks = async () => {
@@ -1236,6 +1255,11 @@ function App() {
     window.addEventListener('communityFollowChanged', handleFollowChange);
     return () => window.removeEventListener('communityFollowChanged', handleFollowChange);
   }, []);
+
+  // Reset current time immediately whenever the active track/index changes (prevents inheriting previous track's time offset)
+  useEffect(() => {
+    setCurrentTime(0);
+  }, [currentTrackIndex]);
 
   // Efecto para manejar el audio
   useEffect(() => {
@@ -1534,6 +1558,26 @@ function App() {
     // 3. Set states
     const firstTrack = enrichedQueue[startIndex];
     const isYT = (firstTrack?.source || firstTrack?.Source)?.startsWith('youtube:');
+
+    // Synchronous mobile gesture unblocking:
+    if (audioRef.current) {
+      initAudioCtx();
+      if (audioCtx.current && audioCtx.current.state === 'suspended') {
+        audioCtx.current.resume().catch(e => console.warn("[MOBILE GESTURE] Resume AudioContext blocked:", e));
+      }
+      const trackSource = firstTrack?.source || firstTrack?.Source;
+      const isYTTrack = trackSource && trackSource.startsWith('youtube:');
+      if (isYTTrack) {
+        audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+        audioRef.current.loop = true;
+      } else {
+        const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
+        audioRef.current.src = resolvedSrc;
+        audioRef.current.loop = false;
+      }
+      audioRef.current.load();
+      audioRef.current.play().catch(e => console.warn("[MOBILE GESTURE] Play failed:", e));
+    }
 
     setTracks(enrichedQueue);
     setCurrentTrackIndex(startIndex);
@@ -2287,6 +2331,14 @@ function App() {
 
       <audio
         ref={audioRef}
+        src={(() => {
+          const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
+          if (!currentTrack) return "";
+          const trackSource = currentTrack.source || currentTrack.Source;
+          const isYT = trackSource && trackSource.startsWith('youtube:');
+          if (isYT) return "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+          return trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
+        })()}
         crossOrigin="anonymous"
         onEnded={playNext}
         onTimeUpdate={handleTimeUpdate}
@@ -4833,6 +4885,7 @@ const PlayerContent = ({
         />
       ) : (
         <IPodPlayer
+          onPlayTrack={onPlayTrack}
           user={user}
           vibeFeatures={vibeFeatures}
           forceNowPlaying={forceNowPlaying}
