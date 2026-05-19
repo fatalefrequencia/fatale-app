@@ -2576,6 +2576,11 @@ function App() {
               onStateChange={(e) => {
                 console.log("[YOUTUBE] State Change:", e.data);
                 if (e.data === 0) playNext();
+                if (isPlaying && (e.data === 5 || e.data === -1)) {
+                  try {
+                    e.target.playVideo();
+                  } catch (err) { console.warn("Failed to autoplay on state change:", err); }
+                }
               }}
               onError={(e) => {
                 console.error("[YOUTUBE] Error detected:", e.data);
@@ -2586,7 +2591,7 @@ function App() {
                 height: '1',
                 width: '1',
                 playerVars: {
-                  autoplay: 0,
+                  autoplay: isPlaying ? 1 : 0,
                   controls: 0,
                   disablekb: 1,
                   fs: 0,
