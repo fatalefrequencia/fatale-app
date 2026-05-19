@@ -1150,7 +1150,6 @@ export const IPodPlayer = ({
                                     >
                                         <HistoryIcon size={14} className={fullViewTab === 'history' ? 'text-[#f00060]' : ''} />
                                         <span className="flex-1 tracking-wider uppercase">{t('HISTORY')}</span>
-                                        <span className="text-[9px] bg-white/10 px-1.5 py-0.5 rounded font-mono text-white/60">{currentTrackIndex}</span>
                                     </button>
                                     
                                     <button 
@@ -1269,7 +1268,9 @@ export const IPodPlayer = ({
                                             <>
                                                 {(() => {
                                                     const historyTracks = tracks.slice(0, currentTrackIndex);
-                                                    const filteredHistory = historyTracks.filter(trk => {
+                                                    // Reverse and limit to the last 20 tracks
+                                                    const recentHistory = [...historyTracks].reverse().slice(0, 20);
+                                                    const filteredHistory = recentHistory.filter(trk => {
                                                         const title = (trk.title || trk.Title || '').toLowerCase();
                                                         const artist = (trk.artist || trk.artistName || trk.ArtistName || trk.author || trk.Author || trk.channelTitle || trk.ChannelTitle || '').toLowerCase();
                                                         return title.includes(librarySearchQuery.toLowerCase()) || artist.includes(librarySearchQuery.toLowerCase());
@@ -1283,58 +1284,62 @@ export const IPodPlayer = ({
                                                         );
                                                     }
 
-                                                    return filteredHistory.map((t, idx) => {
-                                                        const actualIndex = tracks.findIndex(original => original === t);
-                                                        const isActive = actualIndex === currentTrackIndex;
-                                                        return (
-                                                            <div 
-                                                                key={idx} 
-                                                                className={`flex items-center gap-4 p-3 rounded-xl border transition-all duration-300 group/row cursor-pointer ${isActive ? 'bg-[#f00060]/10 border-[#f00060]/30 shadow-[0_0_15px_rgba(240,0,96,0.05)]' : 'bg-black/20 border-white/5 hover:bg-white/[0.03] hover:border-white/10'}`}
-                                                                onClick={() => { setCurrentTrackIndex(actualIndex); setIsPlaying(true); }}
-                                                            >
-                                                                {/* Cover Art Box with hover overlay */}
-                                                                <div className={`w-12 h-12 bg-white/5 flex items-center justify-center rounded-lg overflow-hidden shrink-0 relative border transition-all ${isActive ? 'border-[#f00060]/50 shadow-[0_0_10px_rgba(240,0,96,0.2)]' : 'border-white/10 group-hover/row:border-white/20'}`}>
-                                                                    {t.ImageUrl || t.imageUrl || t.cover || t.coverUrl ? (
-                                                                        <img src={getMediaUrl(t.ImageUrl || t.imageUrl || t.cover || t.coverUrl)} alt="" className="w-full h-full object-cover" />
-                                                                    ) : (
-                                                                        <Music size={16} className="text-white/40" />
-                                                                    )}
-                                                                    
-                                                                    {/* Dynamic soundwave animator if active & playing */}
-                                                                    {isActive && isPlaying ? (
-                                                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-0.5">
-                                                                            <div className="w-0.5 h-3 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.1s' }} />
-                                                                            <div className="w-0.5 h-4 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.3s' }} />
-                                                                            <div className="w-0.5 h-2 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.5s' }} />
-                                                                            <div className="w-0.5 h-3.5 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.2s' }} />
+                                                    return (
+                                                        <div className="max-h-[280px] overflow-y-auto pr-1 space-y-3 no-scrollbar">
+                                                            {filteredHistory.map((t, idx) => {
+                                                                const actualIndex = tracks.findIndex(original => original === t);
+                                                                const isActive = actualIndex === currentTrackIndex;
+                                                                return (
+                                                                    <div 
+                                                                        key={idx} 
+                                                                        className={`flex items-center gap-4 p-3 rounded-xl border transition-all duration-300 group/row cursor-pointer ${isActive ? 'bg-[#f00060]/10 border-[#f00060]/30 shadow-[0_0_15px_rgba(240,0,96,0.05)]' : 'bg-black/20 border-white/5 hover:bg-white/[0.03] hover:border-white/10'}`}
+                                                                        onClick={() => { setCurrentTrackIndex(actualIndex); setIsPlaying(true); }}
+                                                                    >
+                                                                        {/* Cover Art Box with hover overlay */}
+                                                                        <div className={`w-12 h-12 bg-white/5 flex items-center justify-center rounded-lg overflow-hidden shrink-0 relative border transition-all ${isActive ? 'border-[#f00060]/50 shadow-[0_0_10px_rgba(240,0,96,0.2)]' : 'border-white/10 group-hover/row:border-white/20'}`}>
+                                                                            {t.ImageUrl || t.imageUrl || t.cover || t.coverUrl ? (
+                                                                                <img src={getMediaUrl(t.ImageUrl || t.imageUrl || t.cover || t.coverUrl)} alt="" className="w-full h-full object-cover" />
+                                                                            ) : (
+                                                                                <Music size={16} className="text-white/40" />
+                                                                            )}
+                                                                            
+                                                                            {/* Dynamic soundwave animator if active & playing */}
+                                                                            {isActive && isPlaying ? (
+                                                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-0.5">
+                                                                                    <div className="w-0.5 h-3 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.1s' }} />
+                                                                                    <div className="w-0.5 h-4 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.3s' }} />
+                                                                                    <div className="w-0.5 h-2 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.5s' }} />
+                                                                                    <div className="w-0.5 h-3.5 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.2s' }} />
+                                                                                </div>
+                                                                            ) : isActive ? (
+                                                                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                                                                    <Play size={14} className="text-[#f00060]" />
+                                                                                </div>
+                                                                            ) : (
+                                                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/row:opacity-100 transition-opacity flex items-center justify-center">
+                                                                                    <Play size={14} className="text-white" />
+                                                                                </div>
+                                                                            )}
                                                                         </div>
-                                                                    ) : isActive ? (
-                                                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                                                            <Play size={14} className="text-[#f00060]" />
+                                                                        
+                                                                        {/* Title & Artist details */}
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <div className={`text-xs font-bold truncate tracking-wide ${isActive ? 'text-[#f00060]' : 'text-white/90 group-hover/row:text-white'}`}>{t.title || t.Title || 'Untitled'}</div>
+                                                                            <div className="text-[10px] text-white/40 truncate mt-0.5 flex items-center gap-1.5 font-mono">
+                                                                                {(() => {
+                                                                                    const artist = t.artist || t.artistName || t.ArtistName || t.author || t.Author || t.channelTitle || t.ChannelTitle;
+                                                                                    if (artist && artist !== 'YouTube') return <span className="truncate">{artist}</span>;
+                                                                                    const title = t.title || t.Title || '';
+                                                                                    if (title.includes(' - ')) return <span className="truncate">{title.split(' - ')[0]}</span>;
+                                                                                    return <span className="text-red-500 uppercase tracking-widest text-[8px] bg-red-950/20 px-1 border border-red-900/30 rounded-sm">[ YT_SIGNAL ]</span>;
+                                                                                })()}
+                                                                            </div>
                                                                         </div>
-                                                                    ) : (
-                                                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/row:opacity-100 transition-opacity flex items-center justify-center">
-                                                                            <Play size={14} className="text-white" />
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                                
-                                                                {/* Title & Artist details */}
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className={`text-xs font-bold truncate tracking-wide ${isActive ? 'text-[#f00060]' : 'text-white/90 group-hover/row:text-white'}`}>{t.title || t.Title || 'Untitled'}</div>
-                                                                    <div className="text-[10px] text-white/40 truncate mt-0.5 flex items-center gap-1.5 font-mono">
-                                                                        {(() => {
-                                                                            const artist = t.artist || t.artistName || t.ArtistName || t.author || t.Author || t.channelTitle || t.ChannelTitle;
-                                                                            if (artist && artist !== 'YouTube') return <span className="truncate">{artist}</span>;
-                                                                            const title = t.title || t.Title || '';
-                                                                            if (title.includes(' - ')) return <span className="truncate">{title.split(' - ')[0]}</span>;
-                                                                            return <span className="text-red-500 uppercase tracking-widest text-[8px] bg-red-950/20 px-1 border border-red-900/30 rounded-sm">[ YT_SIGNAL ]</span>;
-                                                                        })()}
                                                                     </div>
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    });
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    );
                                                 })()}
                                             </>
                                         )}
@@ -1538,11 +1543,11 @@ export const IPodPlayer = ({
                                                     <h2 className="text-sm sm:text-base font-black text-white tracking-wide truncate">{tracks[currentTrackIndex]?.title || tracks[currentTrackIndex]?.Title || t('UNTITLED')}</h2>
                                                     <p className="text-[10px] sm:text-xs text-white/50 mt-1.5 uppercase font-mono tracking-widest truncate">
                                                         {(() => {
-                                                            const t = tracks[currentTrackIndex];
-                                                            if (!t) return t('UNKNOWN');
-                                                            const artist = t.artist || t.artistName || t.ArtistName || t.author || t.Author || t.channelTitle || t.ChannelTitle;
+                                                            const trk = tracks[currentTrackIndex];
+                                                            if (!trk) return t('UNKNOWN');
+                                                            const artist = trk.artist || trk.artistName || trk.ArtistName || trk.author || trk.Author || trk.channelTitle || trk.ChannelTitle;
                                                             if (artist && artist !== 'YouTube') return artist;
-                                                            const title = t.title || t.Title || '';
+                                                            const title = trk.title || trk.Title || '';
                                                             if (title.includes(' - ')) return title.split(' - ')[0];
                                                             return 'YouTube';
                                                         })()}
