@@ -2575,6 +2575,7 @@ function App() {
                requestTrack={handleRequestTrack}
                setUser={setUser}
                onPlayTrack={handlePlayTrack}
+               onPlayTrackAtIndex={handlePlayTrackAtIndex}
                onExpandContent={(content, type, themeData) => {
                  setGlobalExpandedContent(content);
                  setGlobalExpandedType(type);
@@ -2900,7 +2901,8 @@ const Dashboard = React.memo(({
   onEqA,
   analyserA,
   isLandscape,
-  onPlayTrack
+  onPlayTrack,
+  onPlayTrackAtIndex
 }) => {
   const { t } = useLanguage();
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
@@ -3271,7 +3273,7 @@ const Dashboard = React.memo(({
                   setKeyLockA={setKeyLockA}
                   vibeFeatures={vibeFeatures}
                   onPlayTrack={onPlayTrack}
-                  onPlayTrackAtIndex={handlePlayTrackAtIndex}
+                  onPlayTrackAtIndex={onPlayTrackAtIndex}
                 />
               </motion.div>
             )}
