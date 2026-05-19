@@ -465,6 +465,7 @@ function App() {
   const [isYoutubeMode, setIsYoutubeMode] = useState(false);
   const [vibeFeatures, setVibeFeatures] = useState(null);
   const lastLoadedYtId = useRef(null);
+  const hasStartedPlayingYt = useRef(false);
 
   // Dynamic Spotify track resolver (resolves Spotify metadata to YouTube video ID under the hood)
   useEffect(() => {
@@ -514,6 +515,7 @@ function App() {
         if (lastLoadedYtId.current !== ytId) {
           console.log(`[YOUTUBE] Programmatic load of video ID: ${ytId}`);
           lastLoadedYtId.current = ytId;
+          hasStartedPlayingYt.current = false;
           youtubePlayer.loadVideoById({
             videoId: ytId,
             startSeconds: 0
@@ -522,11 +524,16 @@ function App() {
           youtubePlayer.setPlaybackRate(globalPlaybackRate);
         }
         
-        // Ensure play state is synchronized
+        // Ensure play state is synchronized without redundant calls that cause audio stutters
+        const ytState = youtubePlayer.getPlayerState ? youtubePlayer.getPlayerState() : null;
         if (isPlaying) {
-          youtubePlayer.playVideo();
+          if (ytState !== 1 && ytState !== 3) {
+            youtubePlayer.playVideo();
+          }
         } else {
-          youtubePlayer.pauseVideo();
+          if (ytState !== 2) {
+            youtubePlayer.pauseVideo();
+          }
         }
       } catch (err) {
         console.warn("[YOUTUBE] Programmatic track change play/load failed (retrying on ready/state):", err);
@@ -1446,8 +1453,8 @@ function App() {
 
     if (!track || !user) return;
     try {
-      const isYT = (track.source || track.Source)?.startsWith('youtube:');
-      const trackId = isYT ? (track.source || track.Source).split(':')[1] : (track.id || track.Id);
+      const isYT = (track.source || track.Source)?.startsWith('youtube:') || (track.source || track.Source)?.startsWith('spotify:');
+      const trackId = isYT ? ((track.source || track.Source)?.startsWith('youtube:') ? (track.source || track.Source).split(':')[1] : track.resolvedYoutubeId) : (track.id || track.Id);
 
       const res = await API.Organic.logEvent({
         trackType: isYT ? 'youtube' : 'local',
@@ -1474,7 +1481,7 @@ function App() {
       if (audioRef.current) {
         const nextTrack = tracks[nextIndex];
         const trackSource = nextTrack?.source || nextTrack?.Source;
-        const isYTTrack = trackSource && trackSource.startsWith('youtube:');
+        const isYTTrack = trackSource && (trackSource.startsWith('youtube:') || trackSource.startsWith('spotify:'));
         if (isYTTrack) {
           audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
           audioRef.current.loop = true;
@@ -1493,8 +1500,11 @@ function App() {
       console.log("[ORGANIC] Queue exhausted. Fetching recommendations...");
       try {
         const lastTrack = tracks[currentTrackIndex];
-        const isYT = (lastTrack?.source || lastTrack?.Source)?.startsWith('youtube:');
-        const lastVideoId = isYT ? (lastTrack.source || lastTrack.Source).split(':')[1] : null;
+        const isYT = (lastTrack?.source || lastTrack?.Source)?.startsWith('youtube:') || (lastTrack?.source || lastTrack?.Source)?.startsWith('spotify:');
+        let lastVideoId = null;
+        if (isYT) {
+          lastVideoId = (lastTrack.source || lastTrack.Source)?.startsWith('youtube:') ? (lastTrack.source || lastTrack.Source).split(':')[1] : lastTrack.resolvedYoutubeId;
+        }
 
         const res = await API.Organic.getNextRecommendation(
           lastVideoId || 'COLD_START',
@@ -1594,7 +1604,7 @@ function App() {
     if (audioRef.current) {
       const prevTrack = tracks[prevIndex];
       const trackSource = prevTrack?.source || prevTrack?.Source;
-      const isYTTrack = trackSource && trackSource.startsWith('youtube:');
+      const isYTTrack = trackSource && (trackSource.startsWith('youtube:') || trackSource.startsWith('spotify:'));
       if (isYTTrack) {
         audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
         audioRef.current.loop = true;
@@ -1666,7 +1676,7 @@ function App() {
     
     const track = tracks[index];
     const trackSource = track.source || track.Source;
-    const isYTTrack = trackSource && trackSource.startsWith('youtube:');
+    const isYTTrack = trackSource && (trackSource.startsWith('youtube:') || trackSource.startsWith('spotify:'));
     
     if (audioRef.current) {
       if (isYTTrack) {
@@ -1750,7 +1760,7 @@ function App() {
 
     // 3. Set states
     const firstTrack = enrichedQueue[startIndex];
-    const isYT = (firstTrack?.source || firstTrack?.Source)?.startsWith('youtube:');
+    const isYT = (firstTrack?.source || firstTrack?.Source)?.startsWith('youtube:') || (firstTrack?.source || firstTrack?.Source)?.startsWith('spotify:');
 
     // Synchronous mobile gesture unblocking:
     if (audioRef.current) {
@@ -1759,7 +1769,7 @@ function App() {
         audioCtx.current.resume().catch(e => console.warn("[MOBILE GESTURE] Resume AudioContext blocked:", e));
       }
       const trackSource = firstTrack?.source || firstTrack?.Source;
-      const isYTTrack = trackSource && trackSource.startsWith('youtube:');
+      const isYTTrack = trackSource && (trackSource.startsWith('youtube:') || trackSource.startsWith('spotify:'));
       if (isYTTrack) {
         audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
         audioRef.current.loop = true;
@@ -1981,7 +1991,7 @@ function App() {
     if (!track.source) return;
 
     // Check if YouTube track
-    const isYoutube = track.source && track.source.startsWith('youtube:');
+    const isYoutube = track.source && (track.source.startsWith('youtube:') || track.source.startsWith('spotify:'));
     if (isYoutube) {
       await handleCache(track);
       return;
@@ -2110,13 +2120,13 @@ function App() {
     // FIX: Use ONLY source-based detection. typeof trackId === 'string' was too broad
     // because JSON deserializes numeric DB IDs as strings (e.g., "42"), falsely
     // triggering YouTube logic for local tracks that were saved to DB.
-    const isYoutube = track.source?.startsWith('youtube:');
+    const isYoutube = track.source?.startsWith('youtube:') || track.source?.startsWith('spotify:');
     const isLiking = !track.isLiked;
 
-    // FIX: Always derive pureYoutubeId from track.source, never from trackId
+    // FIX: Always derive pureYoutubeId from track.source or resolvedYoutubeId, never from trackId
     let pureYoutubeId = null;
     if (isYoutube) {
-      pureYoutubeId = track.source.split(':')[1];
+      pureYoutubeId = track.source?.startsWith('youtube:') ? track.source.split(':')[1] : track.resolvedYoutubeId;
     }
 
     console.log(`[handleLike] ${isLiking ? 'LIKE' : 'UNLIKE'} | Type: ${isYoutube ? 'YouTube' : 'Local'} | trackId: ${trackId} | ytId: ${pureYoutubeId}`);
@@ -2529,7 +2539,7 @@ function App() {
           const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
           if (!currentTrack) return "";
           const trackSource = currentTrack.source || currentTrack.Source;
-          const isYT = trackSource && trackSource.startsWith('youtube:');
+          const isYT = trackSource && (trackSource.startsWith('youtube:') || trackSource.startsWith('spotify:'));
           if (isYT) return "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
           return trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
         })()}
@@ -2584,7 +2594,10 @@ function App() {
               onStateChange={(e) => {
                 console.log("[YOUTUBE] State Change:", e.data);
                 if (e.data === 0) playNext();
-                if (isPlaying && (e.data === 5 || e.data === -1 || e.data === 2)) {
+                if (e.data === 1) {
+                  hasStartedPlayingYt.current = true;
+                }
+                if (isPlaying && (e.data === 5 || e.data === -1 || (e.data === 2 && !hasStartedPlayingYt.current))) {
                   try {
                     e.target.playVideo();
                   } catch (err) { console.warn("Failed to autoplay on state change:", err); }
