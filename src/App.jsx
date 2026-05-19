@@ -113,6 +113,21 @@ const getGlobalYoutubeId = (t) => {
   return null;
 };
 
+// Unified Track Source Resolver (bypasses legacy Youtube Iframe Player completely)
+const resolveTrackSource = (track, currentUserId, cachedTrackIds) => {
+  if (!track) return "";
+  const pureYtId = getGlobalYoutubeId(track);
+  if (pureYtId) {
+    const isCached = cachedTrackIds && (typeof cachedTrackIds.has === 'function' ? cachedTrackIds.has(pureYtId) : Array.from(cachedTrackIds).includes(pureYtId));
+    return isCached
+      ? `${API_BASE_URL}cache/${currentUserId}_${pureYtId}.mp3`
+      : `${API_BASE_URL}api/Youtube/stream?videoId=${pureYtId}&userId=${currentUserId}`;
+  }
+  const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
+  return rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : "";
+};
+
+
 // Global Orientation State Fallback (Prevents ReferenceErrors in components defined before App)
 const GLOBAL_IS_LANDSCAPE = typeof window !== 'undefined' && window.innerWidth > window.innerHeight;
 
@@ -1041,15 +1056,9 @@ function App() {
       if (audioCtx.current && audioCtx.current.state === 'suspended') {
         audioCtx.current.resume().catch(e => console.warn("[MOBILE GESTURE] Resume AudioContext blocked:", e));
       }
-      if (isYoutube) {
-        audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
-        audioRef.current.loop = true;
-      } else {
-        const rawSource = enriched.source;
-        const resolvedSrc = rawSource ? (rawSource.startsWith('http') ? rawSource : (typeof getMediaUrl === 'function' ? getMediaUrl(rawSource) : rawSource)) : "";
-        audioRef.current.src = resolvedSrc;
-        audioRef.current.loop = false;
-      }
+      const resolvedSrc = resolveTrackSource(enriched, currentUserId, cachedTrackIds);
+      audioRef.current.src = resolvedSrc;
+      audioRef.current.loop = false;
       audioRef.current.load();
       audioRef.current.play().catch(e => console.warn("[MOBILE GESTURE] Play failed:", e));
     }
@@ -1432,16 +1441,9 @@ function App() {
       // Synchronous mobile unblocking:
       if (audioRef.current) {
         const nextTrack = tracks[nextIndex];
-        const trackSource = nextTrack?.source || nextTrack?.Source;
-        const isYTTrack = trackSource && trackSource.startsWith('youtube:');
-        if (isYTTrack) {
-          audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
-          audioRef.current.loop = true;
-        } else {
-          const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
-          audioRef.current.src = resolvedSrc;
-          audioRef.current.loop = false;
-        }
+        const resolvedSrc = resolveTrackSource(nextTrack, currentUserId, cachedTrackIds);
+        audioRef.current.src = resolvedSrc;
+        audioRef.current.loop = false;
         audioRef.current.load();
         audioRef.current.play().catch(e => console.warn("Next play failed:", e));
       }
@@ -1558,16 +1560,9 @@ function App() {
     // Synchronous mobile unblocking:
     if (audioRef.current) {
       const prevTrack = tracks[prevIndex];
-      const trackSource = prevTrack?.source || prevTrack?.Source;
-      const isYTTrack = trackSource && trackSource.startsWith('youtube:');
-      if (isYTTrack) {
-        audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
-        audioRef.current.loop = true;
-      } else {
-        const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
-        audioRef.current.src = resolvedSrc;
-        audioRef.current.loop = false;
-      }
+      const resolvedSrc = resolveTrackSource(prevTrack, currentUserId, cachedTrackIds);
+      audioRef.current.src = resolvedSrc;
+      audioRef.current.loop = false;
       audioRef.current.load();
       audioRef.current.play().catch(e => console.warn("Prev play failed:", e));
     }
@@ -2486,14 +2481,7 @@ function App() {
 
       <audio
         ref={audioRef}
-        src={(() => {
-          const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
-          if (!currentTrack) return "";
-          const trackSource = currentTrack.source || currentTrack.Source;
-          const isYT = trackSource && trackSource.startsWith('youtube:');
-          if (isYT) return "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
-          return trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
-        })()}
+        src={resolveTrackSource(currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null, currentUserId, cachedTrackIds)}
         crossOrigin="anonymous"
         onEnded={playNext}
         onTimeUpdate={handleTimeUpdate}
