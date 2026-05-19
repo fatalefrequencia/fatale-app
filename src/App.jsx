@@ -86,20 +86,9 @@ const getGlobalYoutubeId = (t) => {
   const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
   const id = track.youtubeId || track.YoutubeId || track.videoId || track.VideoId || track.id || track.Id;
   
+  if (typeof rawSource === 'string' && rawSource.startsWith('youtube:')) return rawSource.split(':')[1];
+  
   if (typeof rawSource === 'string') {
-    if (rawSource.startsWith('youtube:')) return rawSource.split(':')[1];
-    if (rawSource.includes('Youtube/stream')) {
-      const match = rawSource.match(/[?&]videoId=([^&]+)/);
-      if (match) return match[1];
-    }
-    if (rawSource.includes('cache/')) {
-      const parts = rawSource.split('/');
-      const lastPart = parts[parts.length - 1];
-      const underScoreIndex = lastPart.indexOf('_');
-      if (underScoreIndex !== -1) {
-        return lastPart.substring(underScoreIndex + 1).replace('.mp3', '');
-      }
-    }
     if (rawSource.includes('youtube.com/watch?v=')) return rawSource.split('v=')[1]?.split('&')[0];
     if (rawSource.includes('youtu.be/')) return rawSource.split('youtu.be/')[1]?.split('?')[0];
   }
@@ -112,21 +101,6 @@ const getGlobalYoutubeId = (t) => {
   
   return null;
 };
-
-// Unified Track Source Resolver (bypasses legacy Youtube Iframe Player completely)
-const resolveTrackSource = (track, currentUserId, cachedTrackIds) => {
-  if (!track) return "";
-  const pureYtId = getGlobalYoutubeId(track);
-  if (pureYtId) {
-    const isCached = cachedTrackIds && (typeof cachedTrackIds.has === 'function' ? cachedTrackIds.has(pureYtId) : Array.from(cachedTrackIds).includes(pureYtId));
-    return isCached
-      ? `${API_BASE_URL}cache/${currentUserId}_${pureYtId}.mp3`
-      : `${API_BASE_URL}api/Youtube/stream?videoId=${pureYtId}&userId=${currentUserId}`;
-  }
-  const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
-  return rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : "";
-};
-
 
 // Global Orientation State Fallback (Prevents ReferenceErrors in components defined before App)
 const GLOBAL_IS_LANDSCAPE = typeof window !== 'undefined' && window.innerWidth > window.innerHeight;
@@ -1013,12 +987,10 @@ function App() {
     // Unified YouTube Resolution
     const pureYtId = getGlobalYoutubeId(track);
     const isCached = pureYtId && cachedTrackIds.has(pureYtId);
-    const isYoutube = false; // Bypass legacy YouTube iframe player
-    const sourceStr = pureYtId
-      ? (isCached
-          ? `${API_BASE_URL}cache/${currentUserId}_${pureYtId}.mp3`
-          : `${API_BASE_URL}api/Youtube/stream?videoId=${pureYtId}&userId=${currentUserId}`)
-      : (rawSource || "");
+    const isYoutube = !!pureYtId && !isCached;
+    const sourceStr = isCached
+      ? `${API_BASE_URL}cache/${currentUserId}_${pureYtId}.mp3`
+      : (isYoutube ? `youtube:${pureYtId}` : (rawSource || ""));
 
     // --- DEEP RECONCILIATION: Inherit State from Library ---
     const libraryMatch = libraryTracks.find(lt =>
@@ -1056,9 +1028,15 @@ function App() {
       if (audioCtx.current && audioCtx.current.state === 'suspended') {
         audioCtx.current.resume().catch(e => console.warn("[MOBILE GESTURE] Resume AudioContext blocked:", e));
       }
-      const resolvedSrc = resolveTrackSource(enriched, currentUserId, cachedTrackIds);
-      audioRef.current.src = resolvedSrc;
-      audioRef.current.loop = false;
+      if (isYoutube) {
+        audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+        audioRef.current.loop = true;
+      } else {
+        const rawSource = enriched.source;
+        const resolvedSrc = rawSource ? (rawSource.startsWith('http') ? rawSource : (typeof getMediaUrl === 'function' ? getMediaUrl(rawSource) : rawSource)) : "";
+        audioRef.current.src = resolvedSrc;
+        audioRef.current.loop = false;
+      }
       audioRef.current.load();
       audioRef.current.play().catch(e => console.warn("[MOBILE GESTURE] Play failed:", e));
     }
@@ -1134,11 +1112,9 @@ function App() {
           const isCached = yId && cachedIds.has(String(yId));
           const isYT = !!yId && !isCached;
           const rawSource = t.source || t.Source || t.filePath || t.FilePath || "";
-          const resolvedSource = yId
-            ? (isCached
-                ? `${API_BASE_URL}cache/${uid}_${yId}.mp3`
-                : `${API_BASE_URL}api/Youtube/stream?videoId=${yId}&userId=${uid}`)
-            : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null);
+          const resolvedSource = isCached
+            ? `${API_BASE_URL}cache/${uid}_${yId}.mp3`
+            : (isYT ? `youtube:${yId}` : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null));
 
           if (!resolvedSource || resolvedSource === API_BASE_URL || resolvedSource === `${API_BASE_URL}/`) return;
 
@@ -1178,9 +1154,7 @@ function App() {
           if (yId) {
             localLikedYtIds.add(yId);
             const isCached = cachedIds.has(String(yId));
-            const sourceKey = isCached
-              ? `${API_BASE_URL}cache/${uid}_${yId}.mp3`
-              : `${API_BASE_URL}api/Youtube/stream?videoId=${yId}&userId=${uid}`;
+            const sourceKey = isCached ? `${API_BASE_URL}cache/${uid}_${yId}.mp3` : `youtube:${yId}`;
             if (uniqueTracksMap.has(sourceKey)) {
               const existing = uniqueTracksMap.get(sourceKey);
               uniqueTracksMap.set(sourceKey, { ...existing, isLiked: true });
@@ -1230,11 +1204,9 @@ function App() {
           const artist = matched ? (matched.artist || extractArtistName(matched)) : (t.artist || extractArtistName(t) || 'Unknown Artist');
           const artistName = matched ? (matched.artistName || matched.ArtistName || extractArtistName(matched)) : (t.artistName || t.ArtistName || extractArtistName(t) || 'Unknown Artist');
           
-          const resolvedSource = yId
-            ? (isCached
-                ? `${API_BASE_URL}cache/${uid}_${yId}.mp3`
-                : `${API_BASE_URL}api/Youtube/stream?videoId=${yId}&userId=${uid}`)
-            : (t.source || t.Source);
+          const resolvedSource = isCached
+            ? `${API_BASE_URL}cache/${uid}_${yId}.mp3`
+            : (yId ? `youtube:${yId}` : (t.source || t.Source));
 
           return { ...t, isLiked, isOwned, artist, artistName, source: resolvedSource, isCached };
         });
@@ -1317,24 +1289,50 @@ function App() {
     const track = tracks[currentTrackIndex];
     if (!track) return;
 
+    const trackSource = track.source || track.Source;
     const isLocked = (track.isLocked ?? false) && !(track.isOwned ?? true);
+    const isYT = trackSource && trackSource.startsWith('youtube:');
 
-    // Treat all tracks as native HTML5 audio tracks using resolveTrackSource
-    if (isYoutubeMode) setIsYoutubeMode(false);
+    // 1. Mode Switching
+    if (isYT) {
+      if (!isYoutubeMode) setIsYoutubeMode(true);
+      
+      // Play silent audio on native element to keep background session alive on mobile
+      const silentSrc = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+      if (audio.src !== silentSrc && audio.getAttribute('data-playing-src') !== 'silent') {
+        audio.src = silentSrc;
+        audio.loop = true;
+        audio.setAttribute('data-playing-src', 'silent');
+        audio.load();
+      }
+      
+      if (isPlaying) {
+        if (audio.paused) {
+          audio.play().catch(err => console.warn("[PLAYER] Failed to play silent audio", err));
+        }
+      } else {
+        if (!audio.paused) {
+          audio.pause();
+        }
+      }
+    } else {
+      if (isYoutubeMode) setIsYoutubeMode(false);
 
-    const currentSrc = audio.getAttribute('data-playing-src') || audio.src;
-    const targetSrc = resolveTrackSource(track, currentUserId, cachedTrackIds);
-    const isAlreadyLoaded = audio.src && (audio.src === targetSrc || currentSrc === targetSrc);
-    if (targetSrc && !isAlreadyLoaded) {
-      console.log(`[PLAYER] Loading track source: ${targetSrc}`);
-      audio.src = targetSrc;
-      audio.loop = false; // Ensure it doesn't loop so onEnded fires
-      audio.setAttribute('data-playing-src', targetSrc);
-      audio.load();
-      setCurrentTime(0);
+      // Handle Local Audio Source Change
+      const currentSrc = audio.getAttribute('data-playing-src') || audio.src;
+      const targetSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
+      const isAlreadyLoaded = audio.src && (audio.src === targetSrc || audio.src.endsWith(trackSource) || currentSrc === targetSrc || currentSrc === trackSource);
+      if (trackSource && !isAlreadyLoaded) {
+        console.log(`[PLAYER] Loading new local source: ${targetSrc}`);
+        audio.src = targetSrc;
+        audio.loop = false; // Ensure it doesn't loop so onEnded fires
+        audio.setAttribute('data-playing-src', targetSrc);
+        audio.load();
+        setCurrentTime(0);
+      }
     }
 
-    // Playback State Sync
+    // 2. Playback State Sync
     if (isPlaying && !isLocked) {
       // Ensure AudioContext is initialized and active for seamless playback on any interaction
       initAudioCtx();
@@ -1342,16 +1340,33 @@ function App() {
         audioCtx.current.resume().catch(e => console.warn("[PLAYER] Resume AudioContext blocked:", e));
       }
 
-      if (audio.paused && audio.src) {
-        audio.play().catch(e => {
-          if (e.name !== 'AbortError') console.warn("Auto-play blocked", e);
-        });
+      if (isYT) {
+        if (youtubePlayer && typeof youtubePlayer.playVideo === 'function') {
+          try {
+            const state = youtubePlayer.getPlayerState();
+            if (state !== 1 && state !== 3) youtubePlayer.playVideo();
+          } catch (e) { }
+        }
+      } else {
+        if (audio.paused && audio.src) {
+          audio.play().catch(e => {
+            if (e.name !== 'AbortError') console.warn("Auto-play blocked", e);
+          });
+        }
       }
     } else {
       // Paused
-      if (!audio.paused) audio.pause();
+      if (isYT) {
+        if (youtubePlayer && typeof youtubePlayer.pauseVideo === 'function') {
+          try {
+            if (youtubePlayer.getPlayerState() === 1) youtubePlayer.pauseVideo();
+          } catch (e) { }
+        }
+      } else {
+        if (!audio.paused) audio.pause();
+      }
     }
-  }, [currentTrackIndex, tracks, isPlaying, isYoutubeMode, currentUserId, cachedTrackIds]);
+  }, [currentTrackIndex, tracks, isPlaying, isYoutubeMode, youtubePlayer]);
 
   const finalizeListenEvent = () => {
     if (listenEventRef.current.id && listenEventRef.current.startTime) {
@@ -1398,9 +1413,16 @@ function App() {
       // Synchronous mobile unblocking:
       if (audioRef.current) {
         const nextTrack = tracks[nextIndex];
-        const resolvedSrc = resolveTrackSource(nextTrack, currentUserId, cachedTrackIds);
-        audioRef.current.src = resolvedSrc;
-        audioRef.current.loop = false;
+        const trackSource = nextTrack?.source || nextTrack?.Source;
+        const isYTTrack = trackSource && trackSource.startsWith('youtube:');
+        if (isYTTrack) {
+          audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+          audioRef.current.loop = true;
+        } else {
+          const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
+          audioRef.current.src = resolvedSrc;
+          audioRef.current.loop = false;
+        }
         audioRef.current.load();
         audioRef.current.play().catch(e => console.warn("Next play failed:", e));
       }
@@ -1411,8 +1433,8 @@ function App() {
       console.log("[ORGANIC] Queue exhausted. Fetching recommendations...");
       try {
         const lastTrack = tracks[currentTrackIndex];
-        const lastVideoId = getGlobalYoutubeId(lastTrack);
-        const isYT = !!lastVideoId;
+        const isYT = (lastTrack?.source || lastTrack?.Source)?.startsWith('youtube:');
+        const lastVideoId = isYT ? (lastTrack.source || lastTrack.Source).split(':')[1] : null;
 
         const res = await API.Organic.getNextRecommendation(
           lastVideoId || 'COLD_START',
@@ -1422,22 +1444,16 @@ function App() {
 
         if (res.data && res.data.length > 0) {
           const rec = res.data[0];
-          const isCached = cachedTrackIds.has(rec.trackId);
           const mappedRec = {
             id: rec.trackId,
             title: rec.title,
             artist: rec.author || rec.artist || 'Recommended',
-            source: rec.trackType === 'youtube'
-              ? (isCached
-                  ? `${API_BASE_URL}cache/${currentUserId}_${rec.trackId}.mp3`
-                  : `${API_BASE_URL}api/Youtube/stream?videoId=${rec.trackId}&userId=${currentUserId}`)
-              : rec.trackId,
+            source: rec.trackType === 'youtube' ? `youtube:${rec.trackId}` : rec.trackId,
             cover: rec.thumbnailUrl,
             tags: rec.tags,
             isLiked: rec.trackType === 'youtube' ? likedYoutubeIds.has(rec.trackId) : libraryTracks.some(lt => String(lt.id || lt.Id) === String(rec.trackId) && lt.isLiked),
             isOwned: true,
-            isLocked: false,
-            isCached: isCached
+            isLocked: false
           };
 
           // Update tracks first, then index
@@ -1517,9 +1533,16 @@ function App() {
     // Synchronous mobile unblocking:
     if (audioRef.current) {
       const prevTrack = tracks[prevIndex];
-      const resolvedSrc = resolveTrackSource(prevTrack, currentUserId, cachedTrackIds);
-      audioRef.current.src = resolvedSrc;
-      audioRef.current.loop = false;
+      const trackSource = prevTrack?.source || prevTrack?.Source;
+      const isYTTrack = trackSource && trackSource.startsWith('youtube:');
+      if (isYTTrack) {
+        audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+        audioRef.current.loop = true;
+      } else {
+        const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
+        audioRef.current.src = resolvedSrc;
+        audioRef.current.loop = false;
+      }
       audioRef.current.load();
       audioRef.current.play().catch(e => console.warn("Prev play failed:", e));
     }
@@ -1576,18 +1599,25 @@ function App() {
     }
     
     const track = tracks[index];
+    const trackSource = track.source || track.Source;
+    const isYTTrack = trackSource && trackSource.startsWith('youtube:');
     
     if (audioRef.current) {
-      const resolvedSrc = resolveTrackSource(track, currentUserId, cachedTrackIds);
-      audioRef.current.src = resolvedSrc;
-      audioRef.current.loop = false;
+      if (isYTTrack) {
+        audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+        audioRef.current.loop = true;
+      } else {
+        const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
+        audioRef.current.src = resolvedSrc;
+        audioRef.current.loop = false;
+      }
       audioRef.current.load();
       audioRef.current.play().catch(e => console.warn("[MOBILE GESTURE] Play index failed:", e));
     }
     
     setCurrentTrackIndex(index);
     setIsPlaying(true);
-    if (isYoutubeMode) setIsYoutubeMode(false);
+    if (isYTTrack) setIsYoutubeMode(true);
   };
 
   // Modified to use main library tracks for correct Like status
@@ -1610,23 +1640,21 @@ function App() {
       // Unified YouTube Resolution
       const pureYtId = getGlobalYoutubeId(pTrack);
       const isCached = pureYtId && cachedTrackIds.has(pureYtId);
-      const isYoutube = false; // Bypass legacy YouTube iframe player
-      const isDiscoveryAbsolute = !!pureYtId || (pTrack.source || pTrack.Source || "").startsWith('http');
+      const isYoutube = !!pureYtId && !isCached;
+      const isDiscoveryAbsolute = isYoutube || (pTrack.source || pTrack.Source || "").startsWith('http');
 
       // Resolve Like Status
-      const isLiked = pureYtId ? likedYoutubeIds.has(pureYtId) : (pTrack.isLiked || pTrack.IsLiked || found?.isLiked || found?.IsLiked);
+      const isLiked = isYoutube ? likedYoutubeIds.has(pureYtId) : (pTrack.isLiked || pTrack.IsLiked || found?.isLiked || found?.IsLiked);
 
       // Resolve Cover
       const rawCover = pTrack.cover || pTrack.CoverImageUrl || pTrack.coverImageUrl || pTrack.imageUrl || pTrack.ImageUrl || found?.cover || found?.CoverImageUrl || found?.imageUrl;
-      const resolvedCover = (pureYtId || isCached)
+      const resolvedCover = (isYoutube || isCached)
         ? (rawCover || `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg`)
         : (rawCover ? (rawCover.startsWith('http') ? rawCover : getMediaUrl(rawCover)) : null);
 
-      const resolvedSource = pureYtId
-        ? (isCached
-            ? `${API_BASE_URL}cache/${currentUserId}_${pureYtId}.mp3`
-            : `${API_BASE_URL}api/Youtube/stream?videoId=${pureYtId}&userId=${currentUserId}`)
-        : (isDiscoveryAbsolute ? (pTrack.source || pTrack.Source) : (found?.source || found?.Source || pTrack.source || pTrack.Source));
+      const resolvedSource = isCached
+        ? `${API_BASE_URL}cache/${currentUserId}_${pureYtId}.mp3`
+        : (isYoutube ? `youtube:${pureYtId}` : (isDiscoveryAbsolute ? (pTrack.source || pTrack.Source) : (found?.source || found?.Source || pTrack.source || pTrack.Source)));
 
       if (found) {
         return {
@@ -1656,6 +1684,7 @@ function App() {
 
     // 3. Set states
     const firstTrack = enrichedQueue[startIndex];
+    const isYT = (firstTrack?.source || firstTrack?.Source)?.startsWith('youtube:');
 
     // Synchronous mobile gesture unblocking:
     if (audioRef.current) {
@@ -1663,9 +1692,16 @@ function App() {
       if (audioCtx.current && audioCtx.current.state === 'suspended') {
         audioCtx.current.resume().catch(e => console.warn("[MOBILE GESTURE] Resume AudioContext blocked:", e));
       }
-      const resolvedSrc = resolveTrackSource(firstTrack, currentUserId, cachedTrackIds);
-      audioRef.current.src = resolvedSrc;
-      audioRef.current.loop = false;
+      const trackSource = firstTrack?.source || firstTrack?.Source;
+      const isYTTrack = trackSource && trackSource.startsWith('youtube:');
+      if (isYTTrack) {
+        audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+        audioRef.current.loop = true;
+      } else {
+        const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
+        audioRef.current.src = resolvedSrc;
+        audioRef.current.loop = false;
+      }
       audioRef.current.load();
       audioRef.current.play().catch(e => console.warn("[MOBILE GESTURE] Play failed:", e));
     }
@@ -1673,7 +1709,8 @@ function App() {
     setTracks(enrichedQueue);
     setCurrentTrackIndex(startIndex);
     setIsPlaying(true);
-    if (isYoutubeMode) setIsYoutubeMode(false);
+    if (isYT) setIsYoutubeMode(true);
+    else setIsYoutubeMode(false);
 
     if (shouldRedirect && typeof setRedirectTrigger === 'function') {
       setRedirectTrigger(Date.now());
@@ -2422,7 +2459,14 @@ function App() {
 
       <audio
         ref={audioRef}
-        src={resolveTrackSource(currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null, currentUserId, cachedTrackIds)}
+        src={(() => {
+          const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
+          if (!currentTrack) return "";
+          const trackSource = currentTrack.source || currentTrack.Source;
+          const isYT = trackSource && trackSource.startsWith('youtube:');
+          if (isYT) return "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+          return trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
+        })()}
         crossOrigin="anonymous"
         onEnded={playNext}
         onTimeUpdate={handleTimeUpdate}
