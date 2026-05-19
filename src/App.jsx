@@ -317,6 +317,11 @@ function App() {
   const analyser = useRef(null); // Keep ref for internal logic but use state for props
 
   const initAudioCtx = () => {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || navigator.vendor || window.opera);
+    if (isMobile) {
+      console.log("[PLAYER] Mobile environment detected. Bypassing Web Audio API Graph to preserve background native playback thread.");
+      return;
+    }
     if (!audioCtx.current && audioRef.current) {
         audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
         
@@ -1315,12 +1320,13 @@ function App() {
 
       // Handle Local Audio Source Change
       const currentSrc = audio.getAttribute('data-playing-src') || audio.src;
-      const isAlreadyLoaded = audio.src && (audio.src === trackSource || audio.src.endsWith(trackSource) || currentSrc === trackSource);
+      const targetSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
+      const isAlreadyLoaded = audio.src && (audio.src === targetSrc || audio.src.endsWith(trackSource) || currentSrc === targetSrc || currentSrc === trackSource);
       if (trackSource && !isAlreadyLoaded) {
-        console.log(`[PLAYER] Loading new local source: ${trackSource}`);
-        audio.src = trackSource;
+        console.log(`[PLAYER] Loading new local source: ${targetSrc}`);
+        audio.src = targetSrc;
         audio.loop = false; // Ensure it doesn't loop so onEnded fires
-        audio.setAttribute('data-playing-src', trackSource);
+        audio.setAttribute('data-playing-src', targetSrc);
         audio.load();
         setCurrentTime(0);
       }
