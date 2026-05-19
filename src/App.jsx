@@ -1,5 +1,5 @@
 // Deployment Trigger: 2026-05-05T02:50:00-04:00
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play, Pause, SkipBack, SkipForward, Heart,
