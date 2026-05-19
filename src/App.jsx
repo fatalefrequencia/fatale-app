@@ -466,6 +466,11 @@ function App() {
   const [vibeFeatures, setVibeFeatures] = useState(null);
   const lastLoadedYtId = useRef(null);
   const hasStartedPlayingYt = useRef(false);
+  const lastPlayRequestTime = useRef(0);
+
+  const currentYtId = useMemo(() => {
+    return getGlobalYoutubeId(currentTrack);
+  }, [currentTrack]);
 
   // Dynamic Spotify track resolver (resolves Spotify metadata to YouTube video ID under the hood)
   useEffect(() => {
@@ -499,16 +504,35 @@ function App() {
     resolveSpotifyTrack();
   }, [currentTrackIndex, tracks]);
 
+  // Helper to trigger autoplay, with a fallback to muted autoplay if browser blocks playback
+  const playYtVideo = (player) => {
+    if (!player) return;
+    try {
+      player.playVideo();
+      const checkTime = Date.now();
+      lastPlayRequestTime.current = checkTime;
+      
+      setTimeout(() => {
+        if (lastPlayRequestTime.current === checkTime) {
+          const state = player.getPlayerState ? player.getPlayerState() : -1;
+          // If the player is not playing (1) or buffering (3), trigger muted autoplay fallback
+          if (state !== 1 && state !== 3) {
+            console.log("[YOUTUBE_AUTOPLAY] Autoplay blocked, falling back to muted play");
+            player.mute();
+            player.playVideo();
+          }
+        }
+      }, 350);
+    } catch (e) {
+      console.warn("[YOUTUBE_AUTOPLAY] Error starting YouTube video:", e);
+    }
+  };
+
   // Effect to load and play YouTube track when it changes
   useEffect(() => {
     if (!youtubePlayer) return;
 
-    let ytId = null;
-    if (currentTrack?.source?.startsWith('youtube:')) {
-      ytId = currentTrack.source.split(':')[1]?.trim();
-    } else if (currentTrack?.source?.startsWith('spotify:')) {
-      ytId = currentTrack.resolvedYoutubeId;
-    }
+    const ytId = currentYtId;
 
     if (isYoutubeMode && ytId) {
       try {
@@ -528,7 +552,7 @@ function App() {
         const ytState = youtubePlayer.getPlayerState ? youtubePlayer.getPlayerState() : null;
         if (isPlaying) {
           if (ytState !== 1 && ytState !== 3) {
-            youtubePlayer.playVideo();
+            playYtVideo(youtubePlayer);
           }
         } else {
           if (ytState !== 2) {
@@ -541,7 +565,7 @@ function App() {
     } else {
       lastLoadedYtId.current = null;
     }
-  }, [currentTrack?.id, currentTrack?.source, currentTrack?.resolvedYoutubeId, isYoutubeMode, youtubePlayer, isPlaying, volume, globalPlaybackRate]);
+  }, [currentYtId, isYoutubeMode, youtubePlayer, isPlaying, volume, globalPlaybackRate]);
 
   // Fetch Spotify Vibe Features or generate mock features for other tracks
   useEffect(() => {
@@ -756,7 +780,7 @@ function App() {
         if (typeof youtubePlayer.getPlayerState === 'function') {
           const state = youtubePlayer.getPlayerState();
           if (state !== 1 && state !== 3) { // 1=playing, 3=buffering
-            youtubePlayer.playVideo();
+            playYtVideo(youtubePlayer);
           }
           // Capture time immediately on play to prevent jumps/stutter
           if (typeof youtubePlayer.getCurrentTime === 'function') {
@@ -1410,7 +1434,7 @@ function App() {
         if (youtubePlayer && typeof youtubePlayer.playVideo === 'function') {
           try {
             const state = youtubePlayer.getPlayerState();
-            if (state !== 1 && state !== 3) youtubePlayer.playVideo();
+            if (state !== 1 && state !== 3) playYtVideo(youtubePlayer);
           } catch (e) { }
         }
       } else {
@@ -1432,7 +1456,16 @@ function App() {
         if (!audio.paused) audio.pause();
       }
     }
-  }, [currentTrackIndex, tracks, isPlaying, isYoutubeMode, youtubePlayer]);
+  }, [
+    currentTrackIndex,
+    currentTrack?.source,
+    currentTrack?.Source,
+    currentTrack?.isLocked,
+    currentTrack?.isOwned,
+    isPlaying,
+    isYoutubeMode,
+    youtubePlayer
+  ]);
 
   const finalizeListenEvent = () => {
     if (listenEventRef.current.id && listenEventRef.current.startTime) {
@@ -1560,7 +1593,7 @@ function App() {
 
       navigator.mediaSession.setActionHandler('play', () => {
         setIsPlaying(true);
-        if (isYoutubeMode && youtubePlayer) youtubePlayer.playVideo();
+        if (isYoutubeMode && youtubePlayer) playYtVideo(youtubePlayer);
         else if (audioRef.current) audioRef.current.play();
       });
       navigator.mediaSession.setActionHandler('pause', () => {
@@ -1637,7 +1670,7 @@ function App() {
         const ytState = typeof youtubePlayer.getPlayerState === 'function' ? youtubePlayer.getPlayerState() : -1;
         // ytState 1 is PLAYING, 3 is BUFFERING. If it's loaded but paused/cued/unstarted:
         if (ytState !== 1 && ytState !== 3) {
-          youtubePlayer.playVideo();
+          playYtVideo(youtubePlayer);
           setIsPlaying(true);
           return;
         }
@@ -1650,7 +1683,7 @@ function App() {
     if (nextPlaying) {
       if (isYoutubeMode && youtubePlayer && typeof youtubePlayer.playVideo === 'function') {
         try {
-          youtubePlayer.playVideo();
+          playYtVideo(youtubePlayer);
         } catch (e) { console.warn("Sync YT play failed:", e); }
       } else if (audioRef.current && audioRef.current.paused) {
         audioRef.current.play().catch(e => console.warn("Sync audio play failed:", e));
@@ -2527,21 +2560,12 @@ function App() {
 
       <audio
         ref={audioRef}
-        src={(() => {
-          const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
-          if (!currentTrack) return "";
-          const trackSource = currentTrack.source || currentTrack.Source;
-          const isYT = trackSource && (trackSource.startsWith('youtube:') || trackSource.startsWith('spotify:'));
-          if (isYT) return "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
-          return trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
-        })()}
         crossOrigin="anonymous"
         onEnded={playNext}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         preload="auto"
         playsInline={true}
-        autoPlay={isPlaying}
       />
 
       {/* PERSISTENT YOUTUBE PLAYER */}
@@ -2578,7 +2602,7 @@ function App() {
                 if (isPlaying && isYoutubeMode && ytId) {
                   try {
                     e.target.setVolume(volume * 100);
-                    e.target.playVideo();
+                    playYtVideo(e.target);
                     e.target.setPlaybackRate(globalPlaybackRate);
                   } catch (err) { console.warn("YT Play onReady failure:", err); }
                 }
@@ -2588,10 +2612,19 @@ function App() {
                 if (e.data === 0) playNext();
                 if (e.data === 1) {
                   hasStartedPlayingYt.current = true;
+                  // Auto-unmute if we started muted to bypass autoplay policy
+                  if (e.target.isMuted && e.target.isMuted() && !isMuted) {
+                    try {
+                      e.target.unMute();
+                      e.target.setVolume(volume * 100);
+                    } catch (err) {
+                      console.warn("[YOUTUBE_AUTOPLAY] Failed to unmute:", err);
+                    }
+                  }
                 }
                 if (isPlaying && (e.data === 5 || e.data === -1 || (e.data === 2 && !hasStartedPlayingYt.current))) {
                   try {
-                    e.target.playVideo();
+                    playYtVideo(e.target);
                   } catch (err) { console.warn("Failed to autoplay on state change:", err); }
                 }
               }}
