@@ -981,8 +981,11 @@ function App() {
 
     // Unified YouTube Resolution
     const pureYtId = getGlobalYoutubeId(track);
-    const isYoutube = !!pureYtId;
-    const sourceStr = isYoutube ? `youtube:${pureYtId}` : (rawSource || "");
+    const isCached = pureYtId && cachedTrackIds.has(pureYtId);
+    const isYoutube = !!pureYtId && !isCached;
+    const sourceStr = isCached
+      ? `${API_BASE_URL}cache/${currentUserId}_${pureYtId}.mp3`
+      : (isYoutube ? `youtube:${pureYtId}` : (rawSource || ""));
 
     // --- DEEP RECONCILIATION: Inherit State from Library ---
     const libraryMatch = libraryTracks.find(lt =>
@@ -1004,39 +1007,41 @@ function App() {
     const enriched = {
       ...track,
       id: tId,
-      source: isYoutube ? sourceStr : (rawSource ? ((rawSource.startsWith('http') || rawSource.startsWith('spotify:')) ? rawSource : getMediaUrl(rawSource)) : null),
-      cover: isYoutube ? (rawCover || `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg`) : (rawCover ? (rawCover.startsWith('http') ? rawCover : getMediaUrl(rawCover)) : null),
+      source: sourceStr,
+      cover: (isYoutube || isCached) ? (rawCover || `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg`) : (rawCover ? (rawCover.startsWith('http') ? rawCover : getMediaUrl(rawCover)) : null),
       isLiked,
       isOwned,
-    isLocked: false,
-    artist,
-    artistName
-  };
+      isLocked: false,
+      artist,
+      artistName,
+      isCached
+    };
 
-  // Synchronous mobile gesture unblocking:
-  if (audioRef.current) {
-    initAudioCtx();
-    if (audioCtx.current && audioCtx.current.state === 'suspended') {
-      audioCtx.current.resume().catch(e => console.warn("[MOBILE GESTURE] Resume AudioContext blocked:", e));
+    // Synchronous mobile gesture unblocking:
+    if (audioRef.current) {
+      initAudioCtx();
+      if (audioCtx.current && audioCtx.current.state === 'suspended') {
+        audioCtx.current.resume().catch(e => console.warn("[MOBILE GESTURE] Resume AudioContext blocked:", e));
+      }
+      if (isYoutube) {
+        audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+        audioRef.current.loop = true;
+      } else {
+        const rawSource = enriched.source;
+        const resolvedSrc = rawSource ? (rawSource.startsWith('http') ? rawSource : (typeof getMediaUrl === 'function' ? getMediaUrl(rawSource) : rawSource)) : "";
+        audioRef.current.src = resolvedSrc;
+        audioRef.current.loop = false;
+      }
+      audioRef.current.load();
+      audioRef.current.play().catch(e => console.warn("[MOBILE GESTURE] Play failed:", e));
     }
-    if (isYoutube) {
-      audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
-      audioRef.current.loop = true;
-    } else {
-      const rawSource = enriched.source;
-      const resolvedSrc = rawSource ? (rawSource.startsWith('http') ? rawSource : (typeof getMediaUrl === 'function' ? getMediaUrl(rawSource) : rawSource)) : "";
-      audioRef.current.src = resolvedSrc;
-      audioRef.current.loop = false;
-    }
-    audioRef.current.load();
-    audioRef.current.play().catch(e => console.warn("[MOBILE GESTURE] Play failed:", e));
-  }
 
-  setTracks([enriched]);
-  setCurrentTrackIndex(0);
-  setIsPlaying(true);
-  if (isYoutube) setIsYoutubeMode(true);
-}, [libraryTracks, likedYoutubeIds]);
+    setTracks([enriched]);
+    setCurrentTrackIndex(0);
+    setIsPlaying(true);
+    if (isYoutube) setIsYoutubeMode(true);
+    else setIsYoutubeMode(false);
+  }, [libraryTracks, likedYoutubeIds, currentUserId, cachedTrackIds]);
 
   // Fetch Tracks, Purchases, Likes (Local & YouTube), Subscription
   const fetchTracks = async () => {
@@ -1068,6 +1073,7 @@ function App() {
       const localCachedKey = `cached_native_${uid || 'anon'}`;
       const cachedNative = JSON.parse(localStorage.getItem(localCachedKey) || "[]");
       const cachedIds = new Set([
+        ...cachedTracks.map(t => String(t.youtubeId)),
         ...cachedTracks.map(t => String(t.youtubeTrackId || t.YoutubeTrackId)),
         ...cachedNative.map(String)
       ]);
@@ -1098,9 +1104,12 @@ function App() {
           const isMine = artistUserId && String(artistUserId) === String(uid);
 
           const yId = getGlobalYoutubeId(t);
-          const isYT = !!yId;
+          const isCached = yId && cachedIds.has(String(yId));
+          const isYT = !!yId && !isCached;
           const rawSource = t.source || t.Source || t.filePath || t.FilePath || "";
-          const resolvedSource = isYT ? `youtube:${yId}` : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null);
+          const resolvedSource = isCached
+            ? `${API_BASE_URL}cache/${uid}_${yId}.mp3`
+            : (isYT ? `youtube:${yId}` : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null));
 
           if (!resolvedSource || resolvedSource === API_BASE_URL || resolvedSource === `${API_BASE_URL}/`) return;
 
@@ -1117,11 +1126,11 @@ function App() {
             artist: artistName || 'Unknown Artist',
             album: t.album?.title || t.Album?.Title || 'Unknown Album',
             duration: t.duration || t.Duration || '3:00',
-            cover: isYT ? (t.thumbnailUrl || t.ThumbnailUrl || `https://img.youtube.com/vi/${yId}/hqdefault.jpg`) : getMediaUrl(t.coverImageUrl || t.CoverImageUrl),
+            cover: (isYT || isCached) ? (t.thumbnailUrl || t.ThumbnailUrl || `https://img.youtube.com/vi/${yId}/hqdefault.jpg`) : getMediaUrl(t.coverImageUrl || t.CoverImageUrl),
             source: resolvedSource,
             isOwned: ownedTrackIds.has(trackId) || isMine,
             isLiked: isLiked,
-            isCached: cachedIds.has(Number(trackId)) || cachedIds.has(trackId),
+            isCached: isCached || cachedIds.has(Number(trackId)) || cachedIds.has(trackId),
           };
 
           const key = getUniqueKey(mappedTrack);
@@ -1139,7 +1148,8 @@ function App() {
           const yId = getGlobalYoutubeId(lik);
           if (yId) {
             localLikedYtIds.add(yId);
-            const sourceKey = `youtube:${yId}`;
+            const isCached = cachedIds.has(String(yId));
+            const sourceKey = isCached ? `${API_BASE_URL}cache/${uid}_${yId}.mp3` : `youtube:${yId}`;
             if (uniqueTracksMap.has(sourceKey)) {
               const existing = uniqueTracksMap.get(sourceKey);
               uniqueTracksMap.set(sourceKey, { ...existing, isLiked: true });
@@ -1154,7 +1164,7 @@ function App() {
               isLiked: true,
               isOwned: false,
               isLocked: false,
-              isCached: cachedIds.has(lik.id) || cachedIds.has(lik.Id)
+              isCached: isCached || cachedIds.has(lik.id) || cachedIds.has(lik.Id)
             };
             uniqueTracksMap.set(sourceKey, mappedYt);
           }
@@ -1174,6 +1184,7 @@ function App() {
         return prev.map(t => {
           const tId = String(t.trackId || t.TrackId || t.id || t.Id);
           const yId = getGlobalYoutubeId(t);
+          const isCached = yId && cachedIds.has(String(yId));
           
           let isLiked = yId ? localLikedYtIds.has(yId) : likedTrackIds.has(tId);
           // If not found by primary keys, try matching libraryTracks meta (fallthrough)
@@ -1187,8 +1198,12 @@ function App() {
           // Ensure correct artist and artistName mapping to get rid of "Unknown Artist" saved in queue/local storage
           const artist = matched ? (matched.artist || extractArtistName(matched)) : (t.artist || extractArtistName(t) || 'Unknown Artist');
           const artistName = matched ? (matched.artistName || matched.ArtistName || extractArtistName(matched)) : (t.artistName || t.ArtistName || extractArtistName(t) || 'Unknown Artist');
+          
+          const resolvedSource = isCached
+            ? `${API_BASE_URL}cache/${uid}_${yId}.mp3`
+            : (yId ? `youtube:${yId}` : (t.source || t.Source));
 
-          return { ...t, isLiked, isOwned, artist, artistName };
+          return { ...t, isLiked, isOwned, artist, artistName, source: resolvedSource, isCached };
         });
       });
     } catch (error) {
@@ -1536,6 +1551,18 @@ function App() {
       audioCtx.current.resume().catch(e => console.warn("AudioContext resume failed:", e));
     }
     
+    if (isYoutubeMode && youtubePlayer) {
+      try {
+        const ytState = typeof youtubePlayer.getPlayerState === 'function' ? youtubePlayer.getPlayerState() : -1;
+        // ytState 1 is PLAYING, 3 is BUFFERING. If it's loaded but paused/cued/unstarted:
+        if (ytState !== 1 && ytState !== 3) {
+          youtubePlayer.playVideo();
+          setIsPlaying(true);
+          return;
+        }
+      } catch (e) { console.warn("Failed checking YT state in togglePlay:", e); }
+    }
+
     const nextPlaying = !isPlaying;
     setIsPlaying(nextPlaying);
     
@@ -1606,7 +1633,8 @@ function App() {
 
       // Unified YouTube Resolution
       const pureYtId = getGlobalYoutubeId(pTrack);
-      const isYoutube = !!pureYtId;
+      const isCached = pureYtId && cachedTrackIds.has(pureYtId);
+      const isYoutube = !!pureYtId && !isCached;
       const isDiscoveryAbsolute = isYoutube || (pTrack.source || pTrack.Source || "").startsWith('http');
 
       // Resolve Like Status
@@ -1614,29 +1642,35 @@ function App() {
 
       // Resolve Cover
       const rawCover = pTrack.cover || pTrack.CoverImageUrl || pTrack.coverImageUrl || pTrack.imageUrl || pTrack.ImageUrl || found?.cover || found?.CoverImageUrl || found?.imageUrl;
-      const resolvedCover = isYoutube 
+      const resolvedCover = (isYoutube || isCached)
         ? (rawCover || `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg`)
         : (rawCover ? (rawCover.startsWith('http') ? rawCover : getMediaUrl(rawCover)) : null);
+
+      const resolvedSource = isCached
+        ? `${API_BASE_URL}cache/${currentUserId}_${pureYtId}.mp3`
+        : (isYoutube ? `youtube:${pureYtId}` : (isDiscoveryAbsolute ? (pTrack.source || pTrack.Source) : (found?.source || found?.Source || pTrack.source || pTrack.Source)));
 
       if (found) {
         return {
           ...found,
           id: pId || found.id || found.Id,
-          source: isYoutube ? `youtube:${pureYtId}` : (isDiscoveryAbsolute ? (pTrack.source || pTrack.Source) : (found.source || found.Source || pTrack.source || pTrack.Source)),
+          source: resolvedSource,
           cover: resolvedCover,
           isLiked,
           isOwned: true,
-          isLocked: false
+          isLocked: false,
+          isCached
         };
       }
       return {
         ...pTrack,
         id: pId,
-        source: isYoutube ? `youtube:${pureYtId}` : (pTrack.source || pTrack.Source),
+        source: resolvedSource,
         cover: resolvedCover,
         isLiked,
         isOwned: true,
-        isLocked: false
+        isLocked: false,
+        isCached
       };
     });
 
@@ -1670,6 +1704,7 @@ function App() {
     setCurrentTrackIndex(startIndex);
     setIsPlaying(true);
     if (isYT) setIsYoutubeMode(true);
+    else setIsYoutubeMode(false);
 
     if (shouldRedirect && typeof setRedirectTrigger === 'function') {
       setRedirectTrigger(Date.now());
