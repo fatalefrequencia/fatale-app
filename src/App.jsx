@@ -86,9 +86,20 @@ const getGlobalYoutubeId = (t) => {
   const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
   const id = track.youtubeId || track.YoutubeId || track.videoId || track.VideoId || track.id || track.Id;
   
-  if (typeof rawSource === 'string' && rawSource.startsWith('youtube:')) return rawSource.split(':')[1];
-  
   if (typeof rawSource === 'string') {
+    if (rawSource.startsWith('youtube:')) return rawSource.split(':')[1];
+    if (rawSource.includes('Youtube/stream')) {
+      const match = rawSource.match(/[?&]videoId=([^&]+)/);
+      if (match) return match[1];
+    }
+    if (rawSource.includes('cache/')) {
+      const parts = rawSource.split('/');
+      const lastPart = parts[parts.length - 1];
+      const underScoreIndex = lastPart.indexOf('_');
+      if (underScoreIndex !== -1) {
+        return lastPart.substring(underScoreIndex + 1).replace('.mp3', '');
+      }
+    }
     if (rawSource.includes('youtube.com/watch?v=')) return rawSource.split('v=')[1]?.split('&')[0];
     if (rawSource.includes('youtu.be/')) return rawSource.split('youtu.be/')[1]?.split('?')[0];
   }
@@ -987,10 +998,12 @@ function App() {
     // Unified YouTube Resolution
     const pureYtId = getGlobalYoutubeId(track);
     const isCached = pureYtId && cachedTrackIds.has(pureYtId);
-    const isYoutube = !!pureYtId && !isCached;
-    const sourceStr = isCached
-      ? `${API_BASE_URL}cache/${currentUserId}_${pureYtId}.mp3`
-      : (isYoutube ? `youtube:${pureYtId}` : (rawSource || ""));
+    const isYoutube = false; // Bypass legacy YouTube iframe player
+    const sourceStr = pureYtId
+      ? (isCached
+          ? `${API_BASE_URL}cache/${currentUserId}_${pureYtId}.mp3`
+          : `${API_BASE_URL}Youtube/stream?videoId=${pureYtId}&userId=${currentUserId}`)
+      : (rawSource || "");
 
     // --- DEEP RECONCILIATION: Inherit State from Library ---
     const libraryMatch = libraryTracks.find(lt =>
@@ -1112,9 +1125,11 @@ function App() {
           const isCached = yId && cachedIds.has(String(yId));
           const isYT = !!yId && !isCached;
           const rawSource = t.source || t.Source || t.filePath || t.FilePath || "";
-          const resolvedSource = isCached
-            ? `${API_BASE_URL}cache/${uid}_${yId}.mp3`
-            : (isYT ? `youtube:${yId}` : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null));
+          const resolvedSource = yId
+            ? (isCached
+                ? `${API_BASE_URL}cache/${uid}_${yId}.mp3`
+                : `${API_BASE_URL}Youtube/stream?videoId=${yId}&userId=${uid}`)
+            : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null);
 
           if (!resolvedSource || resolvedSource === API_BASE_URL || resolvedSource === `${API_BASE_URL}/`) return;
 
@@ -1154,7 +1169,9 @@ function App() {
           if (yId) {
             localLikedYtIds.add(yId);
             const isCached = cachedIds.has(String(yId));
-            const sourceKey = isCached ? `${API_BASE_URL}cache/${uid}_${yId}.mp3` : `youtube:${yId}`;
+            const sourceKey = isCached
+              ? `${API_BASE_URL}cache/${uid}_${yId}.mp3`
+              : `${API_BASE_URL}Youtube/stream?videoId=${yId}&userId=${uid}`;
             if (uniqueTracksMap.has(sourceKey)) {
               const existing = uniqueTracksMap.get(sourceKey);
               uniqueTracksMap.set(sourceKey, { ...existing, isLiked: true });
@@ -1204,9 +1221,11 @@ function App() {
           const artist = matched ? (matched.artist || extractArtistName(matched)) : (t.artist || extractArtistName(t) || 'Unknown Artist');
           const artistName = matched ? (matched.artistName || matched.ArtistName || extractArtistName(matched)) : (t.artistName || t.ArtistName || extractArtistName(t) || 'Unknown Artist');
           
-          const resolvedSource = isCached
-            ? `${API_BASE_URL}cache/${uid}_${yId}.mp3`
-            : (yId ? `youtube:${yId}` : (t.source || t.Source));
+          const resolvedSource = yId
+            ? (isCached
+                ? `${API_BASE_URL}cache/${uid}_${yId}.mp3`
+                : `${API_BASE_URL}Youtube/stream?videoId=${yId}&userId=${uid}`)
+            : (t.source || t.Source);
 
           return { ...t, isLiked, isOwned, artist, artistName, source: resolvedSource, isCached };
         });
@@ -1433,8 +1452,8 @@ function App() {
       console.log("[ORGANIC] Queue exhausted. Fetching recommendations...");
       try {
         const lastTrack = tracks[currentTrackIndex];
-        const isYT = (lastTrack?.source || lastTrack?.Source)?.startsWith('youtube:');
-        const lastVideoId = isYT ? (lastTrack.source || lastTrack.Source).split(':')[1] : null;
+        const lastVideoId = getGlobalYoutubeId(lastTrack);
+        const isYT = !!lastVideoId;
 
         const res = await API.Organic.getNextRecommendation(
           lastVideoId || 'COLD_START',
@@ -1444,16 +1463,22 @@ function App() {
 
         if (res.data && res.data.length > 0) {
           const rec = res.data[0];
+          const isCached = cachedTrackIds.has(rec.trackId);
           const mappedRec = {
             id: rec.trackId,
             title: rec.title,
             artist: rec.author || rec.artist || 'Recommended',
-            source: rec.trackType === 'youtube' ? `youtube:${rec.trackId}` : rec.trackId,
+            source: rec.trackType === 'youtube'
+              ? (isCached
+                  ? `${API_BASE_URL}cache/${currentUserId}_${rec.trackId}.mp3`
+                  : `${API_BASE_URL}Youtube/stream?videoId=${rec.trackId}&userId=${currentUserId}`)
+              : rec.trackId,
             cover: rec.thumbnailUrl,
             tags: rec.tags,
             isLiked: rec.trackType === 'youtube' ? likedYoutubeIds.has(rec.trackId) : libraryTracks.some(lt => String(lt.id || lt.Id) === String(rec.trackId) && lt.isLiked),
             isOwned: true,
-            isLocked: false
+            isLocked: false,
+            isCached: isCached
           };
 
           // Update tracks first, then index
@@ -1640,21 +1665,23 @@ function App() {
       // Unified YouTube Resolution
       const pureYtId = getGlobalYoutubeId(pTrack);
       const isCached = pureYtId && cachedTrackIds.has(pureYtId);
-      const isYoutube = !!pureYtId && !isCached;
-      const isDiscoveryAbsolute = isYoutube || (pTrack.source || pTrack.Source || "").startsWith('http');
+      const isYoutube = false; // Bypass legacy YouTube iframe player
+      const isDiscoveryAbsolute = !!pureYtId || (pTrack.source || pTrack.Source || "").startsWith('http');
 
       // Resolve Like Status
-      const isLiked = isYoutube ? likedYoutubeIds.has(pureYtId) : (pTrack.isLiked || pTrack.IsLiked || found?.isLiked || found?.IsLiked);
+      const isLiked = pureYtId ? likedYoutubeIds.has(pureYtId) : (pTrack.isLiked || pTrack.IsLiked || found?.isLiked || found?.IsLiked);
 
       // Resolve Cover
       const rawCover = pTrack.cover || pTrack.CoverImageUrl || pTrack.coverImageUrl || pTrack.imageUrl || pTrack.ImageUrl || found?.cover || found?.CoverImageUrl || found?.imageUrl;
-      const resolvedCover = (isYoutube || isCached)
+      const resolvedCover = (pureYtId || isCached)
         ? (rawCover || `https://img.youtube.com/vi/${pureYtId}/hqdefault.jpg`)
         : (rawCover ? (rawCover.startsWith('http') ? rawCover : getMediaUrl(rawCover)) : null);
 
-      const resolvedSource = isCached
-        ? `${API_BASE_URL}cache/${currentUserId}_${pureYtId}.mp3`
-        : (isYoutube ? `youtube:${pureYtId}` : (isDiscoveryAbsolute ? (pTrack.source || pTrack.Source) : (found?.source || found?.Source || pTrack.source || pTrack.Source)));
+      const resolvedSource = pureYtId
+        ? (isCached
+            ? `${API_BASE_URL}cache/${currentUserId}_${pureYtId}.mp3`
+            : `${API_BASE_URL}Youtube/stream?videoId=${pureYtId}&userId=${currentUserId}`)
+        : (isDiscoveryAbsolute ? (pTrack.source || pTrack.Source) : (found?.source || found?.Source || pTrack.source || pTrack.Source));
 
       if (found) {
         return {

@@ -13,6 +13,34 @@ import skullImg from '../assets/skull_neon_fuscia.png';
 
 // MENU_ITEMS moved inside component for localization
 
+// Unified YouTube Detection
+const getGlobalYoutubeId = (t) => {
+  if (!t) return null;
+  const track = t.track || t.Track || t;
+  const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
+  const id = track.youtubeId || track.YoutubeId || track.videoId || track.VideoId || track.id || track.Id;
+  
+  if (typeof rawSource === 'string') {
+    if (rawSource.startsWith('youtube:')) return rawSource.split(':')[1];
+    if (rawSource.includes('Youtube/stream')) {
+      const match = rawSource.match(/[?&]videoId=([^&]+)/);
+      if (match) return match[1];
+    }
+    if (rawSource.includes('cache/')) {
+      const parts = rawSource.split('/');
+      const lastPart = parts[parts.length - 1];
+      const underScoreIndex = lastPart.indexOf('_');
+      if (underScoreIndex !== -1) {
+        return lastPart.substring(underScoreIndex + 1).replace('.mp3', '');
+      }
+    }
+  }
+  if (typeof id === 'string' && id.length === 11) return id;
+  if (typeof id === 'string' && id.startsWith('yt-')) return id.replace('yt-', '');
+  if (typeof id === 'string' && id.startsWith('youtube:')) return id.split(':')[1];
+  return null;
+};
+
 export const IPodPlayer = ({
     isLandscape,
     tracks,
@@ -216,9 +244,10 @@ export const IPodPlayer = ({
                             duration: durationStr,
                             durationSeconds: durationSec,
                             isLiked: libraryTracks.some(lt => {
-                                const ltSource = lt.source || lt.Source;
-                                return (ltSource === `spotify:${trackId}`) || (ltSource === `youtube:${trackId}`);
-                            })
+                                 const ltSource = lt.source || lt.Source;
+                                 const ytId = getGlobalYoutubeId(lt);
+                                 return (ltSource === `spotify:${trackId}`) || (ytId === trackId);
+                             })
                         }
                     };
                 });
@@ -823,16 +852,16 @@ export const IPodPlayer = ({
                         let targetTrackId = currentTrack.id || currentTrack.Id;
 
                         // HANDLE YOUTUBE VIRTUAL TRACKS
-                        const isYoutube = currentTrack.category === 'YouTube' || (currentTrack.source && currentTrack.source.startsWith('youtube:'));
+                        const ytId = getGlobalYoutubeId(currentTrack);
+                        const isYoutube = currentTrack.category === 'YouTube' || !!ytId;
 
                         if (isYoutube) {
                             const isNumeric = !isNaN(parseInt(targetTrackId)) && String(targetTrackId).indexOf('-') === -1 && !String(targetTrackId).startsWith('youtube:');
 
                             if (!isNumeric) {
                                 console.log("[IPodPlayer] Virtual or YouTube track detected. Syncing to database...");
-                                let videoId = targetTrackId;
+                                let videoId = ytId || targetTrackId;
                                 if (String(videoId).includes(':')) videoId = videoId.split(':').pop();
-                                if (currentTrack.source?.includes(':')) videoId = currentTrack.source.split(':').pop();
 
                                 const trackData = {
                                     youtubeId: (videoId || "").trim(),
