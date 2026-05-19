@@ -274,4 +274,6 @@ export default {
     "UNKNOWN": "DESCONOCIDO",
     "UNTITLED": "SIN TÍTULO",
     "IPOD_STICKER_HELP": "Haga clic en los bordes exteriores para cambiar la calcomanía del iPod",
+    "QUEUE": "COLA",
+    "HISTORY": "HISTORIAL",
 };

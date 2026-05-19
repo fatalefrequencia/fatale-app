@@ -274,4 +274,6 @@ export default {
     "UNKNOWN": "UNKNOWN",
     "UNTITLED": "UNTITLED",
     "IPOD_STICKER_HELP": "Click the outer edges to change the iPod casing decal",
+    "QUEUE": "QUEUE",
+    "HISTORY": "HISTORY",
 };

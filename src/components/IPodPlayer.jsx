@@ -7,7 +7,7 @@ import {
     Play, Pause, SkipBack, SkipForward, Music, ArrowLeft,
     ChevronRight, Zap, Minimize2, Maximize2, Download as DownloadIcon, Heart,
     Wifi, Disc, User, List, DollarSign, Search, Video, Radio as AntennaIcon, RefreshCw,
-    Plus, X, Layers
+    Plus, X, Layers, History as HistoryIcon
 } from 'lucide-react';
 import skullImg from '../assets/skull_neon_fuscia.png';
 
@@ -91,7 +91,7 @@ export const IPodPlayer = ({
     const [activePlaylistId, setActivePlaylistId] = useState(null);
     const [showResonantStations, setShowResonantStations] = useState(false);
     const [isFullView, setIsFullView] = useState(false);
-    const [fullViewTab, setFullViewTab] = useState('playlist'); // 'playlist' | 'library' | 'favorites'
+    const [fullViewTab, setFullViewTab] = useState('queue'); // 'queue' | 'history' | 'library' | 'favorites' | 'player'
     const [librarySearchQuery, setLibrarySearchQuery] = useState('');
     const [showLibrarySearch, setShowLibrarySearch] = useState(false);
     const [resonantStations, setResonantStations] = useState([]);
@@ -301,7 +301,8 @@ export const IPodPlayer = ({
         if (isSearching) {
             if (!searchQuery) return [{ id: 'INFO', label: 'Type to search...' }];
             const lowerQ = searchQuery.toLowerCase();
-            const results = tracks.map((trk, i) => ({ ...trk, originalIndex: i }))
+            const sourceList = libraryTracks.length > 0 ? libraryTracks : tracks;
+            const results = sourceList.map((trk, i) => ({ ...trk, originalIndex: i }))
                 .filter(trk => (trk.title || trk.Title || '').toLowerCase().includes(lowerQ) ||
                     (trk.artist || trk.artistName || trk.ArtistName || '').toLowerCase().includes(lowerQ))
                 .map(trk => ({ id: trk.originalIndex, label: trk.title || trk.Title || 'Untitled Track', originalTrack: trk }));
@@ -1135,12 +1136,21 @@ export const IPodPlayer = ({
                                 {/* LEFT PANEL: Navigation */}
                                 <div className="flex lg:flex-col gap-2 mb-4 lg:mb-0 overflow-x-auto no-scrollbar shrink-0 lg:pr-2 border-r lg:border-white/5">
                                     <button 
-                                        onClick={() => setFullViewTab('playlist')} 
-                                        className={`px-4 py-3 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-3 w-full border text-left ${fullViewTab === 'playlist' ? 'bg-[#f00060]/10 border-[#f00060] text-white shadow-[0_0_15px_rgba(240,0,96,0.15)] font-black' : 'bg-white/[0.02] border-white/5 text-white/50 hover:text-white/80 hover:bg-white/[0.04]'}`}
+                                        onClick={() => setFullViewTab('queue')} 
+                                        className={`px-4 py-3 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-3 w-full border text-left ${fullViewTab === 'queue' ? 'bg-[#f00060]/10 border-[#f00060] text-white shadow-[0_0_15px_rgba(240,0,96,0.15)] font-black' : 'bg-white/[0.02] border-white/5 text-white/50 hover:text-white/80 hover:bg-white/[0.04]'}`}
                                     >
-                                        <List size={14} className={fullViewTab === 'playlist' ? 'text-[#f00060]' : ''} />
-                                        <span className="flex-1 tracking-wider uppercase">{t('NOW_PLAYING_EXPANDED')}</span>
-                                        <span className="text-[9px] bg-white/10 px-1.5 py-0.5 rounded font-mono text-white/60">{tracks.length}</span>
+                                        <List size={14} className={fullViewTab === 'queue' ? 'text-[#f00060]' : ''} />
+                                        <span className="flex-1 tracking-wider uppercase">{t('QUEUE')}</span>
+                                        <span className="text-[9px] bg-white/10 px-1.5 py-0.5 rounded font-mono text-white/60">{tracks.length - currentTrackIndex}</span>
+                                    </button>
+
+                                    <button 
+                                        onClick={() => setFullViewTab('history')} 
+                                        className={`px-4 py-3 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-3 w-full border text-left ${fullViewTab === 'history' ? 'bg-[#f00060]/10 border-[#f00060] text-white shadow-[0_0_15px_rgba(240,0,96,0.15)] font-black' : 'bg-white/[0.02] border-white/5 text-white/50 hover:text-white/80 hover:bg-white/[0.04]'}`}
+                                    >
+                                        <HistoryIcon size={14} className={fullViewTab === 'history' ? 'text-[#f00060]' : ''} />
+                                        <span className="flex-1 tracking-wider uppercase">{t('HISTORY')}</span>
+                                        <span className="text-[9px] bg-white/10 px-1.5 py-0.5 rounded font-mono text-white/60">{currentTrackIndex}</span>
                                     </button>
                                     
                                     <button 
@@ -1179,25 +1189,26 @@ export const IPodPlayer = ({
                                     <div className="flex-1 overflow-y-auto no-scrollbar space-y-3 z-10 min-h-0 relative">
                                         
                                         {/* Tab: Playlist (Queue) */}
-                                        {fullViewTab === 'playlist' && (
+                                        {/* Tab: Queue */}
+                                        {fullViewTab === 'queue' && (
                                             <>
                                                 {(() => {
-                                                    const filteredPlaylist = tracks.filter(trk => {
+                                                    const queueTracks = tracks.slice(currentTrackIndex);
+                                                    const filteredQueue = queueTracks.filter(trk => {
                                                         const title = (trk.title || trk.Title || '').toLowerCase();
                                                         const artist = (trk.artist || trk.artistName || trk.ArtistName || trk.author || trk.Author || trk.channelTitle || trk.ChannelTitle || '').toLowerCase();
                                                         return title.includes(librarySearchQuery.toLowerCase()) || artist.includes(librarySearchQuery.toLowerCase());
                                                     });
 
-                                                    if (filteredPlaylist.length === 0) {
+                                                    if (filteredQueue.length === 0) {
                                                         return (
                                                             <div className="text-center py-12 text-white/30 text-xs">
                                                                 {t('NO_TRACKS_FOUND')}
-                                                                {/* NINGÚN DISPOSITIVO / PISTA ENCONTRADA */}
                                                             </div>
                                                         );
                                                     }
 
-                                                    return filteredPlaylist.map((t, idx) => {
+                                                    return filteredQueue.map((t, idx) => {
                                                         const actualIndex = tracks.findIndex(original => original === t);
                                                         const isActive = actualIndex === currentTrackIndex;
                                                         return (
@@ -1208,8 +1219,8 @@ export const IPodPlayer = ({
                                                             >
                                                                 {/* Cover Art Box with hover overlay */}
                                                                 <div className={`w-12 h-12 bg-white/5 flex items-center justify-center rounded-lg overflow-hidden shrink-0 relative border transition-all ${isActive ? 'border-[#f00060]/50 shadow-[0_0_10px_rgba(240,0,96,0.2)]' : 'border-white/10 group-hover/row:border-white/20'}`}>
-                                                                    {t.ImageUrl || t.imageUrl || t.cover ? (
-                                                                        <img src={getMediaUrl(t.ImageUrl || t.imageUrl || t.cover)} alt="" className="w-full h-full object-cover" />
+                                                                    {t.ImageUrl || t.imageUrl || t.cover || t.coverUrl ? (
+                                                                        <img src={getMediaUrl(t.ImageUrl || t.imageUrl || t.cover || t.coverUrl)} alt="" className="w-full h-full object-cover" />
                                                                     ) : (
                                                                         <Music size={16} className="text-white/40" />
                                                                     )}
@@ -1250,6 +1261,83 @@ export const IPodPlayer = ({
                                                         );
                                                     });
                                                 })()}
+                                            </>
+                                        )}
+
+                                        {/* Tab: History */}
+                                        {fullViewTab === 'history' && (
+                                            <>
+                                                {(() => {
+                                                    const historyTracks = tracks.slice(0, currentTrackIndex);
+                                                    const filteredHistory = historyTracks.filter(trk => {
+                                                        const title = (trk.title || trk.Title || '').toLowerCase();
+                                                        const artist = (trk.artist || trk.artistName || trk.ArtistName || trk.author || trk.Author || trk.channelTitle || trk.ChannelTitle || '').toLowerCase();
+                                                        return title.includes(librarySearchQuery.toLowerCase()) || artist.includes(librarySearchQuery.toLowerCase());
+                                                    });
+
+                                                    if (filteredHistory.length === 0) {
+                                                        return (
+                                                            <div className="text-center py-12 text-white/30 text-xs">
+                                                                {t('NO_TRACKS_FOUND')}
+                                                            </div>
+                                                        );
+                                                    }
+
+                                                    return filteredHistory.map((t, idx) => {
+                                                        const actualIndex = tracks.findIndex(original => original === t);
+                                                        const isActive = actualIndex === currentTrackIndex;
+                                                        return (
+                                                            <div 
+                                                                key={idx} 
+                                                                className={`flex items-center gap-4 p-3 rounded-xl border transition-all duration-300 group/row cursor-pointer ${isActive ? 'bg-[#f00060]/10 border-[#f00060]/30 shadow-[0_0_15px_rgba(240,0,96,0.05)]' : 'bg-black/20 border-white/5 hover:bg-white/[0.03] hover:border-white/10'}`}
+                                                                onClick={() => { setCurrentTrackIndex(actualIndex); setIsPlaying(true); }}
+                                                            >
+                                                                {/* Cover Art Box with hover overlay */}
+                                                                <div className={`w-12 h-12 bg-white/5 flex items-center justify-center rounded-lg overflow-hidden shrink-0 relative border transition-all ${isActive ? 'border-[#f00060]/50 shadow-[0_0_10px_rgba(240,0,96,0.2)]' : 'border-white/10 group-hover/row:border-white/20'}`}>
+                                                                    {t.ImageUrl || t.imageUrl || t.cover || t.coverUrl ? (
+                                                                        <img src={getMediaUrl(t.ImageUrl || t.imageUrl || t.cover || t.coverUrl)} alt="" className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        <Music size={16} className="text-white/40" />
+                                                                    )}
+                                                                    
+                                                                    {/* Dynamic soundwave animator if active & playing */}
+                                                                    {isActive && isPlaying ? (
+                                                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-0.5">
+                                                                            <div className="w-0.5 h-3 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.1s' }} />
+                                                                            <div className="w-0.5 h-4 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.3s' }} />
+                                                                            <div className="w-0.5 h-2 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.5s' }} />
+                                                                            <div className="w-0.5 h-3.5 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.2s' }} />
+                                                                        </div>
+                                                                    ) : isActive ? (
+                                                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                                                            <Play size={14} className="text-[#f00060]" />
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/row:opacity-100 transition-opacity flex items-center justify-center">
+                                                                            <Play size={14} className="text-white" />
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                
+                                                                {/* Title & Artist details */}
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className={`text-xs font-bold truncate tracking-wide ${isActive ? 'text-[#f00060]' : 'text-white/90 group-hover/row:text-white'}`}>{t.title || t.Title || 'Untitled'}</div>
+                                                                    <div className="text-[10px] text-white/40 truncate mt-0.5 flex items-center gap-1.5 font-mono">
+                                                                        {(() => {
+                                                                            const artist = t.artist || t.artistName || t.ArtistName || t.author || t.Author || t.channelTitle || t.ChannelTitle;
+                                                                            if (artist && artist !== 'YouTube') return <span className="truncate">{artist}</span>;
+                                                                            const title = t.title || t.Title || '';
+                                                                            if (title.includes(' - ')) return <span className="truncate">{title.split(' - ')[0]}</span>;
+                                                                            return <span className="text-red-500 uppercase tracking-widest text-[8px] bg-red-950/20 px-1 border border-red-900/30 rounded-sm">[ YT_SIGNAL ]</span>;
+                                                                        })()}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    });
+                                                })()}
+                                            </>
+                                        )}
 
                                                 {/* Recommendations section inside Playlist Tab */}
                                                 {recommendedTracks && recommendedTracks.length > 0 && !librarySearchQuery && (
@@ -1266,8 +1354,8 @@ export const IPodPlayer = ({
                                                                     onClick={() => onPlayPlaylist && onPlayPlaylist(recommendedTracks, idx)}
                                                                 >
                                                                     <div className="w-32 h-32 bg-black border border-white/5 flex items-center justify-center rounded-xl overflow-hidden mb-2 relative group-hover/card:border-[#f00060]/30 transition-all">
-                                                                        {t.ImageUrl || t.imageUrl ? (
-                                                                            <img src={getMediaUrl(t.ImageUrl || t.imageUrl)} alt="" className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" />
+                                                                        {t.ImageUrl || t.imageUrl || t.cover || t.coverUrl ? (
+                                                                            <img src={getMediaUrl(t.ImageUrl || t.imageUrl || t.cover || t.coverUrl)} alt="" className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" />
                                                                         ) : (
                                                                             <Music size={24} className="text-[#f00060]/40" />
                                                                         )}
@@ -1293,8 +1381,8 @@ export const IPodPlayer = ({
                                                                     onClick={() => setCurrentTrackIndex(idx)}
                                                                 >
                                                                     <div className="w-32 h-32 bg-black border border-white/5 flex items-center justify-center rounded-xl overflow-hidden mb-2 relative group-hover/card:border-[#f00060]/30 transition-all">
-                                                                        {t.ImageUrl || t.imageUrl ? (
-                                                                            <img src={getMediaUrl(t.ImageUrl || t.imageUrl)} alt="" className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" />
+                                                                        {t.ImageUrl || t.imageUrl || t.cover || t.coverUrl ? (
+                                                                            <img src={getMediaUrl(t.ImageUrl || t.imageUrl || t.cover || t.coverUrl)} alt="" className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" />
                                                                         ) : (
                                                                             <Music size={24} className="text-[#f00060]/40" />
                                                                         )}
@@ -1309,8 +1397,6 @@ export const IPodPlayer = ({
                                                         </div>
                                                     </div>
                                                 )}
-                                            </>
-                                        )}
 
                                         {/* Tab: Playlists */}
                                         {fullViewTab === 'library' && (
@@ -1335,7 +1421,7 @@ export const IPodPlayer = ({
                                                             className="flex items-center gap-4 p-3 rounded-xl border border-white/5 bg-black/20 hover:bg-white/[0.03] hover:border-[#f00060]/30 transition-all duration-300 group/row cursor-pointer"
                                                             onClick={() => {
                                                                 onPlayPlaylist && onPlayPlaylist(p.tracks || [], 0);
-                                                                setFullViewTab('playlist');
+                                                                setFullViewTab('queue');
                                                             }}
                                                         >
                                                             <div className="w-12 h-12 bg-[#f00060]/10 flex items-center justify-center rounded-lg border border-white/10 group-hover/row:border-[#f00060]/30 transition-all shrink-0">
@@ -1378,7 +1464,7 @@ export const IPodPlayer = ({
                                                                 const favorites = libraryTracks.filter(track => track.isLiked);
                                                                 const favIndex = favorites.findIndex(original => original === trk);
                                                                 onPlayPlaylist && onPlayPlaylist(favorites, favIndex >= 0 ? favIndex : 0);
-                                                                setFullViewTab('playlist');
+                                                                setFullViewTab('queue');
                                                             }}
                                                         >
                                                             <div className="w-12 h-12 bg-[#ff006e]/10 flex items-center justify-center rounded-lg border border-white/10 group-hover/row:border-[#ff006e]/30 transition-all shrink-0">
@@ -1789,9 +1875,17 @@ export const IPodPlayer = ({
                                                 />
                                             </div>
                                         ) : (
-                                            <div className="flex items-center gap-1.5 min-w-0">
+                                            <div 
+                                                onClick={() => {
+                                                    if (screen === 'MAIN') {
+                                                        setIsSearching(true);
+                                                        setSelectedIndex(0);
+                                                    }
+                                                }}
+                                                className={`flex items-center gap-1.5 min-w-0 ${screen === 'MAIN' ? 'cursor-pointer' : ''}`}
+                                            >
                                                 {screen === 'MAIN' && <Search size={11} className="text-[#f00060] shrink-0" />}
-                                                <h2 className={`text-[11px] font-black text-[#f00060] tracking-[0.3em] font-mono ${screen === 'PLAYLIST_DETAILS' ? '' : 'uppercase'} truncate max-w-[180px]`}>
+                                                <h2 className={`text-[11px] font-black tracking-[0.3em] font-mono ${screen === 'PLAYLIST_DETAILS' ? '' : 'uppercase'} truncate max-w-[180px] ${screen === 'MAIN' ? 'text-white/40' : 'text-[#f00060]'}`}>
                                                     {screen === 'MAIN' ? t('BUSCA_ALGO') + '...' :
                                                         screen === 'ACTION_MENU' ? 'OPTIONS' :
                                                             screen === 'TIP_MENU' ? 'SELECT TIP' :
@@ -1819,7 +1913,7 @@ export const IPodPlayer = ({
                                             }}
                                             className={`transition-colors ${isSearching ? 'text-white hover:text-red-500' : 'text-[#f00060] hover:text-[#f00060]/80'}`}
                                         >
-                                            {isSearching ? <Minimize2 size={12} /> : <Search size={12} />}
+                                            {isSearching || screen === 'MAIN' ? <Minimize2 size={12} /> : <Search size={12} />}
                                         </button>
                                     </div>
                                     <div className={`flex-1 flex ${isVertical ? 'flex-col' : 'flex-row'} overflow-hidden`}>

@@ -233,4 +233,6 @@ export default {
     "UNKNOWN": "不明",
     "UNTITLED": "無題",
     "IPOD_STICKER_HELP": "外側のエッジをクリックしてiPodのデカールスキンを変更します",
+    "QUEUE": "キュー",
+    "HISTORY": "履歴",
 };

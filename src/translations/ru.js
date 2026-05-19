@@ -233,4 +233,6 @@ export default {
     "UNKNOWN": "НЕИЗВЕСТНО",
     "UNTITLED": "БЕЗ НАЗВАНИЯ",
     "IPOD_STICKER_HELP": "Нажмите на внешние края, чтобы изменить наклейку iPod",
+    "QUEUE": "ОЧЕРЕДЬ",
+    "HISTORY": "ИСТОРИЯ",
 };
