@@ -44,7 +44,8 @@ export const IPodPlayer = ({
     stationChat = [],
     stationQueue = [],
     onSendMessage,
-    onRequestTrack
+    onRequestTrack,
+    onPlayTrackAtIndex
 }) => {
     const { showNotification } = useNotification();
     const { t } = useLanguage();
@@ -1239,7 +1240,14 @@ export const IPodPlayer = ({
                                                             <div 
                                                                 key={idx} 
                                                                 className={`flex items-center gap-4 p-3 rounded-xl border transition-all duration-300 group/row cursor-pointer ${isActive ? 'bg-[#f00060]/10 border-[#f00060]/30 shadow-[0_0_15px_rgba(240,0,96,0.05)]' : 'bg-black/20 border-white/5 hover:bg-white/[0.03] hover:border-white/10'}`}
-                                                                onClick={() => { setCurrentTrackIndex(actualIndex); setIsPlaying(true); }}
+                                                                onClick={() => {
+                                                                    if (onPlayTrackAtIndex) {
+                                                                        onPlayTrackAtIndex(actualIndex);
+                                                                    } else {
+                                                                        setCurrentTrackIndex(actualIndex);
+                                                                        setIsPlaying(true);
+                                                                    }
+                                                                }}
                                                             >
                                                                 {/* Cover Art Box with hover overlay */}
                                                                 <div className={`w-12 h-12 bg-white/5 flex items-center justify-center rounded-lg overflow-hidden shrink-0 relative border transition-all ${isActive ? 'border-[#f00060]/50 shadow-[0_0_10px_rgba(240,0,96,0.2)]' : 'border-white/10 group-hover/row:border-white/20'}`}>
@@ -1319,8 +1327,12 @@ export const IPodPlayer = ({
                                                                                 className={`flex items-center gap-4 p-3 rounded-xl border transition-all duration-300 group/row cursor-pointer ${isActive ? 'bg-[#f00060]/10 border-[#f00060]/30 shadow-[0_0_15px_rgba(240,0,96,0.05)]' : 'bg-black/20 border-white/5 hover:bg-white/[0.03] hover:border-white/10'}`}
                                                                                 onClick={() => {
                                                                                     if (actualIndex >= 0) {
-                                                                                        setCurrentTrackIndex(actualIndex);
-                                                                                        setIsPlaying(true);
+                                                                                        if (onPlayTrackAtIndex) {
+                                                                                            onPlayTrackAtIndex(actualIndex);
+                                                                                        } else {
+                                                                                            setCurrentTrackIndex(actualIndex);
+                                                                                            setIsPlaying(true);
+                                                                                        }
                                                                                     } else {
                                                                                         onPlayPlaylist && onPlayPlaylist([t], 0);
                                                                                     }
@@ -1425,8 +1437,12 @@ export const IPodPlayer = ({
                                                                                         onClick={() => {
                                                                                             const actualIndex = tracks.findIndex(original => original.id === t.id || original.title === t.title);
                                                                                             if (actualIndex >= 0) {
-                                                                                                setCurrentTrackIndex(actualIndex);
-                                                                                                setIsPlaying(true);
+                                                                                                if (onPlayTrackAtIndex) {
+                                                                                                    onPlayTrackAtIndex(actualIndex);
+                                                                                                } else {
+                                                                                                    setCurrentTrackIndex(actualIndex);
+                                                                                                    setIsPlaying(true);
+                                                                                                }
                                                                                             } else {
                                                                                                 onPlayPlaylist && onPlayPlaylist([t], 0);
                                                                                             }

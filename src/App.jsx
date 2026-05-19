@@ -1279,7 +1279,7 @@ function App() {
       
       // Play silent audio on native element to keep background session alive on mobile
       const silentSrc = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
-      if (audio.getAttribute('data-playing-src') !== 'silent') {
+      if (audio.src !== silentSrc && audio.getAttribute('data-playing-src') !== 'silent') {
         audio.src = silentSrc;
         audio.loop = true;
         audio.setAttribute('data-playing-src', 'silent');
@@ -1299,8 +1299,9 @@ function App() {
       if (isYoutubeMode) setIsYoutubeMode(false);
 
       // Handle Local Audio Source Change
-      const currentSrc = audio.getAttribute('data-playing-src');
-      if (trackSource && (currentSrc !== trackSource)) {
+      const currentSrc = audio.getAttribute('data-playing-src') || audio.src;
+      const isAlreadyLoaded = audio.src && (audio.src === trackSource || audio.src.endsWith(trackSource) || currentSrc === trackSource);
+      if (trackSource && !isAlreadyLoaded) {
         console.log(`[PLAYER] Loading new local source: ${trackSource}`);
         audio.src = trackSource;
         audio.loop = false; // Ensure it doesn't loop so onEnded fires
@@ -1388,6 +1389,23 @@ function App() {
     const nextIndex = currentTrackIndex + 1;
 
     if (nextIndex < tracks.length) {
+      // Synchronous mobile unblocking:
+      if (audioRef.current) {
+        const nextTrack = tracks[nextIndex];
+        const trackSource = nextTrack?.source || nextTrack?.Source;
+        const isYTTrack = trackSource && trackSource.startsWith('youtube:');
+        if (isYTTrack) {
+          audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+          audioRef.current.loop = true;
+        } else {
+          const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
+          audioRef.current.src = resolvedSrc;
+          audioRef.current.loop = false;
+        }
+        audioRef.current.load();
+        audioRef.current.play().catch(e => console.warn("Next play failed:", e));
+      }
+
       setCurrentTrackIndex(nextIndex);
       setIsPlaying(true);
     } else {
@@ -1488,7 +1506,27 @@ function App() {
   }, [currentTrack?.id, isPlaying]);
 
   const playPrev = () => {
-    setCurrentTrackIndex((prev) => (prev - 1 + tracks.length) % (tracks.length || 1));
+    if (tracks.length === 0) return;
+    const prevIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
+
+    // Synchronous mobile unblocking:
+    if (audioRef.current) {
+      const prevTrack = tracks[prevIndex];
+      const trackSource = prevTrack?.source || prevTrack?.Source;
+      const isYTTrack = trackSource && trackSource.startsWith('youtube:');
+      if (isYTTrack) {
+        audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+        audioRef.current.loop = true;
+      } else {
+        const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
+        audioRef.current.src = resolvedSrc;
+        audioRef.current.loop = false;
+      }
+      audioRef.current.load();
+      audioRef.current.play().catch(e => console.warn("Prev play failed:", e));
+    }
+
+    setCurrentTrackIndex(prevIndex);
     setIsPlaying(true);
   };
 
@@ -1497,7 +1535,56 @@ function App() {
     if (audioCtx.current?.state === 'suspended') {
       audioCtx.current.resume().catch(e => console.warn("AudioContext resume failed:", e));
     }
-    setIsPlaying(!isPlaying);
+    
+    const nextPlaying = !isPlaying;
+    setIsPlaying(nextPlaying);
+    
+    if (nextPlaying) {
+      if (isYoutubeMode && youtubePlayer && typeof youtubePlayer.playVideo === 'function') {
+        try {
+          youtubePlayer.playVideo();
+        } catch (e) { console.warn("Sync YT play failed:", e); }
+      } else if (audioRef.current && audioRef.current.paused) {
+        audioRef.current.play().catch(e => console.warn("Sync audio play failed:", e));
+      }
+    } else {
+      if (isYoutubeMode && youtubePlayer && typeof youtubePlayer.pauseVideo === 'function') {
+        try {
+          youtubePlayer.pauseVideo();
+        } catch (e) { }
+      } else if (audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause();
+      }
+    }
+  };
+
+  const handlePlayTrackAtIndex = (index) => {
+    if (index < 0 || index >= tracks.length) return;
+    initAudioCtx();
+    if (audioCtx.current && audioCtx.current.state === 'suspended') {
+      audioCtx.current.resume().catch(e => console.warn("[MOBILE GESTURE] Resume AudioContext blocked:", e));
+    }
+    
+    const track = tracks[index];
+    const trackSource = track.source || track.Source;
+    const isYTTrack = trackSource && trackSource.startsWith('youtube:');
+    
+    if (audioRef.current) {
+      if (isYTTrack) {
+        audioRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+        audioRef.current.loop = true;
+      } else {
+        const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
+        audioRef.current.src = resolvedSrc;
+        audioRef.current.loop = false;
+      }
+      audioRef.current.load();
+      audioRef.current.play().catch(e => console.warn("[MOBILE GESTURE] Play index failed:", e));
+    }
+    
+    setCurrentTrackIndex(index);
+    setIsPlaying(true);
+    if (isYTTrack) setIsYoutubeMode(true);
   };
 
   // Modified to use main library tracks for correct Like status
@@ -4886,6 +4973,7 @@ const PlayerContent = ({
       ) : (
         <IPodPlayer
           onPlayTrack={onPlayTrack}
+          onPlayTrackAtIndex={handlePlayTrackAtIndex}
           user={user}
           vibeFeatures={vibeFeatures}
           forceNowPlaying={forceNowPlaying}
