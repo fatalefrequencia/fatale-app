@@ -64,6 +64,8 @@ export const IPodPlayer = ({
     const [playlists, setPlaylists] = useState([]);
     const [playlistTracks, setPlaylistTracks] = useState([]);
     const [activePlaylistName, setActivePlaylistName] = useState('');
+    const [activeArtistName, setActiveArtistName] = useState('');
+    const [activeArtistTracks, setActiveArtistTracks] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [recommendedTracks, setRecommendedTracks] = useState([]);
     const [listeningHistory, setListeningHistory] = useState(() => {
@@ -394,9 +396,41 @@ export const IPodPlayer = ({
         }
 
         if (screen === 'ARTISTS') {
+            const sourceList = libraryTracks.length > 0 ? libraryTracks : tracks;
+            const artistMap = new Map();
+            sourceList.forEach(t => {
+                const artistName = extractArtistName(t) || 'Unknown Artist';
+                if (!artistMap.has(artistName)) {
+                    artistMap.set(artistName, []);
+                }
+                artistMap.get(artistName).push(t);
+            });
+            const sortedArtists = Array.from(artistMap.keys()).sort((a, b) => a.localeCompare(b));
+
+            if (sortedArtists.length === 0) {
+                return [
+                    { id: 'BACK', label: '.. ' + t('BACK') },
+                    { id: 'MOCK', label: `${t('EMPTY')} ${screen}` }
+                ];
+            }
+
             return [
                 { id: 'BACK', label: '.. ' + t('BACK') },
-                { id: 'MOCK', label: `${t('EMPTY')} ${screen}` }
+                ...sortedArtists.map(artist => ({
+                    id: `ARTIST_${artist}`,
+                    label: artist,
+                    type: 'ARTIST',
+                    tracks: artistMap.get(artist)
+                }))
+            ];
+        }
+
+        if (screen === 'ARTIST_DETAILS') {
+            return [
+                { id: 'BACK_ARTISTS', label: '.. ' + t('BACK') },
+                { id: 'PLAY_ARTIST', label: t('PLAY'), action: true },
+                { id: 'SHUFFLE_ARTIST', label: t('SHUFFLE'), action: true },
+                ...activeArtistTracks.map((t, i) => ({ id: i, label: t.title || t.Title || 'Untitled Track', originalTrack: t }))
             ];
         }
         if (screen === 'SETTINGS') return [
@@ -760,13 +794,51 @@ export const IPodPlayer = ({
         }
 
         if (screen === 'ARTISTS') {
-            if (item.id === 'PLAY_ALL' || item.id === 'SHUFFLE_ALL') {
-                const rand = Math.floor(Math.random() * tracks.length);
-                setCurrentTrackIndex(rand);
-                setIsPlaying(true);
-                setScreen('NOW_PLAYING');
+            if (item.type === 'ARTIST') {
+                setActiveArtistName(item.label);
+                setActiveArtistTracks(item.tracks);
+                setScreen('ARTIST_DETAILS');
+                setSelectedIndex(0);
             }
             return;
+        }
+
+        if (screen === 'ARTIST_DETAILS') {
+            if (item.id === 'BACK_ARTISTS') {
+                setScreen('ARTISTS');
+                setSelectedIndex(0);
+                return;
+            }
+            if (item.id === 'PLAY_ARTIST') {
+                if (activeArtistTracks.length > 0) {
+                    onPlayPlaylist && onPlayPlaylist(activeArtistTracks, 0);
+                    setScreen('NOW_PLAYING');
+                }
+                return;
+            }
+            if (item.id === 'SHUFFLE_ARTIST') {
+                if (activeArtistTracks.length > 0) {
+                    const shuffled = [...activeArtistTracks].sort(() => Math.random() - 0.5);
+                    onPlayPlaylist && onPlayPlaylist(shuffled, 0);
+                    setScreen('NOW_PLAYING');
+                }
+                return;
+            }
+            // Play individual track
+            if (item.originalTrack) {
+                if (onPlayPlaylist) {
+                    onPlayPlaylist(activeArtistTracks, item.id); // 'id' in this menu is the index
+                    setScreen('NOW_PLAYING');
+                } else {
+                    const mainIndex = tracks.findIndex(trk => trk.id === item.originalTrack.id);
+                    if (mainIndex !== -1) {
+                        setCurrentTrackIndex(mainIndex);
+                        setIsPlaying(true);
+                        setScreen('NOW_PLAYING');
+                    }
+                }
+                return;
+            }
         }
 
         // --- SETTINGS ---
@@ -972,6 +1044,9 @@ export const IPodPlayer = ({
             setSelectedIndex(0);
         } else if (screen === 'PLAYLIST_DETAILS') {
             setScreen('PLAYLISTS');
+            setSelectedIndex(0);
+        } else if (screen === 'ARTIST_DETAILS') {
+            setScreen('ARTISTS');
             setSelectedIndex(0);
         } else if (screen !== 'MAIN') {
             setScreen('MAIN');
@@ -1963,7 +2038,8 @@ export const IPodPlayer = ({
                                                                                     screen === 'STATION_CHAT' ? 'LIVE COMM' :
                                                                                         screen === 'STATION_QUEUE' ? 'REQ. QUEUE' :
                                                                                             screen === 'PLAYLIST_DETAILS' ? activePlaylistName :
-                                                                                                screen}
+                                                                                                screen === 'ARTIST_DETAILS' ? activeArtistName :
+                                                                                                    screen}
                                                 </h2>
                                             </div>
                                         )}
