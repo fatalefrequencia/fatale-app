@@ -394,119 +394,144 @@ const ShoppingView = () => {
                                     </div>
                                 </div>
 
-                                {/* Right / Bottom: Info Panel */}
-                                <div className="w-full md:w-[45%] lg:w-[40%] flex flex-col bg-[#080808] md:border-l border-white/5 relative">
-                                    <div className="flex-1 overflow-y-auto no-scrollbar p-5 md:p-8 space-y-5">
+                                {/* Right / Bottom: Info Panel — TERMINAL STYLE */}
+<div className="w-full md:w-[45%] lg:w-[40%] flex flex-col bg-[#07060a] md:border-l border-[#2a0a2e] relative" style={{ fontFamily: "'Courier New', monospace" }}>
+  <div className="flex-1 overflow-y-auto no-scrollbar p-5 md:p-6 space-y-4">
 
-                                        {/* Live badge + Store name */}
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-ping" />
-                                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#ff006e]">{labels.activeProducts}</span>
-                                            </div>
-                                            <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-white leading-tight">
-                                                {selectedShop.shopName}
-                                            </h1>
-                                        </div>
+    {/* Boot prompt */}
+    <div>
+      <div className="text-[10px] text-[#8b1a8b] tracking-[.12em] mb-0.5">$ cat store_info.json</div>
+      <div className="text-[10px] text-[#cc00aa] tracking-[.08em] mb-3">// fetching product node... OK <span className="inline-block w-2 h-3 bg-[#cc00aa] align-middle animate-pulse" /></div>
+      <div className="flex items-center gap-2 mb-2">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-ping" />
+        <span className="text-[9px] font-black tracking-[.2em] text-[#cc00aa]">ACTIVE_PRODUCTS // NODE_LIVE</span>
+      </div>
+      <h1 className="text-2xl font-black tracking-[.06em] text-[#ff006e] leading-tight uppercase">
+        {selectedShop.shopName}
+      </h1>
+      <div className="text-[9px] text-[#8b1a8b] tracking-[.18em] mt-1">
+        // INDEPENDENT ARTIST STORE — MARKETPLACE_ID: {selectedShop.id.replace('api-', '0x').slice(0,8).toUpperCase()}
+      </div>
+    </div>
 
-                                        {/* Price */}
-                                        <div className="flex items-baseline gap-3 pb-4 border-b border-white/5">
-                                            <span className="text-4xl font-black text-[#00f0ff] tracking-tight" style={{ textShadow: '0 0 20px rgba(0,240,255,0.2)' }}>
-                                                {formatPrice(selectedShop.price)}
-                                            </span>
-                                            <span className="text-[8px] text-white/20 uppercase tracking-widest font-black">NET VALUE</span>
-                                            {hasNext && (
-                                                <button onClick={() => setSelectedShop(filteredShops[currentIndex + 1])}
-                                                    className="ml-auto w-7 h-7 rounded-full border border-white/10 hover:border-[#ff006e]/50 flex items-center justify-center text-white/30 hover:text-[#ff006e] transition-all">
-                                                    <ChevronRight size={14} />
-                                                </button>
-                                            )}
-                                        </div>
+    <hr className="border-[#1a041a]" />
 
-                                        {/* Technical details */}
-                                        <div className="space-y-0 text-[10px] uppercase tracking-widest">
-                                            {[
-                                                { label: isEs ? 'VENDEDOR' : 'SELLER', value: selectedShop.artistName, color: 'text-white' },
-                                                { label: 'PLATFORM', value: getDomain(selectedShop.url), color: 'text-[#00f0ff]' },
-                                                { label: 'SYNAPSE_HASH', value: selectedShop.id.replace('api-', ''), color: 'text-white/50' },
-                                            ].map(row => (
-                                                <div key={row.label} className="flex justify-between items-center py-2.5 border-b border-white/[0.04]">
-                                                    <span className="text-white/20">{row.label}</span>
-                                                    <span className={`font-bold truncate max-w-[55%] text-right ${row.color}`}>{row.value}</span>
-                                                </div>
-                                            ))}
-                                        </div>
+    {/* Price */}
+    <div className="flex items-baseline gap-2">
+      <span className="text-3xl font-black tracking-[.04em] text-[#cc00aa]">
+        {formatPrice(selectedShop.price)}
+      </span>
+      <span className="text-[9px] text-[#3d0a3d] tracking-[.2em] font-black">NET_VALUE</span>
+    </div>
 
-                                        {/* Status block */}
-                                        <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 space-y-3">
-                                            <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-widest text-[#ff006e]">
-                                                <span>[ GATEWAY_CONNECTION // ACTIVE ]</span>
-                                                <span className="animate-pulse">● LIVE_FEED</span>
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-3 text-[9px] uppercase">
-                                                <div>
-                                                    <div className="text-white/20 mb-0.5">ESTABLISHED</div>
-                                                    <div className="text-white font-bold">{selectedShop.timestamp}</div>
-                                                </div>
-                                                <div>
-                                                    <div className="text-white/20 mb-0.5">STATUS</div>
-                                                    <div className="text-green-400 font-bold">SECURED</div>
-                                                </div>
-                                            </div>
-                                        </div>
+    <hr className="border-[#1a041a]" />
 
-                                        {/* Description */}
-                                        {selectedShop.desc && (
-                                            <div>
-                                                <div className="text-[9px] text-white/20 uppercase tracking-widest mb-2">
-                                                    {isEs ? 'DESCRIPCIÓN' : 'DESCRIPTION'}
-                                                </div>
-                                                <p className="text-[11px] text-white/60 leading-relaxed">{selectedShop.desc}</p>
-                                            </div>
-                                        )}
-                                    </div>
+    {/* Metadata rows */}
+    <div>
+      <div className="text-[9px] text-[#8b1a8b] tracking-[.18em] border-b border-[#1a041a] pb-1 mb-1">
+        $ fetch node_metadata --verbose
+      </div>
+      {[
+        { label: isEs ? 'VENDEDOR' : 'SELLER', value: selectedShop.artistName, cls: 'text-[#ff006e]' },
+        { label: 'PLATFORM', value: getDomain(selectedShop.url), cls: 'text-[#cc00aa]' },
+        { label: 'SYNAPSE_HASH', value: `0x${selectedShop.id.replace('api-', '')}`, cls: 'text-[#5c1a5c]' },
+        { label: 'TIMESTAMP', value: selectedShop.timestamp, cls: 'text-[#5c1a5c]' },
+      ].map(row => (
+        <div key={row.label} className="flex justify-between items-center py-1.5 border-b border-[#0f020f] text-[10px]">
+          <span className="text-[#4a0a4a] tracking-[.12em]">{row.label}</span>
+          <span className={`font-bold truncate max-w-[55%] text-right tracking-[.06em] ${row.cls}`}>{row.value}</span>
+        </div>
+      ))}
+    </div>
 
-                                    {/* Sticky CTA footer */}
-                                    <div className="p-4 md:p-6 border-t border-white/5 bg-[#080808] space-y-2.5">
-                                        {/* Primary CTA */}
-                                        <button
-                                            onClick={() => window.open(selectedShop.url, '_blank')}
-                                            className="w-full py-4 bg-gradient-to-r from-[#ff006e] to-[#ff409f] hover:from-[#ff0080] hover:to-[#ff50af] text-white font-black uppercase text-[11px] tracking-[0.25em] rounded-xl shadow-[0_0_25px_rgba(255,0,110,0.25)] hover:shadow-[0_0_40px_rgba(255,0,110,0.4)] transition-all flex items-center justify-center gap-2"
-                                        >
-                                            {labels.buyBtn}
-                                            <ExternalLink size={13} />
-                                        </button>
+    {/* Gateway block */}
+    <div>
+      <div className="text-[9px] text-[#8b1a8b] tracking-[.18em] border-b border-[#1a041a] pb-1 mb-2">
+        $ ping gateway --status
+      </div>
+      <div className="bg-[#0b020e] border border-[#2a0a2e] rounded-md p-3 space-y-2">
+        <div className="flex items-center justify-between text-[9px] tracking-[.15em] text-[#cc00aa]">
+          <span>[ GATEWAY_CONNECTION // ACTIVE ]</span>
+          <span className="text-[#8b1a8b] animate-pulse">● LIVE_FEED</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2 text-[9px]">
+          {[
+            { k: 'ESTABLISHED', v: selectedShop.timestamp, c: 'text-[#ff006e]' },
+            { k: 'STATUS', v: 'SECURED', c: 'text-green-400' },
+            { k: 'LATENCY', v: '12ms', c: 'text-[#ff006e]' },
+            { k: 'PROTOCOL', v: 'HTTPS/2', c: 'text-[#ff006e]' },
+          ].map(r => (
+            <div key={r.k}>
+              <div className="text-[#4a0a4a] tracking-[.1em] mb-0.5">{r.k}</div>
+              <div className={`font-bold tracking-[.06em] ${r.c}`}>{r.v}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
 
-                                        {/* Secondary actions */}
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <button
-                                                onClick={() => handleCopyLink(selectedShop)}
-                                                className="py-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/15 text-white text-[10px] font-bold uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-1.5"
-                                            >
-                                                <Link2 size={11} />
-                                                {copiedId === selectedShop.id ? (isEs ? 'COPIADO' : 'COPIED!') : labels.copyLink}
-                                            </button>
-                                            <button
-                                                onClick={() => { navigator.clipboard.writeText(selectedShop.url); }}
-                                                className="py-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/15 text-white text-[10px] font-bold uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-1.5"
-                                            >
-                                                <Share2 size={11} />
-                                                {labels.shareProduct}
-                                            </button>
-                                        </div>
+    {/* Description */}
+    {selectedShop.desc && (
+      <div>
+        <div className="text-[9px] text-[#8b1a8b] tracking-[.18em] border-b border-[#1a041a] pb-1 mb-2">
+          $ cat description.txt
+        </div>
+        <div className="text-[9px] text-[#4a0a4a] tracking-[.1em] mb-1.5">PRODUCT_DESCRIPTION</div>
+        <p className="text-[11px] text-[#8b3a7a] leading-relaxed">{selectedShop.desc}</p>
+      </div>
+    )}
+  </div>
 
-                                        {/* Delete (owner only) */}
-                                        {isLoggedIn && selectedShop.artistName === `USER_${currentUserId}` && (
-                                            <button
-                                                onClick={() => handleDelete(selectedShop.id.replace('api-', ''))}
-                                                className="w-full py-2.5 border border-[#ff006e]/10 text-[#ff006e]/50 hover:text-[#ff006e] hover:border-[#ff006e]/30 text-[9px] font-bold uppercase tracking-widest rounded-xl transition-colors"
-                                            >
-                                                {labels.deleteBtn}
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
+  {/* Sticky CTA footer */}
+  <div className="p-4 md:p-5 border-t border-[#1a041a] bg-[#060408] space-y-2">
+    <div className="text-[9px] text-[#8b1a8b] tracking-[.12em] mb-2">$ exec open_store --external</div>
+
+    {/* Primary */}
+    <button
+      onClick={() => window.open(selectedShop.url, '_blank')}
+      className="w-full py-3.5 bg-[#ff006e] hover:bg-[#ff409f] text-black font-black uppercase text-[11px] tracking-[.22em] rounded flex items-center justify-center gap-2 transition-colors"
+      style={{ fontFamily: "'Courier New', monospace" }}
+    >
+      VISIT_STORE
+      <ExternalLink size={13} />
+    </button>
+
+    {/* Secondary row */}
+    <div className="grid grid-cols-2 gap-2">
+      <button
+        onClick={() => handleCopyLink(selectedShop)}
+        className="py-2.5 bg-[#0b020e] border border-[#2a0a2e] hover:border-[#cc00aa] text-[#ff006e] hover:text-[#cc00aa] text-[9px] font-bold tracking-[.15em] rounded transition-colors flex items-center justify-center gap-1.5"
+        style={{ fontFamily: "'Courier New', monospace" }}
+      >
+        <Link2 size={11} />
+        {copiedId === selectedShop.id ? 'COPIED!' : 'COPY_LINK'}
+      </button>
+      <button
+        onClick={() => { navigator.clipboard.writeText(selectedShop.url); }}
+        className="py-2.5 bg-[#0b020e] border border-[#2a0a2e] hover:border-[#cc00aa] text-[#ff006e] hover:text-[#cc00aa] text-[9px] font-bold tracking-[.15em] rounded transition-colors flex items-center justify-center gap-1.5"
+        style={{ fontFamily: "'Courier New', monospace" }}
+      >
+        <Share2 size={11} />
+        SHARE
+      </button>
+    </div>
+
+    {/* Delete */}
+    {isLoggedIn && selectedShop.artistName === `USER_${currentUserId}` && (
+      <button
+        onClick={() => handleDelete(selectedShop.id.replace('api-', ''))}
+        className="w-full py-2 border border-[#1a0418] hover:border-[#ff006e33] text-[#4a0a4a] hover:text-[#ff006e55] text-[9px] tracking-[.18em] rounded transition-colors"
+        style={{ fontFamily: "'Courier New', monospace" }}
+      >
+        [ DELETE_LISTING // OWNER_ONLY ]
+      </button>
+    )}
+
+    <div className="text-center text-[9px] text-[#3d0a3d] tracking-[.1em]">
+      // NODE {currentIndex + 1} / {filteredShops.length} — USE ARROWS TO NAVIGATE
+    </div>
+  </div>
+</div>
                         </motion.div>
 
                         {/* Copy toast */}
