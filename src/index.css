@@ -1,13 +1,6 @@
 @import "tailwindcss";
 
 @font-face {
-    font-family: 'FataleNeon';
-    src: url('./assets/fonts/FataleNeon.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-}
-
-@font-face {
     font-family: 'Share Tech Mono';
     src: url('./assets/fonts/FataleNeon.ttf') format('truetype');
     font-weight: normal;
@@ -15,7 +8,8 @@
 }
 
 @theme {
-    --font-mono: 'FataleNeon', monospace;
+    --font-sans: 'Share Tech Mono', monospace;
+    --font-mono: 'Share Tech Mono', monospace;
 }
 
 :root {
@@ -27,6 +21,7 @@
 
 html, body {
     background-color: #020202 !important;
+    font-family: 'Share Tech Mono', monospace;
     margin: 0;
     padding: 0;
     width: 100%;
@@ -44,10 +39,10 @@ body {
 
 @keyframes terminal-text-flicker {
     0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% {
-        text-shadow: 0 0 15px rgba(var(--theme-color-rgb), 0.12);
+        text-shadow: 0 0 3px rgba(var(--theme-color-rgb), 0.15);
     }
     20%, 21.999%, 63%, 63.999%, 65%, 69.999% {
-        text-shadow: 0 0 18px rgba(var(--theme-color-rgb), 0.18);
+        text-shadow: 0 0 5px rgba(var(--theme-color-rgb), 0.22);
     }
 }
 
@@ -181,7 +176,7 @@ body {
     }
 
     .mono {
-        font-family: 'FataleNeon', monospace;
+        font-family: 'Share Tech Mono', monospace;
     }
 
     @keyframes pulse-ring {
@@ -291,12 +286,12 @@ body {
 }
 
 .terminal-mono {
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     letter-spacing: 0.05em;
 }
 
 .terminal-glow-tight {
-    text-shadow: 0 0 5px currentColor;
+    text-shadow: 0 0 2px currentColor;
 }
 
 /* Glass Sweep Shimmer Keyframes */

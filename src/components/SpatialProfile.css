@@ -178,7 +178,7 @@
     flex-direction: column;
     padding: 24px;
     font-size: 10px;
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     color: var(--text-color, #ffffff);
     overflow-y: auto;
     transition: background 0.5s ease, backdrop-filter 0.5s ease, -webkit-backdrop-filter 0.5s ease;
@@ -295,7 +295,7 @@
     right: 2px;
     font-size: 6px;
     color: var(--theme-color);
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     opacity: 0.5;
 }
 
@@ -339,7 +339,7 @@
 }
 
 .identity-username {
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     font-size: 24px;
     font-weight: 900;
     color: #fff;
@@ -349,7 +349,7 @@
 }
 
 .identity-bio {
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     font-size: 10px;
     color: #fff;
     opacity: 0.6;
@@ -422,7 +422,7 @@
 }
 
 .social-name {
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     font-size: 20px;
     font-weight: 900;
     color: #fff;
@@ -431,7 +431,7 @@
 }
 
 .social-bio-text {
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     font-size: 10px;
     color: rgba(255, 255, 255, 0.5);
     line-height: 1.5;
@@ -639,7 +639,7 @@
     color: var(--subsystem-accent);
     background: var(--subsystem-bg);
     padding: 0 4px;
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     opacity: 0.5;
     z-index: 10;
 }
@@ -660,7 +660,7 @@
     color: var(--subsystem-accent);
     text-transform: uppercase;
     letter-spacing: 0.25em;
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
 }
 
 .subsystem-status {
@@ -701,7 +701,7 @@
 }
 
 .subsystem-tag {
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     font-size: 5px;
     color: var(--subsystem-accent);
     background: rgba(0, 0, 0, 0.8);
@@ -727,7 +727,7 @@
     background: transparent;
     border: 1px solid var(--subsystem-border);
     color: var(--subsystem-accent);
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     font-size: 8px;
     font-weight: bold;
     text-transform: uppercase;
@@ -875,7 +875,7 @@
     font-weight: bold;
     letter-spacing: 2px;
     text-transform: uppercase;
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     opacity: 0.6;
 }
 
@@ -938,7 +938,7 @@
 }
 
 .sector-tag {
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     font-size: 8px;
     color: var(--theme-color);
     background: rgba(var(--theme-color-rgb), 0.1);
@@ -949,12 +949,12 @@
 }
 
 .sector-label {
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     font-size: 14px;
     font-weight: 900;
     color: #fff;
     letter-spacing: 4px;
-    text-shadow: 0 0 10px rgba(var(--theme-color-rgb), 0.3);
+    text-shadow: 0 0 3px rgba(var(--theme-color-rgb), 0.3);
     text-transform: uppercase;
 }
 
@@ -1073,7 +1073,7 @@
     position: absolute;
     bottom: -15px;
     right: 0;
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     font-size: 6px;
     color: var(--theme-color);
     text-transform: uppercase;
@@ -1190,7 +1190,7 @@
 }
 
 .mobile-username {
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     font-size: 12px;
     font-weight: bold;
     color: var(--text-color, #fff);
@@ -1199,7 +1199,7 @@
 }
 
 .mobile-bio {
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     font-size: 8px;
     color: var(--text-color, #fff);
     opacity: 0.6;
@@ -1293,7 +1293,7 @@
     background: rgba(var(--subsystem-accent-rgb), 0.1);
     border: 1px solid var(--subsystem-accent);
     color: var(--subsystem-accent);
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     font-size: 12px;
     font-weight: 900;
     letter-spacing: 0.6em;
@@ -1409,7 +1409,7 @@
 .gear-item {
     font-size: 8px;
     color: rgba(255,255,255,0.6);
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     padding: 6px 12px;
     border-left: 2px solid transparent;
     transition: all 0.2s ease;
@@ -1430,7 +1430,7 @@
     border-top: 1px solid rgba(var(--subsystem-accent-rgb), 0.15);
     padding: 10px;
     font-size: 8px;
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     color: #fff;
     outline: none;
     width: 100%;
@@ -1455,7 +1455,7 @@
     font-size: 6px;
     color: var(--subsystem-accent);
     opacity: 0.4;
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
 }
 
 .subsystem-header {
@@ -1508,7 +1508,7 @@
     text-transform: uppercase;
     width: 80px;
     flex-shrink: 0;
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
 }
 
 .metadata-value {
@@ -1535,7 +1535,7 @@
     flex: 1;
     background: transparent;
     border: none;
-    font-family: 'FataleNeon', monospace;
+    font-family: 'Share Tech Mono', monospace;
     font-size: 8px;
     color: rgba(var(--subsystem-accent-rgb), 0.8);
     text-transform: uppercase;
