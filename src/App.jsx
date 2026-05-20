@@ -1405,7 +1405,8 @@ function App() {
 
     const trackSource = track.source || track.Source;
     const isLocked = (track.isLocked ?? false) && !(track.isOwned ?? true);
-    const isYT = !!getGlobalYoutubeId(track);
+    const pureYtId = getGlobalYoutubeId(track);
+    const isYT = !!pureYtId && !(track.isCached || (pureYtId && cachedTrackIds.has(pureYtId)));
 
     // 1. Mode Switching
     if (isYT) {
@@ -1495,7 +1496,8 @@ function App() {
     currentTrack?.isOwned,
     isPlaying,
     isYoutubeMode,
-    youtubePlayer
+    youtubePlayer,
+    cachedTrackIds
   ]);
 
   const finalizeListenEvent = () => {
@@ -1544,10 +1546,12 @@ function App() {
       // Synchronous mobile unblocking:
       if (audioRef.current) {
         const nextTrack = tracks[nextIndex];
-        const isYTTrack = !!getGlobalYoutubeId(nextTrack);
+        const nextYtId = getGlobalYoutubeId(nextTrack);
+        const isYTTrack = !!nextYtId && !(nextTrack.isCached || (nextYtId && cachedTrackIds.has(nextYtId)));
         if (isYTTrack) {
           playSilentAudioIfNecessary();
         } else {
+          const trackSource = nextTrack?.source || nextTrack?.Source;
           const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
           audioRef.current.src = resolvedSrc;
           audioRef.current.loop = false;
@@ -1662,10 +1666,12 @@ function App() {
     // Synchronous mobile unblocking:
     if (audioRef.current) {
       const prevTrack = tracks[prevIndex];
-      const isYTTrack = !!getGlobalYoutubeId(prevTrack);
+      const prevYtId = getGlobalYoutubeId(prevTrack);
+      const isYTTrack = !!prevYtId && !(prevTrack.isCached || (prevYtId && cachedTrackIds.has(prevYtId)));
       if (isYTTrack) {
         playSilentAudioIfNecessary();
       } else {
+        const trackSource = prevTrack?.source || prevTrack?.Source;
         const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
         audioRef.current.src = resolvedSrc;
         audioRef.current.loop = false;
@@ -1732,12 +1738,14 @@ function App() {
     }
     
     const track = tracks[index];
-    const isYTTrack = !!getGlobalYoutubeId(track);
+    const ytId = getGlobalYoutubeId(track);
+    const isYTTrack = !!ytId && !(track.isCached || (ytId && cachedTrackIds.has(ytId)));
     
     if (audioRef.current) {
       if (isYTTrack) {
         playSilentAudioIfNecessary();
       } else {
+        const trackSource = track.source || track.Source;
         const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
         audioRef.current.src = resolvedSrc;
         audioRef.current.loop = false;
@@ -1815,7 +1823,8 @@ function App() {
 
     // 3. Set states
     const firstTrack = enrichedQueue[startIndex];
-    const isYT = !!getGlobalYoutubeId(firstTrack);
+    const firstYtId = getGlobalYoutubeId(firstTrack);
+    const isYT = !!firstYtId && !(firstTrack.isCached || (firstYtId && cachedTrackIds.has(firstYtId)));
 
     // Synchronous mobile gesture unblocking:
     if (audioRef.current) {
@@ -1827,6 +1836,7 @@ function App() {
       if (isYTTrack) {
         playSilentAudioIfNecessary();
       } else {
+        const trackSource = firstTrack?.source || firstTrack?.Source;
         const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
         audioRef.current.src = resolvedSrc;
         audioRef.current.loop = false;
