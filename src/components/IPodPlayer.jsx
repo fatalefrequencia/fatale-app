@@ -397,8 +397,12 @@ export const IPodPlayer = ({
 
         if (screen === 'ARTISTS') {
             const sourceList = libraryTracks.length > 0 ? libraryTracks : tracks;
+            // Only tracks the user has explicitly liked should appear in the ARTISTS view.
+            // isMine / isOwned tracks enter libraryTracks for playback purposes but must
+            // not generate artist entries unless the user has also saved them.
+            const savedTracks = sourceList.filter(t => t.isLiked);
             const artistMap = new Map();
-            sourceList.forEach(t => {
+            savedTracks.forEach(t => {
                 const artistName = extractArtistName(t) || 'Unknown Artist';
                 if (!artistMap.has(artistName)) {
                     artistMap.set(artistName, []);
