@@ -5,6 +5,25 @@ import API from '../services/api';
 import { useLanguage } from '../contexts/LanguageContext';
 import theMarketHeader from '../assets/the_market.png';
 
+// ─── Terminal color palette (inline styles — never rely on Tailwind JIT for these) ───
+const T = {
+    bg:         '#07060a',
+    bgDeep:     '#060408',
+    bgBox:      '#0b020e',
+    border:     '#2a0a2e',
+    borderDim:  '#1a041a',
+    borderFaint:'#0f020f',
+    pink:       '#ff006e',
+    fuchsia:    '#cc00aa',
+    purple:     '#8b1a8b',
+    purpleDim:  '#4a0a4a',
+    purpleFaint:'#3d0a3d',
+    purpleMid:  '#5c1a5c',
+    descText:   '#8b3a7a',
+    green:      '#2aff6e',
+    mono:       "'Courier New', Courier, monospace",
+};
+
 const ShoppingView = () => {
     const { language } = useLanguage();
     const isEs = language === 'es';
@@ -20,16 +39,16 @@ const ShoppingView = () => {
         purchaseLinkPlaceholder: isEs ? 'https://tu-tienda.com/producto' : 'https://your-store.com/product',
         visualTeaser: isEs ? 'Portada del Producto' : 'Product Cover Media',
         uploadBtn: isEs ? 'PUBLICAR PRODUCTO' : 'PUBLISH TO MARKETPLACE',
-        buyBtn: isEs ? 'VISITAR TIENDA' : 'VISIT STORE',
-        copyLink: isEs ? 'COPIAR' : 'COPY LINK',
-        shareProduct: isEs ? 'COMPARTIR' : 'SHARE',
-        deleteBtn: isEs ? 'ELIMINAR' : 'DELETE LISTING',
+        buyBtn: isEs ? 'VISIT_STORE' : 'VISIT_STORE',
+        copyLink: isEs ? 'COPY_LINK' : 'COPY_LINK',
+        shareProduct: isEs ? 'SHARE' : 'SHARE',
+        deleteBtn: isEs ? '[ ELIMINAR // OWNER_ONLY ]' : '[ DELETE_LISTING // OWNER_ONLY ]',
         noNodes: isEs ? 'No se encontraron productos' : 'No products found',
-        activeProducts: isEs ? 'PRODUCTOS ACTIVOS' : 'ACTIVE PRODUCTS',
+        activeProducts: isEs ? 'ACTIVE_PRODUCTS' : 'ACTIVE_PRODUCTS',
         allFilter: isEs ? 'Todo' : 'All',
         myFilter: isEs ? 'Mis Productos' : 'My Products',
         enterStore: isEs ? 'ENTRAR' : 'ENTER',
-        backToMall: isEs ? 'VOLVER AL MERCADO' : 'BACK TO MALL',
+        backToMall: isEs ? 'BACK TO MALL' : 'BACK TO MALL',
     };
 
     const [shops, setShops] = useState([]);
@@ -96,7 +115,7 @@ const ShoppingView = () => {
                     desc: parsedDesc,
                     image: url.startsWith('http') ? url : `${import.meta.env.VITE_API_BASE_URL?.replace('/api/', '') || 'http://localhost:5264'}${url}`,
                     type,
-                    timestamp: new Date().toLocaleDateString()
+                    timestamp: new Date().toLocaleDateString(),
                 };
             });
             setShops(apiShops.reverse());
@@ -108,8 +127,7 @@ const ShoppingView = () => {
         const f = e.target.files[0];
         if (f) {
             setFile(f);
-            const isVideo = f.type.startsWith('video/') || /\.(mp4|webm|mov)$/i.test(f.name);
-            setMediaType(isVideo ? 'VIDEO' : 'PHOTO');
+            setMediaType(f.type.startsWith('video/') || /\.(mp4|webm|mov)$/i.test(f.name) ? 'VIDEO' : 'PHOTO');
         } else setFile(null);
     };
 
@@ -182,6 +200,33 @@ const ShoppingView = () => {
         return () => window.removeEventListener('keydown', onKey);
     }, [selectedShop, currentIndex, hasPrev, hasNext, filteredShops]);
 
+    // ─── Shared terminal button styles ───────────────────────────────────────────
+    const btnPrimary = {
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        width: '100%', padding: '14px 16px',
+        background: T.pink, color: '#000',
+        fontFamily: T.mono, fontSize: 11, fontWeight: 900,
+        letterSpacing: '0.22em', textTransform: 'uppercase',
+        border: 'none', borderRadius: 4, cursor: 'pointer',
+        transition: 'background 0.15s',
+    };
+    const btnSec = {
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+        flex: 1, padding: '11px 8px',
+        background: T.bgBox, border: `1px solid ${T.border}`,
+        color: T.pink, fontFamily: T.mono, fontSize: 9,
+        fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase',
+        borderRadius: 4, cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s',
+    };
+    const btnDel = {
+        width: '100%', padding: '9px 12px',
+        background: 'transparent', border: `1px solid ${T.borderDim}`,
+        color: T.purpleDim, fontFamily: T.mono, fontSize: 9,
+        letterSpacing: '0.18em', textTransform: 'uppercase',
+        borderRadius: 4, cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s',
+        marginTop: 6,
+    };
+
     return (
         <div className="h-full w-full overflow-y-auto no-scrollbar bg-[#020202] relative text-white">
 
@@ -209,8 +254,6 @@ const ShoppingView = () => {
                                         <div className="text-xl font-black text-[#ff006e]">{shops.length}</div>
                                     </div>
                                 </div>
-
-                                {/* Search + Filters row */}
                                 <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
                                     <div className="relative flex-1 max-w-md">
                                         <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
@@ -238,7 +281,7 @@ const ShoppingView = () => {
                             </div>
                         </div>
 
-                        {/* Mall Floor — Store Cards Grid */}
+                        {/* Mall Floor */}
                         <div className="flex-1 px-4 md:px-8 py-6 pb-32">
                             <div className="max-w-7xl mx-auto">
                                 {loading ? (
@@ -247,11 +290,8 @@ const ShoppingView = () => {
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
-
-                                        {/* Publish Card */}
                                         <motion.div
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
+                                            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                                             onClick={() => isLoggedIn ? setIsModalOpen(true) : alert('Please log in first.')}
                                             className="group cursor-pointer relative flex flex-col rounded-xl overflow-hidden border border-dashed border-white/10 hover:border-[#ff006e]/40 bg-white/[0.015] transition-all duration-300 aspect-[3/4]"
                                         >
@@ -266,58 +306,41 @@ const ShoppingView = () => {
                                             </div>
                                         </motion.div>
 
-                                        {/* Store Cards */}
                                         <AnimatePresence>
                                             {filteredShops.length === 0 && !loading ? (
                                                 <div className="col-span-full py-20 text-center text-white/20 text-xs uppercase tracking-widest">{labels.noNodes}</div>
                                             ) : filteredShops.map((shop, i) => (
                                                 <motion.div
                                                     key={shop.id}
-                                                    initial={{ opacity: 0, y: 20 }}
-                                                    animate={{ opacity: 1, y: 0 }}
+                                                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                                                     transition={{ delay: Math.min(i * 0.04, 0.3), type: 'spring', stiffness: 120, damping: 18 }}
-                                                    whileHover={{ y: -4 }}
-                                                    whileTap={{ scale: 0.97 }}
+                                                    whileHover={{ y: -4 }} whileTap={{ scale: 0.97 }}
                                                     onClick={() => setSelectedShop(shop)}
                                                     className="group cursor-pointer relative flex flex-col rounded-xl overflow-hidden border border-white/5 hover:border-[#ff006e]/30 bg-[#0a0a0a] transition-all duration-300 shadow-lg hover:shadow-[0_8px_30px_rgba(255,0,110,0.12)] aspect-[3/4]"
                                                 >
-                                                    {/* Hero Image — 75% of card */}
                                                     <div className="relative flex-1 overflow-hidden bg-black/40">
                                                         {shop.type === 'VIDEO' ? (
                                                             <video src={shop.image} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" autoPlay muted loop playsInline />
                                                         ) : (
                                                             <img src={shop.image} alt={shop.shopName} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" loading="lazy" />
                                                         )}
-
-                                                        {/* Gradient overlay */}
                                                         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent" />
-
-                                                        {/* Price badge */}
                                                         {shop.price && (
                                                             <div className="absolute top-2 right-2 text-[10px] font-black text-[#00f0ff] bg-black/80 border border-[#00f0ff]/30 px-2 py-0.5 rounded-md group-hover:border-[#ff006e]/50 group-hover:text-[#ff006e] transition-colors">
                                                                 {formatPrice(shop.price)}
                                                             </div>
                                                         )}
-
-                                                        {/* Domain badge */}
                                                         <div className="absolute top-2 left-2 text-[8px] bg-black/70 text-white/50 px-1.5 py-0.5 rounded">
                                                             {getDomain(shop.url)}
                                                         </div>
-
-                                                        {/* Enter overlay on hover */}
                                                         <div className="absolute inset-0 bg-[#ff006e]/0 group-hover:bg-[#ff006e]/5 transition-colors duration-300 flex items-center justify-center">
                                                             <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 bg-[#ff006e] text-black text-[9px] font-black tracking-[0.2em] px-3 py-1.5 rounded-lg flex items-center gap-1.5">
-                                                                <Store size={10} />
-                                                                {labels.enterStore}
+                                                                <Store size={10} />{labels.enterStore}
                                                             </div>
                                                         </div>
                                                     </div>
-
-                                                    {/* Card Footer — Store Info */}
                                                     <div className="px-3 py-2.5 bg-[#0a0a0a] border-t border-white/5">
-                                                        <div className="text-[11px] font-bold text-white truncate group-hover:text-[#ff006e] transition-colors leading-tight">
-                                                            {shop.shopName}
-                                                        </div>
+                                                        <div className="text-[11px] font-bold text-white truncate group-hover:text-[#ff006e] transition-colors leading-tight">{shop.shopName}</div>
                                                         <div className="text-[9px] text-white/30 mt-0.5 truncate">{shop.artistName}</div>
                                                     </div>
                                                 </motion.div>
@@ -331,222 +354,306 @@ const ShoppingView = () => {
                 )}
             </AnimatePresence>
 
-            {/* ── STORE DETAIL VIEW (full-screen "inside store") ── */}
+            {/* ── STORE DETAIL VIEW ── */}
             <AnimatePresence>
                 {selectedShop && (
                     <motion.div
                         key="store-detail"
-                        initial={{ opacity: 0, x: 40 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 40 }}
+                        initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 40 }}
                         transition={{ type: 'spring', stiffness: 280, damping: 28 }}
-                        className="absolute inset-0 bg-[#020202] flex flex-col overflow-y-auto no-scrollbar z-20"
+                        className="absolute inset-0 flex flex-col overflow-y-auto no-scrollbar z-20"
+                        style={{ background: '#020202' }}
                     >
-                        {/* Animated key for store transitions */}
                         <motion.div
                             key={selectedShop.id}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.2 }}
-                            className="flex flex-col min-h-full"
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}
+                            className="flex flex-col md:flex-row min-h-full"
                         >
-                            {/* Hero Image — top 45% on mobile, side panel on desktop */}
-                            <div className="flex flex-col md:flex-row flex-1">
+                            {/* ── LEFT / TOP: Hero image ── */}
+                            <div
+                                className="relative w-full md:w-[55%] lg:w-[60%] flex-shrink-0"
+                                style={{ minHeight: '55vw', maxHeight: '100vh' }}
+                            >
+                                <div className="absolute inset-0 bg-cover bg-center scale-110"
+                                    style={{ backgroundImage: `url(${selectedShop.image})`, filter: 'blur(28px)', opacity: 0.18 }} />
 
-                                {/* Left / Top: Hero */}
-                                <div className="relative w-full md:w-[55%] lg:w-[60%] md:h-full" style={{ minHeight: '45vw', maxHeight: '70vh' }}>
-                                    {/* Blurred BG */}
-                                    <div className="absolute inset-0 bg-cover bg-center blur-2xl opacity-20 scale-110"
-                                        style={{ backgroundImage: `url(${selectedShop.image})` }} />
+                                {selectedShop.type === 'VIDEO' ? (
+                                    <video src={selectedShop.image} className="relative z-10 w-full h-full object-cover md:object-contain" autoPlay muted loop playsInline />
+                                ) : (
+                                    <img src={selectedShop.image} alt={selectedShop.shopName} className="relative z-10 w-full h-full object-cover md:object-contain" />
+                                )}
 
-                                    {selectedShop.type === 'VIDEO' ? (
-                                        <video src={selectedShop.image} className="relative z-10 w-full h-full object-cover md:object-contain" autoPlay muted loop playsInline />
-                                    ) : (
-                                        <img src={selectedShop.image} alt={selectedShop.shopName} className="relative z-10 w-full h-full object-cover md:object-contain" />
-                                    )}
+                                {/* Back button */}
+                                <button
+                                    onClick={() => setSelectedShop(null)}
+                                    style={{
+                                        position: 'absolute', top: 16, left: 16, zIndex: 30,
+                                        display: 'flex', alignItems: 'center', gap: 6,
+                                        background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
+                                        border: `1px solid ${T.border}`,
+                                        color: '#e0e0e0', padding: '8px 14px', borderRadius: 6,
+                                        fontFamily: T.mono, fontSize: 10, fontWeight: 700,
+                                        letterSpacing: '0.14em', textTransform: 'uppercase',
+                                        cursor: 'pointer', transition: 'border-color 0.15s',
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.borderColor = T.pink}
+                                    onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
+                                >
+                                    <ArrowLeft size={13} />
+                                    <span className="hidden sm:inline">{labels.backToMall}</span>
+                                </button>
 
-                                    {/* Back button (top-left) */}
-                                    <button
-                                        onClick={() => setSelectedShop(null)}
-                                        className="absolute top-4 left-4 z-30 flex items-center gap-2 bg-black/60 backdrop-blur-sm border border-white/10 hover:border-[#ff006e]/50 text-white/80 hover:text-white px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all"
+                                {/* Prev arrow */}
+                                {hasPrev && (
+                                    <button onClick={() => setSelectedShop(filteredShops[currentIndex - 1])}
+                                        style={{
+                                            position: 'absolute', left: 16, bottom: 16, zIndex: 30,
+                                            width: 36, height: 36, borderRadius: '50%',
+                                            background: 'rgba(0,0,0,0.75)', border: `1px solid ${T.border}`,
+                                            color: '#e0e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s',
+                                        }}
+                                        onMouseEnter={e => { e.currentTarget.style.borderColor = T.pink; e.currentTarget.style.color = T.pink; }}
+                                        onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = '#e0e0e0'; }}
                                     >
-                                        <ArrowLeft size={13} />
-                                        <span className="hidden sm:inline">{labels.backToMall}</span>
+                                        <ChevronLeft size={16} />
                                     </button>
+                                )}
+                                {/* Next arrow */}
+                                {hasNext && (
+                                    <button onClick={() => setSelectedShop(filteredShops[currentIndex + 1])}
+                                        style={{
+                                            position: 'absolute', right: 16, bottom: 16, zIndex: 30,
+                                            width: 36, height: 36, borderRadius: '50%',
+                                            background: 'rgba(0,0,0,0.75)', border: `1px solid ${T.border}`,
+                                            color: '#e0e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s',
+                                        }}
+                                        onMouseEnter={e => { e.currentTarget.style.borderColor = T.pink; e.currentTarget.style.color = T.pink; }}
+                                        onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = '#e0e0e0'; }}
+                                    >
+                                        <ChevronRight size={16} />
+                                    </button>
+                                )}
 
-                                    {/* Nav arrows */}
-                                    {hasPrev && (
-                                        <button onClick={() => setSelectedShop(filteredShops[currentIndex - 1])}
-                                            className="absolute left-4 bottom-4 z-30 w-9 h-9 rounded-full bg-black/70 border border-white/10 hover:border-[#ff006e]/50 hover:text-[#ff006e] flex items-center justify-center transition-all">
-                                            <ChevronLeft size={16} />
-                                        </button>
-                                    )}
-                                    {hasNext && (
-                                        <button onClick={() => setSelectedShop(filteredShops[currentIndex + 1])}
-                                            className="absolute right-4 bottom-4 z-30 w-9 h-9 rounded-full bg-black/70 border border-white/10 hover:border-[#ff006e]/50 hover:text-[#ff006e] flex items-center justify-center transition-all">
-                                            <ChevronRight size={16} />
-                                        </button>
-                                    )}
+                                {/* Counter */}
+                                <div style={{
+                                    position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 30,
+                                    fontFamily: T.mono, fontSize: 9, color: 'rgba(255,255,255,0.35)',
+                                    background: 'rgba(0,0,0,0.65)', padding: '4px 12px', borderRadius: 99,
+                                    letterSpacing: '0.1em',
+                                }}>
+                                    {currentIndex + 1} / {filteredShops.length}
+                                </div>
+                            </div>
 
-                                    {/* Store counter */}
-                                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 text-[9px] text-white/40 bg-black/60 px-3 py-1 rounded-full">
-                                        {currentIndex + 1} / {filteredShops.length}
+                            {/* ── RIGHT / BOTTOM: Terminal Info Panel ── */}
+                            <div style={{
+                                display: 'flex', flexDirection: 'column',
+                                flex: 1, minWidth: 0,
+                                background: T.bg,
+                                borderLeft: `1px solid ${T.border}`,
+                                fontFamily: T.mono,
+                                /* on mobile it flows below the image naturally */
+                            }}>
+
+                                {/* Scrollable content area */}
+                                <div style={{ flex: 1, overflowY: 'auto', padding: '20px 22px' }} className="no-scrollbar">
+
+                                    {/* Boot prompt */}
+                                    <div style={{ marginBottom: 14 }}>
+                                        <div style={{ color: T.purple, fontSize: 10, letterSpacing: '0.12em', marginBottom: 2 }}>
+                                            $ cat store_info.json
+                                        </div>
+                                        <div style={{ color: T.fuchsia, fontSize: 10, letterSpacing: '0.08em', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            // fetching product node... OK
+                                            <span style={{
+                                                display: 'inline-block', width: 7, height: 12,
+                                                background: T.fuchsia, verticalAlign: 'middle',
+                                                animation: 'termBlink 1s step-end infinite',
+                                            }} />
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                            <span style={{
+                                                display: 'inline-block', width: 6, height: 6,
+                                                borderRadius: '50%', background: T.pink,
+                                                animation: 'termPing 0.9s ease-in-out infinite',
+                                            }} />
+                                            <span style={{ color: T.fuchsia, fontSize: 9, fontWeight: 900, letterSpacing: '0.2em' }}>
+                                                {labels.activeProducts} // NODE_LIVE
+                                            </span>
+                                        </div>
+                                        <h1 style={{
+                                            color: T.pink, fontSize: 22, fontWeight: 900,
+                                            letterSpacing: '0.06em', lineHeight: 1.1,
+                                            textTransform: 'uppercase', margin: '0 0 4px',
+                                            wordBreak: 'break-word',
+                                        }}>
+                                            {selectedShop.shopName}
+                                        </h1>
+                                        <div style={{ color: T.purple, fontSize: 9, letterSpacing: '0.18em', marginTop: 2 }}>
+                                            // INDEPENDENT ARTIST STORE — ID: {selectedShop.id.replace('api-', '0x').slice(0, 10).toUpperCase()}
+                                        </div>
                                     </div>
+
+                                    <hr style={{ border: 'none', borderTop: `1px solid ${T.borderDim}`, margin: '12px 0' }} />
+
+                                    {/* Price */}
+                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+                                        <span style={{ color: T.fuchsia, fontSize: 28, fontWeight: 900, letterSpacing: '0.04em' }}>
+                                            {formatPrice(selectedShop.price)}
+                                        </span>
+                                        <span style={{ color: T.purpleFaint, fontSize: 9, letterSpacing: '0.2em', fontWeight: 900 }}>
+                                            NET_VALUE
+                                        </span>
+                                    </div>
+
+                                    <hr style={{ border: 'none', borderTop: `1px solid ${T.borderDim}`, margin: '12px 0' }} />
+
+                                    {/* Metadata section */}
+                                    <div style={{ color: T.purple, fontSize: 9, letterSpacing: '0.18em', borderBottom: `1px solid ${T.borderDim}`, paddingBottom: 4, marginBottom: 6 }}>
+                                        $ fetch node_metadata --verbose
+                                    </div>
+                                    {[
+                                        { label: isEs ? 'VENDEDOR' : 'SELLER',   value: selectedShop.artistName,                          color: T.pink },
+                                        { label: 'PLATFORM',                      value: getDomain(selectedShop.url),                      color: T.fuchsia },
+                                        { label: 'SYNAPSE_HASH',                  value: `0x${selectedShop.id.replace('api-', '')}`,        color: T.purpleMid },
+                                        { label: 'TIMESTAMP',                     value: selectedShop.timestamp,                           color: T.purpleMid },
+                                    ].map(row => (
+                                        <div key={row.label} style={{
+                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                            padding: '7px 0', borderBottom: `1px solid ${T.borderFaint}`, fontSize: 10,
+                                        }}>
+                                            <span style={{ color: T.purpleDim, letterSpacing: '0.12em' }}>{row.label}</span>
+                                            <span style={{ color: row.color, fontWeight: 700, letterSpacing: '0.06em', maxWidth: '58%', textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {row.value}
+                                            </span>
+                                        </div>
+                                    ))}
+
+                                    {/* Gateway block */}
+                                    <div style={{ color: T.purple, fontSize: 9, letterSpacing: '0.18em', borderBottom: `1px solid ${T.borderDim}`, paddingBottom: 4, margin: '14px 0 8px' }}>
+                                        $ ping gateway --status
+                                    </div>
+                                    <div style={{
+                                        background: T.bgBox, border: `1px solid ${T.border}`,
+                                        borderRadius: 5, padding: '12px 14px',
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                                            <span style={{ color: T.fuchsia, fontSize: 9, letterSpacing: '0.14em' }}>[ GATEWAY_CONNECTION // ACTIVE ]</span>
+                                            <span style={{ color: T.purple, fontSize: 9, animation: 'termPing 1.2s ease-in-out infinite' }}>● LIVE_FEED</span>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', fontSize: 9 }}>
+                                            {[
+                                                { k: 'ESTABLISHED', v: selectedShop.timestamp, c: T.pink },
+                                                { k: 'STATUS',      v: 'SECURED',              c: T.green },
+                                                { k: 'LATENCY',     v: '12ms',                 c: T.pink },
+                                                { k: 'PROTOCOL',    v: 'HTTPS/2',              c: T.pink },
+                                            ].map(r => (
+                                                <div key={r.k}>
+                                                    <div style={{ color: T.purpleDim, letterSpacing: '0.1em', marginBottom: 2 }}>{r.k}</div>
+                                                    <div style={{ color: r.c, fontWeight: 700, letterSpacing: '0.06em' }}>{r.v}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Description */}
+                                    {selectedShop.desc && (
+                                        <div style={{ marginTop: 14 }}>
+                                            <div style={{ color: T.purple, fontSize: 9, letterSpacing: '0.18em', borderBottom: `1px solid ${T.borderDim}`, paddingBottom: 4, marginBottom: 8 }}>
+                                                $ cat description.txt
+                                            </div>
+                                            <div style={{ color: T.purpleDim, fontSize: 9, letterSpacing: '0.12em', marginBottom: 4 }}>PRODUCT_DESCRIPTION</div>
+                                            <p style={{ color: T.descText, fontSize: 11, lineHeight: 1.65, margin: 0 }}>{selectedShop.desc}</p>
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* Right / Bottom: Info Panel — TERMINAL STYLE */}
-<div className="w-full md:w-[45%] lg:w-[40%] flex flex-col bg-[#07060a] md:border-l border-[#2a0a2e] relative" style={{ fontFamily: "'Courier New', monospace" }}>
-  <div className="flex-1 overflow-y-auto no-scrollbar p-5 md:p-6 space-y-4">
+                                {/* ── Sticky CTA footer ── */}
+                                <div style={{
+                                    padding: '16px 22px',
+                                    borderTop: `1px solid ${T.borderDim}`,
+                                    background: T.bgDeep,
+                                }}>
+                                    <div style={{ color: T.purple, fontSize: 9, letterSpacing: '0.12em', marginBottom: 10 }}>
+                                        $ exec open_store --external
+                                    </div>
 
-    {/* Boot prompt */}
-    <div>
-      <div className="text-[10px] text-[#8b1a8b] tracking-[.12em] mb-0.5">$ cat store_info.json</div>
-      <div className="text-[10px] text-[#cc00aa] tracking-[.08em] mb-3">// fetching product node... OK <span className="inline-block w-2 h-3 bg-[#cc00aa] align-middle animate-pulse" /></div>
-      <div className="flex items-center gap-2 mb-2">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-ping" />
-        <span className="text-[9px] font-black tracking-[.2em] text-[#cc00aa]">ACTIVE_PRODUCTS // NODE_LIVE</span>
-      </div>
-      <h1 className="text-2xl font-black tracking-[.06em] text-[#ff006e] leading-tight uppercase">
-        {selectedShop.shopName}
-      </h1>
-      <div className="text-[9px] text-[#8b1a8b] tracking-[.18em] mt-1">
-        // INDEPENDENT ARTIST STORE — MARKETPLACE_ID: {selectedShop.id.replace('api-', '0x').slice(0,8).toUpperCase()}
-      </div>
-    </div>
+                                    {/* Primary CTA */}
+                                    <button
+                                        style={btnPrimary}
+                                        onClick={() => window.open(selectedShop.url, '_blank')}
+                                        onMouseEnter={e => e.currentTarget.style.background = '#ff409f'}
+                                        onMouseLeave={e => e.currentTarget.style.background = T.pink}
+                                    >
+                                        {labels.buyBtn}
+                                        <ExternalLink size={13} />
+                                    </button>
 
-    <hr className="border-[#1a041a]" />
+                                    {/* Secondary row */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+                                        <button
+                                            style={btnSec}
+                                            onClick={() => handleCopyLink(selectedShop)}
+                                            onMouseEnter={e => { e.currentTarget.style.borderColor = T.fuchsia; e.currentTarget.style.color = T.fuchsia; }}
+                                            onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.pink; }}
+                                        >
+                                            <Link2 size={11} />
+                                            {copiedId === selectedShop.id ? 'COPIED!' : labels.copyLink}
+                                        </button>
+                                        <button
+                                            style={btnSec}
+                                            onClick={() => navigator.clipboard.writeText(selectedShop.url)}
+                                            onMouseEnter={e => { e.currentTarget.style.borderColor = T.fuchsia; e.currentTarget.style.color = T.fuchsia; }}
+                                            onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.pink; }}
+                                        >
+                                            <Share2 size={11} />
+                                            {labels.shareProduct}
+                                        </button>
+                                    </div>
 
-    {/* Price */}
-    <div className="flex items-baseline gap-2">
-      <span className="text-3xl font-black tracking-[.04em] text-[#cc00aa]">
-        {formatPrice(selectedShop.price)}
-      </span>
-      <span className="text-[9px] text-[#3d0a3d] tracking-[.2em] font-black">NET_VALUE</span>
-    </div>
+                                    {/* Delete (owner only) */}
+                                    {isLoggedIn && selectedShop.artistName === `USER_${currentUserId}` && (
+                                        <button
+                                            style={btnDel}
+                                            onClick={() => handleDelete(selectedShop.id.replace('api-', ''))}
+                                            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,0,110,0.25)'; e.currentTarget.style.color = 'rgba(255,0,110,0.45)'; }}
+                                            onMouseLeave={e => { e.currentTarget.style.borderColor = T.borderDim; e.currentTarget.style.color = T.purpleDim; }}
+                                        >
+                                            {labels.deleteBtn}
+                                        </button>
+                                    )}
 
-    <hr className="border-[#1a041a]" />
-
-    {/* Metadata rows */}
-    <div>
-      <div className="text-[9px] text-[#8b1a8b] tracking-[.18em] border-b border-[#1a041a] pb-1 mb-1">
-        $ fetch node_metadata --verbose
-      </div>
-      {[
-        { label: isEs ? 'VENDEDOR' : 'SELLER', value: selectedShop.artistName, cls: 'text-[#ff006e]' },
-        { label: 'PLATFORM', value: getDomain(selectedShop.url), cls: 'text-[#cc00aa]' },
-        { label: 'SYNAPSE_HASH', value: `0x${selectedShop.id.replace('api-', '')}`, cls: 'text-[#5c1a5c]' },
-        { label: 'TIMESTAMP', value: selectedShop.timestamp, cls: 'text-[#5c1a5c]' },
-      ].map(row => (
-        <div key={row.label} className="flex justify-between items-center py-1.5 border-b border-[#0f020f] text-[10px]">
-          <span className="text-[#4a0a4a] tracking-[.12em]">{row.label}</span>
-          <span className={`font-bold truncate max-w-[55%] text-right tracking-[.06em] ${row.cls}`}>{row.value}</span>
-        </div>
-      ))}
-    </div>
-
-    {/* Gateway block */}
-    <div>
-      <div className="text-[9px] text-[#8b1a8b] tracking-[.18em] border-b border-[#1a041a] pb-1 mb-2">
-        $ ping gateway --status
-      </div>
-      <div className="bg-[#0b020e] border border-[#2a0a2e] rounded-md p-3 space-y-2">
-        <div className="flex items-center justify-between text-[9px] tracking-[.15em] text-[#cc00aa]">
-          <span>[ GATEWAY_CONNECTION // ACTIVE ]</span>
-          <span className="text-[#8b1a8b] animate-pulse">● LIVE_FEED</span>
-        </div>
-        <div className="grid grid-cols-2 gap-2 text-[9px]">
-          {[
-            { k: 'ESTABLISHED', v: selectedShop.timestamp, c: 'text-[#ff006e]' },
-            { k: 'STATUS', v: 'SECURED', c: 'text-green-400' },
-            { k: 'LATENCY', v: '12ms', c: 'text-[#ff006e]' },
-            { k: 'PROTOCOL', v: 'HTTPS/2', c: 'text-[#ff006e]' },
-          ].map(r => (
-            <div key={r.k}>
-              <div className="text-[#4a0a4a] tracking-[.1em] mb-0.5">{r.k}</div>
-              <div className={`font-bold tracking-[.06em] ${r.c}`}>{r.v}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-
-    {/* Description */}
-    {selectedShop.desc && (
-      <div>
-        <div className="text-[9px] text-[#8b1a8b] tracking-[.18em] border-b border-[#1a041a] pb-1 mb-2">
-          $ cat description.txt
-        </div>
-        <div className="text-[9px] text-[#4a0a4a] tracking-[.1em] mb-1.5">PRODUCT_DESCRIPTION</div>
-        <p className="text-[11px] text-[#8b3a7a] leading-relaxed">{selectedShop.desc}</p>
-      </div>
-    )}
-  </div>
-
-  {/* Sticky CTA footer */}
-  <div className="p-4 md:p-5 border-t border-[#1a041a] bg-[#060408] space-y-2">
-    <div className="text-[9px] text-[#8b1a8b] tracking-[.12em] mb-2">$ exec open_store --external</div>
-
-    {/* Primary */}
-    <button
-      onClick={() => window.open(selectedShop.url, '_blank')}
-      className="w-full py-3.5 bg-[#ff006e] hover:bg-[#ff409f] text-black font-black uppercase text-[11px] tracking-[.22em] rounded flex items-center justify-center gap-2 transition-colors"
-      style={{ fontFamily: "'Courier New', monospace" }}
-    >
-      VISIT_STORE
-      <ExternalLink size={13} />
-    </button>
-
-    {/* Secondary row */}
-    <div className="grid grid-cols-2 gap-2">
-      <button
-        onClick={() => handleCopyLink(selectedShop)}
-        className="py-2.5 bg-[#0b020e] border border-[#2a0a2e] hover:border-[#cc00aa] text-[#ff006e] hover:text-[#cc00aa] text-[9px] font-bold tracking-[.15em] rounded transition-colors flex items-center justify-center gap-1.5"
-        style={{ fontFamily: "'Courier New', monospace" }}
-      >
-        <Link2 size={11} />
-        {copiedId === selectedShop.id ? 'COPIED!' : 'COPY_LINK'}
-      </button>
-      <button
-        onClick={() => { navigator.clipboard.writeText(selectedShop.url); }}
-        className="py-2.5 bg-[#0b020e] border border-[#2a0a2e] hover:border-[#cc00aa] text-[#ff006e] hover:text-[#cc00aa] text-[9px] font-bold tracking-[.15em] rounded transition-colors flex items-center justify-center gap-1.5"
-        style={{ fontFamily: "'Courier New', monospace" }}
-      >
-        <Share2 size={11} />
-        SHARE
-      </button>
-    </div>
-
-    {/* Delete */}
-    {isLoggedIn && selectedShop.artistName === `USER_${currentUserId}` && (
-      <button
-        onClick={() => handleDelete(selectedShop.id.replace('api-', ''))}
-        className="w-full py-2 border border-[#1a0418] hover:border-[#ff006e33] text-[#4a0a4a] hover:text-[#ff006e55] text-[9px] tracking-[.18em] rounded transition-colors"
-        style={{ fontFamily: "'Courier New', monospace" }}
-      >
-        [ DELETE_LISTING // OWNER_ONLY ]
-      </button>
-    )}
-
-    <div className="text-center text-[9px] text-[#3d0a3d] tracking-[.1em]">
-      // NODE {currentIndex + 1} / {filteredShops.length} — USE ARROWS TO NAVIGATE
-    </div>
-  </div>
-</div>
+                                    <div style={{ textAlign: 'center', color: T.purpleFaint, fontSize: 9, letterSpacing: '0.1em', marginTop: 8 }}>
+                                        // NODE {currentIndex + 1} / {filteredShops.length} — USE ARROWS TO NAVIGATE
+                                    </div>
+                                </div>
+                            </div>
                         </motion.div>
 
                         {/* Copy toast */}
                         <AnimatePresence>
                             {showCopyToast && (
                                 <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: 20 }}
-                                    className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-[#ff006e] text-black text-[9px] font-black tracking-widest px-5 py-2 rounded-full shadow-[0_0_20px_rgba(255,0,110,0.4)]"
+                                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
+                                    style={{
+                                        position: 'fixed', bottom: 96, left: '50%', transform: 'translateX(-50%)',
+                                        zIndex: 50, background: T.pink, color: '#000',
+                                        fontFamily: T.mono, fontSize: 9, fontWeight: 900,
+                                        letterSpacing: '0.18em', padding: '8px 20px', borderRadius: 99,
+                                    }}
                                 >
                                     [ LINK_COPIED // SECURED ]
                                 </motion.div>
                             )}
                         </AnimatePresence>
+
+                        {/* Keyframe injection */}
+                        <style>{`
+                            @keyframes termBlink { 50% { opacity: 0; } }
+                            @keyframes termPing { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+                        `}</style>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -555,16 +662,12 @@ const ShoppingView = () => {
             <AnimatePresence>
                 {isModalOpen && (
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         onClick={() => setIsModalOpen(false)}
                         className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4"
                     >
                         <motion.div
-                            initial={{ scale: 0.95, y: 15 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.95, y: 15 }}
+                            initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }}
                             onClick={e => e.stopPropagation()}
                             className="bg-[#060608] border border-white/8 rounded-2xl w-full max-w-2xl relative overflow-hidden shadow-2xl"
                         >
@@ -576,7 +679,6 @@ const ShoppingView = () => {
                             </div>
 
                             <form onSubmit={handleUpload} className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Preview */}
                                 <div>
                                     <div className="text-[9px] text-white/30 uppercase tracking-widest mb-2">{labels.visualTeaser}</div>
                                     {previewUrl ? (
@@ -601,7 +703,6 @@ const ShoppingView = () => {
                                     )}
                                 </div>
 
-                                {/* Fields */}
                                 <div className="flex flex-col gap-4">
                                     {[
                                         { label: labels.productName, value: title, set: setTitle, placeholder: labels.productNamePlaceholder, required: true },
@@ -611,10 +712,8 @@ const ShoppingView = () => {
                                         <div key={f.label}>
                                             <label className="text-[9px] text-white/30 uppercase tracking-widest block mb-1.5">{f.label}</label>
                                             <input
-                                                value={f.value}
-                                                onChange={e => f.set(e.target.value)}
-                                                placeholder={f.placeholder}
-                                                required={f.required}
+                                                value={f.value} onChange={e => f.set(e.target.value)}
+                                                placeholder={f.placeholder} required={f.required}
                                                 className="w-full bg-white/[0.04] border border-white/8 focus:border-[#ff006e]/40 px-3 py-2.5 text-xs rounded-xl focus:outline-none transition-colors placeholder:text-white/15"
                                             />
                                         </div>
@@ -622,17 +721,14 @@ const ShoppingView = () => {
                                     <div>
                                         <label className="text-[9px] text-white/30 uppercase tracking-widest block mb-1.5">{isEs ? 'Descripción' : 'Description'}</label>
                                         <textarea
-                                            value={description}
-                                            onChange={e => setDescription(e.target.value)}
-                                            rows={3}
-                                            placeholder={isEs ? 'Descripción del producto...' : 'Product description...'}
+                                            value={description} onChange={e => setDescription(e.target.value)}
+                                            rows={3} placeholder={isEs ? 'Descripción del producto...' : 'Product description...'}
                                             className="w-full bg-white/[0.04] border border-white/8 focus:border-[#ff006e]/40 px-3 py-2.5 text-xs rounded-xl focus:outline-none transition-colors resize-none placeholder:text-white/15"
                                         />
                                     </div>
                                     <button
-                                        type="submit"
-                                        disabled={isUploading}
-                                        className="w-full py-3.5 bg-gradient-to-r from-[#ff006e] to-[#ff409f] hover:from-[#ff0080] hover:to-[#ff50af] text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-xl shadow-[0_0_20px_rgba(255,0,110,0.2)] hover:shadow-[0_0_30px_rgba(255,0,110,0.35)] disabled:opacity-50 transition-all mt-auto"
+                                        type="submit" disabled={isUploading}
+                                        className="w-full py-3.5 bg-gradient-to-r from-[#ff006e] to-[#ff409f] hover:from-[#ff0080] hover:to-[#ff50af] text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-xl disabled:opacity-50 transition-all mt-auto"
                                     >
                                         {isUploading ? '[ PUBLISHING... ]' : labels.uploadBtn}
                                     </button>
