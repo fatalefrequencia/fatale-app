@@ -291,7 +291,7 @@ const ShoppingView = () => {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-6">
                     <div className="space-y-1">
                         <div className="flex items-center">
-                            <img src={theMarketHeader} alt="The Market" className="h-10 md:h-14 w-auto object-contain animate-neon-flicker" />
+                            <img src={theMarketHeader} alt="The Market" className="h-10 md:h-14 w-auto object-contain" />
                         </div>
                         <p className="text-[10px] text-white/40 uppercase tracking-wider">
                             {labels.subtitle}
