@@ -1230,6 +1230,11 @@ function App() {
           if (artistName === 'The Archive') return;
 
           const isLiked = likedTrackIds.has(trackId);
+
+          // Skip native (non-YouTube) tracks that the user has no relationship with.
+          // Without this guard all public posted tracks enter libraryTracks and their
+          // artists bleed into the ARTISTS crate even when nothing is saved.
+          if (!isYT && !isLiked && !isMine && !ownedTrackIds.has(trackId)) return;
           if (isYT && isLiked) localLikedYtIds.add(yId);
 
           const mappedTrack = {
