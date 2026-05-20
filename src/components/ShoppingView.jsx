@@ -10,16 +10,16 @@ const T = {
     bg:         '#000000',
     bgDeep:     '#000000',
     bgBox:      '#080808',
-    border:     '#2a0a2e',
-    borderDim:  '#1a041a',
-    borderFaint:'#0f020f',
+border:     '#2a0a0a',
+borderDim:  '#1a0404',
+borderFaint:'#0f0202',
     pink:       '#ff006e',
     fuchsia:    '#cc00aa',
-    purple:     '#8b1a8b',
-    purpleDim:  '#4a0a4a',
-    purpleFaint:'#3d0a3d',
-    purpleMid:  '#5c1a5c',
-    descText:   '#8b3a7a',
+        purple:     '#8b1a1a',
+    purpleDim:  '#4a0a0a',
+    purpleFaint:'#3d0a0a',
+    purpleMid:  '#5c1a1a',
+    descText:   '#8b3a3a',
     green:      '#2aff6e',
     mono:       "'Share Tech Mono', monospace",
 };
@@ -460,41 +460,19 @@ const ShoppingView = () => {
                                 {/* Scrollable content area */}
                                 <div style={{ flex: 1, overflowY: 'auto', padding: '20px 22px' }} className="no-scrollbar">
 
-                                    {/* Boot prompt */}
                                     <div style={{ marginBottom: 14 }}>
-                                        <div style={{ color: T.purple, fontSize: 10, letterSpacing: '0.12em', marginBottom: 2 }}>
-                                            $ cat store_info.json
-                                        </div>
-                                        <div style={{ color: T.fuchsia, fontSize: 10, letterSpacing: '0.08em', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            // fetching product node... OK
-                                            <span style={{
-                                                display: 'inline-block', width: 7, height: 12,
-                                                background: T.fuchsia, verticalAlign: 'middle',
-                                                animation: 'termBlink 1s step-end infinite',
-                                            }} />
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                                            <span style={{
-                                                display: 'inline-block', width: 6, height: 6,
-                                                borderRadius: '50%', background: T.pink,
-                                                animation: 'termPing 0.9s ease-in-out infinite',
-                                            }} />
-                                            <span style={{ color: T.fuchsia, fontSize: 9, fontWeight: 900, letterSpacing: '0.2em' }}>
-                                                {labels.activeProducts} // NODE_LIVE
-                                            </span>
-                                        </div>
-                                        <h1 style={{
-                                            color: T.pink, fontSize: 22, fontWeight: 900,
-                                            letterSpacing: '0.06em', lineHeight: 1.1,
-                                            textTransform: 'uppercase', margin: '0 0 4px',
-                                            wordBreak: 'break-word',
-                                        }}>
-                                            {selectedShop.shopName}
-                                        </h1>
-                                        <div style={{ color: T.purple, fontSize: 9, letterSpacing: '0.18em', marginTop: 2 }}>
-                                            // INDEPENDENT ARTIST STORE — ID: {selectedShop.id.replace('api-', '0x').slice(0, 10).toUpperCase()}
-                                        </div>
-                                    </div>
+    <h1 style={{
+        color: T.pink, fontSize: 22, fontWeight: 900,
+        letterSpacing: '0.06em', lineHeight: 1.1,
+        textTransform: 'uppercase', margin: '0 0 4px',
+        wordBreak: 'break-word',
+    }}>
+        {selectedShop.shopName}
+    </h1>
+    <div style={{ color: T.purple, fontSize: 9, letterSpacing: '0.18em', marginTop: 2 }}>
+        // INDEPENDENT ARTIST STORE — ID: {selectedShop.id.replace('api-', '0x').slice(0, 10).toUpperCase()}
+    </div>
+</div>
 
                                     <hr style={{ border: 'none', borderTop: `1px solid ${T.borderDim}`, margin: '12px 0' }} />
 
