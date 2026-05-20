@@ -7,6 +7,17 @@
     font-style: normal;
 }
 
+@font-face {
+    font-family: 'Share Tech Mono';
+    src: url('./assets/fonts/FataleNeon.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@theme {
+    --font-mono: 'FataleNeon', monospace;
+}
+
 :root {
     --text-color: #ff006e;
     --text-color-rgb: 255, 0, 110;
