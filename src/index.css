@@ -1,11 +1,5 @@
 @import "tailwindcss";
 
-@font-face {
-    font-family: 'Share Tech Mono';
-    src: url('./assets/fonts/FataleNeon.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-}
 
 @theme {
     --font-sans: 'Share Tech Mono', monospace;
