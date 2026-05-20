@@ -1405,8 +1405,7 @@ function App() {
 
     const trackSource = track.source || track.Source;
     const isLocked = (track.isLocked ?? false) && !(track.isOwned ?? true);
-    const pureYtId = getGlobalYoutubeId(track);
-    const isYT = !!pureYtId && !(track.isCached || (pureYtId && cachedTrackIds.has(pureYtId)));
+    const isYT = !!getGlobalYoutubeId(track) && !track.isCached;
 
     // 1. Mode Switching
     if (isYT) {
@@ -1496,8 +1495,7 @@ function App() {
     currentTrack?.isOwned,
     isPlaying,
     isYoutubeMode,
-    youtubePlayer,
-    cachedTrackIds
+    youtubePlayer
   ]);
 
   const finalizeListenEvent = () => {
@@ -1546,8 +1544,7 @@ function App() {
       // Synchronous mobile unblocking:
       if (audioRef.current) {
         const nextTrack = tracks[nextIndex];
-        const nextYtId = getGlobalYoutubeId(nextTrack);
-        const isYTTrack = !!nextYtId && !(nextTrack.isCached || (nextYtId && cachedTrackIds.has(nextYtId)));
+        const isYTTrack = !!getGlobalYoutubeId(nextTrack) && !nextTrack.isCached;
         if (isYTTrack) {
           playSilentAudioIfNecessary();
         } else {
@@ -1666,8 +1663,7 @@ function App() {
     // Synchronous mobile unblocking:
     if (audioRef.current) {
       const prevTrack = tracks[prevIndex];
-      const prevYtId = getGlobalYoutubeId(prevTrack);
-      const isYTTrack = !!prevYtId && !(prevTrack.isCached || (prevYtId && cachedTrackIds.has(prevYtId)));
+      const isYTTrack = !!getGlobalYoutubeId(prevTrack) && !prevTrack.isCached;
       if (isYTTrack) {
         playSilentAudioIfNecessary();
       } else {
@@ -1738,8 +1734,7 @@ function App() {
     }
     
     const track = tracks[index];
-    const ytId = getGlobalYoutubeId(track);
-    const isYTTrack = !!ytId && !(track.isCached || (ytId && cachedTrackIds.has(ytId)));
+    const isYTTrack = !!getGlobalYoutubeId(track) && !track.isCached;
     
     if (audioRef.current) {
       if (isYTTrack) {
@@ -1823,8 +1818,7 @@ function App() {
 
     // 3. Set states
     const firstTrack = enrichedQueue[startIndex];
-    const firstYtId = getGlobalYoutubeId(firstTrack);
-    const isYT = !!firstYtId && !(firstTrack.isCached || (firstYtId && cachedTrackIds.has(firstYtId)));
+    const isYT = !!getGlobalYoutubeId(firstTrack) && !firstTrack.isCached;
 
     // Synchronous mobile gesture unblocking:
     if (audioRef.current) {
