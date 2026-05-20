@@ -886,11 +886,12 @@ const DJMixerPlayer = ({
         }
 
         if (crateCategory === 'ARTISTS') {
+            const savedTracks = libraryTracks.filter(t => t.isLiked);
             if (viewingArtist) {
-                const artistTracks = libraryTracks.filter(t => getDisplayArtist(t) === viewingArtist);
+                const artistTracks = savedTracks.filter(t => getDisplayArtist(t) === viewingArtist);
                 return { collection: artistTracks, network: [] };
             }
-            const uniqueArtists = Array.from(new Set(libraryTracks.map(t => getDisplayArtist(t)))).sort();
+            const uniqueArtists = Array.from(new Set(savedTracks.map(t => getDisplayArtist(t)))).sort();
             return { collection: [], network: [], artists: uniqueArtists };
         }
 
@@ -1602,7 +1603,7 @@ const DJMixerPlayer = ({
                                                             {artist}
                                                         </td>
                                                         <td className="sig-bpm mono opacity-20">
-                                                            {libraryTracks.filter(t => getDisplayArtist(t) === artist).length} SIG
+                                                            {libraryTracks.filter(t => t.isLiked && getDisplayArtist(t) === artist).length} SIG
                                                         </td>
                                                         <td className="sig-sync mono opacity-20">BROWSE_NODE</td>
                                                     </tr>
@@ -1613,7 +1614,24 @@ const DJMixerPlayer = ({
                                                         <tr className="section-header-row"><td colSpan="5">{t('PLAYLISTS')}: {viewingPlaylist.name || viewingPlaylist.Title}</td></tr>
                                                     )}
                                                     {viewingArtist && (
-                                                        <tr className="section-header-row"><td colSpan="5">ARTIST_SEQUENCE: {viewingArtist}</td></tr>
+                                                        <>
+                                                            <tr className="section-header-row"><td colSpan="5">ARTIST_SEQUENCE: {viewingArtist}</td></tr>
+                                                            {getFilteredTracks().collection.map((t, i) => (
+                                                                <tr key={`art-track-${i}`} className="signal-row">
+                                                                    <td className="load-actions">
+                                                                        <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
+                                                                        <button onClick={() => loadToDeck(t, 'B')} className="load-chip">B</button>
+                                                                    </td>
+                                                                    <td className="sig-title truncate font-black flex items-center gap-2">
+                                                                        {t.title}
+                                                                        {t.isLiked && <Heart size={8} fill="var(--accent)" className="text-[var(--accent)]" />}
+                                                                    </td>
+                                                                    <td className="sig-artist truncate opacity-30">{getDisplayArtist(t)}</td>
+                                                                    <td className="sig-bpm mono text-[var(--accent)]">{t.bpm || '--'}</td>
+                                                                    <td className="sig-sync mono opacity-20">{t.duration ? Math.floor(t.duration / 60) + ':' + (t.duration % 60).toString().padStart(2, '0') : '--:--'}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </>
                                                     )}
                                                     {getFilteredTracks().collection.filter(t => t.isLiked).length > 0 && !viewingPlaylist && !viewingArtist && (
                                                         <>

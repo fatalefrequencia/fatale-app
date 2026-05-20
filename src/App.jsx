@@ -1184,6 +1184,7 @@ function App() {
 
       const localCachedKey = `cached_native_${uid || 'anon'}`;
       const cachedNative = JSON.parse(localStorage.getItem(localCachedKey) || "[]");
+      const cachedNativeIds = new Set(cachedNative.map(String));
       const cachedIds = new Set([
         ...cachedTracks.map(t => String(t.youtubeId)),
         ...cachedTracks.map(t => String(t.youtubeTrackId || t.YoutubeTrackId)),
@@ -1242,7 +1243,9 @@ function App() {
             source: resolvedSource,
             isOwned: ownedTrackIds.has(trackId) || isMine,
             isLiked: isLiked,
-            isCached: isCached || cachedIds.has(Number(trackId)) || cachedIds.has(trackId),
+            isCached: yId 
+              ? (isCached || cachedIds.has(Number(trackId)) || cachedIds.has(trackId)) 
+              : (cachedNativeIds.has(trackId) || cachedNativeIds.has(Number(trackId))),
           };
 
           const key = getUniqueKey(mappedTrack);
@@ -1296,11 +1299,13 @@ function App() {
         return prev.map(t => {
           const tId = String(t.trackId || t.TrackId || t.id || t.Id);
           const yId = getGlobalYoutubeId(t);
-          const isCached = yId && cachedIds.has(String(yId));
+          const matched = finalTracks.find(ft => String(ft.id) === tId || (yId && getGlobalYoutubeId(ft) === yId));
+          const isCached = matched 
+            ? matched.isCached 
+            : (yId ? (yId && cachedIds.has(String(yId))) : (cachedNativeIds.has(tId) || cachedNativeIds.has(Number(tId))));
           
           let isLiked = yId ? localLikedYtIds.has(yId) : likedTrackIds.has(tId);
           // If not found by primary keys, try matching libraryTracks meta (fallthrough)
-          const matched = finalTracks.find(ft => String(ft.id) === tId || (yId && getGlobalYoutubeId(ft) === yId));
           if (!isLiked && matched) {
              isLiked = matched.isLiked;
           }
