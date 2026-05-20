@@ -7,9 +7,9 @@ import theMarketHeader from '../assets/the_market.png';
 
 // ─── Terminal color palette (inline styles — never rely on Tailwind JIT for these) ───
 const T = {
-    bg:         '#07060a',
-    bgDeep:     '#060408',
-    bgBox:      '#0b020e',
+    bg:         '#000000',
+    bgDeep:     '#000000',
+    bgBox:      '#080808',
     border:     '#2a0a2e',
     borderDim:  '#1a041a',
     borderFaint:'#0f020f',
@@ -21,7 +21,7 @@ const T = {
     purpleMid:  '#5c1a5c',
     descText:   '#8b3a7a',
     green:      '#2aff6e',
-    mono:       "'Courier New', Courier, monospace",
+    mono:       "'Share Tech Mono', monospace",
 };
 
 const ShoppingView = () => {
@@ -362,7 +362,7 @@ const ShoppingView = () => {
                         initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 40 }}
                         transition={{ type: 'spring', stiffness: 280, damping: 28 }}
                         className="absolute inset-0 flex flex-col overflow-y-auto no-scrollbar z-20"
-                        style={{ background: '#020202' }}
+                        style={{ background: '#000000' }}
                     >
                         <motion.div
                             key={selectedShop.id}
