@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+@font-face {
+    font-family: 'FataleNeon';
+    src: url('./assets/fonts/FataleNeon.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 :root {
     --text-color: #ff006e;
     --text-color-rgb: 255, 0, 110;
@@ -163,7 +170,7 @@ body {
     }
 
     .mono {
-        font-family: 'Share Tech Mono', monospace;
+        font-family: 'FataleNeon', monospace;
     }
 
     @keyframes pulse-ring {
@@ -273,7 +280,7 @@ body {
 }
 
 .terminal-mono {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'FataleNeon', monospace;
     letter-spacing: 0.05em;
 }
 
@@ -289,4 +296,4 @@ body {
     100% {
         transform: translateX(100%);
     }
-}
+}
