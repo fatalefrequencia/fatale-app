@@ -26,6 +26,7 @@ const getFunMessages = () => [
     "SIGNAL_CAPACITY: OPTIMAL",
     
     "FATALE NETWORK ONLINE.",
+    "xx.",
    
 ];
 
