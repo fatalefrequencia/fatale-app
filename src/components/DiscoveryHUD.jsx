@@ -21,16 +21,12 @@ const hashStr = (s) => {
 const LAST_DEPLOY_FALLBACK = '2026-05-22 @ 12:30 UTC';
 
 const getFunMessages = () => [
-    "STAY RARE. STAY SIGNAL.",
+    
     "NETWORK_INTEGRITY: STABLE",
     "SIGNAL_CAPACITY: OPTIMAL",
-    "TRANSMISSION QUALITY: CLEAN",
-    "THE FREQUENCY IS YOURS.",
-    "ALL NODES SYNCHRONIZED.",
-    "BROADCAST WIDE. COMPRESS NOTHING.",
+    
     "FATALE NETWORK ONLINE.",
-    "YOUR SIGNAL MATTERS.",
-    "KEEP TRANSMITTING.",
+   
 ];
 
 const buildLEDString = (deployInfo) => {
