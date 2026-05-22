@@ -258,6 +258,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-6"
+                style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}
         >
             {/* Backdrop */}
             <motion.div
@@ -273,6 +274,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.98, y: 10 }}
                 className="relative w-full max-w-lg bg-[#000000] border border-white/10 p-8 shadow-[0_0_100px_rgba(0,0,0,1)] rounded-sm overflow-visible"
+                    style={{ maxHeight: 'calc(100dvh - env(safe-area-inset-top, 44px) - env(safe-area-inset-bottom, 34px) - 32px)', overflowY: 'auto' }}
             >
                 {/* HUD Elements */}
                 <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-white/5 pointer-events-none" />
