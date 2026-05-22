@@ -552,117 +552,116 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
         
             {/* --- TOP HUD BAR --- */}
-<div className="z-[80] flex flex-col lg:flex-row items-center justify-between gap-4 mb-4 px-2 relative">
+            <div className="z-[80] flex flex-col lg:flex-row items-center justify-between gap-4 mb-4 px-2 relative">
 
-    {/* MOBILE: LED banner — ABOVE search on mobile */}
-    {isMobile && (
-        <div className="w-full overflow-hidden border border-[#ff006e]/15 bg-[#ff006e]/[0.03] h-5 relative">
-            <div
-                className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[9px] font-black tracking-[0.25em] text-[#ff006e]/80"
-                style={{ animation: 'led-scroll 30s linear infinite' }}
-            >
-                {[`LAST_UPDATE: ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`, ...FUN_MESSAGES].join('  //  ')}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{[`LAST_UPDATE: ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`, ...FUN_MESSAGES].join('  //  ')}
-            </div>
-        </div>
-    )}
-
-    {/* CENTER: SEARCH */}
-    <div className="w-full lg:w-[450px] flex justify-center relative">
-        {isMobile && mobileViewMode !== 'search' && !searchQuery ? (
-            <button
-                onClick={() => setMobileViewMode('search')}
-                className="p-2 text-[#ff006e] hover:text-white transition-colors self-center lg:hidden"
-            >
-                <Search size={20} />
-            </button>
-        ) : (
-            <div className="relative group w-full">
-                <div
-                    className="absolute -inset-1 rounded-lg blur opacity-0 group-focus-within:opacity-100 transition duration-1000 group-focus-within:duration-200"
-                    style={{ backgroundColor: activeSectorColor || '#ff006e', opacity: activeSectorColor ? 0.3 : 0 }}
-                ></div>
-                <div className="relative flex items-center">
-                    <div className="absolute left-3 flex items-center pointer-events-none">
-                        <Search
-                            size={16}
-                            className="group-focus-within:opacity-100 transition-opacity"
-                            style={{ color: activeSectorColor || '#ff006e', opacity: activeSector ? 1 : 0.4 }}
-                        />
-                    </div>
-                    <input
-                        type="text"
-                        placeholder={t('SEARCH_SIGNAL')}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onTouchStart={(e) => e.stopPropagation()}
-                        onTouchEnd={(e) => e.stopPropagation()}
-                        className="w-full bg-black/60 border rounded px-10 py-2.5 text-xs tracking-[0.2em] focus:outline-none focus:ring-1 transition-all placeholder:text-[#ff006e]/20"
-                        style={{
-                            borderColor: activeSectorColor ? `${activeSectorColor}99` : 'rgba(255,0,110,0.3)',
-                            focusBorderColor: activeSectorColor || '#ff006e',
-                            color: activeSectorColor || 'white',
-                            '--tw-ring-color': activeSectorColor ? `${activeSectorColor}33` : 'rgba(255,0,110,0.2)'
-                        }}
-                    />
-                    {searchQuery && (
+                {/* CENTER: SEARCH */}
+                <div className="w-full lg:w-[450px] flex justify-center relative">
+                    {isMobile && mobileViewMode !== 'search' && !searchQuery ? (
                         <button
-                            onTouchStart={(e) => { e.stopPropagation(); setSearchQuery(''); }}
-                            onClick={(e) => { e.stopPropagation(); setSearchQuery(''); }}
-                            className="absolute right-3 text-white/20 hover:text-white transition-colors"
+                            onClick={() => setMobileViewMode('search')}
+                            className="p-2 text-[#ff006e] hover:text-white transition-colors self-center lg:hidden"
                         >
-                            <X size={14} />
+                            <Search size={20} />
                         </button>
+                    ) : (
+                        <div className="relative group w-full">
+                            <div
+                                className="absolute -inset-1 rounded-lg blur opacity-0 group-focus-within:opacity-100 transition duration-1000 group-focus-within:duration-200"
+                                style={{ backgroundColor: activeSectorColor || '#ff006e', opacity: activeSectorColor ? 0.3 : 0 }}
+                            ></div>
+                            <div className="relative flex items-center">
+                                <div className="absolute left-3 flex items-center pointer-events-none">
+                                    <Search
+                                        size={16}
+                                        className="group-focus-within:opacity-100 transition-opacity"
+                                        style={{ color: activeSectorColor || '#ff006e', opacity: activeSector ? 1 : 0.4 }}
+                                    />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder={t('SEARCH_SIGNAL')}
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onTouchStart={(e) => e.stopPropagation()}
+                                    onTouchEnd={(e) => e.stopPropagation()}
+                                    className="w-full bg-black/60 border rounded px-10 py-2.5 text-xs tracking-[0.2em] focus:outline-none focus:ring-1 transition-all placeholder:text-[#ff006e]/20"
+                                    style={{
+                                        borderColor: activeSectorColor ? `${activeSectorColor}99` : 'rgba(255,0,110,0.3)',
+                                        focusBorderColor: activeSectorColor || '#ff006e',
+                                        color: activeSectorColor || 'white',
+                                        '--tw-ring-color': activeSectorColor ? `${activeSectorColor}33` : 'rgba(255,0,110,0.2)'
+                                    }}
+                                />
+                                {searchQuery && (
+                                    <button
+                                        onTouchStart={(e) => { e.stopPropagation(); setSearchQuery(''); }}
+                                        onClick={(e) => { e.stopPropagation(); setSearchQuery(''); }}
+                                        className="absolute right-3 text-white/20 hover:text-white transition-colors"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     )}
                 </div>
+
+                {/* RIGHT: LED SIGN — desktop only */}
+                <div className="flex-1 hidden lg:flex items-center justify-end">
+                    <LEDSign lastUpdated={new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC'} />
+                </div>
+
+                {/* MOBILE: LED banner — sits below search, above globe/data toggle */}
+                {isMobile && (
+                    <div className="w-full overflow-hidden border border-[#ff006e]/15 bg-[#ff006e]/[0.03] h-5 relative">
+                        <div
+                            className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[9px] font-black tracking-[0.25em] text-[#ff006e]/80"
+                            style={{ animation: 'led-scroll 30s linear infinite' }}
+                        >
+                            {[`LAST_UPDATE: ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`, ...FUN_MESSAGES].join('  //  ')}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{[`LAST_UPDATE: ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`, ...FUN_MESSAGES].join('  //  ')}
+                        </div>
+                    </div>
+                )}
+
+                {/* MOBILE VIEW TOGGLE */}
+                {isMobile && (
+                    <div
+                        className="mt-4 flex bg-black/40 border border-[#ff006e]/20 rounded-sm p-1 gap-1 pointer-events-auto relative z-[90] w-full"
+                        onTouchStart={(e) => e.stopPropagation()}
+                        onTouchEnd={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('globe'); }}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('globe'); }}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'globe' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
+                        >
+                            <Globe size={12} /> {t('GLOBE_SENSE')}
+                        </button>
+                        <button
+                            onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('data'); }}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('data'); }}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'data' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
+                        >
+                            <Activity size={12} /> {t('DATA_STREAM')}
+                        </button>
+                    </div>
+                )}
+
+                {/* Small frequency indicator — desktop only */}
+                {!isMobile && (
+                    <div className="absolute -bottom-4 left-0 right-0 flex justify-center gap-[2px]">
+                        {[...Array(20)].map((_, i) => (
+                            <motion.div
+                                key={i}
+                                animate={{ height: [2, 8, 2, 4, 2] }}
+                                transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.05 }}
+                                className="w-[2px] transition-colors duration-500"
+                                style={{ backgroundColor: activeSectorColor ? `${activeSectorColor}66` : 'rgba(255, 0, 110, 0.3)' }}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
-        )}
-    </div>
-
-    {/* RIGHT: LED SIGN — desktop only */}
-    <div className="flex-1 hidden lg:flex items-center justify-end">
-        <LEDSign lastUpdated={new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC'} />
-    </div>
-
-    {/* MOBILE VIEW TOGGLE */}
-    {isMobile && (
-        <div
-            className="mt-4 flex bg-black/40 border border-[#ff006e]/20 rounded-sm p-1 gap-1 pointer-events-auto relative z-[90] w-full"
-            onTouchStart={(e) => e.stopPropagation()}
-            onTouchEnd={(e) => e.stopPropagation()}
-        >
-            <button
-                onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('globe'); }}
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('globe'); }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'globe' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
-            >
-                <Globe size={12} /> {t('GLOBE_SENSE')}
-            </button>
-            <button
-                onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('data'); }}
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('data'); }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'data' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
-            >
-                <Activity size={12} /> {t('DATA_STREAM')}
-            </button>
-        </div>
-    )}
-
-    {/* Small frequency indicator — desktop only */}
-    {!isMobile && (
-        <div className="absolute -bottom-4 left-0 right-0 flex justify-center gap-[2px]">
-            {[...Array(20)].map((_, i) => (
-                <motion.div
-                    key={i}
-                    animate={{ height: [2, 8, 2, 4, 2] }}
-                    transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.05 }}
-                    className="w-[2px] transition-colors duration-500"
-                    style={{ backgroundColor: activeSectorColor ? `${activeSectorColor}66` : 'rgba(255, 0, 110, 0.3)' }}
-                />
-            ))}
-        </div>
-    )}
-
-</div>
 
             {/* --- MAIN DASHBOARD GRID --- */}
             <motion.div
