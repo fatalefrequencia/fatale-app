@@ -18,6 +18,43 @@ const hashStr = (s) => {
     return Math.abs(h);
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// LED SIGN — edit FUN_MESSAGES freely. Each string scrolls across the marquee.
+// lastUpdated is injected automatically; no need to add it here.
+// ─────────────────────────────────────────────────────────────────────────────
+const FUN_MESSAGES = [
+    
+     `DATE: ${new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }).toUpperCase()}`,
+    "NETWORK_INTEGRITY: STABLE",
+    "SIGNAL_CAPACITY: OPTIMAL",
+    
+    
+    "FATALE NETWORK ONLINE.",
+    
+];
+
+const LEDSign = ({ lastUpdated }) => {
+    const messages = [
+        `LAST_UPDATE: ${lastUpdated}`,
+        ...FUN_MESSAGES,
+    ].join("  //  ");
+
+    return (
+        <div className="flex items-center gap-2 flex-1 overflow-hidden">
+            <div className="text-[8px] font-black tracking-[0.25em] text-[#ff006e] border border-[#ff006e]/40 px-1.5 py-0.5 opacity-80 shrink-0">
+                SYS_LOG
+            </div>
+            <div className="overflow-hidden flex-1 border border-[#ff006e]/15 bg-[#ff006e]/[0.03] h-5 relative">
+                <div
+                    className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[9px] font-black tracking-[0.25em] text-[#ff006e]/80 animate-[led-scroll_30s_linear_infinite]"
+                    style={{ animationName: 'led-scroll' }}
+                >
+                    {messages}      {messages}
+                </div>
+            </div>
+        </div>
+    );
+};
 const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, onPlayPlaylist, isPlayerActive, onExpandContent, onPlayStation, isLandscape, setShowGlobalIngest, setIngestMode, onMessageCommunity }) => {
     const { t } = useLanguage();
     const { showNotification } = useNotification();
@@ -470,6 +507,10 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                     width: 0 !important;
                     height: 0 !important;
                 }
+                    @keyframes led-scroll {
+                    0%   { left: 100%; }
+                    100% { left: -200%; }
+                }
             `}} />
 
             {/* Terminal Boot Sequence Overlay */}
@@ -509,20 +550,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
             {/* Top scanning lines effect */}
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#ff006e]/10 z-[60] shadow-[0_0_20px_#ff006e]" />
 
-            {/* --- TOP HUD BAR --- */}
-            <div className="z-[80] flex flex-col lg:flex-row items-center justify-between gap-4 mb-4 px-2 relative">
-                {/* LEFT: KERNEL PULSE */}
-                <div className="flex-1 flex justify-start w-full lg:w-auto">
-                    <div className="flex items-center gap-4 self-start lg:self-auto">
-                        <div className="flex items-center gap-2">
-                            <Activity size={14} className="text-[#ff006e] animate-pulse" />
-                            <div className="text-[#ff006e] text-[10px] font-black tracking-widest opacity-70">
-                                {t('KERNEL_PULSE')}: <span className="text-green-500">{t('SYNC_OK')}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+        
                 {/* CENTER: SEARCH */}
                 <div className="w-full lg:w-[450px] flex justify-center relative">
                     {isMobile && mobileViewMode !== 'search' && !searchQuery ? (
@@ -574,21 +602,9 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         </div>
                     )}
                 </div>
-
-                {/* RIGHT: DATE / LOCATION */}
-                <div className="flex-1 hidden lg:flex items-center justify-end gap-6 text-[10px] text-white/40 tracking-tighter">
-                    <div className="hidden xl:flex items-center gap-2">
-                        <span className="opacity-30">{t('LOC')}:</span>
-                        <span
-                            className="transition-all duration-500 font-black tracking-widest"
-                            style={{ color: activeSectorColor || '#ff006e' }}
-                        >
-                            {activeSector !== null ? SECTORS.find(s => s.id === activeSector)?.name : t('GLOBAL_SIGNAL')}
-                        </span>
-                    </div>
-                    <div className="w-[1px] h-3 bg-white/10" />
-                    <div className="tabular-nums">{new Date().toISOString().split('T')[0]}</div>
-                </div>
+                    <div className="flex-1 hidden lg:flex items-center justify-end">
+    <LEDSign lastUpdated={new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC'} />
+</div>
 
                 {/* MOBILE VIEW TOGGLE - BELOW SEARCH ON MOBILE */}
                 {isMobile && (
