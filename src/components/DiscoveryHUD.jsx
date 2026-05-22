@@ -551,6 +551,9 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#ff006e]/10 z-[60] shadow-[0_0_20px_#ff006e]" />
 
         
+            {/* --- TOP HUD BAR --- */}
+            <div className="z-[80] flex flex-col lg:flex-row items-center justify-between gap-4 mb-4 px-2 relative">
+
                 {/* CENTER: SEARCH */}
                 <div className="w-full lg:w-[450px] flex justify-center relative">
                     {isMobile && mobileViewMode !== 'search' && !searchQuery ? (
@@ -602,18 +605,31 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         </div>
                     )}
                 </div>
-                    <div className="flex-1 hidden lg:flex items-center justify-end">
-    <LEDSign lastUpdated={new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC'} />
-</div>
 
-                {/* MOBILE VIEW TOGGLE - BELOW SEARCH ON MOBILE */}
+                {/* RIGHT: LED SIGN — desktop only */}
+                <div className="flex-1 hidden lg:flex items-center justify-end">
+                    <LEDSign lastUpdated={new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC'} />
+                </div>
+
+                {/* MOBILE: LED banner — sits below search, above globe/data toggle */}
+                {isMobile && (
+                    <div className="w-full overflow-hidden border border-[#ff006e]/15 bg-[#ff006e]/[0.03] h-5 relative">
+                        <div
+                            className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[9px] font-black tracking-[0.25em] text-[#ff006e]/80"
+                            style={{ animation: 'led-scroll 30s linear infinite' }}
+                        >
+                            {[`LAST_UPDATE: ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`, ...FUN_MESSAGES].join('  //  ')}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{[`LAST_UPDATE: ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`, ...FUN_MESSAGES].join('  //  ')}
+                        </div>
+                    </div>
+                )}
+
+                {/* MOBILE VIEW TOGGLE */}
                 {isMobile && (
                     <div
                         className="mt-4 flex bg-black/40 border border-[#ff006e]/20 rounded-sm p-1 gap-1 pointer-events-auto relative z-[90] w-full"
                         onTouchStart={(e) => e.stopPropagation()}
                         onTouchEnd={(e) => e.stopPropagation()}
                     >
-
                         <button
                             onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('globe'); }}
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('globe'); }}
@@ -631,7 +647,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                     </div>
                 )}
 
-                {/* Small frequency indicator below switch/search */}
+                {/* Small frequency indicator — desktop only */}
                 {!isMobile && (
                     <div className="absolute -bottom-4 left-0 right-0 flex justify-center gap-[2px]">
                         {[...Array(20)].map((_, i) => (
@@ -646,7 +662,6 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                     </div>
                 )}
             </div>
-
 
             {/* --- MAIN DASHBOARD GRID --- */}
             <motion.div
