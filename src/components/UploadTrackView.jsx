@@ -104,7 +104,7 @@ const AlbumTrackRow = ({ track, index, onChange, onRemove, canRemove }) => {
 
             {/* Audio file picker */}
             <div className={`relative border p-3 flex items-center justify-between cursor-pointer transition-all rounded-sm ${track.audioFile ? 'border-[#ff006e]/50 bg-[#ff006e]/5' : 'border-white/5 bg-white/[0.02] hover:border-[#ff006e]/30'}`}>
-                <input type="file" accept="audio/*" onChange={e => handleFileChange(e, 'audioFile')} className="hidden" id={`audio-${track.id}`} />
+                <input type="file" accept="audio/*,.mp3,.wav,.flac,.aac,.ogg,.m4a" onChange={e => handleFileChange(e, 'audioFile')} className="hidden" id={`audio-${track.id}`} />
                 <label htmlFor={`audio-${track.id}`} className="flex items-center gap-3 cursor-pointer w-full">
                     <div className={`w-8 h-8 rounded-sm border flex items-center justify-center transition-all ${track.audioFile ? 'border-[#ff006e] bg-[#ff006e]/20' : 'border-white/10'}`}>
                         <Music size={12} className={track.audioFile ? 'text-[#ff006e]' : 'text-white/20'} />
@@ -424,7 +424,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                     {/* File pickers */}
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className={`relative border border-dashed p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all rounded-sm ${formData.audioFile ? 'bg-[#ff006e]/10 border-[#ff006e]/50' : 'border-white/5 bg-white/[0.02] hover:border-[#ff006e]/30'}`}>
-                                            <input type="file" accept="audio/*" onChange={e => { const f = e.target.files[0]; if (f) setFormData(p => ({ ...p, audioFile: f })); }} className="hidden" id="audio-upload" />
+                                            <input type="file" accept="audio/*,.mp3,.wav,.flac,.aac,.ogg,.m4a" onChange={...} className="hidden" id="audio-upload" />
                                             <label htmlFor="audio-upload" className="flex flex-col items-center cursor-pointer text-center w-full">
                                                 <div className={`w-12 h-12 border flex items-center justify-center mb-2 transition-all ${formData.audioFile ? 'border-[#ff006e] bg-[#ff006e]/20' : 'border-white/10'}`}>
                                                     <Music size={20} className={formData.audioFile ? 'text-[#ff006e]' : 'text-white/20'} />
