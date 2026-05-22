@@ -300,6 +300,10 @@ const API = {
     Spotify: {
         search: (query) => api.get(`Spotify/search?query=${encodeURIComponent(query)}`),
         getAudioFeatures: (id) => api.get(`Spotify/audio-features/${id}`)
+    },
+    // In services/api.js, add to your existing API object:
+    System: {
+        getVersion: () => axios.get(`${API_BASE_URL}system/version`)
     }
 };
 

@@ -18,26 +18,69 @@ const hashStr = (s) => {
     return Math.abs(h);
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// LED SIGN — edit FUN_MESSAGES freely. Each string scrolls across the marquee.
-// lastUpdated is injected automatically; no need to add it here.
-// ─────────────────────────────────────────────────────────────────────────────
-const FUN_MESSAGES = [
-    
-     `DATE: ${new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }).toUpperCase()}`,
+const LAST_DEPLOY_FALLBACK = '2026-05-22 @ 12:30 UTC';
+
+const getFunMessages = () => [
+    "STAY RARE. STAY SIGNAL.",
     "NETWORK_INTEGRITY: STABLE",
     "SIGNAL_CAPACITY: OPTIMAL",
-    
-    
+    "TRANSMISSION QUALITY: CLEAN",
+    "THE FREQUENCY IS YOURS.",
+    "ALL NODES SYNCHRONIZED.",
+    "BROADCAST WIDE. COMPRESS NOTHING.",
     "FATALE NETWORK ONLINE.",
-    
+    "YOUR SIGNAL MATTERS.",
+    "KEEP TRANSMITTING.",
 ];
 
-const LEDSign = ({ lastUpdated }) => {
-    const messages = [
-        `LAST_UPDATE: ${lastUpdated}`,
-        ...FUN_MESSAGES,
-    ].join("  //  ");
+const buildLEDString = (deployInfo) => {
+    const now = new Date();
+    const currentDate = now.toLocaleDateString('en-US', {
+        weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+    }).toUpperCase();
+    const currentTime = now.toISOString().slice(11, 16) + ' UTC';
+
+    return [
+        `LAST_DEPLOY: ${deployInfo?.lastDeploy || LAST_DEPLOY_FALLBACK}`,
+        deployInfo?.version ? `BUILD: ${deployInfo.version}` : null,
+        `DATE: ${currentDate}`,
+        `TIME: ${currentTime}`,
+        ...getFunMessages()
+    ].filter(Boolean).join('  //  ');
+};
+
+const useLEDString = () => {
+    const [deployInfo, setDeployInfo] = useState(null);
+    const [ledString, setLedString] = useState(() => buildLEDString(null));
+
+    useEffect(() => {
+        // Fetch deploy info once on mount
+        API.System.getVersion()
+            .then(res => {
+                setDeployInfo(res.data);
+                setLedString(buildLEDString(res.data));
+            })
+            .catch(() => setLedString(buildLEDString(null)));
+
+        // Tick every 60s to keep date/time live
+        const interval = setInterval(() => {
+            setLedString(prev => buildLEDString(deployInfo));
+        }, 60000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    // Keep interval in sync when deployInfo resolves
+    useEffect(() => {
+        if (!deployInfo) return;
+        setLedString(buildLEDString(deployInfo));
+    }, [deployInfo]);
+
+    return ledString;
+};
+
+const LEDSign = () => {
+    const ledString = useLEDString();
 
     return (
         <div className="flex items-center gap-2 flex-1 overflow-hidden">
@@ -46,11 +89,26 @@ const LEDSign = ({ lastUpdated }) => {
             </div>
             <div className="overflow-hidden flex-1 border border-[#ff006e]/15 bg-[#ff006e]/[0.03] h-5 relative">
                 <div
-                    className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[9px] font-black tracking-[0.25em] text-[#ff006e]/80 animate-[led-scroll_30s_linear_infinite]"
-                    style={{ animationName: 'led-scroll' }}
+                    className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[9px] font-black tracking-[0.25em] text-[#ff006e]/80"
+                    style={{ animation: 'led-scroll 30s linear infinite' }}
                 >
-                    {messages}      {messages}
+                    {ledString}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ledString}
                 </div>
+            </div>
+        </div>
+    );
+};
+
+const MobileLEDBanner = () => {
+    const ledString = useLEDString();
+
+    return (
+        <div className="w-full overflow-hidden border border-[#ff006e]/15 bg-[#ff006e]/[0.03] h-5 relative">
+            <div
+                className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[9px] font-black tracking-[0.25em] text-[#ff006e]/80"
+                style={{ animation: 'led-scroll 30s linear infinite' }}
+            >
+                {ledString}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ledString}
             </div>
         </div>
     );
