@@ -133,7 +133,17 @@ export const IPodPlayer = ({
     const [isVertical, setIsVertical] = useState(() =>
         typeof window !== 'undefined' ? (window.innerHeight > window.innerWidth || window.innerWidth <= 768) : false
     );
+    
+    const [currentClock, setCurrentClock] = useState(
+    new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })       
+    );
 
+useEffect(() => {
+    const tick = setInterval(() => {
+        setCurrentClock(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    }, 1000);
+    return () => clearInterval(tick);
+}, []);
     useEffect(() => {
         const handleResize = () => {
             setIsVertical(typeof window !== 'undefined' && (window.innerHeight > window.innerWidth || window.innerWidth <= 768));
@@ -1782,10 +1792,10 @@ export const IPodPlayer = ({
                     <div className="h-7 bg-gradient-to-b from-[#1a1a1a] to-black/40 backdrop-blur-md border-b border-[#f00060]/30 flex justify-between items-center px-4 z-20">
                         <div className="flex items-center gap-2">
                             {isPlaying ? <Pause size={12} fill="#ff006e" /> : <Play size={12} fill="#ff006e" />}
-                            <span className="text-[10px] font-black text-white font-mono tracking-widest uppercase">CYBER_POD</span>
+                            
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-[#f00060] font-mono">23:42</span>
+                            <span className="text-[10px] font-bold text-[#f00060] font-mono">{currentClock}</span>
                             {currentTrack.isCached && <Zap size={10} className="text-green-500 fill-green-500" />}
                             <Wifi size={12} className={isOnline ? "text-[#f00060]" : "text-gray-600"} />
                         </div>
