@@ -128,6 +128,7 @@ export const IPodPlayer = ({
     const [loadingStations, setLoadingStations] = useState(false);
     const fileInputRef = useRef(null);
     const listRef = useRef(null);
+    const createPlaylistCallbackRef = useRef(null);
 
 
     const [isVertical, setIsVertical] = useState(() =>
@@ -911,20 +912,14 @@ useEffect(() => {
         const createAndAdd = async () => {
             try {
                 const API = await import('../services/api').then(m => m.default);
-                // Create playlist first
                 const res = await API.Playlists.create({ name: name.trim(), isPublic: false });
                 const newPlaylist = res.data;
                 const newPlaylistId = newPlaylist.id || newPlaylist.Id;
 
-                // Prompt for image upload
                 const wantsImage = window.confirm('Add a cover image to this playlist?');
                 if (wantsImage) {
-                    // Trigger file picker
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = 'image/*';
-                    input.onchange = async (e) => {
-                        const file = e.target.files?.[0];
+                    // Set callback for when file is selected
+                    createPlaylistCallbackRef.current = async (file) => {
                         if (file) {
                             try {
                                 const formData = new FormData();
@@ -932,22 +927,20 @@ useEffect(() => {
                                 const uploadRes = await API.Studio.upload(formData);
                                 const imageUrl = uploadRes.data.imageUrl || uploadRes.data.ImageUrl;
                                 await API.Playlists.update(newPlaylistId, { imageUrl });
-                                showNotification("VISUAL_SYNC", "Cover image set!", "success");
                             } catch (err) {
                                 console.error('[IMAGE_UPLOAD]', err);
-                                showNotification("SYNC_ERROR", "Image upload failed, playlist created without cover.", "error");
+                                showNotification("SYNC_ERROR", "Image failed, playlist created without cover.", "error");
                             }
                         }
-                        // Add track and finish regardless of image success
                         await API.Playlists.addTrack(newPlaylistId, currentTrack.id);
                         const listRes = await API.Playlists.getUserPlaylists(user?.id || user?.Id);
                         setPlaylists(listRes.data || []);
                         showNotification("PLAYLIST_CREATED", `Created & added to ${name.trim()}`, "success");
                         setScreen('NOW_PLAYING');
                     };
-                    input.click();
+                    // Trigger the existing file input
+                    fileInputRef.current?.click();
                 } else {
-                    // No image, just add track and finish
                     await API.Playlists.addTrack(newPlaylistId, currentTrack.id);
                     const listRes = await API.Playlists.getUserPlaylists(user?.id || user?.Id);
                     setPlaylists(listRes.data || []);
@@ -1194,7 +1187,22 @@ useEffect(() => {
 
     const handleImageUpload = async (e) => {
         const file = e.target.files?.[0];
-        if (!file) return;
+         if (!file) {
+        // If there's a pending create callback, run it without image
+        if (createPlaylistCallbackRef.current) {
+            createPlaylistCallbackRef.current(null);
+            createPlaylistCallbackRef.current = null;
+        }
+        return;
+    }
+
+    // If called from create playlist flow
+    if (createPlaylistCallbackRef.current) {
+        createPlaylistCallbackRef.current(file);
+        createPlaylistCallbackRef.current = null;
+        return;
+    }
+
 
         try {
             const API = await import('../services/api').then(m => m.default);
