@@ -673,7 +673,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[9px] font-black tracking-[0.25em] text-[#ff006e]/80"
                             style={{ animation: 'led-scroll 30s linear infinite' }}
                         >
-                            {[`LAST_UPDATE: ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`, ...FUN_MESSAGES].join('  //  ')}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{[`LAST_UPDATE: ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`, ...FUN_MESSAGES].join('  //  ')}
+                            {[`LAST_UPDATE: ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`, ...getFunMessages()].join('  //  ')}
                         </div>
                     </div>
                 )}
