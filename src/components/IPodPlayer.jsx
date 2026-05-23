@@ -1797,7 +1797,7 @@ useEffect(() => {
                         <div className="flex items-center gap-2">
                             <span className="text-[10px] font-bold text-[#f00060] font-mono">{currentClock}</span>
                             {currentTrack.isCached && <Zap size={10} className="text-green-500 fill-green-500" />}
-                            <Wifi size={12} className={isOnline ? "text-[#f00060]" : "text-gray-600"} />
+                            
                         </div>
                     </div>
 
