@@ -740,18 +740,20 @@ useEffect(() => {
                 return;
             }
             if (item.id === 'DELETE_PLAYLIST') {
+                const confirmed = window.confirm(`Delete "${activePlaylistName}"?`);
+                if (!confirmed) return;
                 const executeDelete = async () => {
                     try {
                         const API = await import('../services/api').then(m => m.default);
+                        console.log('[DELETE] Attempting delete for playlist ID:', activePlaylistId);
                         await API.Playlists.delete(activePlaylistId);
-                        showNotification("PLAYLIST_TERMINATED", "Signal link purged from database.", "success");
-                        // Refresh playlists
+                        showNotification("PLAYLIST_TERMINATED", "Signal link purged.", "success");
                         const res = await API.Playlists.getUserPlaylists(user?.id || user?.Id);
                         setPlaylists(res.data || []);
                         setScreen('PLAYLISTS');
                         setSelectedIndex(0);
                     } catch (e) {
-                        console.error(e);
+                        console.error('[DELETE ERROR]', e);
                         showNotification("PERMISSION_DENIED", "Unable to terminate signal link.", "error");
                     }
                 };
@@ -904,27 +906,63 @@ useEffect(() => {
     }
 
     if (item.id === 'CREATE_PLAYLIST') {
-        const name = window.prompt('Enter playlist name:');
-        if (name && name.trim()) {
-            const createAndAdd = async () => {
-                try {
-                    const API = await import('../services/api').then(m => m.default);
-                    const res = await API.Playlists.create({ name: name.trim(), isPublic: false });
-                    const newPlaylist = res.data;
+    const name = window.prompt('Enter playlist name:');
+    if (name && name.trim()) {
+        const createAndAdd = async () => {
+            try {
+                const API = await import('../services/api').then(m => m.default);
+                // Create playlist first
+                const res = await API.Playlists.create({ name: name.trim(), isPublic: false });
+                const newPlaylist = res.data;
+                const newPlaylistId = newPlaylist.id || newPlaylist.Id;
+
+                // Prompt for image upload
+                const wantsImage = window.confirm('Add a cover image to this playlist?');
+                if (wantsImage) {
+                    // Trigger file picker
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.onchange = async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                            try {
+                                const formData = new FormData();
+                                formData.append('File', file);
+                                const uploadRes = await API.Studio.upload(formData);
+                                const imageUrl = uploadRes.data.imageUrl || uploadRes.data.ImageUrl;
+                                await API.Playlists.update(newPlaylistId, { imageUrl });
+                                showNotification("VISUAL_SYNC", "Cover image set!", "success");
+                            } catch (err) {
+                                console.error('[IMAGE_UPLOAD]', err);
+                                showNotification("SYNC_ERROR", "Image upload failed, playlist created without cover.", "error");
+                            }
+                        }
+                        // Add track and finish regardless of image success
+                        await API.Playlists.addTrack(newPlaylistId, currentTrack.id);
+                        const listRes = await API.Playlists.getUserPlaylists(user?.id || user?.Id);
+                        setPlaylists(listRes.data || []);
+                        showNotification("PLAYLIST_CREATED", `Created & added to ${name.trim()}`, "success");
+                        setScreen('NOW_PLAYING');
+                    };
+                    input.click();
+                } else {
+                    // No image, just add track and finish
+                    await API.Playlists.addTrack(newPlaylistId, currentTrack.id);
                     const listRes = await API.Playlists.getUserPlaylists(user?.id || user?.Id);
                     setPlaylists(listRes.data || []);
-                    await API.Playlists.addTrack(newPlaylist.id || newPlaylist.Id, currentTrack.id);
                     showNotification("PLAYLIST_CREATED", `Created & added to ${name.trim()}`, "success");
                     setScreen('NOW_PLAYING');
-                } catch (e) {
-                    console.error(e);
-                    showNotification("ERROR", "Failed to create playlist", "error");
                 }
-            };
-            createAndAdd();
-        }
-        return;
+            } catch (e) {
+                console.error(e);
+                showNotification("ERROR", "Failed to create playlist", "error");
+            }
+        };
+        createAndAdd();
     }
+    return;
+}
 
             if (item.type === 'SELECT_PLAYLIST_ITEM') {
                 const addTrack = async () => {
@@ -2102,7 +2140,14 @@ useEffect(() => {
                                             className="flex-1 overflow-y-auto p-1 py-3 no-scrollbar scroll-smooth"
                                         >
                                             {getCurrentItems().map((item, idx) => {
-                                                const isAction = ['BACK', 'BACK_SM', 'BACK_AM', 'BACK_NP', 'PLAY_ALL_FILTERED', 'SHUFFLE_ALL_FILTERED', 'PLAY_PLAYLIST', 'SHUFFLE_PLAYLIST'].includes(item.id);
+                                                const isAction = [
+                                                                        'BACK', 'BACK_SM', 'BACK_AM', 'BACK_NP', 
+                                                                        'PLAY_ALL_FILTERED', 'SHUFFLE_ALL_FILTERED', 
+                                                                        'PLAY_PLAYLIST', 'SHUFFLE_PLAYLIST',
+                                                                        'UPDATE_PLAYLIST_IMAGE', 'DELETE_PLAYLIST',
+                                                                        'PLAY_ARTIST', 'SHUFFLE_ARTIST',
+                                                                        'CREATE_PLAYLIST'
+                                                                    ].includes(item.id) || item.action === true;
                                                 const track = typeof item.id === 'number' ? tracks[item.id] : null;
                                                 const isDisabled = !isOnline && track && !track.isOwned;
 
