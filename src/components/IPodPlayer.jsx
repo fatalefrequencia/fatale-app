@@ -480,6 +480,7 @@ useEffect(() => {
         if (screen === 'SELECT_PLAYLIST') {
             return [
                 { id: 'BACK_AM', label: '.. ' + t('BACK') },
+                { id: 'CREATE_PLAYLIST', label: '+ CREATE NEW PLAYLIST' },
                 ...playlists.map(p => {
                     const pid = p.id || p.Id;
                     return { id: `ADD_TO_${pid}`, label: p.name || p.Name, playlistId: pid, type: 'SELECT_PLAYLIST_ITEM' };
@@ -896,11 +897,34 @@ useEffect(() => {
         }
 
         if (screen === 'SELECT_PLAYLIST') {
-            if (item.id === 'BACK_AM') {
-                setScreen('ACTION_MENU');
-                setSelectedIndex(0);
-                return;
-            }
+    if (item.id === 'BACK_AM') {
+        setScreen('ACTION_MENU');
+        setSelectedIndex(0);
+        return;
+    }
+
+    if (item.id === 'CREATE_PLAYLIST') {
+        const name = window.prompt('Enter playlist name:');
+        if (name && name.trim()) {
+            const createAndAdd = async () => {
+                try {
+                    const API = await import('../services/api').then(m => m.default);
+                    const res = await API.Playlists.create({ name: name.trim(), isPublic: false });
+                    const newPlaylist = res.data;
+                    const listRes = await API.Playlists.getUserPlaylists(user?.id || user?.Id);
+                    setPlaylists(listRes.data || []);
+                    await API.Playlists.addTrack(newPlaylist.id || newPlaylist.Id, currentTrack.id);
+                    showNotification("PLAYLIST_CREATED", `Created & added to ${name.trim()}`, "success");
+                    setScreen('NOW_PLAYING');
+                } catch (e) {
+                    console.error(e);
+                    showNotification("ERROR", "Failed to create playlist", "error");
+                }
+            };
+            createAndAdd();
+        }
+        return;
+    }
 
             if (item.type === 'SELECT_PLAYLIST_ITEM') {
                 const addTrack = async () => {
