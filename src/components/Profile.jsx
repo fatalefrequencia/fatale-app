@@ -1496,12 +1496,14 @@ export const ProfileView = React.memo(({
         try {
             const {
                 uploadProfileMediaFile,
+                uploadProfileVideo,
                 prepareProfileImageFile,
                 assertVideoSize,
                 isBlobLike,
                 buildProfileUpdatePayload,
                 syncProfileUpdate,
                 syncProfileMultipart,
+                appendProfileFieldsToFormData,
             } = await import('../utils/profileMediaUpload');
             const uid = currentUser?.id || currentUser?.Id || currentUser?.userId || currentUser?.UserId;
 
@@ -1509,8 +1511,8 @@ export const ProfileView = React.memo(({
             const pfpFile = formData.get('ProfilePicture');
             const bnrFile = formData.get('Banner');
             const vdoFile = formData.get('WallpaperVideo');
+            const hasVideo = isBlobLike(vdoFile);
 
-            // iOS: use native fetch for file POST, then JSON for profile (not PUT+multipart).
             if (isBlobLike(pfpFile)) {
                 const prepared = await prepareProfileImageFile(pfpFile);
                 media.profilePictureUrl = await uploadProfileMediaFile(prepared);
@@ -1519,11 +1521,7 @@ export const ProfileView = React.memo(({
                 const prepared = await prepareProfileImageFile(bnrFile);
                 media.bannerUrl = await uploadProfileMediaFile(prepared);
                 media.wallpaperVideoUrl = '';
-            } else if (isBlobLike(vdoFile)) {
-                assertVideoSize(vdoFile);
-                media.wallpaperVideoUrl = await uploadProfileMediaFile(vdoFile);
-                media.bannerUrl = '';
-            } else {
+            } else if (!hasVideo) {
                 if (formData.get('BannerUrl') === '') {
                     media.bannerUrl = '';
                     media.wallpaperVideoUrl = '';
@@ -1533,22 +1531,22 @@ export const ProfileView = React.memo(({
                 }
             }
 
-            const payload = buildProfileUpdatePayload(formData, media);
             let res;
-            try {
-                res = await syncProfileUpdate(payload, uid);
-            } catch (jsonErr) {
-                console.warn('[Profile] JSON update failed, trying multipart fallback:', jsonErr);
-                const fallbackForm = new FormData();
-                Object.entries(payload).forEach(([key, val]) => {
-                    if (val !== undefined && val !== null) {
-                        fallbackForm.append(key, typeof val === 'boolean' ? String(val) : val);
-                    }
-                });
-                if (isBlobLike(pfpFile)) fallbackForm.append('ProfilePicture', pfpFile);
-                if (isBlobLike(bnrFile)) fallbackForm.append('Banner', bnrFile);
-                if (isBlobLike(vdoFile)) fallbackForm.append('WallpaperVideo', vdoFile);
-                res = await syncProfileMultipart(fallbackForm, uid);
+            if (hasVideo) {
+                assertVideoSize(vdoFile);
+                res = await uploadProfileVideo(formData, vdoFile, uid, media);
+            } else {
+                const payload = buildProfileUpdatePayload(formData, media);
+                try {
+                    res = await syncProfileUpdate(payload, uid);
+                } catch (jsonErr) {
+                    console.warn('[Profile] JSON update failed, trying multipart fallback:', jsonErr);
+                    const fallbackForm = new FormData();
+                    appendProfileFieldsToFormData(fallbackForm, formData, media);
+                    if (isBlobLike(pfpFile)) fallbackForm.append('ProfilePicture', pfpFile);
+                    if (isBlobLike(bnrFile)) fallbackForm.append('Banner', bnrFile);
+                    res = await syncProfileMultipart(fallbackForm, uid);
+                }
             }
             showNotification("PROFILE_SYNCED", "Identity modifications committed and persistent.", "success");
             setShowEditProfile(false);
@@ -2873,7 +2871,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                         <div className="relative group cursor-pointer border border-dashed border-[var(--text-color)]/20 hover:border-[var(--theme-color)] transition-all bg-white/5 hover:bg-[var(--theme-color)]/5 overflow-hidden">
                             <input
                                 type="file"
-                                accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,video/mp4,video/webm,video/quicktime"
+                                accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,video/mp4,video/webm,video/quicktime,video/*"
                                 onChange={e => {
                                     const f = e.target.files[0];
                                     if (!f) return;
@@ -2928,7 +2926,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                         <span className="text-[9px] text-[var(--text-color)]/60 uppercase tracking-widest text-center">
                                             {user?.bannerUrl || user?.wallpaperVideoUrl ? 'UPDATE_BACKDROP_SIGNAL' : 'UPLOAD_PHOTO_OR_VIDEO'}
                                         </span>
-                                        <span className="text-[7px] text-[var(--text-color)]/20 uppercase tracking-widest">JPG · PNG · GIF · MP4 · WEBM</span>
+                                        <span className="text-[7px] text-[var(--text-color)]/20 uppercase tracking-widest">JPG · PNG · GIF · MP4 · WEBM · MOV (max 25MB mobile)</span>
                                     </>
                                 )}
                             </div>

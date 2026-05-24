@@ -1,6 +1,12 @@
 /** Max sizes before we reject or compress (mobile camera photos are often 5–15MB). */
 export const PROFILE_IMAGE_MAX_BYTES = 8 * 1024 * 1024;
 export const PROFILE_VIDEO_MAX_BYTES = 50 * 1024 * 1024;
+/** Safer cap for mobile uploads (cellular + Safari often drop larger bodies). */
+export const PROFILE_VIDEO_MOBILE_MAX_BYTES = 25 * 1024 * 1024;
+
+const isMobileDevice = () =>
+    typeof navigator !== 'undefined' &&
+    /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
 const API_BASE = () =>
     (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5264/api/').replace(/\/?$/, '/');
@@ -55,13 +61,47 @@ async function parseErrorResponse(res) {
     }
 }
 
+function xhrSend(url, { method = 'POST', body, headers = {}, timeoutMs = 300000 }) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open(method, url, true);
+        Object.entries(headers).forEach(([key, value]) => {
+            if (value != null) xhr.setRequestHeader(key, value);
+        });
+        xhr.timeout = timeoutMs;
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    resolve(xhr.responseText ? JSON.parse(xhr.responseText) : {});
+                } catch {
+                    resolve({});
+                }
+                return;
+            }
+            reject(new Error(xhr.responseText || `Request failed (${xhr.status})`));
+        };
+        xhr.onerror = () =>
+            reject(
+                new Error(
+                    'Upload failed. Use Wi‑Fi or a shorter clip (under 25MB on mobile).'
+                )
+            );
+        xhr.ontimeout = () =>
+            reject(new Error('Upload timed out. Try a shorter video (under 25MB).'));
+        xhr.send(body);
+    });
+}
+
 /**
- * Native fetch upload — avoids axios "Network Error" on iOS Safari for multipart POST.
+ * Native fetch upload for images — small files only.
  */
 export async function uploadProfileMediaFile(file) {
+    if (file?.type?.startsWith('video/')) {
+        throw new Error('Use uploadProfileVideo instead of generic file upload for video.');
+    }
+
     const formData = new FormData();
-    const fallbackName = file.type?.startsWith('video/') ? 'backdrop.mp4' : 'profile.jpg';
-    formData.append('file', file, file.name || fallbackName);
+    formData.append('file', file, file.name || 'profile.jpg');
 
     const res = await fetch(`${API_BASE()}File/upload`, {
         method: 'POST',
@@ -79,6 +119,70 @@ export async function uploadProfileMediaFile(file) {
         throw new Error('Upload completed but the server did not return a file path.');
     }
     return path;
+}
+
+/** Append all profile fields to multipart FormData (PascalCase for .NET form binding). */
+export function appendProfileFieldsToFormData(target, formData, media = {}) {
+    const set = (key, val) => {
+        if (val !== undefined && val !== null) {
+            target.append(key, typeof val === 'boolean' ? String(val) : val);
+        }
+    };
+
+    set('Username', formData.get('Username'));
+    set('Biography', formData.get('Biography'));
+    set('StatusMessage', formData.get('StatusMessage'));
+    set('ResidentSectorId', formData.get('ResidentSectorId'));
+    set('IsLive', formData.get('IsLive'));
+    set('ThemeColor', formData.get('ThemeColor'));
+    set('TextColor', formData.get('TextColor'));
+    set('BackgroundColor', formData.get('BackgroundColor'));
+    set('SecondaryColor', formData.get('SecondaryColor'));
+    set('IsGlass', formData.get('IsGlass'));
+    set('InstagramUrl', formData.get('InstagramUrl'));
+    set('TwitterUrl', formData.get('TwitterUrl'));
+    set('YoutubeUrl', formData.get('YoutubeUrl'));
+    set('WebsiteUrl', formData.get('WebsiteUrl'));
+
+    const featuredRaw = formData.get('FeaturedTrackId');
+    const featuredId = parseInt(featuredRaw, 10);
+    if (!isNaN(featuredId) && featuredId > 0) {
+        set('FeaturedTrackId', featuredId);
+    }
+
+    if (media.profilePictureUrl != null) set('ProfilePictureUrl', media.profilePictureUrl);
+    if (media.bannerUrl != null) set('BannerUrl', media.bannerUrl);
+    if (media.wallpaperVideoUrl != null) set('WallpaperVideoUrl', media.wallpaperVideoUrl);
+}
+
+/**
+ * Upload backdrop video directly on the profile endpoint via XHR POST.
+ * iOS Safari often reports fetch "Load failed" on large File/upload requests.
+ */
+export async function uploadProfileVideo(formData, videoFile, userId, media = {}) {
+    const body = new FormData();
+    appendProfileFieldsToFormData(body, formData, media);
+    body.append('WallpaperVideo', videoFile, videoFile.name || 'backdrop.mp4');
+    body.append('BannerUrl', '');
+
+    const headers = getSessionHeaders();
+    if (userId != null && userId !== '') headers.UserId = String(userId);
+
+    const url = `${API_BASE()}Users/update-profile`;
+    const timeoutMs = isMobileDevice() ? 600000 : 300000;
+
+    let data;
+    try {
+        data = await xhrSend(url, { method: 'POST', body, headers, timeoutMs });
+    } catch (postErr) {
+        try {
+            data = await xhrSend(url, { method: 'PUT', body, headers, timeoutMs });
+        } catch {
+            throw postErr;
+        }
+    }
+
+    return { data: data?.user ? data : { user: data } };
 }
 
 /**
@@ -283,7 +387,14 @@ export async function prepareProfileImageFile(file) {
 }
 
 export function assertVideoSize(file) {
-    if (file?.type?.startsWith('video/') && file.size > PROFILE_VIDEO_MAX_BYTES) {
-        throw new Error('Video is too large. Please use a clip under 50MB.');
+    if (!file?.type?.startsWith('video/')) return;
+    const mobileCap = isMobileDevice();
+    const limit = mobileCap ? PROFILE_VIDEO_MOBILE_MAX_BYTES : PROFILE_VIDEO_MAX_BYTES;
+    if (file.size > limit) {
+        throw new Error(
+            mobileCap
+                ? 'Video is too large for mobile upload. Please use a clip under 25MB.'
+                : 'Video is too large. Please use a clip under 50MB.'
+        );
     }
 }
