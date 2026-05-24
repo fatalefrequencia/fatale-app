@@ -1,12 +1,35 @@
 /** Max sizes before we reject or compress (mobile camera photos are often 5–15MB). */
 export const PROFILE_IMAGE_MAX_BYTES = 8 * 1024 * 1024;
 export const PROFILE_VIDEO_MAX_BYTES = 50 * 1024 * 1024;
-/** Safer cap for mobile uploads (cellular + Safari often drop larger bodies). */
-export const PROFILE_VIDEO_MOBILE_MAX_BYTES = 25 * 1024 * 1024;
-
 const isMobileDevice = () =>
     typeof navigator !== 'undefined' &&
     /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+export function formatFileSizeMb(bytes) {
+    return ((bytes || 0) / (1024 * 1024)).toFixed(1);
+}
+
+/** iOS often leaves `file.type` empty for .mov — also check extension. */
+export function isVideoFile(file) {
+    if (!file) return false;
+    if (file.type?.startsWith('video/')) return true;
+    return /\.(mp4|mov|webm|m4v|mkv|avi)$/i.test(file.name || '');
+}
+
+export function normalizeVideoFile(file) {
+    if (!file) return file;
+    if (file.type?.startsWith('video/')) return file;
+    const name = file.name || 'backdrop.mp4';
+    const ext = (name.split('.').pop() || 'mp4').toLowerCase();
+    const mime = {
+        mov: 'video/quicktime',
+        mp4: 'video/mp4',
+        m4v: 'video/mp4',
+        webm: 'video/webm',
+    }[ext] || 'video/mp4';
+    const safeName = name.includes('.') ? name : `${name}.mp4`;
+    return new File([file], safeName, { type: mime, lastModified: file.lastModified ?? Date.now() });
+}
 
 const API_BASE = () =>
     (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5264/api/').replace(/\/?$/, '/');
@@ -81,13 +104,9 @@ function xhrSend(url, { method = 'POST', body, headers = {}, timeoutMs = 300000 
             reject(new Error(xhr.responseText || `Request failed (${xhr.status})`));
         };
         xhr.onerror = () =>
-            reject(
-                new Error(
-                    'Upload failed. Use Wi‑Fi or a shorter clip (under 25MB on mobile).'
-                )
-            );
+            reject(new Error('Video upload failed. Check your connection and try again.'));
         xhr.ontimeout = () =>
-            reject(new Error('Upload timed out. Try a shorter video (under 25MB).'));
+            reject(new Error('Video upload timed out. Try again on Wi‑Fi.'));
         xhr.send(body);
     });
 }
@@ -155,14 +174,34 @@ export function appendProfileFieldsToFormData(target, formData, media = {}) {
     if (media.wallpaperVideoUrl != null) set('WallpaperVideoUrl', media.wallpaperVideoUrl);
 }
 
-/**
- * Upload backdrop video directly on the profile endpoint via XHR POST.
- * iOS Safari often reports fetch "Load failed" on large File/upload requests.
- */
-export async function uploadProfileVideo(formData, videoFile, userId, media = {}) {
+async function uploadVideoViaFileEndpoint(file) {
+    const normalized = normalizeVideoFile(file);
+    const body = new FormData();
+    body.append('file', normalized, normalized.name);
+
+    const res = await fetch(`${API_BASE()}File/upload`, {
+        method: 'POST',
+        body,
+        headers: getSessionHeaders(),
+    });
+
+    if (!res.ok) {
+        throw new Error(await parseErrorResponse(res));
+    }
+
+    const data = await res.json();
+    const path = extractUploadedPath(data);
+    if (!path) {
+        throw new Error('Video uploaded but server did not return a path.');
+    }
+    return path;
+}
+
+async function uploadVideoViaProfileMultipart(formData, videoFile, userId, media = {}) {
+    const file = normalizeVideoFile(videoFile);
     const body = new FormData();
     appendProfileFieldsToFormData(body, formData, media);
-    body.append('WallpaperVideo', videoFile, videoFile.name || 'backdrop.mp4');
+    body.append('WallpaperVideo', file, file.name);
     body.append('BannerUrl', '');
 
     const headers = getSessionHeaders();
@@ -183,6 +222,29 @@ export async function uploadProfileVideo(formData, videoFile, userId, media = {}
     }
 
     return { data: data?.user ? data : { user: data } };
+}
+
+/**
+ * Backdrop video: upload to storage, then sync profile URL (works for short clips on mobile).
+ * Falls back to direct WallpaperVideo multipart if needed.
+ */
+export async function uploadProfileVideo(formData, videoFile, userId, media = {}) {
+    const file = normalizeVideoFile(videoFile);
+    assertVideoSize(file);
+
+    const mergedMedia = { ...media, bannerUrl: '', wallpaperVideoUrl: '' };
+
+    try {
+        const path = await uploadVideoViaFileEndpoint(file);
+        const payload = buildProfileUpdatePayload(formData, {
+            ...mergedMedia,
+            wallpaperVideoUrl: path,
+        });
+        return await syncProfileUpdate(payload, userId);
+    } catch (primaryErr) {
+        console.warn('[Profile] Video File/upload + JSON sync failed, trying multipart:', primaryErr);
+        return uploadVideoViaProfileMultipart(formData, file, userId, mergedMedia);
+    }
 }
 
 /**
@@ -387,14 +449,10 @@ export async function prepareProfileImageFile(file) {
 }
 
 export function assertVideoSize(file) {
-    if (!file?.type?.startsWith('video/')) return;
-    const mobileCap = isMobileDevice();
-    const limit = mobileCap ? PROFILE_VIDEO_MOBILE_MAX_BYTES : PROFILE_VIDEO_MAX_BYTES;
-    if (file.size > limit) {
+    if (!isVideoFile(file)) return;
+    if (file.size > PROFILE_VIDEO_MAX_BYTES) {
         throw new Error(
-            mobileCap
-                ? 'Video is too large for mobile upload. Please use a clip under 25MB.'
-                : 'Video is too large. Please use a clip under 50MB.'
+            `This video is ${formatFileSizeMb(file.size)}MB. Please use a clip under ${formatFileSizeMb(PROFILE_VIDEO_MAX_BYTES)}MB.`
         );
     }
 }

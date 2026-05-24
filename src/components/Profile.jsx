@@ -18,6 +18,7 @@ import {
 import { useNotification } from '../contexts/NotificationContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { API_BASE_URL, getMediaUrl } from '../constants';
+import { isVideoFile } from '../utils/profileMediaUpload';
 
 const SECTORS = [
     { id: 0, name: 'NEON SLUMS', color: 'var(--text-color)' },
@@ -2872,10 +2873,10 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                             <input
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,video/mp4,video/webm,video/quicktime,video/*"
-                                onChange={e => {
-                                    const f = e.target.files[0];
+                                onChange={(e) => {
+                                    const f = e.target.files?.[0];
                                     if (!f) return;
-                                    if (f.type.startsWith('video/')) {
+                                    if (isVideoFile(f)) {
                                         setWallpaperVideoFile(f);
                                         setBannerFile(null);
                                     } else {
@@ -2926,7 +2927,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                         <span className="text-[9px] text-[var(--text-color)]/60 uppercase tracking-widest text-center">
                                             {user?.bannerUrl || user?.wallpaperVideoUrl ? 'UPDATE_BACKDROP_SIGNAL' : 'UPLOAD_PHOTO_OR_VIDEO'}
                                         </span>
-                                        <span className="text-[7px] text-[var(--text-color)]/20 uppercase tracking-widest">JPG · PNG · GIF · MP4 · WEBM · MOV (max 25MB mobile)</span>
+                                        <span className="text-[7px] text-[var(--text-color)]/20 uppercase tracking-widest">JPG · PNG · GIF · MP4 · WEBM · MOV</span>
                                     </>
                                 )}
                             </div>
