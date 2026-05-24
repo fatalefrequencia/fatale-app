@@ -2538,7 +2538,10 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [bannerFile, setBannerFile] = useState(null);
     const [wallpaperVideoFile, setWallpaperVideoFile] = useState(null);
-    const [themeColor, setThemeColor] = useState(user?.themeColor || user?.ThemeColor || 'var(--text-color)');
+    const [themeColor, setThemeColor] = useState(() => {
+        const c = user?.themeColor || user?.ThemeColor;
+        return c && !String(c).includes('var(') ? c : '#ff006e';
+    });
     const [textColor, setTextColor] = useState(user?.textColor || user?.TextColor || '#ffffff');
     const [backgroundColor, setBackgroundColor] = useState(user?.backgroundColor || user?.BackgroundColor || '#000000');
     const [secondaryColor, setSecondaryColor] = useState(user?.secondaryColor || user?.SecondaryColor || '#00ffff');
@@ -2653,7 +2656,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                     : null) ||
                 error.message ||
                 'Upload failed';
-            alert(`Validation Error: ${detail}`);
+            alert(detail);
         } finally {
             setIsSaving(false);
         }

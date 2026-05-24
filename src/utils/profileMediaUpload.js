@@ -1,9 +1,6 @@
 /** Max sizes before we reject or compress (mobile camera photos are often 5–15MB). */
 export const PROFILE_IMAGE_MAX_BYTES = 8 * 1024 * 1024;
 export const PROFILE_VIDEO_MAX_BYTES = 50 * 1024 * 1024;
-const isMobileDevice = () =>
-    typeof navigator !== 'undefined' &&
-    /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
 export function formatFileSizeMb(bytes) {
     return ((bytes || 0) / (1024 * 1024)).toFixed(1);
@@ -43,6 +40,13 @@ export function isBlobLike(value) {
     );
 }
 
+/** Backend expects hex colors — CSS vars like var(--text-color) break profile sync. */
+export function sanitizeColor(value, fallback = '#ff006e') {
+    const str = String(value ?? '').trim();
+    if (!str || str.includes('var(') || str.includes('calc(')) return fallback;
+    return str;
+}
+
 function getSessionHeaders() {
     const headers = {};
     const token = localStorage.getItem('token');
@@ -75,6 +79,20 @@ export function extractUploadedPath(data) {
     );
 }
 
+function formatAxiosError(err, step) {
+    const status = err?.response?.status;
+    const data = err?.response?.data;
+    const detail =
+        data?.message ||
+        data?.title ||
+        data?.error ||
+        (typeof data === 'string' ? data : null) ||
+        (data ? JSON.stringify(data) : null) ||
+        err?.message ||
+        'Unknown error';
+    return `${step}${status ? ` (HTTP ${status})` : ''}: ${detail}`;
+}
+
 async function parseErrorResponse(res) {
     try {
         const data = await res.json();
@@ -84,31 +102,8 @@ async function parseErrorResponse(res) {
     }
 }
 
-function xhrSend(url, { method = 'POST', body, headers = {}, timeoutMs = 300000 }) {
-    return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open(method, url, true);
-        Object.entries(headers).forEach(([key, value]) => {
-            if (value != null) xhr.setRequestHeader(key, value);
-        });
-        xhr.timeout = timeoutMs;
-        xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                try {
-                    resolve(xhr.responseText ? JSON.parse(xhr.responseText) : {});
-                } catch {
-                    resolve({});
-                }
-                return;
-            }
-            reject(new Error(xhr.responseText || `Request failed (${xhr.status})`));
-        };
-        xhr.onerror = () =>
-            reject(new Error('Video upload failed. Check your connection and try again.'));
-        xhr.ontimeout = () =>
-            reject(new Error('Video upload timed out. Try again on Wi‑Fi.'));
-        xhr.send(body);
-    });
+async function getApiClient() {
+    return (await import('../services/api')).default;
 }
 
 /**
@@ -140,6 +135,15 @@ export async function uploadProfileMediaFile(file) {
     return path;
 }
 
+function buildVideoMultipartBody(formData, videoFile, media = {}) {
+    const file = normalizeVideoFile(videoFile);
+    const body = new FormData();
+    appendProfileFieldsToFormData(body, formData, { ...media, bannerUrl: '' });
+    body.append('WallpaperVideo', file, file.name);
+    body.append('BannerUrl', '');
+    return body;
+}
+
 /** Append all profile fields to multipart FormData (PascalCase for .NET form binding). */
 export function appendProfileFieldsToFormData(target, formData, media = {}) {
     const set = (key, val) => {
@@ -153,10 +157,10 @@ export function appendProfileFieldsToFormData(target, formData, media = {}) {
     set('StatusMessage', formData.get('StatusMessage'));
     set('ResidentSectorId', formData.get('ResidentSectorId'));
     set('IsLive', formData.get('IsLive'));
-    set('ThemeColor', formData.get('ThemeColor'));
-    set('TextColor', formData.get('TextColor'));
-    set('BackgroundColor', formData.get('BackgroundColor'));
-    set('SecondaryColor', formData.get('SecondaryColor'));
+    set('ThemeColor', sanitizeColor(formData.get('ThemeColor'), '#ff006e'));
+    set('TextColor', sanitizeColor(formData.get('TextColor'), '#ffffff'));
+    set('BackgroundColor', sanitizeColor(formData.get('BackgroundColor'), '#000000'));
+    set('SecondaryColor', sanitizeColor(formData.get('SecondaryColor'), '#00ffff'));
     set('IsGlass', formData.get('IsGlass'));
     set('InstagramUrl', formData.get('InstagramUrl'));
     set('TwitterUrl', formData.get('TwitterUrl'));
@@ -174,77 +178,57 @@ export function appendProfileFieldsToFormData(target, formData, media = {}) {
     if (media.wallpaperVideoUrl != null) set('WallpaperVideoUrl', media.wallpaperVideoUrl);
 }
 
-async function uploadVideoViaFileEndpoint(file) {
-    const normalized = normalizeVideoFile(file);
-    const body = new FormData();
-    body.append('file', normalized, normalized.name);
-
-    const res = await fetch(`${API_BASE()}File/upload`, {
-        method: 'POST',
-        body,
-        headers: getSessionHeaders(),
-    });
-
-    if (!res.ok) {
-        throw new Error(await parseErrorResponse(res));
-    }
-
-    const data = await res.json();
-    const path = extractUploadedPath(data);
-    if (!path) {
-        throw new Error('Video uploaded but server did not return a path.');
-    }
-    return path;
-}
-
-async function uploadVideoViaProfileMultipart(formData, videoFile, userId, media = {}) {
-    const file = normalizeVideoFile(videoFile);
-    const body = new FormData();
-    appendProfileFieldsToFormData(body, formData, media);
-    body.append('WallpaperVideo', file, file.name);
-    body.append('BannerUrl', '');
-
-    const headers = getSessionHeaders();
-    if (userId != null && userId !== '') headers.UserId = String(userId);
-
-    const url = `${API_BASE()}Users/update-profile`;
-    const timeoutMs = isMobileDevice() ? 600000 : 300000;
-
-    let data;
-    try {
-        data = await xhrSend(url, { method: 'POST', body, headers, timeoutMs });
-    } catch (postErr) {
-        try {
-            data = await xhrSend(url, { method: 'PUT', body, headers, timeoutMs });
-        } catch {
-            throw postErr;
-        }
-    }
-
-    return { data: data?.user ? data : { user: data } };
-}
-
 /**
- * Backdrop video: upload to storage, then sync profile URL (works for short clips on mobile).
- * Falls back to direct WallpaperVideo multipart if needed.
+ * Video backdrop upload — tries axios strategies (same stack as community image uploads).
  */
 export async function uploadProfileVideo(formData, videoFile, userId, media = {}) {
+    const API = await getApiClient();
     const file = normalizeVideoFile(videoFile);
     assertVideoSize(file);
 
     const mergedMedia = { ...media, bannerUrl: '', wallpaperVideoUrl: '' };
+    const errors = [];
 
-    try {
-        const path = await uploadVideoViaFileEndpoint(file);
-        const payload = buildProfileUpdatePayload(formData, {
-            ...mergedMedia,
-            wallpaperVideoUrl: path,
-        });
-        return await syncProfileUpdate(payload, userId);
-    } catch (primaryErr) {
-        console.warn('[Profile] Video File/upload + JSON sync failed, trying multipart:', primaryErr);
-        return uploadVideoViaProfileMultipart(formData, file, userId, mergedMedia);
+    const attempts = [
+        {
+            step: 'Direct video upload (POST)',
+            run: () => API.Users.updateProfilePost(buildVideoMultipartBody(formData, file, mergedMedia), userId),
+        },
+        {
+            step: 'Direct video upload (PUT)',
+            run: () => API.Users.updateProfile(buildVideoMultipartBody(formData, file, mergedMedia), userId),
+        },
+        {
+            step: 'Storage upload + profile sync',
+            run: async () => {
+                const fd = new FormData();
+                fd.append('file', file, file.name);
+                const uploadRes = await API.Files.upload(fd);
+                const path = extractUploadedPath(uploadRes.data);
+                if (!path) throw new Error('Server did not return a video path.');
+                const payload = buildProfileUpdatePayload(formData, {
+                    ...mergedMedia,
+                    wallpaperVideoUrl: path,
+                });
+                return API.Users.updateProfile(payload, userId);
+            },
+        },
+    ];
+
+    for (const attempt of attempts) {
+        try {
+            return await attempt.run();
+        } catch (err) {
+            console.warn(`[Profile] ${attempt.step} failed:`, err);
+            errors.push(formatAxiosError(err, attempt.step));
+        }
     }
+
+    throw new Error(
+        errors.length
+            ? errors.join(' · ')
+            : 'Video backdrop upload failed. Try converting the clip to MP4 and upload again.'
+    );
 }
 
 /**
@@ -267,6 +251,11 @@ export function buildProfileUpdatePayload(formData, media = {}) {
         isGlassRaw === 1 ||
         isGlassRaw === '1';
 
+    const themeColor = sanitizeColor(formData.get('ThemeColor'), '#ff006e');
+    const textColor = sanitizeColor(formData.get('TextColor'), '#ffffff');
+    const backgroundColor = sanitizeColor(formData.get('BackgroundColor'), '#000000');
+    const secondaryColor = sanitizeColor(formData.get('SecondaryColor'), '#00ffff');
+
     const payload = {
         username: formData.get('Username') ?? '',
         Username: formData.get('Username') ?? '',
@@ -278,14 +267,14 @@ export function buildProfileUpdatePayload(formData, media = {}) {
         ResidentSectorId: parseInt(formData.get('ResidentSectorId'), 10) || 0,
         isLive,
         IsLive: isLive,
-        themeColor: formData.get('ThemeColor') ?? '',
-        ThemeColor: formData.get('ThemeColor') ?? '',
-        textColor: formData.get('TextColor') ?? '',
-        TextColor: formData.get('TextColor') ?? '',
-        backgroundColor: formData.get('BackgroundColor') ?? '',
-        BackgroundColor: formData.get('BackgroundColor') ?? '',
-        secondaryColor: formData.get('SecondaryColor') ?? '',
-        SecondaryColor: formData.get('SecondaryColor') ?? '',
+        themeColor,
+        ThemeColor: themeColor,
+        textColor,
+        TextColor: textColor,
+        backgroundColor,
+        BackgroundColor: backgroundColor,
+        secondaryColor,
+        SecondaryColor: secondaryColor,
         isGlass,
         IsGlass: isGlass,
         instagramUrl: formData.get('InstagramUrl') ?? '',
@@ -322,63 +311,23 @@ export function buildProfileUpdatePayload(formData, media = {}) {
 }
 
 /**
- * JSON profile sync via fetch — iOS often breaks axios/fetch PUT + multipart.
+ * JSON profile sync via fetch — used for photo-only updates.
  */
 export async function syncProfileUpdate(payload, userId) {
-    const headers = {
-        ...getSessionHeaders(),
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-    };
-    if (userId != null && userId !== '') {
-        headers.UserId = String(userId);
-    }
-
-    const url = `${API_BASE()}Users/update-profile`;
-    const body = JSON.stringify(payload);
-
-    let res = await fetch(url, { method: 'PUT', headers, body });
-
-    if (!res.ok && (res.status === 405 || res.status === 404)) {
-        res = await fetch(url, { method: 'POST', headers, body });
-    }
-
-    if (!res.ok) {
-        throw new Error(await parseErrorResponse(res));
-    }
-
-    const contentType = res.headers.get('content-type') || '';
-    if (contentType.includes('application/json')) {
-        return { data: await res.json() };
-    }
-    return { data: {} };
+    const API = await getApiClient();
+    return API.Users.updateProfile(payload, userId);
 }
 
 /**
  * Last-resort: multipart POST with file blobs (when URL fields are not accepted).
  */
 export async function syncProfileMultipart(formData, userId) {
-    const headers = getSessionHeaders();
-    if (userId != null && userId !== '') {
-        headers.UserId = String(userId);
+    const API = await getApiClient();
+    try {
+        return await API.Users.updateProfilePost(formData, userId);
+    } catch {
+        return API.Users.updateProfile(formData, userId);
     }
-
-    const url = `${API_BASE()}Users/update-profile`;
-    let res = await fetch(url, { method: 'POST', body: formData, headers });
-
-    if (!res.ok && res.status === 405) {
-        res = await fetch(url, { method: 'PUT', body: formData, headers });
-    }
-
-    if (!res.ok) {
-        throw new Error(await parseErrorResponse(res));
-    }
-
-    const contentType = res.headers.get('content-type') || '';
-    if (contentType.includes('application/json')) {
-        return { data: await res.json() };
-    }
-    return { data: {} };
 }
 
 export function compressImageForUpload(

@@ -103,7 +103,7 @@ const API = {
             if (data instanceof FormData) {
                 return api.put('Users/update-profile', data, {
                     headers,
-                    timeout: 120000,
+                    timeout: 300000,
                     maxBodyLength: Infinity,
                     maxContentLength: Infinity,
                 });
@@ -112,6 +112,16 @@ const API = {
             return api.put('Users/update-profile', data, {
                 headers: { ...headers, 'Content-Type': 'application/json' },
                 timeout: 120000,
+            });
+        },
+        updateProfilePost: (data, userId) => {
+            const headers = {};
+            if (userId != null && userId !== '') headers.UserId = String(userId);
+            return api.post('Users/update-profile', data, {
+                headers,
+                timeout: 300000,
+                maxBodyLength: Infinity,
+                maxContentLength: Infinity,
             });
         },
         followUser: (id) => api.post(`Artists/like/${id}`), // Re-routed to Artists for social linking
