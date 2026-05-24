@@ -1495,6 +1495,11 @@ export const ProfileView = React.memo(({
     const handleUpdateProfile = async (formData) => {
         try {
             const API = await import('../services/api').then(mod => mod.default);
+            const {
+                uploadProfileMediaFile,
+                prepareProfileImageFile,
+                assertVideoSize,
+            } = await import('../utils/profileMediaUpload');
             const uid = currentUser?.id || currentUser?.Id || currentUser?.userId || currentUser?.UserId;
             
             const updateForm = new FormData();
@@ -1503,28 +1508,48 @@ export const ProfileView = React.memo(({
             updateForm.append('StatusMessage', formData.get('StatusMessage'));
             updateForm.append('ResidentSectorId', formData.get('ResidentSectorId'));
             updateForm.append('IsLive', formData.get('IsLive'));
-            updateForm.append('FeaturedTrackId', formData.get('FeaturedTrackId') || '');
             updateForm.append('ThemeColor', formData.get('ThemeColor'));
             updateForm.append('TextColor', formData.get('TextColor'));
             updateForm.append('BackgroundColor', formData.get('BackgroundColor'));
             updateForm.append('SecondaryColor', formData.get('SecondaryColor'));
             updateForm.append('IsGlass', formData.get('IsGlass'));
 
+            ['InstagramUrl', 'TwitterUrl', 'YoutubeUrl', 'WebsiteUrl'].forEach((key) => {
+                const val = formData.get(key);
+                if (val !== null && val !== undefined) updateForm.append(key, val);
+            });
+
+            const featuredRaw = formData.get('FeaturedTrackId');
+            const featuredId = parseInt(featuredRaw, 10);
+            if (!isNaN(featuredId) && featuredId > 0) {
+                updateForm.append('FeaturedTrackId', String(featuredId));
+            }
+
             const pfpFile = formData.get('ProfilePicture');
             const bnrFile = formData.get('Banner');
             const vdoFile = formData.get('WallpaperVideo');
 
+            // Mobile Safari often fails PUT + multipart files — upload via POST first, then sync URLs.
             if (pfpFile instanceof File) {
-                updateForm.append('ProfilePicture', pfpFile);
+                const prepared = await prepareProfileImageFile(pfpFile);
+                const path = await uploadProfileMediaFile(API, prepared);
+                updateForm.append('ProfilePictureUrl', path);
             }
             if (bnrFile instanceof File) {
-                updateForm.append('Banner', bnrFile);
-            }
-            if (vdoFile instanceof File) {
-                updateForm.append('WallpaperVideo', vdoFile);
+                const prepared = await prepareProfileImageFile(bnrFile);
+                const path = await uploadProfileMediaFile(API, prepared);
+                updateForm.append('BannerUrl', path);
+                updateForm.append('WallpaperVideoUrl', '');
+            } else if (vdoFile instanceof File) {
+                assertVideoSize(vdoFile);
+                const path = await uploadProfileMediaFile(API, vdoFile);
+                updateForm.append('WallpaperVideoUrl', path);
+                updateForm.append('BannerUrl', '');
+            } else {
+                if (formData.get('BannerUrl') === '') updateForm.append('BannerUrl', '');
+                if (formData.get('WallpaperVideoUrl') === '') updateForm.append('WallpaperVideoUrl', '');
             }
 
-            // Synchronize with backend core
             const res = await API.Users.updateProfile(updateForm, uid);
             showNotification("PROFILE_SYNCED", "Identity modifications committed and persistent.", "success");
             setShowEditProfile(false);
@@ -1571,7 +1596,12 @@ export const ProfileView = React.memo(({
             }
         } catch (error) {
             console.error("Profile Sync Error:", error);
-            showNotification("SYNC_FAILED", "Failed to commit modifications to core.", "error");
+            const detail =
+                error.response?.data?.message ||
+                error.response?.data?.title ||
+                error.message ||
+                'Failed to commit modifications to core.';
+            showNotification("SYNC_FAILED", detail, "error");
             throw error;
         }
     };
@@ -2583,8 +2613,9 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             formData.append('ResidentSectorId', parseInt(sectorId) || 0);
             formData.append('IsLive', isLive);
 
-            if (featuredTrackId !== null) {
-                formData.append('FeaturedTrackId', parseInt(featuredTrackId));
+            const parsedFeatured = parseInt(featuredTrackId, 10);
+            if (!isNaN(parsedFeatured) && parsedFeatured > 0) {
+                formData.append('FeaturedTrackId', parsedFeatured);
             }
 
             if (file) formData.append('ProfilePicture', file);
@@ -2611,8 +2642,16 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
 
             await onSubmit(formData);
         } catch (error) {
-            console.error("Profile Update Failed Validation:", error.response?.data?.errors);
-            alert(`Validation Error: ${JSON.stringify(error.response?.data?.errors || error.message)}`);
+            console.error("Profile Update Failed:", error.response?.data || error);
+            const detail =
+                error.response?.data?.message ||
+                error.response?.data?.title ||
+                (error.response?.data?.errors
+                    ? JSON.stringify(error.response.data.errors)
+                    : null) ||
+                error.message ||
+                'Upload failed';
+            alert(`Validation Error: ${detail}`);
         }
     };
 
@@ -2660,7 +2699,8 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                             )}
                             <input
                                 type="file"
-                                onChange={e => setFile(e.target.files[0])}
+                                accept="image/jpeg,image/png,image/webp,image/gif"
+                                onChange={e => setFile(e.target.files?.[0] || null)}
                                 className="absolute inset-0 opacity-0 cursor-pointer z-10"
                             />
                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">

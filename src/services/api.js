@@ -96,10 +96,16 @@ const API = {
         getProfile: (userId = null) => api.get(`Users/profile?_t=${new Date().getTime()}`, {
             headers: userId ? { 'UserId': userId } : {}
         }),
-        updateProfile: (data, userId) => api.put('Users/update-profile', data, {
-            headers: { UserId: userId },
-            timeout: 120000 // 2 min for media updates
-        }),
+        updateProfile: (data, userId) => {
+            const headers = {};
+            if (userId != null && userId !== '') headers.UserId = String(userId);
+            return api.put('Users/update-profile', data, {
+                headers,
+                timeout: 120000,
+                maxBodyLength: Infinity,
+                maxContentLength: Infinity,
+            });
+        },
         followUser: (id) => api.post(`Artists/like/${id}`), // Re-routed to Artists for social linking
         unfollowUser: (id) => api.post(`Artists/like/${id}`), // It's a toggle in backend
         getFollowers: (id) => api.get(`Users/${id}/followers`),
@@ -271,8 +277,9 @@ const API = {
     },
     Files: {
         upload: (formData) => api.post('File/upload', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-            timeout: 120000
+            timeout: 180000,
+            maxBodyLength: Infinity,
+            maxContentLength: Infinity,
         })
     },
     Organic: {
