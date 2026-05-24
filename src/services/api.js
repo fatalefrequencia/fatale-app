@@ -1,6 +1,13 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5264/api/';
+const resolveApiBaseUrl = () => {
+    const raw = import.meta.env.VITE_API_BASE_URL || '/api/';
+    if (raw.startsWith('http')) return raw;
+    const base = raw.startsWith('/') ? raw : `/${raw}`;
+    return base.endsWith('/') ? base : `${base}/`;
+};
+
+const BASE_URL = resolveApiBaseUrl();
 console.log('[API_SERVICE] Initializing with URL:', BASE_URL);
 
 const api = axios.create({

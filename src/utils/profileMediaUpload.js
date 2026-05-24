@@ -28,8 +28,13 @@ export function normalizeVideoFile(file) {
     return new File([file], safeName, { type: mime, lastModified: file.lastModified ?? Date.now() });
 }
 
-const API_BASE = () =>
-    (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5264/api/').replace(/\/?$/, '/');
+const API_BASE = () => {
+    const raw = import.meta.env.VITE_API_BASE_URL || '/api/';
+    if (raw.startsWith('http')) return raw.replace(/\/?$/, '/');
+    // Same-origin relative path (proxied in prod via _redirects, vite in dev)
+    const base = raw.startsWith('/') ? raw : `/${raw}`;
+    return base.replace(/\/?$/, '/');
+};
 
 export function isBlobLike(value) {
     return (

@@ -1,7 +1,9 @@
-export const API_BASE_URL = (import.meta.env.VITE_SIGNALR_URL ||
-  (import.meta.env.PROD
-    ? (import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api/', '') : 'https://fatalecore-production.up.railway.app')
-    : 'http://localhost:5264')).replace(/\/+$/, '') + '/'; // Ensure exactly ONE trailing slash
+// Absolute host for media paths (S3 URLs may also be full https — those pass through getMediaUrl).
+export const API_BASE_URL = (
+  import.meta.env.VITE_MEDIA_BASE_URL ||
+  import.meta.env.VITE_SIGNALR_URL ||
+  'https://api.fatale.fm'
+).replace(/\/+$/, '') + '/';
 
 export const getMediaUrl = (path) => {
   if (!path || path.startsWith('http') || path.startsWith('blob:') || path.startsWith('data:')) return path;

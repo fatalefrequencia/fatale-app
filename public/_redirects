@@ -1,1 +1,3 @@
-/* /index.html 200
+# Same-origin API proxy — fixes mobile multipart uploads (avoids cross-origin Network Error)
+/api/*  https://api.fatale.fm/api/:splat  200
+/*  /index.html  200
