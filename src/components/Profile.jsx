@@ -1494,63 +1494,62 @@ export const ProfileView = React.memo(({
 
     const handleUpdateProfile = async (formData) => {
         try {
-            const API = await import('../services/api').then(mod => mod.default);
             const {
                 uploadProfileMediaFile,
                 prepareProfileImageFile,
                 assertVideoSize,
+                isBlobLike,
+                buildProfileUpdatePayload,
+                syncProfileUpdate,
+                syncProfileMultipart,
             } = await import('../utils/profileMediaUpload');
             const uid = currentUser?.id || currentUser?.Id || currentUser?.userId || currentUser?.UserId;
-            
-            const updateForm = new FormData();
-            updateForm.append('Username', formData.get('Username'));
-            updateForm.append('Biography', formData.get('Biography'));
-            updateForm.append('StatusMessage', formData.get('StatusMessage'));
-            updateForm.append('ResidentSectorId', formData.get('ResidentSectorId'));
-            updateForm.append('IsLive', formData.get('IsLive'));
-            updateForm.append('ThemeColor', formData.get('ThemeColor'));
-            updateForm.append('TextColor', formData.get('TextColor'));
-            updateForm.append('BackgroundColor', formData.get('BackgroundColor'));
-            updateForm.append('SecondaryColor', formData.get('SecondaryColor'));
-            updateForm.append('IsGlass', formData.get('IsGlass'));
 
-            ['InstagramUrl', 'TwitterUrl', 'YoutubeUrl', 'WebsiteUrl'].forEach((key) => {
-                const val = formData.get(key);
-                if (val !== null && val !== undefined) updateForm.append(key, val);
-            });
-
-            const featuredRaw = formData.get('FeaturedTrackId');
-            const featuredId = parseInt(featuredRaw, 10);
-            if (!isNaN(featuredId) && featuredId > 0) {
-                updateForm.append('FeaturedTrackId', String(featuredId));
-            }
-
+            const media = {};
             const pfpFile = formData.get('ProfilePicture');
             const bnrFile = formData.get('Banner');
             const vdoFile = formData.get('WallpaperVideo');
 
-            // Mobile Safari often fails PUT + multipart files — upload via POST first, then sync URLs.
-            if (pfpFile instanceof File) {
+            // iOS: use native fetch for file POST, then JSON for profile (not PUT+multipart).
+            if (isBlobLike(pfpFile)) {
                 const prepared = await prepareProfileImageFile(pfpFile);
-                const path = await uploadProfileMediaFile(API, prepared);
-                updateForm.append('ProfilePictureUrl', path);
+                media.profilePictureUrl = await uploadProfileMediaFile(prepared);
             }
-            if (bnrFile instanceof File) {
+            if (isBlobLike(bnrFile)) {
                 const prepared = await prepareProfileImageFile(bnrFile);
-                const path = await uploadProfileMediaFile(API, prepared);
-                updateForm.append('BannerUrl', path);
-                updateForm.append('WallpaperVideoUrl', '');
-            } else if (vdoFile instanceof File) {
+                media.bannerUrl = await uploadProfileMediaFile(prepared);
+                media.wallpaperVideoUrl = '';
+            } else if (isBlobLike(vdoFile)) {
                 assertVideoSize(vdoFile);
-                const path = await uploadProfileMediaFile(API, vdoFile);
-                updateForm.append('WallpaperVideoUrl', path);
-                updateForm.append('BannerUrl', '');
+                media.wallpaperVideoUrl = await uploadProfileMediaFile(vdoFile);
+                media.bannerUrl = '';
             } else {
-                if (formData.get('BannerUrl') === '') updateForm.append('BannerUrl', '');
-                if (formData.get('WallpaperVideoUrl') === '') updateForm.append('WallpaperVideoUrl', '');
+                if (formData.get('BannerUrl') === '') {
+                    media.bannerUrl = '';
+                    media.wallpaperVideoUrl = '';
+                }
+                if (formData.get('WallpaperVideoUrl') === '') {
+                    media.wallpaperVideoUrl = '';
+                }
             }
 
-            const res = await API.Users.updateProfile(updateForm, uid);
+            const payload = buildProfileUpdatePayload(formData, media);
+            let res;
+            try {
+                res = await syncProfileUpdate(payload, uid);
+            } catch (jsonErr) {
+                console.warn('[Profile] JSON update failed, trying multipart fallback:', jsonErr);
+                const fallbackForm = new FormData();
+                Object.entries(payload).forEach(([key, val]) => {
+                    if (val !== undefined && val !== null) {
+                        fallbackForm.append(key, typeof val === 'boolean' ? String(val) : val);
+                    }
+                });
+                if (isBlobLike(pfpFile)) fallbackForm.append('ProfilePicture', pfpFile);
+                if (isBlobLike(bnrFile)) fallbackForm.append('Banner', bnrFile);
+                if (isBlobLike(vdoFile)) fallbackForm.append('WallpaperVideo', vdoFile);
+                res = await syncProfileMultipart(fallbackForm, uid);
+            }
             showNotification("PROFILE_SYNCED", "Identity modifications committed and persistent.", "success");
             setShowEditProfile(false);
 
@@ -2602,8 +2601,12 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
 
 
 
+    const [isSaving, setIsSaving] = useState(false);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isSaving) return;
+        setIsSaving(true);
         try {
             const formData = new FormData();
             formData.append('Username', name);
@@ -2652,6 +2655,8 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                 error.message ||
                 'Upload failed';
             alert(`Validation Error: ${detail}`);
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -2699,7 +2704,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                             )}
                             <input
                                 type="file"
-                                accept="image/jpeg,image/png,image/webp,image/gif"
+                                accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif"
                                 onChange={e => setFile(e.target.files?.[0] || null)}
                                 className="absolute inset-0 opacity-0 cursor-pointer z-10"
                             />
@@ -2868,7 +2873,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                         <div className="relative group cursor-pointer border border-dashed border-[var(--text-color)]/20 hover:border-[var(--theme-color)] transition-all bg-white/5 hover:bg-[var(--theme-color)]/5 overflow-hidden">
                             <input
                                 type="file"
-                                accept="image/*,video/mp4,video/webm,video/*"
+                                accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,video/mp4,video/webm,video/quicktime"
                                 onChange={e => {
                                     const f = e.target.files[0];
                                     if (!f) return;
@@ -2989,8 +2994,8 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             )}
 
             <div className="mt-auto pt-10 flex flex-col gap-4">
-                <button type="submit" className="w-full py-6 bg-black border border-[var(--theme-color)] text-[var(--theme-color)] font-bold uppercase tracking-[0.5em] hover:bg-[var(--theme-color)] hover:text-black transition-all shadow-[0_0_30px_rgba(var(--theme-color-rgb),0.15)]">
-                    SYNC_IDENTITY_TO_CORE
+                <button type="submit" disabled={isSaving} className={`w-full py-6 bg-black border border-[var(--theme-color)] text-[var(--theme-color)] font-bold uppercase tracking-[0.5em] transition-all shadow-[0_0_30px_rgba(var(--theme-color-rgb),0.15)] ${isSaving ? 'opacity-50 cursor-wait' : 'hover:bg-[var(--theme-color)] hover:text-black'}`}>
+                    {isSaving ? 'UPLOADING_SIGNAL...' : 'SYNC_IDENTITY_TO_CORE'}
                 </button>
                 <button
                     type="button"

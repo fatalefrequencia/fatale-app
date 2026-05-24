@@ -2,6 +2,35 @@
 export const PROFILE_IMAGE_MAX_BYTES = 8 * 1024 * 1024;
 export const PROFILE_VIDEO_MAX_BYTES = 50 * 1024 * 1024;
 
+const API_BASE = () =>
+    (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5264/api/').replace(/\/?$/, '/');
+
+export function isBlobLike(value) {
+    return (
+        value != null &&
+        typeof value === 'object' &&
+        typeof value.size === 'number' &&
+        value.size > 0
+    );
+}
+
+function getSessionHeaders() {
+    const headers = {};
+    const token = localStorage.getItem('token');
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const rawId = user?.id ?? user?.Id ?? user?.userId ?? user?.UserId;
+        if (rawId != null && rawId !== '' && rawId !== 'undefined') {
+            headers.UserId = String(rawId);
+        }
+    } catch {
+        /* ignore */
+    }
+    return headers;
+}
+
 export function extractUploadedPath(data) {
     if (!data) return null;
     return (
@@ -17,10 +46,175 @@ export function extractUploadedPath(data) {
     );
 }
 
+async function parseErrorResponse(res) {
+    try {
+        const data = await res.json();
+        return data?.message || data?.title || data?.error || JSON.stringify(data);
+    } catch {
+        return (await res.text()) || `Request failed (${res.status})`;
+    }
+}
+
 /**
- * Resize/compress large photos so mobile uploads stay under proxy limits.
- * Skips GIF/video and images that are already small enough.
+ * Native fetch upload — avoids axios "Network Error" on iOS Safari for multipart POST.
  */
+export async function uploadProfileMediaFile(file) {
+    const formData = new FormData();
+    const fallbackName = file.type?.startsWith('video/') ? 'backdrop.mp4' : 'profile.jpg';
+    formData.append('file', file, file.name || fallbackName);
+
+    const res = await fetch(`${API_BASE()}File/upload`, {
+        method: 'POST',
+        body: formData,
+        headers: getSessionHeaders(),
+    });
+
+    if (!res.ok) {
+        throw new Error(await parseErrorResponse(res));
+    }
+
+    const data = await res.json();
+    const path = extractUploadedPath(data);
+    if (!path) {
+        throw new Error('Upload completed but the server did not return a file path.');
+    }
+    return path;
+}
+
+/**
+ * Build JSON payload for profile update (camelCase + PascalCase for .NET compatibility).
+ */
+export function buildProfileUpdatePayload(formData, media = {}) {
+    const isLiveRaw = formData.get('IsLive');
+    const isLive =
+        isLiveRaw === true ||
+        isLiveRaw === 'true' ||
+        isLiveRaw === 'True' ||
+        isLiveRaw === 1 ||
+        isLiveRaw === '1';
+
+    const isGlassRaw = formData.get('IsGlass');
+    const isGlass =
+        isGlassRaw === true ||
+        isGlassRaw === 'true' ||
+        isGlassRaw === 'True' ||
+        isGlassRaw === 1 ||
+        isGlassRaw === '1';
+
+    const payload = {
+        username: formData.get('Username') ?? '',
+        Username: formData.get('Username') ?? '',
+        biography: formData.get('Biography') ?? '',
+        Biography: formData.get('Biography') ?? '',
+        statusMessage: formData.get('StatusMessage') ?? '',
+        StatusMessage: formData.get('StatusMessage') ?? '',
+        residentSectorId: parseInt(formData.get('ResidentSectorId'), 10) || 0,
+        ResidentSectorId: parseInt(formData.get('ResidentSectorId'), 10) || 0,
+        isLive,
+        IsLive: isLive,
+        themeColor: formData.get('ThemeColor') ?? '',
+        ThemeColor: formData.get('ThemeColor') ?? '',
+        textColor: formData.get('TextColor') ?? '',
+        TextColor: formData.get('TextColor') ?? '',
+        backgroundColor: formData.get('BackgroundColor') ?? '',
+        BackgroundColor: formData.get('BackgroundColor') ?? '',
+        secondaryColor: formData.get('SecondaryColor') ?? '',
+        SecondaryColor: formData.get('SecondaryColor') ?? '',
+        isGlass,
+        IsGlass: isGlass,
+        instagramUrl: formData.get('InstagramUrl') ?? '',
+        InstagramUrl: formData.get('InstagramUrl') ?? '',
+        twitterUrl: formData.get('TwitterUrl') ?? '',
+        TwitterUrl: formData.get('TwitterUrl') ?? '',
+        youtubeUrl: formData.get('YoutubeUrl') ?? '',
+        YoutubeUrl: formData.get('YoutubeUrl') ?? '',
+        websiteUrl: formData.get('WebsiteUrl') ?? '',
+        WebsiteUrl: formData.get('WebsiteUrl') ?? '',
+    };
+
+    const featuredRaw = formData.get('FeaturedTrackId');
+    const featuredId = parseInt(featuredRaw, 10);
+    if (!isNaN(featuredId) && featuredId > 0) {
+        payload.featuredTrackId = featuredId;
+        payload.FeaturedTrackId = featuredId;
+    }
+
+    if (media.profilePictureUrl != null) {
+        payload.profilePictureUrl = media.profilePictureUrl;
+        payload.ProfilePictureUrl = media.profilePictureUrl;
+    }
+    if (media.bannerUrl != null) {
+        payload.bannerUrl = media.bannerUrl;
+        payload.BannerUrl = media.bannerUrl;
+    }
+    if (media.wallpaperVideoUrl != null) {
+        payload.wallpaperVideoUrl = media.wallpaperVideoUrl;
+        payload.WallpaperVideoUrl = media.wallpaperVideoUrl;
+    }
+
+    return payload;
+}
+
+/**
+ * JSON profile sync via fetch — iOS often breaks axios/fetch PUT + multipart.
+ */
+export async function syncProfileUpdate(payload, userId) {
+    const headers = {
+        ...getSessionHeaders(),
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+    };
+    if (userId != null && userId !== '') {
+        headers.UserId = String(userId);
+    }
+
+    const url = `${API_BASE()}Users/update-profile`;
+    const body = JSON.stringify(payload);
+
+    let res = await fetch(url, { method: 'PUT', headers, body });
+
+    if (!res.ok && (res.status === 405 || res.status === 404)) {
+        res = await fetch(url, { method: 'POST', headers, body });
+    }
+
+    if (!res.ok) {
+        throw new Error(await parseErrorResponse(res));
+    }
+
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+        return { data: await res.json() };
+    }
+    return { data: {} };
+}
+
+/**
+ * Last-resort: multipart POST with file blobs (when URL fields are not accepted).
+ */
+export async function syncProfileMultipart(formData, userId) {
+    const headers = getSessionHeaders();
+    if (userId != null && userId !== '') {
+        headers.UserId = String(userId);
+    }
+
+    const url = `${API_BASE()}Users/update-profile`;
+    let res = await fetch(url, { method: 'POST', body: formData, headers });
+
+    if (!res.ok && res.status === 405) {
+        res = await fetch(url, { method: 'PUT', body: formData, headers });
+    }
+
+    if (!res.ok) {
+        throw new Error(await parseErrorResponse(res));
+    }
+
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+        return { data: await res.json() };
+    }
+    return { data: {} };
+}
+
 export function compressImageForUpload(
     file,
     { maxWidth = 1920, maxHeight = 1920, maxBytes = 2 * 1024 * 1024, quality = 0.82 } = {}
@@ -59,7 +253,7 @@ export function compressImageForUpload(
                         resolve(file);
                         return;
                     }
-                    const name = file.name.replace(/\.[^.]+$/, '') || 'profile';
+                    const name = file.name?.replace(/\.[^.]+$/, '') || 'profile';
                     resolve(new File([blob], `${name}.jpg`, { type: 'image/jpeg', lastModified: Date.now() }));
                 },
                 'image/jpeg',
@@ -74,17 +268,6 @@ export function compressImageForUpload(
 
         img.src = url;
     });
-}
-
-export async function uploadProfileMediaFile(api, file) {
-    const formData = new FormData();
-    formData.append('file', file);
-    const res = await api.Files.upload(formData);
-    const path = extractUploadedPath(res.data);
-    if (!path) {
-        throw new Error('Upload completed but the server did not return a file path.');
-    }
-    return path;
 }
 
 export async function prepareProfileImageFile(file) {

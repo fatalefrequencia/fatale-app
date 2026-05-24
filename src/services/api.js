@@ -5,7 +5,7 @@ console.log('[API_SERVICE] Initializing with URL:', BASE_URL);
 
 const api = axios.create({
     baseURL: BASE_URL,
-    timeout: 30000,
+    timeout: 120000,
 });
 
 // Interceptor to inject token and UserID
@@ -99,11 +99,19 @@ const API = {
         updateProfile: (data, userId) => {
             const headers = {};
             if (userId != null && userId !== '') headers.UserId = String(userId);
+
+            if (data instanceof FormData) {
+                return api.put('Users/update-profile', data, {
+                    headers,
+                    timeout: 120000,
+                    maxBodyLength: Infinity,
+                    maxContentLength: Infinity,
+                });
+            }
+
             return api.put('Users/update-profile', data, {
-                headers,
+                headers: { ...headers, 'Content-Type': 'application/json' },
                 timeout: 120000,
-                maxBodyLength: Infinity,
-                maxContentLength: Infinity,
             });
         },
         followUser: (id) => api.post(`Artists/like/${id}`), // Re-routed to Artists for social linking
