@@ -263,6 +263,7 @@ const API = {
     },
     Feed: {
         getGlobalFeed: () => api.get('Feed'),
+        getFollowingFeed: () => api.get('Feed/following'),
     },
     Stations: {
         getAll: () => api.get('Stations'),

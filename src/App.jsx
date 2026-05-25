@@ -3799,6 +3799,7 @@ const FeedContent = React.memo(({
   // Mobile slide-up panel
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [mobilePanelTab, setMobilePanelTab] = useState('filters'); // 'filters' | 'favorites' | 'stations'
+  const [feedFilter, setFeedFilter] = useState('ALL');
 
   useEffect(() => {
     API.Communities.getAll().then(res => setAllCommunities(res.data || [])).catch(() => { });
@@ -3807,7 +3808,9 @@ const FeedContent = React.memo(({
   const fetchFeed = async () => {
     setLoading(true);
     try {
-      const res = await API.Feed.getGlobalFeed();
+      const res = feedFilter === 'FOLLOWING'
+        ? await API.Feed.getFollowingFeed()
+        : await API.Feed.getGlobalFeed();
       // Normalize all social counts and properties for consistent rendering
       const normalizedFeed = (res.data || []).map(item => ({
         ...item,
@@ -3836,7 +3839,7 @@ const FeedContent = React.memo(({
 
   useEffect(() => {
     fetchFeed();
-  }, []);
+  }, [feedFilter]);
 
   const handleTrackPlay = (clickedItem) => {
     console.log("[FEED_SIGNAL] INTERCEPTED_TRACK_PLAY_REQUEST:", clickedItem?.Id || clickedItem?.id || clickedItem?.Title || "UNKNOWN");
@@ -4296,6 +4299,21 @@ const FeedContent = React.memo(({
             <div className="w-24 h-px bg-[#ff006e]/10 border-t border-dashed border-[#ff006e]/20" />
           </div>
 
+          <div className="flex items-center gap-1">
+            {['ALL', 'FOLLOWING'].map(f => (
+              <button
+                key={f}
+                onClick={() => setFeedFilter(f)}
+                className={`px-3 py-1 text-[8px] font-black uppercase tracking-widest border transition-all ${
+                  feedFilter === f
+                    ? 'border-[#ff006e]/60 bg-[#ff006e]/10 text-[#ff006e]'
+                    : 'border-white/5 text-white/20 hover:text-white/40'
+                }`}
+              >
+                [{f}]
+              </button>
+            ))}
+          </div>
           {/* Mobile Actions */}
           <div className="flex lg:hidden items-center gap-2">
             <button 
