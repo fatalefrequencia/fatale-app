@@ -2220,14 +2220,19 @@ export const ProfileView = React.memo(({
                                             </div>
                                         </div>
                                         {isMe && (
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleDeleteJournal(entry.id || entry.Id); }}
-                                                className="absolute top-2 right-2 opacity-0 group-hover/jentry:opacity-100 transition-opacity p-1 text-red-500/40 hover:text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20"
-                                                title="Delete entry"
-                                            >
-                                                <X size={10} />
-                                            </button>
-                                        )}
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleDeleteJournal(entry.id || entry.Id); }}
+                                            className="absolute bottom-2 right-2 p-1.5 
+                                                text-red-500/20 hover:text-red-500 
+                                                border border-transparent hover:border-red-500/30 
+                                                hover:bg-red-500/10 transition-all
+                                                md:opacity-0 md:group-hover/jentry:opacity-100
+                                                opacity-100"
+                                            title="Delete entry"
+                                        >
+                                            <X size={9} />
+                                        </button>
+                                    )}
                                     </div>
                                 )) : (
                                     <div className="text-[8px] text-white/20 uppercase py-4 text-center">
@@ -2501,14 +2506,19 @@ export const ProfileView = React.memo(({
                                     )}
                                     <div className="absolute inset-0 border border-[var(--subsystem-accent)]/0 group-hover:border-[var(--subsystem-accent)]/40 transition-all duration-500" />
                                     {isMe && (
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleDeleteGallery(img.id || img.Id); }}
-                                            className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-black/80 text-red-500/60 hover:text-red-500 border border-red-500/20 hover:border-red-500/60 z-10"
-                                            title="Delete file"
-                                        >
-                                            <X size={11} />
-                                        </button>
-                                    )}
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleDeleteGallery(img.id || img.Id); }}
+                                        className="absolute bottom-1 right-1 p-1 bg-black/80 
+                                            text-red-500/30 hover:text-red-500 
+                                            border border-transparent hover:border-red-500/40 
+                                            transition-all z-10
+                                            md:opacity-0 md:group-hover:opacity-100
+                                            opacity-100"
+                                        title="Delete file"
+                                    >
+                                        <X size={10} />
+                                    </button>
+                                )}
                                 </div>
                             ))}
                             </div>
