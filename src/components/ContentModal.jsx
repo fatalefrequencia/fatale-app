@@ -317,29 +317,31 @@ const ContentModal = ({
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-white/5 bg-black/40 flex flex-wrap justify-between items-center gap-4 text-[9px] mono uppercase tracking-widest text-white/30 relative z-10">
-                    <div className="flex items-center gap-8">
-                        <div className="flex flex-col gap-1">
-                            <span className="text-[#9d00ff]/40 tracking-tighter">PACKAGE_ID</span>
-                            <span className="text-white/60 font-bold">{content?.Id || content?.id || 'GLOBAL_CORE'}</span>
+                {!hideActions && (
+                    <div className="p-6 border-t border-white/5 bg-black/40 flex flex-wrap justify-between items-center gap-4 text-[9px] mono uppercase tracking-widest text-white/30 relative z-10">
+                        <div className="flex items-center gap-8">
+                            <div className="flex flex-col gap-1">
+                                <span className="text-[#9d00ff]/40 tracking-tighter">PACKAGE_ID</span>
+                                <span className="text-white/60 font-bold">{content?.Id || content?.id || 'GLOBAL_CORE'}</span>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <span className="text-[#9d00ff]/40 tracking-tighter">TIMESTAMP</span>
+                                <span className="text-white/60 font-bold">{content?.CreatedAt ? new Date(content.CreatedAt).toLocaleString() : 'SYNCHRONIZED'}</span>
+                            </div>
                         </div>
-                        <div className="flex flex-col gap-1">
-                            <span className="text-[#9d00ff]/40 tracking-tighter">TIMESTAMP</span>
-                            <span className="text-white/60 font-bold">{content?.CreatedAt ? new Date(content.CreatedAt).toLocaleString() : 'SYNCHRONIZED'}</span>
+                        <div className="flex gap-4">
+                            <button onClick={() => setShowTipModal(true)} className="px-4 py-2 bg-[#ff006e]/10 border border-[#ff006e]/30 hover:bg-[#ff006e] hover:text-black transition-all text-[#ff006e] font-black flex items-center gap-2 group">
+                                <Coins size={12} className="group-hover:animate-bounce" /> {t('TIP_ARTIST')}
+                            </button>
+                            <button onClick={handleShare} className="px-4 py-2 bg-white/5 border border-white/10 hover:border-[#9d00ff]/50 hover:text-white transition-all text-white/60 flex items-center gap-2">
+                                <Share2 size={12} /> {t('SHARE_SIGNAL')}
+                            </button>
+                            <button onClick={onClose} className="text-white font-black px-8 py-2 uppercase transition-all border border-white/40 hover:border-white hover:bg-white hover:text-black text-[10px] tracking-[0.2em]">
+                                {t('CLOSE')}
+                            </button>
                         </div>
                     </div>
-                    <div className="flex gap-4">
-                        <button onClick={() => setShowTipModal(true)} className="px-4 py-2 bg-[#ff006e]/10 border border-[#ff006e]/30 hover:bg-[#ff006e] hover:text-black transition-all text-[#ff006e] font-black flex items-center gap-2 group">
-                            <Coins size={12} className="group-hover:animate-bounce" /> {t('TIP_ARTIST')}
-                        </button>
-                        <button onClick={handleShare} className="px-4 py-2 bg-white/5 border border-white/10 hover:border-[#9d00ff]/50 hover:text-white transition-all text-white/60 flex items-center gap-2">
-                            <Share2 size={12} /> {t('SHARE_SIGNAL')}
-                        </button>
-                        <button onClick={onClose} className="text-white font-black px-8 py-2 uppercase transition-all border border-white/40 hover:border-white hover:bg-white hover:text-black text-[10px] tracking-[0.2em]">
-                            {t('CLOSE')}
-                        </button>
-                    </div>
-                </div>
+                )}
 
                 {/* Tipping Overlay */}
                 <AnimatePresence>

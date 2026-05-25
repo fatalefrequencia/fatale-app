@@ -2423,8 +2423,8 @@ export const ProfileView = React.memo(({
 
             {/* Modal Layer */}
             <AnimatePresence>
-                {showEditProfile && (
-                    <ContentModal onClose={() => setShowEditProfile(false)} title={t('MODIFY_IDENTITY')}>
+            {showEditProfile && (
+    <ContentModal onClose={() => setShowEditProfile(false)} title={t('MODIFY_IDENTITY')} hideActions={true}>
                          <div className="p-8 h-full bg-black/90 backdrop-blur-3xl border border-white/5 overflow-y-auto custom-scrollbar">
                             <h2 className="text-xs font-black text-white/80 mb-6 uppercase tracking-[0.4em] flex items-center gap-2">
                                 IDENTITY_CORE_UPDATE
@@ -2439,8 +2439,8 @@ export const ProfileView = React.memo(({
                     </ContentModal>
                 )}
 
-                {isStudioExpanded && (
-                    <ContentModal onClose={() => setIsStudioExpanded(false)} title={t('STUDIO_ARCHIVE')}>
+{isStudioExpanded && (
+    <ContentModal onClose={() => setIsStudioExpanded(false)} title={t('STUDIO_ARCHIVE')} hideActions={true}>
                          <div className="p-4 md:p-8 bg-black/95 backdrop-blur-3xl border border-white/5 overflow-y-auto custom-scrollbar h-[80vh]">
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
                                 {profileGallery.map((img, idx) => (
