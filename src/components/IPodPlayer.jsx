@@ -1096,10 +1096,8 @@ useEffect(() => {
             if (createModalImage) {
                 try {
                     const formData = new FormData();
-                    formData.append('File', createModalImage);
-                    const uploadRes = await API.Studio.upload(formData);
-                    const imageUrl = uploadRes.data.imageUrl || uploadRes.data.ImageUrl;
-                    await API.Playlists.update(newPlaylistId, { imageUrl });
+                    formData.append('file', createModalImage);
+                    await API.Playlists.uploadCover(newPlaylistId, formData);
                 } catch (err) {
                     console.error('[IMAGE_UPLOAD]', err);
                     showNotification("SYNC_ERROR", "Image failed, playlist created without cover.", "error");
