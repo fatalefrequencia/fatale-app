@@ -126,6 +126,11 @@ export const IPodPlayer = ({
     const [resonantStations, setResonantStations] = useState([]);
     const [resonantTag, setResonantTag] = useState('');
     const [loadingStations, setLoadingStations] = useState(false);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [createModalName, setCreateModalName] = useState('');
+    const [createModalImage, setCreateModalImage] = useState(null);
+    const [createModalPreview, setCreateModalPreview] = useState(null);
+    const createModalImageRef = useRef(null);
     const fileInputRef = useRef(null);
     const listRef = useRef(null);
     const createPlaylistCallbackRef = useRef(null);
@@ -902,59 +907,12 @@ useEffect(() => {
     }
 
     if (item.id === 'CREATE_PLAYLIST') {
-    const name = window.prompt('Enter playlist name:');
-    if (name && name.trim()) {
-        const createAndAdd = async () => {
-            try {
-                const API = await import('../services/api').then(m => m.default);
-                const res = await API.Playlists.create({ 
-                    name: name.trim(), 
-                    isPublic: true,   
-                    IsPosted: true    
-                });
-                const newPlaylist = res.data;
-                const newPlaylistId = newPlaylist.id || newPlaylist.Id;
-
-                const wantsImage = window.confirm('Add a cover image to this playlist?');
-                if (wantsImage) {
-                    // Set callback for when file is selected
-                    createPlaylistCallbackRef.current = async (file) => {
-                        if (file) {
-                            try {
-                                const formData = new FormData();
-                                formData.append('File', file);
-                                const uploadRes = await API.Studio.upload(formData);
-                                const imageUrl = uploadRes.data.imageUrl || uploadRes.data.ImageUrl;
-                                await API.Playlists.update(newPlaylistId, { imageUrl });
-                            } catch (err) {
-                                console.error('[IMAGE_UPLOAD]', err);
-                                showNotification("SYNC_ERROR", "Image failed, playlist created without cover.", "error");
-                            }
-                        }
-                        await API.Playlists.addTrack(newPlaylistId, currentTrack.id);
-                        const listRes = await API.Playlists.getUserPlaylists(user?.id || user?.Id);
-                        setPlaylists(listRes.data || []);
-                        showNotification("PLAYLIST_CREATED", `Created & added to ${name.trim()}`, "success");
-                        setScreen('NOW_PLAYING');
-                    };
-                    // Trigger the existing file input
-                    fileInputRef.current?.click();
-                } else {
-                    await API.Playlists.addTrack(newPlaylistId, currentTrack.id);
-                    const listRes = await API.Playlists.getUserPlaylists(user?.id || user?.Id);
-                    setPlaylists(listRes.data || []);
-                    showNotification("PLAYLIST_CREATED", `Created & added to ${name.trim()}`, "success");
-                    setScreen('NOW_PLAYING');
-                }
-            } catch (e) {
-                console.error(e);
-                showNotification("ERROR", "Failed to create playlist", "error");
-            }
-        };
-        createAndAdd();
+        setCreateModalName('');
+        setCreateModalImage(null);
+        setCreateModalPreview(null);
+        setShowCreateModal(true);
+        return;
     }
-    return;
-}
 
             if (item.type === 'SELECT_PLAYLIST_ITEM') {
                 const addTrack = async () => {
@@ -1122,6 +1080,43 @@ useEffect(() => {
         }
     };
 
+    const handleCreateModalSubmit = async () => {
+        if (!createModalName.trim()) return;
+        setShowCreateModal(false);
+        try {
+            const API = await import('../services/api').then(m => m.default);
+            const res = await API.Playlists.create({
+                name: createModalName.trim(),
+                isPublic: true,
+                IsPosted: true
+            });
+            const newPlaylist = res.data;
+            const newPlaylistId = newPlaylist.id || newPlaylist.Id;
+
+            if (createModalImage) {
+                try {
+                    const formData = new FormData();
+                    formData.append('File', createModalImage);
+                    const uploadRes = await API.Studio.upload(formData);
+                    const imageUrl = uploadRes.data.imageUrl || uploadRes.data.ImageUrl;
+                    await API.Playlists.update(newPlaylistId, { imageUrl });
+                } catch (err) {
+                    console.error('[IMAGE_UPLOAD]', err);
+                    showNotification("SYNC_ERROR", "Image failed, playlist created without cover.", "error");
+                }
+            }
+
+            await API.Playlists.addTrack(newPlaylistId, currentTrack.id);
+            const listRes = await API.Playlists.getUserPlaylists(user?.id || user?.Id);
+            setPlaylists(listRes.data || []);
+            showNotification("PLAYLIST_CREATED", `Created & added to ${createModalName.trim()}`, "success");
+            setScreen('NOW_PLAYING');
+        } catch (e) {
+            console.error(e);
+            showNotification("ERROR", "Failed to create playlist", "error");
+        }
+    };
+
     const getAngle = (clientX, clientY) => {
         if (!wheelRef.current) return 0;
         const rect = wheelRef.current.getBoundingClientRect();
@@ -1244,6 +1239,88 @@ useEffect(() => {
                 onChange={handleImageUpload}
             />
 
+
+            {showCreateModal && createPortal(
+                <div 
+                    className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+                    onClick={() => setShowCreateModal(false)}
+                >
+                    <div 
+                        className="w-full max-w-sm bg-[#0a0a0a] border border-[#f00060]/30 rounded-2xl p-6 space-y-5 shadow-[0_0_40px_rgba(255,0,110,0.2)]"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-[11px] font-black text-white uppercase tracking-[0.3em] font-mono">
+                                // NEW_PLAYLIST
+                            </h3>
+                            <button 
+                                onClick={() => setShowCreateModal(false)}
+                                className="text-white/30 hover:text-white transition-colors"
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+
+                        <div 
+                            className="relative w-full aspect-square max-h-40 bg-black border border-[#f00060]/20 rounded-xl overflow-hidden flex items-center justify-center cursor-pointer group"
+                            onClick={() => createModalImageRef.current?.click()}
+                        >
+                            {createModalPreview ? (
+                                <img src={createModalPreview} className="w-full h-full object-cover" alt="cover" />
+                            ) : (
+                                <div className="flex flex-col items-center gap-2 text-white/20 group-hover:text-[#f00060] transition-colors">
+                                    <Plus size={28} />
+                                    <span className="text-[9px] font-mono uppercase tracking-widest">Add Cover</span>
+                                </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span className="text-[9px] font-mono text-white uppercase tracking-widest">Change Image</span>
+                            </div>
+                            <input
+                                ref={createModalImageRef}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={e => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        setCreateModalImage(file);
+                                        setCreateModalPreview(URL.createObjectURL(file));
+                                    }
+                                    e.target.value = '';
+                                }}
+                            />
+                        </div>
+
+                        <input
+                            type="text"
+                            value={createModalName}
+                            onChange={e => setCreateModalName(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleCreateModalSubmit()}
+                            placeholder="PLAYLIST NAME..."
+                            autoFocus
+                            className="w-full bg-black border border-white/10 focus:border-[#f00060]/50 rounded-lg px-4 py-3 text-white text-xs font-mono uppercase tracking-widest outline-none placeholder:text-white/20 transition-colors"
+                        />
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowCreateModal(false)}
+                                className="flex-1 py-3 border border-white/10 text-white/40 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleCreateModalSubmit}
+                                disabled={!createModalName.trim()}
+                                className="flex-1 py-3 bg-[#f00060] disabled:bg-[#f00060]/20 disabled:text-white/20 text-black text-[10px] font-black uppercase tracking-widest rounded-lg transition-all hover:bg-[#ff2277]"
+                            >
+                                Create
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
             {/* Standalone Fullscreen Library Overlay (Superimposes everything cleanly) */}
             {createPortal(
                 <AnimatePresence>
