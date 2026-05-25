@@ -747,6 +747,16 @@ useEffect(() => {
                     try {
                         const API = await import('../services/api').then(m => m.default);
                         console.log('[DELETE] Attempting delete for playlist ID:', activePlaylistId);
+                
+                        // Clear cover image before deleting to prevent orphaning to studio
+                        try {
+                            const emptyForm = new FormData();
+                            emptyForm.append('imageUrl', '');
+                            await API.Playlists.update(activePlaylistId, { imageUrl: '' });
+                        } catch (coverErr) {
+                            console.warn('[DELETE] Could not clear cover before delete:', coverErr);
+                        }
+                
                         await API.Playlists.delete(activePlaylistId);
                         showNotification("PLAYLIST_TERMINATED", "Signal link purged.", "success");
                         const res = await API.Playlists.getUserPlaylists(user?.id || user?.Id);
@@ -1201,12 +1211,8 @@ useEffect(() => {
             const formData = new FormData();
             formData.append('File', file);
 
-            // We use a temporary upload to get a URL, or the API might support direct update
-            // Assuming we need to upload first then update playlist
-            const uploadRes = await API.Studio.upload(formData);
-            const imageUrl = uploadRes.data.imageUrl || uploadRes.data.ImageUrl;
 
-            await API.Playlists.update(activePlaylistId, { imageUrl });
+            await API.Playlists.uploadCover(activePlaylistId, formData);
             showNotification("VISUAL_SYNC", "Playlist pattern updated successfully.", "success");
 
             // Refresh

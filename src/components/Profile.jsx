@@ -1654,6 +1654,31 @@ export const ProfileView = React.memo(({
         }
     };
 
+    const handleDeleteJournal = async (entryId) => {
+        if (!window.confirm("Delete this log entry permanently?")) return;
+        try {
+            const API = await import('../services/api').then(mod => mod.default);
+            await API.Journal.delete(entryId);
+            setProfileJournal(prev => prev.filter(j => (j.id || j.Id) !== entryId));
+            showNotification("LOG_PURGED", "Journal entry removed from core.", "success");
+        } catch (err) {
+            console.error("Failed to delete journal entry", err);
+            showNotification("PURGE_FAILED", "Failed to remove log entry.", "error");
+        }
+    };
+    
+    const handleDeleteGallery = async (itemId) => {
+        if (!window.confirm("Delete this file from the archive permanently?")) return;
+        try {
+            const API = await import('../services/api').then(mod => mod.default);
+            await API.Studio.delete(itemId);
+            setProfileGallery(prev => prev.filter(g => (g.id || g.Id) !== itemId));
+            showNotification("ARCHIVE_PURGED", "File removed from studio archive.", "success");
+        } catch (err) {
+            console.error("Failed to delete gallery item", err);
+            showNotification("PURGE_FAILED", "Failed to remove file.", "error");
+        }
+    };
     // Fetch Target Profile
     useEffect(() => {
         const fetchTargetProfileInternal = async () => {
@@ -2100,16 +2125,25 @@ export const ProfileView = React.memo(({
                                 </button>
                             </div>
                             <div className="grid grid-cols-4 gap-2">
-                                {profileGallery.map((img, idx) => (
-                                    <div key={idx} className="aspect-square bg-black border border-white/5 overflow-hidden group relative cursor-pointer" onClick={() => handleItemClick(img, 'GALLERY')}>
-                                        <img src={resolveThumbnail(img)} className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-all duration-500 group-hover:scale-110" />
-                                        {(img.type === 'VIDEO' || img.Type === 'VIDEO') && (
-                                            <div className="absolute top-1 right-1 p-1 bg-black/60 border border-cyan-500/30">
-                                                <Video size={10} className="text-cyan-400" />
-                                            </div>
-                                        )}
+                            {profileGallery.map((img, idx) => (
+                            <div key={idx} className="aspect-square bg-black border border-white/10 overflow-hidden group relative cursor-pointer" onClick={() => handleItemClick(img, 'GALLERY')}>
+                                <img src={resolveThumbnail(img)} className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-all duration-500 group-hover:scale-110" />
+                                {(img.type === 'VIDEO' || img.Type === 'VIDEO') && (
+                                    <div className="absolute top-1 right-1 p-1 bg-black/60 border border-cyan-500/30">
+                                        <Video size={10} className="text-cyan-400" />
                                     </div>
-                                ))}
+                                )}
+                                {isMe && (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleDeleteGallery(img.id || img.Id); }}
+                                        className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-black/80 text-red-500/60 hover:text-red-500 border border-red-500/20 hover:border-red-500/60 z-10"
+                                        title="Delete file"
+                                    >
+                                        <X size={9} />
+                                    </button>
+                                )}
+                            </div>
+                        ))}
                             </div>
                         </div>
                     </SubsystemBlock>
@@ -2171,15 +2205,29 @@ export const ProfileView = React.memo(({
                                 )}
 
                                 {profileJournal.length > 0 ? profileJournal.map((entry, idx) => (
-                                    <div key={idx} className="border-b border-white/5 py-2 cursor-pointer hover:bg-white/5 px-2 transition-colors" onClick={() => handleItemClick(entry, 'JOURNAL')}>
-                                        <div className="flex justify-between items-center mb-1">
-                                            <div className="text-[10px] font-black uppercase text-white/80 truncate">{entry.title || entry.Title}</div>
-                                            <Book size={10} className="text-[var(--subsystem-accent)]/40 flex-shrink-0 ml-2" />
+                                    <div key={idx} className="border-b border-white/5 py-2 hover:bg-white/5 px-2 transition-colors group/jentry relative">
+                                        <div 
+                                            className="cursor-pointer"
+                                            onClick={() => handleItemClick(entry, 'JOURNAL')}
+                                        >
+                                            <div className="flex justify-between items-center mb-1">
+                                                <div className="text-[10px] font-black uppercase text-white/80 truncate pr-6">{entry.title || entry.Title}</div>
+                                                <Book size={10} className="text-[var(--subsystem-accent)]/40 flex-shrink-0 ml-2" />
+                                            </div>
+                                            <div className="text-[8px] text-white/50 font-mono whitespace-pre-wrap mb-1 leading-relaxed break-words w-full">{entry.content || entry.Content}</div>
+                                            <div className="text-[6px] text-white/20 uppercase tracking-widest">
+                                                {new Date(entry.createdAt || entry.CreatedAt).toLocaleDateString()}
+                                            </div>
                                         </div>
-                                        <div className="text-[8px] text-white/50 font-mono whitespace-pre-wrap mb-1 leading-relaxed break-words w-full">{entry.content || entry.Content}</div>
-                                        <div className="text-[6px] text-white/20 uppercase tracking-widest">
-                                            {new Date(entry.createdAt || entry.CreatedAt).toLocaleDateString()}
-                                        </div>
+                                        {isMe && (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleDeleteJournal(entry.id || entry.Id); }}
+                                                className="absolute top-2 right-2 opacity-0 group-hover/jentry:opacity-100 transition-opacity p-1 text-red-500/40 hover:text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20"
+                                                title="Delete entry"
+                                            >
+                                                <X size={10} />
+                                            </button>
+                                        )}
                                     </div>
                                 )) : (
                                     <div className="text-[8px] text-white/20 uppercase py-4 text-center">
@@ -2443,17 +2491,26 @@ export const ProfileView = React.memo(({
     <ContentModal onClose={() => setIsStudioExpanded(false)} title={t('STUDIO_ARCHIVE')} hideActions={true}>
                          <div className="p-4 md:p-8 bg-black/95 backdrop-blur-3xl border border-white/5 overflow-y-auto custom-scrollbar h-[80vh]">
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-                                {profileGallery.map((img, idx) => (
-                                    <div key={idx} className="aspect-square bg-black border border-white/10 overflow-hidden group relative cursor-pointer" onClick={() => handleItemClick(img, 'GALLERY')}>
-                                        <img src={resolveThumbnail(img)} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-700 group-hover:scale-105" />
-                                        {(img.type === 'VIDEO' || img.Type === 'VIDEO') && (
-                                            <div className="absolute top-2 right-2 p-1.5 bg-black/60 border border-cyan-500/30 backdrop-blur-sm">
-                                                <Video size={12} className="text-cyan-400" />
-                                            </div>
-                                        )}
-                                        <div className="absolute inset-0 border border-[var(--subsystem-accent)]/0 group-hover:border-[var(--subsystem-accent)]/40 transition-all duration-500" />
-                                    </div>
-                                ))}
+                            {profileGallery.map((img, idx) => (
+                                <div key={idx} className="aspect-square bg-black border border-white/10 overflow-hidden group relative cursor-pointer" onClick={() => handleItemClick(img, 'GALLERY')}>
+                                    <img src={resolveThumbnail(img)} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-700 group-hover:scale-105" />
+                                    {(img.type === 'VIDEO' || img.Type === 'VIDEO') && (
+                                        <div className="absolute top-2 right-2 p-1.5 bg-black/60 border border-cyan-500/30 backdrop-blur-sm">
+                                            <Video size={12} className="text-cyan-400" />
+                                        </div>
+                                    )}
+                                    <div className="absolute inset-0 border border-[var(--subsystem-accent)]/0 group-hover:border-[var(--subsystem-accent)]/40 transition-all duration-500" />
+                                    {isMe && (
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleDeleteGallery(img.id || img.Id); }}
+                                            className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-black/80 text-red-500/60 hover:text-red-500 border border-red-500/20 hover:border-red-500/60 z-10"
+                                            title="Delete file"
+                                        >
+                                            <X size={11} />
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
                             </div>
                         </div>
                     </ContentModal>
