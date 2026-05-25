@@ -700,39 +700,32 @@ useEffect(() => {
 
         // --- PLAYLISTS / ARTISTS SUBMENU ---
         // --- PLAYLISTS / ARTISTS SUBMENU ---
-        if (screen === 'PLAYLISTS') {
-            if (item.type === 'PLAYLIST') {
-                // Set name immediately for snappier UI
-                setActivePlaylistName(item.label);
-
-                // Fetch details
-                const loadPlaylist = async () => {
-                    try {
-                        const API = await import('../services/api').then(m => m.default);
-                        const res = await API.Playlists.getById(item.playlistId);
-                        const plData = res.data;
-                        const tracks = plData.tracks || plData.Tracks || [];
-                        const normalizedTracks = tracks.map(trk => ({
-                            ...trk,
-                            id: trk.id || trk.Id,
-                            title: trk.title || trk.Title,
-                            artistName: trk.artistName || trk.ArtistName,
-                            coverImageUrl: trk.coverImageUrl || trk.CoverImageUrl,
-                            source: trk.source || trk.Source
-                        }));
-                        const name = plData.name || plData.Name || item.label;
-
-                        setPlaylistTracks(normalizedTracks.map(trk => ({ ...trk, isOwned: true })));
-                        setActivePlaylistName(name);
-                        setActivePlaylistId(plData.id || plData.Id);
-                    } catch (e) { console.error(e); }
-                };
-                loadPlaylist();
-                setScreen('PLAYLIST_DETAILS');
-                setSelectedIndex(0);
-                return;
-            }
-        }
+        const loadPlaylist = async () => {
+            try {
+                const API = await import('../services/api').then(m => m.default);
+                const res = await API.Playlists.getById(item.playlistId);
+                const plData = res.data;
+                const tracks = plData.tracks || plData.Tracks || [];
+                const normalizedTracks = tracks.map(trk => ({
+                    ...trk,
+                    id: trk.id || trk.Id,
+                    title: trk.title || trk.Title,
+                    artistName: trk.artistName || trk.ArtistName,
+                    coverImageUrl: trk.coverImageUrl || trk.CoverImageUrl,
+                    source: trk.source || trk.Source
+                }));
+                const name = plData.name || plData.Name || item.label;
+                setPlaylistTracks(normalizedTracks.map(trk => ({ ...trk, isOwned: true })));
+                setActivePlaylistName(name);
+            } catch (e) { console.error(e); }
+        };
+        setActivePlaylistId(item.playlistId); // ← moved here, runs before async
+        loadPlaylist();
+        setScreen('PLAYLIST_DETAILS');
+        setSelectedIndex(0);
+        return;
+    }
+}
 
         if (screen === 'PLAYLIST_DETAILS') {
             if (item.id === 'BACK_PL') {
@@ -912,7 +905,11 @@ useEffect(() => {
         const createAndAdd = async () => {
             try {
                 const API = await import('../services/api').then(m => m.default);
-                const res = await API.Playlists.create({ name: name.trim(), isPublic: false });
+                const res = await API.Playlists.create({ 
+                    name: name.trim(), 
+                    isPublic: true,   
+                    IsPosted: true    
+                });
                 const newPlaylist = res.data;
                 const newPlaylistId = newPlaylist.id || newPlaylist.Id;
 

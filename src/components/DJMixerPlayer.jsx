@@ -180,7 +180,7 @@ const DJMixerPlayer = ({
         try {
             let playlistId = editingPlaylistId;
             if (!playlistId) {
-                const res = await API.Playlists.create({ name: newPlaylistName });
+                const res = await API.Playlists.create({ name: newPlaylistName, IsPosted: true });
                 playlistId = res.id || res.Id;
             } else {
                 await API.Playlists.update(playlistId, { name: newPlaylistName });
@@ -2068,14 +2068,14 @@ const DJMixerPlayer = ({
                                                                         onClick={async (e) => {
                                                                             e.stopPropagation();
                                                                             const pId = p.id || p.Id;
-                                                                            if (confirm(`¿Borrar playlist "${p.name || p.Title}"?`)) {
+                                                                            if (confirm(`Delete playlist "${p.name || p.Title}"?`)) {
                                                                                 try {
                                                                                     await API.Playlists.delete(pId);
                                                                                     setLocalPlaylists(prev => prev.filter(item => (item.id || item.Id) !== pId));
                                                                                 } catch (err) {
                                                                                     console.error("Failed to delete playlist", err);
-                                                                                    // Remove anyway to satisfy user request immediately
-                                                                                    setLocalPlaylists(prev => prev.filter(item => (item.id || item.Id) !== pId));
+                                                                                    showNotification("DELETE_FAILED", "Could not delete playlist. Try again.", "error");
+                                                                                    // Don't remove from state — server delete failed
                                                                                 }
                                                                             }
                                                                         }}
