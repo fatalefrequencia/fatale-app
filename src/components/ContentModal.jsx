@@ -14,6 +14,7 @@ const ContentModal = ({
     user,
     children,
     title,
+    hideActions = false,   // <-- ADD THIS
     type = 'JOURNAL', 
     hasMiniPlayer = true, 
     themeColor = '#9d00ff', 
