@@ -70,7 +70,7 @@ const API = {
         login: (credentials) => api.post('Auth/login', credentials),
         register: (userData) => api.post('Auth/register', userData),
         forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
-        resetPassword: (token, newPassword) => api.post('/auth/reset-password', { token, newPassword }),
+        resetPassword: (token, newPassword) => api.post('auth/reset-password', { token, newPassword }),
         getMe: () => api.get('Auth/me'),
     },
     Albums: {
