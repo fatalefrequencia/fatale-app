@@ -931,6 +931,7 @@ export const ProfileView = React.memo(({
     const [showIngestMenu, setShowIngestMenu] = useState(false);
     const [selectedContent, setSelectedContent] = useState(null);
     const [expandedEntries, setExpandedEntries] = useState({});
+    const [expandedAlbums, setExpandedAlbums] = useState({});
     const [showJournalForm, setShowJournalForm] = useState(false);
     const [stationData, setStationData] = useState(null);
     const [isStationFavorited, setIsStationFavorited] = useState(false);
@@ -2085,34 +2086,112 @@ export const ProfileView = React.memo(({
                                 <button className="p-1 hover:text-white text-white/20 transition-all hover:scale-110"><ChevronRight size={16} /></button>
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 xl:grid-cols-3 gap-6 p-6 max-h-[750px] overflow-y-auto custom-scrollbar">
-    {profileTracks.filter(t => {
-        const isAlbumTrack = t.albumTitle && t.albumTitle !== 'Singles';
-        if (musicFilter === 'ALL') return true;
-        if (musicFilter === 'ALBUMS') return isAlbumTrack;
-        return !isAlbumTrack; // SINGLES
-    }).map((t, idx) => (
-        <div key={idx} className="group cursor-pointer relative" onClick={() => onPlayTrack(t)}>
-            <div className="aspect-square bg-black border border-white/10 overflow-hidden relative mb-3 p-1">
-                <div className="w-full h-full border border-white/5 relative overflow-hidden">
-                    {t.coverImageUrl || t.CoverImageUrl ? (
-                        <img src={getMediaUrl(t.coverImageUrl || t.CoverImageUrl)} className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 group-hover:scale-105" />
-                    ) : (
-                        <div className="w-full h-full bg-[#050505] flex items-center justify-center text-white/10"><Music size={48} /></div>
-                    )}
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Play size={32} className="text-white scale-75 group-hover:scale-100 transition-transform" />
-                    </div>
-                </div>
-                {isMe && (
-                    <button
-                        onClick={(e) => { e.stopPropagation(); handleDeleteTrack(t); }}
-                        className="absolute top-2 right-2 p-1 bg-black/80 text-red-500/40 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all border border-transparent hover:border-red-500/30 z-10"
+                        <div className="p-6 max-h-[750px] overflow-y-auto custom-scrollbar space-y-4">
+    {(() => {
+        const filtered = profileTracks.filter(t => {
+            const isAlbumTrack = t.albumTitle && t.albumTitle !== 'Singles';
+            if (musicFilter === 'ALL') return true;
+            if (musicFilter === 'ALBUMS') return isAlbumTrack;
+            return !isAlbumTrack;
+        });
+
+        // Group by albumTitle
+        const groups = filtered.reduce((acc, t) => {
+            const key = (t.albumTitle && t.albumTitle !== 'Singles') ? t.albumTitle : '__singles__';
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(t);
+            return acc;
+        }, {});
+
+        return Object.entries(groups).map(([albumTitle, tracks]) => {
+            const isSinglesGroup = albumTitle === '__singles__';
+            const isExpanded = expandedAlbums?.[albumTitle] ?? false;
+            const cover = tracks[0]?.coverImageUrl || tracks[0]?.CoverImageUrl;
+
+            return (
+                <div key={albumTitle} className="border border-white/5 bg-black/40 group">
+                    {/* Album Header */}
+                    <div
+                        className="flex items-center gap-4 p-3 cursor-pointer hover:border-[var(--subsystem-accent)]/30 transition-all"
+                        onClick={() => setExpandedAlbums(prev => ({ ...prev, [albumTitle]: !isExpanded }))}
                     >
-                        <X size={10} />
-                    </button>
-                )}
-            </div>
+                        <div className="w-14 h-14 bg-black border border-white/10 overflow-hidden shrink-0 relative">
+                            {cover ? (
+                                <img src={getMediaUrl(cover)} className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-white/10"><Music size={20} /></div>
+                            )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="text-[11px] font-black text-white uppercase tracking-wider truncate">
+                                {isSinglesGroup ? 'SINGLES' : albumTitle}
+                            </div>
+                            <div className="text-[7px] mono text-[var(--subsystem-accent)]/60 uppercase tracking-widest mt-0.5">
+                                {isSinglesGroup ? 'SINGLE_SIGNAL' : 'ALBUM_RELEASE'} // {tracks.length} TRACK{tracks.length !== 1 ? 'S' : ''}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                            {isMe && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onPlayTrack(tracks[0]); }}
+                                    className="p-1.5 border border-white/10 hover:border-[var(--subsystem-accent)] text-white/20 hover:text-[var(--subsystem-accent)] transition-all"
+                                >
+                                    <Play size={10} fill="currentColor" />
+                                </button>
+                            )}
+                            <ChevronDown size={14} className={`text-white/20 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                        </div>
+                    </div>
+
+                    {/* Expanded Track List */}
+                    <AnimatePresence>
+                        {isExpanded && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden border-t border-white/5"
+                            >
+                                {tracks.map((t, idx) => (
+                                    <div
+                                        key={t.id || idx}
+                                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 cursor-pointer group/track transition-all border-b border-white/5 last:border-none"
+                                        onClick={() => onPlayTrack(t)}
+                                    >
+                                        <span className="text-[8px] mono text-white/20 w-5">{String(idx + 1).padStart(2, '0')}</span>
+                                        <div className="w-7 h-7 bg-black border border-white/10 overflow-hidden shrink-0">
+                                            {(t.coverImageUrl || t.CoverImageUrl) ? (
+                                                <img src={getMediaUrl(t.coverImageUrl || t.CoverImageUrl)} className="w-full h-full object-cover opacity-60 group-hover/track:opacity-100 transition-all" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-white/10"><Music size={10} /></div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-[10px] font-black text-white/80 uppercase tracking-wider truncate group-hover/track:text-[var(--subsystem-accent)] transition-colors">
+                                                {t.title || t.Title}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 opacity-0 group-hover/track:opacity-100 transition-opacity">
+                                            <Play size={10} className="text-[var(--subsystem-accent)]" />
+                                            {isMe && (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleDeleteTrack(t); }}
+                                                    className="p-1 text-red-500/40 hover:text-red-500 transition-colors"
+                                                >
+                                                    <X size={9} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            );
+        });
+    })()}
+</div>
             <div className="text-[11px] font-black text-white uppercase tracking-wider truncate mb-1">{t.title || t.Title}</div>
             <div className="flex items-center justify-between">
                 <div className="text-[7px] mono text-[var(--subsystem-accent)]/80 uppercase tracking-widest">
