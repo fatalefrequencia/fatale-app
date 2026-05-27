@@ -2086,28 +2086,43 @@ export const ProfileView = React.memo(({
                             </div>
                         </div>
                         <div className="grid grid-cols-2 xl:grid-cols-3 gap-6 p-6 max-h-[750px] overflow-y-auto custom-scrollbar">
-                            {profileTracks.filter(t => musicFilter === 'ALL' || (musicFilter === 'ALBUMS' ? (t.isAlbum || t.IsAlbum) : !(t.isAlbum || t.IsAlbum))).map((t, idx) => (
-                                <div key={idx} className="group cursor-pointer" onClick={() => onPlayTrack(t)}>
-                                    <div className="aspect-square bg-black border border-white/10 overflow-hidden relative mb-3 p-1">
-                                        <div className="w-full h-full border border-white/5 relative overflow-hidden">
-                                            {t.coverImageUrl || t.CoverImageUrl ? (
-                                                <img src={getMediaUrl(t.coverImageUrl || t.CoverImageUrl)} className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 group-hover:scale-105" />
-                                            ) : (
-                                                <div className="w-full h-full bg-[#050505] flex items-center justify-center text-white/10"><Music size={48} /></div>
-                                            )}
-                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                <Play size={32} className="text-white scale-75 group-hover:scale-100 transition-transform" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="text-[11px] font-black text-white uppercase tracking-wider truncate mb-1">{t.title || t.Title}</div>
-                                    <div className="flex items-center justify-between">
-                                        <div className="text-[7px] mono text-[var(--subsystem-accent)]/80 uppercase tracking-widest">{(t.isAlbum || t.IsAlbum) ? 'ALBUM_RELEASE' : 'SINGLE_SIGNAL'}</div>
-                                        <div className="text-[6px] mono text-white/20 uppercase">ID_0X{idx.toString(16).padStart(3,'0')}</div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+    {profileTracks.filter(t => {
+        const isAlbumTrack = t.albumTitle && t.albumTitle !== 'Singles';
+        if (musicFilter === 'ALL') return true;
+        if (musicFilter === 'ALBUMS') return isAlbumTrack;
+        return !isAlbumTrack; // SINGLES
+    }).map((t, idx) => (
+        <div key={idx} className="group cursor-pointer relative" onClick={() => onPlayTrack(t)}>
+            <div className="aspect-square bg-black border border-white/10 overflow-hidden relative mb-3 p-1">
+                <div className="w-full h-full border border-white/5 relative overflow-hidden">
+                    {t.coverImageUrl || t.CoverImageUrl ? (
+                        <img src={getMediaUrl(t.coverImageUrl || t.CoverImageUrl)} className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 group-hover:scale-105" />
+                    ) : (
+                        <div className="w-full h-full bg-[#050505] flex items-center justify-center text-white/10"><Music size={48} /></div>
+                    )}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Play size={32} className="text-white scale-75 group-hover:scale-100 transition-transform" />
+                    </div>
+                </div>
+                {isMe && (
+                    <button
+                        onClick={(e) => { e.stopPropagation(); handleDeleteTrack(t); }}
+                        className="absolute top-2 right-2 p-1 bg-black/80 text-red-500/40 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all border border-transparent hover:border-red-500/30 z-10"
+                    >
+                        <X size={10} />
+                    </button>
+                )}
+            </div>
+            <div className="text-[11px] font-black text-white uppercase tracking-wider truncate mb-1">{t.title || t.Title}</div>
+            <div className="flex items-center justify-between">
+                <div className="text-[7px] mono text-[var(--subsystem-accent)]/80 uppercase tracking-widest">
+                    {(t.albumTitle && t.albumTitle !== 'Singles') ? 'ALBUM_RELEASE' : 'SINGLE_SIGNAL'}
+                </div>
+                <div className="text-[6px] mono text-white/20 uppercase">ID_0X{idx.toString(16).padStart(3,'0')}</div>
+            </div>
+        </div>
+    ))}
+</div>
                     </SubsystemBlock>
                 </div>
 
