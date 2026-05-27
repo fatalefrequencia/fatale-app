@@ -2192,16 +2192,6 @@ export const ProfileView = React.memo(({
         });
     })()}
 </div>
-            <div className="text-[11px] font-black text-white uppercase tracking-wider truncate mb-1">{t.title || t.Title}</div>
-            <div className="flex items-center justify-between">
-                <div className="text-[7px] mono text-[var(--subsystem-accent)]/80 uppercase tracking-widest">
-                    {(t.albumTitle && t.albumTitle !== 'Singles') ? 'ALBUM_RELEASE' : 'SINGLE_SIGNAL'}
-                </div>
-                <div className="text-[6px] mono text-white/20 uppercase">ID_0X{idx.toString(16).padStart(3,'0')}</div>
-            </div>
-        </div>
-    ))}
-</div>
                     </SubsystemBlock>
                 </div>
 
