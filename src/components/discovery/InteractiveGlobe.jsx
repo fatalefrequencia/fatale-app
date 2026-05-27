@@ -17,16 +17,12 @@ const hashStr = (s) => {
 const getSphericalPos = (id, radius = 2.5, offset = 0) => {
     const h = hashStr(id);
     
-    // Use Math.sin for deterministic but wildly different values for sequential inputs
-    const rand1 = (Math.abs(Math.sin(h)) * 10000) % 1;
-    const rand2 = (Math.abs(Math.sin(h + 100)) * 10000) % 1;
+    const rand1 = (Math.abs(Math.sin(h * 127.1)) * 10000) % 1;
+    const rand2 = (Math.abs(Math.sin(h * 311.7)) * 10000) % 1;
     
-    // Constrain longitude (lon) to be on the front hemisphere directly facing the camera (centered at Math.PI / 2)
-    // We vary it between Math.PI/2 - Math.PI/3.5 and Math.PI/2 + Math.PI/3.5 for a beautiful wide spread
-    const lon = Math.PI / 2 + (rand1 * 2 - 1) * (Math.PI / 3.5);
-    
-    // Constrain latitude (lat) to be in a comfortable range around the equator (between -Math.PI/4 and Math.PI/4)
-    const lat = (rand2 * 2 - 1) * (Math.PI / 4);
+    // Full sphere distribution using spherical coordinates
+    const lon = rand1 * Math.PI * 2;           // 0 to 2π — full 360°
+    const lat = Math.asin(rand2 * 2 - 1);      // -π/2 to π/2 — uniform latitude
 
     const r = radius + offset;
     const x = r * Math.cos(lat) * Math.cos(lon);
@@ -385,7 +381,7 @@ const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists =
             {(activeView === 'COMMUNITIES' || !activeView) && filteredCommunities.map(c => (
                 <LightPointNode 
                     key={`comm-${c.id || c.Id}`} 
-                    id={c.id || c.Id}
+                    id={`comm-${c.id || c.Id}`}
                     name={c.name || c.Name}
                     color="#ffaa00"
                     size={0.1 * densityMultiplier}
@@ -399,7 +395,7 @@ const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists =
             {(activeView === 'ARTISTS' || !activeView) && filteredArtists.map(a => (
                 <LightPointNode 
                     key={`artist-${a.id || a.Id}`} 
-                    id={a.id || a.Id}
+                    id={`artist-${a.id || a.Id}`}
                     name={a.name || a.Name}
                     color="#00ffaa"
                     size={0.08 * densityMultiplier}
@@ -413,7 +409,7 @@ const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists =
             {(activeView === 'TRACKS' || !activeView) && filteredTracks.map(t => (
                 <LightPointNode 
                     key={`track-${t.id || t.Id}`} 
-                    id={t.id || t.Id}
+                    id={`track-${t.id || t.Id}`}
                     name={t.title || t.Title}
                     subtitle={t.artist || t.Artist}
                     color="#00aaff"
@@ -428,7 +424,7 @@ const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists =
             {(activeView === 'PLAYLISTS' || !activeView) && filteredPlaylists.map(p => (
                 <LightPointNode 
                     key={`playlist-${p.id || p.Id}`} 
-                    id={p.id || p.Id}
+                    id={`playlist-${p.id || p.Id}`}
                     name={p.name || p.Name}
                     color="#ff006e"
                     size={0.08 * densityMultiplier}
