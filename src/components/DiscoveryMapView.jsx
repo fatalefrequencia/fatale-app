@@ -133,7 +133,7 @@ const DiscoveryCanvas = ({
         Object.entries(sectorGroups).forEach(([secId, group]) => {
             const sec = SECTORS[parseInt(secId)] || SECTORS[0];
             group.forEach((a, idx) => {
-                const pos = spiral(idx, sec.x, sec.y, 300, 140);
+                const pos = spiral(idx + 100, sec.x, sec.y, 600, 180);
                 // UNIFIED ID LOGIC
                 const aId = a.id || a.Id || a.userId || a.UserId || `fallback-${idx}`;
                 const id = `a-${aId}`;
