@@ -2662,7 +2662,7 @@ function App() {
                 height: '1',
                 width: '1',
                 playerVars: {
-                  autoplay: 1,
+                  autoplay: 0,
                   controls: 0,
                   disablekb: 1,
                   fs: 0,
