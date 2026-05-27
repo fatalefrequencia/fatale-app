@@ -32,8 +32,8 @@ export const SECTORS = [
   {
     id: 1,
     name: 'POP / R&B',
-    x: 1800,
-    y: 400,
+    x: 4000,
+    y: 800,
     color: '#00ffff',
     desc: 'Synthetic highs & digital dreams',
     subgenres: ['Hyperpop', 'R&B', 'Pop', 'Dance']
@@ -42,7 +42,7 @@ export const SECTORS = [
     id: 2,
     name: 'AMBIENT / EXPERIMENTAL',
     x: 800,
-    y: 1800,
+    y: 4000,
     color: '#9b5de5',
     desc: 'Deep frequency & noise art',
     subgenres: ['Ambient', 'Experimental', 'IDM', 'Noise']
@@ -50,8 +50,8 @@ export const SECTORS = [
   {
     id: 3,
     name: 'RAP / DRILL',
-    x: 1800,
-    y: 2800,
+    x: 4000,
+    y: 4000,
     color: '#ffcc00',
     desc: 'Convergence point of all signals',
     subgenres: ['Trap', 'Drill', 'Rap', 'Boom Bap']
@@ -59,7 +59,7 @@ export const SECTORS = [
   {
     id: 4,
     name: 'ROCK / METAL',
-    x: 2800,
+    x: 7000,
     y: 800,
     color: '#00ff88',
     desc: 'Fringe transmissions & outliers',
@@ -68,8 +68,8 @@ export const SECTORS = [
   {
     id: 5,
     name: 'SOUL / GOSPEL',
-    x: 2800,
-    y: 1800,
+    x: 7000,
+    y: 4000,
     color: '#ff7e00',
     desc: 'Celestial frequencies & organic soul',
     subgenres: ['Soul', 'Gospel', 'Jazz', 'Funk']
