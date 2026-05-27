@@ -44,29 +44,8 @@ const ShoppingView = React.lazy(() =>
   })
 );
 
-// --- BASE DE DATOS MOCK (Sincronizada en toda la app) ---
-const TRACKS = [
-  { id: 'mock-1', title: 'youtsplit', artist: 'menoboy', album: 'digital_void', duration: '2:09', cover: 'O', artistUserId: 3, price: 0, isLocked: false, playCount: 1450, source: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
-  { id: 'mock-2', title: 'glitch_heart', artist: 'cyber_vamp', album: 'neon_night', duration: '3:15', cover: 'V', artistUserId: 3, price: 5, isLocked: true, playCount: 890, source: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
-  { id: 'mock-3', title: 'thorny_path', artist: 'dark_pixel', album: 'vamp_glitch', duration: '1:45', cover: 'P', artistUserId: 3, price: 2, isLocked: false, playCount: 3200, source: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' },
-  { id: 'mock-4', title: 'neon_skull', artist: 'retro_void', album: 'system_error', duration: '4:20', cover: 'S', artistUserId: 99, price: 10, isLocked: true, playCount: 120, source: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3' },
-  { id: 'mock-5', title: 'digital_tear', artist: 'emo_system', album: 'null_life', duration: '2:55', cover: 'E', artistUserId: 1, price: 1, isLocked: false, playCount: 5500, source: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3' },
-];
 
-const RADIO_STATIONS = [
-  { id: 1, name: 'Rock FM', track: 'Nightmare City', listeners: 234, active: true },
-  { id: 2, name: 'Jazz Lounge', track: 'Back at 8 PM EST', listeners: 0, active: false },
-  { id: 3, name: 'Techno Void', track: 'Circuit Breaker', listeners: 1205, active: true },
-];
 
-const DISCOVERY_GRID = [
-  { id: 1, name: 'Radar de Novedades', color: '#ff006e', type: 'Playlist' },
-  { id: 2, name: 'It\'s Immaterial', color: '#1a1a1a', type: 'Album' },
-  { id: 3, name: 'Descubrimiento Semanal', color: '#ff006e', type: 'Personal' },
-  { id: 4, name: 'Blonde', color: '#1a1a1a', type: 'Artist' },
-  { id: 5, name: 'tape2', color: '#1a1a1a', type: 'Mix' },
-  { id: 6, name: 'Dreamo Mix', color: '#ff006e', type: 'Vibes' },
-];
 
 
 // --- UTILS ---
@@ -451,7 +430,7 @@ function App() {
   const currentTrack = React.useMemo(() => {
     const raw = (currentTrackIndex >= 0 && tracks[currentTrackIndex])
       ? tracks[currentTrackIndex]
-      : (TRACKS[0] || { source: '', title: 'Loading...', artist: 'System' });
+      : null;
 
     return {
       ...raw,
@@ -1294,7 +1273,7 @@ function App() {
       setLikedYoutubeIds(localLikedYtIds);
 
       const allTracks = Array.from(uniqueTracksMap.values());
-      const finalTracks = allTracks.length > 0 ? allTracks : (uid ? [] : TRACKS);
+      const finalTracks = allTracks.length > 0 ? allTracks : [];
       setLibraryTracks(finalTracks);
       setTracks(prev => {
         const isMock = prev.length > 0 && String(prev[0].id).startsWith('mock-');
@@ -1330,8 +1309,8 @@ function App() {
       });
     } catch (error) {
       console.error("Failed to fetch tracks", error);
-      setLibraryTracks(TRACKS);
-      setTracks(prev => prev.length === 0 ? TRACKS : prev);
+      setLibraryTracks([]);
+      setTracks(prev => prev.length === 0 ? [] : prev);
     }
   };
 
@@ -5270,12 +5249,7 @@ const QuickActionButton = React.memo(({ label, icon }) => (
   <button className="w-full flex items-center justify-between p-3 rounded-lg border border-[#ff006e]/10 text-[10px] font-bold text-[#ff006e]/60 hover:bg-[#ff006e10] hover:text-white transition-all uppercase">{label} {icon}</button>
 ));
 
-// --- DATOS DEL FEED (ACTUALIZADOS) ---
-const FEED_POSTS = [
-  { id: 1, user: 'Vamp_Grl', handle: '@vampy', content: 'Escaneando frecuencias prohibidas en el sector Miami. ¿Alguien en sintonía?', type: 'text', likes: 24, reposts: 5, time: '2m' },
-  { id: 2, user: 'Neo_Raver', handle: '@neo_r', track: 'GLITCH_MATRIX_404.wav', type: 'track', likes: 150, reposts: 42, time: '15m' },
-  { id: 3, user: 'Null_Pointer', handle: '@null_ptr', content: 'Nueva sesión de visuales industriales lista.', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=400', type: 'image', likes: 88, reposts: 12, time: '1h' },
-];
+
 import { LanguageProvider } from './contexts/LanguageContext';
 
 export default function AppWrapper() {
