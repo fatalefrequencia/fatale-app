@@ -432,6 +432,17 @@ function App() {
       ? tracks[currentTrackIndex]
       : null;
 
+    if (!raw) return {
+      id: null,
+      title: null,
+      artist: null,
+      source: null,
+      cover: null,
+      isLiked: false,
+      isLocked: false,
+      isOwned: true
+    };
+
     return {
       ...raw,
       id: raw.id || raw.Id,
@@ -443,8 +454,7 @@ function App() {
       isLocked: raw.isLocked ?? (raw.IsLocked ?? false),
       isOwned: raw.isOwned ?? (raw.IsOwned ?? true)
     };
-  }, [currentTrackIndex, tracks]);
-
+}, [currentTrackIndex, tracks]);
   // Audio Ref for persistence
   const audioRef = useRef(null);
 
