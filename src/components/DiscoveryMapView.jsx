@@ -124,7 +124,7 @@ const DiscoveryCanvas = ({
             const dbSectorId = a.sectorId ?? a.SectorId;
             const secId = (dbSectorId !== null && dbSectorId !== undefined && SECTORS[dbSectorId])
                 ? dbSectorId
-                : idx % SECTORS.length;
+                : hashStr(String(a.userId || a.id || idx)) % SECTORS.length;
             if (!sectorGroups[secId]) sectorGroups[secId] = [];
             sectorGroups[secId].push(a);
         });
@@ -323,6 +323,8 @@ const DiscoveryCanvas = ({
                 isLive: a.isLive || a.IsLive || false,
                 trackCount: a.trackCount || a.TrackCount || 0
             }));
+
+            console.log('Artists loaded:', artists.map(a => ({ id: a.id, name: a.name, sectorId: a.sectorId, userId: a.userId })));
 
             const comms = (Array.isArray(commRes?.data) ? commRes.data : []).map(c => ({
                 ...c,
