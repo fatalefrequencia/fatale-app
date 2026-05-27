@@ -283,7 +283,7 @@ function App() {
   // Live Radio State
   const [followingMap, setFollowingMap] = useState({});
   const [favoriteStations, setFavoriteStations] = useState([]);
-  const [liveStations, setLiveStations] = useState(RADIO_STATIONS);
+  const [liveStations, setLiveStations] = useState([]);
   const [activeStation, setActiveStation] = useState(null);
   const [stationChat, setStationChat] = useState([]);
   const [stationQueue, setStationQueue] = useState([]);
