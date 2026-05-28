@@ -169,24 +169,10 @@ const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeVi
             });
         });
 
-        // PLAYLISTS — raw data, use name-aware matching to handle multi-profile users
-        const artistName = (artist.name || artist.Name || '').toLowerCase();
-        const artistUserId = String(artist.userId || artist.UserId || '');
+        // PLAYLISTS — artistId is pre-resolved upstream by playlistsWithArtist in DiscoveryHUD
         playlists.forEach(playlist => {
-            const plArtistId  = playlist.artistId  || playlist.ArtistId;
-            const plOwnerUID  = String(playlist.artistUserId || playlist.ArtistUserId ||
-                                playlist.ownerId || playlist.OwnerId || '');
-            const plOwnerName = (playlist.artistName || playlist.ArtistName ||
-                                 playlist.ownerName  || playlist.OwnerName || '').toLowerCase();
-
-            let matches = false;
-            if (plArtistId) {
-                matches = String(plArtistId) === String(artistId);
-            } else if (plOwnerUID && artistUserId && plOwnerUID === artistUserId) {
-                // Same user owns multiple artist profiles — require name match to disambiguate
-                matches = !plOwnerName || plOwnerName === artistName;
-            }
-            if (!matches) return;
+            const enrichedArtistId = playlist.artistId || playlist.ArtistId;
+            if (!enrichedArtistId || String(enrichedArtistId) !== String(artistId)) return;
 
             const plPos = getSphericalPos(`playlist-${playlist.id || playlist.Id}`, 2.48).pos;
             const seed  = hashStr(artistId + (playlist.id || playlist.Id));

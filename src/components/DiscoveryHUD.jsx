@@ -502,6 +502,40 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
         });
     }, [trendingArtists]);
 
+    // Enrich playlists with a resolved artistId so the globe can draw connections
+    // reliably — same multi-profile-aware logic used for tracks.
+    const playlistsWithArtist = useMemo(() => {
+        return trendingPlaylists.map(pl => {
+            const plUserId   = pl.userId   || pl.UserId;
+            const plAuthorName = (pl.authorName || pl.AuthorName || pl.userName || pl.UserName || '').toLowerCase();
+
+            // 1. Playlist already carries an artistId (future-proof)
+            let artist = (pl.artistId || pl.ArtistId)
+                ? trendingArtists.find(a => String(a.id || a.Id) === String(pl.artistId || pl.ArtistId))
+                : null;
+
+            // 2. Match on userId — with name tiebreak for multi-profile users
+            if (!artist && plUserId) {
+                const byUID = trendingArtists.filter(a => String(a.userId || a.UserId) === String(plUserId));
+                if (byUID.length === 1) {
+                    artist = byUID[0];
+                } else if (byUID.length > 1 && plAuthorName) {
+                    artist = byUID.find(a => (a.name || a.Name || '').toLowerCase() === plAuthorName) || null;
+                }
+            }
+
+            // 3. Name-only fallback
+            if (!artist && plAuthorName) {
+                artist = trendingArtists.find(a => (a.name || a.Name || '').toLowerCase() === plAuthorName);
+            }
+
+            return {
+                ...pl,
+                artistId: artist ? (artist.id || artist.Id) : null,
+            };
+        });
+    }, [trendingPlaylists, trendingArtists]);
+
 
 
     const filteredVisuals = useMemo(() => {
@@ -810,7 +844,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 communities={communities}
                                 artists={artistsForGlobe}
                                 tracks={tracksWithColor}
-                                playlists={trendingPlaylists}
+                                playlists={playlistsWithArtist}
                                 albums={albums}
                                 activeSector={activeSector}
                                 selectedId={selectedGlobeItem ? (selectedGlobeItem.isSystem ? 'system-fatale_core' : `${selectedGlobeItem.type}-${selectedGlobeItem.id || selectedGlobeItem.Id}`) : (activeTerminalCommunity?.isSystem ? 'system-fatale_core' : null)}
