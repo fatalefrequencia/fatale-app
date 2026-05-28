@@ -253,29 +253,66 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
 };
 
 
+// ── Add this sub-component above ConnectionLines ──────────────────────────────
+const CurvedLine = memo(({ from, to, color, opacity }) => {
+    const geo = useMemo(() => {
+        const f = new THREE.Vector3(...from);
+        const t = new THREE.Vector3(...to);
+        const mid = new THREE.Vector3().addVectors(f, t).multiplyScalar(0.5);
+        const outwardPush = mid.length() < 0.01 ? 1.4 : 2.8 / mid.length();
+        mid.multiplyScalar(outwardPush);
+        const curve = new THREE.QuadraticBezierCurve3(f, mid, t);
+        const points = curve.getPoints(40);
+        return new THREE.BufferGeometry().setFromPoints(points);
+    }, [from[0], from[1], from[2], to[0], to[1], to[2]]);
+
+    useEffect(() => () => geo.dispose(), [geo]);
+
+    return (
+        <line geometry={geo}>
+            <lineBasicMaterial
+                color={color}
+                transparent
+                opacity={opacity}
+                linewidth={1}
+                toneMapped={false}
+                depthWrite={false}
+            />
+        </line>
+    );
+});
+
+// ── Replace ConnectionLines entirely ─────────────────────────────────────────
 const ConnectionLines = ({ artists, tracks, playlists, selectedId, activeView }) => {
     const lines = useMemo(() => {
         const result = [];
-        
+
         artists.forEach(artist => {
-            const artistUserId = artist.userId || artist.UserId || artist.id || artist.Id;
-            const artistId = artist.id || artist.Id;
-            const artistPos = getSphericalPos(`artist-${artistId}`, 2.48).pos;
-            
+            const artistId      = artist.id     || artist.Id;
+            const artistUserId  = artist.userId || artist.UserId || artistId;
+            const artistPos     = getSphericalPos(`artist-${artistId}`, 2.48).pos;
+
             // Artist → Tracks
             if (activeView === 'TRACKS' || !activeView) {
                 tracks.forEach(track => {
-                    const trackUserId = track.artistUserId || track.ArtistUserId || 
-                    track.userId || track.UserId;
-                    if (String(trackUserId) === String(artistUserId)) {
+                    // BUG FIX: also check track.artistId which is set by tracksWithColor
+                    const trackRef = track.artistUserId || track.ArtistUserId ||
+                                     track.artistId    || track.ArtistId     ||
+                                     track.userId      || track.UserId;
+                    if (!trackRef) return;
+
+                    const matches =
+                        String(trackRef) === String(artistUserId) ||
+                        String(trackRef) === String(artistId);
+
+                    if (matches) {
                         const trackPos = getSphericalPos(`track-${track.id || track.Id}`, 2.48).pos;
-                        result.push({ 
-                            from: artistPos, 
-                            to: trackPos, 
-                            color: '#00ffaa', 
-                            dashed: false,
+                        result.push({
+                            from: artistPos,
+                            to: trackPos,
+                            color: '#00ffaa',
                             ownerId: `artist-${artistId}`,
-                            targetId: `track-${track.id || track.Id}`
+                            targetId: `track-${track.id || track.Id}`,
                         });
                     }
                 });
@@ -284,18 +321,23 @@ const ConnectionLines = ({ artists, tracks, playlists, selectedId, activeView })
             // Artist → Playlists
             if (activeView === 'PLAYLISTS' || !activeView) {
                 playlists.forEach(playlist => {
-                    const plUserId = playlist.userId || playlist.UserId || 
-                                     playlist.ownerId || playlist.OwnerId ||
-                                     playlist.artistUserId || playlist.ArtistUserId;
-                                     if (String(plUserId) === String(artistUserId)) {
+                    const plRef = playlist.userId    || playlist.UserId   ||
+                                  playlist.ownerId   || playlist.OwnerId  ||
+                                  playlist.artistUserId || playlist.ArtistUserId;
+                    if (!plRef) return;
+
+                    const matches =
+                        String(plRef) === String(artistUserId) ||
+                        String(plRef) === String(artistId);
+
+                    if (matches) {
                         const plPos = getSphericalPos(`playlist-${playlist.id || playlist.Id}`, 2.48).pos;
-                        result.push({ 
-                            from: artistPos, 
-                            to: plPos, 
-                            color: '#ff006e', 
-                            dashed: true,
+                        result.push({
+                            from: artistPos,
+                            to: plPos,
+                            color: '#ff006e',
                             ownerId: `artist-${artistId}`,
-                            targetId: `playlist-${playlist.id || playlist.Id}`
+                            targetId: `playlist-${playlist.id || playlist.Id}`,
                         });
                     }
                 });
@@ -308,34 +350,20 @@ const ConnectionLines = ({ artists, tracks, playlists, selectedId, activeView })
     return (
         <>
             {lines.map((line, i) => {
-                const isConnectedToSelected = selectedId && 
+                const isConnectedToSelected =
+                    selectedId &&
                     (line.ownerId === selectedId || line.targetId === selectedId);
-                const dimmed = selectedId && !isConnectedToSelected;
-                
-                const from = new THREE.Vector3(...line.from);
-                const to = new THREE.Vector3(...line.to);
-                
-                // Bezier control point: push outward from globe center
-                const mid = new THREE.Vector3()
-                    .addVectors(from, to)
-                    .multiplyScalar(0.5);
-                const outwardPush = mid.length() < 0.01 ? 1.4 : 2.8 / mid.length();
-                mid.multiplyScalar(outwardPush);
-
-                const curve = new THREE.QuadraticBezierCurve3(from, mid, to);
-                const points = curve.getPoints(40);
-                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const dimmed  = selectedId && !isConnectedToSelected;
+                const opacity = dimmed ? 0.04 : isConnectedToSelected ? 0.85 : 0.22;
 
                 return (
-                    <line key={i} geometry={geometry}>
-                        <lineBasicMaterial
-                            color={line.color}
-                            transparent
-                            opacity={dimmed ? 0.04 : isConnectedToSelected ? 0.85 : 0.18}
-                            linewidth={1}
-                            toneMapped={false}
-                        />
-                    </line>
+                    <CurvedLine
+                        key={`${line.ownerId}__${line.targetId}`}
+                        from={line.from}
+                        to={line.to}
+                        color={line.color}
+                        opacity={opacity}
+                    />
                 );
             })}
         </>
