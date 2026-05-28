@@ -901,6 +901,7 @@ export const ProfileView = React.memo(({
     const [isFollowing, setIsFollowing] = useState(false);
     const [isLoadingProfile, setIsLoadingProfile] = useState(false);
     const [profileTracks, setProfileTracks] = useState([]);
+    console.log('sample track:', filtered[0]);
     const [isLoadingTracks, setIsLoadingTracks] = useState(false);
     const [profileJournal, setProfileJournal] = useState([]);
     const [isLoadingJournal, setIsLoadingJournal] = useState(false);
