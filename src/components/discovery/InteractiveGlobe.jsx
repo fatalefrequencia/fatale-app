@@ -530,8 +530,9 @@ const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists =
                 cameraDist={cameraDist}
                 hideLabel={!!selectedId}
                 onClick={() => onCommunityClick?.({ id: 'fatale_core', name: 'FATALE_CORE', isSystem: true, description: 'The official Fatale system node. Share feedback, bug reports and reviews.' })}
-            
-                <ConnectionLines
+            />
+
+            <ConnectionLines
                 artists={filteredArtists}
                 tracks={filteredTracks}
                 playlists={filteredPlaylists}
