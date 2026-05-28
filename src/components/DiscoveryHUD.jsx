@@ -878,230 +878,107 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     />
                                 </motion.div>
                             )}
-                        </AnimatePresence>
-
-                        {/* Globe Detail Card - Premium Glassmorphism */}
                         <AnimatePresence>
-                            {selectedGlobeItem && !activeTerminalCommunity && (
-                                <motion.div
-                                    initial={isMobile ? { y: "100%" } : { y: 300, opacity: 0 }}
-                                    animate={isMobile ? { y: 0 } : { y: 0, opacity: 1 }}
-                                    exit={isMobile ? { y: "100%" } : { y: 300, opacity: 0 }}
-                                    transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                                    className={`absolute z-50 pointer-events-auto ${isMobile ? 'bottom-0 left-0 right-0' : 'bottom-4 left-4 right-4'}`}
-                                >
-                                    <div className={`bg-black/95 backdrop-blur-3xl border-t border-x border-white/10 shadow-[0_-20px_80px_rgba(0,0,0,0.9)] overflow-hidden relative group mx-auto ${isMobile ? 'rounded-t-[32px] p-5 pb-10' : `border px-6 py-4 shadow-[0_0_80px_rgba(0,0,0,0.9)] ${selectedGlobeItem.type === 'track' ? 'max-w-md' : 'max-w-4xl'}`}`}>
-                                        {/* Mobile Swipe Handle */}
-                                        {isMobile && (
-                                            <div className="flex justify-center mb-3">
-                                                <div className="w-12 h-1 bg-white/10 rounded-full" />
-                                            </div>
-                                        )}
+    {selectedGlobeItem && !activeTerminalCommunity && (
+        <motion.div
+            initial={{ opacity: 0, scale: 0.92, y: 8 }}
+            animate={{ opacity: 1, scale: 1,    y: 0 }}
+            exit={{    opacity: 0, scale: 0.92, y: 8 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 380 }}
+            className="absolute z-50 pointer-events-auto bottom-4 left-4"
+        >
+            <div
+                className="relative bg-black/96 backdrop-blur-xl border border-white/10 p-3"
+                style={{ width: '220px', boxShadow: '0 0 40px rgba(0,0,0,0.85)' }}
+            >
+                {/* Corner accents */}
+                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white/20" />
+                <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-white/20" />
+                <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-white/20" />
+                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white/20" />
 
-                                        {/* Corner Brackets (Desktop Only for clarity) */}
-                                        {!isMobile && (
-                                            <>
-                                                <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
-                                                <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
-                                                <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
-                                                <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[#ff006e]/30 group-hover:border-[#ff006e]/60 transition-colors" />
-                                            </>
-                                        )}
-
-                                        <div className={`relative z-10 grid grid-cols-1 gap-4 items-center ${selectedGlobeItem.type === 'track' ? '' : 'md:grid-cols-12'}`}>
-                                            {/* Header Section */}
-                                            <div className={`${selectedGlobeItem.type === 'track' ? 'md:col-span-1 text-center' : 'md:col-span-5 border-r border-white/5 pr-6'}`}>
-                                                <div className="flex justify-between items-start mb-3">
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-16 h-16 rounded-sm bg-black border border-white/10 overflow-hidden shrink-0 shadow-2xl relative">
-                                                                <img
-                                                                    src={getMediaUrl(selectedGlobeItem.profilePicture || selectedGlobeItem.ProfilePicture || selectedGlobeItem.imageUrl || selectedGlobeItem.ImageUrl || selectedGlobeItem.coverImageUrl || selectedGlobeItem.CoverImageUrl)}
-                                                                    alt=""
-                                                                    className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all"
-                                                                />
-                                                                <div className="absolute inset-0 border border-white/5 pointer-events-none" />
-                                                            </div>
-                                                            <div className={`truncate flex flex-col justify-center ${selectedGlobeItem.type === 'track' && 'items-center text-center'}`}>
-                                                                <div className="text-[16px] font-black tracking-tight text-white uppercase leading-none truncate">
-                                                                    {selectedGlobeItem.name || selectedGlobeItem.title || selectedGlobeItem.Title}
-                                                                </div>
-                                                                {selectedGlobeItem.type === 'track' && (
-                                                                    <div className="text-[10px] font-bold text-white/40 tracking-[0.2em] uppercase mt-1">
-                                                                        {selectedGlobeItem.artist || selectedGlobeItem.artistName || selectedGlobeItem.ArtistName || 'UNKNOWN_ARTIST'}
-                                                                    </div>
-                                                                )}
-                                                                <div className="text-[8px] text-[#ff006e] font-bold tracking-[0.4em] uppercase mt-1.5 flex items-center gap-2 whitespace-nowrap">
-                                                                    <Activity size={10} />
-                                                                    <span className="leading-none">
-                                                                        {selectedGlobeItem.type === 'track' ? 'SIGNAL_BROADCAST_v2' :
-                                                                            selectedGlobeItem.type === 'community' ? 'NEURAL_CLUSTER' :
-                                                                            selectedGlobeItem.type === 'playlist' ? 'CURATED_PLAYLIST' :
-                                                                                'ARTIST_IDENTITY'}
-                                                                    </span>
-                                                                </div>
-                                                                {/* Cool Info */}
-                                                                {selectedGlobeItem.type === 'community' && (
-                                                                    <div className="text-[8px] text-[#00ffff] font-bold mt-1 uppercase tracking-widest">
-                                                                        POPULATION: {selectedGlobeItem.memberCount || 0} _UNITS
-                                                                    </div>
-                                                                )}
-                                                                {selectedGlobeItem.type === 'artist' && (
-                                                                    <div className="text-[8px] text-[#00ffff] font-bold mt-1 uppercase tracking-widest">
-                                                                        GENRE: {(selectedGlobeItem.genre || "NATIVE").toUpperCase()}
-                                                                    </div>
-                                                                )}
-                                                                {selectedGlobeItem.type === 'playlist' && (
-                                                                    <div className="text-[8px] text-[#00ffff] font-bold mt-1 uppercase tracking-widest">
-                                                                        CAPACITY: {playlistTracks.length || selectedGlobeItem.trackCount || 0} _SIGNALS
-                                                                    </div>
-                                                                )}
-                                                                {selectedGlobeItem.type === 'track' && (
-                                                                    <div className="text-[8px] text-[#00ffff] font-bold mt-1 uppercase tracking-widest">
-                                                                        STATUS: STREAMING_ACTIVE
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); setSelectedGlobeItem(null); }}
-                                                        onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedGlobeItem(null); }}
-                                                        className="p-2 text-white/20 hover:text-white transition-all scale-125 cursor-pointer relative z-[100]"
-                                                    >
-                                                        <X size={16} />
-                                                    </button>
-                                                </div>
-
-                                                <div className="flex flex-col gap-2">
-                                                    {selectedGlobeItem.type === 'artist' && (
-                                                        <button
-                                                            onClick={() => navigateToProfile(selectedGlobeItem.userId || selectedGlobeItem.UserId)}
-                                                            className="w-full bg-transparent border border-white/20 text-white/80 hover:border-white hover:text-white py-2.5 text-[10px] font-black tracking-[0.3em] uppercase transition-all relative group/btn"
-                                                        >
-                                                            <div className="absolute inset-0 border border-white/5 transform scale-95 group-hover/btn:scale-100 transition-transform pointer-events-none" />
-                                                            {t('VISIT_IDENTITY')}
-                                                        </button>
-                                                    )}
-                                                    {selectedGlobeItem.type === 'community' && (
-                                                        <button
-                                                            onClick={() => setActiveTerminalCommunity(selectedGlobeItem)}
-                                                            className="w-full bg-transparent border border-white/20 text-white/80 hover:border-white hover:text-white py-2.5 text-[10px] font-black tracking-[0.3em] uppercase transition-all relative group/btn"
-                                                        >
-                                                            <div className="absolute inset-0 border border-white/5 transform scale-95 group-hover/btn:scale-100 transition-transform pointer-events-none" />
-                                                            {t('ENTER_PORTAL')}
-                                                        </button>
-                                                    )}
-                                                    {selectedGlobeItem.type === 'track' && (
-                                                        <button
-                                                            onClick={() => { onPlayTrack(selectedGlobeItem); setSelectedGlobeItem(null); }}
-                                                            className="w-full bg-transparent border border-[#ff006e]/60 text-[#ff006e] hover:bg-[#ff006e]/10 py-2.5 text-[10px] font-black tracking-[0.3em] uppercase transition-all flex items-center justify-center gap-3 relative group/btn"
-                                                        >
-                                                            <div className="absolute inset-0 border border-[#ff006e]/20 transform scale-95 group-hover/btn:scale-100 transition-transform pointer-events-none" />
-                                                            <Play size={12} fill="currentColor" /> {t('PLAY_TRACK')}
-                                                        </button>
-                                                    )}
-                                                    {selectedGlobeItem.type === 'playlist' && (
-                                                        <button
-                                                            onClick={() => {
-                                                                if (playlistTracks && playlistTracks.length > 0) {
-                                                                    onPlayTrack(playlistTracks[0]);
-                                                                }
-                                                                setSelectedGlobeItem(null);
-                                                            }}
-                                                            className="w-full bg-transparent border border-[#ff006e]/60 text-[#ff006e] hover:bg-[#ff006e]/10 py-2.5 text-[10px] font-black tracking-[0.3em] uppercase transition-all flex items-center justify-center gap-3 relative group/btn"
-                                                        >
-                                                            <div className="absolute inset-0 border border-[#ff006e]/20 transform scale-95 group-hover/btn:scale-100 transition-transform pointer-events-none" />
-                                                            <Play size={12} fill="currentColor" /> {t('PLAY_PLAYLIST') || 'PLAY_PLAYLIST'}
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Dynamic Membership / Signal Section - Only for Hubs, Artists and Playlists */}
-                                            {selectedGlobeItem.type !== 'track' && (
-                                                <div className="md:col-span-7">
-                                                    <div className="text-[8px] text-white/40 font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
-                                                        {selectedGlobeItem.type === 'community' ? (
-                                                            <><Users size={10} /> {t('ARTIST_MEMBERS')}</>
-                                                        ) : selectedGlobeItem.type === 'playlist' ? (
-                                                            <><Music size={10} /> PLAYLIST_TRACKS</>
-                                                        ) : (
-                                                            <><Zap size={10} /> {t('SIGNAL_SHARES')}</>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
-                                                        {selectedGlobeItem.type === 'community' ? (
-                                                            // COMMUNITY: Show Member Artists
-                                                            trendingArtists.filter(a => String(a.communityId || a.CommunityId) === String(selectedGlobeItem.id)).slice(0, 8).map((a, i) => (
-                                                                <div key={i} className="flex flex-col items-center gap-2 shrink-0 group/member cursor-pointer" onClick={() => navigateToProfile(a.userId || a.UserId)}>
-                                                                    <div className="w-10 h-10 rounded-full border border-white/10 overflow-hidden group-hover/member:border-[#ff006e] transition-colors bg-white/5">
-                                                                        <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale group-hover/member:grayscale-0 transition-all" />
-                                                                    </div>
-                                                                    <span className="text-[7px] font-bold text-white/60 tracking-wider uppercase group-hover/member:text-white">{a.name || a.Name}</span>
-                                                                </div>
-                                                            ))
-                                                        ) : selectedGlobeItem.type === 'playlist' ? (
-                                                            // PLAYLIST: Show Tracks
-                                                            playlistTracks.slice(0, 8).map((track, i) => (
-                                                                <div key={i} className="flex flex-col items-center gap-2 shrink-0 group/member cursor-pointer" onClick={() => onPlayTrack(track)}>
-                                                                    <div className="w-10 h-10 rounded-sm border border-white/10 overflow-hidden group-hover/member:border-[#ff006e] transition-all bg-black flex items-center justify-center shadow-lg">
-                                                                        {track.coverImageUrl || track.CoverImageUrl ? (
-                                                                            <img src={getMediaUrl(track.coverImageUrl || track.CoverImageUrl)} alt="" className="w-full h-full object-cover" />
-                                                                        ) : (
-                                                                            <Music size={14} className="text-white/40" />
-                                                                        )}
-                                                                    </div>
-                                                                    <span className="text-[7px] font-bold text-white/60 tracking-wider uppercase group-hover/member:text-white truncate w-16 text-center">{track.title || track.Title}</span>
-                                                                </div>
-                                                            ))
-                                                        ) : (
-                                                            // ARTIST: Show Signal Previews
-                                                            visualUploads.filter(v => {
-                                                                const artistId = selectedGlobeItem.type === 'track'
-                                                                    ? (selectedGlobeItem.artistId || selectedGlobeItem.ArtistId)
-                                                                    : (selectedGlobeItem.userId || selectedGlobeItem.UserId || selectedGlobeItem.id || selectedGlobeItem.Id);
-
-                                                                const uploadArtistId = v.userId || v.UserId || v.artistId || v.ArtistId;
-
-                                                                const artistName = (selectedGlobeItem.type === 'track'
-                                                                    ? (selectedGlobeItem.artist || selectedGlobeItem.artistName)
-                                                                    : (selectedGlobeItem.name || selectedGlobeItem.Name)) || '';
-
-                                                                const uploadArtistName = (v.artist || v.Artist || '').toLowerCase();
-
-                                                                // Strict matching: If names are present and different, don't show
-                                                                if (artistName && uploadArtistName && artistName.toLowerCase() !== uploadArtistName) return false;
-
-                                                                return (String(uploadArtistId) === String(artistId)) || (artistName && artistName.toLowerCase() === uploadArtistName);
-                                                            }).slice(0, 5).map((v, i) => (
-                                                                <div key={i} className="w-32 h-20 bg-black border border-white/10 shrink-0 relative group/img overflow-hidden rounded-sm">
-                                                                    <img src={resolveThumbnail(v)} alt="" className="w-full h-full object-cover opacity-60 group-hover/img:opacity-100 transition-opacity" />
-                                                                    <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60" />
-                                                                    <div className="absolute bottom-2 left-2 right-2 flex justify-between items-end">
-                                                                        <span className="text-[7px] font-black truncate uppercase leading-none">{v.title}</span>
-                                                                        <div className="p-1 bg-white/10 rounded-full"><Camera size={8} /></div>
-                                                                    </div>
-                                                                </div>
-                                                            ))
-                                                        )}
-
-                                                        {/* Edge Case Fallbacks */}
-                                                        {selectedGlobeItem.type === 'community' && trendingArtists.filter(a => String(a.communityId || a.CommunityId) === String(selectedGlobeItem.id)).length === 0 && (
-                                                            <div className="text-[9px] text-white/10 font-bold tracking-[0.2em] italic uppercase py-6">{t('NO_SIGNALS_DETECTED')}</div>
-                                                        )}
-                                                        {selectedGlobeItem.type === 'playlist' && playlistTracks.length === 0 && (
-                                                            <div className="text-[9px] text-white/10 font-bold tracking-[0.2em] italic uppercase py-6">NO_SIGNALS_FOUND</div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </motion.div>
+                {/* Identity row */}
+                <div className="flex items-center gap-2 mb-2.5">
+                    <div className="w-9 h-9 border border-white/10 overflow-hidden shrink-0 bg-black">
+                        <img
+                            src={getMediaUrl(
+                                selectedGlobeItem.profilePicture || selectedGlobeItem.ProfilePicture ||
+                                selectedGlobeItem.imageUrl       || selectedGlobeItem.ImageUrl       ||
+                                selectedGlobeItem.coverImageUrl  || selectedGlobeItem.CoverImageUrl
                             )}
-                        </AnimatePresence>
+                            alt=""
+                            className="w-full h-full object-cover opacity-75"
+                        />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <div className="text-[10px] font-black uppercase tracking-tight truncate text-white leading-none">
+                            {selectedGlobeItem.name || selectedGlobeItem.title || selectedGlobeItem.Title}
+                        </div>
+                        {selectedGlobeItem.type === 'track' && (
+                            <div className="text-[7px] text-white/35 uppercase tracking-wider truncate mt-0.5">
+                                {selectedGlobeItem.artist || selectedGlobeItem.artistName}
+                            </div>
+                        )}
+                        <div
+                            className="text-[6px] font-black tracking-[0.3em] uppercase mt-1"
+                            style={{
+                                color:
+                                    selectedGlobeItem.type === 'artist'    ? '#00ffaa' :
+                                    selectedGlobeItem.type === 'community' ? '#ffaa00' :
+                                    selectedGlobeItem.type === 'playlist'  ? '#ff006e' : '#00aaff'
+                            }}
+                        >
+                            {selectedGlobeItem.type === 'community' ? 'CLUSTER' :
+                             selectedGlobeItem.type === 'artist'    ? 'ARTIST'  :
+                             selectedGlobeItem.type === 'playlist'  ? 'PLAYLIST': 'TRACK'}
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => setSelectedGlobeItem(null)}
+                        onTouchEnd={(e) => { e.preventDefault(); setSelectedGlobeItem(null); }}
+                        className="text-white/20 hover:text-white transition-colors shrink-0"
+                    >
+                        <X size={11} />
+                    </button>
+                </div>
+
+                {/* Single action */}
+                {selectedGlobeItem.type === 'artist' && (
+                    <button
+                        onClick={() => navigateToProfile(selectedGlobeItem.userId || selectedGlobeItem.UserId)}
+                        className="w-full border border-white/12 text-white/60 hover:border-white/40 hover:text-white py-1.5 text-[7px] font-black tracking-[0.3em] uppercase transition-all"
+                    >
+                        VIEW PROFILE
+                    </button>
+                )}
+                {selectedGlobeItem.type === 'community' && (
+                    <button
+                        onClick={() => setActiveTerminalCommunity(selectedGlobeItem)}
+                        className="w-full border border-white/12 text-white/60 hover:border-white/40 hover:text-white py-1.5 text-[7px] font-black tracking-[0.3em] uppercase transition-all"
+                    >
+                        ENTER PORTAL
+                    </button>
+                )}
+                {(selectedGlobeItem.type === 'track' || selectedGlobeItem.type === 'playlist') && (
+                    <button
+                        onClick={() => {
+                            if (selectedGlobeItem.type === 'track') {
+                                onPlayTrack(selectedGlobeItem);
+                            } else if (playlistTracks?.[0]) {
+                                onPlayTrack(playlistTracks[0]);
+                            }
+                            setSelectedGlobeItem(null);
+                        }}
+                        className="w-full border border-[#ff006e]/30 text-[#ff006e] hover:bg-[#ff006e]/10 py-1.5 text-[7px] font-black tracking-[0.3em] uppercase transition-all flex items-center justify-center gap-2"
+                    >
+                        <Play size={8} fill="currentColor" />
+                        {selectedGlobeItem.type === 'track' ? 'PLAY TRACK' : 'PLAY PLAYLIST'}
+                    </button>
+                )}
+            </div>
+        </motion.div>
+    )}
+</AnimatePresence>
 
                         {/* Globe Controls - Premium Mirror Layout */}
                         {!activeTerminalCommunity && (
