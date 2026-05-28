@@ -147,58 +147,56 @@ const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeVi
     // Build all connections once (memoised on data change)
     const connections = useMemo(() => {
         const result = [];
-        // TRACKS — replace the ref/match block
-tracks.forEach(track => {
-    // Only use explicit artist references — never track.userId (that's the uploader)
-    const ref = track.artistUserId || track.ArtistUserId ||
-                track.artistId     || track.ArtistId;
-    if (!ref) return;
+        artists.forEach(artist => {
+            const artistId     = artist.id     || artist.Id;
+            const artistNodeId = `artist-${artistId}`;
+            const artistPos    = getSphericalPos(artistNodeId, 2.48).pos;
 
-    const artistId     = artist.id     || artist.Id;
-    const artistUserId = artist.userId || artist.UserId;
+        // TRACKS
+        tracks.forEach(track => {
+            const ref = track.artistUserId || track.ArtistUserId ||
+                        track.artistId     || track.ArtistId;
+            if (!ref) return;
 
-    const matches = (artistUserId && String(ref) === String(artistUserId)) ||
-                    String(ref) === String(artistId);
-    if (!matches) return;
+            const artistUserId = artist.userId || artist.UserId;
+            const matches = (artistUserId && String(ref) === String(artistUserId)) ||
+                            String(ref) === String(artistId);
+            if (!matches) return;
 
-    const trackPos = getSphericalPos(`track-${track.id || track.Id}`, 2.48).pos;
-    const seed     = hashStr(artistId + (track.id || track.Id));
-    result.push({
-        from: artistPos, to: trackPos,
-        color: '#00d4ff',
-        ownerId:  artistNodeId,
-        targetId: `track-${track.id || track.Id}`,
-        speed:    0.22 + (seed % 100) / 300,
-        phase:    (seed % 1000) / 1000,
-    });
-});
+            const trackPos = getSphericalPos(`track-${track.id || track.Id}`, 2.48).pos;
+            const seed     = hashStr(artistId + (track.id || track.Id));
+            result.push({
+                from: artistPos, to: trackPos,
+                color: '#00d4ff',
+                ownerId:  artistNodeId,
+                targetId: `track-${track.id || track.Id}`,
+                speed:    0.22 + (seed % 100) / 300,
+                phase:    (seed % 1000) / 1000,
+            });
+        });
 
-// PLAYLISTS — same fix
-playlists.forEach(playlist => {
-    const ref = playlist.artistUserId || playlist.ArtistUserId ||
-                playlist.ownerId      || playlist.OwnerId;
-    // Do NOT use playlist.userId as fallback — same cross-match risk
-    if (!ref) return;
+        // PLAYLISTS
+        playlists.forEach(playlist => {
+            const ref = playlist.artistUserId || playlist.ArtistUserId ||
+                        playlist.ownerId      || playlist.OwnerId;
+            if (!ref) return;
 
-    const artistId     = artist.id     || artist.Id;
-    const artistUserId = artist.userId || artist.UserId;
+            const artistUserId = artist.userId || artist.UserId;
+            const matches = (artistUserId && String(ref) === String(artistUserId)) ||
+                            String(ref) === String(artistId);
+            if (!matches) return;
 
-    const matches = (artistUserId && String(ref) === String(artistUserId)) ||
-                    String(ref) === String(artistId);
-    if (!matches) return;
-
-    const plPos = getSphericalPos(`playlist-${playlist.id || playlist.Id}`, 2.48).pos;
-    const seed  = hashStr(artistId + (playlist.id || playlist.Id));
-    result.push({
-        from: artistPos, to: plPos,
-        color: '#ff3d7f',
-        ownerId:  artistNodeId,
-        targetId: `playlist-${playlist.id || playlist.Id}`,
-        speed:    0.18 + (seed % 100) / 350,
-        phase:    (seed % 1000) / 1000,
-    });
-});
-            }
+            const plPos = getSphericalPos(`playlist-${playlist.id || playlist.Id}`, 2.48).pos;
+            const seed  = hashStr(artistId + (playlist.id || playlist.Id));
+            result.push({
+                from: artistPos, to: plPos,
+                color: '#ff3d7f',
+                ownerId:  artistNodeId,
+                targetId: `playlist-${playlist.id || playlist.Id}`,
+                speed:    0.18 + (seed % 100) / 350,
+                phase:    (seed % 1000) / 1000,
+            });
+        });
         });
         return result;
     }, [artists, tracks, playlists, activeView]);

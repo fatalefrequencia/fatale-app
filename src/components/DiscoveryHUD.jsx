@@ -979,6 +979,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
         </motion.div>
     )}
 </AnimatePresence>
+                        </AnimatePresence>
 
                         {/* Globe Controls - Premium Mirror Layout */}
                         {!activeTerminalCommunity && (
