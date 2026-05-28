@@ -1,6 +1,6 @@
 import React, { useRef, useMemo, useEffect, useState, memo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Float, Stars, Sphere, Html } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Float, Sphere, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { SECTORS } from '../../constants';
 
@@ -158,9 +158,8 @@ const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeVi
                         track.artistId     || track.ArtistId;
             if (!ref) return;
 
-            const artistUserId = artist.userId || artist.UserId;
-            const matches = (artistUserId && String(ref) === String(artistUserId)) ||
-                            String(ref) === String(artistId);
+            // Match strictly on artistId only — never userId (one user can own multiple artist profiles)
+            const matches = String(ref) === String(artistId);
             if (!matches) return;
 
             const trackPos = getSphericalPos(`track-${track.id || track.Id}`, 2.48).pos;
@@ -181,9 +180,8 @@ const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeVi
                         playlist.ownerId      || playlist.OwnerId;
             if (!ref) return;
 
-            const artistUserId = artist.userId || artist.UserId;
-            const matches = (artistUserId && String(ref) === String(artistUserId)) ||
-                            String(ref) === String(artistId);
+            // Match strictly on artistId only — never userId (one user can own multiple artist profiles)
+            const matches = String(ref) === String(artistId);
             if (!matches) return;
 
             const plPos = getSphericalPos(`playlist-${playlist.id || playlist.Id}`, 2.48).pos;
@@ -711,11 +709,7 @@ const InteractiveGlobe = memo(({
                     </group>
                 </Float>
 
-                <Stars
-                    radius={150} depth={60} count={1200}
-                    factor={6} saturation={0.5} fade
-                    speed={isGlobeSpinning ? 0.8 : 0}
-                />
+
             </Canvas>
         </div>
     );
