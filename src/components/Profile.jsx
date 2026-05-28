@@ -1740,7 +1740,7 @@ export const ProfileView = React.memo(({
                     cover: getMediaUrl(t.coverImageUrl || t.CoverImageUrl)
                 }));
                 setIsLoadingTracks(false);
-                setProfileTracks([...filtered].sort((a, b) => (a.id || a.Id) - (b.id || b.Id)));
+                setProfileTracks([...filtered].sort((a, b) => a.id - b.id));
                 try {
                     setIsLoadingJournal(true);
                     setIsLoadingGallery(true);
