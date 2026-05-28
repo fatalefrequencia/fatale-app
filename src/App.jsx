@@ -267,10 +267,7 @@ function App() {
   const [isSubmittingPost, setIsSubmittingPost] = useState(false);
 
   // Real-time Audio State
-  const [currentTime, setCurrentTime] = useState(() => {
-    const val = localStorage.getItem('currentTime');
-    return val !== null ? parseFloat(val) : 0;
-  });
+  const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(1); // 0 to 1
@@ -1006,27 +1003,12 @@ function App() {
     localStorage.setItem('tracks', JSON.stringify(tracks));
   }, [tracks]);
 
-  useEffect(() => {
-    // Only save time periodically to avoid excessive storage writes
-    const interval = setInterval(() => {
-      if (isPlaying && currentTime > 0) {
-        localStorage.setItem('currentTime', currentTime);
-      }
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [isPlaying, currentTime]);
+
 
   useEffect(() => {
     localStorage.setItem('liked_youtube_ids', JSON.stringify(Array.from(likedYoutubeIds)));
   }, [likedYoutubeIds]);
 
-  // Restoration Seek Effect
-  useEffect(() => {
-    if (currentTime > 0 && (audioRef.current || youtubePlayer)) {
-      console.log(`[Persistence] Restoring playback to: ${currentTime}s`);
-      handleSeek(currentTime);
-    }
-  }, [currentTrack?.id, !!youtubePlayer]);
 
   // --- HOST BROADCASTING LOGIC ---
   useEffect(() => {
