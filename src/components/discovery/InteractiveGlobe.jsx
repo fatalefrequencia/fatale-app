@@ -258,6 +258,7 @@ const ConnectionLines = ({ artists, tracks, playlists, selectedId, activeView })
         const result = [];
         
         artists.forEach(artist => {
+            const artistUserId = artist.userId || artist.UserId || artist.id || artist.Id;
             const artistId = artist.id || artist.Id;
             const artistPos = getSphericalPos(`artist-${artistId}`, 2.48).pos;
             
@@ -265,8 +266,8 @@ const ConnectionLines = ({ artists, tracks, playlists, selectedId, activeView })
             if (activeView === 'TRACKS' || !activeView) {
                 tracks.forEach(track => {
                     const trackUserId = track.artistUserId || track.ArtistUserId || 
-                                        track.userId || track.UserId;
-                    if (String(trackUserId) === String(artistId)) {
+                    track.userId || track.UserId;
+                    if (String(trackUserId) === String(artistUserId)) {
                         const trackPos = getSphericalPos(`track-${track.id || track.Id}`, 2.48).pos;
                         result.push({ 
                             from: artistPos, 
@@ -286,7 +287,7 @@ const ConnectionLines = ({ artists, tracks, playlists, selectedId, activeView })
                     const plUserId = playlist.userId || playlist.UserId || 
                                      playlist.ownerId || playlist.OwnerId ||
                                      playlist.artistUserId || playlist.ArtistUserId;
-                    if (String(plUserId) === String(artistId)) {
+                                     if (String(plUserId) === String(artistUserId)) {
                         const plPos = getSphericalPos(`playlist-${playlist.id || playlist.Id}`, 2.48).pos;
                         result.push({ 
                             from: artistPos, 
