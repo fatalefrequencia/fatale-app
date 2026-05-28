@@ -901,7 +901,6 @@ export const ProfileView = React.memo(({
     const [isFollowing, setIsFollowing] = useState(false);
     const [isLoadingProfile, setIsLoadingProfile] = useState(false);
     const [profileTracks, setProfileTracks] = useState([]);
-    console.log('sample track:', filtered[0]);
     const [isLoadingTracks, setIsLoadingTracks] = useState(false);
     const [profileJournal, setProfileJournal] = useState([]);
     const [isLoadingJournal, setIsLoadingJournal] = useState(false);
@@ -1741,8 +1740,7 @@ export const ProfileView = React.memo(({
                     cover: getMediaUrl(t.coverImageUrl || t.CoverImageUrl)
                 }));
                 setIsLoadingTracks(false);
-                setProfileTracks(filtered);
-
+                setProfileTracks([...filtered].sort((a, b) => (a.id || a.Id) - (b.id || b.Id)));
                 try {
                     setIsLoadingJournal(true);
                     setIsLoadingGallery(true);
