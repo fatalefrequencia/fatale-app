@@ -665,7 +665,7 @@ function App() {
   const [ingestMode, setIngestMode] = useState('ALL'); // 'ALL' or 'JOURNAL'
   // Force reload to fix cache issue with setIngestMode
 
-  const [goLiveFormData, setGoLiveFormData] = useState({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true });
+  const [goLiveFormData, setGoLiveFormData] = useState({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true, sectorId: null });
   
   // --- GLOBAL MODAL STATE ---
   const [globalExpandedContent, setGlobalExpandedContent] = useState(null);
@@ -686,12 +686,13 @@ function App() {
         SessionTitle: title,
         Description: desc || null,
         IsChatEnabled: goLiveFormData.isChatEnabled,
-        IsQueueEnabled: goLiveFormData.isQueueEnabled
+        IsQueueEnabled: goLiveFormData.isQueueEnabled,
+        SectorId: goLiveFormData.sectorId ?? null
       });
 
       showNotification("BROADCAST_ACTIVE", t('ESTABLISH_SIGNAL'), "success");
       setShowGlobalGoLive(false);
-      setGoLiveFormData({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true });
+      setGoLiveFormData({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true, sectorId: null });
 
       // After starting, briefly navigate to profile to show the broadcast interface
       navigateToProfile(user?.id, 'broadcast');
@@ -2801,7 +2802,7 @@ function App() {
                 </button>
               </div>
 
-              <div className="space-y-8">
+              <div className="space-y-6">
                 <div className="space-y-3">
                   <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] ml-1">signal_metadata // title</label>
                   <input
@@ -2812,16 +2813,49 @@ function App() {
                     placeholder="establish_session_id..."
                   />
                 </div>
+
+                {/* Sector Allocation — styled after Discovery HUD sector dropdown */}
+                <div className="space-y-1.5">
+                  <div className="text-[7px] opacity-40 font-mono uppercase tracking-widest ml-1">TRANSMISSION_SECTOR // ALLOCATION</div>
+                  <div className="relative">
+                    <select
+                      value={goLiveFormData.sectorId ?? ''}
+                      onChange={e => setGoLiveFormData(p => ({ ...p, sectorId: e.target.value === '' ? null : Number(e.target.value) }))}
+                      className="w-full bg-black/60 border border-[#ff006e]/20 hover:border-[#ff006e]/50 focus:border-[#ff006e]/60 p-3 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
+                    >
+                      <option value="">ALL_SECTORS // UNALLOCATED</option>
+                      {SECTORS.map(s => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                      <ChevronDown size={12} className="text-[#ff006e]/40" />
+                    </div>
+                    {/* Sector colour accent strip */}
+                    {goLiveFormData.sectorId !== null && goLiveFormData.sectorId !== '' && (
+                      <div
+                        className="absolute left-0 top-0 bottom-0 w-0.5 pointer-events-none"
+                        style={{ backgroundColor: SECTORS[goLiveFormData.sectorId]?.color || '#ff006e', boxShadow: `0 0 8px ${SECTORS[goLiveFormData.sectorId]?.color || '#ff006e'}` }}
+                      />
+                    )}
+                  </div>
+                  {goLiveFormData.sectorId !== null && goLiveFormData.sectorId !== '' && (
+                    <div className="text-[7px] font-mono tracking-widest opacity-40 ml-1" style={{ color: SECTORS[goLiveFormData.sectorId]?.color }}>
+                      {SECTORS[goLiveFormData.sectorId]?.desc}
+                    </div>
+                  )}
+                </div>
+
                 <div className="space-y-3">
                   <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] ml-1">transmission_log // description</label>
                   <textarea
                     value={goLiveFormData.description}
                     onChange={e => setGoLiveFormData(p => ({ ...p, description: e.target.value }))}
-                    className="w-full bg-[#050505] border border-white/5 p-4 text-white font-medium outline-none focus:border-[#ff006e]/20 min-h-[100px] text-[10px] resize-none transition-all placeholder:text-white/5"
+                    className="w-full bg-[#050505] border border-white/5 p-4 text-white font-medium outline-none focus:border-[#ff006e]/20 min-h-[80px] text-[10px] resize-none transition-all placeholder:text-white/5"
                     placeholder="Optional signal details..."
                   />
                 </div>
-                <div className="pt-4">
+                <div className="pt-2">
                   <button
                     onClick={() => handleGlobalGoLive()}
                     disabled={!goLiveFormData.sessionTitle.trim()}
@@ -3333,6 +3367,7 @@ const Dashboard = React.memo(({
                   setShowGlobalIngest={setShowGlobalIngest}
                   onExpandContent={onExpandContent}
                   libraryTracks={libraryTracks}
+                  onSendMessage={sendMessage}
                 />
               </motion.div>
              )}
@@ -3759,7 +3794,8 @@ const FeedContent = React.memo(({
   setShowGlobalUpload,
   setShowGlobalIngest,
   onExpandContent,
-  libraryTracks
+  libraryTracks,
+  onSendMessage
 }) => {
   const { language } = useLanguage();
   const [feed, setFeed] = useState([]);
@@ -3771,6 +3807,45 @@ const FeedContent = React.memo(({
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [mobilePanelTab, setMobilePanelTab] = useState('filters'); // 'filters' | 'favorites' | 'stations'
   const [feedFilter, setFeedFilter] = useState('ALL');
+  const [expandedAlbums, setExpandedAlbums] = useState({});
+  const [sidebarSector, setSidebarSector] = useState(null);
+  const [listenerChatInput, setListenerChatInput] = useState('');
+
+  const groupFeedItems = (items) => {
+    const grouped = [];
+    let currentGroup = null;
+
+    items.forEach(item => {
+      const itemType = (item.Type || item.type || "").toLowerCase();
+      const albumTitle = item.AlbumTitle || item.albumTitle;
+      
+      const hasAlbum = itemType === 'track' && albumTitle && albumTitle.trim() !== '' && albumTitle.toLowerCase() !== 'singles';
+
+      if (hasAlbum) {
+        if (currentGroup && currentGroup.Artist === item.Artist && currentGroup.AlbumTitle === albumTitle) {
+          currentGroup.tracks.push(item);
+        } else {
+          currentGroup = {
+            Id: `album-group-${item.Id}`,
+            Type: 'album',
+            Artist: item.Artist,
+            ArtistUserId: item.ArtistUserId || item.artistUserId,
+            AlbumTitle: albumTitle,
+            CreatedAt: item.CreatedAt,
+            profilePictureUrl: item.profilePictureUrl || item.ProfilePictureUrl,
+            tracks: [item],
+            IsOriginalSignal: item.IsOriginalSignal ?? item.isOriginalSignal ?? true,
+            RepostedBy: item.RepostedBy || item.repostedBy
+          };
+          grouped.push(currentGroup);
+        }
+      } else {
+        currentGroup = null;
+        grouped.push(item);
+      }
+    });
+    return grouped;
+  };
 
   useEffect(() => {
     API.Communities.getAll().then(res => setAllCommunities(res.data || [])).catch(() => { });
@@ -4167,8 +4242,12 @@ const FeedContent = React.memo(({
         <div className="bg-[#0a0a0a]/50 backdrop-blur-xl border border-[#ff006e]/20 rounded-lg overflow-hidden">
           <div className="p-3 bg-[#ff006e]/5 border-b border-[#ff006e]/10 flex justify-between items-center text-[10px] font-black uppercase text-white">:: TERMINAL_CMDS :: <ChevronDown size={14} /></div>
           <div className="p-4 space-y-1">
-            <button onClick={() => setShowGlobalIngest(true)} className="w-full text-left p-2 text-[10px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e10] transition-all uppercase tracking-widest">{`> NEW_POST`} </button>
-            <button onClick={() => setShowGlobalUpload(true)} className="w-full text-left p-2 text-[10px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e10] transition-all uppercase tracking-widest">{`> UPLOAD_TRACK`} </button>
+            <button onClick={() => setShowGlobalIngest(true)} className="w-full text-left p-2 text-[10px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/5 transition-all uppercase tracking-widest">{`> NEW_POST`} </button>
+            <button onClick={() => setShowGlobalUpload(true)} className="w-full text-left p-2 text-[10px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/5 transition-all uppercase tracking-widest">{`> UPLOAD_TRACK`} </button>
+            <button onClick={() => setShowGlobalGoLive(true)} className="w-full text-left p-2 text-[10px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/5 transition-all uppercase tracking-widest flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_6px_#ff006e] shrink-0" />
+              {`> GO_LIVE`}
+            </button>
           </div>
         </div>
 
@@ -4372,7 +4451,7 @@ const FeedContent = React.memo(({
                     </div>
                   )}
 
-                  {feed.filter(item => {
+                  {groupFeedItems(feed.filter(item => {
                     if (selectedCommunityId !== null) {
                       const itemCommId = item.communityId || item.CommunityId;
                       return String(itemCommId) === String(selectedCommunityId);
@@ -4382,17 +4461,17 @@ const FeedContent = React.memo(({
                       return sectorId === selectedSector;
                     }
                     return true;
-                  }).map(item => {
+                  })).map(item => {
                     const type = item.Type;
                     const artist = item.Artist;
-                    const title = item.Title;
+                    const title = type === 'album' ? item.AlbumTitle : item.Title;
                     const content = item.Content;
                     const createdAt = item.CreatedAt;
                     const playCount = item.PlayCount;
                     const mediaType = (item.mediaType || item.MediaType || '').toUpperCase();
                     const isOriginal = item.IsOriginalSignal ?? item.isOriginalSignal ?? true;
                     const repostedBy = item.RepostedBy || item.repostedBy;
-                    const imageUrl = getMediaUrl(item.imageUrl || item.ImageUrl);
+                    const imageUrl = type === 'album' ? getMediaUrl(item.tracks[0]?.imageUrl || item.tracks[0]?.ImageUrl) : getMediaUrl(item.imageUrl || item.ImageUrl);
 
                     if (type === 'system') {
                       return null;
@@ -4409,7 +4488,7 @@ const FeedContent = React.memo(({
 
                     const getPostAccent = () => {
                       if (isMarketplace) return { color: '#ffaa00', glow: 'rgba(255, 170, 0, 0.18)' };
-                      if (type === 'track') return { color: '#00f0ff', glow: 'rgba(0, 240, 255, 0.18)' };
+                      if (type === 'track' || type === 'album') return { color: '#00f0ff', glow: 'rgba(0, 240, 255, 0.18)' };
                       if (type === 'studio') return { color: '#ff006e', glow: 'rgba(255, 0, 110, 0.18)' };
                       if (type === 'journal') return { color: '#9d00ff', glow: 'rgba(157, 0, 255, 0.18)' };
                       return { color: '#ffffff', glow: 'rgba(255, 255, 255, 0.08)' };
@@ -4576,6 +4655,8 @@ const FeedContent = React.memo(({
                               </div>
                               <div className="text-[11px] text-white/90 leading-relaxed mt-0.5">
                                 {type === 'track' && `Uploaded track "${title}"`}
+                                {type === 'album' && `Released album `}
+                                {type === 'album' && <span className="text-[#00f0ff] font-black">{title}</span>}
                                 {type === 'studio' && (content || title)}
                                 {type === 'journal' && (content || title)}
                               </div>
@@ -4606,6 +4687,83 @@ const FeedContent = React.memo(({
                               </div>
                             </div>
                           )}
+
+                          {type === 'album' && (() => {
+                            const albumKey = item.Id;
+                            const isExpanded = !!expandedAlbums[albumKey];
+                            const albumColor = '#00f0ff';
+                            return (
+                              <div className="rounded-sm border border-[#00f0ff]/20 overflow-hidden shadow-[0_0_20px_rgba(0,240,255,0.05)] max-w-md">
+                                {/* Album cover + header */}
+                                <div className="flex items-center gap-3 p-3 bg-black/60 border-b border-[#00f0ff]/10">
+                                  <div className="w-14 h-14 rounded-sm overflow-hidden shrink-0 border border-[#00f0ff]/20 flex items-center justify-center bg-black">
+                                    {imageUrl ? (
+                                      <img src={imageUrl} className="w-full h-full object-cover" alt="" />
+                                    ) : (
+                                      <Music size={22} className="text-[#00f0ff]/40" />
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-[8px] font-mono text-[#00f0ff]/50 uppercase tracking-widest mb-0.5">ALBUM // {item.tracks.length} TRACKS</div>
+                                    <div className="text-[12px] font-black uppercase text-white truncate leading-tight">{title}</div>
+                                    <div className="text-[9px] text-[#00f0ff]/60 uppercase tracking-widest truncate">{artist}</div>
+                                  </div>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setExpandedAlbums(prev => ({ ...prev, [albumKey]: !prev[albumKey] })); }}
+                                    className="w-8 h-8 flex items-center justify-center border border-[#00f0ff]/20 text-[#00f0ff]/60 hover:border-[#00f0ff]/60 hover:text-[#00f0ff] transition-all rounded-sm shrink-0"
+                                    title={isExpanded ? 'COLLAPSE' : 'EXPAND'}
+                                  >
+                                    <ChevronDown size={14} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                  </button>
+                                </div>
+
+                                {/* Tracklist dropdown */}
+                                {isExpanded && (
+                                  <div className="divide-y divide-[#00f0ff]/5">
+                                    {item.tracks.map((track, idx) => {
+                                      const tSrc = track.source || track.Source || track.filePath || track.FilePath;
+                                      const tImg = getMediaUrl(track.imageUrl || track.ImageUrl);
+                                      return (
+                                        <div
+                                          key={track.Id || idx}
+                                          onClick={(e) => { e.stopPropagation(); handleTrackPlay(track); }}
+                                          className="flex items-center gap-3 px-3 py-2.5 bg-black/40 hover:bg-[#00f0ff]/5 cursor-pointer group/titem transition-all"
+                                        >
+                                          <div className="text-[9px] font-mono text-[#00f0ff]/30 w-4 shrink-0 text-right">{idx + 1}</div>
+                                          <div className="w-8 h-8 rounded-sm overflow-hidden shrink-0 border border-white/5 flex items-center justify-center bg-black">
+                                            {tImg ? (
+                                              <img src={tImg} className="w-full h-full object-cover opacity-70 group-hover/titem:opacity-100 transition-opacity" alt="" />
+                                            ) : (
+                                              <Music size={12} className="text-[#00f0ff]/30" />
+                                            )}
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="text-[10px] font-black uppercase text-white/90 truncate group-hover/titem:text-[#00f0ff] transition-colors">{track.Title || track.title}</div>
+                                          </div>
+                                          <div className="w-6 h-6 rounded-sm border border-[#00f0ff]/10 flex items-center justify-center text-[#00f0ff]/30 group-hover/titem:border-[#00f0ff]/50 group-hover/titem:text-[#00f0ff] transition-all">
+                                            <Play size={10} fill="currentColor" />
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+
+                                {/* Collapsed preview — first track play */}
+                                {!isExpanded && (
+                                  <div
+                                    onClick={(e) => { e.stopPropagation(); handleTrackPlay(item.tracks[0]); }}
+                                    className="flex items-center gap-3 px-3 py-2 bg-black/20 hover:bg-[#00f0ff]/5 cursor-pointer group/preview transition-all"
+                                  >
+                                    <Play size={10} fill="currentColor" className="text-[#00f0ff]/40 group-hover/preview:text-[#00f0ff] transition-colors" />
+                                    <span className="text-[9px] font-mono text-white/30 group-hover/preview:text-white/60 transition-colors uppercase tracking-widest">
+                                      {item.tracks[0]?.Title || item.tracks[0]?.title} &nbsp;+{item.tracks.length - 1} more
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
 
                           {type === 'studio' && (
                             <div
@@ -4892,11 +5050,68 @@ const FeedContent = React.memo(({
                     </div>
                   </div>
 
-                  {/* Sector filter */}
-                  <div className="space-y-2">
-                    <h3 className="text-[9px] font-black uppercase text-[#ff006e] tracking-widest">:: SECTORES Y LIVES ::</h3>
-                    <div className="p-4 border border-dashed border-white/5 text-center opacity-40 text-[9px] uppercase tracking-widest">
-                      [ EN DESARROLLO / PENDIENTE ]
+                  {/* Sector filter + Live stations */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-[9px] font-black uppercase text-[#ff006e] tracking-widest flex items-center gap-1.5">
+                        <Radio size={10} className="animate-pulse" /> :: LIVE_FREQ ::
+                      </h3>
+                      <button
+                        onClick={() => { setShowGlobalGoLive(true); setMobilePanelOpen(false); }}
+                        className="flex items-center gap-1 px-2 py-1 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] text-[8px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all rounded-sm"
+                      >
+                        <span className="w-1 h-1 rounded-full bg-current animate-pulse" /> GO_LIVE
+                      </button>
+                    </div>
+
+                    {/* Sector dropdown */}
+                    <div className="space-y-1">
+                      <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest">TRANSMISSION_SECTOR // FILTER</div>
+                      <div className="relative">
+                        <select
+                          value={selectedSector ?? ''}
+                          onChange={e => { setSelectedSector(e.target.value === '' ? null : Number(e.target.value)); setMobilePanelOpen(false); }}
+                          className="w-full bg-black/60 border border-[#ff006e]/20 hover:border-[#ff006e]/40 p-2.5 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
+                        >
+                          <option value="">ALL_SECTORS</option>
+                          {SECTORS.map(s => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                          ))}
+                        </select>
+                        <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2">
+                          <ChevronDown size={10} className="text-[#ff006e]/40" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Live stations list */}
+                    <div className="space-y-1.5">
+                      {(() => {
+                        const filtered = (liveStations || []).filter(s => selectedSector === null || s.sectorId === selectedSector || s.SectorId === selectedSector);
+                        if (filtered.length === 0) return (
+                          <div className="p-4 border border-dashed border-white/5 text-center opacity-30">
+                            <div className="text-[8px] font-mono uppercase tracking-widest">NO_ACTIVE_FREQUENCIES</div>
+                          </div>
+                        );
+                        return filtered.map((station, idx) => {
+                          const sc = SECTORS[station.sectorId ?? station.SectorId]?.color || '#ff006e';
+                          const isActive = activeStation && String(activeStation.id || activeStation.Id) === String(station.id || station.Id);
+                          return (
+                            <button
+                              key={station.id || idx}
+                              onClick={() => { setActiveStation(station); setMobilePanelOpen(false); }}
+                              className={`w-full flex items-center gap-2.5 px-3 py-2.5 border text-left transition-all rounded-sm ${isActive ? 'border-[#ff006e]/60 bg-[#ff006e]/10' : 'border-white/5 bg-black/20 hover:border-white/20'}`}
+                            >
+                              <div className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse" style={{ backgroundColor: sc, boxShadow: `0 0 6px ${sc}` }} />
+                              <div className="flex-1 min-w-0">
+                                <div className="text-[9px] font-black uppercase text-white truncate">{station.sessionTitle || station.SessionTitle}</div>
+                                <div className="text-[7px] font-mono text-white/30 uppercase truncate">{station.artistName || station.ArtistName}</div>
+                              </div>
+                              {isActive && <Radio size={10} className="text-[#ff006e] animate-pulse shrink-0" />}
+                            </button>
+                          );
+                        });
+                      })()}
                     </div>
                   </div>
 
@@ -4986,7 +5201,9 @@ const FeedContent = React.memo(({
       </AnimatePresence>
 
       {/* Derecha: Radios & Broadcaster Panel */}
-      <div className="hidden xl:block w-80 p-6 space-y-8 bg-black border-l border-[#ff006e]/5 relative z-10 overflow-y-auto no-scrollbar">
+      <div className="hidden xl:block w-80 p-6 space-y-6 bg-black border-l border-[#ff006e]/5 relative z-10 overflow-y-auto no-scrollbar">
+
+        {/* ── BROADCASTER MODE (host) ── */}
         {activeStation && (String(activeStation.artistUserId || activeStation.ArtistUserId) === String(user?.id || user?.Id)) && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
             <div className="flex items-center gap-3 pb-3 border-b border-[#ff006e]/20">
@@ -4995,12 +5212,12 @@ const FeedContent = React.memo(({
             </div>
 
             {/* Mini Chat */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex justify-between items-center text-[8px] font-bold text-white/40 uppercase tracking-widest">
                 <span>COMM_LINK</span>
                 <span className="text-[#ff006e]/40">ENCRYPTED</span>
               </div>
-              <div className="h-48 bg-black/40 border border-[#ff006e]/10 rounded-sm p-3 font-mono text-[9px] overflow-y-auto custom-scrollbar space-y-2">
+              <div className="h-40 bg-black/40 border border-[#ff006e]/10 rounded-sm p-3 font-mono text-[9px] overflow-y-auto custom-scrollbar space-y-2">
                 {stationChat && stationChat.length > 0 ? stationChat.map((msg, idx) => (
                   <div key={idx} className="break-words">
                     <span className="text-[#ff006e] font-bold">[{msg.username}]</span> <span className="text-white/80">{msg.message}</span>
@@ -5012,12 +5229,12 @@ const FeedContent = React.memo(({
             </div>
 
             {/* Mini Queue */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="text-[8px] font-bold text-white/40 uppercase tracking-widest flex justify-between">
                 <span>REQUEST_QUEUE</span>
                 <span>[{stationQueue?.length || 0}]</span>
               </div>
-              <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-2">
+              <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1.5">
                 {stationQueue && stationQueue.length > 0 ? stationQueue.map((req, idx) => (
                   <div key={idx} className="p-2 border border-[#ff006e]/10 bg-black/60 flex justify-between items-center group hover:border-[#ff006e]/40 transition-all">
                     <div className="min-w-0">
@@ -5026,20 +5243,18 @@ const FeedContent = React.memo(({
                     </div>
                     <button
                       onClick={() => onPlayPlaylist && onPlayPlaylist([{ id: req.trackId, title: req.trackTitle, artist: 'REQUEST' }], 0)}
-                      className="w-6 h-6 rounded-full border border-[#ff006e]/20 flex items-center justify-center text-[#ff006e] hover:bg-[#ff006e] hover:text-black transition-all"
+                      className="w-6 h-6 rounded-sm border border-[#ff006e]/20 flex items-center justify-center text-[#ff006e] hover:bg-[#ff006e] hover:text-black transition-all"
                     >
                       <Play size={10} fill="currentColor" />
                     </button>
                   </div>
                 )) : (
-                  <div className="p-4 border border-dashed border-white/5 text-center opacity-20 text-[8px] uppercase tracking-widest">
-                    Queue Clear
-                  </div>
+                  <div className="p-3 border border-dashed border-white/5 text-center opacity-20 text-[8px] uppercase tracking-widest">Queue Clear</div>
                 )}
               </div>
             </div>
 
-            <div className="pt-4 border-t border-[#ff006e]/10">
+            <div className="pt-3 border-t border-[#ff006e]/10">
               <button
                 onClick={() => setView('player')}
                 className="w-full py-2 bg-[#ff006e]/10 border border-[#ff006e]/40 text-[#ff006e] text-[9px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all"
@@ -5050,6 +5265,166 @@ const FeedContent = React.memo(({
           </div>
         )}
 
+        {/* ── LISTENER MODE (tuned in, not host) ── */}
+        {activeStation && (String(activeStation.artistUserId || activeStation.ArtistUserId) !== String(user?.id || user?.Id)) && (
+          <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-500">
+            {/* Station header */}
+            <div className="border border-[#ff006e]/30 rounded-sm overflow-hidden">
+              <div className="flex items-center gap-2 px-3 py-2 bg-[#ff006e]/10 border-b border-[#ff006e]/20">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_8px_#ff006e]" />
+                <span className="text-[9px] font-black uppercase text-[#ff006e] tracking-widest">TUNED_IN</span>
+              </div>
+              <div className="p-3">
+                <div className="text-[12px] font-black uppercase text-white truncate">{activeStation.sessionTitle || activeStation.SessionTitle}</div>
+                <div className="text-[9px] font-mono text-[#ff006e]/60 uppercase tracking-widest truncate">{activeStation.artistName || activeStation.ArtistName}</div>
+              </div>
+            </div>
+
+            {/* Comm link (listener read + send) */}
+            <div className="space-y-2">
+              <div className="text-[8px] font-bold text-white/40 uppercase tracking-widest">COMM_LINK</div>
+              <div className="h-40 bg-black/40 border border-[#ff006e]/10 rounded-sm p-3 font-mono text-[9px] overflow-y-auto custom-scrollbar space-y-2">
+                {stationChat && stationChat.length > 0 ? stationChat.map((msg, idx) => (
+                  <div key={idx} className="break-words">
+                    <span className="text-[#ff006e] font-bold">[{msg.username}]</span> <span className="text-white/80">{msg.message}</span>
+                  </div>
+                )) : (
+                  <div className="h-full flex items-center justify-center opacity-20 italic">LINK_IDLE...</div>
+                )}
+              </div>
+              {typeof onSendMessage === 'function' && (
+                <div className="flex gap-2">
+                  <input
+                    value={listenerChatInput}
+                    onChange={e => setListenerChatInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && listenerChatInput.trim()) { onSendMessage(listenerChatInput); setListenerChatInput(''); } }}
+                    placeholder="Send signal..."
+                    className="flex-1 bg-black/60 border border-[#ff006e]/20 focus:border-[#ff006e]/50 px-2 py-1.5 text-[9px] font-mono text-white outline-none placeholder:text-white/10 transition-all"
+                  />
+                  <button
+                    onClick={() => { if (listenerChatInput.trim()) { onSendMessage(listenerChatInput); setListenerChatInput(''); } }}
+                    className="px-2 py-1.5 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] text-[8px] font-black uppercase hover:bg-[#ff006e] hover:text-black transition-all"
+                  >TX</button>
+                </div>
+              )}
+            </div>
+
+            {/* Disconnect */}
+            <button
+              onClick={() => setActiveStation(null)}
+              className="w-full py-2 border border-[#ff006e]/30 text-[#ff006e]/60 text-[9px] font-black uppercase tracking-widest hover:border-[#ff006e] hover:text-[#ff006e] transition-all"
+            >
+              [ DISCONNECT_LINK ]
+            </button>
+          </div>
+        )}
+
+        {/* ── TUNING INTERFACE (not connected) ── */}
+        {!activeStation && (() => {
+          const filteredStations = (liveStations || []).filter(s =>
+            sidebarSector === null || s.sectorId === sidebarSector || s.SectorId === sidebarSector
+          );
+          return (
+            <div className="space-y-5">
+              {/* Header with Go Live CTA */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e]/40 animate-pulse" />
+                  <h3 className="text-[10px] font-black uppercase text-[#ff006e]/70 tracking-[0.3em]">LIVE_FREQ</h3>
+                </div>
+                <button
+                  onClick={() => setShowGlobalGoLive(true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] text-[8px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all rounded-sm"
+                >
+                  <span className="w-1 h-1 rounded-full bg-current animate-pulse" /> GO_LIVE
+                </button>
+              </div>
+
+              {/* HUD brackets decor */}
+              <div className="relative">
+                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#ff006e]/20 pointer-events-none" />
+                <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#ff006e]/20 pointer-events-none" />
+
+                {/* Sector dropdown */}
+                <div className="space-y-1.5 pt-2">
+                  <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest">TRANSMISSION_SECTOR // FILTER</div>
+                  <div className="relative">
+                    <select
+                      value={sidebarSector ?? ''}
+                      onChange={e => setSidebarSector(e.target.value === '' ? null : Number(e.target.value))}
+                      className="w-full bg-black/60 border border-[#ff006e]/20 hover:border-[#ff006e]/50 focus:border-[#ff006e]/60 p-2.5 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
+                    >
+                      <option value="">ALL_SECTORS</option>
+                      {SECTORS.map(s => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2">
+                      <ChevronDown size={10} className="text-[#ff006e]/40" />
+                    </div>
+                    {sidebarSector !== null && (
+                      <div
+                        className="absolute left-0 top-0 bottom-0 w-0.5 pointer-events-none transition-colors"
+                        style={{ backgroundColor: SECTORS[sidebarSector]?.color, boxShadow: `0 0 6px ${SECTORS[sidebarSector]?.color}` }}
+                      />
+                    )}
+                  </div>
+                  {sidebarSector !== null && (
+                    <div className="text-[7px] font-mono tracking-widest opacity-40" style={{ color: SECTORS[sidebarSector]?.color }}>
+                      {SECTORS[sidebarSector]?.desc}
+                    </div>
+                  )}
+                </div>
+
+                <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[#ff006e]/20 pointer-events-none" />
+                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#ff006e]/20 pointer-events-none" />
+              </div>
+
+              {/* Stations list */}
+              <div className="space-y-1.5">
+                <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest">ACTIVE_FREQUENCIES [{filteredStations.length}]</div>
+                {filteredStations.length === 0 ? (
+                  <div className="py-8 border border-dashed border-white/5 text-center">
+                    <Radio size={20} className="mx-auto mb-2 text-[#ff006e]/10" />
+                    <div className="text-[8px] font-mono uppercase tracking-widest text-white/10">NO_ACTIVE_FREQUENCIES_DETECTED</div>
+                  </div>
+                ) : (
+                  filteredStations.map((station, idx) => {
+                    const sectorColor = SECTORS[station.sectorId ?? station.SectorId]?.color || '#ff006e';
+                    return (
+                      <button
+                        key={station.id || station.Id || idx}
+                        onClick={() => setActiveStation(station)}
+                        className="w-full text-left border border-white/5 hover:border-white/20 bg-black/20 hover:bg-white/[0.03] p-3 transition-all group/st rounded-sm"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div
+                            className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse"
+                            style={{ backgroundColor: sectorColor, boxShadow: `0 0 8px ${sectorColor}` }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[10px] font-black uppercase text-white truncate group-hover/st:text-[#ff006e] transition-colors">{station.sessionTitle || station.SessionTitle}</div>
+                            <div className="text-[7px] font-mono text-white/30 uppercase tracking-widest truncate">{station.artistName || station.ArtistName}</div>
+                          </div>
+                          <div className="text-[7px] font-mono text-white/10 group-hover/st:text-[#ff006e]/40 transition-colors shrink-0">TUNE_IN ›</div>
+                        </div>
+                        {/* Sector label */}
+                        <div className="mt-1.5 ml-4">
+                          <span
+                            className="text-[7px] font-mono uppercase tracking-widest px-1 border rounded-sm"
+                            style={{ color: sectorColor, borderColor: `${sectorColor}30`, backgroundColor: `${sectorColor}10` }}
+                          >
+                            {SECTORS[station.sectorId ?? station.SectorId]?.name || 'FREQ'}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
       </div>
     </motion.div>
