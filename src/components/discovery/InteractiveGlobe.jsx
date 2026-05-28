@@ -252,6 +252,96 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
     );
 };
 
+
+const ConnectionLines = ({ artists, tracks, playlists, selectedId, activeView }) => {
+    const lines = useMemo(() => {
+        const result = [];
+        
+        artists.forEach(artist => {
+            const artistId = artist.id || artist.Id;
+            const artistPos = getSphericalPos(`artist-${artistId}`, 2.48).pos;
+            
+            // Artist → Tracks
+            if (activeView === 'TRACKS' || !activeView) {
+                tracks.forEach(track => {
+                    const trackUserId = track.artistUserId || track.ArtistUserId || 
+                                        track.userId || track.UserId;
+                    if (String(trackUserId) === String(artistId)) {
+                        const trackPos = getSphericalPos(`track-${track.id || track.Id}`, 2.48).pos;
+                        result.push({ 
+                            from: artistPos, 
+                            to: trackPos, 
+                            color: '#00ffaa', 
+                            dashed: false,
+                            ownerId: `artist-${artistId}`,
+                            targetId: `track-${track.id || track.Id}`
+                        });
+                    }
+                });
+            }
+
+            // Artist → Playlists
+            if (activeView === 'PLAYLISTS' || !activeView) {
+                playlists.forEach(playlist => {
+                    const plUserId = playlist.userId || playlist.UserId || 
+                                     playlist.ownerId || playlist.OwnerId ||
+                                     playlist.artistUserId || playlist.ArtistUserId;
+                    if (String(plUserId) === String(artistId)) {
+                        const plPos = getSphericalPos(`playlist-${playlist.id || playlist.Id}`, 2.48).pos;
+                        result.push({ 
+                            from: artistPos, 
+                            to: plPos, 
+                            color: '#ff006e', 
+                            dashed: true,
+                            ownerId: `artist-${artistId}`,
+                            targetId: `playlist-${playlist.id || playlist.Id}`
+                        });
+                    }
+                });
+            }
+        });
+
+        return result;
+    }, [artists, tracks, playlists, activeView]);
+
+    return (
+        <>
+            {lines.map((line, i) => {
+                const isConnectedToSelected = selectedId && 
+                    (line.ownerId === selectedId || line.targetId === selectedId);
+                const dimmed = selectedId && !isConnectedToSelected;
+                
+                const from = new THREE.Vector3(...line.from);
+                const to = new THREE.Vector3(...line.to);
+                
+                // Bezier control point: push outward from globe center
+                const mid = new THREE.Vector3()
+                    .addVectors(from, to)
+                    .multiplyScalar(0.5);
+                const outwardPush = mid.length() < 0.01 ? 1.4 : 2.8 / mid.length();
+                mid.multiplyScalar(outwardPush);
+
+                const curve = new THREE.QuadraticBezierCurve3(from, mid, to);
+                const points = curve.getPoints(40);
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+                return (
+                    <line key={i} geometry={geometry}>
+                        <lineBasicMaterial
+                            color={line.color}
+                            transparent
+                            opacity={dimmed ? 0.04 : isConnectedToSelected ? 0.85 : 0.18}
+                            linewidth={1}
+                            toneMapped={false}
+                        />
+                    </line>
+                );
+            })}
+        </>
+    );
+};
+
+
 const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists = [], playlists = [], tracks = [], selectedId, activeView, onArtistClick, onCommunityClick, onTrackClick, onPlaylistClick, isGlobeSpinning }) => {
     const { camera } = useThree();
     const [cameraDist, setCameraDist] = useState(10);
@@ -440,6 +530,13 @@ const GlobeCore = memo(({ activeSector, searchQuery, communities = [], artists =
                 cameraDist={cameraDist}
                 hideLabel={!!selectedId}
                 onClick={() => onCommunityClick?.({ id: 'fatale_core', name: 'FATALE_CORE', isSystem: true, description: 'The official Fatale system node. Share feedback, bug reports and reviews.' })}
+            
+                <ConnectionLines
+                artists={filteredArtists}
+                tracks={filteredTracks}
+                playlists={filteredPlaylists}
+                selectedId={selectedId}
+                activeView={activeView}
             />
         </group>
     );

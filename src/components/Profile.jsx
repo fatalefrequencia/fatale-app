@@ -2132,7 +2132,7 @@ export const ProfileView = React.memo(({
                         <div className="flex items-center gap-2 shrink-0">
                             {isMe && (
                                 <button
-                                onClick={(e) => { e.stopPropagation(); onPlayPlaylist(tracks, 0); }}
+                                onClick={(e) => { e.stopPropagation(); onPlayPlaylist(tracks, 0, false); }}
                                     className="p-1.5 border border-white/10 hover:border-[var(--subsystem-accent)] text-white/20 hover:text-[var(--subsystem-accent)] transition-all"
                                 >
                                     <Play size={10} fill="currentColor" />
@@ -2155,7 +2155,7 @@ export const ProfileView = React.memo(({
                                     <div
                                         key={t.id || idx}
                                         className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 cursor-pointer group/track transition-all border-b border-white/5 last:border-none"
-                                        onClick={() => onPlayPlaylist(tracks, idx)}
+                                        onClick={() => onPlayPlaylist(tracks, idx, false)}
                                     >
                                         <span className="text-[8px] mono text-white/20 w-5">{String(idx + 1).padStart(2, '0')}</span>
                                         <div className="w-7 h-7 bg-black border border-white/10 overflow-hidden shrink-0">
