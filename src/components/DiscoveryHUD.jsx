@@ -461,11 +461,30 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
         return trendingTracks
             .filter(isNativeTrack)
             .map(trk => {
-                const artist = trendingArtists.find(a => 
-                    (trk.artistUserId || trk.ArtistUserId) ? String(a.userId || a.UserId) === String(trk.artistUserId || trk.ArtistUserId) :
-                    (trk.artistId || trk.ArtistId) ? String(a.id || a.Id) === String(trk.artistId || trk.ArtistId) :
-                    (a.name || a.Name || '').toLowerCase() === (trk.artistName || trk.ArtistName || trk.artist || trk.Artist || '').toLowerCase()
-                );
+                const trkArtistId   = trk.artistId   || trk.ArtistId;
+                const trkArtistUID  = trk.artistUserId || trk.ArtistUserId;
+                const trkArtistName = (trk.artistName || trk.ArtistName || trk.artist || trk.Artist || '').toLowerCase();
+
+                // 1. Exact artistId match — most reliable
+                let artist = trkArtistId
+                    ? trendingArtists.find(a => String(a.id || a.Id) === String(trkArtistId))
+                    : null;
+
+                // 2. artistUserId + name tiebreak — handles multi-profile users (e.g. Yuki / Heavensent)
+                if (!artist && trkArtistUID) {
+                    const byUID = trendingArtists.filter(a => String(a.userId || a.UserId) === String(trkArtistUID));
+                    if (byUID.length === 1) {
+                        artist = byUID[0];
+                    } else if (byUID.length > 1 && trkArtistName) {
+                        artist = byUID.find(a => (a.name || a.Name || '').toLowerCase() === trkArtistName) || null;
+                    }
+                }
+
+                // 3. Name-only fallback
+                if (!artist && trkArtistName) {
+                    artist = trendingArtists.find(a => (a.name || a.Name || '').toLowerCase() === trkArtistName);
+                }
+
                 const sector = artist ? SECTORS.find(s => s.id === (artist.sectorId || artist.SectorId)) : null;
                 return { 
                     ...trk, 

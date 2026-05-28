@@ -152,15 +152,10 @@ const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeVi
             const artistNodeId = `artist-${artistId}`;
             const artistPos    = getSphericalPos(artistNodeId, 2.48).pos;
 
-        // TRACKS
+        // TRACKS — trust the enriched artistId stamped by tracksWithColor in DiscoveryHUD
         tracks.forEach(track => {
-            const ref = track.artistUserId || track.ArtistUserId ||
-                        track.artistId     || track.ArtistId;
-            if (!ref) return;
-
-            // Match strictly on artistId only — never userId (one user can own multiple artist profiles)
-            const matches = String(ref) === String(artistId);
-            if (!matches) return;
+            const enrichedArtistId = track.artistId || track.ArtistId;
+            if (!enrichedArtistId || String(enrichedArtistId) !== String(artistId)) return;
 
             const trackPos = getSphericalPos(`track-${track.id || track.Id}`, 2.48).pos;
             const seed     = hashStr(artistId + (track.id || track.Id));
@@ -174,14 +169,23 @@ const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeVi
             });
         });
 
-        // PLAYLISTS
+        // PLAYLISTS — raw data, use name-aware matching to handle multi-profile users
+        const artistName = (artist.name || artist.Name || '').toLowerCase();
+        const artistUserId = String(artist.userId || artist.UserId || '');
         playlists.forEach(playlist => {
-            const ref = playlist.artistUserId || playlist.ArtistUserId ||
-                        playlist.ownerId      || playlist.OwnerId;
-            if (!ref) return;
+            const plArtistId  = playlist.artistId  || playlist.ArtistId;
+            const plOwnerUID  = String(playlist.artistUserId || playlist.ArtistUserId ||
+                                playlist.ownerId || playlist.OwnerId || '');
+            const plOwnerName = (playlist.artistName || playlist.ArtistName ||
+                                 playlist.ownerName  || playlist.OwnerName || '').toLowerCase();
 
-            // Match strictly on artistId only — never userId (one user can own multiple artist profiles)
-            const matches = String(ref) === String(artistId);
+            let matches = false;
+            if (plArtistId) {
+                matches = String(plArtistId) === String(artistId);
+            } else if (plOwnerUID && artistUserId && plOwnerUID === artistUserId) {
+                // Same user owns multiple artist profiles — require name match to disambiguate
+                matches = !plOwnerName || plOwnerName === artistName;
+            }
             if (!matches) return;
 
             const plPos = getSphericalPos(`playlist-${playlist.id || playlist.Id}`, 2.48).pos;
