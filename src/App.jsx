@@ -4324,16 +4324,34 @@ const FeedContent = React.memo(({
               </button>
             ))}
           </div>
-          {/* RADIO button — always visible, shows live count when active */}
+         {/* Mobile Actions */}
+<div className="flex lg:hidden items-center gap-1.5">
+  {(liveStations || []).length > 0 && (
+    <button
+      onClick={() => { setMobilePanelTab('stations'); setMobilePanelOpen(true); }}
+      className="flex items-center gap-1 px-2 py-1 border bg-[#ff006e]/10 border-[#ff006e]/40 text-[#ff006e] text-[8px] font-black uppercase tracking-widest transition-all"
+    >
+      <span className="w-1 h-1 rounded-full bg-[#ff006e] animate-pulse shrink-0" />
+      {liveStations.length} LIVE
+    </button>
+  )}
+  <button
+    onClick={() => { setMobilePanelTab('actions'); setMobilePanelOpen(true); }}
+    className="w-7 h-7 flex items-center justify-center border border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/40 transition-all rounded-sm"
+    title="Quick Actions"
+  >
+    <Plus size={16} />
+  </button>
+</div>
 
-          <div className="bg-black/60 backdrop-blur-sm p-1 rounded-sm border border-[#ff006e]/10 shrink-0">
-            <RefreshCw
-              size={16}
-              className={`text-[#ff006e]/60 hover:text-[#ff006e] cursor-pointer transition-colors ${loading ? 'animate-spin' : ''}`}
-              onClick={fetchFeed}
-            />
-          </div>
-        </div>
+<div className="bg-black/60 backdrop-blur-sm p-1 rounded-sm border border-[#ff006e]/10 shrink-0">
+  <RefreshCw
+    size={16}
+    className={`text-[#ff006e]/60 hover:text-[#ff006e] cursor-pointer transition-colors ${loading ? 'animate-spin' : ''}`}
+    onClick={fetchFeed}
+  />
+</div>
+</div>
 
         <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-1 flex flex-col justify-start pb-32">
           {/* ── MOBILE LIVE STATIONS STRIP (horizontal scroll, only when live) ── */}
