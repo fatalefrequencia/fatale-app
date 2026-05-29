@@ -4322,18 +4322,28 @@ const FeedContent = React.memo(({
             ))}
           </div>
           {/* Mobile Actions */}
-          <div className="flex lg:hidden items-center gap-2">
-            <button 
-              onClick={() => setShowGlobalIngest(true)} 
-              className="px-2 py-1 bg-[#ff006e]/10 text-[#ff006e] border border-[#ff006e]/20 text-[8px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all"
+          <div className="flex lg:hidden items-center gap-1.5">
+            {/* RADIO button — always visible, shows live count when active */}
+            <button
+              onClick={() => { setMobilePanelTab('stations'); setMobilePanelOpen(true); }}
+              className={`flex items-center gap-1 px-2 py-1 border text-[8px] font-black uppercase tracking-widest transition-all ${
+                (liveStations || []).length > 0
+                  ? 'bg-[#ff006e]/10 border-[#ff006e]/40 text-[#ff006e]'
+                  : 'bg-transparent border-white/10 text-white/30'
+              }`}
             >
-              + POST
+              {(liveStations || []).length > 0
+                ? <span className="w-1 h-1 rounded-full bg-[#ff006e] animate-pulse shrink-0" />
+                : <Radio size={10} />
+              }
+              {(liveStations || []).length > 0 ? `${liveStations.length} LIVE` : 'RADIO'}
             </button>
-            <button 
-              onClick={() => setShowGlobalUpload(true)} 
-              className="px-2 py-1 bg-[#ff006e]/10 text-[#ff006e] border border-[#ff006e]/20 text-[8px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all"
+            <button
+              onClick={() => { setMobilePanelTab('filters'); setMobilePanelOpen(true); }}
+              className="p-1.5 border border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/40 transition-all"
+              title="Filters & Actions"
             >
-              + TRACK
+              <Zap size={14} />
             </button>
           </div>
 
@@ -4347,6 +4357,40 @@ const FeedContent = React.memo(({
         </div>
 
         <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-1 flex flex-col justify-start pb-32">
+          {/* ── MOBILE LIVE STATIONS STRIP (horizontal scroll, only when live) ── */}
+          {(liveStations || []).length > 0 && (
+            <div className="lg:hidden -mx-6 px-4 mb-4">
+              <div className="flex items-center gap-1.5 mb-2">
+                <span className="w-1 h-1 rounded-full bg-[#ff006e] animate-pulse" />
+                <span className="text-[8px] font-black text-[#ff006e]/60 uppercase tracking-widest">LIVE_FREQ</span>
+              </div>
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                {(liveStations || []).map((station, idx) => {
+                  const sc = SECTORS[station.sectorId ?? station.SectorId]?.color || '#ff006e';
+                  const isActive = activeStation && String(activeStation.id || activeStation.Id) === String(station.id || station.Id);
+                  return (
+                    <button
+                      key={station.id || idx}
+                      onClick={() => setActiveStation(station)}
+                      className={`flex items-center gap-2 px-3 py-2 border rounded-sm shrink-0 transition-all ${
+                        isActive
+                          ? 'border-[#ff006e]/60 bg-[#ff006e]/10'
+                          : 'border-white/10 bg-black/40 hover:border-white/30'
+                      }`}
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse" style={{ backgroundColor: sc, boxShadow: `0 0 5px ${sc}` }} />
+                      <div className="text-left min-w-0">
+                        <div className="text-[9px] font-black uppercase text-white truncate max-w-[110px]">{station.sessionTitle || station.SessionTitle}</div>
+                        <div className="text-[7px] font-mono text-white/30 uppercase truncate max-w-[110px]">{station.artistName || station.ArtistName}</div>
+                      </div>
+                      {isActive && <Radio size={9} className="text-[#ff006e] animate-pulse shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {selectedSector !== null && (
             <div className="mb-6 p-4 bg-[#ff006e]/5 border border-[#ff006e]/20 rounded flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -4970,17 +5014,23 @@ const FeedContent = React.memo(({
           >
             {/* Drag handle + header */}
             <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-[#ff006e]/10 shrink-0">
-              <div className="flex gap-3">
-                {[['filters', <Zap size={10} key="z" />, 'FILTERS']].map(([tab, icon, label]) => (
+              <div className="flex gap-2">
+                {[
+                  ['filters', <Zap size={10} key="z" />, 'ACTIONS'],
+                  ['stations', <Radio size={10} key="r" />, `LIVE${(liveStations||[]).length > 0 ? ` (${liveStations.length})` : ''}`],
+                ].map(([tab, icon, label]) => (
                   <button
                     key={tab}
                     onClick={() => setMobilePanelTab(tab)}
                     className={`flex items-center gap-1 px-2 py-1 text-[9px] font-black uppercase tracking-widest border rounded-sm transition-all ${mobilePanelTab === tab
                       ? 'border-[#ff006e]/50 bg-[#ff006e]/10 text-[#ff006e]'
                       : 'border-white/5 text-white/30 hover:text-white/60'
-                      }`}
+                      } ${tab === 'stations' && (liveStations||[]).length > 0 ? 'border-[#ff006e]/20' : ''}`}
                   >
-                    {icon}{label}
+                    {tab === 'stations' && (liveStations||[]).length > 0
+                      ? <span className="w-1 h-1 rounded-full bg-[#ff006e] animate-pulse shrink-0" />
+                      : icon}
+                    {label}
                   </button>
                 ))}
               </div>
