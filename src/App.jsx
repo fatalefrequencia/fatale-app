@@ -3803,6 +3803,9 @@ const FeedContent = React.memo(({
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [mobilePanelTab, setMobilePanelTab] = useState('filters'); // 'filters' | 'favorites' | 'stations'
   const [feedFilter, setFeedFilter] = useState('ALL');
+  const [expandedAlbums, setExpandedAlbums] = useState({});
+  const [sidebarSector, setSidebarSector] = useState(null);
+  const [listenerChatInput, setListenerChatInput] = useState('');
 
   useEffect(() => {
     API.Communities.getAll().then(res => setAllCommunities(res.data || [])).catch(() => { });
