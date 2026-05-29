@@ -4324,31 +4324,7 @@ const FeedContent = React.memo(({
               </button>
             ))}
           </div>
-          {/* Mobile Actions */}
-          <div className="flex lg:hidden items-center gap-1.5">
-            {/* RADIO button — always visible, shows live count when active */}
-            <button
-              onClick={() => { setMobilePanelTab('stations'); setMobilePanelOpen(true); }}
-              className={`flex items-center gap-1 px-2 py-1 border text-[8px] font-black uppercase tracking-widest transition-all ${
-                (liveStations || []).length > 0
-                  ? 'bg-[#ff006e]/10 border-[#ff006e]/40 text-[#ff006e]'
-                  : 'bg-transparent border-white/10 text-white/30'
-              }`}
-            >
-              {(liveStations || []).length > 0
-                ? <span className="w-1 h-1 rounded-full bg-[#ff006e] animate-pulse shrink-0" />
-                : <Radio size={10} />
-              }
-              {(liveStations || []).length > 0 ? `${liveStations.length} LIVE` : 'RADIO'}
-            </button>
-            <button
-              onClick={() => { setMobilePanelTab('filters'); setMobilePanelOpen(true); }}
-              className="p-1.5 border border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/40 transition-all"
-              title="Filters & Actions"
-            >
-              <Zap size={14} />
-            </button>
-          </div>
+          {/* RADIO button — always visible, shows live count when active */}
 
           <div className="bg-black/60 backdrop-blur-sm p-1 rounded-sm border border-[#ff006e]/10 shrink-0">
             <RefreshCw
@@ -5019,7 +4995,7 @@ const FeedContent = React.memo(({
             <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-[#ff006e]/10 shrink-0">
               <div className="flex gap-2">
                 {[
-                  ['filters', <Zap size={10} key="z" />, 'ACTIONS'],
+                  ['actions', <Plus size={10} key="p" />, 'NEW'],
                   ['stations', <Radio size={10} key="r" />, `LIVE${(liveStations||[]).length > 0 ? ` (${liveStations.length})` : ''}`],
                 ].map(([tab, icon, label]) => (
                   <button
@@ -5048,21 +5024,31 @@ const FeedContent = React.memo(({
             {/* Scrollable panel content */}
             <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4">
 
-              {/* ── TAB: FILTERS ── */}
-              {mobilePanelTab === 'filters' && (
-                <div className="space-y-5">
-                  {/* Quick actions */}
-                  <div className="bg-black border border-[#ff006e]/20 rounded-lg overflow-hidden">
-                    <div className="p-2.5 bg-[#ff006e]/5 border-b border-[#ff006e]/10 text-[9px] font-black uppercase text-white tracking-widest">:: TERMINAL_CMDS ::</div>
-                    <div className="p-3 space-y-1">
-                      <button onClick={() => { setShowGlobalIngest(true); setMobilePanelOpen(false); }} className="w-full text-left p-2 text-[9px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/10 transition-all uppercase tracking-widest">{`> NEW_POST`}</button>
-                      <button onClick={() => { setShowGlobalUpload(true); setMobilePanelOpen(false); }} className="w-full text-left p-2 text-[9px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/10 transition-all uppercase tracking-widest">{`> UPLOAD_TRACK`}</button>
-                      <button onClick={() => { setShowGlobalGoLive(true); setMobilePanelOpen(false); }} className="w-full text-left p-2 text-[9px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/10 transition-all uppercase tracking-widest flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_6px_#ff006e] shrink-0" />
-                        {`> GO_LIVE`}
-                      </button>
-                    </div>
-                  </div>
+              {/* ── TAB: ACTIONS ── */}
+{mobilePanelTab === 'actions' && (
+  <div className="space-y-3 pt-1">
+    <button
+      onClick={() => { setShowGlobalIngest(true); setMobilePanelOpen(false); }}
+      className="w-full flex items-center gap-3 px-4 py-4 border border-white/10 bg-black/20 hover:border-[#ff006e]/40 hover:bg-[#ff006e]/5 text-white/60 hover:text-white transition-all rounded-sm"
+    >
+      <PenTool size={16} className="text-[#ff006e]/60 shrink-0" />
+      <div className="text-left">
+        <div className="text-[10px] font-black uppercase tracking-widest">New Post</div>
+        <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest mt-0.5">Journal · Photo · Video</div>
+      </div>
+    </button>
+    <button
+      onClick={() => { setShowGlobalUpload(true); setMobilePanelOpen(false); }}
+      className="w-full flex items-center gap-3 px-4 py-4 border border-white/10 bg-black/20 hover:border-[#ff006e]/40 hover:bg-[#ff006e]/5 text-white/60 hover:text-white transition-all rounded-sm"
+    >
+      <Music size={16} className="text-[#ff006e]/60 shrink-0" />
+      <div className="text-left">
+        <div className="text-[10px] font-black uppercase tracking-widest">Upload Track</div>
+        <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest mt-0.5">MP3 · WAV · FLAC</div>
+      </div>
+    </button>
+  </div>
+)}
 
                   {/* Sector filter + Live stations */}
                   <div className="space-y-3">
@@ -5180,52 +5166,76 @@ const FeedContent = React.memo(({
 
               {/* ── TAB: LIVE STATIONS ── */}
               {mobilePanelTab === 'stations' && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-[9px] font-black uppercase text-[#ff006e] tracking-widest flex items-center gap-1.5">
-                      <Radio size={10} className="animate-pulse" /> LIVE_STATIONS
-                    </h3>
-                    <button
-                      onClick={() => { setShowGlobalGoLive(true); setMobilePanelOpen(false); }}
-                      className="flex items-center gap-1 px-2 py-1 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] text-[8px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all rounded-sm"
-                    >
-                      <span className="w-1 h-1 rounded-full bg-current animate-pulse" /> GO_LIVE
-                    </button>
-                  </div>
-                  <div className="space-y-1.5">
-                    {(liveStations || []).length === 0 ? (
-                      <div className="py-8 border border-dashed border-white/5 text-center">
-                        <Radio size={20} className="mx-auto mb-2 text-[#ff006e]/10" />
-                        <div className="text-[8px] font-mono uppercase tracking-widest text-white/10">NO_ACTIVE_FREQUENCIES_DETECTED</div>
-                      </div>
-                    ) : (
-                      (liveStations || []).map((station, idx) => {
-                        const sc = SECTORS[station.sectorId ?? station.SectorId]?.color || '#ff006e';
-                        const isActive = activeStation && String(activeStation.id || activeStation.Id) === String(station.id || station.Id);
-                        return (
-                          <button
-                            key={station.id || idx}
-                            onClick={() => { setActiveStation(station); setMobilePanelOpen(false); }}
-                            className={`w-full flex items-center gap-2.5 px-3 py-2.5 border text-left transition-all rounded-sm ${isActive ? 'border-[#ff006e]/60 bg-[#ff006e]/10' : 'border-white/5 bg-black/20 hover:border-white/20'}`}
-                          >
-                            <div className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse" style={{ backgroundColor: sc, boxShadow: `0 0 6px ${sc}` }} />
-                            <div className="flex-1 min-w-0">
-                              <div className="text-[9px] font-black uppercase text-white truncate">{station.sessionTitle || station.SessionTitle}</div>
-                              <div className="text-[7px] font-mono text-white/30 uppercase truncate">{station.artistName || station.ArtistName}</div>
-                            </div>
-                            <div className="flex flex-col items-end gap-0.5 shrink-0">
-                              {isActive && <Radio size={10} className="text-[#ff006e] animate-pulse" />}
-                              <span className="text-[6px] font-mono uppercase tracking-widest px-1 border rounded-sm" style={{ color: sc, borderColor: `${sc}30`, backgroundColor: `${sc}10` }}>
-                                {SECTORS[station.sectorId ?? station.SectorId]?.name || 'FREQ'}
-                              </span>
-                            </div>
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-              )}
+  <div className="space-y-4">
+    <div className="flex items-center justify-between">
+      <h3 className="text-[9px] font-black uppercase text-[#ff006e] tracking-widest flex items-center gap-1.5">
+        <Radio size={10} className="animate-pulse" /> LIVE_STATIONS
+      </h3>
+      <button
+        onClick={() => { setShowGlobalGoLive(true); setMobilePanelOpen(false); }}
+        className="flex items-center gap-1 px-2 py-1 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] text-[8px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all rounded-sm"
+      >
+        <span className="w-1 h-1 rounded-full bg-current animate-pulse" /> GO_LIVE
+      </button>
+    </div>
+
+    <div className="space-y-1">
+      <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest">TRANSMISSION_SECTOR // FILTER</div>
+      <div className="relative">
+        <select
+          value={selectedSector ?? ''}
+          onChange={e => setSelectedSector(e.target.value === '' ? null : Number(e.target.value))}
+          className="w-full bg-black/60 border border-[#ff006e]/20 hover:border-[#ff006e]/40 p-2.5 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
+        >
+          <option value="">ALL_SECTORS</option>
+          {SECTORS.map(s => (
+            <option key={s.id} value={s.id}>{s.name}</option>
+          ))}
+        </select>
+        <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2">
+          <ChevronDown size={10} className="text-[#ff006e]/40" />
+        </div>
+      </div>
+    </div>
+
+    <div className="space-y-1.5">
+      {(() => {
+        const filtered = (liveStations || []).filter(s =>
+          selectedSector === null || s.sectorId === selectedSector || s.SectorId === selectedSector
+        );
+        if (filtered.length === 0) return (
+          <div className="py-8 border border-dashed border-white/5 text-center">
+            <Radio size={20} className="mx-auto mb-2 text-[#ff006e]/10" />
+            <div className="text-[8px] font-mono uppercase tracking-widest text-white/10">NO_ACTIVE_FREQUENCIES_DETECTED</div>
+          </div>
+        );
+        return filtered.map((station, idx) => {
+          const sc = SECTORS[station.sectorId ?? station.SectorId]?.color || '#ff006e';
+          const isActive = activeStation && String(activeStation.id || activeStation.Id) === String(station.id || station.Id);
+          return (
+            <button
+              key={station.id || idx}
+              onClick={() => { setActiveStation(station); setMobilePanelOpen(false); }}
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 border text-left transition-all rounded-sm ${isActive ? 'border-[#ff006e]/60 bg-[#ff006e]/10' : 'border-white/5 bg-black/20 hover:border-white/20'}`}
+            >
+              <div className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse" style={{ backgroundColor: sc, boxShadow: `0 0 6px ${sc}` }} />
+              <div className="flex-1 min-w-0">
+                <div className="text-[9px] font-black uppercase text-white truncate">{station.sessionTitle || station.SessionTitle}</div>
+                <div className="text-[7px] font-mono text-white/30 uppercase truncate">{station.artistName || station.ArtistName}</div>
+              </div>
+              <div className="flex flex-col items-end gap-0.5 shrink-0">
+                {isActive && <Radio size={10} className="text-[#ff006e] animate-pulse" />}
+                <span className="text-[6px] font-mono uppercase tracking-widest px-1 border rounded-sm" style={{ color: sc, borderColor: `${sc}30`, backgroundColor: `${sc}10` }}>
+                  {SECTORS[station.sectorId ?? station.SectorId]?.name || 'FREQ'}
+                </span>
+              </div>
+            </button>
+          );
+        });
+      })()}
+    </div>
+  </div>
+)}
 
             </div>
           </motion.div>
