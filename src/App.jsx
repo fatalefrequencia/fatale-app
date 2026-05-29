@@ -834,6 +834,9 @@ function App() {
       const station = e.detail;
       setActiveStation(station);
       joinStation(station.id || station.Id);
+      setIsPlaying(false);
+      setTracks([]);
+      setCurrentTrackIndex(-1);
     };
     window.addEventListener('tuneIn', handleTuneIn);
     return () => window.removeEventListener('tuneIn', handleTuneIn);
@@ -946,6 +949,7 @@ function App() {
           if (prev && (prev.id === data.stationId || prev.Id === data.stationId)) {
             showNotification("BROADCAST_ENDED", t('SIGNAL_LOST'), "info");
             leaveStation(data.stationId);
+            setIsPlaying(false);
             return null;
           }
           return prev;
@@ -1518,6 +1522,7 @@ function App() {
   };
 
   const playNext = async () => {
+    if (activeStation) return;
     if (tracks.length === 0) return;
 
     const nextIndex = currentTrackIndex + 1;
@@ -3302,6 +3307,9 @@ const Dashboard = React.memo(({
                   onPlayStation={(station) => {
                     setActiveStation(station);
                     joinStation(station.id || station.Id);
+                    setIsPlaying(false);
+                    setTracks([]);
+                    setCurrentTrackIndex(-1);
                     showNotification("RADIO_LINK_ESTABLISHED", `SIGNAL_LOCKED: ${station.name}`, "success");
                   }}
                   isPlayerActive={currentTrackIndex >= 0 && !isMiniPlayerMinimized}
@@ -5040,7 +5048,7 @@ const FeedContent = React.memo(({
             </div>
 
             {/* Scrollable panel content */}
-            <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4">
+            
 
              {/* ── TAB: ACTIONS ── */}
 {mobilePanelTab === 'actions' && (
@@ -5069,7 +5077,7 @@ const FeedContent = React.memo(({
       <h3 className="text-[9px] font-black uppercase text-[#ff006e] tracking-widest flex items-center gap-1.5">
         <Radio size={10} className="animate-pulse" /> LIVE_STATIONS
       </h3>
-      <button
+      <button<div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4">
         onClick={() => { setShowGlobalGoLive(true); setMobilePanelOpen(false); }}
         className="flex items-center gap-1 px-2 py-1 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] text-[8px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all rounded-sm"
       >
