@@ -5332,24 +5332,21 @@ const FeedContent = React.memo(({
                   <div className="h-full flex items-center justify-center opacity-20 italic">LINK_IDLE...</div>
                 )}
               </div>
-              {typeof onSendMessage === 'function' && (() => {
-                const [listenerInput, setListenerInput] = React.useState('');
-                return (
-                  <div className="flex gap-2">
-                    <input
-                      value={listenerInput}
-                      onChange={e => setListenerInput(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter' && listenerInput.trim()) { onSendMessage(listenerInput); setListenerInput(''); } }}
-                      placeholder="Send signal..."
-                      className="flex-1 bg-black/60 border border-[#ff006e]/20 focus:border-[#ff006e]/50 px-2 py-1.5 text-[9px] font-mono text-white outline-none placeholder:text-white/10 transition-all"
-                    />
-                    <button
-                      onClick={() => { if (listenerInput.trim()) { onSendMessage(listenerInput); setListenerInput(''); } }}
-                      className="px-2 py-1.5 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] text-[8px] font-black uppercase hover:bg-[#ff006e] hover:text-black transition-all"
-                    >TX</button>
-                  </div>
-                );
-              })()}
+              {typeof onSendMessage === 'function' && (
+                <div className="flex gap-2">
+                  <input
+                    value={listenerChatInput}
+                    onChange={e => setListenerChatInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && listenerChatInput.trim()) { onSendMessage(listenerChatInput); setListenerChatInput(''); } }}
+                    placeholder="Send signal..."
+                    className="flex-1 bg-black/60 border border-[#ff006e]/20 focus:border-[#ff006e]/50 px-2 py-1.5 text-[9px] font-mono text-white outline-none placeholder:text-white/10 transition-all"
+                  />
+                  <button
+                    onClick={() => { if (listenerChatInput.trim()) { onSendMessage(listenerChatInput); setListenerChatInput(''); } }}
+                    className="px-2 py-1.5 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] text-[8px] font-black uppercase hover:bg-[#ff006e] hover:text-black transition-all"
+                  >TX</button>
+                </div>
+              )}
             </div>
             <button
               onClick={() => setActiveStation(null)}
@@ -5362,7 +5359,6 @@ const FeedContent = React.memo(({
 
         {/* ── TUNING INTERFACE (not connected to any station) ── */}
         {!activeStation && (() => {
-          const [sidebarSector, setSidebarSector] = React.useState(null);
           const filteredStations = (liveStations || []).filter(s =>
             sidebarSector === null || s.sectorId === sidebarSector || s.SectorId === sidebarSector
           );
