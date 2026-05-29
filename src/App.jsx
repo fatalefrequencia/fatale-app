@@ -4325,7 +4325,14 @@ const FeedContent = React.memo(({
             ))}
           </div>
          {/* Mobile Actions */}
-<div className="flex lg:hidden items-center gap-1.5">
+<div className="flex lg:hidden items-center gap-1 ml-auto">
+  <button
+    onClick={() => { setMobilePanelTab('actions'); setMobilePanelOpen(true); }}
+    className="w-7 h-7 flex items-center justify-center border border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/40 transition-all rounded-sm"
+    title="Quick Actions"
+  >
+    <Plus size={16} />
+  </button>
   {(liveStations || []).length > 0 && (
     <button
       onClick={() => { setMobilePanelTab('stations'); setMobilePanelOpen(true); }}
@@ -4335,13 +4342,6 @@ const FeedContent = React.memo(({
       {liveStations.length} LIVE
     </button>
   )}
-  <button
-    onClick={() => { setMobilePanelTab('actions'); setMobilePanelOpen(true); }}
-    className="w-7 h-7 flex items-center justify-center border border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/40 transition-all rounded-sm"
-    title="Quick Actions"
-  >
-    <Plus size={16} />
-  </button>
 </div>
 
 <div className="bg-black/60 backdrop-blur-sm p-1 rounded-sm border border-[#ff006e]/10 shrink-0">
@@ -5046,25 +5046,19 @@ const FeedContent = React.memo(({
 {mobilePanelTab === 'actions' && (
   <div className="space-y-3 pt-1">
     <button
-      onClick={() => { setShowGlobalIngest(true); setMobilePanelOpen(false); }}
-      className="w-full flex items-center gap-3 px-4 py-4 border border-white/10 bg-black/20 hover:border-[#ff006e]/40 hover:bg-[#ff006e]/5 text-white/60 hover:text-white transition-all rounded-sm"
-    >
-      <PenTool size={16} className="text-[#ff006e]/60 shrink-0" />
-      <div className="text-left">
-        <div className="text-[10px] font-black uppercase tracking-widest">New Post</div>
-        <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest mt-0.5">Journal · Photo · Video</div>
-      </div>
-    </button>
-    <button
-      onClick={() => { setShowGlobalUpload(true); setMobilePanelOpen(false); }}
-      className="w-full flex items-center gap-3 px-4 py-4 border border-white/10 bg-black/20 hover:border-[#ff006e]/40 hover:bg-[#ff006e]/5 text-white/60 hover:text-white transition-all rounded-sm"
-    >
-      <Music size={16} className="text-[#ff006e]/60 shrink-0" />
-      <div className="text-left">
-        <div className="text-[10px] font-black uppercase tracking-widest">Upload Track</div>
-        <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest mt-0.5">MP3 · WAV · FLAC</div>
-      </div>
-    </button>
+  onClick={() => { setShowGlobalIngest(true); setMobilePanelOpen(false); }}
+  className="w-full px-4 py-4 border border-white/10 bg-black/20 hover:border-[#ff006e]/40 hover:bg-[#ff006e]/5 text-white/60 hover:text-white transition-all rounded-sm text-left"
+>
+  <div className="text-[10px] font-black uppercase tracking-widest">New Post</div>
+  <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest mt-0.5">Journal · Photo · Video</div>
+</button>
+<button
+  onClick={() => { setShowGlobalUpload(true); setMobilePanelOpen(false); }}
+  className="w-full px-4 py-4 border border-white/10 bg-black/20 hover:border-[#ff006e]/40 hover:bg-[#ff006e]/5 text-white/60 hover:text-white transition-all rounded-sm text-left"
+>
+  <div className="text-[10px] font-black uppercase tracking-widest">Upload Track</div>
+  <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest mt-0.5">MP3 · WAV · FLAC</div>
+</button>
   </div>
 )}
 
@@ -5097,7 +5091,7 @@ const FeedContent = React.memo(({
                     </div>
 
                     {/* Live stations list */}
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 overflow-y-auto max-h-[40vh] no-scrollbar">
                       {(() => {
                         const filtered = (liveStations || []).filter(s => selectedSector === null || s.sectorId === selectedSector || s.SectorId === selectedSector);
                         if (filtered.length === 0) return (
