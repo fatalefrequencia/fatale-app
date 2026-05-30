@@ -976,6 +976,10 @@ function App() {
   // Unified Play Track handler with full deep reconciliation (artist & artistName)
   const handlePlayTrack = React.useCallback((track) => {
     if (!track) return;
+
+    setActiveStation(null);
+  activeStationRef.current = null; 
+
     const tId = track.id || track.Id;
     const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
 
@@ -1295,6 +1299,14 @@ function App() {
   // Efecto para manejar el audio
   useEffect(() => {
     if (!audioRef.current || currentTrackIndex < 0) return;
+    if (activeStationRef.current) {
+      if (isPlaying && audioRef.current.paused) {
+        audioRef.current.play().catch(() => {});
+      } else if (!isPlaying && !audioRef.current.paused) {
+        audioRef.current.pause();
+      }
+      return; // 👈 hard stop — never touch source or mode for station playback
+    }
     if (activeStationRef.current) {
       if (audioRef.current.paused && isPlaying) {
         audioRef.current.play().catch(() => {});
