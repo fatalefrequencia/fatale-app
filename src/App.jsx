@@ -922,6 +922,17 @@ function App() {
         setCurrentTrackIndex(0);
         setIsPlaying(hostIsPlaying);
 
+        if (audioRef.current) {
+          audioRef.current.onended = () => {
+            if (activeStationRef.current) {
+              const silentSrc = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+              audioRef.current.src = silentSrc;
+              audioRef.current.loop = true;
+              audioRef.current.play().catch(() => {});
+            }
+          };
+        }
+
         // Use timeout to allow React to render the new track element before playing
         setTimeout(() => {
           if (hostIsPlaying) {
