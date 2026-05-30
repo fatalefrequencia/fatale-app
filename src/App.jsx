@@ -946,23 +946,27 @@ function App() {
 
   // --- HOST BROADCASTING LOGIC ---
   useEffect(() => {
-  if (!isHost || !activeStation || !currentTrack?.title) return;
-
-  const stationId = activeStation.id || activeStation.Id;
-  syncTrack(stationId, currentTrack, currentTime, isPlaying);
-
-}, [currentTrack?.id, currentTrack?.source, isPlaying, isHost, activeStation?.id]);
-
-useEffect(() => {
-  if (!isHost || !activeStation || !currentTrack?.title) return;
-  const stationId = activeStation.id || activeStation.Id;
-
-  const timer = setTimeout(() => {
-    syncTrack(stationId, currentTrack, currentTime, isPlaying);
-  }, 300);
-
-  return () => clearTimeout(timer);
-}, [currentTime, isHost]);
+    if (!isHost || !activeStation || !currentTrack?.title) return;
+    const stationId = activeStation.id || activeStation.Id;
+  
+    // Guard: ensure signalR is ready before syncing
+    const timer = setTimeout(() => {
+      syncTrack(stationId, currentTrack, currentTime, isPlaying);
+    }, 0);
+  
+    return () => clearTimeout(timer);
+  }, [currentTrack?.id, currentTrack?.source, isPlaying, isHost, activeStation?.id]);
+  
+  useEffect(() => {
+    if (!isHost || !activeStation || !currentTrack?.title) return;
+    const stationId = activeStation.id || activeStation.Id;
+  
+    const timer = setTimeout(() => {
+      syncTrack(stationId, currentTrack, currentTime, isPlaying);
+    }, 300);
+  
+    return () => clearTimeout(timer);
+  }, [currentTime, isHost]);
 
   const fetchPlaylists = async (uid) => {
     try {
