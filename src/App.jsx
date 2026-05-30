@@ -720,11 +720,20 @@ function App() {
   ? String(activeStation.artistUserId || activeStation.ArtistUserId) === String(currentUserId)
   : false;
 
-useBroadcastSync({
-  activeStation, audioRef, youtubePlayer, isHost,
-  setIsPlaying, setCurrentTime, setDuration,
-  setBroadcastTrack, setIsYoutubeMode, showNotification,
-});
+  useBroadcastSync({
+    activeStation,
+    audioRef,
+    youtubePlayer,
+    isHost,
+    setIsPlaying,
+    setCurrentTime,
+    setDuration,
+    setBroadcastTrack,
+    setIsYoutubeMode,
+    showNotification,
+    joinStation,
+    onBroadcastSync,
+  });
   // Sync Audio Volume & Mute
   useEffect(() => {
     if (audioRef.current) {
