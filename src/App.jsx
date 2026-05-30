@@ -465,6 +465,7 @@ function App() {
   const lastLoadedYtId = useRef(null);
   const hasStartedPlayingYt = useRef(false);
   const lastPlayRequestTime = useRef(0);
+  const activeStationRef = useRef(null);
 
   const currentYtId = useMemo(() => {
     return getGlobalYoutubeId(currentTrack);
@@ -702,6 +703,9 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    activeStationRef.current = activeStation;
+  }, [activeStation]);
   // Sync Audio Volume & Mute
   useEffect(() => {
     if (audioRef.current) {
@@ -832,6 +836,7 @@ function App() {
   useEffect(() => {
     const handleTuneIn = (e) => {
       const station = e.detail;
+      activeStationRef.current = station;
       setActiveStation(station);
       joinStation(station.id || station.Id);
       setIsPlaying(false);
@@ -947,6 +952,7 @@ function App() {
       conn.on("StationEnded", (data) => {
         setActiveStation(prev => {
           if (prev && (prev.id === data.stationId || prev.Id === data.stationId)) {
+            activeStationRef.current = null;
             showNotification("BROADCAST_ENDED", t('SIGNAL_LOST'), "info");
             leaveStation(data.stationId);
             setIsPlaying(false);
@@ -1376,6 +1382,7 @@ function App() {
 
   // Auto-play/initialize index to 0 if playback is enabled but no track is selected
   useEffect(() => {
+    if (activeStationRef.current) return;  
     if (isPlaying && currentTrackIndex < 0 && tracks.length > 0) {
       setCurrentTrackIndex(0);
     }
@@ -1384,6 +1391,7 @@ function App() {
   // Efecto para manejar el audio
   useEffect(() => {
     if (!audioRef.current || currentTrackIndex < 0) return;
+    if (activeStationRef.current) return;
 
     const audio = audioRef.current;
     const track = tracks[currentTrackIndex];
@@ -1522,7 +1530,7 @@ function App() {
   };
 
   const playNext = async () => {
-    if (activeStation) return;
+    if (activeStationRef.current) return;
     if (tracks.length === 0) return;
 
     const nextIndex = currentTrackIndex + 1;
@@ -3305,6 +3313,7 @@ const Dashboard = React.memo(({
                   onExpandContent={onExpandContent}
                   setUser={setUser}
                   onPlayStation={(station) => {
+                    activeStationRef.current = station;
                     setActiveStation(station);
                     joinStation(station.id || station.Id);
                     setIsPlaying(false);
