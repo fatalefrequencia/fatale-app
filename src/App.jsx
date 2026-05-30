@@ -426,6 +426,10 @@ function App() {
     return '';
   };
 
+  const isHost = activeStation
+  ? String(activeStation.artistUserId || activeStation.ArtistUserId) === String(currentUserId)
+  : false;
+  
   const currentTrack = React.useMemo(() => {
     // ── Broadcast mode: listener follows station, not local queue ──
     if (activeStation && broadcastTrack && !isHost) {
@@ -716,9 +720,7 @@ function App() {
     activeStationRef.current = activeStation;
   }, [activeStation]);
 
-  const isHost = activeStation
-  ? String(activeStation.artistUserId || activeStation.ArtistUserId) === String(currentUserId)
-  : false;
+
 
   useBroadcastSync({
     activeStation,
