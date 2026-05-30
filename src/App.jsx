@@ -1407,12 +1407,12 @@ function App() {
   // Efecto para manejar el audio
   useEffect(() => {
     if (!audioRef.current || currentTrackIndex < 0) return;
-    if (audioRef.current.paused && isPlaying) {
-      audioRef.current.play().catch(() => {});
+    if (activeStationRef.current) {
+      if (audioRef.current.paused && isPlaying) {
+        audioRef.current.play().catch(() => {});
+      }
+      return;
     }
-    return;
-  }
-
     const audio = audioRef.current;
     const track = tracks[currentTrackIndex];
     if (!track) return;
