@@ -2120,38 +2120,42 @@ useEffect(() => {
                                         </div>
 
                                         {/* PROGRESS BAR */}
-{activeStation ? (
-  <div className="flex items-center gap-2 pb-0.5">
-    <span className="w-1.5 h-1.5 rounded-full bg-[#f00060] animate-pulse shrink-0 shadow-[0_0_8px_#f00060]" />
-    <span className={`${isVertical ? 'text-[8px]' : 'text-[9px]'} font-mono text-[#f00060] font-black tracking-widest uppercase`}>
-      LIVE BROADCAST
-    </span>
-  </div>
-) : (
-  <div
-    className="space-y-0.5 pb-0.5 cursor-pointer group/progress"
-    onClick={(e) => {
-      e.stopPropagation();
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const pct = x / rect.width;
-      const targetTime = pct * trackDurationSec;
-      onSeek && onSeek(targetTime);
-    }}
-  >
-    <div className={`${isVertical ? 'h-1.5' : 'h-2'} bg-[#1a1a1a] rounded-full overflow-hidden border border-[#f00060]/20 relative transition-all`}>
-      <motion.div
-        className="h-full bg-gradient-to-r from-[#f00060] to-[#c70055] shadow-[0_0_15px_#f00060]"
-        animate={{ width: `${(visualTime / trackDurationSec) * 100}%` }}
-        transition={{ type: "spring", bounce: 0, duration: 0.1 }}
-      />
-    </div>
-    <div className={`flex justify-between ${isVertical ? 'text-[8px]' : 'text-[9px]'} font-mono text-[#f00060]/60 font-black tracking-widest transition-all`}>
-      <span>{formatTime(visualTime)}</span>
-      <span>-{formatTime(Math.max(0, trackDurationSec - visualTime))}</span>
-    </div>
-  </div>
-)}
+                                        {activeStation ? (
+                                            <div className="flex items-center gap-2 pb-0.5">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-[#f00060] animate-pulse shrink-0 shadow-[0_0_8px_#f00060]" />
+                                                <span className={`${isVertical ? 'text-[8px]' : 'text-[9px]'} font-mono text-[#f00060] font-black tracking-widest uppercase`}>
+                                                    LIVE BROADCAST
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <div
+                                                className="space-y-0.5 pb-0.5 cursor-pointer group/progress"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                    const x = e.clientX - rect.left;
+                                                    const pct = x / rect.width;
+                                                    const targetTime = pct * trackDurationSec;
+                                                    onSeek && onSeek(targetTime);
+                                                }}
+                                            >
+                                                <div className={`${isVertical ? 'h-1.5' : 'h-2'} bg-[#1a1a1a] rounded-full overflow-hidden border border-[#f00060]/20 relative transition-all`}>
+                                                    <motion.div
+                                                        className="h-full bg-gradient-to-r from-[#f00060] to-[#c70055] shadow-[0_0_15px_#f00060]"
+                                                        animate={{ width: `${(visualTime / trackDurationSec) * 100}%` }}
+                                                        transition={{ type: "spring", bounce: 0, duration: 0.1 }}
+                                                    />
+                                                </div>
+                                                <div className={`flex justify-between ${isVertical ? 'text-[8px]' : 'text-[9px]'} font-mono text-[#f00060]/60 font-black tracking-widest transition-all`}>
+                                                    <span>{formatTime(visualTime)}</span>
+                                                    <span>-{formatTime(Math.max(0, trackDurationSec - visualTime))}</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    
+                                </motion.div>
+                                {
                             ) : (
                                 // --- MENU SYSTEM ---
                                 <motion.div
