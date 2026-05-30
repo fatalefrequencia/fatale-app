@@ -34,7 +34,7 @@ import SettingsView from './components/SettingsView';
 import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
 import DJMixerPlayer from './components/DJMixerPlayer';
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
-import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack } from './services/signalr';
+import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack, onBroadcastSync } from './services/signalr';
 import { useBroadcastSync } from './hooks/useBroadcastSync';
 
 const ShoppingView = React.lazy(() => 
@@ -429,7 +429,7 @@ function App() {
   const isHost = activeStation
   ? String(activeStation.artistUserId || activeStation.ArtistUserId) === String(currentUserId)
   : false;
-  
+
   const currentTrack = React.useMemo(() => {
     // ── Broadcast mode: listener follows station, not local queue ──
     if (activeStation && broadcastTrack && !isHost) {
