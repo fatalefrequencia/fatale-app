@@ -177,4 +177,3 @@ export const requestTrack = async (stationId, trackData, username) => {
   }
 };
 
-export default connection;
