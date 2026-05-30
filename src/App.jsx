@@ -5086,13 +5086,14 @@ const FeedContent = React.memo(({
       <h3 className="text-[9px] font-black uppercase text-[#ff006e] tracking-widest flex items-center gap-1.5">
         <Radio size={10} className="animate-pulse" /> LIVE_STATIONS
       </h3>
-      <button<div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4">
-        onClick={() => { setShowGlobalGoLive(true); setMobilePanelOpen(false); }}
-        className="flex items-center gap-1 px-2 py-1 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] text-[8px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all rounded-sm"
-      >
-        <span className="w-1 h-1 rounded-full bg-current animate-pulse" /> GO_LIVE
-      </button>
-    </div>
+      <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4">
+  <button
+    onClick={() => { setShowGlobalGoLive(true); setMobilePanelOpen(false); }}
+    className="flex items-center gap-1 px-2 py-1 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] text-[8px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all rounded-sm"
+  >
+    <span className="w-1 h-1 rounded-full bg-current animate-pulse" /> GO_LIVE
+  </button>
+</div>
 
     <div className="space-y-1">
       <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest">TRANSMISSION_SECTOR // FILTER</div>
