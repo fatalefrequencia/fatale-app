@@ -842,6 +842,13 @@ function App() {
       setIsPlaying(false);
       setTracks([]);
       setCurrentTrackIndex(-1);
+
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      if (youtubePlayer && typeof youtubePlayer.pauseVideo === 'function') {
+        try { youtubePlayer.pauseVideo(); } catch(e) {}
+      }
     
       if (audioRef.current) {
         const silentSrc = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
