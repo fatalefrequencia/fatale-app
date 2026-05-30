@@ -839,19 +839,26 @@ function App() {
       activeStationRef.current = station;
       setActiveStation(station);
       joinStation(station.id || station.Id);
+  
+      // ── STOP everything currently playing ──
       setIsPlaying(false);
-      setTracks([]);
-      setCurrentTrackIndex(-1);
-
+      setIsYoutubeMode(false);
+  
       if (audioRef.current) {
         audioRef.current.pause();
+        audioRef.current.src = '';
+        audioRef.current.removeAttribute('data-playing-src');
       }
       if (youtubePlayer && typeof youtubePlayer.pauseVideo === 'function') {
         try { youtubePlayer.pauseVideo(); } catch(e) {}
       }
-    
+  
+      setTracks([]);
+      setCurrentTrackIndex(-1);
+  
+      // ── START silent carrier stream ──
+      const silentSrc = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
       if (audioRef.current) {
-        const silentSrc = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
         audioRef.current.src = silentSrc;
         audioRef.current.loop = true;
         audioRef.current.setAttribute('data-playing-src', 'silent');
@@ -862,146 +869,9 @@ function App() {
     };
     window.addEventListener('tuneIn', handleTuneIn);
     return () => window.removeEventListener('tuneIn', handleTuneIn);
-  }, []);
+  }, [youtubePlayer]);
+  
 
-  // Ensure the current user (including broadcasters) joins their station SignalR group
-  useEffect(() => {
-    if (activeStation) {
-      const sId = activeStation.id || activeStation.Id;
-      joinStation(sId);
-    }
-  }, [activeStation]);
-
-  useEffect(() => {
-    // Check for existing session
-    let token = localStorage.getItem('token');
-    let savedUser = localStorage.getItem('user');
-
-    // Sanitize: sometimes 'undefined' string gets stored if logic is buggy
-    if (token === 'undefined' || !token) {
-      localStorage.removeItem('token');
-      token = null; // Clear token for current session
-    }
-
-    if (savedUser && savedUser !== 'undefined') {
-      try {
-        const parsed = JSON.parse(savedUser);
-        if (parsed && (parsed.id || parsed.Id)) {
-          setUser(parsed);
-          // Check hash or default to discovery on initialization
-          const hash = window.location.hash.replace('#', '');
-          const validViews = ['discovery', 'feed', 'profile', 'player', 'messages', 'shopping', 'settings', 'wallet'];
-          if (validViews.includes(hash)) {
-            setView(hash);
-          } else {
-            setView('discovery');
-          }
-        } else {
-          console.warn("[App] Corrupt user object in localStorage, clearing.");
-          localStorage.removeItem('user');
-          savedUser = null; // Clear savedUser for current session
-          setUser(null);
-        }
-      } catch (e) {
-        console.error("[App] Failed to parse saved user", e);
-        localStorage.removeItem('user');
-        savedUser = null; // Clear savedUser for current session
-        setUser(null);
-      }
-    } else if (savedUser === 'undefined') {
-      localStorage.removeItem('user');
-      savedUser = null; // Clear savedUser for current session
-    }
-
-    if (token && savedUser) {
-      // Initialize SignalR listener
-      const conn = initSignalR(token);
-
-      conn.on("TrackSynced", (trackData, syncTime, hostIsPlaying) => {
-        setTracks(prev => {
-          const currentTrack = prev[0]; // If listening, queue is handled sequentially
-          if (!currentTrack || (currentTrack.id !== trackData.id && currentTrack.Id !== trackData.Id)) {
-            const mapped = { ...trackData, isLocked: false, isOwned: true };
-            return [mapped];
-          }
-          return prev;
-        });
-        setCurrentTrackIndex(0);
-        setIsPlaying(hostIsPlaying);
-
-        if (audioRef.current) {
-          audioRef.current.onended = () => {
-            if (activeStationRef.current) {
-              const silentSrc = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
-              audioRef.current.src = silentSrc;
-              audioRef.current.loop = true;
-              audioRef.current.play().catch(() => {});
-            }
-          };
-        }
-
-        // Use timeout to allow React to render the new track element before playing
-        setTimeout(() => {
-          if (hostIsPlaying) {
-            const isYtLocal = !!getGlobalYoutubeId(trackData);
-            if (isYtLocal) {
-              // Try to seek youtube player if it exists. Note: youtube player state is hard to access here from effect without deps 
-              // This relies on the useEffect `[isYoutubeMode, isPlaying, youtubePlayer]` picking up the seek and track change later.
-              // But we can trigger handleSeek if accessible
-            } else if (audioRef.current) {
-              audioRef.current.currentTime = syncTime;
-            }
-          }
-        }, 100);
-      });
-
-      conn.on("ReceiveMessage", (msg) => {
-        setStationChat(prev => {
-          // Skip duplicates: if we already added this message optimistically, don't add the server echo
-          const alreadyExists = prev.some(
-            m => m.isLocal && m.message === (msg.message || msg.content) && m.username === (msg.username || msg.userName)
-          );
-          if (alreadyExists) {
-            // Replace the optimistic copy with the canonical server copy (removes isLocal flag)
-            return prev.map(m =>
-              m.isLocal && m.message === (msg.message || msg.content) && m.username === (msg.username || msg.userName)
-                ? { ...msg, isLocal: false }
-                : m
-            );
-          }
-          return [...prev, msg].slice(-50);
-        });
-      });
-
-      conn.on("TrackRequested", (req) => {
-        setStationQueue(prev => [...prev, req].slice(-20));
-      });
-
-      conn.on("StationEnded", (data) => {
-        setActiveStation(prev => {
-          if (prev && (prev.id === data.stationId || prev.Id === data.stationId)) {
-            activeStationRef.current = null;
-            
-            if (audioRef.current) {
-              audioRef.current.pause();
-              audioRef.current.src = "";
-              audioRef.current.removeAttribute('data-playing-src');
-            }
-            showNotification("BROADCAST_ENDED", t('SIGNAL_LOST'), "info");
-            leaveStation(data.stationId);
-            setIsPlaying(false);
-            return null;
-          }
-          return prev;
-        });
-        fetchLiveStations();
-      });
-
-      conn.on("StationWentLive", (data) => {
-        fetchLiveStations();
-      });
-    }
-  }, []);
 
   // --- PERSISTENCE & ROUTING LOOPS ---
   useEffect(() => {
