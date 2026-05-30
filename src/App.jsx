@@ -842,6 +842,16 @@ function App() {
       setIsPlaying(false);
       setTracks([]);
       setCurrentTrackIndex(-1);
+    
+      if (audioRef.current) {
+        const silentSrc = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+        audioRef.current.src = silentSrc;
+        audioRef.current.loop = true;
+        audioRef.current.setAttribute('data-playing-src', 'silent');
+        audioRef.current.load();
+        audioRef.current.play().catch(e => console.warn("[RADIO] Silent stream failed:", e));
+      }
+      setIsPlaying(true);
     };
     window.addEventListener('tuneIn', handleTuneIn);
     return () => window.removeEventListener('tuneIn', handleTuneIn);
@@ -953,6 +963,12 @@ function App() {
         setActiveStation(prev => {
           if (prev && (prev.id === data.stationId || prev.Id === data.stationId)) {
             activeStationRef.current = null;
+            
+            if (audioRef.current) {
+              audioRef.current.pause();
+              audioRef.current.src = "";
+              audioRef.current.removeAttribute('data-playing-src');
+            }
             showNotification("BROADCAST_ENDED", t('SIGNAL_LOST'), "info");
             leaveStation(data.stationId);
             setIsPlaying(false);
@@ -1391,7 +1407,11 @@ function App() {
   // Efecto para manejar el audio
   useEffect(() => {
     if (!audioRef.current || currentTrackIndex < 0) return;
-    if (activeStationRef.current) return;
+    if (audioRef.current.paused && isPlaying) {
+      audioRef.current.play().catch(() => {});
+    }
+    return;
+  }
 
     const audio = audioRef.current;
     const track = tracks[currentTrackIndex];
