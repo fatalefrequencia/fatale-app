@@ -35,6 +35,7 @@ import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
 import DJMixerPlayer from './components/DJMixerPlayer';
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
 import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack } from './services/signalr';
+import { useBroadcastSync } from './hooks/useBroadcastSync';
 
 const ShoppingView = React.lazy(() => 
   import('./components/ShoppingView').catch((err) => {
@@ -285,6 +286,7 @@ function App() {
   const [stationChat, setStationChat] = useState([]);
   const [stationQueue, setStationQueue] = useState([]);
   const [showMixer, setShowMixer] = useState(false);
+  const [broadcastTrack, setBroadcastTrack] = useState(null);
   const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
   const isMobile = window.innerWidth < 1024;
   const [feedBackgroundImage, setFeedBackgroundImage] = useState(localStorage.getItem('feedBackgroundImage') || '');
@@ -425,33 +427,40 @@ function App() {
   };
 
   const currentTrack = React.useMemo(() => {
+    // ── Broadcast mode: listener follows station, not local queue ──
+    if (activeStation && broadcastTrack && !isHost) {
+      return {
+        ...broadcastTrack,
+        id:       broadcastTrack.youtubeId || broadcastTrack.source || 'broadcast',
+        isLiked:  false,
+        isLocked: false,
+        isOwned:  true,
+      };
+    }
+  
+    // ── Normal local queue mode ────────────────────────────────────
     const raw = (currentTrackIndex >= 0 && tracks[currentTrackIndex])
       ? tracks[currentTrackIndex]
       : null;
-
+  
     if (!raw) return {
-      id: null,
-      title: null,
-      artist: null,
-      source: null,
-      cover: null,
-      isLiked: false,
-      isLocked: false,
-      isOwned: true
+      id: null, title: null, artist: null,
+      source: null, cover: null,
+      isLiked: false, isLocked: false, isOwned: true
     };
-
+  
     return {
       ...raw,
-      id: raw.id || raw.Id,
-      title: raw.title || raw.Title,
-      artist: extractArtistName(raw) || 'Unknown Artist',
-      source: raw.source || raw.Source,
-      cover: raw.cover || raw.coverImageUrl || raw.CoverImageUrl,
+      id:      raw.id || raw.Id,
+      title:   raw.title || raw.Title,
+      artist:  extractArtistName(raw) || 'Unknown Artist',
+      source:  raw.source || raw.Source,
+      cover:   raw.cover || raw.coverImageUrl || raw.CoverImageUrl,
       isLiked: raw.isLiked ?? (raw.IsLiked ?? false),
       isLocked: raw.isLocked ?? (raw.IsLocked ?? false),
-      isOwned: raw.isOwned ?? (raw.IsOwned ?? true)
+      isOwned:  raw.isOwned ?? (raw.IsOwned ?? true),
     };
-}, [currentTrackIndex, tracks]);
+  }, [currentTrackIndex, tracks, activeStation, broadcastTrack, isHost]);
   // Audio Ref for persistence
   const audioRef = useRef(null);
 
@@ -706,6 +715,16 @@ function App() {
   useEffect(() => {
     activeStationRef.current = activeStation;
   }, [activeStation]);
+
+  const isHost = activeStation
+  ? String(activeStation.artistUserId || activeStation.ArtistUserId) === String(currentUserId)
+  : false;
+
+useBroadcastSync({
+  activeStation, audioRef, youtubePlayer, isHost,
+  setIsPlaying, setCurrentTime, setDuration,
+  setBroadcastTrack, setIsYoutubeMode, showNotification,
+});
   // Sync Audio Volume & Mute
   useEffect(() => {
     if (audioRef.current) {
@@ -838,39 +857,30 @@ function App() {
       const station = e.detail;
       activeStationRef.current = station;
       setActiveStation(station);
-      joinStation(station.id || station.Id);
   
-      // ── STOP everything currently playing ──
-      setIsPlaying(false);
-      setIsYoutubeMode(false);
+      // Join the SignalR room — useBroadcastSync takes it from here.
+      // Do NOT touch tracks, currentTrackIndex, or isYoutubeMode here.
+      // The hook will set everything once the first BroadcastSync arrives.
   
+      // Only reset broadcastTrack so UI shows "Tuning in..." until first sync
+      setBroadcastTrack(null);
+  
+      // Keep a silent carrier alive so Media Session API doesn't die on mobile
+      const SILENT = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==';
       if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
-        audioRef.current.removeAttribute('data-playing-src');
+        if (audioRef.current.getAttribute('data-playing-src') !== 'silent') {
+          audioRef.current.src = SILENT;
+          audioRef.current.loop = true;
+          audioRef.current.setAttribute('data-playing-src', 'silent');
+          audioRef.current.load();
+          audioRef.current.play().catch(() => {});
+        }
       }
-      if (youtubePlayer && typeof youtubePlayer.pauseVideo === 'function') {
-        try { youtubePlayer.pauseVideo(); } catch(e) {}
-      }
-  
-      setTracks([]);
-      setCurrentTrackIndex(-1);
-  
-      // ── START silent carrier stream ──
-      const silentSrc = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
-      if (audioRef.current) {
-        audioRef.current.src = silentSrc;
-        audioRef.current.loop = true;
-        audioRef.current.setAttribute('data-playing-src', 'silent');
-        audioRef.current.load();
-        audioRef.current.play().catch(e => console.warn("[RADIO] Silent stream failed:", e));
-      }
-      setIsPlaying(true);
     };
+  
     window.addEventListener('tuneIn', handleTuneIn);
     return () => window.removeEventListener('tuneIn', handleTuneIn);
   }, [youtubePlayer]);
-  
 
 
   // --- PERSISTENCE & ROUTING LOOPS ---
@@ -927,15 +937,23 @@ function App() {
 
   // --- HOST BROADCASTING LOGIC ---
   useEffect(() => {
-    const uid = currentUserId;
-    if (uid && currentTrack) {
-      API.Stations.getByUserId(uid).then(res => {
-        if (res.data) {
-          syncTrack(res.data.id || res.data.Id, currentTrack, currentTime, isPlaying);
-        }
-      }).catch(e => console.warn("Track sync failed:", e));
-    }
-  }, [currentTrack?.id, isPlaying, currentUserId]);
+  if (!isHost || !activeStation || !currentTrack?.title) return;
+
+  const stationId = activeStation.id || activeStation.Id;
+  syncTrack(stationId, currentTrack, currentTime, isPlaying);
+
+}, [currentTrack?.id, currentTrack?.source, isPlaying, isHost, activeStation?.id]);
+
+useEffect(() => {
+  if (!isHost || !activeStation || !currentTrack?.title) return;
+  const stationId = activeStation.id || activeStation.Id;
+
+  const timer = setTimeout(() => {
+    syncTrack(stationId, currentTrack, currentTime, isPlaying);
+  }, 300);
+
+  return () => clearTimeout(timer);
+}, [currentTime, isHost]);
 
   const fetchPlaylists = async (uid) => {
     try {
@@ -976,9 +994,12 @@ function App() {
   // Unified Play Track handler with full deep reconciliation (artist & artistName)
   const handlePlayTrack = React.useCallback((track) => {
     if (!track) return;
-
-    setActiveStation(null);
-  activeStationRef.current = null; 
+  
+    if (activeStation && !isHost) {
+      setActiveStation(null);
+      activeStationRef.current = null;
+      setBroadcastTrack(null);
+    }
 
     const tId = track.id || track.Id;
     const rawSource = track.source || track.Source || track.filePath || track.FilePath || "";
@@ -3529,6 +3550,12 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
         <div className="flex-1 min-w-0 overflow-hidden flex flex-col justify-center gap-0.5">
           <h4 className={`text-[11px] lg:text-[13px] font-black uppercase truncate transition-colors leading-none tracking-wide ${isMessages ? 'text-white' : 'text-white group-hover/info:text-transparent group-hover/info:bg-clip-text group-hover/info:bg-gradient-to-r group-hover/info:from-white group-hover/info:to-[#ff006e]'}`}>{track?.title || 'No Track'}</h4>
           <p className={`text-[9px] lg:text-[10px] font-bold uppercase truncate tracking-widest leading-none ${isMessages ? 'text-white/40' : 'text-[#ff006e]/50 group-hover/info:text-[#ff006e]/90'}`}>{track?.artist || track?.artistName || track?.ArtistName || 'Unknown'}</p>
+          {track?.isBroadcast && (
+  <span className="text-[7px] font-black text-[#ff006e] border border-[#ff006e]/30
+                   px-1 uppercase tracking-widest animate-pulse ml-1">
+    LIVE
+  </span>
+)}
         </div>
       </div>
 
