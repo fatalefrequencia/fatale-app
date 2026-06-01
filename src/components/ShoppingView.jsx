@@ -73,7 +73,7 @@ const ShoppingView = () => {
     const isEs = language === 'es';
 
     const labels = {
-        subtitle:              isEs ? 'TIENDAS DE ARTISTAS INDEPENDIENTES' : 'INDEPENDENT ARTIST STORES & MERCH',
+        subtitle:              isEs ? 'TIENDAS DE ARTISTAS INDEPENDIENTES (barajado a diario"' : 'INDEPENDENT ARTIST STORES & MERCH (shuffled daily)',
         searchPlaceholder:     isEs ? 'Buscar productos o artistas...'      : 'Search products or artists...',
         uploadTitle:           isEs ? 'PUBLICAR PRODUCTO'                   : 'PUBLISH NEW PRODUCT',
         productName:           isEs ? 'Nombre del Producto'                 : 'Product Name',
@@ -106,6 +106,20 @@ const ShoppingView = () => {
     const [activeCat, setActiveCat] = useState('ALL');
     const [copiedId, setCopiedId] = useState(null);
     const [showCopyToast, setShowCopyToast] = useState(false);
+    const [allDropdownOpen, setAllDropdownOpen] = useState(false);
+    const allDropdownRef = React.useRef(null);
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        if (!allDropdownOpen) return;
+        const handler = (e) => {
+            if (allDropdownRef.current && !allDropdownRef.current.contains(e.target)) {
+                setAllDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [allDropdownOpen]);
 
     const [file, setFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState('');
@@ -340,8 +354,9 @@ const ShoppingView = () => {
                                     </div>
                                 </div>
 
-                                {/* Search + owner filter row */}
-                                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center mb-3">
+                                {/* Search + filter row */}
+                                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                                    {/* Search */}
                                     <div className="relative flex-1 max-w-md">
                                         <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
                                         <input
@@ -352,48 +367,136 @@ const ShoppingView = () => {
                                             className="w-full bg-white/[0.04] border border-white/10 focus:border-[#ff006e]/40 pl-8 pr-3 py-2 text-xs rounded-lg focus:outline-none transition-colors placeholder:text-white/20"
                                         />
                                     </div>
-                                    <div className="flex gap-2">
-                                        {[{ id: 'ALL', label: labels.allFilter }, { id: 'MY_NODES', label: labels.myFilter, auth: true }].map(f => {
-                                            if (f.auth && !isLoggedIn) return null;
-                                            const active = activeFilter === f.id;
-                                            return (
-                                                <button key={f.id} onClick={() => setActiveFilter(f.id)}
-                                                    className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${active ? 'bg-white text-black' : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white'}`}>
-                                                    {f.label}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
 
-                                {/* ── Category flag filters ── */}
-                                <div className="flex flex-wrap gap-2 pb-1">
-                                    {CATEGORIES.map(cat => {
-                                        const active = activeCat === cat.id;
-                                        return (
+                                    {/* ── ALL (dropdown) + MY PRODUCTS ── */}
+                                    <div className="flex gap-2 items-center relative">
+
+                                        {/* ALL — dropdown trigger */}
+                                        <div className="relative" ref={allDropdownRef}>
                                             <button
-                                                key={cat.id}
-                                                onClick={() => setActiveCat(cat.id)}
+                                                onClick={() => setAllDropdownOpen(v => !v)}
                                                 style={{
-                                                    fontFamily: T.mono,
-                                                    fontSize: 9,
-                                                    letterSpacing: '0.16em',
-                                                    padding: '5px 10px',
-                                                    borderRadius: 3,
-                                                    border: active ? `1px solid ${T.pink}` : `1px solid ${T.borderDim}`,
-                                                    background: active ? 'rgba(255,0,110,0.12)' : 'transparent',
-                                                    color: active ? T.pink : T.purpleDim,
-                                                    cursor: 'pointer',
+                                                    fontFamily: T.mono, fontSize: 10, letterSpacing: '0.16em',
+                                                    padding: '8px 14px',
+                                                    border: (activeFilter === 'ALL')
+                                                        ? `1px solid ${activeCat !== 'ALL' ? '#00f0ff' : '#ffffff'}`
+                                                        : `1px solid ${T.borderDim}`,
+                                                    background: activeFilter === 'ALL'
+                                                        ? activeCat !== 'ALL' ? 'rgba(0,240,255,0.08)' : 'rgba(255,255,255,0.9)'
+                                                        : 'transparent',
+                                                    color: activeFilter === 'ALL'
+                                                        ? activeCat !== 'ALL' ? '#00f0ff' : '#000'
+                                                        : T.purpleDim,
+                                                    borderRadius: 4, cursor: 'pointer',
                                                     transition: 'all 0.15s',
-                                                    textTransform: 'uppercase',
+                                                    display: 'flex', alignItems: 'center', gap: 6,
+                                                    textTransform: 'uppercase', fontWeight: 900,
+                                                    whiteSpace: 'nowrap',
                                                 }}
-                                                onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.purple; } }}
-                                                onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor = T.borderDim; e.currentTarget.style.color = T.purpleDim; } }}
                                             >
-                                                {cat.flag}
+                                                {/* Show active category name inside button if filtered */}
+                                                {activeCat !== 'ALL'
+                                                    ? CATEGORIES.find(c => c.id === activeCat)?.flag ?? '--all'
+                                                    : labels.allFilter}
+                                                <span style={{
+                                                    fontSize: 7,
+                                                    opacity: 0.6,
+                                                    transform: allDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                                    transition: 'transform 0.2s',
+                                                    display: 'inline-block',
+                                                }}>▼</span>
                                             </button>
-                                        );
-                                    })}
+
+                                            {/* Dropdown panel — DiscoveryHUD sector style */}
+                                            <AnimatePresence>
+                                                {allDropdownOpen && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                        exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                                                        transition={{ duration: 0.12 }}
+                                                        style={{
+                                                            position: 'absolute', top: 'calc(100% + 6px)', left: 0,
+                                                            zIndex: 200, minWidth: 160,
+                                                            background: '#050505',
+                                                            border: `1px solid ${T.border}`,
+                                                            borderRadius: 6,
+                                                            padding: '6px',
+                                                            boxShadow: '0 8px 32px rgba(0,0,0,0.9)',
+                                                            fontFamily: T.mono,
+                                                        }}
+                                                    >
+                                                        {/* --all resets to ALL */}
+                                                        <button
+                                                            onClick={() => { setActiveCat('ALL'); setActiveFilter('ALL'); setAllDropdownOpen(false); }}
+                                                            style={{
+                                                                display: 'block', width: '100%', textAlign: 'left',
+                                                                padding: '6px 10px', fontSize: 9,
+                                                                letterSpacing: '0.16em', textTransform: 'uppercase',
+                                                                background: activeCat === 'ALL' ? 'rgba(255,255,255,0.08)' : 'transparent',
+                                                                color: activeCat === 'ALL' ? '#fff' : T.purpleDim,
+                                                                border: 'none', borderRadius: 3, cursor: 'pointer',
+                                                                transition: 'all 0.1s',
+                                                            }}
+                                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                                            onMouseLeave={e => e.currentTarget.style.background = activeCat === 'ALL' ? 'rgba(255,255,255,0.08)' : 'transparent'}
+                                                        >
+                                                            --all
+                                                        </button>
+
+                                                        {/* Divider */}
+                                                        <div style={{ height: 1, background: T.borderDim, margin: '4px 6px' }} />
+
+                                                        {/* Category flags */}
+                                                        {CATEGORIES.filter(c => c.id !== 'ALL').map(cat => {
+                                                            const isActive = activeCat === cat.id;
+                                                            return (
+                                                                <button
+                                                                    key={cat.id}
+                                                                    onClick={() => { setActiveCat(cat.id); setActiveFilter('ALL'); setAllDropdownOpen(false); }}
+                                                                    style={{
+                                                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                                        width: '100%', textAlign: 'left',
+                                                                        padding: '6px 10px', fontSize: 9,
+                                                                        letterSpacing: '0.16em', textTransform: 'uppercase',
+                                                                        background: isActive ? 'rgba(0,240,255,0.08)' : 'transparent',
+                                                                        color: isActive ? '#00f0ff' : T.purpleDim,
+                                                                        border: 'none', borderRadius: 3, cursor: 'pointer',
+                                                                        transition: 'all 0.1s',
+                                                                    }}
+                                                                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,240,255,0.05)'; e.currentTarget.style.color = '#00f0ff'; }}
+                                                                    onMouseLeave={e => { e.currentTarget.style.background = isActive ? 'rgba(0,240,255,0.08)' : 'transparent'; e.currentTarget.style.color = isActive ? '#00f0ff' : T.purpleDim; }}
+                                                                >
+                                                                    <span>{cat.flag}</span>
+                                                                    {isActive && <span style={{ fontSize: 7, color: '#00f0ff' }}>◆</span>}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+
+                                        {/* MY PRODUCTS */}
+                                        {isLoggedIn && (
+                                            <button
+                                                onClick={() => { setActiveFilter(f => f === 'MY_NODES' ? 'ALL' : 'MY_NODES'); setAllDropdownOpen(false); }}
+                                                style={{
+                                                    fontFamily: T.mono, fontSize: 10, letterSpacing: '0.16em',
+                                                    padding: '8px 14px',
+                                                    border: activeFilter === 'MY_NODES' ? `1px solid ${T.pink}` : `1px solid ${T.borderDim}`,
+                                                    background: activeFilter === 'MY_NODES' ? 'rgba(255,0,110,0.1)' : 'transparent',
+                                                    color: activeFilter === 'MY_NODES' ? T.pink : T.purpleDim,
+                                                    borderRadius: 4, cursor: 'pointer',
+                                                    transition: 'all 0.15s',
+                                                    textTransform: 'uppercase', fontWeight: 900,
+                                                    whiteSpace: 'nowrap',
+                                                }}
+                                            >
+                                                {labels.myFilter}
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -445,21 +548,15 @@ const ShoppingView = () => {
                                                         )}
                                                         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent" />
 
-                                                        {/* Price badge */}
-                                                        {shop.price && (
-                                                            <div className="absolute top-2 right-2 text-[10px] font-black text-[#00f0ff] bg-black/80 border border-[#00f0ff]/30 px-2 py-0.5 rounded-md group-hover:border-[#ff006e]/50 group-hover:text-[#ff006e] transition-colors">
-                                                                {formatPrice(shop.price)}
-                                                            </div>
-                                                        )}
+                                                        {/* Category badge — top right, cyan */}
+                                                        <div className="absolute top-2 right-2 text-[8px] font-black text-[#00f0ff] bg-black/80 border border-[#00f0ff]/30 px-2 py-0.5 rounded-sm"
+                                                            style={{ fontFamily: T.mono, letterSpacing: '0.14em' }}>
+                                                            [ {shop.category} ]
+                                                        </div>
 
                                                         {/* Domain badge */}
                                                         <div className="absolute top-2 left-2 text-[8px] bg-black/70 text-white/50 px-1.5 py-0.5 rounded">
                                                             {getDomain(shop.url)}
-                                                        </div>
-
-                                                        {/* Category badge bottom-left */}
-                                                        <div className="absolute bottom-10 left-2">
-                                                            <CatBadge cat={shop.category} />
                                                         </div>
 
                                                         {/* Hover overlay */}
