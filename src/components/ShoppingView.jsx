@@ -359,7 +359,7 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                 </div>
 
                                 {/* Search + filter row */}
-                                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center sm:justify-between">
                                     {/* Search */}
                                     <div className="relative flex-1 max-w-md">
                                         <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
