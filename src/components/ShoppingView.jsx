@@ -356,10 +356,6 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                         <img src={theMarketHeader} alt="The Market" className="h-9 md:h-12 w-auto object-contain" />
                                         <p className="text-[9px] text-white/30 uppercase tracking-widest mt-1">{labels.subtitle}</p>
                                     </div>
-                                    <div className="text-right">
-                                        <div className="text-[9px] text-white/20 uppercase tracking-widest">{labels.activeProducts}</div>
-                                        <div className="text-xl font-black text-[#ff006e]">{shops.length}</div>
-                                    </div>
                                 </div>
 
                                 {/* Search + filter row */}
