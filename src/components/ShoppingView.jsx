@@ -184,8 +184,16 @@ const ShoppingView = () => {
                 const cleanDesc = stripCategoryTag(parsedDesc);
 
                 // Resolve node label — prefer real username if available
-                const username = item.username || item.Username || item.userName || item.UserName;
-                const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
+                const username =
+    item.username   || item.Username   ||
+    item.userName   || item.UserName   ||
+    item.user?.username || item.user?.Username ||
+    item.user?.name     || item.user?.Name     ||
+    item.artistName || item.ArtistName ||
+    item.author     || item.Author     ||
+    item.name       || item.Name;
+
+const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
 
                 return {
                     id:         `api-${item.id || item.Id}`,
