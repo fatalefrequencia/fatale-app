@@ -50,61 +50,17 @@ const buildArc = (from, to) => {
     const f = new THREE.Vector3(...from);
     const t = new THREE.Vector3(...to);
     const mid = new THREE.Vector3().addVectors(f, t).multiplyScalar(0.5);
-    // Normalize then push to arc height well above globe surface
     mid.normalize().multiplyScalar(4.8);
     return new THREE.QuadraticBezierCurve3(f, mid, t);
 };
 
-// ─── TRAVELING PULSE ──────────────────────────────────────────────────────────
-// A single animated dot that travels along a pre-built bezier curve.
-// Multiple instances are staggered in phase to create a heartbeat feel.
+// ─── SHIMMER LINE ─────────────────────────────────────────────────────────────
+// Always-visible arc with a slow animated opacity shimmer.
+// isSelected brightens and widens the line.
 
-const TravelingPulse = ({ curve, color, speed = 0.28, phaseOffset = 0, size = 0.022 }) => {
-    const meshRef = useRef();
-    const tRef = useRef(phaseOffset % 1);
-
-    useFrame((_, delta) => {
-        if (!meshRef.current) return;
-
-        tRef.current += delta * speed;
-        if (tRef.current > 1.15) tRef.current = -0.15; // loop with brief fade gap
-
-        const clamped = Math.max(0, Math.min(1, tRef.current));
-
-        if (tRef.current < 0 || tRef.current > 1) {
-            meshRef.current.visible = false;
-            return;
-        }
-
-        meshRef.current.visible = true;
-        const pos = curve.getPoint(clamped);
-        meshRef.current.position.copy(pos);
-
-        // Smooth fade in/out at path endpoints
-        const fade = Math.sin(clamped * Math.PI);
-        meshRef.current.material.opacity = fade * 0.9;
-    });
-
-    return (
-        <mesh ref={meshRef}>
-            <sphereGeometry args={[size, 8, 8]} />
-            <meshBasicMaterial
-                color={color}
-                transparent
-                opacity={0}
-                toneMapped={false}
-                depthWrite={false}
-            />
-        </mesh>
-    );
-};
-
-// ─── CONSTELLATION LINE ───────────────────────────────────────────────────────
-// Appears only when a node is selected. Fades in smoothly from opacity 0.
-
-const ConstellationLine = memo(({ from, to, color }) => {
-    const lineRef = useRef();
-    const opRef   = useRef(0);
+const ShimmerLine = memo(({ from, to, color, phaseOffset = 0, isSelected = false, isRelated = false }) => {
+    const lineRef  = useRef();
+    const opRef    = useRef(0);
 
     const geo = useMemo(() => {
         const curve = buildArc(from, to);
@@ -114,13 +70,28 @@ const ConstellationLine = memo(({ from, to, color }) => {
 
     useEffect(() => () => geo.dispose(), [geo]);
 
-    // Reset on remount so re-selecting animates in fresh
+    // Fade in on mount
     useEffect(() => { opRef.current = 0; }, []);
 
-    useFrame((_, delta) => {
+    useFrame(({ clock }) => {
         if (!lineRef.current) return;
-        opRef.current = Math.min(opRef.current + delta * 2.5, 0.55);
-        lineRef.current.material.opacity = opRef.current;
+
+        const t = clock.getElapsedTime();
+
+        if (isSelected) {
+            // Bright constant when selected
+            opRef.current = Math.min(opRef.current + 0.05, 1);
+            lineRef.current.material.opacity = 0.75;
+        } else if (isRelated) {
+            // Related to selected node — medium bright
+            opRef.current = Math.min(opRef.current + 0.04, 1);
+            lineRef.current.material.opacity = 0.45;
+        } else {
+            // Resting shimmer — slow sine wave, subtle
+            opRef.current = Math.min(opRef.current + 0.025, 1); // fade in
+            const shimmer = 0.10 + Math.sin(t * 0.6 + phaseOffset) * 0.07;
+            lineRef.current.material.opacity = opRef.current * shimmer;
+        }
     });
 
     return (
@@ -138,13 +109,11 @@ const ConstellationLine = memo(({ from, to, color }) => {
 });
 
 // ─── NETWORK VISUALIZATION ────────────────────────────────────────────────────
-// Resting state  → ambient traveling pulses along invisible paths (heartbeat)
-// Selected state → constellation lines bloom out from the chosen node,
-//                  plus extra/faster pulses on those specific connections
+// Resting  → all arc lines always visible, shimmering gently
+// Selected → selected node's arcs brighten; unrelated arcs dim further
 
 const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeView }) => {
 
-    // Build all connections once (memoised on data change)
     const connections = useMemo(() => {
         const result = [];
         artists.forEach(artist => {
@@ -152,90 +121,62 @@ const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeVi
             const artistNodeId = `artist-${artistId}`;
             const artistPos    = getSphericalPos(artistNodeId, 2.48).pos;
 
-        // TRACKS — trust the enriched artistId stamped by tracksWithColor in DiscoveryHUD
-        tracks.forEach(track => {
-            const enrichedArtistId = track.artistId || track.ArtistId;
-            if (!enrichedArtistId || String(enrichedArtistId) !== String(artistId)) return;
+            tracks.forEach(track => {
+                const enrichedArtistId = track.artistId || track.ArtistId;
+                if (!enrichedArtistId || String(enrichedArtistId) !== String(artistId)) return;
 
-            const trackPos = getSphericalPos(`track-${track.id || track.Id}`, 2.48).pos;
-            const seed     = hashStr(artistId + (track.id || track.Id));
-            result.push({
-                from: artistPos, to: trackPos,
-                color: '#00d4ff',
-                ownerId:  artistNodeId,
-                targetId: `track-${track.id || track.Id}`,
-                speed:    0.22 + (seed % 100) / 300,
-                phase:    (seed % 1000) / 1000,
+                const trackPos = getSphericalPos(`track-${track.id || track.Id}`, 2.48).pos;
+                const seed     = hashStr(artistId + (track.id || track.Id));
+                result.push({
+                    from: artistPos, to: trackPos,
+                    color: '#00d4ff',
+                    ownerId:  artistNodeId,
+                    targetId: `track-${track.id || track.Id}`,
+                    phase:    (seed % 1000) / 1000 * Math.PI * 2,
+                });
             });
-        });
 
-        // PLAYLISTS — artistId is pre-resolved upstream by playlistsWithArtist in DiscoveryHUD
-        playlists.forEach(playlist => {
-            const enrichedArtistId = playlist.artistId || playlist.ArtistId;
-            if (!enrichedArtistId || String(enrichedArtistId) !== String(artistId)) return;
+            playlists.forEach(playlist => {
+                const enrichedArtistId = playlist.artistId || playlist.ArtistId;
+                if (!enrichedArtistId || String(enrichedArtistId) !== String(artistId)) return;
 
-            const plPos = getSphericalPos(`playlist-${playlist.id || playlist.Id}`, 2.48).pos;
-            const seed  = hashStr(artistId + (playlist.id || playlist.Id));
-            result.push({
-                from: artistPos, to: plPos,
-                color: '#ff3d7f',
-                ownerId:  artistNodeId,
-                targetId: `playlist-${playlist.id || playlist.Id}`,
-                speed:    0.18 + (seed % 100) / 350,
-                phase:    (seed % 1000) / 1000,
+                const plPos = getSphericalPos(`playlist-${playlist.id || playlist.Id}`, 2.48).pos;
+                const seed  = hashStr(artistId + (playlist.id || playlist.Id));
+                result.push({
+                    from: artistPos, to: plPos,
+                    color: '#ff3d7f',
+                    ownerId:  artistNodeId,
+                    targetId: `playlist-${playlist.id || playlist.Id}`,
+                    phase:    (seed % 1000) / 1000 * Math.PI * 2,
+                });
             });
-        });
         });
         return result;
     }, [artists, tracks, playlists, activeView]);
 
-    // Pre-build curves (expensive — only recompute when connections change)
-    const withCurves = useMemo(() =>
-        connections.map(c => ({ ...c, curve: buildArc(c.from, c.to) })),
-    [connections]);
-
-    // Connections that belong to the selected node
-    const selected = useMemo(() => {
-        if (!selectedId) return [];
-        return withCurves.filter(c =>
-            c.ownerId === selectedId || c.targetId === selectedId
-        );
-    }, [withCurves, selectedId]);
-
-    // All connections for ambient pulses (capped to keep GPU happy)
-    const ambient = useMemo(() => withCurves.slice(0, 40), [withCurves]);
+    // Cap total visible arcs to keep GPU comfortable
+    const visible = useMemo(() => connections.slice(0, 60), [connections]);
 
     return (
         <group>
-            {/* ── AMBIENT PULSES (resting heartbeat) ── */}
-            {ambient.map((c, i) => {
-                const isRelated = selectedId &&
+            {visible.map((c) => {
+                const isSelected = selectedId &&
+                    (c.ownerId === selectedId && c.targetId === selectedId);
+                const isRelated  = selectedId &&
                     (c.ownerId === selectedId || c.targetId === selectedId);
-                // Hide ambient pulses on unrelated connections when something is selected
-                // so the selected constellation reads cleanly
-                if (selectedId && !isRelated) return null;
 
                 return (
-                    <TravelingPulse
-                        key={`pulse-${c.ownerId}-${c.targetId}`}
-                        curve={c.curve}
+                    <ShimmerLine
+                        key={`arc-${c.ownerId}-${c.targetId}`}
+                        from={c.from}
+                        to={c.to}
                         color={c.color}
-                        speed={isRelated ? c.speed * 1.6 : c.speed}
                         phaseOffset={c.phase}
-                        size={isRelated ? 0.030 : 0.020}
+                        isSelected={isSelected}
+                        isRelated={isRelated}
                     />
                 );
             })}
-
-            {/* ── CONSTELLATION LINES (selected reveal) ── */}
-            {selected.map(c => (
-                <ConstellationLine
-                    key={`constellation-${c.ownerId}-${c.targetId}`}
-                    from={c.from}
-                    to={c.to}
-                    color={c.color}
-                />
-            ))}
         </group>
     );
 };
@@ -265,21 +206,26 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
         }
     });
 
+    // Slightly larger hit area via invisible sphere for easier clicking
     return (
         <group position={pos}>
-            {/* Core sphere */}
+            {/* Invisible hit area — larger than visual node */}
             <mesh
-                ref={meshRef}
-                scale={[scaleFactor, scaleFactor, scaleFactor]}
                 onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
                 onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
                 onPointerOut={() => setHovered(false)}
             >
+                <sphereGeometry args={[size * 4, 8, 8]} />
+                <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+            </mesh>
+
+            {/* Core sphere */}
+            <mesh ref={meshRef} scale={[scaleFactor, scaleFactor, scaleFactor]}>
                 <sphereGeometry args={[size, 16, 16]} />
                 <meshStandardMaterial
                     color={color}
                     emissive={color}
-                    emissiveIntensity={isSelected ? 3.5 : 2}
+                    emissiveIntensity={isSelected ? 4.5 : hovered ? 3.5 : 2.5}
                     toneMapped={false}
                     transparent
                     opacity={opacityFactor}
@@ -292,8 +238,8 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
             {glowTexture && (
                 <mesh
                     scale={[
-                        size * (isSelected ? 18 : 12) * scaleFactor,
-                        size * (isSelected ? 18 : 12) * scaleFactor,
+                        size * (isSelected ? 20 : hovered ? 16 : 11) * scaleFactor,
+                        size * (isSelected ? 20 : hovered ? 16 : 11) * scaleFactor,
                         1,
                     ]}
                     onUpdate={(self) => self.lookAt(0, 0, 0)}
@@ -303,7 +249,7 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
                         map={glowTexture}
                         transparent
                         blending={THREE.AdditiveBlending}
-                        opacity={opacityFactor * (isSelected ? 1 : 0.65)}
+                        opacity={opacityFactor * (isSelected ? 1.0 : hovered ? 0.85 : 0.55)}
                         side={THREE.DoubleSide}
                         depthWrite={false}
                         toneMapped={false}
@@ -311,19 +257,19 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
                 </mesh>
             )}
 
-            {/* Minimal label — shown on hover or selection */}
+            {/* Label — shown on hover or selection */}
             {(isSelected || hovered) && (
                 <>
                     <pointLight distance={1.2} intensity={isSelected ? 6 : 4} color={color} />
-                    <Html position={[0, size + 0.1, 0]} center zIndexRange={[0, 10]}>
+                    <Html position={[0, size + 0.14, 0]} center zIndexRange={[0, 10]}>
                         <div
                             className="pointer-events-none select-none"
                             style={{
-                                background: 'rgba(0,0,0,0.92)',
-                                border: `1px solid ${color}45`,
+                                background: 'rgba(0,0,0,0.90)',
+                                border: `1px solid ${color}55`,
                                 padding: '4px 10px',
-                                backdropFilter: 'blur(14px)',
-                                boxShadow: `0 0 18px ${color}20`,
+                                backdropFilter: 'blur(16px)',
+                                boxShadow: `0 0 20px ${color}25`,
                                 minWidth: '80px',
                                 textAlign: 'center',
                             }}
@@ -335,13 +281,13 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
                                 fontWeight: 900,
                                 letterSpacing: '0.2em',
                                 textTransform: 'uppercase',
-                                textShadow: `0 0 8px ${color}70`,
+                                textShadow: `0 0 8px ${color}80`,
                             }}>
                                 {name}
                             </div>
                             {subtitle && (
                                 <div style={{
-                                    color: 'rgba(255,255,255,0.3)',
+                                    color: 'rgba(255,255,255,0.35)',
                                     fontSize: '6px',
                                     fontFamily: 'monospace',
                                     fontWeight: 700,
@@ -387,12 +333,17 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
 
     return (
         <group position={POS}>
+            {/* Invisible hit area */}
             <mesh
-                ref={meshRef}
                 onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
                 onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
                 onPointerOut={() => setHovered(false)}
             >
+                <sphereGeometry args={[0.30, 8, 8]} />
+                <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+            </mesh>
+
+            <mesh ref={meshRef}>
                 <sphereGeometry args={[0.12, 32, 32]} />
                 <meshStandardMaterial
                     color={COLOR} emissive={COLOR} emissiveIntensity={3}
@@ -537,23 +488,30 @@ const GlobeCore = memo(({
 
             {/* Globe layers */}
             <Sphere args={[2.45, 64, 64]}>
-                <meshStandardMaterial color="#080808" roughness={0.15} metalness={0.9} />
+                <meshStandardMaterial color="#060606" roughness={0.12} metalness={0.95} />
             </Sphere>
+            {/* Subtle inner tint */}
             <Sphere args={[2.46, 32, 32]}>
                 <meshStandardMaterial
-                    color={accentColor} transparent opacity={0.04}
-                    emissive={accentColor} emissiveIntensity={0.4}
+                    color={accentColor} transparent opacity={0.035}
+                    emissive={accentColor} emissiveIntensity={0.35}
                 />
             </Sphere>
-            <Sphere args={[2.52, 48, 48]}>
+            {/* Wireframe grid — slightly more visible than before */}
+            <Sphere args={[2.52, 32, 32]}>
                 <meshStandardMaterial
                     color={accentColor} wireframe
-                    transparent opacity={0.04}
-                    emissive={accentColor} emissiveIntensity={0.25}
+                    transparent opacity={0.055}
+                    emissive={accentColor} emissiveIntensity={0.3}
                 />
             </Sphere>
+            {/* Atmosphere */}
             <Sphere ref={atmosphereRef} args={[2.58, 64, 64]}>
-                <meshBasicMaterial color={accentColor} transparent opacity={0.08} side={THREE.BackSide} />
+                <meshBasicMaterial color={accentColor} transparent opacity={0.07} side={THREE.BackSide} />
+            </Sphere>
+            {/* Outer rim glow */}
+            <Sphere args={[2.62, 32, 32]}>
+                <meshBasicMaterial color={accentColor} transparent opacity={0.025} side={THREE.BackSide} />
             </Sphere>
 
             {/* ── NODES ── */}
@@ -621,7 +579,7 @@ const GlobeCore = memo(({
                 })}
             />
 
-            {/* ── NETWORK: traveling pulses + constellation lines ── */}
+            {/* ── NETWORK: always-visible shimmer lines ── */}
             <NetworkVisualization
                 artists={artists_}
                 tracks={tracks_}
@@ -698,8 +656,6 @@ const InteractiveGlobe = memo(({
                         />
                     </group>
                 </Float>
-
-
             </Canvas>
         </div>
     );
