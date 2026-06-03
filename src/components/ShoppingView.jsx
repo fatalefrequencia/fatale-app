@@ -73,27 +73,28 @@ const ShoppingView = () => {
     const isEs = language === 'es';
 
     const labels = {
-        subtitle:              isEs ? 'TIENDAS DE ARTISTAS INDEPENDIENTES (barajado a diario"' : 'INDEPENDENT ARTIST STORES & MERCH (shuffled daily)',
-        searchPlaceholder:     isEs ? 'Buscar productos o artistas...'      : 'Search products or artists...',
-        uploadTitle:           isEs ? 'PUBLICAR PRODUCTO'                   : 'PUBLISH NEW PRODUCT',
-        productName:           isEs ? 'Nombre del Producto'                 : 'Product Name',
-        productNamePlaceholder:isEs ? 'Ej. Camiseta, Vinilo, Preset Pack'   : 'e.g., Logo T-Shirt, Vinyl Record, Presets',
-        productPrice:          isEs ? 'Precio / Valor'                      : 'Price / Value',
-        purchaseLink:          isEs ? 'Enlace de Compra / Tienda'           : 'Purchase / Store Link',
-        purchaseLinkPlaceholder:isEs? 'https://tu-tienda.com/producto'      : 'https://your-store.com/product',
-        visualTeaser:          isEs ? 'Portada del Producto'                : 'Product Cover Media',
-        uploadBtn:             isEs ? 'PUBLICAR PRODUCTO'                   : 'PUBLISH TO MARKETPLACE',
-        buyBtn:                isEs ? 'VISIT_STORE'                         : 'VISIT_STORE',
-        copyLink:              isEs ? 'COPY_LINK'                           : 'COPY_LINK',
-        shareProduct:          isEs ? 'SHARE'                               : 'SHARE',
-        deleteBtn:             isEs ? '[ ELIMINAR // OWNER_ONLY ]'          : '[ DELETE_LISTING // OWNER_ONLY ]',
-        noNodes:               isEs ? 'No se encontraron productos'         : 'No products found',
-        activeProducts:        isEs ? 'ACTIVE_PRODUCTS'                     : 'ACTIVE_PRODUCTS',
-        allFilter:             isEs ? 'Todo'                                : 'All',
-        myFilter:              isEs ? 'Mis Productos'                       : 'My Products',
-        enterStore:            isEs ? 'ENTRAR'                              : 'ENTER',
-        backToMall:            isEs ? 'BACK TO MALL'                        : 'BACK TO MALL',
-        categoryLabel:         isEs ? 'CATEGORÍA'                           : 'CATEGORY',
+        subtitle:               isEs ? 'TIENDAS DE ARTISTAS INDEPENDIENTES (barajado a diario"' : 'INDEPENDENT ARTIST STORES & MERCH (shuffled daily)',
+        searchPlaceholder:      isEs ? 'Buscar productos o artistas...'      : 'Search products or artists...',
+        uploadTitle:            isEs ? 'PUBLICAR PRODUCTO'                   : 'PUBLISH NEW PRODUCT',
+        productName:            isEs ? 'Nombre del Producto'                 : 'Product Name',
+        productNamePlaceholder: isEs ? 'Ej. Camiseta, Vinilo, Preset Pack'   : 'e.g., Logo T-Shirt, Vinyl Record, Presets',
+        productPrice:           isEs ? 'Precio / Valor'                      : 'Price / Value',
+        purchaseLink:           isEs ? 'Enlace de Compra / Tienda'           : 'Purchase / Store Link',
+        purchaseLinkPlaceholder:isEs ? 'https://tu-tienda.com/producto'      : 'https://your-store.com/product',
+        visualTeaser:           isEs ? 'Portada del Producto'                : 'Product Cover Media',
+        uploadBtn:              isEs ? 'PUBLICAR PRODUCTO'                   : 'PUBLISH TO MARKETPLACE',
+        buyBtn:                 isEs ? 'VISIT_STORE'                         : 'VISIT_STORE',
+        copyLink:               isEs ? 'COPY_LINK'                           : 'COPY_LINK',
+        shareProduct:           isEs ? 'SHARE'                               : 'SHARE',
+        deleteBtn:              isEs ? '[ ELIMINAR // OWNER_ONLY ]'          : '[ DELETE_LISTING // OWNER_ONLY ]',
+        noNodes:                isEs ? 'No se encontraron productos'         : 'No products found',
+        activeProducts:         isEs ? 'ACTIVE_PRODUCTS'                     : 'ACTIVE_PRODUCTS',
+        allFilter:              isEs ? 'Todo'                                : 'All',
+        myFilter:               isEs ? 'Mis Productos'                       : 'My Products',
+        // CHANGE #4: updated enter store label — bracket style, no icon
+        enterStore:             isEs ? '[ ENTER_STORE ]'                     : '[ ENTER_STORE ]',
+        backToMall:             isEs ? 'BACK TO MALL'                        : 'BACK TO MALL',
+        categoryLabel:          isEs ? 'CATEGORÍA'                           : 'CATEGORY',
     };
 
     const [shops, setShops] = useState([]);
@@ -183,17 +184,16 @@ const ShoppingView = () => {
                 const cat = parseCategoryFromDesc(parsedDesc);
                 const cleanDesc = stripCategoryTag(parsedDesc);
 
-                // Resolve node label — prefer real username if available
                 const username =
-    item.username   || item.Username   ||
-    item.userName   || item.UserName   ||
-    item.user?.username || item.user?.Username ||
-    item.user?.name     || item.user?.Name     ||
-    item.artistName || item.ArtistName ||
-    item.author     || item.Author     ||
-    item.name       || item.Name;
+                    item.username   || item.Username   ||
+                    item.userName   || item.UserName   ||
+                    item.user?.username || item.user?.Username ||
+                    item.user?.name     || item.user?.Name     ||
+                    item.artistName || item.ArtistName ||
+                    item.author     || item.Author     ||
+                    item.name       || item.Name;
 
-const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
+                const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
 
                 return {
                     id:         `api-${item.id || item.Id}`,
@@ -229,7 +229,6 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
             const formData = new FormData();
             formData.append('File', file);
             formData.append('Title', price.trim() ? `${title.trim()} [${price.trim()}]` : title.trim());
-            // Embed category tag into description
             const descWithCat = description.trim()
                 ? `${link.trim()}|${description.trim()} [CAT:${category}]`
                 : `${link.trim()}|[CAT:${category}]`;
@@ -302,7 +301,7 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
         background: T.pink, color: '#000',
         fontFamily: T.mono, fontSize: 11, fontWeight: 900,
         letterSpacing: '0.22em', textTransform: 'uppercase',
-        border: 'none', borderRadius: 4, cursor: 'pointer',
+        border: 'none', borderRadius: 0, cursor: 'pointer', // CHANGE #1: borderRadius 0
         transition: 'background 0.15s',
     };
     const btnSec = {
@@ -311,14 +310,14 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
         background: T.bgBox, border: `1px solid ${T.border}`,
         color: T.pink, fontFamily: T.mono, fontSize: 9,
         fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase',
-        borderRadius: 4, cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s',
+        borderRadius: 0, cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s', // CHANGE #1: borderRadius 0
     };
     const btnDel = {
         width: '100%', padding: '9px 12px',
         background: 'transparent', border: `1px solid ${T.borderDim}`,
         color: T.purpleDim, fontFamily: T.mono, fontSize: 9,
         letterSpacing: '0.18em', textTransform: 'uppercase',
-        borderRadius: 4, cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s',
+        borderRadius: 0, cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s', // CHANGE #1: borderRadius 0
         marginTop: 6,
     };
 
@@ -328,7 +327,7 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
             fontFamily: T.mono, fontSize: 8, letterSpacing: '0.14em',
             color: T.purpleDim, background: 'rgba(0,0,0,0.75)',
             border: `1px solid ${T.borderDim}`,
-            padding: '2px 6px', borderRadius: 3,
+            padding: '2px 6px', borderRadius: 0, // CHANGE #1: borderRadius 0
         }}>
             [ {cat} ]
         </span>
@@ -368,7 +367,7 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                             placeholder={labels.searchPlaceholder}
                                             value={searchTerm}
                                             onChange={e => setSearchTerm(e.target.value)}
-                                            className="w-full bg-white/[0.04] border border-white/10 focus:border-[#ff006e]/40 pl-8 pr-3 py-2 text-xs rounded-lg focus:outline-none transition-colors placeholder:text-white/20"
+                                            className="w-full bg-white/[0.04] border border-white/10 focus:border-[#ff006e]/40 pl-8 pr-3 py-2 text-xs rounded-none focus:outline-none transition-colors placeholder:text-white/20" // CHANGE #1: rounded-none
                                         />
                                     </div>
 
@@ -391,14 +390,13 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                                     color: activeFilter === 'ALL'
                                                         ? activeCat !== 'ALL' ? '#00f0ff' : '#000'
                                                         : T.purpleDim,
-                                                    borderRadius: 4, cursor: 'pointer',
+                                                    borderRadius: 0, cursor: 'pointer', // CHANGE #1: borderRadius 0
                                                     transition: 'all 0.15s',
                                                     display: 'flex', alignItems: 'center', gap: 6,
                                                     textTransform: 'uppercase', fontWeight: 900,
                                                     whiteSpace: 'nowrap',
                                                 }}
                                             >
-                                                {/* Show active category name inside button if filtered */}
                                                 {activeCat !== 'ALL'
                                                     ? CATEGORIES.find(c => c.id === activeCat)?.flag ?? '--all'
                                                     : labels.allFilter}
@@ -411,7 +409,7 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                                 }}>▼</span>
                                             </button>
 
-                                            {/* Dropdown panel — DiscoveryHUD sector style */}
+                                            {/* Dropdown panel */}
                                             <AnimatePresence>
                                                 {allDropdownOpen && (
                                                     <motion.div
@@ -424,13 +422,12 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                                             zIndex: 200, minWidth: 160,
                                                             background: '#050505',
                                                             border: `1px solid ${T.border}`,
-                                                            borderRadius: 6,
+                                                            borderRadius: 0, // CHANGE #1: borderRadius 0
                                                             padding: '6px',
                                                             boxShadow: '0 8px 32px rgba(0,0,0,0.9)',
                                                             fontFamily: T.mono,
                                                         }}
                                                     >
-                                                        {/* --all resets to ALL */}
                                                         <button
                                                             onClick={() => { setActiveCat('ALL'); setActiveFilter('ALL'); setAllDropdownOpen(false); }}
                                                             style={{
@@ -439,7 +436,7 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                                                 letterSpacing: '0.16em', textTransform: 'uppercase',
                                                                 background: activeCat === 'ALL' ? 'rgba(255,255,255,0.08)' : 'transparent',
                                                                 color: activeCat === 'ALL' ? '#fff' : T.purpleDim,
-                                                                border: 'none', borderRadius: 3, cursor: 'pointer',
+                                                                border: 'none', borderRadius: 0, cursor: 'pointer', // CHANGE #1: borderRadius 0
                                                                 transition: 'all 0.1s',
                                                             }}
                                                             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
@@ -448,10 +445,8 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                                             --all
                                                         </button>
 
-                                                        {/* Divider */}
                                                         <div style={{ height: 1, background: T.borderDim, margin: '4px 6px' }} />
 
-                                                        {/* Category flags */}
                                                         {CATEGORIES.filter(c => c.id !== 'ALL').map(cat => {
                                                             const isActive = activeCat === cat.id;
                                                             return (
@@ -465,7 +460,7 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                                                         letterSpacing: '0.16em', textTransform: 'uppercase',
                                                                         background: isActive ? 'rgba(0,240,255,0.08)' : 'transparent',
                                                                         color: isActive ? '#00f0ff' : T.purpleDim,
-                                                                        border: 'none', borderRadius: 3, cursor: 'pointer',
+                                                                        border: 'none', borderRadius: 0, cursor: 'pointer', // CHANGE #1: borderRadius 0
                                                                         transition: 'all 0.1s',
                                                                     }}
                                                                     onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,240,255,0.05)'; e.currentTarget.style.color = '#00f0ff'; }}
@@ -491,7 +486,7 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                                     border: activeFilter === 'MY_NODES' ? `1px solid ${T.pink}` : `1px solid ${T.borderDim}`,
                                                     background: activeFilter === 'MY_NODES' ? 'rgba(255,0,110,0.1)' : 'transparent',
                                                     color: activeFilter === 'MY_NODES' ? T.pink : T.purpleDim,
-                                                    borderRadius: 4, cursor: 'pointer',
+                                                    borderRadius: 0, cursor: 'pointer', // CHANGE #1: borderRadius 0
                                                     transition: 'all 0.15s',
                                                     textTransform: 'uppercase', fontWeight: 900,
                                                     whiteSpace: 'nowrap',
@@ -515,14 +510,15 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                 ) : (
                                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
 
-                                        {/* Upload card */}
+                                        {/* Upload card — CHANGE #1: rounded-none, square icon */}
                                         <motion.div
                                             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                                             onClick={() => isLoggedIn ? setIsModalOpen(true) : alert('Please log in first.')}
-                                            className="group cursor-pointer relative flex flex-col rounded-xl overflow-hidden border border-dashed border-white/10 hover:border-[#ff006e]/40 bg-white/[0.015] transition-all duration-300 aspect-[3/4]"
+                                            className="group cursor-pointer relative flex flex-col rounded-none overflow-hidden border border-dashed border-white/10 hover:border-[#ff006e]/40 bg-white/[0.015] transition-all duration-300 aspect-[3/4]"
                                         >
                                             <div className="flex-1 flex flex-col items-center justify-center gap-3 p-4">
-                                                <div className="w-12 h-12 rounded-full border border-white/10 group-hover:border-[#ff006e]/50 flex items-center justify-center transition-all">
+                                                {/* CHANGE #1: square instead of rounded-full */}
+                                                <div className="w-12 h-12 border border-white/10 group-hover:border-[#ff006e]/50 flex items-center justify-center transition-all">
                                                     <Plus size={20} className="text-white/30 group-hover:text-[#ff006e] transition-colors" />
                                                 </div>
                                                 <div className="text-center">
@@ -542,37 +538,48 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                                     transition={{ delay: Math.min(i * 0.04, 0.3), type: 'spring', stiffness: 120, damping: 18 }}
                                                     whileHover={{ y: -4 }} whileTap={{ scale: 0.97 }}
                                                     onClick={() => setSelectedShop(shop)}
-                                                    className="group cursor-pointer relative flex flex-col rounded-xl overflow-hidden border border-white/5 hover:border-[#ff006e]/30 bg-[#0a0a0a] transition-all duration-300 shadow-lg hover:shadow-[0_8px_30px_rgba(255,0,110,0.12)] aspect-[3/4]"
+                                                    // CHANGE #1: rounded-none; CHANGE #2: bracket corners via pseudo + glow on hover
+                                                    className="group cursor-pointer relative flex flex-col rounded-none overflow-visible border border-[#1a0404] hover:border-[#ff006e] bg-[#060606] transition-all duration-300 aspect-[3/4]"
+                                                    onMouseEnter={e => e.currentTarget.style.boxShadow = '0 0 14px rgba(255,0,110,0.18), inset 0 0 20px rgba(255,0,110,0.03)'}
+                                                    onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
                                                 >
+                                                    {/* CHANGE #2: bracket corner accents */}
+                                                    <div className="absolute -top-px -left-px w-2.5 h-2.5 border-t-2 border-l-2 border-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 pointer-events-none" />
+                                                    <div className="absolute -top-px -right-px w-2.5 h-2.5 border-t-2 border-r-2 border-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 pointer-events-none" />
+                                                    <div className="absolute -bottom-px -left-px w-2.5 h-2.5 border-b-2 border-l-2 border-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 pointer-events-none" />
+                                                    <div className="absolute -bottom-px -right-px w-2.5 h-2.5 border-b-2 border-r-2 border-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 pointer-events-none" />
+
                                                     <div className="relative flex-1 overflow-hidden bg-black/40">
                                                         {shop.type === 'VIDEO' ? (
                                                             <video src={shop.image} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" autoPlay muted loop playsInline />
                                                         ) : (
                                                             <img src={shop.image} alt={shop.shopName} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" loading="lazy" />
                                                         )}
-                                                        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent" />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-[#060606] via-transparent to-transparent" />
 
                                                         {/* Category badge — top right, cyan */}
-                                                        <div className="absolute top-2 right-2 text-[8px] font-black text-[#00f0ff] bg-black/80 border border-[#00f0ff]/30 px-2 py-0.5 rounded-sm"
+                                                        <div className="absolute top-2 right-2 text-[8px] font-black text-[#00f0ff] bg-black/80 border border-[#00f0ff]/30 px-2 py-0.5 rounded-none" // CHANGE #1: rounded-none
                                                             style={{ fontFamily: T.mono, letterSpacing: '0.14em' }}>
                                                             [ {shop.category} ]
                                                         </div>
 
                                                         {/* Domain badge */}
-                                                        <div className="absolute top-2 left-2 text-[8px] bg-black/70 text-white/50 px-1.5 py-0.5 rounded">
+                                                        <div className="absolute top-2 left-2 text-[8px] bg-black/70 text-white/50 px-1.5 py-0.5 rounded-none"> {/* CHANGE #1: rounded-none */}
                                                             {getDomain(shop.url)}
                                                         </div>
 
-                                                        {/* Hover overlay */}
+                                                        {/* CHANGE #4: updated hover CTA — no icon, bracket style */}
                                                         <div className="absolute inset-0 bg-[#ff006e]/0 group-hover:bg-[#ff006e]/5 transition-colors duration-300 flex items-center justify-center">
-                                                            <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 bg-[#ff006e] text-black text-[9px] font-black tracking-[0.2em] px-3 py-1.5 rounded-lg flex items-center gap-1.5">
-                                                                <Store size={10} />{labels.enterStore}
+                                                            <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 bg-[#ff006e] text-black text-[9px] font-black tracking-[0.2em] px-3 py-1.5 flex items-center gap-1.5" style={{ borderRadius: 0 }}>
+                                                                {labels.enterStore}
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div className="px-3 py-2.5 bg-[#0a0a0a] border-t border-white/5">
-                                                        <div className="text-[11px] font-bold text-white truncate group-hover:text-[#ff006e] transition-colors leading-tight">{shop.shopName}</div>
-                                                        <div className="text-[9px] text-white/30 mt-0.5 truncate">{shop.artistName}</div>
+
+                                                    <div className="px-3 py-2.5 bg-[#060606] border-t border-[#0f0202]">
+                                                        <div className="text-[11px] font-bold text-white truncate group-hover:text-[#ff006e] transition-colors leading-tight" style={{ fontFamily: T.mono, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{shop.shopName}</div>
+                                                        {/* CHANGE #3: comment syntax for artist name */}
+                                                        <div className="text-[9px] mt-0.5 truncate" style={{ color: T.purpleDim, fontFamily: T.mono, letterSpacing: '0.1em' }}>// {shop.artistName}</div>
                                                     </div>
                                                 </motion.div>
                                             ))}
@@ -585,7 +592,7 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                 )}
             </AnimatePresence>
 
-            {/* ── STORE DETAIL MODAL (large card, centered overlay) ── */}
+            {/* ── STORE DETAIL MODAL ── */}
             <AnimatePresence>
                 {selectedShop && (
                     <motion.div
@@ -613,7 +620,7 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                 maxHeight: '88vh',
                                 background: T.bg,
                                 border: `1px solid ${T.border}`,
-                                borderRadius: 12,
+                                borderRadius: 0, // CHANGE #1: borderRadius 0
                                 overflow: 'hidden',
                                 boxShadow: `0 0 80px rgba(255,0,110,0.12), 0 32px 64px rgba(0,0,0,0.8)`,
                                 fontFamily: T.mono,
@@ -625,7 +632,6 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                 className="relative flex-shrink-0 w-full md:w-[48%]"
                                 style={{ minHeight: 300, maxHeight: '88vh', background: '#000' }}
                             >
-                                {/* Blurred bg */}
                                 <div className="absolute inset-0 bg-cover bg-center scale-110"
                                     style={{ backgroundImage: `url(${selectedShop.image})`, filter: 'blur(22px)', opacity: 0.15 }} />
 
@@ -643,7 +649,7 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                         display: 'flex', alignItems: 'center', gap: 6,
                                         background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
                                         border: `1px solid ${T.border}`,
-                                        color: '#e0e0e0', padding: '7px 12px', borderRadius: 6,
+                                        color: '#e0e0e0', padding: '7px 12px', borderRadius: 0, // CHANGE #1: borderRadius 0
                                         fontFamily: T.mono, fontSize: 9, fontWeight: 700,
                                         letterSpacing: '0.14em', textTransform: 'uppercase',
                                         cursor: 'pointer', transition: 'border-color 0.15s',
@@ -660,7 +666,7 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                     <button onClick={() => setSelectedShop(filteredShops[currentIndex - 1])}
                                         style={{
                                             position: 'absolute', left: 12, bottom: 12, zIndex: 30,
-                                            width: 34, height: 34, borderRadius: '50%',
+                                            width: 34, height: 34, borderRadius: 0, // CHANGE #1: borderRadius 0
                                             background: 'rgba(0,0,0,0.75)', border: `1px solid ${T.border}`,
                                             color: '#e0e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s',
@@ -676,7 +682,7 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                     <button onClick={() => setSelectedShop(filteredShops[currentIndex + 1])}
                                         style={{
                                             position: 'absolute', right: 12, bottom: 12, zIndex: 30,
-                                            width: 34, height: 34, borderRadius: '50%',
+                                            width: 34, height: 34, borderRadius: 0, // CHANGE #1: borderRadius 0
                                             background: 'rgba(0,0,0,0.75)', border: `1px solid ${T.border}`,
                                             color: '#e0e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s',
@@ -692,7 +698,7 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                 <div style={{
                                     position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', zIndex: 30,
                                     fontFamily: T.mono, fontSize: 8, color: 'rgba(255,255,255,0.3)',
-                                    background: 'rgba(0,0,0,0.7)', padding: '3px 10px', borderRadius: 99,
+                                    background: 'rgba(0,0,0,0.7)', padding: '3px 10px', borderRadius: 0, // CHANGE #1: borderRadius 0
                                     letterSpacing: '0.1em', whiteSpace: 'nowrap',
                                 }}>
                                     {currentIndex + 1} / {filteredShops.length}
@@ -712,7 +718,6 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                 {/* Scrollable info */}
                                 <div style={{ flex: 1, overflowY: 'auto', padding: '20px 22px' }} className="no-scrollbar">
 
-                                    {/* Title with CRT flicker */}
                                     <div style={{ marginBottom: 14 }}>
                                         <h1 style={{
                                             color: T.pink, fontSize: 20, fontWeight: 900,
@@ -766,7 +771,7 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                     <div style={{ color: T.purple, fontSize: 9, letterSpacing: '0.18em', borderBottom: `1px solid ${T.borderDim}`, paddingBottom: 4, margin: '14px 0 8px' }}>
                                         $ ping gateway --status
                                     </div>
-                                    <div style={{ background: T.bgBox, border: `1px solid ${T.border}`, borderRadius: 5, padding: '11px 14px' }}>
+                                    <div style={{ background: T.bgBox, border: `1px solid ${T.border}`, borderRadius: 0, padding: '11px 14px' }}> {/* CHANGE #1: borderRadius 0 */}
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                                             <span style={{ color: T.fuchsia, fontSize: 9, letterSpacing: '0.14em' }}>[ GATEWAY_CONNECTION // ACTIVE ]</span>
                                             <span style={{ color: T.purple, fontSize: 9, animation: 'termPing 1.2s ease-in-out infinite' }}>● LIVE_FEED</span>
@@ -861,11 +866,11 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                         <motion.div
                             initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }}
                             onClick={e => e.stopPropagation()}
-                            className="bg-[#060608] border border-white/8 rounded-2xl w-full max-w-2xl relative overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar"
+                            className="bg-[#060608] border border-white/8 rounded-none w-full max-w-2xl relative overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar" // CHANGE #1: rounded-none
                         >
                             <div className="flex items-center justify-between p-5 border-b border-white/5">
                                 <div className="text-sm font-black uppercase tracking-widest text-[#ff006e]">[ {labels.uploadTitle} ]</div>
-                                <button onClick={() => setIsModalOpen(false)} className="text-white/30 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors">
+                                <button onClick={() => setIsModalOpen(false)} className="text-white/30 hover:text-white p-1.5 rounded-none hover:bg-white/5 transition-colors"> {/* CHANGE #1: rounded-none */}
                                     <X size={16} />
                                 </button>
                             </div>
@@ -875,19 +880,20 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                 <div>
                                     <div className="text-[9px] text-white/30 uppercase tracking-widest mb-2">{labels.visualTeaser}</div>
                                     {previewUrl ? (
-                                        <div className="aspect-square rounded-xl overflow-hidden bg-black/40 border border-white/5 relative">
+                                        <div className="aspect-square rounded-none overflow-hidden bg-black/40 border border-white/5 relative"> {/* CHANGE #1: rounded-none */}
                                             <div className="absolute inset-0 bg-cover bg-center blur-xl opacity-20" style={{ backgroundImage: `url(${previewUrl})` }} />
                                             {mediaType === 'VIDEO'
                                                 ? <video src={previewUrl} className="w-full h-full object-contain relative z-10" autoPlay muted loop />
                                                 : <img src={previewUrl} className="w-full h-full object-contain relative z-10" alt="Preview" />}
-                                            <label htmlFor="file-change" className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center cursor-pointer z-20 rounded-xl transition-opacity">
-                                                <span className="text-[10px] font-bold uppercase border border-white/20 bg-black/80 px-3 py-1.5 rounded-lg">{isEs ? 'CAMBIAR' : 'CHANGE FILE'}</span>
+                                            <label htmlFor="file-change" className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center cursor-pointer z-20 rounded-none transition-opacity"> {/* CHANGE #1: rounded-none */}
+                                                <span className="text-[10px] font-bold uppercase border border-white/20 bg-black/80 px-3 py-1.5 rounded-none">{isEs ? 'CAMBIAR' : 'CHANGE FILE'}</span> {/* CHANGE #1: rounded-none */}
                                             </label>
                                             <input type="file" id="file-change" onChange={handleFileChange} className="hidden" accept="image/*,video/*" />
                                         </div>
                                     ) : (
-                                        <label htmlFor="file-upload" className="aspect-square rounded-xl border border-dashed border-white/10 hover:border-[#ff006e]/40 bg-white/[0.01] flex flex-col items-center justify-center gap-3 cursor-pointer transition-all group">
-                                            <div className="w-10 h-10 rounded-full border border-white/10 group-hover:border-[#ff006e]/30 flex items-center justify-center transition-all">
+                                        <label htmlFor="file-upload" className="aspect-square rounded-none border border-dashed border-white/10 hover:border-[#ff006e]/40 bg-white/[0.01] flex flex-col items-center justify-center gap-3 cursor-pointer transition-all group"> {/* CHANGE #1: rounded-none */}
+                                            {/* CHANGE #1: square instead of rounded-full */}
+                                            <div className="w-10 h-10 border border-white/10 group-hover:border-[#ff006e]/30 flex items-center justify-center transition-all">
                                                 <Upload size={16} className="text-white/30 group-hover:text-[#ff006e]" />
                                             </div>
                                             <span className="text-[10px] text-white/40 uppercase tracking-wider group-hover:text-white">{isEs ? 'SELECCIONAR ARCHIVO' : 'CHOOSE FILE'}</span>
@@ -908,12 +914,12 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                             <input
                                                 value={f.value} onChange={e => f.set(e.target.value)}
                                                 placeholder={f.placeholder} required={f.required}
-                                                className="w-full bg-white/[0.04] border border-white/8 focus:border-[#ff006e]/40 px-3 py-2.5 text-xs rounded-xl focus:outline-none transition-colors placeholder:text-white/15"
+                                                className="w-full bg-white/[0.04] border border-white/8 focus:border-[#ff006e]/40 px-3 py-2.5 text-xs rounded-none focus:outline-none transition-colors placeholder:text-white/15" // CHANGE #1: rounded-none
                                             />
                                         </div>
                                     ))}
 
-                                    {/* Category selector — terminal checkbox style */}
+                                    {/* Category selector */}
                                     <div>
                                         <label className="text-[9px] text-white/30 uppercase tracking-widest block mb-2">{labels.categoryLabel}</label>
                                         <div className="flex flex-wrap gap-1.5">
@@ -929,7 +935,7 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                                             fontSize: 9,
                                                             letterSpacing: '0.14em',
                                                             padding: '4px 9px',
-                                                            borderRadius: 3,
+                                                            borderRadius: 0, // CHANGE #1: borderRadius 0
                                                             border: active ? `1px solid ${T.pink}` : `1px solid ${T.borderDim}`,
                                                             background: active ? 'rgba(255,0,110,0.1)' : 'transparent',
                                                             color: active ? T.pink : T.purpleDim,
@@ -949,13 +955,13 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                                         <textarea
                                             value={description} onChange={e => setDescription(e.target.value)}
                                             rows={3} placeholder={isEs ? 'Descripción del producto...' : 'Product description...'}
-                                            className="w-full bg-white/[0.04] border border-white/8 focus:border-[#ff006e]/40 px-3 py-2.5 text-xs rounded-xl focus:outline-none transition-colors resize-none placeholder:text-white/15"
+                                            className="w-full bg-white/[0.04] border border-white/8 focus:border-[#ff006e]/40 px-3 py-2.5 text-xs rounded-none focus:outline-none transition-colors resize-none placeholder:text-white/15" // CHANGE #1: rounded-none
                                         />
                                     </div>
 
                                     <button
                                         type="submit" disabled={isUploading}
-                                        className="w-full py-3.5 bg-gradient-to-r from-[#ff006e] to-[#ff409f] hover:from-[#ff0080] hover:to-[#ff50af] text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-xl disabled:opacity-50 transition-all mt-auto"
+                                        className="w-full py-3.5 bg-gradient-to-r from-[#ff006e] to-[#ff409f] hover:from-[#ff0080] hover:to-[#ff50af] text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-none disabled:opacity-50 transition-all mt-auto" // CHANGE #1: rounded-none
                                     >
                                         {isUploading ? '[ PUBLISHING... ]' : labels.uploadBtn}
                                     </button>
@@ -975,7 +981,7 @@ const nodeLabel = username ? username.toUpperCase() : `NODE_${userId}`;
                             position: 'fixed', bottom: 96, left: '50%', transform: 'translateX(-50%)',
                             zIndex: 999, background: T.pink, color: '#000',
                             fontFamily: T.mono, fontSize: 9, fontWeight: 900,
-                            letterSpacing: '0.18em', padding: '8px 20px', borderRadius: 99,
+                            letterSpacing: '0.18em', padding: '8px 20px', borderRadius: 0, // CHANGE #1: borderRadius 0
                         }}
                     >
                         [ LINK_COPIED // SECURED ]
