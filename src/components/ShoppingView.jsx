@@ -601,7 +601,7 @@ const ShoppingView = () => {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.18 }}
-                        className="fixed inset-0 z-40 flex items-center justify-center p-4 md:p-8"
+                        className="fixed inset-0 z-40 flex items-center justify-center p-2 md:p-8"
                         style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(6px)' }}
                         onClick={() => setSelectedShop(null)}
                     >
@@ -617,7 +617,7 @@ const ShoppingView = () => {
                                 flexDirection: 'row',
                                 width: '100%',
                                 maxWidth: 900,
-                                maxHeight: '88vh',
+                                maxHeight: '92dvh',
                                 background: T.bg,
                                 border: `1px solid ${T.border}`,
                                 borderRadius: 0, // CHANGE #1: borderRadius 0
@@ -866,9 +866,9 @@ const ShoppingView = () => {
                         <motion.div
                             initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }}
                             onClick={e => e.stopPropagation()}
-                            className="bg-[#060608] border border-white/8 rounded-none w-full max-w-2xl relative overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar" // CHANGE #1: rounded-none
+                            className="bg-[#060608] border border-white/8 rounded-none w-full max-w-2xl relative shadow-2xl max-h-[90dvh] overflow-y-auto no-scrollbar" // CHANGE #1: rounded-none
                         >
-                            <div className="flex items-center justify-between p-5 border-b border-white/5">
+                            <div className="flex items-center justify-between p-5 border-b border-white/5 sticky top-0 z-10 bg-[#060608]">
                                 <div className="text-sm font-black uppercase tracking-widest text-[#ff006e]">[ {labels.uploadTitle} ]</div>
                                 <button onClick={() => setIsModalOpen(false)} className="text-white/30 hover:text-white p-1.5 rounded-none hover:bg-white/5 transition-colors"> {/* CHANGE #1: rounded-none */}
                                     <X size={16} />
