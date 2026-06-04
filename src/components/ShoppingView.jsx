@@ -370,13 +370,14 @@ const ShoppingView = () => {
                         onClick={onClose}
                         style={{
                             display: 'flex', alignItems: 'center', gap: 6,
-                            background: 'transparent', border: `1px solid ${T.border}`,
-                            color: '#ccc', padding: '6px 12px',
+                            background: 'transparent', border: `1px solid ${T.pink}`,
+                            color: T.pink, padding: '6px 12px',
                             fontFamily: T.mono, fontSize: 9, letterSpacing: '0.14em',
                             textTransform: 'uppercase', cursor: 'pointer', borderRadius: 0,
+                            fontWeight: 900,
                         }}
                     >
-                        <ArrowLeft size={11} /> BACK
+                        <X size={11} /> EXIT
                     </button>
 
                     {/* Tab toggle */}
@@ -447,15 +448,6 @@ const ShoppingView = () => {
                                 ? <video src={shop.image} style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', objectFit: 'contain' }} autoPlay muted loop playsInline />
                                 : <img src={shop.image} alt={shop.shopName} style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', objectFit: 'contain' }} />
                             }
-                            {/* Price pill overlay */}
-                            <div style={{
-                                position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
-                                zIndex: 2, background: 'rgba(0,0,0,0.85)', border: `1px solid ${T.border}`,
-                                padding: '6px 20px', display: 'flex', alignItems: 'baseline', gap: 8,
-                            }}>
-                                <span style={{ color: T.pink, fontSize: 20, fontWeight: 900 }}>{formatPrice(shop.price)}</span>
-                                <span style={{ color: T.purpleFaint, fontSize: 8, letterSpacing: '0.2em' }}>NET_VALUE</span>
-                            </div>
                         </motion.div>
                     )}
 
@@ -655,7 +647,7 @@ const ShoppingView = () => {
 
                 {/* Scrollable form */}
                 <div style={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch', flex: 1 }} className="no-scrollbar">
-                    <form onSubmit={handleUpload} style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <form onSubmit={handleUpload} style={{ padding: '16px', paddingBottom: '32px', display: 'flex', flexDirection: 'column', gap: 14 }}>
 
                         {/* File upload */}
                         <div>
@@ -699,7 +691,7 @@ const ShoppingView = () => {
                         {/* Fields */}
                         {[
                             { label: labels.productName,  value: title, set: setTitle, placeholder: labels.productNamePlaceholder, required: true },
-                            { label: labels.productPrice, value: price, set: setPrice, placeholder: 'e.g. $25.00 or FREE' },
+                            { label: labels.productPrice, value: price, set: setPrice, placeholder: 'e.g. $25, $10–$50, from $5, FREE' },
                             { label: labels.purchaseLink, value: link,  set: setLink,  placeholder: labels.purchaseLinkPlaceholder, required: true },
                         ].map(f => (
                             <div key={f.label}>
@@ -1201,7 +1193,7 @@ const ShoppingView = () => {
                                 <div className="flex flex-col gap-4">
                                     {[
                                         { label: labels.productName, value: title, set: setTitle, placeholder: labels.productNamePlaceholder, required: true },
-                                        { label: labels.productPrice, value: price, set: setPrice, placeholder: 'e.g. $25.00 or FREE' },
+                                        { label: labels.productPrice, value: price, set: setPrice, placeholder: 'e.g. $25, $10–$50, from $5, FREE' },
                                         { label: labels.purchaseLink, value: link, set: setLink, placeholder: labels.purchaseLinkPlaceholder, required: true },
                                     ].map(f => (
                                         <div key={f.label}>
