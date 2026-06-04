@@ -5,9 +5,8 @@ import * as THREE from 'three';
 import { SECTORS } from '../../constants';
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
-// NODE_R: nodes sit just outside all globe layers (atmosphere = 2.56)
-const GLOBE_R = 2.45;
-const NODE_R  = 2.64;   // slightly proud of the surface — always visible
+const GLOBE_R  = 2.45;   // solid opaque core
+const NODE_R   = 2.51;   // nodes sit just above wireframe (2.50), flush with surface
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 
@@ -60,8 +59,6 @@ const buildArc = (from, to) => {
 };
 
 // ─── STAR FIELD ───────────────────────────────────────────────────────────────
-// ~1 200 stars distributed on a large sphere behind the globe.
-// Two layers: tiny sharp stars + a handful of slightly brighter ones.
 
 const StarField = memo(() => {
     const COUNT_SMALL  = 1100;
@@ -72,7 +69,6 @@ const StarField = memo(() => {
         const mkGeo = (count, r) => {
             const pos = new Float32Array(count * 3);
             for (let i = 0; i < count; i++) {
-                // uniform sphere distribution
                 const u   = Math.random();
                 const v   = Math.random();
                 const lat = Math.acos(2 * v - 1) - Math.PI / 2;
@@ -91,32 +87,12 @@ const StarField = memo(() => {
     useEffect(() => () => { smallGeo.dispose(); brightGeo.dispose(); }, [smallGeo, brightGeo]);
 
     return (
-        <group renderOrder={-10}>
-            {/* Tiny dim stars */}
-            <points geometry={smallGeo} renderOrder={-10}>
-                <pointsMaterial
-                    color="#a0c8ff"
-                    size={0.055}
-                    sizeAttenuation
-                    transparent
-                    opacity={0.55}
-                    depthWrite={false}
-                    toneMapped={false}
-                    blending={THREE.AdditiveBlending}
-                />
+        <group>
+            <points geometry={smallGeo}>
+                <pointsMaterial color="#a0c8ff" size={0.055} sizeAttenuation transparent opacity={0.55} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
             </points>
-            {/* A few brighter accent stars — slight warm tint */}
-            <points geometry={brightGeo} renderOrder={-10}>
-                <pointsMaterial
-                    color="#ffe8c0"
-                    size={0.10}
-                    sizeAttenuation
-                    transparent
-                    opacity={0.70}
-                    depthWrite={false}
-                    toneMapped={false}
-                    blending={THREE.AdditiveBlending}
-                />
+            <points geometry={brightGeo}>
+                <pointsMaterial color="#ffe8c0" size={0.10} sizeAttenuation transparent opacity={0.70} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
             </points>
         </group>
     );
@@ -200,14 +176,13 @@ const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeVi
 };
 
 // ─── FLAT CITY-LIGHT NODE ─────────────────────────────────────────────────────
-// Sits at NODE_R (outside all globe geometry).
-// depthTest=false on all billboard materials → never occluded by globe layers.
+// Sits at NODE_R. depthTest=false → never clipped by globe geometry.
 
 const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, onClick, cameraDist }) => {
     const billRef  = useRef();
     const ringRef  = useRef();
     const [hovered, setHovered] = useState(false);
-    const { pos }  = useMemo(() => getSphericalPos(id), [id]);           // uses NODE_R by default
+    const { pos }  = useMemo(() => getSphericalPos(id), [id]);
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
 
     const baseScale = THREE.MathUtils.clamp(cameraDist / 8, 0.55, 1.8);
@@ -229,13 +204,10 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
     const DOT  = size * 0.9;
     const RING = size * 1.9;
     const GLOW = size * (isSelected ? 9 : hovered ? 7 : 4.5);
-
-    // renderOrder 10 + depthTest false = always on top of globe
-    const RO = 10;
+    const RO   = 10;
 
     return (
         <group position={pos}>
-            {/* Invisible hit sphere */}
             <mesh
                 onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
                 onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
@@ -246,7 +218,6 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
             </mesh>
 
             <group ref={billRef}>
-                {/* Soft halo */}
                 {glowTex && (
                     <mesh renderOrder={RO}>
                         <planeGeometry args={[GLOW * 2, GLOW * 2]} />
@@ -255,24 +226,18 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
                             side={THREE.DoubleSide} depthWrite={false} depthTest={false} toneMapped={false} />
                     </mesh>
                 )}
-
-                {/* Core dot */}
                 <mesh renderOrder={RO + 1}>
                     <circleGeometry args={[DOT, 32]} />
                     <meshBasicMaterial color={color} transparent blending={THREE.AdditiveBlending}
                         opacity={isSelected ? 1 : hovered ? 0.95 : 0.92}
                         depthWrite={false} depthTest={false} toneMapped={false} />
                 </mesh>
-
-                {/* Thin ring */}
                 <mesh ref={ringRef} renderOrder={RO + 1}>
                     <ringGeometry args={[RING * 0.85, RING, 48]} />
                     <meshBasicMaterial color={color} transparent blending={THREE.AdditiveBlending}
                         opacity={isSelected ? 0.80 : hovered ? 0.55 : 0.20}
                         depthWrite={false} depthTest={false} toneMapped={false} side={THREE.DoubleSide} />
                 </mesh>
-
-                {/* Selected: outer pulse ring */}
                 {isSelected && (
                     <mesh renderOrder={RO + 1}>
                         <ringGeometry args={[RING * 1.6, RING * 1.72, 48]} />
@@ -321,11 +286,7 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
     const ring2Ref = useRef();
     const [hovered, setHovered] = useState(false);
     const COLOR     = '#ff0033';
-    // Top of globe — same NODE_R radius
-    const POS       = useMemo(() => {
-        const r = NODE_R;
-        return [0, r, 0];
-    }, []);
+    const POS       = [0, NODE_R, 0];
     const baseScale = THREE.MathUtils.clamp(cameraDist / 8, 0.55, 1.8);
     const glowTex   = useMemo(() => createGlowTexture(COLOR), []);
     const isMobile  = typeof window !== 'undefined' && window.innerWidth < 1024;
@@ -374,7 +335,6 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
                     <meshBasicMaterial color={COLOR} transparent opacity={0.30} depthWrite={false} depthTest={false} toneMapped={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
                 </mesh>
             </group>
-
             {!hideLabel && (
                 <Html position={[0, 0.28, 0]} center zIndexRange={[0, 5]} style={{ pointerEvents: 'none' }}>
                     <div onClick={!isMobile ? (e) => { e.stopPropagation(); onClick(); } : undefined}
@@ -401,16 +361,8 @@ const GlobeCore = memo(({
     const { camera }    = useThree();
     const [cameraDist, setCameraDist] = useState(10);
     const [seed]        = useState(() => Math.random().toString());
-    const atmosphereRef = useRef();
-    const backGlowRef   = useRef();
 
-    useFrame(({ clock }) => {
-        const t = clock.getElapsedTime();
-        setCameraDist(camera.position.length());
-        if (atmosphereRef.current) atmosphereRef.current.scale.setScalar(1 + Math.sin(t * 1.2) * 0.003);
-        // Slow breathe on the back-glow
-        if (backGlowRef.current) backGlowRef.current.material.opacity = 0.11 + Math.sin(t * 0.8) * 0.025;
-    });
+    useFrame(() => setCameraDist(camera.position.length()));
 
     const activeSectorColor = useMemo(() => SECTORS.find(s => s.id === activeSector)?.color, [activeSector]);
 
@@ -449,40 +401,33 @@ const GlobeCore = memo(({
         <group>
             {/* ── GLOBE ── */}
 
-            {/* Dark metallic core */}
+            {/* 1. Opaque solid core — renders first, occludes everything behind it */}
             <Sphere args={[GLOBE_R, 64, 64]} renderOrder={1}>
                 <meshStandardMaterial color="#050505" roughness={0.08} metalness={0.92} />
             </Sphere>
 
-            {/* Hair-thin accent tint inside */}
+            {/* 2. Hair-thin inner accent tint */}
             <Sphere args={[2.46, 32, 32]} renderOrder={2}>
-                <meshStandardMaterial color={accentColor} transparent opacity={0.022} emissive={accentColor} emissiveIntensity={0.25} />
+                <meshStandardMaterial color={accentColor} transparent opacity={0.020} emissive={accentColor} emissiveIntensity={0.22} />
             </Sphere>
 
-            {/* Fine wireframe grid */}
+            {/* 3. Fine wireframe latitude/longitude grid */}
             <Sphere args={[2.50, 36, 18]} renderOrder={3}>
-                <meshBasicMaterial color={accentColor} wireframe transparent opacity={0.042} toneMapped={false} />
+                <meshBasicMaterial color={accentColor} wireframe transparent opacity={0.040} toneMapped={false} />
             </Sphere>
 
-            {/* Thin forward atmosphere — BackSide so it wraps the rim */}
-            <Sphere ref={atmosphereRef} args={[2.56, 48, 48]} renderOrder={4}>
-                <meshBasicMaterial color={accentColor} transparent opacity={0.055} side={THREE.BackSide} />
+            {/* 4. Atmosphere rim — BackSide, very thin, just like the reference images */}
+            <Sphere args={[2.56, 48, 48]} renderOrder={4}>
+                <meshBasicMaterial color={accentColor} transparent opacity={0.048} side={THREE.BackSide} toneMapped={false} />
             </Sphere>
 
-            {/* ── BACK GLOW — the "planet from space" corona ── */}
-            {/* Two nested back-facing spheres for a rich layered halo */}
-            <Sphere ref={backGlowRef} args={[3.10, 32, 32]} renderOrder={0}>
-                <meshBasicMaterial color={accentColor} transparent opacity={0.11} side={THREE.BackSide} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
-            </Sphere>
-            <Sphere args={[3.80, 32, 32]} renderOrder={0}>
-                <meshBasicMaterial color={accentColor} transparent opacity={0.045} side={THREE.BackSide} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
-            </Sphere>
-            {/* Subtle inner warm core glow */}
-            <Sphere args={[2.70, 32, 32]} renderOrder={0}>
-                <meshBasicMaterial color={accentColor} transparent opacity={0.06} side={THREE.BackSide} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
+            {/* 5. Outer corona — single subtle halo, NOT additive so it doesn't bleed through core */}
+            {/* Use FrontSide with a very low opacity — gives the rim glow without see-through */}
+            <Sphere args={[2.72, 32, 32]} renderOrder={0}>
+                <meshBasicMaterial color={accentColor} transparent opacity={0.032} side={THREE.BackSide} depthWrite={false} toneMapped={false} />
             </Sphere>
 
-            {/* ── NODES ── (renderOrder 10+ / depthTest false — sit on top of all globe layers) */}
+            {/* ── NODES ── */}
             {(activeView === 'COMMUNITIES' || !activeView) && communities_.map(c => (
                 <LightPointNode key={`comm-${c.id || c.Id}`} id={`comm-${c.id || c.Id}`} name={c.name || c.Name} color="#ffaa00" size={0.055 * density} isSelected={selectedId === `community-${c.id || c.Id}`} cameraDist={cameraDist} onClick={() => onCommunityClick?.(c)} />
             ))}
@@ -524,7 +469,8 @@ const InteractiveGlobe = memo(({
         <div className="w-full h-full cursor-grab active:cursor-grabbing">
             <Canvas dpr={[1, 2]} gl={{ logarithmicDepthBuffer: true, antialias: true }}>
                 <PerspectiveCamera makeDefault position={[0, 0, isMobile ? 12.5 : 15.5]} fov={isMobile ? 30 : 40} />
-                <fog attach="fog" args={['#000005', 20, 60]} />
+                {/* Fog starts far out so stars are fully visible */}
+                <fog attach="fog" args={['#000005', 25, 65]} />
                 <OrbitControls
                     enablePan={false} enableZoom={true}
                     minDistance={2.8} maxDistance={25}
@@ -533,7 +479,6 @@ const InteractiveGlobe = memo(({
                     dampingFactor={0.1} enableDamping rotateSpeed={0.5}
                 />
 
-                {/* Stars — rendered behind everything */}
                 <StarField />
 
                 <ambientLight intensity={0.18} />
