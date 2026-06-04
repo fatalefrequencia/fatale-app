@@ -32,20 +32,23 @@ const getSphericalPos = (id, radius = 2.5) => {
     };
 };
 
+// Sharp-edged glow: bright centre, very tight falloff — city-light style
 const createGlowTexture = (color) => {
     if (typeof document === 'undefined') return null;
     const canvas = document.createElement('canvas');
-    canvas.width = 64; canvas.height = 64;
+    canvas.width = 128; canvas.height = 128;
     const ctx = canvas.getContext('2d');
-    const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-    g.addColorStop(0, color);
-    g.addColorStop(1, 'rgba(0,0,0,0)');
+    const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    g.addColorStop(0,    color);
+    g.addColorStop(0.18, color);          // keep solid core larger
+    g.addColorStop(0.45, color + '88');   // mid soft
+    g.addColorStop(1,    'rgba(0,0,0,0)');
     ctx.fillStyle = g;
-    ctx.fillRect(0, 0, 64, 64);
+    ctx.fillRect(0, 0, 128, 128);
     return new THREE.CanvasTexture(canvas);
 };
 
-// Builds a bezier arc that cleanly clears the globe surface (radius 2.48)
+// Builds a bezier arc that cleanly clears the globe surface
 const buildArc = (from, to) => {
     const f = new THREE.Vector3(...from);
     const t = new THREE.Vector3(...to);
@@ -57,13 +60,12 @@ const buildArc = (from, to) => {
 // ─── SHIMMER LINE ─────────────────────────────────────────────────────────────
 
 const ShimmerLine = memo(({ from, to, color, phaseOffset = 0, isSelected = false, isRelated = false }) => {
-    const lineRef  = useRef();
-    const opRef    = useRef(0);
+    const lineRef = useRef();
+    const opRef   = useRef(0);
 
     const geo = useMemo(() => {
         const curve = buildArc(from, to);
-        const pts   = curve.getPoints(60);
-        return new THREE.BufferGeometry().setFromPoints(pts);
+        return new THREE.BufferGeometry().setFromPoints(curve.getPoints(60));
     }, [from[0], from[1], from[2], to[0], to[1], to[2]]);
 
     useEffect(() => () => geo.dispose(), [geo]);
@@ -87,14 +89,7 @@ const ShimmerLine = memo(({ from, to, color, phaseOffset = 0, isSelected = false
 
     return (
         <line ref={lineRef} geometry={geo}>
-            <lineBasicMaterial
-                color={color}
-                transparent
-                opacity={0}
-                linewidth={1}
-                toneMapped={false}
-                depthWrite={false}
-            />
+            <lineBasicMaterial color={color} transparent opacity={0} linewidth={1} toneMapped={false} depthWrite={false} />
         </line>
     );
 });
@@ -102,42 +97,25 @@ const ShimmerLine = memo(({ from, to, color, phaseOffset = 0, isSelected = false
 // ─── NETWORK VISUALIZATION ────────────────────────────────────────────────────
 
 const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeView }) => {
-
     const connections = useMemo(() => {
         const result = [];
         artists.forEach(artist => {
-            const artistId     = artist.id     || artist.Id;
+            const artistId     = artist.id || artist.Id;
             const artistNodeId = `artist-${artistId}`;
             const artistPos    = getSphericalPos(artistNodeId, 2.48).pos;
-
             tracks.forEach(track => {
-                const enrichedArtistId = track.artistId || track.ArtistId;
-                if (!enrichedArtistId || String(enrichedArtistId) !== String(artistId)) return;
-
+                const eid = track.artistId || track.ArtistId;
+                if (!eid || String(eid) !== String(artistId)) return;
                 const trackPos = getSphericalPos(`track-${track.id || track.Id}`, 2.48).pos;
                 const seed     = hashStr(artistId + (track.id || track.Id));
-                result.push({
-                    from: artistPos, to: trackPos,
-                    color: '#00d4ff',
-                    ownerId:  artistNodeId,
-                    targetId: `track-${track.id || track.Id}`,
-                    phase:    (seed % 1000) / 1000 * Math.PI * 2,
-                });
+                result.push({ from: artistPos, to: trackPos, color: '#00d4ff', ownerId: artistNodeId, targetId: `track-${track.id || track.Id}`, phase: (seed % 1000) / 1000 * Math.PI * 2 });
             });
-
             playlists.forEach(playlist => {
-                const enrichedArtistId = playlist.artistId || playlist.ArtistId;
-                if (!enrichedArtistId || String(enrichedArtistId) !== String(artistId)) return;
-
+                const eid = playlist.artistId || playlist.ArtistId;
+                if (!eid || String(eid) !== String(artistId)) return;
                 const plPos = getSphericalPos(`playlist-${playlist.id || playlist.Id}`, 2.48).pos;
                 const seed  = hashStr(artistId + (playlist.id || playlist.Id));
-                result.push({
-                    from: artistPos, to: plPos,
-                    color: '#ff3d7f',
-                    ownerId:  artistNodeId,
-                    targetId: `playlist-${playlist.id || playlist.Id}`,
-                    phase:    (seed % 1000) / 1000 * Math.PI * 2,
-                });
+                result.push({ from: artistPos, to: plPos, color: '#ff3d7f', ownerId: artistNodeId, targetId: `playlist-${playlist.id || playlist.Id}`, phase: (seed % 1000) / 1000 * Math.PI * 2 });
             });
         });
         return result;
@@ -148,58 +126,45 @@ const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeVi
     return (
         <group>
             {visible.map((c) => {
-                const isSelected = selectedId &&
-                    (c.ownerId === selectedId && c.targetId === selectedId);
-                const isRelated  = selectedId &&
-                    (c.ownerId === selectedId || c.targetId === selectedId);
-
+                const isSelected = selectedId && (c.ownerId === selectedId && c.targetId === selectedId);
+                const isRelated  = selectedId && (c.ownerId === selectedId || c.targetId === selectedId);
                 return (
-                    <ShimmerLine
-                        key={`arc-${c.ownerId}-${c.targetId}`}
-                        from={c.from}
-                        to={c.to}
-                        color={c.color}
-                        phaseOffset={c.phase}
-                        isSelected={isSelected}
-                        isRelated={isRelated}
-                    />
+                    <ShimmerLine key={`arc-${c.ownerId}-${c.targetId}`} from={c.from} to={c.to} color={c.color} phaseOffset={c.phase} isSelected={isSelected} isRelated={isRelated} />
                 );
             })}
         </group>
     );
 };
 
-// ─── FLAT 2D POINT NODE ───────────────────────────────────────────────────────
-// Replaces the 3D sphere with a flat billboard disc + crisp outer ring.
-// On desktop the Html label is also clickable (pointer-events-auto).
+// ─── FLAT CITY-LIGHT NODE ─────────────────────────────────────────────────────
+// Inspired by NASA night-lights imagery: tiny sharp dot + faint halo only.
+// All geometry is a billboard (always faces camera). No 3D sphere at all.
 
 const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, onClick, cameraDist }) => {
-    const groupRef   = useRef();
-    const ringRef    = useRef();
+    const billRef  = useRef();
+    const ringRef  = useRef();
     const [hovered, setHovered] = useState(false);
-    const { pos }    = useMemo(() => getSphericalPos(id, 2.48), [id]);
-    const isMobile   = typeof window !== 'undefined' && window.innerWidth < 1024;
+    const { pos }  = useMemo(() => getSphericalPos(id, 2.48), [id]);
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
 
-    const opacityFactor = THREE.MathUtils.clamp((14 - cameraDist) / 4, 0.5, 1);
-    const scaleFactor   = THREE.MathUtils.clamp(cameraDist / 6, 0.8, 2);
-    const glowTexture   = useMemo(() => createGlowTexture(color), [color]);
+    // Dot: fixed tiny screen-space size regardless of zoom
+    // We scale by cameraDist so nodes stay same apparent size when zooming
+    const baseScale = THREE.MathUtils.clamp(cameraDist / 8, 0.6, 1.8);
 
-    // Billboard: always face camera
+    // Tight glow texture
+    const glowTex = useMemo(() => createGlowTexture(color), [color]);
+
     useFrame(({ camera, clock }) => {
-        if (!groupRef.current) return;
-        groupRef.current.quaternion.copy(camera.quaternion);
+        if (!billRef.current) return;
+        // Billboard — face camera
+        billRef.current.quaternion.copy(camera.quaternion);
 
-        const t = clock.getElapsedTime();
-        if (isSelected) {
-            const pulse = 1 + Math.sin(t * 4) * 0.18;
-            groupRef.current.scale.setScalar(scaleFactor * pulse);
-        } else {
-            groupRef.current.scale.setScalar(scaleFactor);
-        }
+        const t   = clock.getElapsedTime();
+        const sel = isSelected ? (1 + Math.sin(t * 5) * 0.15) : 1;
+        billRef.current.scale.setScalar(baseScale * sel);
 
-        // Slowly rotate the outer ring for a premium feel
         if (ringRef.current) {
-            ringRef.current.rotation.z += isSelected ? 0.025 : 0.006;
+            ringRef.current.rotation.z += isSelected ? 0.018 : 0.004;
         }
     });
 
@@ -208,33 +173,35 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
         return () => { document.body.style.cursor = 'auto'; };
     }, [hovered]);
 
-    const dotSize   = size;
-    const ringSize  = size * 2.2;
-    const glowSize  = size * (isSelected ? 18 : hovered ? 14 : 9) * scaleFactor;
+    // Sizes — intentionally small and crisp
+    const DOT  = size * 0.9;          // solid core disc
+    const RING = size * 1.9;          // thin outer ring radius
+    const GLOW = size * (isSelected ? 9 : hovered ? 7 : 4.5); // soft halo, tight
 
     return (
         <group position={pos}>
-            {/* Invisible hit sphere — generous click area */}
+            {/* Generous invisible hit sphere */}
             <mesh
                 onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
                 onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
                 onPointerOut={() => setHovered(false)}
             >
-                <sphereGeometry args={[size * 5, 8, 8]} />
+                <sphereGeometry args={[size * 6, 8, 8]} />
                 <meshBasicMaterial transparent opacity={0} depthWrite={false} />
             </mesh>
 
-            {/* Billboard group — all visual elements face camera */}
-            <group ref={groupRef}>
-                {/* Soft glow halo */}
-                {glowTexture && (
-                    <mesh scale={[glowSize, glowSize, 1]}>
-                        <planeGeometry />
+            {/* Billboard group */}
+            <group ref={billRef}>
+
+                {/* Tight radial glow — only visible layer behind the dot */}
+                {glowTex && (
+                    <mesh renderOrder={1}>
+                        <planeGeometry args={[GLOW * 2, GLOW * 2]} />
                         <meshBasicMaterial
-                            map={glowTexture}
+                            map={glowTex}
                             transparent
                             blending={THREE.AdditiveBlending}
-                            opacity={opacityFactor * (isSelected ? 1.0 : hovered ? 0.85 : 0.5)}
+                            opacity={isSelected ? 0.7 : hovered ? 0.55 : 0.28}
                             side={THREE.DoubleSide}
                             depthWrite={false}
                             toneMapped={false}
@@ -242,26 +209,26 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
                     </mesh>
                 )}
 
-                {/* Crisp flat disc (core dot) */}
-                <mesh>
-                    <circleGeometry args={[dotSize, 32]} />
+                {/* Crisp solid core disc */}
+                <mesh renderOrder={2}>
+                    <circleGeometry args={[DOT, 32]} />
                     <meshBasicMaterial
                         color={color}
                         transparent
-                        opacity={opacityFactor * (isSelected ? 1 : hovered ? 0.95 : 0.85)}
+                        opacity={isSelected ? 1 : hovered ? 0.95 : 0.9}
                         depthWrite={false}
                         toneMapped={false}
                         blending={THREE.AdditiveBlending}
                     />
                 </mesh>
 
-                {/* Outer ring — rotates slowly */}
-                <mesh ref={ringRef}>
-                    <ringGeometry args={[ringSize * 0.88, ringSize, 64]} />
+                {/* Thin precision ring — always visible, very subtle at rest */}
+                <mesh ref={ringRef} renderOrder={2}>
+                    <ringGeometry args={[RING * 0.85, RING, 48]} />
                     <meshBasicMaterial
                         color={color}
                         transparent
-                        opacity={opacityFactor * (isSelected ? 0.9 : hovered ? 0.65 : 0.28)}
+                        opacity={isSelected ? 0.8 : hovered ? 0.55 : 0.18}
                         depthWrite={false}
                         toneMapped={false}
                         blending={THREE.AdditiveBlending}
@@ -269,14 +236,14 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
                     />
                 </mesh>
 
-                {/* Second tighter ring for selected state */}
+                {/* Extra outer ring pulse on selected */}
                 {isSelected && (
-                    <mesh>
-                        <ringGeometry args={[ringSize * 1.5, ringSize * 1.65, 64]} />
+                    <mesh renderOrder={2}>
+                        <ringGeometry args={[RING * 1.6, RING * 1.72, 48]} />
                         <meshBasicMaterial
                             color={color}
                             transparent
-                            opacity={opacityFactor * 0.45}
+                            opacity={0.35}
                             depthWrite={false}
                             toneMapped={false}
                             blending={THREE.AdditiveBlending}
@@ -286,54 +253,33 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
                 )}
             </group>
 
-            {/* Label — shown on hover or selection */}
+            {/* Label on hover / selected */}
             {(isSelected || hovered) && (
                 <>
-                    <pointLight distance={1.2} intensity={isSelected ? 6 : 4} color={color} />
-                    <Html
-                        position={[0, size + 0.14, 0]}
-                        center
-                        zIndexRange={[0, 10]}
-                        // Prevent the Html wrapper from capturing pointer events we don't want
-                        style={{ pointerEvents: 'none' }}
-                    >
+                    <pointLight distance={0.9} intensity={isSelected ? 5 : 3} color={color} />
+                    <Html position={[0, DOT + 0.12, 0]} center zIndexRange={[0, 10]} style={{ pointerEvents: 'none' }}>
                         <div
-                            // On desktop: label IS clickable and triggers the same action
-                            className={!isMobile ? 'select-none' : 'pointer-events-none select-none'}
                             onClick={!isMobile ? (e) => { e.stopPropagation(); onClick(); } : undefined}
+                            className={isMobile ? 'pointer-events-none select-none' : 'select-none'}
                             style={{
                                 cursor: !isMobile ? 'pointer' : 'default',
                                 pointerEvents: !isMobile ? 'auto' : 'none',
-                                background: 'rgba(0,0,0,0.90)',
-                                border: `1px solid ${color}55`,
-                                padding: '4px 10px',
-                                backdropFilter: 'blur(16px)',
-                                boxShadow: `0 0 20px ${color}25`,
-                                minWidth: '80px',
-                                textAlign: 'center',
+                                background: 'rgba(0,0,0,0.92)',
+                                border: `1px solid ${color}44`,
+                                borderLeft: `2px solid ${color}`,
+                                padding: '3px 8px',
+                                backdropFilter: 'blur(12px)',
+                                boxShadow: `0 0 14px ${color}20`,
+                                minWidth: '70px',
+                                textAlign: 'left',
+                                whiteSpace: 'nowrap',
                             }}
                         >
-                            <div style={{
-                                color,
-                                fontSize: '8px',
-                                fontFamily: 'monospace',
-                                fontWeight: 900,
-                                letterSpacing: '0.2em',
-                                textTransform: 'uppercase',
-                                textShadow: `0 0 8px ${color}80`,
-                            }}>
+                            <div style={{ color, fontSize: '7px', fontFamily: 'monospace', fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase', textShadow: `0 0 6px ${color}99` }}>
                                 {name}
                             </div>
                             {subtitle && (
-                                <div style={{
-                                    color: 'rgba(255,255,255,0.35)',
-                                    fontSize: '6px',
-                                    fontFamily: 'monospace',
-                                    fontWeight: 700,
-                                    letterSpacing: '0.15em',
-                                    textTransform: 'uppercase',
-                                    marginTop: '2px',
-                                }}>
+                                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '6px', fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: '1px' }}>
                                     {subtitle}
                                 </div>
                             )}
@@ -346,28 +292,28 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
 };
 
 // ─── FATALE CORE NODE ─────────────────────────────────────────────────────────
-// Also updated to flat 2D ring style for consistency
+// Slightly larger than regular nodes but same flat-billboard language.
 
 const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
-    const groupRef  = useRef();
-    const ring1Ref  = useRef();
-    const ring2Ref  = useRef();
+    const billRef  = useRef();
+    const ring1Ref = useRef();
+    const ring2Ref = useRef();
     const [hovered, setHovered] = useState(false);
-    const COLOR       = '#ff0033';
-    const POS         = [0, 2.48, 0];
-    const scaleFactor = THREE.MathUtils.clamp(cameraDist / 6, 0.8, 2);
-    const glowTex     = useMemo(() => createGlowTexture(COLOR), []);
-    const isMobile    = typeof window !== 'undefined' && window.innerWidth < 1024;
+    const COLOR      = '#ff0033';
+    const POS        = [0, 2.48, 0];
+    const baseScale  = THREE.MathUtils.clamp(cameraDist / 8, 0.6, 1.8);
+    const glowTex    = useMemo(() => createGlowTexture(COLOR), []);
+    const isMobile   = typeof window !== 'undefined' && window.innerWidth < 1024;
 
     useFrame(({ camera, clock }) => {
         const t = clock.getElapsedTime();
-        if (groupRef.current) {
-            groupRef.current.quaternion.copy(camera.quaternion);
-            const pulse = 1 + Math.sin(t * 3) * 0.12;
-            groupRef.current.scale.setScalar(scaleFactor * pulse);
+        if (billRef.current) {
+            billRef.current.quaternion.copy(camera.quaternion);
+            const pulse = 1 + Math.sin(t * 3.5) * 0.12;
+            billRef.current.scale.setScalar(baseScale * pulse);
         }
-        if (ring1Ref.current) ring1Ref.current.rotation.z += 0.012;
-        if (ring2Ref.current) ring2Ref.current.rotation.z -= 0.007;
+        if (ring1Ref.current) ring1Ref.current.rotation.z += 0.010;
+        if (ring2Ref.current) ring2Ref.current.rotation.z -= 0.006;
     });
 
     useEffect(() => {
@@ -375,95 +321,63 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
         return () => { document.body.style.cursor = 'auto'; };
     }, [hovered]);
 
+    const DOT  = 0.075;
+    const R1   = 0.135;
+    const R2   = 0.185;
+    const GLOW = 0.38;
+
     return (
         <group position={POS}>
-            {/* Invisible hit area */}
-            <mesh
-                onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
-                onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
-                onPointerOut={() => setHovered(false)}
-            >
-                <sphereGeometry args={[0.30, 8, 8]} />
+            <mesh onPointerDown={(e) => { e.stopPropagation(); onClick(); }} onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }} onPointerOut={() => setHovered(false)}>
+                <sphereGeometry args={[0.28, 8, 8]} />
                 <meshBasicMaterial transparent opacity={0} depthWrite={false} />
             </mesh>
 
-            <group ref={groupRef}>
-                {/* Glow */}
+            <group ref={billRef}>
                 {glowTex && (
-                    <mesh scale={[0.12 * 14 * scaleFactor, 0.12 * 14 * scaleFactor, 1]}>
-                        <planeGeometry />
-                        <meshBasicMaterial
-                            map={glowTex} transparent blending={THREE.AdditiveBlending}
-                            opacity={0.85} side={THREE.DoubleSide} depthWrite={false} toneMapped={false}
-                        />
+                    <mesh renderOrder={1}>
+                        <planeGeometry args={[GLOW * 2, GLOW * 2]} />
+                        <meshBasicMaterial map={glowTex} transparent blending={THREE.AdditiveBlending} opacity={0.75} side={THREE.DoubleSide} depthWrite={false} toneMapped={false} />
                     </mesh>
                 )}
 
-                {/* Core flat disc */}
-                <mesh>
-                    <circleGeometry args={[0.085, 48]} />
-                    <meshBasicMaterial
-                        color={COLOR} transparent opacity={0.95}
-                        depthWrite={false} toneMapped={false}
-                        blending={THREE.AdditiveBlending}
-                    />
+                {/* Core */}
+                <mesh renderOrder={2}>
+                    <circleGeometry args={[DOT, 48]} />
+                    <meshBasicMaterial color={COLOR} transparent opacity={0.95} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
                 </mesh>
 
-                {/* Counter-rotating outer rings */}
-                <mesh ref={ring1Ref}>
-                    <ringGeometry args={[0.14, 0.155, 64]} />
-                    <meshBasicMaterial
-                        color={COLOR} transparent opacity={0.65}
-                        depthWrite={false} toneMapped={false}
-                        blending={THREE.AdditiveBlending} side={THREE.DoubleSide}
-                    />
+                {/* Inner rotating ring */}
+                <mesh ref={ring1Ref} renderOrder={2}>
+                    <ringGeometry args={[R1 * 0.88, R1, 64]} />
+                    <meshBasicMaterial color={COLOR} transparent opacity={0.6} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
                 </mesh>
-                <mesh ref={ring2Ref}>
-                    <ringGeometry args={[0.19, 0.198, 64]} />
-                    <meshBasicMaterial
-                        color={COLOR} transparent opacity={0.35}
-                        depthWrite={false} toneMapped={false}
-                        blending={THREE.AdditiveBlending} side={THREE.DoubleSide}
-                    />
+
+                {/* Outer counter-rotating ring */}
+                <mesh ref={ring2Ref} renderOrder={2}>
+                    <ringGeometry args={[R2 * 0.92, R2, 64]} />
+                    <meshBasicMaterial color={COLOR} transparent opacity={0.28} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
                 </mesh>
             </group>
 
             {!hideLabel && (
-                <Html
-                    position={[0, 0.32, 0]}
-                    center
-                    zIndexRange={[0, 5]}
-                    style={{ pointerEvents: 'none' }}
-                >
+                <Html position={[0, 0.28, 0]} center zIndexRange={[0, 5]} style={{ pointerEvents: 'none' }}>
                     <div
                         onClick={!isMobile ? (e) => { e.stopPropagation(); onClick(); } : undefined}
                         style={{
                             cursor: !isMobile ? 'pointer' : 'default',
                             pointerEvents: !isMobile ? 'auto' : 'none',
-                            background: 'rgba(0,0,0,0.88)',
+                            background: 'rgba(0,0,0,0.90)',
                             borderLeft: `2px solid ${COLOR}`,
                             padding: '3px 8px',
-                            backdropFilter: 'blur(16px)',
+                            backdropFilter: 'blur(14px)',
                         }}
                     >
-                        <div style={{
-                            color: COLOR, fontSize: '7px', fontFamily: 'monospace',
-                            fontWeight: 900, letterSpacing: '0.3em',
-                            textTransform: 'uppercase', textShadow: `0 0 10px ${COLOR}`,
-                        }}>
-                            FATALE_CORE
-                        </div>
-                        <div style={{
-                            color: 'rgba(255,255,255,0.22)', fontSize: '5px',
-                            fontFamily: 'monospace', letterSpacing: '0.2em',
-                            textTransform: 'uppercase', marginTop: '1px',
-                        }}>
-                            SYS_NODE
-                        </div>
+                        <div style={{ color: COLOR, fontSize: '7px', fontFamily: 'monospace', fontWeight: 900, letterSpacing: '0.3em', textTransform: 'uppercase', textShadow: `0 0 8px ${COLOR}` }}>FATALE_CORE</div>
+                        <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '5px', fontFamily: 'monospace', letterSpacing: '0.2em', textTransform: 'uppercase', marginTop: '1px' }}>SYS_NODE</div>
                     </div>
                 </Html>
             )}
-
             {isSelected && <pointLight distance={1.5} intensity={8} color={COLOR} />}
         </group>
     );
@@ -478,57 +392,36 @@ const GlobeCore = memo(({
     onArtistClick, onCommunityClick, onTrackClick, onPlaylistClick,
     isGlobeSpinning,
 }) => {
-    const { camera }      = useThree();
+    const { camera }  = useThree();
     const [cameraDist, setCameraDist] = useState(10);
-    const [seed]          = useState(() => Math.random().toString());
-    const atmosphereRef   = useRef();
-    const innerLightRef   = useRef();
+    const [seed]      = useState(() => Math.random().toString());
+    const atmosphereRef = useRef();
 
     useFrame(({ clock }) => {
         const t = clock.getElapsedTime();
         setCameraDist(camera.position.length());
         if (atmosphereRef.current)
-            atmosphereRef.current.scale.setScalar(1 + Math.sin(t * 1.2) * 0.005);
-        if (innerLightRef.current)
-            innerLightRef.current.intensity = 1.0 + Math.sin(t * 2) * 0.4;
+            atmosphereRef.current.scale.setScalar(1 + Math.sin(t * 1.2) * 0.003);
     });
 
-    const activeSectorColor = useMemo(() =>
-        SECTORS.find(s => s.id === activeSector)?.color,
-    [activeSector]);
+    const activeSectorColor = useMemo(() => SECTORS.find(s => s.id === activeSector)?.color, [activeSector]);
 
     const filtered = useMemo(() => {
         const bySearch = (arr, key) => !searchQuery ? arr :
-            arr.filter(x => (x[key] || x[key[0].toUpperCase() + key.slice(1)] || '')
-                .toLowerCase().includes(searchQuery.toLowerCase()));
+            arr.filter(x => (x[key] || x[key[0].toUpperCase() + key.slice(1)] || '').toLowerCase().includes(searchQuery.toLowerCase()));
+        const bySector = (arr) => activeSector !== null ? arr.filter(x => (x.sectorId || x.SectorId) === activeSector) : arr;
+        const shuffle  = (arr) => arr.map(item => ({ item, k: hashStr((item.id || item.Id || '') + seed) })).sort((a, b) => a.k - b.k).map(x => x.item);
 
-        const bySector = (arr) => activeSector !== null
-            ? arr.filter(x => (x.sectorId || x.SectorId) === activeSector) : arr;
-
-        const shuffle = (arr) => arr
-            .map(item => ({ item, k: hashStr((item.id || item.Id || '') + seed) }))
-            .sort((a, b) => a.k - b.k)
-            .map(x => x.item);
-
-        const communities_ = shuffle(
-            bySearch(bySector(
-                communities.filter(c =>
-                    !c.isSystem && !c.IsSystem &&
-                    c.id !== 4 && c.Id !== 4 &&
-                    c.name?.toUpperCase() !== 'FATALE_CORE' &&
-                    c.Name?.toUpperCase() !== 'FATALE_CORE'
-                )
-            ), 'name')
-        ).slice(0, 25);
-
-        const artists_ = shuffle(bySearch(bySector(artists), 'name')).slice(0, 25);
+        const communities_ = shuffle(bySearch(bySector(communities.filter(c =>
+            !c.isSystem && !c.IsSystem && c.id !== 4 && c.Id !== 4 &&
+            c.name?.toUpperCase() !== 'FATALE_CORE' && c.Name?.toUpperCase() !== 'FATALE_CORE'
+        )), 'name')).slice(0, 25);
+        const artists_   = shuffle(bySearch(bySector(artists), 'name')).slice(0, 25);
         const playlists_ = shuffle(bySearch(playlists, 'name')).slice(0, 25);
-        const tracks_ = shuffle(
-            !searchQuery ? tracks : tracks.filter(t =>
-                (t.title  || t.Title  || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (t.artist || t.Artist || '').toLowerCase().includes(searchQuery.toLowerCase())
-            )
-        ).slice(0, 25);
+        const tracks_    = shuffle(!searchQuery ? tracks : tracks.filter(t =>
+            (t.title || t.Title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (t.artist || t.Artist || '').toLowerCase().includes(searchQuery.toLowerCase())
+        )).slice(0, 25);
 
         return { communities_, artists_, playlists_, tracks_ };
     }, [communities, artists, playlists, tracks, activeSector, searchQuery, seed]);
@@ -541,119 +434,65 @@ const GlobeCore = memo(({
         (activeView === 'PLAYLISTS'   || !activeView ? playlists_.length   : 0) +
         (activeView === 'TRACKS'      || !activeView ? tracks_.length      : 0)
     );
-    const density = Math.max(0.4, 1 / (1 + 0.015 * totalNodes));
+    const density    = Math.max(0.4, 1 / (1 + 0.015 * totalNodes));
     const accentColor = activeSectorColor || '#ff006e';
 
     return (
         <group>
-            <pointLight ref={innerLightRef} color={accentColor} intensity={1} distance={5} />
+            {/* ── GLOBE LAYERS — clean, minimal ── */}
 
-            {/* Globe layers */}
+            {/* Dark core — near-black, slight metalness */}
             <Sphere args={[2.45, 64, 64]}>
-                <meshStandardMaterial color="#060606" roughness={0.12} metalness={0.95} />
+                <meshStandardMaterial color="#050505" roughness={0.08} metalness={0.92} />
             </Sphere>
+
+            {/* Very subtle accent tint */}
             <Sphere args={[2.46, 32, 32]}>
-                <meshStandardMaterial
-                    color={accentColor} transparent opacity={0.035}
-                    emissive={accentColor} emissiveIntensity={0.35}
-                />
+                <meshStandardMaterial color={accentColor} transparent opacity={0.018} emissive={accentColor} emissiveIntensity={0.2} />
             </Sphere>
-            <Sphere args={[2.52, 32, 32]}>
-                <meshStandardMaterial
-                    color={accentColor} wireframe
-                    transparent opacity={0.055}
-                    emissive={accentColor} emissiveIntensity={0.3}
-                />
+
+            {/* Precision wireframe grid — fine lines only */}
+            <Sphere args={[2.50, 36, 18]}>
+                <meshBasicMaterial color={accentColor} wireframe transparent opacity={0.038} toneMapped={false} />
             </Sphere>
-            <Sphere ref={atmosphereRef} args={[2.58, 64, 64]}>
-                <meshBasicMaterial color={accentColor} transparent opacity={0.07} side={THREE.BackSide} />
-            </Sphere>
-            <Sphere args={[2.62, 32, 32]}>
-                <meshBasicMaterial color={accentColor} transparent opacity={0.025} side={THREE.BackSide} />
+
+            {/* Atmosphere — thin rim only */}
+            <Sphere ref={atmosphereRef} args={[2.56, 48, 48]}>
+                <meshBasicMaterial color={accentColor} transparent opacity={0.045} side={THREE.BackSide} />
             </Sphere>
 
             {/* ── NODES ── */}
             {(activeView === 'COMMUNITIES' || !activeView) && communities_.map(c => (
-                <LightPointNode
-                    key={`comm-${c.id || c.Id}`}
-                    id={`comm-${c.id || c.Id}`}
-                    name={c.name || c.Name}
-                    color="#ffaa00"
-                    size={0.1 * density}
-                    isSelected={selectedId === `community-${c.id || c.Id}`}
-                    cameraDist={cameraDist}
-                    onClick={() => onCommunityClick?.(c)}
-                />
+                <LightPointNode key={`comm-${c.id || c.Id}`} id={`comm-${c.id || c.Id}`} name={c.name || c.Name} color="#ffaa00" size={0.055 * density} isSelected={selectedId === `community-${c.id || c.Id}`} cameraDist={cameraDist} onClick={() => onCommunityClick?.(c)} />
             ))}
-
             {(activeView === 'ARTISTS' || !activeView) && artists_.map(a => (
-                <LightPointNode
-                    key={`artist-${a.id || a.Id}`}
-                    id={`artist-${a.id || a.Id}`}
-                    name={a.name || a.Name}
-                    color="#00ffaa"
-                    size={0.08 * density}
-                    isSelected={selectedId === `artist-${a.id || a.Id}`}
-                    cameraDist={cameraDist}
-                    onClick={() => onArtistClick?.(a)}
-                />
+                <LightPointNode key={`artist-${a.id || a.Id}`} id={`artist-${a.id || a.Id}`} name={a.name || a.Name} color="#00ffaa" size={0.048 * density} isSelected={selectedId === `artist-${a.id || a.Id}`} cameraDist={cameraDist} onClick={() => onArtistClick?.(a)} />
             ))}
-
             {(activeView === 'TRACKS' || !activeView) && tracks_.map(t => (
-                <LightPointNode
-                    key={`track-${t.id || t.Id}`}
-                    id={`track-${t.id || t.Id}`}
-                    name={t.title || t.Title}
-                    subtitle={t.artist || t.Artist}
-                    color="#00aaff"
-                    size={0.06 * density}
-                    isSelected={selectedId === `track-${t.id || t.Id}`}
-                    cameraDist={cameraDist}
-                    onClick={() => onTrackClick?.(t)}
-                />
+                <LightPointNode key={`track-${t.id || t.Id}`} id={`track-${t.id || t.Id}`} name={t.title || t.Title} subtitle={t.artist || t.Artist} color="#00aaff" size={0.038 * density} isSelected={selectedId === `track-${t.id || t.Id}`} cameraDist={cameraDist} onClick={() => onTrackClick?.(t)} />
             ))}
-
             {(activeView === 'PLAYLISTS' || !activeView) && playlists_.map(p => (
-                <LightPointNode
-                    key={`playlist-${p.id || p.Id}`}
-                    id={`playlist-${p.id || p.Id}`}
-                    name={p.name || p.Name}
-                    color="#ff006e"
-                    size={0.08 * density}
-                    isSelected={selectedId === `playlist-${p.id || p.Id}`}
-                    cameraDist={cameraDist}
-                    onClick={() => onPlaylistClick?.(p)}
-                />
+                <LightPointNode key={`playlist-${p.id || p.Id}`} id={`playlist-${p.id || p.Id}`} name={p.name || p.Name} color="#ff006e" size={0.048 * density} isSelected={selectedId === `playlist-${p.id || p.Id}`} cameraDist={cameraDist} onClick={() => onPlaylistClick?.(p)} />
             ))}
 
-            {/* FATALE_CORE — permanent system node */}
+            {/* FATALE_CORE */}
             <FataleCoreNode
                 isSelected={selectedId === 'system-fatale_core'}
                 cameraDist={cameraDist}
                 hideLabel={!!selectedId}
-                onClick={() => onCommunityClick?.({
-                    id: 'fatale_core', name: 'FATALE_CORE', isSystem: true,
-                    description: 'The official Fatale system node. Share feedback, bug reports and reviews.',
-                })}
+                onClick={() => onCommunityClick?.({ id: 'fatale_core', name: 'FATALE_CORE', isSystem: true, description: 'The official Fatale system node. Share feedback, bug reports and reviews.' })}
             />
 
-            {/* ── NETWORK: always-visible shimmer lines ── */}
-            <NetworkVisualization
-                artists={artists_}
-                tracks={tracks_}
-                playlists={playlists_}
-                selectedId={selectedId}
-                activeView={activeView}
-            />
+            {/* Shimmer arcs */}
+            <NetworkVisualization artists={artists_} tracks={tracks_} playlists={playlists_} selectedId={selectedId} activeView={activeView} />
         </group>
     );
 });
 
-// ─── INTERACTIVE GLOBE (root export) ─────────────────────────────────────────
+// ─── INTERACTIVE GLOBE ────────────────────────────────────────────────────────
 
 const InteractiveGlobe = memo(({
-    activeSector, onSectorClick,
-    searchQuery,
+    activeSector, onSectorClick, searchQuery,
     communities = [], artists = [], selectedId, activeView,
     tracks = [], playlists = [],
     isGlobeSpinning = false,
@@ -665,31 +504,20 @@ const InteractiveGlobe = memo(({
     return (
         <div className="w-full h-full cursor-grab active:cursor-grabbing">
             <Canvas dpr={[1, 2]} gl={{ logarithmicDepthBuffer: true, antialias: true }}>
-                <PerspectiveCamera
-                    makeDefault
-                    position={[0, 0, isMobile ? 12.5 : 15.5]}
-                    fov={isMobile ? 30 : 40}
-                />
+                <PerspectiveCamera makeDefault position={[0, 0, isMobile ? 12.5 : 15.5]} fov={isMobile ? 30 : 40} />
                 <fog attach="fog" args={['#000000', 8, 30]} />
                 <OrbitControls
-                    enablePan={false}
-                    enableZoom={true}
-                    minDistance={2.8}
-                    maxDistance={25}
+                    enablePan={false} enableZoom={true}
+                    minDistance={2.8} maxDistance={25}
                     autoRotate={isGlobeSpinning && !selectedId}
                     autoRotateSpeed={isGlobeSpinning ? 0.5 : 0}
-                    dampingFactor={0.1}
-                    enableDamping={true}
-                    rotateSpeed={0.5}
+                    dampingFactor={0.1} enableDamping={true} rotateSpeed={0.5}
                 />
 
-                <ambientLight intensity={0.35} />
-                <pointLight
-                    position={[10, 10, 10]} intensity={3.5}
-                    color={SECTORS.find(s => s.id === activeSector)?.color || '#ff006e'}
-                />
-                <pointLight position={[-10, -10, -10]} intensity={2.5} color="#00ffff" />
-                <spotLight position={[0, 20, 0]} intensity={2} angle={0.5} penumbra={1} color="#ffffff" />
+                {/* Lighting: minimal — nodes are self-emissive */}
+                <ambientLight intensity={0.2} />
+                <pointLight position={[10, 10, 10]} intensity={2.5} color={SECTORS.find(s => s.id === activeSector)?.color || '#ff006e'} />
+                <pointLight position={[-8, -8, -8]} intensity={1.8} color="#003366" />
 
                 <Float
                     speed={isGlobeSpinning && !selectedId ? (activeSector !== null ? 0.2 : 1.0) : 0}
@@ -698,18 +526,12 @@ const InteractiveGlobe = memo(({
                 >
                     <group rotation={initialRotation}>
                         <GlobeCore
-                            activeSector={activeSector}
-                            searchQuery={searchQuery}
-                            communities={communities}
-                            artists={artists}
-                            playlists={playlists}
-                            tracks={tracks}
-                            selectedId={selectedId}
-                            activeView={activeView}
-                            onArtistClick={onArtistClick}
-                            onCommunityClick={onCommunityClick}
-                            onTrackClick={onTrackClick}
-                            onPlaylistClick={onPlaylistClick}
+                            activeSector={activeSector} searchQuery={searchQuery}
+                            communities={communities} artists={artists}
+                            playlists={playlists} tracks={tracks}
+                            selectedId={selectedId} activeView={activeView}
+                            onArtistClick={onArtistClick} onCommunityClick={onCommunityClick}
+                            onTrackClick={onTrackClick} onPlaylistClick={onPlaylistClick}
                             isGlobeSpinning={isGlobeSpinning}
                         />
                     </group>
