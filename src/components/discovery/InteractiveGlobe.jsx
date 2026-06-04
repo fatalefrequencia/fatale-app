@@ -61,9 +61,9 @@ const buildArc = (from, to) => {
 // ─── STAR FIELD ───────────────────────────────────────────────────────────────
 
 const StarField = memo(() => {
-    const COUNT_SMALL  = 1100;
-    const COUNT_BRIGHT = 80;
-    const RADIUS       = 42;
+    const COUNT_SMALL  = 2200;
+    const COUNT_BRIGHT = 180;
+    const RADIUS       = 38;
 
     const { smallGeo, brightGeo } = useMemo(() => {
         const mkGeo = (count, r) => {
@@ -89,10 +89,10 @@ const StarField = memo(() => {
     return (
         <group>
             <points geometry={smallGeo}>
-                <pointsMaterial color="#a0c8ff" size={0.055} sizeAttenuation transparent opacity={0.55} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
+                <pointsMaterial color="#a0c8ff" size={0.09} sizeAttenuation transparent opacity={0.75} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
             </points>
             <points geometry={brightGeo}>
-                <pointsMaterial color="#ffe8c0" size={0.10} sizeAttenuation transparent opacity={0.70} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
+                <pointsMaterial color="#ffe8c0" size={0.18} sizeAttenuation transparent opacity={0.90} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
             </points>
         </group>
     );
@@ -470,7 +470,7 @@ const InteractiveGlobe = memo(({
             <Canvas dpr={[1, 2]} gl={{ logarithmicDepthBuffer: true, antialias: true }}>
                 <PerspectiveCamera makeDefault position={[0, 0, isMobile ? 12.5 : 15.5]} fov={isMobile ? 30 : 40} />
                 {/* Fog starts far out so stars are fully visible */}
-                <fog attach="fog" args={['#000005', 25, 65]} />
+                <fog attach="fog" args={['#000005', 38, 75]} />
                 <OrbitControls
                     enablePan={false} enableZoom={true}
                     minDistance={2.8} maxDistance={25}
