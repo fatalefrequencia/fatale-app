@@ -55,8 +55,6 @@ const buildArc = (from, to) => {
 };
 
 // ─── SHIMMER LINE ─────────────────────────────────────────────────────────────
-// Always-visible arc with a slow animated opacity shimmer.
-// isSelected brightens and widens the line.
 
 const ShimmerLine = memo(({ from, to, color, phaseOffset = 0, isSelected = false, isRelated = false }) => {
     const lineRef  = useRef();
@@ -69,26 +67,19 @@ const ShimmerLine = memo(({ from, to, color, phaseOffset = 0, isSelected = false
     }, [from[0], from[1], from[2], to[0], to[1], to[2]]);
 
     useEffect(() => () => geo.dispose(), [geo]);
-
-    // Fade in on mount
     useEffect(() => { opRef.current = 0; }, []);
 
     useFrame(({ clock }) => {
         if (!lineRef.current) return;
-
         const t = clock.getElapsedTime();
-
         if (isSelected) {
-            // Bright constant when selected
             opRef.current = Math.min(opRef.current + 0.05, 1);
             lineRef.current.material.opacity = 0.75;
         } else if (isRelated) {
-            // Related to selected node — medium bright
             opRef.current = Math.min(opRef.current + 0.04, 1);
             lineRef.current.material.opacity = 0.45;
         } else {
-            // Resting shimmer — slow sine wave, subtle
-            opRef.current = Math.min(opRef.current + 0.025, 1); // fade in
+            opRef.current = Math.min(opRef.current + 0.025, 1);
             const shimmer = 0.10 + Math.sin(t * 0.6 + phaseOffset) * 0.07;
             lineRef.current.material.opacity = opRef.current * shimmer;
         }
@@ -109,8 +100,6 @@ const ShimmerLine = memo(({ from, to, color, phaseOffset = 0, isSelected = false
 });
 
 // ─── NETWORK VISUALIZATION ────────────────────────────────────────────────────
-// Resting  → all arc lines always visible, shimmering gently
-// Selected → selected node's arcs brighten; unrelated arcs dim further
 
 const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeView }) => {
 
@@ -154,7 +143,6 @@ const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeVi
         return result;
     }, [artists, tracks, playlists, activeView]);
 
-    // Cap total visible arcs to keep GPU comfortable
     const visible = useMemo(() => connections.slice(0, 60), [connections]);
 
     return (
@@ -181,90 +169,141 @@ const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeVi
     );
 };
 
-// ─── LIGHT POINT NODE ─────────────────────────────────────────────────────────
+// ─── FLAT 2D POINT NODE ───────────────────────────────────────────────────────
+// Replaces the 3D sphere with a flat billboard disc + crisp outer ring.
+// On desktop the Html label is also clickable (pointer-events-auto).
 
 const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, onClick, cameraDist }) => {
-    const meshRef    = useRef();
+    const groupRef   = useRef();
+    const ringRef    = useRef();
     const [hovered, setHovered] = useState(false);
     const { pos }    = useMemo(() => getSphericalPos(id, 2.48), [id]);
+    const isMobile   = typeof window !== 'undefined' && window.innerWidth < 1024;
+
     const opacityFactor = THREE.MathUtils.clamp((14 - cameraDist) / 4, 0.5, 1);
     const scaleFactor   = THREE.MathUtils.clamp(cameraDist / 6, 0.8, 2);
     const glowTexture   = useMemo(() => createGlowTexture(color), [color]);
+
+    // Billboard: always face camera
+    useFrame(({ camera, clock }) => {
+        if (!groupRef.current) return;
+        groupRef.current.quaternion.copy(camera.quaternion);
+
+        const t = clock.getElapsedTime();
+        if (isSelected) {
+            const pulse = 1 + Math.sin(t * 4) * 0.18;
+            groupRef.current.scale.setScalar(scaleFactor * pulse);
+        } else {
+            groupRef.current.scale.setScalar(scaleFactor);
+        }
+
+        // Slowly rotate the outer ring for a premium feel
+        if (ringRef.current) {
+            ringRef.current.rotation.z += isSelected ? 0.025 : 0.006;
+        }
+    });
 
     useEffect(() => {
         document.body.style.cursor = hovered ? 'pointer' : 'auto';
         return () => { document.body.style.cursor = 'auto'; };
     }, [hovered]);
 
-    useFrame(({ clock }) => {
-        if (!meshRef.current) return;
-        if (isSelected) {
-            const pulse = 1 + Math.sin(clock.getElapsedTime() * 4) * 0.2;
-            meshRef.current.scale.setScalar(scaleFactor * pulse);
-        } else {
-            meshRef.current.scale.setScalar(scaleFactor);
-        }
-    });
+    const dotSize   = size;
+    const ringSize  = size * 2.2;
+    const glowSize  = size * (isSelected ? 18 : hovered ? 14 : 9) * scaleFactor;
 
-    // Slightly larger hit area via invisible sphere for easier clicking
     return (
         <group position={pos}>
-            {/* Invisible hit area — larger than visual node */}
+            {/* Invisible hit sphere — generous click area */}
             <mesh
                 onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
                 onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
                 onPointerOut={() => setHovered(false)}
             >
-                <sphereGeometry args={[size * 4, 8, 8]} />
+                <sphereGeometry args={[size * 5, 8, 8]} />
                 <meshBasicMaterial transparent opacity={0} depthWrite={false} />
             </mesh>
 
-            {/* Core sphere */}
-            <mesh ref={meshRef} scale={[scaleFactor, scaleFactor, scaleFactor]}>
-                <sphereGeometry args={[size, 16, 16]} />
-                <meshStandardMaterial
-                    color={color}
-                    emissive={color}
-                    emissiveIntensity={isSelected ? 4.5 : hovered ? 3.5 : 2.5}
-                    toneMapped={false}
-                    transparent
-                    opacity={opacityFactor}
-                    roughness={0.1}
-                    metalness={0.8}
-                />
-            </mesh>
+            {/* Billboard group — all visual elements face camera */}
+            <group ref={groupRef}>
+                {/* Soft glow halo */}
+                {glowTexture && (
+                    <mesh scale={[glowSize, glowSize, 1]}>
+                        <planeGeometry />
+                        <meshBasicMaterial
+                            map={glowTexture}
+                            transparent
+                            blending={THREE.AdditiveBlending}
+                            opacity={opacityFactor * (isSelected ? 1.0 : hovered ? 0.85 : 0.5)}
+                            side={THREE.DoubleSide}
+                            depthWrite={false}
+                            toneMapped={false}
+                        />
+                    </mesh>
+                )}
 
-            {/* Soft glow halo */}
-            {glowTexture && (
-                <mesh
-                    scale={[
-                        size * (isSelected ? 20 : hovered ? 16 : 11) * scaleFactor,
-                        size * (isSelected ? 20 : hovered ? 16 : 11) * scaleFactor,
-                        1,
-                    ]}
-                    onUpdate={(self) => self.lookAt(0, 0, 0)}
-                >
-                    <planeGeometry />
+                {/* Crisp flat disc (core dot) */}
+                <mesh>
+                    <circleGeometry args={[dotSize, 32]} />
                     <meshBasicMaterial
-                        map={glowTexture}
+                        color={color}
                         transparent
-                        blending={THREE.AdditiveBlending}
-                        opacity={opacityFactor * (isSelected ? 1.0 : hovered ? 0.85 : 0.55)}
-                        side={THREE.DoubleSide}
+                        opacity={opacityFactor * (isSelected ? 1 : hovered ? 0.95 : 0.85)}
                         depthWrite={false}
                         toneMapped={false}
+                        blending={THREE.AdditiveBlending}
                     />
                 </mesh>
-            )}
+
+                {/* Outer ring — rotates slowly */}
+                <mesh ref={ringRef}>
+                    <ringGeometry args={[ringSize * 0.88, ringSize, 64]} />
+                    <meshBasicMaterial
+                        color={color}
+                        transparent
+                        opacity={opacityFactor * (isSelected ? 0.9 : hovered ? 0.65 : 0.28)}
+                        depthWrite={false}
+                        toneMapped={false}
+                        blending={THREE.AdditiveBlending}
+                        side={THREE.DoubleSide}
+                    />
+                </mesh>
+
+                {/* Second tighter ring for selected state */}
+                {isSelected && (
+                    <mesh>
+                        <ringGeometry args={[ringSize * 1.5, ringSize * 1.65, 64]} />
+                        <meshBasicMaterial
+                            color={color}
+                            transparent
+                            opacity={opacityFactor * 0.45}
+                            depthWrite={false}
+                            toneMapped={false}
+                            blending={THREE.AdditiveBlending}
+                            side={THREE.DoubleSide}
+                        />
+                    </mesh>
+                )}
+            </group>
 
             {/* Label — shown on hover or selection */}
             {(isSelected || hovered) && (
                 <>
                     <pointLight distance={1.2} intensity={isSelected ? 6 : 4} color={color} />
-                    <Html position={[0, size + 0.14, 0]} center zIndexRange={[0, 10]}>
+                    <Html
+                        position={[0, size + 0.14, 0]}
+                        center
+                        zIndexRange={[0, 10]}
+                        // Prevent the Html wrapper from capturing pointer events we don't want
+                        style={{ pointerEvents: 'none' }}
+                    >
                         <div
-                            className="pointer-events-none select-none"
+                            // On desktop: label IS clickable and triggers the same action
+                            className={!isMobile ? 'select-none' : 'pointer-events-none select-none'}
+                            onClick={!isMobile ? (e) => { e.stopPropagation(); onClick(); } : undefined}
                             style={{
+                                cursor: !isMobile ? 'pointer' : 'default',
+                                pointerEvents: !isMobile ? 'auto' : 'none',
                                 background: 'rgba(0,0,0,0.90)',
                                 border: `1px solid ${color}55`,
                                 padding: '4px 10px',
@@ -307,23 +346,28 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
 };
 
 // ─── FATALE CORE NODE ─────────────────────────────────────────────────────────
+// Also updated to flat 2D ring style for consistency
 
 const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
-    const meshRef = useRef();
-    const ringRef = useRef();
+    const groupRef  = useRef();
+    const ring1Ref  = useRef();
+    const ring2Ref  = useRef();
     const [hovered, setHovered] = useState(false);
     const COLOR       = '#ff0033';
     const POS         = [0, 2.48, 0];
     const scaleFactor = THREE.MathUtils.clamp(cameraDist / 6, 0.8, 2);
     const glowTex     = useMemo(() => createGlowTexture(COLOR), []);
+    const isMobile    = typeof window !== 'undefined' && window.innerWidth < 1024;
 
-    useFrame(({ clock }) => {
+    useFrame(({ camera, clock }) => {
         const t = clock.getElapsedTime();
-        if (meshRef.current) {
-            const pulse = 1 + Math.sin(t * 3) * 0.15;
-            meshRef.current.scale.setScalar(scaleFactor * pulse);
+        if (groupRef.current) {
+            groupRef.current.quaternion.copy(camera.quaternion);
+            const pulse = 1 + Math.sin(t * 3) * 0.12;
+            groupRef.current.scale.setScalar(scaleFactor * pulse);
         }
-        if (ringRef.current) ringRef.current.rotation.z += 0.008;
+        if (ring1Ref.current) ring1Ref.current.rotation.z += 0.012;
+        if (ring2Ref.current) ring2Ref.current.rotation.z -= 0.007;
     });
 
     useEffect(() => {
@@ -343,37 +387,59 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
                 <meshBasicMaterial transparent opacity={0} depthWrite={false} />
             </mesh>
 
-            <mesh ref={meshRef}>
-                <sphereGeometry args={[0.12, 32, 32]} />
-                <meshStandardMaterial
-                    color={COLOR} emissive={COLOR} emissiveIntensity={3}
-                    toneMapped={false} roughness={0.05} metalness={0.9}
-                />
-            </mesh>
+            <group ref={groupRef}>
+                {/* Glow */}
+                {glowTex && (
+                    <mesh scale={[0.12 * 14 * scaleFactor, 0.12 * 14 * scaleFactor, 1]}>
+                        <planeGeometry />
+                        <meshBasicMaterial
+                            map={glowTex} transparent blending={THREE.AdditiveBlending}
+                            opacity={0.85} side={THREE.DoubleSide} depthWrite={false} toneMapped={false}
+                        />
+                    </mesh>
+                )}
 
-            <mesh ref={ringRef} rotation={[Math.PI / 2, 0, 0]}>
-                <torusGeometry args={[0.22, 0.007, 8, 64]} />
-                <meshBasicMaterial color={COLOR} toneMapped={false} transparent opacity={0.55} />
-            </mesh>
-
-            {glowTex && (
-                <mesh
-                    scale={[0.12 * 14 * scaleFactor, 0.12 * 14 * scaleFactor, 1]}
-                    onUpdate={(self) => self.lookAt(0, 0, 0)}
-                >
-                    <planeGeometry />
+                {/* Core flat disc */}
+                <mesh>
+                    <circleGeometry args={[0.085, 48]} />
                     <meshBasicMaterial
-                        map={glowTex} transparent blending={THREE.AdditiveBlending}
-                        opacity={0.85} side={THREE.DoubleSide} depthWrite={false} toneMapped={false}
+                        color={COLOR} transparent opacity={0.95}
+                        depthWrite={false} toneMapped={false}
+                        blending={THREE.AdditiveBlending}
                     />
                 </mesh>
-            )}
+
+                {/* Counter-rotating outer rings */}
+                <mesh ref={ring1Ref}>
+                    <ringGeometry args={[0.14, 0.155, 64]} />
+                    <meshBasicMaterial
+                        color={COLOR} transparent opacity={0.65}
+                        depthWrite={false} toneMapped={false}
+                        blending={THREE.AdditiveBlending} side={THREE.DoubleSide}
+                    />
+                </mesh>
+                <mesh ref={ring2Ref}>
+                    <ringGeometry args={[0.19, 0.198, 64]} />
+                    <meshBasicMaterial
+                        color={COLOR} transparent opacity={0.35}
+                        depthWrite={false} toneMapped={false}
+                        blending={THREE.AdditiveBlending} side={THREE.DoubleSide}
+                    />
+                </mesh>
+            </group>
 
             {!hideLabel && (
-                <Html position={[0, 0.32, 0]} center zIndexRange={[0, 5]}>
+                <Html
+                    position={[0, 0.32, 0]}
+                    center
+                    zIndexRange={[0, 5]}
+                    style={{ pointerEvents: 'none' }}
+                >
                     <div
-                        className="pointer-events-none select-none"
+                        onClick={!isMobile ? (e) => { e.stopPropagation(); onClick(); } : undefined}
                         style={{
+                            cursor: !isMobile ? 'pointer' : 'default',
+                            pointerEvents: !isMobile ? 'auto' : 'none',
                             background: 'rgba(0,0,0,0.88)',
                             borderLeft: `2px solid ${COLOR}`,
                             padding: '3px 8px',
@@ -431,7 +497,6 @@ const GlobeCore = memo(({
         SECTORS.find(s => s.id === activeSector)?.color,
     [activeSector]);
 
-    // ── filtered data helpers ──────────────────────────────────────────────────
     const filtered = useMemo(() => {
         const bySearch = (arr, key) => !searchQuery ? arr :
             arr.filter(x => (x[key] || x[key[0].toUpperCase() + key.slice(1)] || '')
@@ -457,9 +522,7 @@ const GlobeCore = memo(({
         ).slice(0, 25);
 
         const artists_ = shuffle(bySearch(bySector(artists), 'name')).slice(0, 25);
-
         const playlists_ = shuffle(bySearch(playlists, 'name')).slice(0, 25);
-
         const tracks_ = shuffle(
             !searchQuery ? tracks : tracks.filter(t =>
                 (t.title  || t.Title  || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -479,7 +542,6 @@ const GlobeCore = memo(({
         (activeView === 'TRACKS'      || !activeView ? tracks_.length      : 0)
     );
     const density = Math.max(0.4, 1 / (1 + 0.015 * totalNodes));
-
     const accentColor = activeSectorColor || '#ff006e';
 
     return (
@@ -490,14 +552,12 @@ const GlobeCore = memo(({
             <Sphere args={[2.45, 64, 64]}>
                 <meshStandardMaterial color="#060606" roughness={0.12} metalness={0.95} />
             </Sphere>
-            {/* Subtle inner tint */}
             <Sphere args={[2.46, 32, 32]}>
                 <meshStandardMaterial
                     color={accentColor} transparent opacity={0.035}
                     emissive={accentColor} emissiveIntensity={0.35}
                 />
             </Sphere>
-            {/* Wireframe grid — slightly more visible than before */}
             <Sphere args={[2.52, 32, 32]}>
                 <meshStandardMaterial
                     color={accentColor} wireframe
@@ -505,11 +565,9 @@ const GlobeCore = memo(({
                     emissive={accentColor} emissiveIntensity={0.3}
                 />
             </Sphere>
-            {/* Atmosphere */}
             <Sphere ref={atmosphereRef} args={[2.58, 64, 64]}>
                 <meshBasicMaterial color={accentColor} transparent opacity={0.07} side={THREE.BackSide} />
             </Sphere>
-            {/* Outer rim glow */}
             <Sphere args={[2.62, 32, 32]}>
                 <meshBasicMaterial color={accentColor} transparent opacity={0.025} side={THREE.BackSide} />
             </Sphere>
