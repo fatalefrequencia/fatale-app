@@ -1541,7 +1541,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         }}
                                         className="flex items-center gap-2 p-2 border border-dashed border-white/10 hover:border-white/30 cursor-pointer group transition-all"
                                     >
-                                        <Zap size={10} className="text-[#ff006e] group-hover:animate-pulse" />
+                                        
                                         <span className="text-[9px] font-black tracking-[0.2em] opacity-40 group-hover:opacity-100">{t('FOUND_CLIQUE')} [+]</span>
                                     </div>
 
