@@ -763,6 +763,22 @@ const ShoppingView = () => {
                         >
                             {isUploading ? '[ PUBLISHING... ]' : labels.uploadBtn}
                         </button>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            style={{
+                                width: '100%', padding: '11px 16px',
+                                background: 'transparent',
+                                border: `1px solid ${T.borderDim}`,
+                                color: T.purpleDim,
+                                fontFamily: T.mono, fontSize: 10,
+                                fontWeight: 900, letterSpacing: '0.2em',
+                                textTransform: 'uppercase',
+                                cursor: 'pointer', borderRadius: 0,
+                            }}
+                        >
+                            [ CANCEL ]
+                        </button>
                     </form>
                 </div>
             </motion.div>
