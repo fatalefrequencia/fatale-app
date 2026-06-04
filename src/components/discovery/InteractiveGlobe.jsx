@@ -4,6 +4,11 @@ import { OrbitControls, PerspectiveCamera, Float, Sphere, Html } from '@react-th
 import * as THREE from 'three';
 import { SECTORS } from '../../constants';
 
+// ─── CONSTANTS ────────────────────────────────────────────────────────────────
+// NODE_R: nodes sit just outside all globe layers (atmosphere = 2.56)
+const GLOBE_R = 2.45;
+const NODE_R  = 2.64;   // slightly proud of the surface — always visible
+
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 
 const hashStr = (s) => {
@@ -14,48 +19,108 @@ const hashStr = (s) => {
     return Math.abs(h);
 };
 
-const getSphericalPos = (id, radius = 2.5) => {
-    const h = hashStr(id);
+const getSphericalPos = (id, radius = NODE_R) => {
+    const h     = hashStr(id);
     const rand1 = (Math.abs(Math.sin(h * 127.1)) * 10000) % 1;
     const rand2 = (Math.abs(Math.sin(h * 311.7)) * 10000) % 1;
-    const lon = rand1 * Math.PI * 2;
-    const lat = Math.asin(rand2 * 2 - 1);
-    const r = radius;
+    const lon   = rand1 * Math.PI * 2;
+    const lat   = Math.asin(rand2 * 2 - 1);
     return {
         pos: [
-            r * Math.cos(lat) * Math.cos(lon),
-            r * Math.sin(lat),
-            r * Math.cos(lat) * Math.sin(lon),
+            radius * Math.cos(lat) * Math.cos(lon),
+            radius * Math.sin(lat),
+            radius * Math.cos(lat) * Math.sin(lon),
         ],
-        lat,
-        lon,
+        lat, lon,
     };
 };
 
-// Sharp-edged glow: bright centre, very tight falloff — city-light style
+// Tight city-light glow — bright hard core, fast falloff
 const createGlowTexture = (color) => {
     if (typeof document === 'undefined') return null;
     const canvas = document.createElement('canvas');
     canvas.width = 128; canvas.height = 128;
     const ctx = canvas.getContext('2d');
-    const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    const g   = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
     g.addColorStop(0,    color);
-    g.addColorStop(0.18, color);          // keep solid core larger
-    g.addColorStop(0.45, color + '88');   // mid soft
+    g.addColorStop(0.15, color);
+    g.addColorStop(0.40, color + '77');
     g.addColorStop(1,    'rgba(0,0,0,0)');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, 128, 128);
     return new THREE.CanvasTexture(canvas);
 };
 
-// Builds a bezier arc that cleanly clears the globe surface
 const buildArc = (from, to) => {
-    const f = new THREE.Vector3(...from);
-    const t = new THREE.Vector3(...to);
+    const f   = new THREE.Vector3(...from);
+    const t   = new THREE.Vector3(...to);
     const mid = new THREE.Vector3().addVectors(f, t).multiplyScalar(0.5);
     mid.normalize().multiplyScalar(4.8);
     return new THREE.QuadraticBezierCurve3(f, mid, t);
 };
+
+// ─── STAR FIELD ───────────────────────────────────────────────────────────────
+// ~1 200 stars distributed on a large sphere behind the globe.
+// Two layers: tiny sharp stars + a handful of slightly brighter ones.
+
+const StarField = memo(() => {
+    const COUNT_SMALL  = 1100;
+    const COUNT_BRIGHT = 80;
+    const RADIUS       = 42;
+
+    const { smallGeo, brightGeo } = useMemo(() => {
+        const mkGeo = (count, r) => {
+            const pos = new Float32Array(count * 3);
+            for (let i = 0; i < count; i++) {
+                // uniform sphere distribution
+                const u   = Math.random();
+                const v   = Math.random();
+                const lat = Math.acos(2 * v - 1) - Math.PI / 2;
+                const lon = 2 * Math.PI * u;
+                pos[i * 3]     = r * Math.cos(lat) * Math.cos(lon);
+                pos[i * 3 + 1] = r * Math.sin(lat);
+                pos[i * 3 + 2] = r * Math.cos(lat) * Math.sin(lon);
+            }
+            const g = new THREE.BufferGeometry();
+            g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            return g;
+        };
+        return { smallGeo: mkGeo(COUNT_SMALL, RADIUS), brightGeo: mkGeo(COUNT_BRIGHT, RADIUS * 0.98) };
+    }, []);
+
+    useEffect(() => () => { smallGeo.dispose(); brightGeo.dispose(); }, [smallGeo, brightGeo]);
+
+    return (
+        <group renderOrder={-10}>
+            {/* Tiny dim stars */}
+            <points geometry={smallGeo} renderOrder={-10}>
+                <pointsMaterial
+                    color="#a0c8ff"
+                    size={0.055}
+                    sizeAttenuation
+                    transparent
+                    opacity={0.55}
+                    depthWrite={false}
+                    toneMapped={false}
+                    blending={THREE.AdditiveBlending}
+                />
+            </points>
+            {/* A few brighter accent stars — slight warm tint */}
+            <points geometry={brightGeo} renderOrder={-10}>
+                <pointsMaterial
+                    color="#ffe8c0"
+                    size={0.10}
+                    sizeAttenuation
+                    transparent
+                    opacity={0.70}
+                    depthWrite={false}
+                    toneMapped={false}
+                    blending={THREE.AdditiveBlending}
+                />
+            </points>
+        </group>
+    );
+});
 
 // ─── SHIMMER LINE ─────────────────────────────────────────────────────────────
 
@@ -82,8 +147,7 @@ const ShimmerLine = memo(({ from, to, color, phaseOffset = 0, isSelected = false
             lineRef.current.material.opacity = 0.45;
         } else {
             opRef.current = Math.min(opRef.current + 0.025, 1);
-            const shimmer = 0.10 + Math.sin(t * 0.6 + phaseOffset) * 0.07;
-            lineRef.current.material.opacity = opRef.current * shimmer;
+            lineRef.current.material.opacity = opRef.current * (0.10 + Math.sin(t * 0.6 + phaseOffset) * 0.07);
         }
     });
 
@@ -102,20 +166,18 @@ const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeVi
         artists.forEach(artist => {
             const artistId     = artist.id || artist.Id;
             const artistNodeId = `artist-${artistId}`;
-            const artistPos    = getSphericalPos(artistNodeId, 2.48).pos;
+            const artistPos    = getSphericalPos(artistNodeId).pos;
             tracks.forEach(track => {
                 const eid = track.artistId || track.ArtistId;
                 if (!eid || String(eid) !== String(artistId)) return;
-                const trackPos = getSphericalPos(`track-${track.id || track.Id}`, 2.48).pos;
-                const seed     = hashStr(artistId + (track.id || track.Id));
-                result.push({ from: artistPos, to: trackPos, color: '#00d4ff', ownerId: artistNodeId, targetId: `track-${track.id || track.Id}`, phase: (seed % 1000) / 1000 * Math.PI * 2 });
+                const seed = hashStr(artistId + (track.id || track.Id));
+                result.push({ from: artistPos, to: getSphericalPos(`track-${track.id || track.Id}`).pos, color: '#00d4ff', ownerId: artistNodeId, targetId: `track-${track.id || track.Id}`, phase: (seed % 1000) / 1000 * Math.PI * 2 });
             });
             playlists.forEach(playlist => {
                 const eid = playlist.artistId || playlist.ArtistId;
                 if (!eid || String(eid) !== String(artistId)) return;
-                const plPos = getSphericalPos(`playlist-${playlist.id || playlist.Id}`, 2.48).pos;
-                const seed  = hashStr(artistId + (playlist.id || playlist.Id));
-                result.push({ from: artistPos, to: plPos, color: '#ff3d7f', ownerId: artistNodeId, targetId: `playlist-${playlist.id || playlist.Id}`, phase: (seed % 1000) / 1000 * Math.PI * 2 });
+                const seed = hashStr(artistId + (playlist.id || playlist.Id));
+                result.push({ from: artistPos, to: getSphericalPos(`playlist-${playlist.id || playlist.Id}`).pos, color: '#ff3d7f', ownerId: artistNodeId, targetId: `playlist-${playlist.id || playlist.Id}`, phase: (seed % 1000) / 1000 * Math.PI * 2 });
             });
         });
         return result;
@@ -125,47 +187,38 @@ const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeVi
 
     return (
         <group>
-            {visible.map((c) => {
-                const isSelected = selectedId && (c.ownerId === selectedId && c.targetId === selectedId);
-                const isRelated  = selectedId && (c.ownerId === selectedId || c.targetId === selectedId);
-                return (
-                    <ShimmerLine key={`arc-${c.ownerId}-${c.targetId}`} from={c.from} to={c.to} color={c.color} phaseOffset={c.phase} isSelected={isSelected} isRelated={isRelated} />
-                );
-            })}
+            {visible.map((c) => (
+                <ShimmerLine
+                    key={`arc-${c.ownerId}-${c.targetId}`}
+                    from={c.from} to={c.to} color={c.color} phaseOffset={c.phase}
+                    isSelected={selectedId && c.ownerId === selectedId && c.targetId === selectedId}
+                    isRelated={selectedId && (c.ownerId === selectedId || c.targetId === selectedId)}
+                />
+            ))}
         </group>
     );
 };
 
 // ─── FLAT CITY-LIGHT NODE ─────────────────────────────────────────────────────
-// Inspired by NASA night-lights imagery: tiny sharp dot + faint halo only.
-// All geometry is a billboard (always faces camera). No 3D sphere at all.
+// Sits at NODE_R (outside all globe geometry).
+// depthTest=false on all billboard materials → never occluded by globe layers.
 
 const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, onClick, cameraDist }) => {
     const billRef  = useRef();
     const ringRef  = useRef();
     const [hovered, setHovered] = useState(false);
-    const { pos }  = useMemo(() => getSphericalPos(id, 2.48), [id]);
+    const { pos }  = useMemo(() => getSphericalPos(id), [id]);           // uses NODE_R by default
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
 
-    // Dot: fixed tiny screen-space size regardless of zoom
-    // We scale by cameraDist so nodes stay same apparent size when zooming
-    const baseScale = THREE.MathUtils.clamp(cameraDist / 8, 0.6, 1.8);
-
-    // Tight glow texture
-    const glowTex = useMemo(() => createGlowTexture(color), [color]);
+    const baseScale = THREE.MathUtils.clamp(cameraDist / 8, 0.55, 1.8);
+    const glowTex   = useMemo(() => createGlowTexture(color), [color]);
 
     useFrame(({ camera, clock }) => {
         if (!billRef.current) return;
-        // Billboard — face camera
         billRef.current.quaternion.copy(camera.quaternion);
-
-        const t   = clock.getElapsedTime();
-        const sel = isSelected ? (1 + Math.sin(t * 5) * 0.15) : 1;
-        billRef.current.scale.setScalar(baseScale * sel);
-
-        if (ringRef.current) {
-            ringRef.current.rotation.z += isSelected ? 0.018 : 0.004;
-        }
+        const pulse = isSelected ? 1 + Math.sin(clock.getElapsedTime() * 5) * 0.15 : 1;
+        billRef.current.scale.setScalar(baseScale * pulse);
+        if (ringRef.current) ringRef.current.rotation.z += isSelected ? 0.018 : 0.004;
     });
 
     useEffect(() => {
@@ -173,14 +226,16 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
         return () => { document.body.style.cursor = 'auto'; };
     }, [hovered]);
 
-    // Sizes — intentionally small and crisp
-    const DOT  = size * 0.9;          // solid core disc
-    const RING = size * 1.9;          // thin outer ring radius
-    const GLOW = size * (isSelected ? 9 : hovered ? 7 : 4.5); // soft halo, tight
+    const DOT  = size * 0.9;
+    const RING = size * 1.9;
+    const GLOW = size * (isSelected ? 9 : hovered ? 7 : 4.5);
+
+    // renderOrder 10 + depthTest false = always on top of globe
+    const RO = 10;
 
     return (
         <group position={pos}>
-            {/* Generous invisible hit sphere */}
+            {/* Invisible hit sphere */}
             <mesh
                 onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
                 onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
@@ -190,70 +245,43 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
                 <meshBasicMaterial transparent opacity={0} depthWrite={false} />
             </mesh>
 
-            {/* Billboard group */}
             <group ref={billRef}>
-
-                {/* Tight radial glow — only visible layer behind the dot */}
+                {/* Soft halo */}
                 {glowTex && (
-                    <mesh renderOrder={1}>
+                    <mesh renderOrder={RO}>
                         <planeGeometry args={[GLOW * 2, GLOW * 2]} />
-                        <meshBasicMaterial
-                            map={glowTex}
-                            transparent
-                            blending={THREE.AdditiveBlending}
-                            opacity={isSelected ? 0.7 : hovered ? 0.55 : 0.28}
-                            side={THREE.DoubleSide}
-                            depthWrite={false}
-                            toneMapped={false}
-                        />
+                        <meshBasicMaterial map={glowTex} transparent blending={THREE.AdditiveBlending}
+                            opacity={isSelected ? 0.7 : hovered ? 0.55 : 0.30}
+                            side={THREE.DoubleSide} depthWrite={false} depthTest={false} toneMapped={false} />
                     </mesh>
                 )}
 
-                {/* Crisp solid core disc */}
-                <mesh renderOrder={2}>
+                {/* Core dot */}
+                <mesh renderOrder={RO + 1}>
                     <circleGeometry args={[DOT, 32]} />
-                    <meshBasicMaterial
-                        color={color}
-                        transparent
-                        opacity={isSelected ? 1 : hovered ? 0.95 : 0.9}
-                        depthWrite={false}
-                        toneMapped={false}
-                        blending={THREE.AdditiveBlending}
-                    />
+                    <meshBasicMaterial color={color} transparent blending={THREE.AdditiveBlending}
+                        opacity={isSelected ? 1 : hovered ? 0.95 : 0.92}
+                        depthWrite={false} depthTest={false} toneMapped={false} />
                 </mesh>
 
-                {/* Thin precision ring — always visible, very subtle at rest */}
-                <mesh ref={ringRef} renderOrder={2}>
+                {/* Thin ring */}
+                <mesh ref={ringRef} renderOrder={RO + 1}>
                     <ringGeometry args={[RING * 0.85, RING, 48]} />
-                    <meshBasicMaterial
-                        color={color}
-                        transparent
-                        opacity={isSelected ? 0.8 : hovered ? 0.55 : 0.18}
-                        depthWrite={false}
-                        toneMapped={false}
-                        blending={THREE.AdditiveBlending}
-                        side={THREE.DoubleSide}
-                    />
+                    <meshBasicMaterial color={color} transparent blending={THREE.AdditiveBlending}
+                        opacity={isSelected ? 0.80 : hovered ? 0.55 : 0.20}
+                        depthWrite={false} depthTest={false} toneMapped={false} side={THREE.DoubleSide} />
                 </mesh>
 
-                {/* Extra outer ring pulse on selected */}
+                {/* Selected: outer pulse ring */}
                 {isSelected && (
-                    <mesh renderOrder={2}>
+                    <mesh renderOrder={RO + 1}>
                         <ringGeometry args={[RING * 1.6, RING * 1.72, 48]} />
-                        <meshBasicMaterial
-                            color={color}
-                            transparent
-                            opacity={0.35}
-                            depthWrite={false}
-                            toneMapped={false}
-                            blending={THREE.AdditiveBlending}
-                            side={THREE.DoubleSide}
-                        />
+                        <meshBasicMaterial color={color} transparent blending={THREE.AdditiveBlending}
+                            opacity={0.35} depthWrite={false} depthTest={false} toneMapped={false} side={THREE.DoubleSide} />
                     </mesh>
                 )}
             </group>
 
-            {/* Label on hover / selected */}
             {(isSelected || hovered) && (
                 <>
                     <pointLight distance={0.9} intensity={isSelected ? 5 : 3} color={color} />
@@ -275,14 +303,8 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
                                 whiteSpace: 'nowrap',
                             }}
                         >
-                            <div style={{ color, fontSize: '7px', fontFamily: 'monospace', fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase', textShadow: `0 0 6px ${color}99` }}>
-                                {name}
-                            </div>
-                            {subtitle && (
-                                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '6px', fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: '1px' }}>
-                                    {subtitle}
-                                </div>
-                            )}
+                            <div style={{ color, fontSize: '7px', fontFamily: 'monospace', fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase', textShadow: `0 0 6px ${color}99` }}>{name}</div>
+                            {subtitle && <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '6px', fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: '1px' }}>{subtitle}</div>}
                         </div>
                     </Html>
                 </>
@@ -292,25 +314,28 @@ const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, on
 };
 
 // ─── FATALE CORE NODE ─────────────────────────────────────────────────────────
-// Slightly larger than regular nodes but same flat-billboard language.
 
 const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
     const billRef  = useRef();
     const ring1Ref = useRef();
     const ring2Ref = useRef();
     const [hovered, setHovered] = useState(false);
-    const COLOR      = '#ff0033';
-    const POS        = [0, 2.48, 0];
-    const baseScale  = THREE.MathUtils.clamp(cameraDist / 8, 0.6, 1.8);
-    const glowTex    = useMemo(() => createGlowTexture(COLOR), []);
-    const isMobile   = typeof window !== 'undefined' && window.innerWidth < 1024;
+    const COLOR     = '#ff0033';
+    // Top of globe — same NODE_R radius
+    const POS       = useMemo(() => {
+        const r = NODE_R;
+        return [0, r, 0];
+    }, []);
+    const baseScale = THREE.MathUtils.clamp(cameraDist / 8, 0.55, 1.8);
+    const glowTex   = useMemo(() => createGlowTexture(COLOR), []);
+    const isMobile  = typeof window !== 'undefined' && window.innerWidth < 1024;
+    const RO        = 10;
 
     useFrame(({ camera, clock }) => {
         const t = clock.getElapsedTime();
         if (billRef.current) {
             billRef.current.quaternion.copy(camera.quaternion);
-            const pulse = 1 + Math.sin(t * 3.5) * 0.12;
-            billRef.current.scale.setScalar(baseScale * pulse);
+            billRef.current.scale.setScalar(baseScale * (1 + Math.sin(t * 3.5) * 0.12));
         }
         if (ring1Ref.current) ring1Ref.current.rotation.z += 0.010;
         if (ring2Ref.current) ring2Ref.current.rotation.z -= 0.006;
@@ -321,10 +346,7 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
         return () => { document.body.style.cursor = 'auto'; };
     }, [hovered]);
 
-    const DOT  = 0.075;
-    const R1   = 0.135;
-    const R2   = 0.185;
-    const GLOW = 0.38;
+    const DOT = 0.075; const R1 = 0.135; const R2 = 0.185; const GLOW = 0.38;
 
     return (
         <group position={POS}>
@@ -332,47 +354,31 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
                 <sphereGeometry args={[0.28, 8, 8]} />
                 <meshBasicMaterial transparent opacity={0} depthWrite={false} />
             </mesh>
-
             <group ref={billRef}>
                 {glowTex && (
-                    <mesh renderOrder={1}>
+                    <mesh renderOrder={RO}>
                         <planeGeometry args={[GLOW * 2, GLOW * 2]} />
-                        <meshBasicMaterial map={glowTex} transparent blending={THREE.AdditiveBlending} opacity={0.75} side={THREE.DoubleSide} depthWrite={false} toneMapped={false} />
+                        <meshBasicMaterial map={glowTex} transparent blending={THREE.AdditiveBlending} opacity={0.78} side={THREE.DoubleSide} depthWrite={false} depthTest={false} toneMapped={false} />
                     </mesh>
                 )}
-
-                {/* Core */}
-                <mesh renderOrder={2}>
+                <mesh renderOrder={RO + 1}>
                     <circleGeometry args={[DOT, 48]} />
-                    <meshBasicMaterial color={COLOR} transparent opacity={0.95} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
+                    <meshBasicMaterial color={COLOR} transparent opacity={0.95} depthWrite={false} depthTest={false} toneMapped={false} blending={THREE.AdditiveBlending} />
                 </mesh>
-
-                {/* Inner rotating ring */}
-                <mesh ref={ring1Ref} renderOrder={2}>
+                <mesh ref={ring1Ref} renderOrder={RO + 1}>
                     <ringGeometry args={[R1 * 0.88, R1, 64]} />
-                    <meshBasicMaterial color={COLOR} transparent opacity={0.6} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
+                    <meshBasicMaterial color={COLOR} transparent opacity={0.62} depthWrite={false} depthTest={false} toneMapped={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
                 </mesh>
-
-                {/* Outer counter-rotating ring */}
-                <mesh ref={ring2Ref} renderOrder={2}>
+                <mesh ref={ring2Ref} renderOrder={RO + 1}>
                     <ringGeometry args={[R2 * 0.92, R2, 64]} />
-                    <meshBasicMaterial color={COLOR} transparent opacity={0.28} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
+                    <meshBasicMaterial color={COLOR} transparent opacity={0.30} depthWrite={false} depthTest={false} toneMapped={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
                 </mesh>
             </group>
 
             {!hideLabel && (
                 <Html position={[0, 0.28, 0]} center zIndexRange={[0, 5]} style={{ pointerEvents: 'none' }}>
-                    <div
-                        onClick={!isMobile ? (e) => { e.stopPropagation(); onClick(); } : undefined}
-                        style={{
-                            cursor: !isMobile ? 'pointer' : 'default',
-                            pointerEvents: !isMobile ? 'auto' : 'none',
-                            background: 'rgba(0,0,0,0.90)',
-                            borderLeft: `2px solid ${COLOR}`,
-                            padding: '3px 8px',
-                            backdropFilter: 'blur(14px)',
-                        }}
-                    >
+                    <div onClick={!isMobile ? (e) => { e.stopPropagation(); onClick(); } : undefined}
+                        style={{ cursor: !isMobile ? 'pointer' : 'default', pointerEvents: !isMobile ? 'auto' : 'none', background: 'rgba(0,0,0,0.90)', borderLeft: `2px solid ${COLOR}`, padding: '3px 8px', backdropFilter: 'blur(14px)' }}>
                         <div style={{ color: COLOR, fontSize: '7px', fontFamily: 'monospace', fontWeight: 900, letterSpacing: '0.3em', textTransform: 'uppercase', textShadow: `0 0 8px ${COLOR}` }}>FATALE_CORE</div>
                         <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '5px', fontFamily: 'monospace', letterSpacing: '0.2em', textTransform: 'uppercase', marginTop: '1px' }}>SYS_NODE</div>
                     </div>
@@ -392,16 +398,18 @@ const GlobeCore = memo(({
     onArtistClick, onCommunityClick, onTrackClick, onPlaylistClick,
     isGlobeSpinning,
 }) => {
-    const { camera }  = useThree();
+    const { camera }    = useThree();
     const [cameraDist, setCameraDist] = useState(10);
-    const [seed]      = useState(() => Math.random().toString());
+    const [seed]        = useState(() => Math.random().toString());
     const atmosphereRef = useRef();
+    const backGlowRef   = useRef();
 
     useFrame(({ clock }) => {
         const t = clock.getElapsedTime();
         setCameraDist(camera.position.length());
-        if (atmosphereRef.current)
-            atmosphereRef.current.scale.setScalar(1 + Math.sin(t * 1.2) * 0.003);
+        if (atmosphereRef.current) atmosphereRef.current.scale.setScalar(1 + Math.sin(t * 1.2) * 0.003);
+        // Slow breathe on the back-glow
+        if (backGlowRef.current) backGlowRef.current.material.opacity = 0.11 + Math.sin(t * 0.8) * 0.025;
     });
 
     const activeSectorColor = useMemo(() => SECTORS.find(s => s.id === activeSector)?.color, [activeSector]);
@@ -412,56 +420,69 @@ const GlobeCore = memo(({
         const bySector = (arr) => activeSector !== null ? arr.filter(x => (x.sectorId || x.SectorId) === activeSector) : arr;
         const shuffle  = (arr) => arr.map(item => ({ item, k: hashStr((item.id || item.Id || '') + seed) })).sort((a, b) => a.k - b.k).map(x => x.item);
 
-        const communities_ = shuffle(bySearch(bySector(communities.filter(c =>
-            !c.isSystem && !c.IsSystem && c.id !== 4 && c.Id !== 4 &&
-            c.name?.toUpperCase() !== 'FATALE_CORE' && c.Name?.toUpperCase() !== 'FATALE_CORE'
-        )), 'name')).slice(0, 25);
-        const artists_   = shuffle(bySearch(bySector(artists), 'name')).slice(0, 25);
-        const playlists_ = shuffle(bySearch(playlists, 'name')).slice(0, 25);
-        const tracks_    = shuffle(!searchQuery ? tracks : tracks.filter(t =>
-            (t.title || t.Title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (t.artist || t.Artist || '').toLowerCase().includes(searchQuery.toLowerCase())
-        )).slice(0, 25);
-
-        return { communities_, artists_, playlists_, tracks_ };
+        return {
+            communities_: shuffle(bySearch(bySector(communities.filter(c =>
+                !c.isSystem && !c.IsSystem && c.id !== 4 && c.Id !== 4 &&
+                c.name?.toUpperCase() !== 'FATALE_CORE' && c.Name?.toUpperCase() !== 'FATALE_CORE'
+            )), 'name')).slice(0, 25),
+            artists_:   shuffle(bySearch(bySector(artists), 'name')).slice(0, 25),
+            playlists_: shuffle(bySearch(playlists, 'name')).slice(0, 25),
+            tracks_:    shuffle(!searchQuery ? tracks : tracks.filter(t =>
+                (t.title || t.Title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (t.artist || t.Artist || '').toLowerCase().includes(searchQuery.toLowerCase())
+            )).slice(0, 25),
+        };
     }, [communities, artists, playlists, tracks, activeSector, searchQuery, seed]);
 
     const { communities_, artists_, playlists_, tracks_ } = filtered;
 
-    const totalNodes = (
+    const totalNodes  = (
         (activeView === 'COMMUNITIES' || !activeView ? communities_.length : 0) +
         (activeView === 'ARTISTS'     || !activeView ? artists_.length     : 0) +
         (activeView === 'PLAYLISTS'   || !activeView ? playlists_.length   : 0) +
         (activeView === 'TRACKS'      || !activeView ? tracks_.length      : 0)
     );
-    const density    = Math.max(0.4, 1 / (1 + 0.015 * totalNodes));
+    const density     = Math.max(0.4, 1 / (1 + 0.015 * totalNodes));
     const accentColor = activeSectorColor || '#ff006e';
 
     return (
         <group>
-            {/* ── GLOBE LAYERS — clean, minimal ── */}
+            {/* ── GLOBE ── */}
 
-            {/* Dark core — near-black, slight metalness */}
-            <Sphere args={[2.45, 64, 64]}>
+            {/* Dark metallic core */}
+            <Sphere args={[GLOBE_R, 64, 64]} renderOrder={1}>
                 <meshStandardMaterial color="#050505" roughness={0.08} metalness={0.92} />
             </Sphere>
 
-            {/* Very subtle accent tint */}
-            <Sphere args={[2.46, 32, 32]}>
-                <meshStandardMaterial color={accentColor} transparent opacity={0.018} emissive={accentColor} emissiveIntensity={0.2} />
+            {/* Hair-thin accent tint inside */}
+            <Sphere args={[2.46, 32, 32]} renderOrder={2}>
+                <meshStandardMaterial color={accentColor} transparent opacity={0.022} emissive={accentColor} emissiveIntensity={0.25} />
             </Sphere>
 
-            {/* Precision wireframe grid — fine lines only */}
-            <Sphere args={[2.50, 36, 18]}>
-                <meshBasicMaterial color={accentColor} wireframe transparent opacity={0.038} toneMapped={false} />
+            {/* Fine wireframe grid */}
+            <Sphere args={[2.50, 36, 18]} renderOrder={3}>
+                <meshBasicMaterial color={accentColor} wireframe transparent opacity={0.042} toneMapped={false} />
             </Sphere>
 
-            {/* Atmosphere — thin rim only */}
-            <Sphere ref={atmosphereRef} args={[2.56, 48, 48]}>
-                <meshBasicMaterial color={accentColor} transparent opacity={0.045} side={THREE.BackSide} />
+            {/* Thin forward atmosphere — BackSide so it wraps the rim */}
+            <Sphere ref={atmosphereRef} args={[2.56, 48, 48]} renderOrder={4}>
+                <meshBasicMaterial color={accentColor} transparent opacity={0.055} side={THREE.BackSide} />
             </Sphere>
 
-            {/* ── NODES ── */}
+            {/* ── BACK GLOW — the "planet from space" corona ── */}
+            {/* Two nested back-facing spheres for a rich layered halo */}
+            <Sphere ref={backGlowRef} args={[3.10, 32, 32]} renderOrder={0}>
+                <meshBasicMaterial color={accentColor} transparent opacity={0.11} side={THREE.BackSide} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
+            </Sphere>
+            <Sphere args={[3.80, 32, 32]} renderOrder={0}>
+                <meshBasicMaterial color={accentColor} transparent opacity={0.045} side={THREE.BackSide} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
+            </Sphere>
+            {/* Subtle inner warm core glow */}
+            <Sphere args={[2.70, 32, 32]} renderOrder={0}>
+                <meshBasicMaterial color={accentColor} transparent opacity={0.06} side={THREE.BackSide} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
+            </Sphere>
+
+            {/* ── NODES ── (renderOrder 10+ / depthTest false — sit on top of all globe layers) */}
             {(activeView === 'COMMUNITIES' || !activeView) && communities_.map(c => (
                 <LightPointNode key={`comm-${c.id || c.Id}`} id={`comm-${c.id || c.Id}`} name={c.name || c.Name} color="#ffaa00" size={0.055 * density} isSelected={selectedId === `community-${c.id || c.Id}`} cameraDist={cameraDist} onClick={() => onCommunityClick?.(c)} />
             ))}
@@ -475,7 +496,6 @@ const GlobeCore = memo(({
                 <LightPointNode key={`playlist-${p.id || p.Id}`} id={`playlist-${p.id || p.Id}`} name={p.name || p.Name} color="#ff006e" size={0.048 * density} isSelected={selectedId === `playlist-${p.id || p.Id}`} cameraDist={cameraDist} onClick={() => onPlaylistClick?.(p)} />
             ))}
 
-            {/* FATALE_CORE */}
             <FataleCoreNode
                 isSelected={selectedId === 'system-fatale_core'}
                 cameraDist={cameraDist}
@@ -483,7 +503,6 @@ const GlobeCore = memo(({
                 onClick={() => onCommunityClick?.({ id: 'fatale_core', name: 'FATALE_CORE', isSystem: true, description: 'The official Fatale system node. Share feedback, bug reports and reviews.' })}
             />
 
-            {/* Shimmer arcs */}
             <NetworkVisualization artists={artists_} tracks={tracks_} playlists={playlists_} selectedId={selectedId} activeView={activeView} />
         </group>
     );
@@ -505,19 +524,21 @@ const InteractiveGlobe = memo(({
         <div className="w-full h-full cursor-grab active:cursor-grabbing">
             <Canvas dpr={[1, 2]} gl={{ logarithmicDepthBuffer: true, antialias: true }}>
                 <PerspectiveCamera makeDefault position={[0, 0, isMobile ? 12.5 : 15.5]} fov={isMobile ? 30 : 40} />
-                <fog attach="fog" args={['#000000', 8, 30]} />
+                <fog attach="fog" args={['#000005', 20, 60]} />
                 <OrbitControls
                     enablePan={false} enableZoom={true}
                     minDistance={2.8} maxDistance={25}
                     autoRotate={isGlobeSpinning && !selectedId}
                     autoRotateSpeed={isGlobeSpinning ? 0.5 : 0}
-                    dampingFactor={0.1} enableDamping={true} rotateSpeed={0.5}
+                    dampingFactor={0.1} enableDamping rotateSpeed={0.5}
                 />
 
-                {/* Lighting: minimal — nodes are self-emissive */}
-                <ambientLight intensity={0.2} />
+                {/* Stars — rendered behind everything */}
+                <StarField />
+
+                <ambientLight intensity={0.18} />
                 <pointLight position={[10, 10, 10]} intensity={2.5} color={SECTORS.find(s => s.id === activeSector)?.color || '#ff006e'} />
-                <pointLight position={[-8, -8, -8]} intensity={1.8} color="#003366" />
+                <pointLight position={[-8, -8, -8]} intensity={1.6} color="#001833" />
 
                 <Float
                     speed={isGlobeSpinning && !selectedId ? (activeSector !== null ? 0.2 : 1.0) : 0}
