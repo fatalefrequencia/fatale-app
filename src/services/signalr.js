@@ -42,11 +42,50 @@ const fire = (key, payload) =>
   listeners[key].forEach(fn => { try { fn(payload); } catch (e) { console.warn(`[SignalR] listener error [${key}]`, e); } });
 
 // ─── Connection ──────────────────────────────────────────────────────────────
-export const initSignalR = async () => {
-  if (connection && connection.state !== signalR.HubConnectionState.Disconnected) return connection;
+let connectedToken = null;
+let lastForceReconnectTime = 0;
 
+export const disconnectSignalR = async () => {
+  clearTimeout(reconnectTimer);
+  if (connection) {
+    try {
+      if (connection.state !== signalR.HubConnectionState.Disconnected) {
+        await connection.stop();
+      }
+      console.log('[SignalR] Disconnected successfully');
+    } catch (e) {
+      console.error('[SignalR] Failed to stop connection:', e);
+    }
+    connection = null;
+    connectedToken = null;
+  }
+};
+
+export const forceReconnectSignalR = async () => {
+  const now = Date.now();
+  if (now - lastForceReconnectTime < 10000) {
+    console.warn('[SignalR] Force reconnect requested too soon, skipping to prevent loop');
+    return;
+  }
+  lastForceReconnectTime = now;
+  console.log('[SignalR] Force reconnecting due to auth failure...');
+  await disconnectSignalR();
+  await initSignalR();
+};
+
+export const initSignalR = async () => {
   const token = localStorage.getItem('token');
 
+  if (connection) {
+    if (connectedToken !== token) {
+      console.log('[SignalR] Token changed. Recreating connection...');
+      await disconnectSignalR();
+    } else if (connection.state !== signalR.HubConnectionState.Disconnected) {
+      return connection;
+    }
+  }
+
+  connectedToken = token;
   connection = new signalR.HubConnectionBuilder()
     .withUrl(HUB_URL, token ? { accessTokenFactory: () => token } : {})
     .withAutomaticReconnect([0, 1000, 3000, 8000, 15000])
@@ -209,6 +248,19 @@ export const syncTrack = async (stationId, track, currentTime, isPlaying) => {
     await connection.invoke('BroadcastSync', payload);
   } catch (e) {
     console.warn('[SignalR] syncTrack failed:', e);
+    const errStr = String(e);
+    if (errStr.toLowerCase().includes('unauthorized') && localStorage.getItem('token')) {
+      console.log('[SignalR] Detected unauthorized error in syncTrack, attempting force reconnect...');
+      try {
+        await forceReconnectSignalR();
+        if (connection && connection.state === signalR.HubConnectionState.Connected) {
+          await connection.invoke('BroadcastSync', payload);
+          console.log('[SignalR] Retried BroadcastSync successfully after reconnect');
+        }
+      } catch (retryErr) {
+        console.error('[SignalR] Retry BroadcastSync failed:', retryErr);
+      }
+    }
   }
 };
 

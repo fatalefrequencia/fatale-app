@@ -34,7 +34,7 @@ import SettingsView from './components/SettingsView';
 import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
 import DJMixerPlayer from './components/DJMixerPlayer';
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
-import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack, onBroadcastSync, registerHost, unregisterHost, onListenerJoined } from './services/signalr';
+import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack, onBroadcastSync, registerHost, unregisterHost, onListenerJoined, disconnectSignalR } from './services/signalr';
 import { useBroadcastSync } from './hooks/useBroadcastSync';
 import { useWebRTCBroadcast } from './hooks/useWebRTCBroadcast';
 import { useWebRTCListener } from './hooks/useWebRTCListener';
@@ -2390,7 +2390,10 @@ function App() {
   const handleAuthSuccess = (authData) => {
     console.log("[App] handleAuthSuccess invoked with:", authData);
 
-    if (authData.token) localStorage.setItem('token', authData.token);
+    if (authData.token) {
+      localStorage.setItem('token', authData.token);
+      initSignalR().catch(e => console.warn('[App] Failed to init SignalR on login:', e));
+    }
 
     // Ensure we have a valid user object with an ID before updating state
     const validUser = authData.user && (authData.user.id || authData.user.Id) ? authData.user : null;
@@ -2426,6 +2429,7 @@ function App() {
     // 3. Clear session data
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    disconnectSignalR().catch(e => console.warn('[App] Failed to disconnect SignalR on logout:', e));
     localStorage.removeItem('activeView');
     localStorage.removeItem('currentTrackIndex');
     localStorage.removeItem('tracks');
