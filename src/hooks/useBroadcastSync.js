@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { requestStream } from '../services/signalr';
+import { getMediaUrl } from '../constants';
 
 export function useBroadcastSync({
   activeStation,
@@ -75,6 +76,11 @@ export function useBroadcastSync({
         return;
       }
 
+      // If we are not in hardware mode, make sure to clear any WebRTC stream
+      if (audioRef.current && audioRef.current.srcObject) {
+        audioRef.current.srcObject = null;
+      }
+
       if (isYT && youtubePlayer) {
         try {
           const ytId = youtubeId || source?.split(':')[1];
@@ -89,14 +95,31 @@ export function useBroadcastSync({
             if (isPlaying) youtubePlayer.playVideo();
             else youtubePlayer.pauseVideo();
           }
+
+          // Mobile session persistence: play silent carrier on audioRef
+          if (audioRef.current) {
+            const silentSrc = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+            if (audioRef.current.src !== silentSrc && audioRef.current.getAttribute('data-playing-src') !== 'silent') {
+              audioRef.current.src = silentSrc;
+              audioRef.current.loop = true;
+              audioRef.current.setAttribute('data-playing-src', 'silent');
+              audioRef.current.load();
+            }
+            if (isPlaying) {
+              audioRef.current.play().catch(() => {});
+            } else {
+              audioRef.current.pause();
+            }
+          }
         } catch (e) {
           console.warn('[BROADCAST_SYNC] YouTube sync error:', e);
         }
       } else if (!isYT && audioRef.current) {
-        if (source && audioRef.current.getAttribute('data-playing-src') !== source) {
-          audioRef.current.src = source;
+        const resolvedSrc = getMediaUrl(source);
+        if (resolvedSrc && audioRef.current.getAttribute('data-playing-src') !== resolvedSrc) {
+          audioRef.current.src = resolvedSrc;
           audioRef.current.load();
-          audioRef.current.setAttribute('data-playing-src', source);
+          audioRef.current.setAttribute('data-playing-src', resolvedSrc);
         }
         const diff = Math.abs((audioRef.current.currentTime || 0) - (currentTime || 0));
         if (diff > 2) audioRef.current.currentTime = currentTime || 0;

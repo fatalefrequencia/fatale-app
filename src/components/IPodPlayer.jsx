@@ -14,6 +14,7 @@ import skullImg from '../assets/skull_neon_fuscia.png';
 // MENU_ITEMS moved inside component for localization
 
 export const IPodPlayer = ({
+    currentTrack: parentCurrentTrack,
     isLandscape,
     tracks,
     vibeFeatures,
@@ -316,13 +317,13 @@ useEffect(() => {
         ? tracks[currentTrackIndex]
         : (tracks[0] || libraryTracks[0] || { title: 'Loading...', artist: 'System' });
 
-    const currentTrack = {
+    const currentTrack = parentCurrentTrack || {
         ...rawTrack,
         id: rawTrack.user_id || rawTrack.id || rawTrack.Id,
         title: rawTrack.title || rawTrack.Title || 'Untitled',
         artist: extractArtistName(rawTrack) || 'Unknown Artist',
         source: rawTrack.source || rawTrack.Source,
-        cover: rawTrack.cover || rawTrack.coverImageUrl || rawTrack.CoverImageUrl,
+        cover: rawTrack.cover || rawTrack.coverImageUrl || rawTrack.CoverImageUrl || rawTrack.imageUrl || rawTrack.ImageUrl,
         isLiked: rawTrack.isLiked !== undefined ? rawTrack.isLiked : (rawTrack.IsLiked !== undefined ? rawTrack.IsLiked : false),
         isLocked: rawTrack.isLocked !== undefined ? rawTrack.isLocked : (rawTrack.IsLocked !== undefined ? rawTrack.IsLocked : false),
         isOwned: rawTrack.isOwned !== undefined ? rawTrack.isOwned : (rawTrack.IsOwned !== undefined ? rawTrack.IsOwned : true)
@@ -1823,8 +1824,8 @@ useEffect(() => {
                                                         <div 
                                                             className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-[#151515] overflow-hidden bg-black flex items-center justify-center ${isPlaying ? 'animate-[spin_10s_linear_infinite]' : ''}`}
                                                         >
-                                                            {tracks[currentTrackIndex]?.ImageUrl || tracks[currentTrackIndex]?.imageUrl || tracks[currentTrackIndex]?.cover ? (
-                                                                <img src={getMediaUrl(tracks[currentTrackIndex].ImageUrl || tracks[currentTrackIndex].imageUrl || tracks[currentTrackIndex].cover)} alt="" className="w-full h-full object-cover" />
+                                                            {currentTrack.cover ? (
+                                                                <img src={getMediaUrl(currentTrack.cover)} alt="" className="w-full h-full object-cover" />
                                                             ) : (
                                                                 <Music size={28} className="text-[#f00060]/50" />
                                                             )}
@@ -1852,10 +1853,10 @@ useEffect(() => {
                                                 
                                                 {/* Title, Artist and Progress metadata */}
                                                 <div className="text-center max-w-[90%] z-10 shrink-0">
-                                                    <h2 className="text-sm sm:text-base font-black text-white tracking-wide truncate">{tracks[currentTrackIndex]?.title || tracks[currentTrackIndex]?.Title || t('UNTITLED')}</h2>
+                                                    <h2 className="text-sm sm:text-base font-black text-white tracking-wide truncate">{currentTrack?.title || t('UNTITLED')}</h2>
                                                     <p className="text-[10px] sm:text-xs text-white/50 mt-1.5 uppercase font-mono tracking-widest truncate">
                                                         {(() => {
-                                                            const trk = tracks[currentTrackIndex];
+                                                            const trk = currentTrack;
                                                             if (!trk) return t('UNKNOWN');
                                                             const artist = trk.artist || trk.artistName || trk.ArtistName || trk.author || trk.Author || trk.channelTitle || trk.ChannelTitle;
                                                             if (artist && artist !== 'YouTube') return artist;

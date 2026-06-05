@@ -5691,6 +5691,7 @@ const PlayerContent = ({
         />
       ) : (
         <IPodPlayer
+          currentTrack={currentTrack}
           onPlayTrack={onPlayTrack}
           onPlayTrackAtIndex={onPlayTrackAtIndex}
           user={user}
