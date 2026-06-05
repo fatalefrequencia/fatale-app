@@ -51,16 +51,16 @@ export function useBroadcastSync({
         setBroadcastSourceType(sourceType || 'app');
       }
 
-      // Request WebRTC audio stream for both hardware and app broadcast types
-      if (sourceType === 'hardware' || sourceType === 'app') {
+      // If this is a hardware broadcast, request the WebRTC audio stream
+      if (sourceType === 'hardware') {
         requestStream(String(stationId));
       }
 
       const isYT = !!(youtubeId || (source && source.startsWith('youtube:')));
       setIsYoutubeMode(isYT);
 
-      // Audio comes via WebRTC
-      if (sourceType === 'hardware' || sourceType === 'app') {
+      // For hardware source, audio comes via WebRTC
+      if (sourceType === 'hardware') {
         // Only pause the audio element if WebRTC has NOT yet provided a srcObject stream.
         // If srcObject is set, the WebRTC audio is already playing — don't interrupt it.
         if (audioRef.current && !audioRef.current.srcObject && !audioRef.current.paused) {

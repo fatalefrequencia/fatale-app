@@ -785,21 +785,10 @@ function App() {
     onBroadcastSync,
   });
 
-  // Combined broadcast stream (micStream for hardware, browser mix for app mode)
-  const broadcastStream = React.useMemo(() => {
-    if (broadcastSourceType === 'hardware') {
-      return micStream;
-    }
-    if (broadcastSourceType === 'app') {
-      return broadcastDestRef.current ? broadcastDestRef.current.stream : null;
-    }
-    return null;
-  }, [broadcastSourceType, micStream, broadcastDestRef.current]);
-
   // ── WebRTC: Host broadcaster (hardware audio → listeners) ──────────────────
   useWebRTCBroadcast({
     stationId: activeStation ? String(activeStation.id || activeStation.Id) : null,
-    micStream: broadcastStream,
+    micStream,
     isHost,
     isBroadcasting: isHost && !!activeStation,
   });

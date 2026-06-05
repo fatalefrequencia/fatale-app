@@ -174,8 +174,8 @@ export function useWebRTCListener({ activeStation, isHost, broadcastSourceType, 
     const stationId = String(activeStation.id || activeStation.Id || '');
     stationIdRef.current = stationId;
 
-    // Request live audio stream for both hardware and app broadcast types
-    if (broadcastSourceType === 'hardware' || broadcastSourceType === 'app') {
+    // If the broadcast is from a hardware source, request the audio stream
+    if (broadcastSourceType === 'hardware') {
       console.log('[WebRTC] Requesting live audio stream for station:', stationId);
       requestStream(stationId);
     }
