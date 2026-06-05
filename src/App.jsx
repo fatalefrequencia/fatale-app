@@ -679,7 +679,8 @@ function App() {
   const [ingestMode, setIngestMode] = useState('ALL'); // 'ALL' or 'JOURNAL'
   // Force reload to fix cache issue with setIngestMode
 
-  const [goLiveFormData, setGoLiveFormData] = useState({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true, sectorId: null });
+  const [goLiveFormData, setGoLiveFormData] = useState({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true, sectorId: null, sourceType: 'app' });
+  const [broadcastSourceType, setBroadcastSourceType] = useState('app');
   
   // --- GLOBAL MODAL STATE ---
   const [globalExpandedContent, setGlobalExpandedContent] = useState(null);
@@ -705,8 +706,9 @@ function App() {
       });
 
       showNotification("BROADCAST_ACTIVE", t('ESTABLISH_SIGNAL'), "success");
+      setBroadcastSourceType(goLiveFormData.sourceType);
       setShowGlobalGoLive(false);
-      setGoLiveFormData({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true, sectorId: null });
+      setGoLiveFormData({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true, sectorId: null, sourceType: 'app' });
 
       // After starting, briefly navigate to profile to show the broadcast interface
       navigateToProfile(user?.id, 'broadcast');
@@ -953,7 +955,12 @@ function App() {
   
     // Guard: ensure signalR is ready before syncing
     const timer = setTimeout(() => {
-      syncTrack(stationId, currentTrack, currentTime, isPlaying);
+      const trackToSync = { ...currentTrack, sourceType: broadcastSourceType };
+      if (broadcastSourceType === 'hardware') {
+        trackToSync.title = '🎙 LIVE INPUT';
+        trackToSync.artist = user?.username || 'Hardware Source';
+      }
+      syncTrack(stationId, trackToSync, currentTime, isPlaying);
     }, 0);
   
     return () => clearTimeout(timer);
@@ -964,7 +971,12 @@ function App() {
     const stationId = activeStation.id || activeStation.Id;
   
     const timer = setTimeout(() => {
-      syncTrack(stationId, currentTrack, currentTime, isPlaying);
+      const trackToSync = { ...currentTrack, sourceType: broadcastSourceType };
+      if (broadcastSourceType === 'hardware') {
+        trackToSync.title = '🎙 LIVE INPUT';
+        trackToSync.artist = user?.username || 'Hardware Source';
+      }
+      syncTrack(stationId, trackToSync, currentTime, isPlaying);
     }, 300);
   
     return () => clearTimeout(timer);
@@ -2813,6 +2825,29 @@ function App() {
                   )}
                 </div>
 
+                {/* Source Selection */}
+                <div className="space-y-1.5">
+                  <div className="text-[7px] opacity-40 font-mono uppercase tracking-widest ml-1">TRANSMISSION_SOURCE // HARDWARE_LINK</div>
+                  <div className="relative">
+                    <select
+                      value={goLiveFormData.sourceType}
+                      onChange={e => setGoLiveFormData(p => ({ ...p, sourceType: e.target.value }))}
+                      className="w-full bg-black/60 border border-[#ff006e]/20 hover:border-[#ff006e]/50 focus:border-[#ff006e]/60 p-3 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
+                    >
+                      <option value="app">Direct App Deck Sync</option>
+                      <option value="hardware">External Audio (Line-In/Mics/Hardware)</option>
+                    </select>
+                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                      <ChevronDown size={12} className="text-[#ff006e]/40" />
+                    </div>
+                  </div>
+                  {goLiveFormData.sourceType === 'hardware' && (
+                    <div className="text-[7px] font-mono tracking-widest text-[#ff006e] ml-1 mt-1 animate-pulse">
+                      WARNING: EXTERNAL AUDIO SOURCE WILL CAPTURE SELECTED INPUT DEVICE
+                    </div>
+                  )}
+                </div>
+
                 <div className="space-y-3">
                   <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] ml-1">transmission_log // description</label>
                   <textarea
@@ -2925,6 +2960,7 @@ function App() {
               isMobile={isMobile}
               currentTrack={currentTrack}
               isPlaying={isPlaying}
+              broadcastSourceType={broadcastSourceType}
               onPlayPause={togglePlay}
               onNext={playNext}
               onPrev={playPrev}
@@ -3455,14 +3491,16 @@ const Dashboard = React.memo(({
 
 
 
-      {/* MINI PLAYER (Todas las vistas excepto Player, y solo si hay track) */}
+      {/* MINI PLAYER (Todas las vistas excepto Player, y solo si hay track o station) */}
       <AnimatePresence>
-        {activeView !== 'player' && currentTrackIndex >= 0 && (
+        {activeView !== 'player' && (currentTrackIndex >= 0 || activeStation) && (
           // Hide mini player on mobile if viewing profile to avoid crowding
           !(window.innerWidth < 1024 && activeView === 'profile') && (
             <MiniPlayer
               key={isMiniPlayerMinimized ? 'minimized' : 'expanded'}
-              track={tracks[currentTrackIndex]}
+              track={currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null}
+              activeStation={activeStation}
+              isHost={isHost}
               isPlaying={isPlaying}
               onTogglePlay={togglePlay}
               onNext={handleNext}
@@ -3501,7 +3539,7 @@ const Dashboard = React.memo(({
 });
 
 // --- MINI PLAYER COMPONENT ---
-const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView, isMuted, onToggleMute, currentTime, duration, isSidebarCollapsed, volume, setVolume, isMinimized, onToggleMinimize, isBroadcasting, onOpenMixer }) => {
+const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView, isMuted, onToggleMute, currentTime, duration, isSidebarCollapsed, volume, setVolume, isMinimized, onToggleMinimize, isBroadcasting, onOpenMixer }) => {
   const isMessages = activeView === 'messages';
 
   if (isMinimized) {
@@ -3556,21 +3594,36 @@ const MiniPlayer = ({ track, isPlaying, onTogglePlay, onNext, onPrev, onLike, on
       {/* Track Info (Click to expand) */}
       <div className="flex items-center gap-3 lg:gap-4 flex-1 cursor-pointer group/info min-w-0 z-10 relative" onClick={onExpand}>
         <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-sm border flex items-center justify-center relative overflow-hidden shrink-0 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.5)] ${isMessages ? 'bg-black border-white/5' : 'bg-[#0a0a0a] border-white/10 group-hover/info:border-[#ff006e]/50 group-hover/info:shadow-[0_0_20px_rgba(255,0,110,0.2)]'}`}>
-          {track?.cover || track?.thumbnail ? (
+          {activeStation ? (
+            <Radio size={18} className={`transition-all duration-500 z-10 relative text-[#ff006e]`} />
+          ) : track?.cover || track?.thumbnail ? (
             <img src={track.cover || track.thumbnail} alt="Cover" className="w-full h-full object-cover filter brightness-[0.7] contrast-[1.2] saturate-[0.8] group-hover/info:filter-none transition-all duration-500 z-10 relative" />
           ) : (
             <Music size={18} className={`transition-all duration-500 z-10 relative ${isMessages ? 'text-white/50' : 'text-[#ff006e]/40 group-hover/info:text-[#ff006e] group-hover/info:drop-shadow-[0_0_8px_#ff006e]'}`} />
           )}
         </div>
         <div className="flex-1 min-w-0 overflow-hidden flex flex-col justify-center gap-0.5">
-          <h4 className={`text-[11px] lg:text-[13px] font-black uppercase truncate transition-colors leading-none tracking-wide ${isMessages ? 'text-white' : 'text-white group-hover/info:text-transparent group-hover/info:bg-clip-text group-hover/info:bg-gradient-to-r group-hover/info:from-white group-hover/info:to-[#ff006e]'}`}>{track?.title || 'No Track'}</h4>
-          <p className={`text-[9px] lg:text-[10px] font-bold uppercase truncate tracking-widest leading-none ${isMessages ? 'text-white/40' : 'text-[#ff006e]/50 group-hover/info:text-[#ff006e]/90'}`}>{track?.artist || track?.artistName || track?.ArtistName || 'Unknown'}</p>
-          {track?.isBroadcast && (
-  <span className="text-[7px] font-black text-[#ff006e] border border-[#ff006e]/30
-                   px-1 uppercase tracking-widest animate-pulse ml-1">
-    LIVE
-  </span>
-)}
+          <h4 className={`text-[11px] lg:text-[13px] font-black uppercase truncate transition-colors leading-none tracking-wide ${isMessages ? 'text-white' : 'text-white group-hover/info:text-transparent group-hover/info:bg-clip-text group-hover/info:bg-gradient-to-r group-hover/info:from-white group-hover/info:to-[#ff006e]'}`}>
+            {activeStation ? activeStation.stationName || `Station ${activeStation.stationId}` : track?.title || 'No Track'}
+          </h4>
+          <p className={`text-[9px] lg:text-[10px] font-bold uppercase truncate tracking-widest leading-none flex items-center gap-2 ${isMessages ? 'text-white/40' : 'text-[#ff006e]/50 group-hover/info:text-[#ff006e]/90'}`}>
+            {activeStation ? (
+              <>
+                <span className="text-[8px] px-1 py-[1px] bg-[#ff006e]/20 text-[#ff006e] rounded-sm animate-pulse whitespace-nowrap">
+                  [ TUNED_IN ]
+                </span>
+                <span className="truncate">LIVE: {activeStation.hostName || 'Host'}</span>
+              </>
+            ) : (
+              track?.artist || track?.artistName || track?.ArtistName || 'Unknown'
+            )}
+          </p>
+          {!activeStation && track?.isBroadcast && (
+            <span className="text-[7px] font-black text-[#ff006e] border border-[#ff006e]/30
+                            px-1 uppercase tracking-widest animate-pulse ml-1 w-max mt-0.5">
+              LIVE
+            </span>
+          )}
         </div>
       </div>
 

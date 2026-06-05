@@ -98,7 +98,8 @@ const DJMixerPlayer = ({
     setTracks,
     setCurrentTrackIndex,
     isMobile = false,
-    user
+    user,
+    broadcastSourceType = 'app'
 }) => {
     const { t, language } = useLanguage();
     const { showNotification } = useNotification();
@@ -173,6 +174,47 @@ const DJMixerPlayer = ({
     const [viewingArtist, setViewingArtist] = useState(null);
     const [chatInput, setChatInput] = useState('');
     const [viewMode, setViewMode] = useState(!isBroadcaster ? 'LISTENER' : 'MIXER');
+
+    const [audioDevices, setAudioDevices] = useState([]);
+    const [selectedDeviceId, setSelectedDeviceId] = useState('');
+    const micStreamRef = useRef(null);
+    const micSourceRef = useRef(null);
+
+    useEffect(() => {
+        if (broadcastSourceType === 'hardware') {
+            navigator.mediaDevices.enumerateDevices().then(devices => {
+                const audioInputs = devices.filter(d => d.kind === 'audioinput');
+                setAudioDevices(audioInputs);
+                if (audioInputs.length > 0 && !selectedDeviceId) {
+                    setSelectedDeviceId(audioInputs[0].deviceId);
+                }
+            }).catch(e => console.warn('Device enumeration failed', e));
+        }
+    }, [broadcastSourceType, selectedDeviceId]);
+
+    useEffect(() => {
+        if (broadcastSourceType === 'hardware' && selectedDeviceId && analyserA) {
+            navigator.mediaDevices.getUserMedia({ audio: { deviceId: selectedDeviceId } })
+                .then(stream => {
+                    micStreamRef.current = stream;
+                    if (analyserA.context) {
+                        if (analyserA.context.state === 'suspended') analyserA.context.resume();
+                        micSourceRef.current = analyserA.context.createMediaStreamSource(stream);
+                        micSourceRef.current.connect(analyserA);
+                    }
+                })
+                .catch(err => console.error("Mic access denied:", err));
+
+            return () => {
+                if (micStreamRef.current) {
+                    micStreamRef.current.getTracks().forEach(t => t.stop());
+                }
+                if (micSourceRef.current) {
+                    micSourceRef.current.disconnect();
+                }
+            };
+        }
+    }, [broadcastSourceType, selectedDeviceId, analyserA]);
     
     const handleSavePlaylist = async () => {
         if (!newPlaylistName || isSavingPlaylist) return;
@@ -1004,6 +1046,26 @@ const DJMixerPlayer = ({
                             </button>
                         </div>
                     </div>
+
+                    {broadcastSourceType === 'hardware' && (
+                        <div className="p-4 mb-2 mx-1 border border-[var(--accent)] bg-[var(--accent)]/10 relative z-10 flex flex-col justify-center">
+                            <div className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)] mb-2">// HARDWARE INPUT ROUTING</div>
+                            <div className="flex gap-4 items-center">
+                                <select 
+                                    className="bg-black text-white text-[10px] p-2 border border-white/20 font-mono outline-none flex-1 truncate"
+                                    value={selectedDeviceId}
+                                    onChange={e => setSelectedDeviceId(e.target.value)}
+                                >
+                                    {audioDevices.map(d => (
+                                        <option key={d.deviceId} value={d.deviceId}>{d.label || `Audio Input ${d.deviceId.substring(0,5)}...`}</option>
+                                    ))}
+                                </select>
+                                <div className="text-[9px] font-black uppercase tracking-widest text-[#ff006e] animate-pulse whitespace-nowrap">
+                                    {micStreamRef.current ? 'LIVE MIC ACTIVE' : 'WAITING FOR SOURCE'}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="mixer-decks-grid-compact">
                         {/* DECK A */}
