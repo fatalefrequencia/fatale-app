@@ -2755,6 +2755,7 @@ function App() {
                station={activeStation}
                isLandscape={isLandscape}
                vibeFeatures={vibeFeatures}
+               isHost={isHost}
            />
           </>
         )}
@@ -3122,7 +3123,8 @@ const Dashboard = React.memo(({
   isLandscape,
   onPlayTrack,
   onPlayTrackAtIndex,
-  onOpenMixer
+  onOpenMixer,
+  isHost
 }) => {
   const { t } = useLanguage();
   const { showNotification } = useNotification();
