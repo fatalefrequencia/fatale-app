@@ -726,6 +726,20 @@ function App() {
     }
   };
 
+  const handleEndBroadcast = async () => {
+    try {
+      await API.Stations.endLive();
+      setActiveStation(null);
+      setBroadcastTrack(null);
+      showNotification("BROADCAST_TERMINATED", "The transmission has been terminated.", "success");
+      fetchLiveStations();
+      setShowGlobalGoLive(false);
+    } catch (e) {
+      console.error("Failed to end broadcast:", e);
+      showNotification("ERROR", "Failed to terminate broadcast.", "error");
+    }
+  };
+
   useEffect(() => {
     activeStationRef.current = activeStation;
   }, [activeStation]);
@@ -2811,90 +2825,109 @@ function App() {
                 </button>
               </div>
 
-              <div className="space-y-8">
-                <div className="space-y-3">
-                  <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] ml-1">signal_metadata // title</label>
-                  <input
-                    type="text"
-                    value={goLiveFormData.sessionTitle}
-                    onChange={e => setGoLiveFormData(p => ({ ...p, sessionTitle: e.target.value }))}
-                    className="w-full bg-[#050505] border border-white/5 p-4 text-white font-black outline-none focus:border-[#ff006e]/40 tracking-widest text-xs transition-all placeholder:text-white/5"
-                    placeholder="establish_session_id..."
-                  />
-                </div>
-                {/* Sector Allocation */}
-                <div className="space-y-1.5">
-                  <div className="text-[7px] opacity-40 font-mono uppercase tracking-widest ml-1">TRANSMISSION_SECTOR // ALLOCATION</div>
-                  <div className="relative">
-                    <select
-                      value={goLiveFormData.sectorId ?? ''}
-                      onChange={e => setGoLiveFormData(p => ({ ...p, sectorId: e.target.value === '' ? null : Number(e.target.value) }))}
-                      className="w-full bg-black/60 border border-[#ff006e]/20 hover:border-[#ff006e]/50 focus:border-[#ff006e]/60 p-3 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
+              {activeStation && String(activeStation.artistUserId || activeStation.ArtistUserId) === String(user?.id || user?.Id) ? (
+                <div className="space-y-6 text-center py-6">
+                  <div className="text-[10px] font-black uppercase text-[#ff006e] tracking-widest animate-pulse">
+                    [ TRANSMISSION_ACTIVE ]
+                  </div>
+                  <div className="text-xs font-mono text-white/80">
+                    Your station is currently live: <span className="text-[#ff006e] font-black">{activeStation.sessionTitle || activeStation.SessionTitle}</span>
+                  </div>
+                  <div className="pt-6">
+                    <button
+                      onClick={handleEndBroadcast}
+                      className="w-full py-4 border border-red-500 bg-red-950/20 text-red-500 text-[10px] font-black uppercase tracking-widest transition-all hover:bg-red-500 hover:text-black hover:shadow-[0_0_40px_rgba(239,68,68,0.4)]"
                     >
-                      <option value="">ALL_SECTORS // UNALLOCATED</option>
-                      {SECTORS.map(s => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                      <ChevronDown size={12} className="text-[#ff006e]/40" />
+                      [ END_BROADCAST ]
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  <div className="space-y-3">
+                    <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] ml-1">signal_metadata // title</label>
+                    <input
+                      type="text"
+                      value={goLiveFormData.sessionTitle}
+                      onChange={e => setGoLiveFormData(p => ({ ...p, sessionTitle: e.target.value }))}
+                      className="w-full bg-[#050505] border border-white/5 p-4 text-white font-black outline-none focus:border-[#ff006e]/40 tracking-widest text-xs transition-all placeholder:text-white/5"
+                      placeholder="establish_session_id..."
+                    />
+                  </div>
+                  {/* Sector Allocation */}
+                  <div className="space-y-1.5">
+                    <div className="text-[7px] opacity-40 font-mono uppercase tracking-widest ml-1">TRANSMISSION_SECTOR // ALLOCATION</div>
+                    <div className="relative">
+                      <select
+                        value={goLiveFormData.sectorId ?? ''}
+                        onChange={e => setGoLiveFormData(p => ({ ...p, sectorId: e.target.value === '' ? null : Number(e.target.value) }))}
+                        className="w-full bg-black/60 border border-[#ff006e]/20 hover:border-[#ff006e]/50 focus:border-[#ff006e]/60 p-3 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
+                      >
+                        <option value="">ALL_SECTORS // UNALLOCATED</option>
+                        {SECTORS.map(s => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                        <ChevronDown size={12} className="text-[#ff006e]/40" />
+                      </div>
+                      {goLiveFormData.sectorId !== null && goLiveFormData.sectorId !== '' && (
+                        <div
+                          className="absolute left-0 top-0 bottom-0 w-0.5 pointer-events-none"
+                          style={{ backgroundColor: SECTORS[goLiveFormData.sectorId]?.color || '#ff006e', boxShadow: `0 0 8px ${SECTORS[goLiveFormData.sectorId]?.color || '#ff006e'}` }}
+                        />
+                      )}
                     </div>
                     {goLiveFormData.sectorId !== null && goLiveFormData.sectorId !== '' && (
-                      <div
-                        className="absolute left-0 top-0 bottom-0 w-0.5 pointer-events-none"
-                        style={{ backgroundColor: SECTORS[goLiveFormData.sectorId]?.color || '#ff006e', boxShadow: `0 0 8px ${SECTORS[goLiveFormData.sectorId]?.color || '#ff006e'}` }}
-                      />
+                      <div className="text-[7px] font-mono tracking-widest opacity-40 ml-1" style={{ color: SECTORS[goLiveFormData.sectorId]?.color }}>
+                        {SECTORS[goLiveFormData.sectorId]?.desc}
+                      </div>
                     )}
                   </div>
-                  {goLiveFormData.sectorId !== null && goLiveFormData.sectorId !== '' && (
-                    <div className="text-[7px] font-mono tracking-widest opacity-40 ml-1" style={{ color: SECTORS[goLiveFormData.sectorId]?.color }}>
-                      {SECTORS[goLiveFormData.sectorId]?.desc}
-                    </div>
-                  )}
-                </div>
 
-                {/* Source Selection */}
-                <div className="space-y-1.5">
-                  <div className="text-[7px] opacity-40 font-mono uppercase tracking-widest ml-1">TRANSMISSION_SOURCE // HARDWARE_LINK</div>
-                  <div className="relative">
-                    <select
-                      value={goLiveFormData.sourceType}
-                      onChange={e => setGoLiveFormData(p => ({ ...p, sourceType: e.target.value }))}
-                      className="w-full bg-black/60 border border-[#ff006e]/20 hover:border-[#ff006e]/50 focus:border-[#ff006e]/60 p-3 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
-                    >
-                      <option value="app">Direct App Deck Sync</option>
-                      <option value="hardware">External Audio (Line-In/Mics/Hardware)</option>
-                    </select>
-                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                      <ChevronDown size={12} className="text-[#ff006e]/40" />
+                  {/* Source Selection */}
+                  <div className="space-y-1.5">
+                    <div className="text-[7px] opacity-40 font-mono uppercase tracking-widest ml-1">TRANSMISSION_SOURCE // HARDWARE_LINK</div>
+                    <div className="relative">
+                      <select
+                        value={goLiveFormData.sourceType}
+                        onChange={e => setGoLiveFormData(p => ({ ...p, sourceType: e.target.value }))}
+                        className="w-full bg-black/60 border border-[#ff006e]/20 hover:border-[#ff006e]/50 focus:border-[#ff006e]/60 p-3 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
+                      >
+                        <option value="app">Direct App Deck Sync</option>
+                        <option value="hardware">External Audio (Line-In/Mics/Hardware)</option>
+                      </select>
+                      <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                        <ChevronDown size={12} className="text-[#ff006e]/40" />
+                      </div>
                     </div>
+                    {goLiveFormData.sourceType === 'hardware' && (
+                      <div className="text-[7px] font-mono tracking-widest text-[#ff006e] ml-1 mt-1 animate-pulse">
+                        WARNING: EXTERNAL AUDIO SOURCE WILL CAPTURE SELECTED INPUT DEVICE
+                      </div>
+                    )}
                   </div>
-                  {goLiveFormData.sourceType === 'hardware' && (
-                    <div className="text-[7px] font-mono tracking-widest text-[#ff006e] ml-1 mt-1 animate-pulse">
-                      WARNING: EXTERNAL AUDIO SOURCE WILL CAPTURE SELECTED INPUT DEVICE
-                    </div>
-                  )}
-                </div>
 
-                <div className="space-y-3">
-                  <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] ml-1">transmission_log // description</label>
-                  <textarea
-                    value={goLiveFormData.description}
-                    onChange={e => setGoLiveFormData(p => ({ ...p, description: e.target.value }))}
-                    className="w-full bg-[#050505] border border-white/5 p-4 text-white font-medium outline-none focus:border-[#ff006e]/20 min-h-[100px] text-[10px] resize-none transition-all placeholder:text-white/5"
-                    placeholder="Optional signal details..."
-                  />
+                  <div className="space-y-3">
+                    <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] ml-1">transmission_log // description</label>
+                    <textarea
+                      value={goLiveFormData.description}
+                      onChange={e => setGoLiveFormData(p => ({ ...p, description: e.target.value }))}
+                      className="w-full bg-[#050505] border border-white/5 p-4 text-white font-medium outline-none focus:border-[#ff006e]/20 min-h-[100px] text-[10px] resize-none transition-all placeholder:text-white/5"
+                      placeholder="Optional signal details..."
+                    />
+                  </div>
+                  <div className="pt-4">
+                    <button
+                      onClick={() => handleGlobalGoLive()}
+                      disabled={!goLiveFormData.sessionTitle.trim()}
+                      className="w-full py-4 border border-[#ff006e] bg-[#ff006e]/10 text-[#ff006e] text-[10px] font-black uppercase tracking-widest transition-all hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_40px_rgba(255,0,110,0.4)] disabled:opacity-50 disabled:shadow-none"
+                    >
+                      Init_Broadcast
+                    </button>
+                  </div>
                 </div>
-                <div className="pt-4">
-                  <button
-                    onClick={() => handleGlobalGoLive()}
-                    disabled={!goLiveFormData.sessionTitle.trim()}
-                    className="w-full py-4 border border-[#ff006e] bg-[#ff006e]/10 text-[#ff006e] text-[10px] font-black uppercase tracking-widest transition-all hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_40px_rgba(255,0,110,0.4)] disabled:opacity-50 disabled:shadow-none"
-                  >
-                    Init_Broadcast
-                  </button>
-                </div>
-              </div>
+              )}
             </motion.div>
           </motion.div>
         )}
@@ -3339,9 +3372,25 @@ const Dashboard = React.memo(({
                     activeStationRef.current = station;
                     setActiveStation(station);
                     joinStation(station.id || station.Id);
-                    setIsPlaying(false);
+                    setIsPlaying(true);
                     setTracks([]);
                     setCurrentTrackIndex(-1);
+                    
+                    // Stop any currently playing cached/local tracks immediately
+                    if (audioRef.current) {
+                      audioRef.current.pause();
+                      audioRef.current.srcObject = null;
+                      audioRef.current.src = "";
+                      audioRef.current.removeAttribute('src');
+                    }
+                    
+                    // Stop YouTube player immediately
+                    if (youtubePlayer && typeof youtubePlayer.pauseVideo === 'function') {
+                      try {
+                        youtubePlayer.pauseVideo();
+                      } catch (e) {}
+                    }
+                    
                     showNotification("RADIO_LINK_ESTABLISHED", `SIGNAL_LOCKED: ${station.name}`, "success");
                   }}
                   isPlayerActive={currentTrackIndex >= 0 && !isMiniPlayerMinimized}
@@ -5331,7 +5380,13 @@ const FeedContent = React.memo(({
               </div>
             </div>
 
-            <div className="pt-4 border-t border-[#ff006e]/10">
+            <div className="pt-4 border-t border-[#ff006e]/10 space-y-2">
+              <button
+                onClick={handleEndBroadcast}
+                className="w-full py-2 bg-red-950/20 border border-red-500/40 text-red-500 text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-black transition-all"
+              >
+                [ END_BROADCAST ]
+              </button>
               <button
                 onClick={() => setView('player')}
                 className="w-full py-2 bg-[#ff006e]/10 border border-[#ff006e]/40 text-[#ff006e] text-[9px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all"
