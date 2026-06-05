@@ -8,32 +8,38 @@ let connection = null;
 let reconnectTimer = null;
 
 // ─── Listener registry ───────────────────────────────────────────────────────
-// Components register handlers here; signalR service fires them.
 const listeners = {
-  onBroadcastSync:  [], // (payload) => void  — track/play state from host
-  onChatMessage:    [], // (msg) => void
-  onTrackRequest:   [], // (req) => void
-  onListenerCount:  [], // (n) => void
+  onBroadcastSync:    [], // (payload) => void  — track/play state from host
+  onChatMessage:      [], // (msg) => void
+  onTrackRequest:     [], // (req) => void
+  onListenerCount:    [], // (n) => void
+  // WebRTC signaling
+  onListenerJoined:   [], // ({ listenerConnectionId, stationId }) => void  — host receives
+  onStreamRequested:  [], // ({ listenerConnectionId, stationId }) => void  — host receives
+  onStreamOffer:      [], // ({ sdpOffer, hostConnectionId, stationId }) => void  — listener receives
+  onStreamAnswer:     [], // ({ sdpAnswer, listenerConnectionId, stationId }) => void  — host receives
+  onIceCandidate:     [], // ({ candidateJson, fromConnectionId, stationId }) => void
+  onHostDisconnected: [], // ({ stationId }) => void — listeners receive
 };
 
-export const onBroadcastSync = (fn) => {
-  listeners.onBroadcastSync.push(fn);
-  return () => { listeners.onBroadcastSync = listeners.onBroadcastSync.filter(f => f !== fn); };
-};
-export const onChatMessage = (fn) => {
-  listeners.onChatMessage.push(fn);
-  return () => { listeners.onChatMessage = listeners.onChatMessage.filter(f => f !== fn); };
-};
-export const onTrackRequest = (fn) => {
-  listeners.onTrackRequest.push(fn);
-  return () => { listeners.onTrackRequest = listeners.onTrackRequest.filter(f => f !== fn); };
-};
-export const onListenerCount = (fn) => {
-  listeners.onListenerCount.push(fn);
-  return () => { listeners.onListenerCount = listeners.onListenerCount.filter(f => f !== fn); };
+const reg = (key) => (fn) => {
+  listeners[key].push(fn);
+  return () => { listeners[key] = listeners[key].filter(f => f !== fn); };
 };
 
-const fire = (key, payload) => listeners[key].forEach(fn => { try { fn(payload); } catch (e) { console.warn(`[SignalR] listener error [${key}]`, e); } });
+export const onBroadcastSync    = reg('onBroadcastSync');
+export const onChatMessage      = reg('onChatMessage');
+export const onTrackRequest     = reg('onTrackRequest');
+export const onListenerCount    = reg('onListenerCount');
+export const onListenerJoined   = reg('onListenerJoined');
+export const onStreamRequested  = reg('onStreamRequested');
+export const onStreamOffer      = reg('onStreamOffer');
+export const onStreamAnswer     = reg('onStreamAnswer');
+export const onIceCandidate     = reg('onIceCandidate');
+export const onHostDisconnected = reg('onHostDisconnected');
+
+const fire = (key, payload) =>
+  listeners[key].forEach(fn => { try { fn(payload); } catch (e) { console.warn(`[SignalR] listener error [${key}]`, e); } });
 
 // ─── Connection ──────────────────────────────────────────────────────────────
 export const initSignalR = async () => {
@@ -47,16 +53,7 @@ export const initSignalR = async () => {
     .configureLogging(signalR.LogLevel.Warning)
     .build();
 
-  // ── Inbound events ──────────────────────────────────────────────────────────
-
-  // Host → all listeners: full broadcast sync payload
-  // Payload shape:
-  // {
-  //   stationId, trackId, title, artist, source, cover,
-  //   youtubeId, streamUrl,
-  //   isPlaying, currentTime, timestamp,
-  //   sourceType: 'youtube' | 'local' | 'stream' | 'hardware'
-  // }
+  // ── Inbound: metadata sync ──────────────────────────────────────────────────
   connection.on('BroadcastSync', (payload) => {
     console.log('[SignalR] BroadcastSync received:', payload);
     fire('onBroadcastSync', payload);
@@ -72,6 +69,42 @@ export const initSignalR = async () => {
 
   connection.on('ListenerCount', (count) => {
     fire('onListenerCount', count);
+  });
+
+  // ── Inbound: WebRTC signaling ───────────────────────────────────────────────
+  // Host receives: a new listener joined mid-broadcast
+  connection.on('ListenerJoined', (payload) => {
+    console.log('[SignalR][WebRTC] ListenerJoined:', payload);
+    fire('onListenerJoined', payload);
+  });
+
+  // Host receives: listener explicitly requested a stream
+  connection.on('StreamRequested', (payload) => {
+    console.log('[SignalR][WebRTC] StreamRequested:', payload);
+    fire('onStreamRequested', payload);
+  });
+
+  // Listener receives: SDP offer from host
+  connection.on('StreamOffer', (payload) => {
+    console.log('[SignalR][WebRTC] StreamOffer received');
+    fire('onStreamOffer', payload);
+  });
+
+  // Host receives: SDP answer from listener
+  connection.on('StreamAnswer', (payload) => {
+    console.log('[SignalR][WebRTC] StreamAnswer received');
+    fire('onStreamAnswer', payload);
+  });
+
+  // Both sides receive: ICE candidate from the other side
+  connection.on('IceCandidate', (payload) => {
+    fire('onIceCandidate', payload);
+  });
+
+  // Listeners receive: host disconnected
+  connection.on('HostDisconnected', (payload) => {
+    console.log('[SignalR][WebRTC] HostDisconnected:', payload);
+    fire('onHostDisconnected', payload);
   });
 
   connection.onreconnected(() => {
@@ -94,6 +127,9 @@ export const initSignalR = async () => {
 
   return connection;
 };
+
+// Expose the raw connection so WebRTC hooks can read connectionId
+export const getConnection = () => connection;
 
 // ─── Station actions ─────────────────────────────────────────────────────────
 export const joinStation = async (stationId) => {
@@ -118,9 +154,26 @@ export const leaveStation = async (stationId) => {
   }
 };
 
-// ─── Host: broadcast current playback state to all listeners ─────────────────
-// Call this from App.js whenever track/play state changes on the HOST side.
-// sourceType: 'youtube' | 'local' | 'stream' | 'hardware'
+export const registerHost = async (stationId) => {
+  if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
+  try {
+    await connection.invoke('RegisterHost', String(stationId));
+    console.log('[SignalR] Registered as host for station:', stationId);
+  } catch (e) {
+    console.error('[SignalR] RegisterHost failed:', e);
+  }
+};
+
+export const unregisterHost = async (stationId) => {
+  if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
+  try {
+    await connection.invoke('UnregisterHost', String(stationId));
+  } catch (e) {
+    console.error('[SignalR] UnregisterHost failed:', e);
+  }
+};
+
+// ─── Host: broadcast current playback state ───────────────────────────────────
 export const syncTrack = async (stationId, track, currentTime, isPlaying) => {
   if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
   if (!stationId || !track) return;
@@ -128,26 +181,27 @@ export const syncTrack = async (stationId, track, currentTime, isPlaying) => {
   const source = track.source || track.Source || '';
   const youtubeId = source.startsWith('youtube:') ? source.split(':')[1] : (track.youtubeId || track.YoutubeId || null);
 
-  const sourceType = youtubeId
-    ? 'youtube'
-    : source.startsWith('http') && !source.includes('localhost')
-      ? 'stream'
-      : source.startsWith('hardware:')
-        ? 'hardware'
-        : 'local';
+  const sourceType = track.sourceType ||
+    (youtubeId
+      ? 'youtube'
+      : source.startsWith('http') && !source.includes('localhost')
+        ? 'stream'
+        : source.startsWith('hardware:')
+          ? 'hardware'
+          : 'local');
 
   const payload = {
-    stationId: String(stationId),
-    trackId:   String(track.id || track.Id || ''),
-    title:     track.title || track.Title || '',
-    artist:    track.artist || track.artistName || track.ArtistName || '',
-    cover:     track.cover || track.coverImageUrl || track.CoverImageUrl || '',
-    source:    source,
-    youtubeId: youtubeId || null,
-    streamUrl: sourceType === 'stream' ? source : null,
-    isPlaying: !!isPlaying,
+    stationId:   String(stationId),
+    trackId:     String(track.id || track.Id || ''),
+    title:       track.title || track.Title || '',
+    artist:      track.artist || track.artistName || track.ArtistName || '',
+    cover:       track.cover || track.coverImageUrl || track.CoverImageUrl || '',
+    source,
+    youtubeId:   youtubeId || null,
+    streamUrl:   sourceType === 'stream' ? source : null,
+    isPlaying:   !!isPlaying,
     currentTime: currentTime || 0,
-    timestamp: Date.now(),   // listeners use this to compensate for latency
+    timestamp:   Date.now(),
     sourceType,
   };
 
@@ -174,6 +228,49 @@ export const requestTrack = async (stationId, trackData, username) => {
     await connection.invoke('RequestTrack', String(stationId), trackData?.title || '', String(trackData?.id || ''), username);
   } catch (e) {
     console.error('[SignalR] RequestTrack failed:', e);
+  }
+};
+
+// ─── WebRTC Signaling ─────────────────────────────────────────────────────────
+
+/** Listener → hub: ask host to initiate a WebRTC connection */
+export const requestStream = async (stationId) => {
+  if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
+  try {
+    await connection.invoke('RequestStream', String(stationId));
+    console.log('[SignalR][WebRTC] Requested stream for station:', stationId);
+  } catch (e) {
+    console.error('[SignalR] RequestStream failed:', e);
+  }
+};
+
+/** Host → listener: send SDP offer */
+export const sendOffer = async (listenerConnectionId, sdpOffer, stationId) => {
+  if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
+  try {
+    await connection.invoke('OfferStream', listenerConnectionId, sdpOffer, String(stationId));
+  } catch (e) {
+    console.error('[SignalR] OfferStream failed:', e);
+  }
+};
+
+/** Listener → host: send SDP answer */
+export const sendAnswer = async (hostConnectionId, sdpAnswer, stationId) => {
+  if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
+  try {
+    await connection.invoke('AnswerStream', hostConnectionId, sdpAnswer, String(stationId));
+  } catch (e) {
+    console.error('[SignalR] AnswerStream failed:', e);
+  }
+};
+
+/** Send an ICE candidate to the other peer */
+export const sendIceCandidate = async (targetConnectionId, candidate, stationId) => {
+  if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
+  try {
+    await connection.invoke('IceCandidate', targetConnectionId, JSON.stringify(candidate), String(stationId));
+  } catch (e) {
+    console.error('[SignalR] IceCandidate failed:', e);
   }
 };
 

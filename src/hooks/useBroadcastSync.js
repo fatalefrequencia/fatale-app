@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { requestStream } from '../services/signalr';
 
 export function useBroadcastSync({
   activeStation,
@@ -10,6 +11,7 @@ export function useBroadcastSync({
   setDuration,
   setBroadcastTrack,
   setIsYoutubeMode,
+  setBroadcastSourceType,
   showNotification,
   joinStation,
   onBroadcastSync,
@@ -29,7 +31,7 @@ export function useBroadcastSync({
       if (lastSyncRef.current && now - lastSyncRef.current < 150) return;
       lastSyncRef.current = now;
 
-      const { title, artist, cover, source, youtubeId, currentTime, isPlaying } = payload;
+      const { title, artist, cover, source, youtubeId, currentTime, isPlaying, sourceType } = payload;
 
       const track = {
         title,
@@ -37,13 +39,31 @@ export function useBroadcastSync({
         cover,
         source,
         youtubeId,
+        sourceType,
         isBroadcast: true,
       };
 
       setBroadcastTrack(track);
 
+      // Surface the source type so the UI and WebRTC listener can react
+      if (typeof setBroadcastSourceType === 'function') {
+        setBroadcastSourceType(sourceType || 'app');
+      }
+
+      // If this is a hardware broadcast, request the WebRTC audio stream
+      if (sourceType === 'hardware') {
+        requestStream(String(stationId));
+      }
+
       const isYT = !!(youtubeId || (source && source.startsWith('youtube:')));
       setIsYoutubeMode(isYT);
+
+      // For hardware source, audio comes via WebRTC — don't touch the audio element
+      if (sourceType === 'hardware') {
+        if (typeof isPlaying === 'boolean') setIsPlaying(isPlaying);
+        if (typeof currentTime === 'number') setCurrentTime(currentTime);
+        return;
+      }
 
       if (isYT && youtubePlayer) {
         try {

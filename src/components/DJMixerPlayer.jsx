@@ -99,7 +99,8 @@ const DJMixerPlayer = ({
     setCurrentTrackIndex,
     isMobile = false,
     user,
-    broadcastSourceType = 'app'
+    broadcastSourceType = 'app',
+    onMicStream = null,
 }) => {
     const { t, language } = useLanguage();
     const { showNotification } = useNotification();
@@ -197,6 +198,8 @@ const DJMixerPlayer = ({
             navigator.mediaDevices.getUserMedia({ audio: { deviceId: selectedDeviceId } })
                 .then(stream => {
                     micStreamRef.current = stream;
+                    // Fire callback so App.jsx can share the stream with useWebRTCBroadcast
+                    if (typeof onMicStream === 'function') onMicStream(stream);
                     if (analyserA.context) {
                         if (analyserA.context.state === 'suspended') analyserA.context.resume();
                         micSourceRef.current = analyserA.context.createMediaStreamSource(stream);
@@ -208,10 +211,14 @@ const DJMixerPlayer = ({
             return () => {
                 if (micStreamRef.current) {
                     micStreamRef.current.getTracks().forEach(t => t.stop());
+                    micStreamRef.current = null;
                 }
                 if (micSourceRef.current) {
                     micSourceRef.current.disconnect();
+                    micSourceRef.current = null;
                 }
+                // Clear stream in parent when hardware mode stops
+                if (typeof onMicStream === 'function') onMicStream(null);
             };
         }
     }, [broadcastSourceType, selectedDeviceId, analyserA]);

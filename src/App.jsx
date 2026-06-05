@@ -34,8 +34,10 @@ import SettingsView from './components/SettingsView';
 import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
 import DJMixerPlayer from './components/DJMixerPlayer';
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
-import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack, onBroadcastSync } from './services/signalr';
+import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack, onBroadcastSync, registerHost, unregisterHost } from './services/signalr';
 import { useBroadcastSync } from './hooks/useBroadcastSync';
+import { useWebRTCBroadcast } from './hooks/useWebRTCBroadcast';
+import { useWebRTCListener } from './hooks/useWebRTCListener';
 
 const ShoppingView = React.lazy(() => 
   import('./components/ShoppingView').catch((err) => {
@@ -681,6 +683,7 @@ function App() {
 
   const [goLiveFormData, setGoLiveFormData] = useState({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true, sectorId: null, sourceType: 'app' });
   const [broadcastSourceType, setBroadcastSourceType] = useState('app');
+  const [micStream, setMicStream] = useState(null); // MediaStream from hardware input
   
   // --- GLOBAL MODAL STATE ---
   const [globalExpandedContent, setGlobalExpandedContent] = useState(null);
@@ -734,10 +737,27 @@ function App() {
     setDuration,
     setBroadcastTrack,
     setIsYoutubeMode,
+    setBroadcastSourceType,
     showNotification,
     joinStation,
     onBroadcastSync,
   });
+
+  // ── WebRTC: Host broadcaster (hardware audio → listeners) ──────────────────
+  useWebRTCBroadcast({
+    stationId: activeStation ? String(activeStation.id || activeStation.Id) : null,
+    micStream,
+    isHost,
+    isBroadcasting: isHost && !!activeStation,
+  });
+
+  // ── WebRTC: Listener (receive live audio from host) ────────────────────────
+  const { isReceivingLiveAudio } = useWebRTCListener({
+    activeStation,
+    isHost,
+    broadcastSourceType,
+  });
+
   // Sync Audio Volume & Mute
   useEffect(() => {
     if (audioRef.current) {
@@ -2990,6 +3010,7 @@ function App() {
               setCurrentTrackIndex={setCurrentTrackIndex}
               onPlayTrack={handlePlayTrack}
               user={user}
+              onMicStream={setMicStream}
             />
             
             {/* Close Mixer Toggle */}
@@ -3530,6 +3551,7 @@ const Dashboard = React.memo(({
                 localStorage.setItem('isMiniPlayerMinimized', newState);
               }}
               onOpenMixer={onOpenMixer}
+              isReceivingLiveAudio={isReceivingLiveAudio}
             />
           )
         )}
@@ -3539,7 +3561,7 @@ const Dashboard = React.memo(({
 });
 
 // --- MINI PLAYER COMPONENT ---
-const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView, isMuted, onToggleMute, currentTime, duration, isSidebarCollapsed, volume, setVolume, isMinimized, onToggleMinimize, isBroadcasting, onOpenMixer }) => {
+const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView, isMuted, onToggleMute, currentTime, duration, isSidebarCollapsed, volume, setVolume, isMinimized, onToggleMinimize, isBroadcasting, onOpenMixer, isReceivingLiveAudio }) => {
   const isMessages = activeView === 'messages';
 
   if (isMinimized) {
@@ -3609,10 +3631,16 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
           <p className={`text-[9px] lg:text-[10px] font-bold uppercase truncate tracking-widest leading-none flex items-center gap-2 ${isMessages ? 'text-white/40' : 'text-[#ff006e]/50 group-hover/info:text-[#ff006e]/90'}`}>
             {activeStation ? (
               <>
-                <span className="text-[8px] px-1 py-[1px] bg-[#ff006e]/20 text-[#ff006e] rounded-sm animate-pulse whitespace-nowrap">
-                  [ TUNED_IN ]
-                </span>
-                <span className="truncate">LIVE: {activeStation.hostName || 'Host'}</span>
+                {isReceivingLiveAudio ? (
+                  <span className="text-[8px] px-1 py-[1px] bg-[#ff006e] text-black rounded-sm animate-pulse whitespace-nowrap font-black">
+                    ▶ LIVE AUDIO
+                  </span>
+                ) : (
+                  <span className="text-[8px] px-1 py-[1px] bg-[#ff006e]/20 text-[#ff006e] rounded-sm animate-pulse whitespace-nowrap">
+                    [ TUNED_IN ]
+                  </span>
+                )}
+                <span className="truncate">LIVE: {activeStation.hostName || activeStation.artistName || activeStation.ArtistName || 'Host'}</span>
               </>
             ) : (
               track?.artist || track?.artistName || track?.ArtistName || 'Unknown'
@@ -5072,7 +5100,7 @@ const FeedContent = React.memo(({
             </div>
 
             {/* Scrollable panel content */}
-            
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
 
              {/* ── TAB: ACTIONS ── */}
 {mobilePanelTab === 'actions' && (
@@ -5091,131 +5119,51 @@ const FeedContent = React.memo(({
       <div className="text-[10px] font-black uppercase tracking-widest">Upload Track</div>
       <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest mt-0.5">MP3 · WAV · FLAC</div>
     </button>
-  </div>
-)}
 
-{/* ── TAB: STATIONS ── */}
-{mobilePanelTab === 'stations' && (
-  <div className="flex flex-col gap-4">
-    <div className="flex items-center justify-between">
-      <h3 className="text-[9px] font-black uppercase text-[#ff006e] tracking-widest flex items-center gap-1.5">
-        <Radio size={10} className="animate-pulse" /> LIVE_STATIONS
-      </h3>
-      <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4">
-  <button
-    onClick={() => { setShowGlobalGoLive(true); setMobilePanelOpen(false); }}
-    className="flex items-center gap-1 px-2 py-1 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] text-[8px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all rounded-sm"
-  >
-    <span className="w-1 h-1 rounded-full bg-current animate-pulse" /> GO_LIVE
-  </button>
-</div>
-
-    <div className="space-y-1">
-      <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest">TRANSMISSION_SECTOR // FILTER</div>
-      <div className="relative">
-        <select
-          value={selectedSector ?? ''}
-          onChange={e => setSelectedSector(e.target.value === '' ? null : Number(e.target.value))}
-          className="w-full bg-black/60 border border-[#ff006e]/20 hover:border-[#ff006e]/40 p-2.5 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
-        >
-          <option value="">ALL_SECTORS</option>
-          {SECTORS.map(s => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </select>
-        <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2">
-          <ChevronDown size={10} className="text-[#ff006e]/40" />
-        </div>
-      </div>
-    </div>
-
-    <div className="overflow-y-auto no-scrollbar" style={{ maxHeight: '45vh' }}>
-      {(() => {
-        const filtered = (liveStations || []).filter(s =>
-          selectedSector === null || s.sectorId === selectedSector || s.SectorId === selectedSector
-        );
-        if (filtered.length === 0) return (
-          <div className="py-8 border border-dashed border-white/5 text-center">
-            <Radio size={20} className="mx-auto mb-2 text-[#ff006e]/10" />
-            <div className="text-[8px] font-mono uppercase tracking-widest text-white/10">NO_ACTIVE_FREQUENCIES_DETECTED</div>
+    {/* Community filter */}
+    {(() => {
+      const userCommId = user?.communityId || user?.CommunityId;
+      const memberIdStr = userCommId ? String(userCommId) : null;
+      const followedIds = (followedCommunities || []).map(id => String(id));
+      const uniqueLinks = Array.from(new Set([...(memberIdStr ? [memberIdStr] : []), ...followedIds])).filter(Boolean);
+      if (uniqueLinks.length === 0) return null;
+      return (
+        <div className="space-y-2 mt-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-[9px] font-black uppercase text-[#00ffff] tracking-widest">:: COMMUNITY_LINKS ::</h3>
+            {selectedCommunityId !== null && (
+              <button onClick={() => { setSelectedCommunityId(null); setMobilePanelOpen(false); }} className="text-[8px] text-[#00ffff]/40 hover:text-[#00ffff] uppercase tracking-tighter">[ RESET ]</button>
+            )}
           </div>
-        );
-        return (
           <div className="space-y-1.5">
-            {filtered.map((station, idx) => {
-              const sc = SECTORS[station.sectorId ?? station.SectorId]?.color || '#ff006e';
-              const isActive = activeStation && String(activeStation.id || activeStation.Id) === String(station.id || station.Id);
+            {uniqueLinks.map(cid => {
+              const comm = allCommunities.find(c => String(c.id) === String(cid));
+              if (!comm) return null;
+              const sectorColor = SECTORS[comm.sectorId]?.color || '#ffffff';
+              const isMember = String(cid) === memberIdStr;
               return (
                 <button
-                  key={station.id || idx}
-                  onClick={() => { setActiveStation(station); setMobilePanelOpen(false); }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 border text-left transition-all rounded-sm ${isActive ? 'border-[#ff006e]/60 bg-[#ff006e]/10' : 'border-white/5 bg-black/20 hover:border-white/20'}`}
+                  key={`mob-comm-${cid}`}
+                  onClick={() => { setSelectedCommunityId(String(selectedCommunityId) === String(cid) ? null : cid); setSelectedSector(null); setMobilePanelOpen(false); }}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded border text-[9px] transition-all ${String(selectedCommunityId) === String(cid)
+                    ? 'bg-[#00ffff]/10 border-[#00ffff]/30 text-white'
+                    : 'bg-black/20 border-white/5 text-white/40 hover:border-[#00ffff]/20'
+                    }`}
                 >
-                  <div className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse" style={{ backgroundColor: sc, boxShadow: `0 0 6px ${sc}` }} />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[9px] font-black uppercase text-white truncate">{station.sessionTitle || station.SessionTitle}</div>
-                    <div className="text-[7px] font-mono text-white/30 uppercase truncate">{station.artistName || station.ArtistName}</div>
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: sectorColor }} />
+                    <span className="font-bold uppercase tracking-widest truncate">{comm.name.replace(' ', '_')}</span>
                   </div>
-                  <div className="flex flex-col items-end gap-0.5 shrink-0">
-                    {isActive && <Radio size={10} className="text-[#ff006e] animate-pulse" />}
-                    <span className="text-[6px] font-mono uppercase tracking-widest px-1 border rounded-sm" style={{ color: sc, borderColor: `${sc}30`, backgroundColor: `${sc}10` }}>
-                      {SECTORS[station.sectorId ?? station.SectorId]?.name || 'FREQ'}
-                    </span>
-                  </div>
+                  {isMember && <span className="text-[7px] font-black text-[#00ffff]/60 border border-[#00ffff]/30 px-1 rounded-sm bg-[#00ffff]/5 shrink-0">MEMBER</span>}
                 </button>
               );
             })}
           </div>
-        );
-      })()}
-    </div>
+        </div>
+      );
+    })()}
   </div>
 )}
-
-                  {/* Community filter */}
-                  {(() => {
-                    const userCommId = user?.communityId || user?.CommunityId;
-                    const memberIdStr = userCommId ? String(userCommId) : null;
-                    const followedIds = (followedCommunities || []).map(id => String(id));
-                    const uniqueLinks = Array.from(new Set([...(memberIdStr ? [memberIdStr] : []), ...followedIds])).filter(Boolean);
-                    if (uniqueLinks.length === 0) return null;
-                    return (
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <h3 className="text-[9px] font-black uppercase text-[#00ffff] tracking-widest">:: COMMUNITY_LINKS ::</h3>
-                          {selectedCommunityId !== null && (
-                            <button onClick={() => { setSelectedCommunityId(null); setMobilePanelOpen(false); }} className="text-[8px] text-[#00ffff]/40 hover:text-[#00ffff] uppercase tracking-tighter">[ RESET ]</button>
-                          )}
-                        </div>
-                        <div className="space-y-1.5">
-                          {uniqueLinks.map(cid => {
-                            const comm = allCommunities.find(c => String(c.id) === String(cid));
-                            if (!comm) return null;
-                            const sectorColor = SECTORS[comm.sectorId]?.color || '#ffffff';
-                            const isMember = String(cid) === memberIdStr;
-                            return (
-                              <button
-                                key={`mob-comm-${cid}`}
-                                onClick={() => { setSelectedCommunityId(String(selectedCommunityId) === String(cid) ? null : cid); setSelectedSector(null); setMobilePanelOpen(false); }}
-                                className={`w-full flex items-center justify-between px-3 py-2 rounded border text-[9px] transition-all ${String(selectedCommunityId) === String(cid)
-                                  ? 'bg-[#00ffff]/10 border-[#00ffff]/30 text-white'
-                                  : 'bg-black/20 border-white/5 text-white/40 hover:border-[#00ffff]/20'
-                                  }`}
-                              >
-                                <div className="flex items-center gap-2 overflow-hidden">
-                                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: sectorColor }} />
-                                  <span className="font-bold uppercase tracking-widest truncate">{comm.name.replace(' ', '_')}</span>
-                                </div>
-                                {isMember && <span className="text-[7px] font-black text-[#00ffff]/60 border border-[#00ffff]/30 px-1 rounded-sm bg-[#00ffff]/5 shrink-0">MEMBER</span>}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
 
               {/* ── TAB: FAVORITES ── */}
               {mobilePanelTab === 'favorites' && (
@@ -5299,7 +5247,7 @@ const FeedContent = React.memo(({
     </div>
   </div>
 )}
-
+            </div>
             
           </motion.div>
         )}
