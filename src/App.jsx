@@ -814,16 +814,17 @@ function App() {
   const fetchLiveStations = async () => {
     try {
       const res = await API.Stations.getAll();
-      if (res.data && res.data.length > 0) {
-        setLiveStations(res.data);
+      if (res.data) {
+        const liveOnly = res.data.filter(s => s.isLive || s.IsLive);
+        setLiveStations(liveOnly);
 
         // Auto-sync host's activeStation
         const currentUserId = user?.id || user?.Id;
         if (currentUserId && !activeStation) {
-          const myStation = res.data.find(s =>
+          const myStation = liveOnly.find(s =>
             String(s.artistUserId || s.ArtistUserId) === String(currentUserId)
           );
-          if (myStation && (myStation.isLive || myStation.IsLive)) {
+          if (myStation) {
             setActiveStation(myStation);
           }
         }
