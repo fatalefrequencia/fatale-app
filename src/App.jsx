@@ -4668,7 +4668,7 @@ const FeedContent = React.memo(({
                             const albumKey = item.Id;
                             const isExpanded = !!expandedAlbums[albumKey];
                             const albumColor = '#00f0ff';
-                            const albumImageUrl = getMediaUrl(item.tracks?.[0]?.imageUrl || item.tracks?.[0]?.ImageUrl);
+                            const albumImageUrl = getMediaUrl(item.imageUrl || item.ImageUrl || item.tracks?.[0]?.coverImageUrl || item.tracks?.[0]?.CoverImageUrl || item.tracks?.[0]?.imageUrl || item.tracks?.[0]?.ImageUrl);
                             return (
                               <div className="rounded-sm border border-[#00f0ff]/20 overflow-hidden shadow-[0_0_20px_rgba(0,240,255,0.05)] max-w-md">
                                 {/* Album cover + header */}
@@ -4698,7 +4698,7 @@ const FeedContent = React.memo(({
                                 {isExpanded && (
                                   <div className="divide-y divide-[#00f0ff]/5">
                                     {(item.tracks || []).map((track, idx) => {
-                                      const tImg = getMediaUrl(track.imageUrl || track.ImageUrl);
+                                      const tImg = getMediaUrl(track.coverImageUrl || track.CoverImageUrl || track.imageUrl || track.ImageUrl || albumImageUrl);
                                       return (
                                         <div
                                           key={track.Id || track.id || idx}
