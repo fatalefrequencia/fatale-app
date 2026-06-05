@@ -4541,7 +4541,7 @@ const FeedContent = React.memo(({
                   return (
                     <button
                       key={station.id || idx}
-                      onClick={() => handleTuneInStation(station)}
+                      onClick={() => setActiveStation(station)}
                       className={`flex items-center gap-2 px-3 py-2 border rounded-sm shrink-0 transition-all ${
                         isActive
                           ? 'border-[#ff006e]/60 bg-[#ff006e]/10'
@@ -5339,7 +5339,7 @@ const FeedContent = React.memo(({
           return (
             <button
               key={station.id || idx}
-              onClick={() => { handleTuneInStation(station); setMobilePanelOpen(false); }}
+              onClick={() => { setActiveStation(station); setMobilePanelOpen(false); }}
               className={`w-full flex items-center gap-2.5 px-3 py-2.5 border text-left transition-all rounded-sm ${isActive ? 'border-[#ff006e]/60 bg-[#ff006e]/10' : 'border-white/5 bg-black/20 hover:border-white/20'}`}
             >
               <div className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse" style={{ backgroundColor: sc, boxShadow: `0 0 6px ${sc}` }} />
@@ -5563,7 +5563,7 @@ const FeedContent = React.memo(({
                     return (
                       <button
                         key={station.id || station.Id || idx}
-                        onClick={() => handleTuneInStation(station)}
+                        onClick={() => setActiveStation(station)}
                         className="w-full text-left border border-white/5 hover:border-white/20 bg-black/20 hover:bg-white/[0.03] p-3 transition-all group/st rounded-sm"
                       >
                         <div className="flex items-center gap-2.5">
