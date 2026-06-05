@@ -1182,7 +1182,23 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         </div>
                                     )) : recentYoutubeTracks && recentYoutubeTracks.length > 0 ? (
                                         <div className="space-y-2">
-                                            <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">{t('YOUTUBE_CACHE')}</div>
+                                            <div className="flex justify-between items-center mb-2 px-2">
+                                                <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40">{t('YOUTUBE_CACHE')}</div>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        try {
+                                                            localStorage.removeItem('recent_youtube_tracks');
+                                                            setRecentYoutubeTracks([]);
+                                                        } catch (err) {
+                                                            console.error("Failed to clear recent tracks:", err);
+                                                        }
+                                                    }}
+                                                    className="text-[8px] font-bold text-[#ff006e]/60 hover:text-[#ff006e] transition-all uppercase tracking-wider bg-transparent cursor-pointer"
+                                                >
+                                                    [ {t('CLEAR')} ]
+                                                </button>
+                                            </div>
                                             {recentYoutubeTracks.map(y => (
                                                 <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => {
                                                     onPlayTrack(y);
