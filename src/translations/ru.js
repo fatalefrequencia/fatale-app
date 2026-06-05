@@ -42,6 +42,7 @@ export default {
     "PLAY_TRACK": "ВОСПРОИЗВЕСТИ",
     "GLOBAL_VIEW": "ГЛОБАЛЬНЫЙ_ВИД",
     "REFRESH_MAP": "ОБНОВИТЬ_КАРТУ",
+    "CLEAR": "ОЧИСТИТЬ",
 
     // --- SETTINGS ---
     "LANGUAGE": "ЯЗЫК",

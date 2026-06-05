@@ -42,6 +42,7 @@ export default {
     "PLAY_TRACK": "PLAY_TRACK",
     "GLOBAL_VIEW": "GLOBAL_VIEW",
     "REFRESH_MAP": "REFRESH_MAP",
+    "CLEAR": "CLEAR",
 
     // --- SETTINGS ---
     "LANGUAGE": "LANGUAGE",

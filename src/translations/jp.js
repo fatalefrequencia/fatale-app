@@ -42,6 +42,7 @@ export default {
     "PLAY_TRACK": "トラック再生",
     "GLOBAL_VIEW": "グローバルビュー",
     "REFRESH_MAP": "マップ更新",
+    "CLEAR": "クリア",
 
     // --- SETTINGS ---
     "LANGUAGE": "言語",
