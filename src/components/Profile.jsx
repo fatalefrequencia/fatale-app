@@ -478,7 +478,7 @@ const ProfileIdentityHeader = ({
     );
 };
 
-const AudioSignalsWidget = ({ tracks, isExpanded, onToggleExpand, onPlayTrack, isMe, onUpload }) => {
+const AudioSignalsWidget = ({ tracks, isExpanded, onToggleExpand, onPlayTrack, onPlayPlaylist, isMe, onUpload }) => {
     const { t } = useLanguage();
     const [subTab, setSubTab] = useState('All');
 
@@ -897,6 +897,7 @@ export const ProfileView = React.memo(({
     
     // 1. ALL STATES
     const [profileData, setProfileData] = useState(null);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [activeTab, setActiveTab] = useState('Music');
     const [isFollowing, setIsFollowing] = useState(false);
     const [isLoadingProfile, setIsLoadingProfile] = useState(false);
@@ -1783,7 +1784,7 @@ export const ProfileView = React.memo(({
         };
 
         fetchTargetProfileInternal();
-    }, [targetUserId, isMe, currentUser, allTracks]);
+    }, [targetUserId, isMe, currentUser, allTracks, refreshTrigger]);
 
 
     const handleFollow = async () => {
@@ -2268,7 +2269,7 @@ export const ProfileView = React.memo(({
                                                         const API = await import('../services/api').then(mod => mod.default);
                                                         await API.Journal.create({ title, content });
                                                         setShowJournalForm(false);
-                                                        if (typeof fetchData === 'function') fetchData();
+                                                        setRefreshTrigger(prev => prev + 1);
                                                     } catch (err) {
                                                         console.error(err);
                                                     }

@@ -1,8 +1,8 @@
 import * as signalR from '@microsoft/signalr';
 
-const HUB_URL = process.env.REACT_APP_API_URL
-  ? `${process.env.REACT_APP_API_URL}hubs/station`
-  : 'http://localhost:5000/hubs/station';
+const base = import.meta.env.VITE_API_BASE_URL || 'https://api.fatale.fm/api/';
+const cleanBase = base.replace(/\/api\/?$/, '').replace(/\/+$/, '');
+const HUB_URL = `${cleanBase}/hubs/station`;
 
 let connection = null;
 let reconnectTimer = null;

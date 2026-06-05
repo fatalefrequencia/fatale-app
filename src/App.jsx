@@ -970,6 +970,12 @@ function App() {
   //  All other views call setActiveStation directly — we wire them to this instead
   //  so mobile gesture unlock always fires in the synchronous click context.)
   const handleTuneInStation = React.useCallback((station) => {
+    if (!station) {
+      activeStationRef.current = null;
+      setActiveStation(null);
+      setBroadcastTrack(null);
+      return;
+    }
     activeStationRef.current = station;
     setActiveStation(station);
     setIsPlaying(true);
@@ -2823,7 +2829,7 @@ function App() {
                setShowGlobalUpload={setShowGlobalUpload}
                setShowGlobalIngest={setShowGlobalIngest}
                setIngestMode={setIngestMode}
-               setActiveStation={setActiveStation}
+               setActiveStation={handleTuneInStation}
                sendMessage={handleSendMessage}
                requestTrack={handleRequestTrack}
                setUser={setUser}
@@ -3442,7 +3448,7 @@ const Dashboard = React.memo(({
                   onExpandContent={onExpandContent}
                   setUser={setUser}
                   onPlayStation={(station) => {
-                    handleTuneInStation(station);
+                    setActiveStation(station);
                     showNotification("RADIO_LINK_ESTABLISHED", `SIGNAL_LOCKED: ${station.sessionTitle || station.SessionTitle || station.name}`, "success");
                   }}
                   isPlayerActive={currentTrackIndex >= 0 && !isMiniPlayerMinimized}
@@ -3496,7 +3502,8 @@ const Dashboard = React.memo(({
                   user={user} 
                   favoriteStations={favoriteStations} 
                   liveStations={liveStations} 
-                  setActiveStation={handleTuneInStation} 
+                  setActiveStation={setActiveStation} 
+                  onSendMessage={sendMessage}
                   activeStation={activeStation} 
                   stationChat={stationChat} 
                   stationQueue={stationQueue} 
@@ -3964,7 +3971,8 @@ const FeedContent = React.memo(({
   setShowGlobalIngest,
   onExpandContent,
   libraryTracks,
-  onEndBroadcast
+  onEndBroadcast,
+  onSendMessage
 }) => {
   const { language } = useLanguage();
   const [feed, setFeed] = useState([]);

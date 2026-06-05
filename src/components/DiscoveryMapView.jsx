@@ -88,6 +88,7 @@ const DiscoveryCanvas = ({
             onPlayPlaylist([track], 0);
         }
     }, [onPlayTrack, onPlayPlaylist]);
+    const { t } = useLanguage();
     const { showNotification } = useNotification();
     const { getViewport, setCenter, fitView } = useReactFlow();
 

@@ -1228,9 +1228,11 @@ useEffect(() => {
 
     const getMediaUrl = (url) => {
         if (!url) return '';
-        if (url.startsWith('http')) return url;
-        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-        return `${API_URL}${url}`;
+        if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
+        const base = import.meta.env.VITE_API_BASE_URL || 'https://api.fatale.fm/api/';
+        const host = base.replace(/\/api\/?$/, '');
+        const cleanPath = url.startsWith('/') ? url : `/${url}`;
+        return `${host}${cleanPath}`;
     };
 
     return (
