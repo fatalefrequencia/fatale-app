@@ -1194,7 +1194,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                             console.error("Failed to clear recent tracks:", err);
                                                         }
                                                     }}
-                                                    className="text-[8px] font-bold text-[#ff006e]/60 hover:text-[#ff006e] transition-all uppercase tracking-wider bg-transparent cursor-pointer"
+                                                    className="text-[7px] font-bold text-[#ff006e]/60 hover:text-[#ff006e] transition-all uppercase tracking-wider bg-transparent cursor-pointer"
                                                 >
                                                     [ {t('CLEAR')} ]
                                                 </button>
@@ -1271,7 +1271,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                             console.error("Failed to clear recent searches:", err);
                                                         }
                                                     }}
-                                                    className="text-[8px] font-bold text-[#ff006e]/60 hover:text-[#ff006e] transition-all uppercase tracking-wider bg-transparent cursor-pointer"
+                                                    className="text-[7px] font-bold text-[#ff006e]/60 hover:text-[#ff006e] transition-all uppercase tracking-wider bg-transparent cursor-pointer"
                                                 >
                                                     [ {t('CLEAR')} ]
                                                 </button>
