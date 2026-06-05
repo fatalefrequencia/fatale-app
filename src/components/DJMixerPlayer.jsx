@@ -101,6 +101,7 @@ const DJMixerPlayer = ({
     user,
     broadcastSourceType = 'app',
     onMicStream = null,
+    onMixerStateChange = null,
 }) => {
     const { t, language } = useLanguage();
     const { showNotification } = useNotification();
@@ -505,6 +506,17 @@ const DJMixerPlayer = ({
             setTimeout(() => setIsSyncing(false), 1000);
         }
     }, [currentTrack]);
+
+    useEffect(() => {
+        if (typeof onMixerStateChange === 'function') {
+            onMixerStateChange({
+                deckB,
+                isPlayingB,
+                currentTimeB,
+                crossfader
+            });
+        }
+    }, [deckB, isPlayingB, currentTimeB, crossfader, onMixerStateChange]);
 
     // Animate Jog Wheels
     useEffect(() => {

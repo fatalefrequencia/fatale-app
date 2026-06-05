@@ -288,6 +288,10 @@ function App() {
   const [stationChat, setStationChat] = useState([]);
   const [stationQueue, setStationQueue] = useState([]);
   const [showMixer, setShowMixer] = useState(false);
+  const [mixerDeckB, setMixerDeckB] = useState(null);
+  const [mixerIsPlayingB, setMixerIsPlayingB] = useState(false);
+  const [mixerCurrentTimeB, setMixerCurrentTimeB] = useState(0);
+  const [mixerCrossfader, setMixerCrossfader] = useState(-100);
   const [broadcastTrack, setBroadcastTrack] = useState(null);
   const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
   const isMobile = window.innerWidth < 1024;
@@ -1052,56 +1056,84 @@ function App() {
   }, [likedYoutubeIds]);
 
 
+  const handleMixerStateChange = React.useCallback((state) => {
+    setMixerDeckB(state.deckB);
+    setMixerIsPlayingB(state.isPlayingB);
+    setMixerCurrentTimeB(state.currentTimeB);
+    setMixerCrossfader(state.crossfader);
+  }, []);
+
+  // Helper to determine the active broadcast state (Deck A vs Deck B)
+  const getActiveBroadcastState = React.useCallback(() => {
+    const isDeckBActive = showMixer && mixerCrossfader > 0 && mixerDeckB;
+    const trackToSync = isDeckBActive ? mixerDeckB : currentTrack;
+    const timeToSync = isDeckBActive ? mixerCurrentTimeB : currentTime;
+    const playingToSync = isDeckBActive ? mixerIsPlayingB : isPlaying;
+    return { trackToSync, timeToSync, playingToSync, isDeckBActive };
+  }, [showMixer, mixerCrossfader, mixerDeckB, currentTrack, mixerCurrentTimeB, currentTime, mixerIsPlayingB, isPlaying]);
+
   // --- HOST BROADCASTING LOGIC ---
   useEffect(() => {
-    if (!isHost || !activeStation || !currentTrack?.title) return;
+    if (!isHost || !activeStation) return;
+    const { trackToSync, timeToSync, playingToSync } = getActiveBroadcastState();
+    if (!trackToSync?.title) return;
     const stationId = activeStation.id || activeStation.Id;
   
     // Guard: ensure signalR is ready before syncing
     const timer = setTimeout(() => {
       lastSyncTimeRef.current = Date.now();
-      const trackToSync = { ...currentTrack, sourceType: broadcastSourceType };
+      const enrichedTrack = { ...trackToSync, sourceType: broadcastSourceType };
       if (broadcastSourceType === 'hardware') {
-        trackToSync.title = '🎙 LIVE INPUT';
-        trackToSync.artist = user?.username || 'Hardware Source';
+        enrichedTrack.title = '🎙 LIVE INPUT';
+        enrichedTrack.artist = user?.username || 'Hardware Source';
       }
-      syncTrack(stationId, trackToSync, currentTime, isPlaying);
+      syncTrack(stationId, enrichedTrack, timeToSync, playingToSync);
     }, 0);
   
     return () => clearTimeout(timer);
-  }, [currentTrack?.id, currentTrack?.source, isPlaying, isHost, activeStation?.id]);
+  }, [
+    currentTrack?.id, currentTrack?.source, isPlaying, isHost, activeStation?.id,
+    showMixer, mixerCrossfader, mixerDeckB?.id, mixerDeckB?.source, mixerIsPlayingB
+  ]);
   
   // Periodic currentTime sync throttle (every 3 seconds)
   useEffect(() => {
-    if (!isHost || !activeStation || !currentTrack?.title) return;
+    if (!isHost || !activeStation) return;
+    const { trackToSync, timeToSync, playingToSync } = getActiveBroadcastState();
+    if (!trackToSync?.title) return;
     const stationId = activeStation.id || activeStation.Id;
   
     const now = Date.now();
     if (now - lastSyncTimeRef.current >= 3000) {
       lastSyncTimeRef.current = now;
-      const trackToSync = { ...currentTrack, sourceType: broadcastSourceType };
+      const enrichedTrack = { ...trackToSync, sourceType: broadcastSourceType };
       if (broadcastSourceType === 'hardware') {
-        trackToSync.title = '🎙 LIVE INPUT';
-        trackToSync.artist = user?.username || 'Hardware Source';
+        enrichedTrack.title = '🎙 LIVE INPUT';
+        enrichedTrack.artist = user?.username || 'Hardware Source';
       }
-      syncTrack(stationId, trackToSync, currentTime, isPlaying);
+      syncTrack(stationId, enrichedTrack, timeToSync, playingToSync);
     }
-  }, [currentTime, isHost, activeStation?.id, currentTrack?.id, currentTrack?.source, isPlaying, broadcastSourceType]);
+  }, [
+    currentTime, mixerCurrentTimeB, isHost, activeStation?.id, isPlaying,
+    mixerIsPlayingB, broadcastSourceType, getActiveBroadcastState
+  ]);
 
   // Sync immediately when a listener joins
   useEffect(() => {
-    if (!isHost || !activeStation || !currentTrack?.title) return;
+    if (!isHost || !activeStation) return;
+    const { trackToSync, timeToSync, playingToSync } = getActiveBroadcastState();
+    if (!trackToSync?.title) return;
     const stationId = activeStation.id || activeStation.Id;
 
     const unsub = onListenerJoined(({ listenerConnectionId }) => {
       console.log(`[HOST] Listener ${listenerConnectionId} joined, syncing track immediately`);
       lastSyncTimeRef.current = Date.now();
-      const trackToSync = { ...currentTrack, sourceType: broadcastSourceType };
+      const enrichedTrack = { ...trackToSync, sourceType: broadcastSourceType };
       if (broadcastSourceType === 'hardware') {
-        trackToSync.title = '🎙 LIVE INPUT';
-        trackToSync.artist = user?.username || 'Hardware Source';
+        enrichedTrack.title = '🎙 LIVE INPUT';
+        enrichedTrack.artist = user?.username || 'Hardware Source';
       }
-      syncTrack(stationId, trackToSync, currentTime, isPlaying);
+      syncTrack(stationId, enrichedTrack, timeToSync, playingToSync);
     });
 
     return () => {
@@ -1869,6 +1901,13 @@ function App() {
 
   // Modified to use main library tracks for correct Like status
   const handlePlayPlaylist = (playlistTracksRaw, startIndex = 0, shouldRedirect = true) => {
+    // If a listener (not the host) starts playing their own track/playlist, exit the station
+    if (activeStation && !isHost) {
+      setActiveStation(null);
+      activeStationRef.current = null;
+      setBroadcastTrack(null);
+    }
+
     // 1. Create a lookup map of all known tracks
     const libraryMap = new Map();
     libraryTracks.forEach(t => {
@@ -3170,6 +3209,7 @@ function App() {
               onPlayTrack={handlePlayTrack}
               user={user}
               onMicStream={setMicStream}
+              onMixerStateChange={handleMixerStateChange}
             />
             
             {/* Close Mixer Toggle */}
@@ -3652,6 +3692,7 @@ const Dashboard = React.memo(({
                   vibeFeatures={vibeFeatures}
                   onPlayTrack={onPlayTrack}
                   onPlayTrackAtIndex={onPlayTrackAtIndex}
+                  onMixerStateChange={handleMixerStateChange}
                 />
               </motion.div>
             )}
@@ -5686,7 +5727,8 @@ const PlayerContent = ({
   analyserA,
   isLandscape,
   onPlayTrack,
-  onPlayTrackAtIndex
+  onPlayTrackAtIndex,
+  onMixerStateChange
 }) => {
   const isDesktop = window.innerWidth >= 1024;
   const isMobile = !isDesktop;
@@ -5730,6 +5772,7 @@ const PlayerContent = ({
           onKeyLockAChange={setKeyLockA}
           onPlayTrack={onPlayTrack}
           user={user}
+          onMixerStateChange={onMixerStateChange}
         />
       ) : (
         <IPodPlayer
