@@ -58,8 +58,16 @@ export function useBroadcastSync({
       const isYT = !!(youtubeId || (source && source.startsWith('youtube:')));
       setIsYoutubeMode(isYT);
 
-      // For hardware source, audio comes via WebRTC — don't touch the audio element
+      // For hardware source, audio comes via WebRTC
       if (sourceType === 'hardware') {
+        if (audioRef.current && !audioRef.current.paused) {
+          audioRef.current.pause();
+        }
+        if (youtubePlayer && typeof youtubePlayer.pauseVideo === 'function') {
+          try {
+            youtubePlayer.pauseVideo();
+          } catch (e) {}
+        }
         if (typeof isPlaying === 'boolean') setIsPlaying(isPlaying);
         if (typeof currentTime === 'number') setCurrentTime(currentTime);
         return;

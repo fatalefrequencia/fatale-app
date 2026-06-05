@@ -53,14 +53,14 @@ const ICE_SERVERS = buildIceServers();
  * @param {string|null}  options.broadcastSourceType — 'hardware' | 'app' | null
  * @returns {{ isReceivingLiveAudio: boolean }}
  */
-export function useWebRTCListener({ activeStation, isHost, broadcastSourceType }) {
+export function useWebRTCListener({ activeStation, isHost, broadcastSourceType, mainAudioRef }) {
   const [isReceivingLiveAudio, setIsReceivingLiveAudio] = useState(false);
   const pcRef = useRef(null);
-  const audioRef = useRef(null); // hidden <audio> element for WebRTC stream
+  const audioRef = useRef(null); // local fallback <audio> element
   const hostConnIdRef = useRef(null);
   const stationIdRef = useRef(null);
 
-  // ── Ensure we have a hidden audio element ───────────────────────────────
+  // ── Ensure we have a hidden fallback audio element ───────────────────────
   useEffect(() => {
     if (!audioRef.current) {
       const el = new Audio();
@@ -82,12 +82,13 @@ export function useWebRTCListener({ activeStation, isHost, broadcastSourceType }
       pcRef.current.close();
       pcRef.current = null;
     }
-    if (audioRef.current) {
-      audioRef.current.srcObject = null;
+    const targetAudio = (mainAudioRef && mainAudioRef.current) ? mainAudioRef.current : audioRef.current;
+    if (targetAudio) {
+      targetAudio.srcObject = null;
     }
     setIsReceivingLiveAudio(false);
     hostConnIdRef.current = null;
-  }, []);
+  }, [mainAudioRef]);
 
   // ── Handle incoming SDP offer from host ─────────────────────────────────
   const handleOffer = useCallback(async ({ sdpOffer, hostConnectionId, stationId }) => {
@@ -110,13 +111,14 @@ export function useWebRTCListener({ activeStation, isHost, broadcastSourceType }
       }
     };
 
-    // When we get the remote audio track — pipe to hidden <audio> element
+    // When we get the remote audio track — pipe to the audio element
     pc.ontrack = (event) => {
       console.log('[WebRTC] Received remote audio track!');
       if (event.streams && event.streams[0]) {
-        if (audioRef.current) {
-          audioRef.current.srcObject = event.streams[0];
-          audioRef.current.play().catch(e => console.warn('[WebRTC] Audio play failed:', e));
+        const targetAudio = (mainAudioRef && mainAudioRef.current) ? mainAudioRef.current : audioRef.current;
+        if (targetAudio) {
+          targetAudio.srcObject = event.streams[0];
+          targetAudio.play().catch(e => console.warn('[WebRTC] Audio play failed:', e));
         }
         setIsReceivingLiveAudio(true);
       }

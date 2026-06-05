@@ -756,6 +756,7 @@ function App() {
     activeStation,
     isHost,
     broadcastSourceType,
+    mainAudioRef: audioRef,
   });
 
   // Sync Audio Volume & Mute
