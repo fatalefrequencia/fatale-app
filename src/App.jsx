@@ -910,6 +910,7 @@ function App() {
       const station = e.detail;
       activeStationRef.current = station;
       setActiveStation(station);
+      setIsPlaying(true); // Auto-play the station immediately
   
       // Join the SignalR room — useBroadcastSync takes it from here.
       // Do NOT touch tracks, currentTrackIndex, or isYoutubeMode here.
@@ -922,12 +923,18 @@ function App() {
       const SILENT = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==';
       if (audioRef.current) {
         if (audioRef.current.getAttribute('data-playing-src') !== 'silent') {
+          audioRef.current.srcObject = null;
           audioRef.current.src = SILENT;
           audioRef.current.loop = true;
           audioRef.current.setAttribute('data-playing-src', 'silent');
           audioRef.current.load();
           audioRef.current.play().catch(() => {});
         }
+      }
+      
+      // Stop any local youtube video
+      if (youtubePlayer && typeof youtubePlayer.pauseVideo === 'function') {
+        try { youtubePlayer.pauseVideo(); } catch(err){}
       }
     };
   
@@ -2777,6 +2784,7 @@ function App() {
                vibeFeatures={vibeFeatures}
                isHost={isHost}
                isReceivingLiveAudio={isReceivingLiveAudio}
+               onEndBroadcast={handleEndBroadcast}
            />
           </>
         )}
@@ -3165,7 +3173,8 @@ const Dashboard = React.memo(({
   onPlayTrackAtIndex,
   onOpenMixer,
   isHost,
-  isReceivingLiveAudio
+  isReceivingLiveAudio,
+  onEndBroadcast
 }) => {
   const { t } = useLanguage();
   const { showNotification } = useNotification();
@@ -3454,7 +3463,7 @@ const Dashboard = React.memo(({
                   setShowGlobalIngest={setShowGlobalIngest}
                   onExpandContent={onExpandContent}
                   libraryTracks={libraryTracks}
-                  onEndBroadcast={handleEndBroadcast}
+                  onEndBroadcast={onEndBroadcast}
                 />
               </motion.div>
              )}
