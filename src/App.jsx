@@ -4696,7 +4696,7 @@ const FeedContent = React.memo(({
 
                                 {/* Tracklist dropdown */}
                                 {isExpanded && (
-                                  <div className="divide-y divide-[#00f0ff]/5">
+                                  <div className="divide-y divide-[#00f0ff]/5 max-h-64 overflow-y-auto no-scrollbar">
                                     {(item.tracks || []).map((track, idx) => {
                                       const tImg = getMediaUrl(track.coverImageUrl || track.CoverImageUrl || track.imageUrl || track.ImageUrl || albumImageUrl);
                                       return (
