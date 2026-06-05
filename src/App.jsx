@@ -303,6 +303,7 @@ function App() {
   const filters = useRef({ low: null, mid: null, high: null });
   const [analyserA, setAnalyserA] = useState(null);
   const analyser = useRef(null); // Keep ref for internal logic but use state for props
+  const broadcastDestRef = useRef(null);
 
   const initAudioCtx = () => {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || navigator.vendor || window.opera);
@@ -336,6 +337,9 @@ function App() {
         filters.current.mid.connect(filters.current.high);
         filters.current.high.connect(analyser.current);
         analyser.current.connect(audioCtx.current.destination);
+
+        broadcastDestRef.current = audioCtx.current.createMediaStreamDestination();
+        analyser.current.connect(broadcastDestRef.current);
     }
   };
 
@@ -781,10 +785,21 @@ function App() {
     onBroadcastSync,
   });
 
+  // Combined broadcast stream (micStream for hardware, browser mix for app mode)
+  const broadcastStream = React.useMemo(() => {
+    if (broadcastSourceType === 'hardware') {
+      return micStream;
+    }
+    if (broadcastSourceType === 'app') {
+      return broadcastDestRef.current ? broadcastDestRef.current.stream : null;
+    }
+    return null;
+  }, [broadcastSourceType, micStream, broadcastDestRef.current]);
+
   // ── WebRTC: Host broadcaster (hardware audio → listeners) ──────────────────
   useWebRTCBroadcast({
     stationId: activeStation ? String(activeStation.id || activeStation.Id) : null,
-    micStream,
+    micStream: broadcastStream,
     isHost,
     isBroadcasting: isHost && !!activeStation,
   });
@@ -1870,6 +1885,14 @@ function App() {
 
   const handlePlayTrackAtIndex = (index) => {
     if (index < 0 || index >= tracks.length) return;
+    
+    // If a listener (not the host) starts playing their own track, exit the station
+    if (activeStation && !isHost) {
+      setActiveStation(null);
+      activeStationRef.current = null;
+      setBroadcastTrack(null);
+    }
+
     initAudioCtx();
     if (audioCtx.current && audioCtx.current.state === 'suspended') {
       audioCtx.current.resume().catch(e => console.warn("[MOBILE GESTURE] Resume AudioContext blocked:", e));
@@ -2935,6 +2958,8 @@ function App() {
                isReceivingLiveAudio={isReceivingLiveAudio}
                onEndBroadcast={handleEndBroadcast}
                onMixerStateChange={handleMixerStateChange}
+               audioCtx={audioCtx.current}
+               broadcastDest={broadcastDestRef.current}
            />
           </>
         )}
@@ -3211,6 +3236,8 @@ function App() {
               user={user}
               onMicStream={setMicStream}
               onMixerStateChange={handleMixerStateChange}
+              audioCtx={audioCtx.current}
+              broadcastDest={broadcastDestRef.current}
             />
             
             {/* Close Mixer Toggle */}
@@ -3326,7 +3353,9 @@ const Dashboard = React.memo(({
   isHost,
   isReceivingLiveAudio,
   onEndBroadcast,
-  onMixerStateChange
+  onMixerStateChange,
+  audioCtx,
+  broadcastDest
 }) => {
   const { t } = useLanguage();
   const { showNotification } = useNotification();
@@ -3695,6 +3724,8 @@ const Dashboard = React.memo(({
                   onPlayTrack={onPlayTrack}
                   onPlayTrackAtIndex={onPlayTrackAtIndex}
                   onMixerStateChange={onMixerStateChange}
+                  audioCtx={audioCtx}
+                  broadcastDest={broadcastDest}
                 />
               </motion.div>
             )}
@@ -5730,7 +5761,9 @@ const PlayerContent = ({
   isLandscape,
   onPlayTrack,
   onPlayTrackAtIndex,
-  onMixerStateChange
+  onMixerStateChange,
+  audioCtx,
+  broadcastDest
 }) => {
   const isDesktop = window.innerWidth >= 1024;
   const isMobile = !isDesktop;
@@ -5775,6 +5808,8 @@ const PlayerContent = ({
           onPlayTrack={onPlayTrack}
           user={user}
           onMixerStateChange={onMixerStateChange}
+          audioCtx={audioCtx}
+          broadcastDest={broadcastDest}
         />
       ) : (
         <IPodPlayer

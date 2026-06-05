@@ -102,6 +102,8 @@ const DJMixerPlayer = ({
     broadcastSourceType = 'app',
     onMicStream = null,
     onMixerStateChange = null,
+    audioCtx = null,
+    broadcastDest = null,
 }) => {
     const { t, language } = useLanguage();
     const { showNotification } = useNotification();
@@ -546,7 +548,7 @@ const DJMixerPlayer = ({
 
     const initAudioB = () => {
         if (!audioCtxB.current && audioB.current) {
-            audioCtxB.current = new (window.AudioContext || window.webkitAudioContext)();
+            audioCtxB.current = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
             
             analyserB.current = audioCtxB.current.createAnalyser();
             analyserB.current.fftSize = 256;
@@ -570,6 +572,11 @@ const DJMixerPlayer = ({
             filtersB.current.mid.connect(filtersB.current.high);
             filtersB.current.high.connect(analyserB.current);
             analyserB.current.connect(audioCtxB.current.destination);
+
+            if (broadcastDest) {
+                analyserB.current.connect(broadcastDest);
+            }
+
             setAnalyserBState(analyserB.current);
         }
     };
