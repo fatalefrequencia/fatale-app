@@ -2934,6 +2934,7 @@ function App() {
                isHost={isHost}
                isReceivingLiveAudio={isReceivingLiveAudio}
                onEndBroadcast={handleEndBroadcast}
+               onMixerStateChange={handleMixerStateChange}
            />
           </>
         )}
@@ -3324,7 +3325,8 @@ const Dashboard = React.memo(({
   onOpenMixer,
   isHost,
   isReceivingLiveAudio,
-  onEndBroadcast
+  onEndBroadcast,
+  onMixerStateChange
 }) => {
   const { t } = useLanguage();
   const { showNotification } = useNotification();
@@ -3692,7 +3694,7 @@ const Dashboard = React.memo(({
                   vibeFeatures={vibeFeatures}
                   onPlayTrack={onPlayTrack}
                   onPlayTrackAtIndex={onPlayTrackAtIndex}
-                  onMixerStateChange={handleMixerStateChange}
+                  onMixerStateChange={onMixerStateChange}
                 />
               </motion.div>
             )}
