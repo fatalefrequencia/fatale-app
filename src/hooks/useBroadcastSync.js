@@ -123,7 +123,11 @@ export function useBroadcastSync({
         }
         const diff = Math.abs((audioRef.current.currentTime || 0) - (currentTime || 0));
         if (diff > 2) audioRef.current.currentTime = currentTime || 0;
-        if (isPlaying) audioRef.current.play().catch(() => {});
+        if (isPlaying) {
+          audioRef.current.play().catch(e => {
+            console.error('[useBroadcastSync] Playback failed for source:', resolvedSrc, e);
+          });
+        }
         else audioRef.current.pause();
       }
 

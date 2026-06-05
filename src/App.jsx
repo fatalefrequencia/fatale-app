@@ -34,7 +34,7 @@ import SettingsView from './components/SettingsView';
 import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
 import DJMixerPlayer from './components/DJMixerPlayer';
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
-import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack, onBroadcastSync, registerHost, unregisterHost } from './services/signalr';
+import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack, onBroadcastSync, registerHost, unregisterHost, onListenerJoined } from './services/signalr';
 import { useBroadcastSync } from './hooks/useBroadcastSync';
 import { useWebRTCBroadcast } from './hooks/useWebRTCBroadcast';
 import { useWebRTCListener } from './hooks/useWebRTCListener';
@@ -495,6 +495,7 @@ function App() {
   const hasStartedPlayingYt = useRef(false);
   const lastPlayRequestTime = useRef(0);
   const activeStationRef = useRef(null);
+  const lastSyncTimeRef = useRef(0);
 
   const currentYtId = useMemo(() => {
     return getGlobalYoutubeId(currentTrack);
@@ -1058,6 +1059,7 @@ function App() {
   
     // Guard: ensure signalR is ready before syncing
     const timer = setTimeout(() => {
+      lastSyncTimeRef.current = Date.now();
       const trackToSync = { ...currentTrack, sourceType: broadcastSourceType };
       if (broadcastSourceType === 'hardware') {
         trackToSync.title = '🎙 LIVE INPUT';
@@ -1069,21 +1071,43 @@ function App() {
     return () => clearTimeout(timer);
   }, [currentTrack?.id, currentTrack?.source, isPlaying, isHost, activeStation?.id]);
   
+  // Periodic currentTime sync throttle (every 3 seconds)
   useEffect(() => {
     if (!isHost || !activeStation || !currentTrack?.title) return;
     const stationId = activeStation.id || activeStation.Id;
   
-    const timer = setTimeout(() => {
+    const now = Date.now();
+    if (now - lastSyncTimeRef.current >= 3000) {
+      lastSyncTimeRef.current = now;
       const trackToSync = { ...currentTrack, sourceType: broadcastSourceType };
       if (broadcastSourceType === 'hardware') {
         trackToSync.title = '🎙 LIVE INPUT';
         trackToSync.artist = user?.username || 'Hardware Source';
       }
       syncTrack(stationId, trackToSync, currentTime, isPlaying);
-    }, 300);
-  
-    return () => clearTimeout(timer);
-  }, [currentTime, isHost]);
+    }
+  }, [currentTime, isHost, activeStation?.id, currentTrack?.id, currentTrack?.source, isPlaying, broadcastSourceType]);
+
+  // Sync immediately when a listener joins
+  useEffect(() => {
+    if (!isHost || !activeStation || !currentTrack?.title) return;
+    const stationId = activeStation.id || activeStation.Id;
+
+    const unsub = onListenerJoined(({ listenerConnectionId }) => {
+      console.log(`[HOST] Listener ${listenerConnectionId} joined, syncing track immediately`);
+      lastSyncTimeRef.current = Date.now();
+      const trackToSync = { ...currentTrack, sourceType: broadcastSourceType };
+      if (broadcastSourceType === 'hardware') {
+        trackToSync.title = '🎙 LIVE INPUT';
+        trackToSync.artist = user?.username || 'Hardware Source';
+      }
+      syncTrack(stationId, trackToSync, currentTime, isPlaying);
+    });
+
+    return () => {
+      if (typeof unsub === 'function') unsub();
+    };
+  }, [isHost, activeStation?.id, currentTrack?.id, currentTrack?.source, currentTime, isPlaying, broadcastSourceType]);
 
   const fetchPlaylists = async (uid) => {
     try {
@@ -1630,6 +1654,9 @@ function App() {
         } else {
           const trackSource = nextTrack?.source || nextTrack?.Source;
           const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
+          if (audioRef.current.srcObject) {
+            audioRef.current.srcObject = null;
+          }
           audioRef.current.src = resolvedSrc;
           audioRef.current.loop = false;
           audioRef.current.load();
@@ -1749,6 +1776,9 @@ function App() {
       } else {
         const trackSource = prevTrack?.source || prevTrack?.Source;
         const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
+        if (audioRef.current.srcObject) {
+          audioRef.current.srcObject = null;
+        }
         audioRef.current.src = resolvedSrc;
         audioRef.current.loop = false;
         audioRef.current.load();
@@ -1822,6 +1852,9 @@ function App() {
       } else {
         const trackSource = track.source || track.Source;
         const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
+        if (audioRef.current.srcObject) {
+          audioRef.current.srcObject = null;
+        }
         audioRef.current.src = resolvedSrc;
         audioRef.current.loop = false;
         audioRef.current.load();
@@ -1912,6 +1945,9 @@ function App() {
       } else {
         const trackSource = firstTrack?.source || firstTrack?.Source;
         const resolvedSrc = trackSource ? (trackSource.startsWith('http') ? trackSource : (typeof getMediaUrl === 'function' ? getMediaUrl(trackSource) : trackSource)) : "";
+        if (audioRef.current.srcObject) {
+          audioRef.current.srcObject = null;
+        }
         audioRef.current.src = resolvedSrc;
         audioRef.current.loop = false;
         audioRef.current.load();
