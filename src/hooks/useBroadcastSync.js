@@ -60,7 +60,9 @@ export function useBroadcastSync({
 
       // For hardware source, audio comes via WebRTC
       if (sourceType === 'hardware') {
-        if (audioRef.current && !audioRef.current.paused) {
+        // Only pause the audio element if WebRTC has NOT yet provided a srcObject stream.
+        // If srcObject is set, the WebRTC audio is already playing — don't interrupt it.
+        if (audioRef.current && !audioRef.current.srcObject && !audioRef.current.paused) {
           audioRef.current.pause();
         }
         if (youtubePlayer && typeof youtubePlayer.pauseVideo === 'function') {

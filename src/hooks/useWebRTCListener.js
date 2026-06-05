@@ -117,8 +117,26 @@ export function useWebRTCListener({ activeStation, isHost, broadcastSourceType, 
       if (event.streams && event.streams[0]) {
         const targetAudio = (mainAudioRef && mainAudioRef.current) ? mainAudioRef.current : audioRef.current;
         if (targetAudio) {
+          // Clear src-based audio first to avoid AbortError conflicts on mobile
+          if (targetAudio.src && !targetAudio.srcObject) {
+            targetAudio.removeAttribute('src');
+          }
           targetAudio.srcObject = event.streams[0];
-          targetAudio.play().catch(e => console.warn('[WebRTC] Audio play failed:', e));
+          targetAudio.volume = 1;
+          targetAudio.muted = false;
+          // Attempt play — on mobile, this should succeed because we pre-unlocked
+          // the element with the silent WAV carrier in handleTuneInStation.
+          const playPromise = targetAudio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch((e) => {
+              console.warn('[WebRTC] Audio play failed, trying muted fallback:', e.message);
+              // Muted fallback: some strict browsers allow muted streams when unmuted is blocked
+              targetAudio.muted = true;
+              targetAudio.play().catch((e2) => {
+                console.error('[WebRTC] Muted fallback also failed:', e2.message);
+              });
+            });
+          }
         }
         setIsReceivingLiveAudio(true);
       }

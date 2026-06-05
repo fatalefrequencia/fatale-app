@@ -434,10 +434,24 @@ function App() {
 
   const currentTrack = React.useMemo(() => {
     // ── Broadcast mode: listener follows station, not local queue ──
-    if (activeStation && broadcastTrack && !isHost) {
+    if (activeStation && !isHost) {
+      if (broadcastTrack) {
+        return {
+          ...broadcastTrack,
+          id:       broadcastTrack.youtubeId || broadcastTrack.source || 'broadcast',
+          isLiked:  false,
+          isLocked: false,
+          isOwned:  true,
+        };
+      }
+      // Tuning in — waiting for first broadcast sync. Return a station placeholder
+      // so we NEVER accidentally surface a local track (and its isLiked state).
       return {
-        ...broadcastTrack,
-        id:       broadcastTrack.youtubeId || broadcastTrack.source || 'broadcast',
+        id:       `station-${activeStation.id || activeStation.Id}`,
+        title:    activeStation.sessionTitle || activeStation.SessionTitle || 'LIVE SIGNAL',
+        artist:   activeStation.artistName || activeStation.ArtistName || 'Live DJ',
+        source:   null,
+        cover:    activeStation.imageUrl || activeStation.ImageUrl || null,
         isLiked:  false,
         isLocked: false,
         isOwned:  true,
@@ -920,17 +934,25 @@ function App() {
       // Only reset broadcastTrack so UI shows "Tuning in..." until first sync
       setBroadcastTrack(null);
   
-      // Keep a silent carrier alive so Media Session API doesn't die on mobile
+      // ── Mobile Gesture Unlock ──────────────────────────────────────────────
+      // On iOS/Android, we MUST call .play() synchronously in the click/touch
+      // handler before any async work. Loading a silent WAV carrier unlocks the
+      // <audio> element so that WebRTC's srcObject assignment can auto-play later.
       const SILENT = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==';
       if (audioRef.current) {
-        if (audioRef.current.getAttribute('data-playing-src') !== 'silent') {
+        // Always clear WebRTC stream first
+        if (audioRef.current.srcObject) {
           audioRef.current.srcObject = null;
-          audioRef.current.src = SILENT;
-          audioRef.current.loop = true;
-          audioRef.current.setAttribute('data-playing-src', 'silent');
-          audioRef.current.load();
-          audioRef.current.play().catch(() => {});
         }
+        // Force-reload silent carrier regardless of what was previously loaded
+        // (the attribute guard was preventing mobile from re-unlocking)
+        audioRef.current.src = SILENT;
+        audioRef.current.loop = true;
+        audioRef.current.setAttribute('data-playing-src', 'silent');
+        audioRef.current.load();
+        audioRef.current.play().catch((err) => {
+          console.warn('[TUNE_IN] Silent carrier play blocked (expected on desktop):', err.message);
+        });
       }
       
       // Stop any local youtube video
@@ -942,6 +964,33 @@ function App() {
     window.addEventListener('tuneIn', handleTuneIn);
     return () => window.removeEventListener('tuneIn', handleTuneIn);
   }, [youtubePlayer]);
+
+  // ── Reusable tune-in handler for direct onClick calls ──────────────────────
+  // (The tuneIn CustomEvent above only fires from DiscoveryHUD which uses it.
+  //  All other views call setActiveStation directly — we wire them to this instead
+  //  so mobile gesture unlock always fires in the synchronous click context.)
+  const handleTuneInStation = React.useCallback((station) => {
+    activeStationRef.current = station;
+    setActiveStation(station);
+    setIsPlaying(true);
+    setBroadcastTrack(null);
+    joinStation(station.id || station.Id);
+
+    const SILENT = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==';
+    if (audioRef.current) {
+      if (audioRef.current.srcObject) audioRef.current.srcObject = null;
+      audioRef.current.src = SILENT;
+      audioRef.current.loop = true;
+      audioRef.current.setAttribute('data-playing-src', 'silent');
+      audioRef.current.load();
+      audioRef.current.play().catch((err) => {
+        console.warn('[TUNE_IN_STATION] Silent carrier blocked (expected on desktop):', err.message);
+      });
+    }
+    if (youtubePlayer && typeof youtubePlayer.pauseVideo === 'function') {
+      try { youtubePlayer.pauseVideo(); } catch(e) {}
+    }
+  }, [youtubePlayer, joinStation]);
 
 
   // --- PERSISTENCE & ROUTING LOOPS ---
@@ -1119,6 +1168,10 @@ function App() {
 
     // Synchronous mobile gesture unblocking:
     if (audioRef.current) {
+      // Always clear WebRTC stream before playing local audio
+      if (audioRef.current.srcObject) {
+        audioRef.current.srcObject = null;
+      }
       initAudioCtx();
       if (audioCtx.current && audioCtx.current.state === 'suspended') {
         audioCtx.current.resume().catch(e => console.warn("[MOBILE GESTURE] Resume AudioContext blocked:", e));
@@ -1421,6 +1474,11 @@ function App() {
     if (isYT) {
       if (!isYoutubeMode) setIsYoutubeMode(true);
       
+      // Clear any lingering WebRTC stream before using src-based audio
+      if (audio.srcObject) {
+        audio.srcObject = null;
+      }
+
       // Play silent audio on native element to keep background session alive on mobile
       const silentSrc = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
       if (audio.src !== silentSrc && audio.getAttribute('data-playing-src') !== 'silent') {
@@ -1447,6 +1505,11 @@ function App() {
         try {
           youtubePlayer.pauseVideo();
         } catch (e) {}
+      }
+
+      // Clear any lingering WebRTC stream so local src can play through
+      if (audio.srcObject) {
+        audio.srcObject = null;
       }
 
       // Handle Local Audio Source Change
@@ -3379,29 +3442,8 @@ const Dashboard = React.memo(({
                   onExpandContent={onExpandContent}
                   setUser={setUser}
                   onPlayStation={(station) => {
-                    activeStationRef.current = station;
-                    setActiveStation(station);
-                    joinStation(station.id || station.Id);
-                    setIsPlaying(true);
-                    setTracks([]);
-                    setCurrentTrackIndex(-1);
-                    
-                    // Stop any currently playing cached/local tracks immediately
-                    if (audioRef.current) {
-                      audioRef.current.pause();
-                      audioRef.current.srcObject = null;
-                      audioRef.current.src = "";
-                      audioRef.current.removeAttribute('src');
-                    }
-                    
-                    // Stop YouTube player immediately
-                    if (youtubePlayer && typeof youtubePlayer.pauseVideo === 'function') {
-                      try {
-                        youtubePlayer.pauseVideo();
-                      } catch (e) {}
-                    }
-                    
-                    showNotification("RADIO_LINK_ESTABLISHED", `SIGNAL_LOCKED: ${station.name}`, "success");
+                    handleTuneInStation(station);
+                    showNotification("RADIO_LINK_ESTABLISHED", `SIGNAL_LOCKED: ${station.sessionTitle || station.SessionTitle || station.name}`, "success");
                   }}
                   isPlayerActive={currentTrackIndex >= 0 && !isMiniPlayerMinimized}
                   setShowGlobalIngest={setShowGlobalIngest}
@@ -3454,7 +3496,7 @@ const Dashboard = React.memo(({
                   user={user} 
                   favoriteStations={favoriteStations} 
                   liveStations={liveStations} 
-                  setActiveStation={setActiveStation} 
+                  setActiveStation={handleTuneInStation} 
                   activeStation={activeStation} 
                   stationChat={stationChat} 
                   stationQueue={stationQueue} 
@@ -4499,7 +4541,7 @@ const FeedContent = React.memo(({
                   return (
                     <button
                       key={station.id || idx}
-                      onClick={() => setActiveStation(station)}
+                      onClick={() => handleTuneInStation(station)}
                       className={`flex items-center gap-2 px-3 py-2 border rounded-sm shrink-0 transition-all ${
                         isActive
                           ? 'border-[#ff006e]/60 bg-[#ff006e]/10'
@@ -5297,7 +5339,7 @@ const FeedContent = React.memo(({
           return (
             <button
               key={station.id || idx}
-              onClick={() => { setActiveStation(station); setMobilePanelOpen(false); }}
+              onClick={() => { handleTuneInStation(station); setMobilePanelOpen(false); }}
               className={`w-full flex items-center gap-2.5 px-3 py-2.5 border text-left transition-all rounded-sm ${isActive ? 'border-[#ff006e]/60 bg-[#ff006e]/10' : 'border-white/5 bg-black/20 hover:border-white/20'}`}
             >
               <div className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse" style={{ backgroundColor: sc, boxShadow: `0 0 6px ${sc}` }} />
@@ -5521,7 +5563,7 @@ const FeedContent = React.memo(({
                     return (
                       <button
                         key={station.id || station.Id || idx}
-                        onClick={() => setActiveStation(station)}
+                        onClick={() => handleTuneInStation(station)}
                         className="w-full text-left border border-white/5 hover:border-white/20 bg-black/20 hover:bg-white/[0.03] p-3 transition-all group/st rounded-sm"
                       >
                         <div className="flex items-center gap-2.5">
