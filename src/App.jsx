@@ -3569,6 +3569,7 @@ const Dashboard = React.memo(({
                 className="w-full h-full"
               >
                 <PlayerContent
+                  currentTrack={currentTrack}
                   initialScreen={redirectTrigger ? 'NOW_PLAYING' : 'MAIN'}
                   forceNowPlaying={redirectTrigger}
                   setView={setView}
@@ -5605,6 +5606,7 @@ const FeedContent = React.memo(({
 
 // --- CONTENIDO: PLAYER (PANTALLA COMPLETA) ---
 const PlayerContent = ({
+  currentTrack,
   setView,
   vibeFeatures,
   keyLockA,
@@ -5656,7 +5658,7 @@ const PlayerContent = ({
       {showFullMixer ? (
         <DJMixerPlayer 
           isMobile={isMobile}
-          currentTrack={currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null}
+          currentTrack={currentTrack}
           isPlaying={isPlaying}
           onPlayPause={togglePlay}
           onNext={onNext}
