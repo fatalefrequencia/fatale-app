@@ -3454,6 +3454,7 @@ const Dashboard = React.memo(({
                   setShowGlobalIngest={setShowGlobalIngest}
                   onExpandContent={onExpandContent}
                   libraryTracks={libraryTracks}
+                  onEndBroadcast={handleEndBroadcast}
                 />
               </motion.div>
              )}
@@ -3910,7 +3911,8 @@ const FeedContent = React.memo(({
   setShowGlobalUpload,
   setShowGlobalIngest,
   onExpandContent,
-  libraryTracks
+  libraryTracks,
+  onEndBroadcast
 }) => {
   const { language } = useLanguage();
   const [feed, setFeed] = useState([]);
@@ -5382,7 +5384,7 @@ const FeedContent = React.memo(({
 
             <div className="pt-4 border-t border-[#ff006e]/10 space-y-2">
               <button
-                onClick={handleEndBroadcast}
+                onClick={onEndBroadcast}
                 className="w-full py-2 bg-red-950/20 border border-red-500/40 text-red-500 text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-black transition-all"
               >
                 [ END_BROADCAST ]
