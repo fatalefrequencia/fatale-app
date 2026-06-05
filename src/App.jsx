@@ -598,6 +598,11 @@ function App() {
       }
     } else {
       lastLoadedYtId.current = null;
+      if (youtubePlayer && typeof youtubePlayer.pauseVideo === 'function') {
+        try {
+          youtubePlayer.pauseVideo();
+        } catch (err) {}
+      }
     }
   }, [currentYtId, isYoutubeMode, youtubePlayer, isPlaying, volume, globalPlaybackRate]);
 
