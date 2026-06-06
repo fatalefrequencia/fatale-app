@@ -788,7 +788,7 @@ function App() {
   // ── WebRTC: Host broadcaster (hardware audio → listeners) ──────────────────
   useWebRTCBroadcast({
     stationId: activeStation ? String(activeStation.id || activeStation.Id) : null,
-    micStream,
+    micStream: broadcastSourceType === 'hardware' ? micStream : (broadcastDestRef.current ? broadcastDestRef.current.stream : null),
     isHost,
     isBroadcasting: isHost && !!activeStation,
   });
@@ -5821,7 +5821,7 @@ const PlayerContent = ({
           onPlayTrack={onPlayTrack}
           user={user}
           onMixerStateChange={onMixerStateChange}
-          audioCtx={audioCtx}
+          audioCtx={audioCtx.current}
           broadcastDest={broadcastDest}
         />
       ) : (

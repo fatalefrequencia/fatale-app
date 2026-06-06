@@ -584,7 +584,8 @@ const DJMixerPlayer = ({
 
     const initAudioB = () => {
         if (!audioCtxB.current && audioB.current) {
-            audioCtxB.current = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+            const actualCtx = (audioCtx && audioCtx.current) ? audioCtx.current : audioCtx;
+            audioCtxB.current = actualCtx || new (window.AudioContext || window.webkitAudioContext)();
             
             analyserB.current = audioCtxB.current.createAnalyser();
             analyserB.current.fftSize = 256;
@@ -1366,8 +1367,8 @@ const DJMixerPlayer = ({
                                 <div className="deck-transport-row-nano right">
                                     <button onClick={() => handleSync('B')} className={`sync-btn-nano ${isSyncedB ? 'active' : ''}`}>{t('SYNCED')}</button>
                                     <button onClick={skipBPrev} className="transport-btn-sq"><SkipBack size={10} /></button>
-                                    <button onClick={togglePlayB} className={`transport-btn-sq main ${isPlayingB || (deckB && isYoutubeTrack(deckB) && isPlaying) ? 'active' : ''}`}>
-                                        {(isPlayingB || (deckB && isYoutubeTrack(deckB) && isPlaying)) ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
+                                    <button onClick={togglePlayB} className={`transport-btn-sq main ${isPlayingB ? 'active' : ''}`}>
+                                        {isPlayingB ? <Pause size={10} /> : <Play size={10} fill="currentColor" />}
                                     </button>
                                     <button onClick={skipBNext} className="transport-btn-sq"><SkipForward size={10} /></button>
                                 </div>
