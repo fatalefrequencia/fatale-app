@@ -5821,7 +5821,7 @@ const PlayerContent = ({
           onPlayTrack={onPlayTrack}
           user={user}
           onMixerStateChange={onMixerStateChange}
-          audioCtx={audioCtx.current}
+          audioCtx={audioCtx}
           broadcastDest={broadcastDest}
         />
       ) : (
