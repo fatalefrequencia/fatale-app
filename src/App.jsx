@@ -3532,7 +3532,7 @@ const Dashboard = React.memo(({
           )}
         </header>
 
-        <div className={`flex-1 relative ${activeView === 'discovery' ? 'overflow-hidden' : activeView === 'messages' ? (currentTrackIndex >= 0 && !isMiniPlayerMinimized ? 'overflow-hidden lg:pb-24 pb-[60px]' : 'overflow-hidden pb-0') : 'overflow-y-auto no-scrollbar pb-24'}`}>
+        <div className={`flex-1 relative ${activeView === 'discovery' ? 'overflow-hidden' : activeView === 'messages' ? (currentTrackIndex >= 0 && !isMiniPlayerMinimized ? 'overflow-hidden lg:pb-24 pb-[60px]' : 'overflow-hidden pb-0') : activeView === 'shopping' ? 'overflow-hidden' : 'overflow-y-auto no-scrollbar pb-24'}`}>
           <AnimatePresence mode="wait" initial={false}>
             {activeView === 'discovery' && (
               <motion.div
@@ -3569,10 +3569,10 @@ const Dashboard = React.memo(({
             {activeView === 'shopping' && (
               <motion.div
                 key="shopping-wrapper"
-                initial={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
-                animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, scale: 1.05, filter: 'blur(10px)' }}
-                transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
                 className="w-full h-full"
               >
                 <React.Suspense fallback={<div className="w-full h-full bg-black animate-pulse" />}>

@@ -428,6 +428,22 @@ const DJMixerPlayer = ({
         };
     }, []);
 
+    // Deck B YouTube Time Polling — keeps currentTimeB in sync for YouTube tracks on Deck B
+    useEffect(() => {
+        if (!isYoutubeModeB || !youtubePlayerB || !isPlayingB) return;
+        const interval = setInterval(() => {
+            try {
+                if (youtubePlayerB && typeof youtubePlayerB.getCurrentTime === 'function') {
+                    const t = youtubePlayerB.getCurrentTime();
+                    const d = youtubePlayerB.getDuration();
+                    if (typeof t === 'number') setCurrentTimeB(t);
+                    if (typeof d === 'number' && d > 0) setDurationB(d);
+                }
+            } catch (e) { /* YT player may be unready */ }
+        }, 500);
+        return () => clearInterval(interval);
+    }, [isYoutubeModeB, youtubePlayerB, isPlayingB]);
+
     // Quantized Loop Engine
     useEffect(() => {
         if (loopA.active && isPlayingA) {
@@ -511,14 +527,26 @@ const DJMixerPlayer = ({
 
     useEffect(() => {
         if (typeof onMixerStateChange === 'function') {
+            // Enrich deckB with explicit source/youtubeId for signalr syncTrack to detect YouTube mode
+            let enrichedDeckB = deckB;
+            if (deckB && isYoutubeModeB) {
+                const ytId = getYoutubeVideoId(deckB);
+                if (ytId) {
+                    enrichedDeckB = {
+                        ...deckB,
+                        youtubeId: ytId,
+                        source: `youtube:${ytId}`,
+                    };
+                }
+            }
             onMixerStateChange({
-                deckB,
+                deckB: enrichedDeckB,
                 isPlayingB,
                 currentTimeB,
                 crossfader
             });
         }
-    }, [deckB, isPlayingB, currentTimeB, crossfader, onMixerStateChange]);
+    }, [deckB, isPlayingB, currentTimeB, crossfader, isYoutubeModeB, onMixerStateChange]);
 
     // Animate Jog Wheels
     useEffect(() => {

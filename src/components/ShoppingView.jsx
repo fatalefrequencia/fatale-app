@@ -357,7 +357,7 @@ const ShoppingView = () => {
                 style={{
                     position: 'fixed',
                     inset: 0,
-                    zIndex: 50,
+                    zIndex: 9000,
                     background: '#000',
                     display: 'flex',
                     flexDirection: 'column',
@@ -604,7 +604,7 @@ const ShoppingView = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.85)' }}
+            style={{ position: 'fixed', inset: 0, zIndex: 9001, background: 'rgba(0,0,0,0.85)' }}
             onClick={onClose}
         >
             <motion.div
