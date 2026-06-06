@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExternalLink, Plus, X, Upload, Search, Link2, Share2, ChevronLeft, ChevronRight, ArrowLeft, Store } from 'lucide-react';
 import API from '../services/api';
@@ -347,7 +348,7 @@ const ShoppingView = () => {
     // ─── MOBILE STORE DETAIL — full screen bottom-up sheet ────────────────────
     const MobileStoreDetail = ({ shop, onClose }) => {
         const [tab, setTab] = useState('info'); // 'info' | 'image'
-        return (
+        return createPortal(
             <motion.div
                 key="mobile-store"
                 initial={{ y: '100%' }}
@@ -593,12 +594,13 @@ const ShoppingView = () => {
                         </button>
                     )}
                 </div>
-            </motion.div>
+            </motion.div>,
+            document.body
         );
     };
 
     // ─── MOBILE UPLOAD MODAL — bottom sheet ───────────────────────────────────
-    const MobileUploadModal = ({ onClose }) => (
+    const MobileUploadModal = ({ onClose }) => createPortal(
         <motion.div
             key="mobile-upload-overlay"
             initial={{ opacity: 0 }}
@@ -791,7 +793,8 @@ const ShoppingView = () => {
                     </form>
                 </div>
             </motion.div>
-        </motion.div>
+        </motion.div>,
+        document.body
     );
 
     return (

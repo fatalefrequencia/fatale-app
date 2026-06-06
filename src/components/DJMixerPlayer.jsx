@@ -529,15 +529,23 @@ const DJMixerPlayer = ({
         if (typeof onMixerStateChange === 'function') {
             // Enrich deckB with explicit source/youtubeId for signalr syncTrack to detect YouTube mode
             let enrichedDeckB = deckB;
-            if (deckB && isYoutubeModeB) {
+            if (deckB) {
                 const ytId = getYoutubeVideoId(deckB);
-                if (ytId) {
-                    enrichedDeckB = {
-                        ...deckB,
-                        youtubeId: ytId,
-                        source: `youtube:${ytId}`,
-                    };
+                const hasId = deckB.id || deckB.Id;
+                let finalId = hasId;
+                if (!finalId) {
+                    const str = deckB.title || deckB.Title || deckB.source || deckB.Source || 'unknown';
+                    let h = 0;
+                    for (let i = 0; i < str.length; i++) {
+                        h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+                    }
+                    finalId = 'fallback-' + Math.abs(h);
                 }
+                enrichedDeckB = {
+                    ...deckB,
+                    id: finalId,
+                    ...(ytId ? { youtubeId: ytId, source: `youtube:${ytId}` } : {})
+                };
             }
             onMixerStateChange({
                 deckB: enrichedDeckB,

@@ -34,7 +34,7 @@ import SettingsView from './components/SettingsView';
 import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
 import DJMixerPlayer from './components/DJMixerPlayer';
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
-import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack, onBroadcastSync, registerHost, unregisterHost, onListenerJoined, disconnectSignalR } from './services/signalr';
+import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack, onBroadcastSync, registerHost, unregisterHost, onListenerJoined, disconnectSignalR, onStationWentLive, onStationEnded } from './services/signalr';
 import { useBroadcastSync } from './hooks/useBroadcastSync';
 import { useWebRTCBroadcast } from './hooks/useWebRTCBroadcast';
 import { useWebRTCListener } from './hooks/useWebRTCListener';
@@ -1105,8 +1105,8 @@ function App() {
   
     return () => clearTimeout(timer);
   }, [
-    currentTrack?.id, currentTrack?.source, isPlaying, isHost, activeStation?.id,
-    showMixer, mixerCrossfader, mixerDeckB?.id, mixerDeckB?.source, mixerIsPlayingB
+    currentTrack?.id, currentTrack?.Id, currentTrack?.source, currentTrack?.title, isPlaying, isHost, activeStation?.id,
+    showMixer, mixerCrossfader, mixerDeckB?.id, mixerDeckB?.Id, mixerDeckB?.source, mixerDeckB?.title, mixerIsPlayingB
   ]);
   
   // Periodic currentTime sync throttle (every 3 seconds)
@@ -1189,6 +1189,21 @@ function App() {
       onRefreshProfile(); // Get latest DB profile including communityId
     }
   }, [currentUserId]);
+
+  useEffect(() => {
+    const unsubLive = onStationWentLive((payload) => {
+      console.log("[App] Real-time: Station went live", payload);
+      fetchLiveStations();
+    });
+    const unsubEnd = onStationEnded((payload) => {
+      console.log("[App] Real-time: Station ended", payload);
+      fetchLiveStations();
+    });
+    return () => {
+      if (typeof unsubLive === 'function') unsubLive();
+      if (typeof unsubEnd === 'function') unsubEnd();
+    };
+  }, []);
 
   // Unified Play Track handler with full deep reconciliation (artist & artistName)
   const handlePlayTrack = React.useCallback((track) => {

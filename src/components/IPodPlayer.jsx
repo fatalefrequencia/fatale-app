@@ -11,6 +11,15 @@ import {
 } from 'lucide-react';
 import skullImg from '../assets/skull_neon_fuscia.png';
 
+const getMediaUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
+    const base = import.meta.env.VITE_API_BASE_URL || 'https://api.fatale.fm/api/';
+    const host = base.replace(/\/api\/?$/, '');
+    const cleanPath = url.startsWith('/') ? url : `/${url}`;
+    return `${host}${cleanPath}`;
+};
+
 // MENU_ITEMS moved inside component for localization
 
 export const IPodPlayer = ({
@@ -317,7 +326,12 @@ useEffect(() => {
         ? tracks[currentTrackIndex]
         : (tracks[0] || libraryTracks[0] || { title: 'Loading...', artist: 'System' });
 
-    const currentTrack = parentCurrentTrack || {
+    const rawCover = activeStation
+        ? (activeStation.imageUrl || activeStation.ImageUrl || activeStation.thumbnailUrl || activeStation.ThumbnailUrl || activeStation.coverArt || activeStation.coverImageUrl || activeStation.CoverImageUrl)
+        : null;
+    const resolvedCover = rawCover ? getMediaUrl(rawCover) : null;
+
+    const baseTrack = parentCurrentTrack || {
         ...rawTrack,
         id: rawTrack.user_id || rawTrack.id || rawTrack.Id,
         title: rawTrack.title || rawTrack.Title || 'Untitled',
@@ -327,6 +341,11 @@ useEffect(() => {
         isLiked: rawTrack.isLiked !== undefined ? rawTrack.isLiked : (rawTrack.IsLiked !== undefined ? rawTrack.IsLiked : false),
         isLocked: rawTrack.isLocked !== undefined ? rawTrack.isLocked : (rawTrack.IsLocked !== undefined ? rawTrack.IsLocked : false),
         isOwned: rawTrack.isOwned !== undefined ? rawTrack.isOwned : (rawTrack.IsOwned !== undefined ? rawTrack.IsOwned : true)
+    };
+
+    const currentTrack = {
+        ...baseTrack,
+        cover: resolvedCover || baseTrack.cover
     };
 
     const isLocked = currentTrack.isLocked && !currentTrack.isOwned;
@@ -1227,14 +1246,7 @@ useEffect(() => {
         }
     };
 
-    const getMediaUrl = (url) => {
-        if (!url) return '';
-        if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
-        const base = import.meta.env.VITE_API_BASE_URL || 'https://api.fatale.fm/api/';
-        const host = base.replace(/\/api\/?$/, '');
-        const cleanPath = url.startsWith('/') ? url : `/${url}`;
-        return `${host}${cleanPath}`;
-    };
+
 
     return (
         <div className="w-full h-full flex items-center justify-center p-4">

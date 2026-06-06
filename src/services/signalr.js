@@ -20,6 +20,8 @@ const listeners = {
   onStreamAnswer:     [], // ({ sdpAnswer, listenerConnectionId, stationId }) => void  — host receives
   onIceCandidate:     [], // ({ candidateJson, fromConnectionId, stationId }) => void
   onHostDisconnected: [], // ({ stationId }) => void — listeners receive
+  onStationWentLive:  [], // ({ stationId }) => void
+  onStationEnded:     [], // ({ stationId }) => void
 };
 
 const reg = (key) => (fn) => {
@@ -37,6 +39,8 @@ export const onStreamOffer      = reg('onStreamOffer');
 export const onStreamAnswer     = reg('onStreamAnswer');
 export const onIceCandidate     = reg('onIceCandidate');
 export const onHostDisconnected = reg('onHostDisconnected');
+export const onStationWentLive  = reg('onStationWentLive');
+export const onStationEnded     = reg('onStationEnded');
 
 const fire = (key, payload) =>
   listeners[key].forEach(fn => { try { fn(payload); } catch (e) { console.warn(`[SignalR] listener error [${key}]`, e); } });
@@ -108,6 +112,16 @@ export const initSignalR = async () => {
 
   connection.on('ListenerCount', (count) => {
     fire('onListenerCount', count);
+  });
+
+  connection.on('StationWentLive', (payload) => {
+    console.log('[SignalR] StationWentLive received:', payload);
+    fire('onStationWentLive', payload);
+  });
+
+  connection.on('StationEnded', (payload) => {
+    console.log('[SignalR] StationEnded received:', payload);
+    fire('onStationEnded', payload);
   });
 
   // ── Inbound: WebRTC signaling ───────────────────────────────────────────────
