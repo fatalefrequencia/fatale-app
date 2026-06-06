@@ -1069,12 +1069,21 @@ function App() {
 
   // Helper to determine the active broadcast state (Deck A vs Deck B)
   const getActiveBroadcastState = React.useCallback(() => {
-    const isDeckBActive = showMixer && mixerCrossfader > 0 && mixerDeckB;
+    let isDeckBActive = false;
+    if (mixerDeckB) {
+      if (mixerIsPlayingB && !isPlaying) {
+        isDeckBActive = true;
+      } else if (!mixerIsPlayingB && isPlaying) {
+        isDeckBActive = false;
+      } else {
+        isDeckBActive = mixerCrossfader > 0;
+      }
+    }
     const trackToSync = isDeckBActive ? mixerDeckB : currentTrack;
     const timeToSync = isDeckBActive ? mixerCurrentTimeB : currentTime;
     const playingToSync = isDeckBActive ? mixerIsPlayingB : isPlaying;
     return { trackToSync, timeToSync, playingToSync, isDeckBActive };
-  }, [showMixer, mixerCrossfader, mixerDeckB, currentTrack, mixerCurrentTimeB, currentTime, mixerIsPlayingB, isPlaying]);
+  }, [mixerCrossfader, mixerDeckB, currentTrack, mixerCurrentTimeB, currentTime, mixerIsPlayingB, isPlaying]);
 
   // --- HOST BROADCASTING LOGIC ---
   useEffect(() => {
@@ -3738,8 +3747,8 @@ const Dashboard = React.memo(({
       {/* MINI PLAYER (Todas las vistas excepto Player, y solo si hay track o station) */}
       <AnimatePresence>
         {activeView !== 'player' && (currentTrackIndex >= 0 || activeStation) && (
-          // Hide mini player on mobile if viewing profile to avoid crowding
-          !(window.innerWidth < 1024 && activeView === 'profile') && (
+          // Hide mini player on mobile if viewing profile or shopping to avoid crowding/overlap
+          !(window.innerWidth < 1024 && (activeView === 'profile' || activeView === 'shopping')) && (
             <MiniPlayer
               key={isMiniPlayerMinimized ? 'minimized' : 'expanded'}
               track={currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null}

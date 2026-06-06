@@ -138,7 +138,16 @@ const ShoppingView = () => {
     const [mediaType, setMediaType] = useState('PHOTO');
     const [isUploading, setIsUploading] = useState(false);
 
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const getUserSafely = () => {
+        try {
+            const saved = localStorage.getItem('user');
+            if (saved && saved !== 'undefined') return JSON.parse(saved);
+        } catch (e) {
+            console.error("Failed to parse user in ShoppingView", e);
+        }
+        return {};
+    };
+    const user = getUserSafely();
     const currentUserId = user.id || user.Id;
     const isLoggedIn = !!currentUserId;
 
