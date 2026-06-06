@@ -18,12 +18,12 @@ const hashStr = (s) => {
     return Math.abs(h);
 };
 
-const LAST_DEPLOY_FALLBACK = '2026-05-22 @ 12:30 UTC';
+const LAST_DEPLOY_FALLBACK = '2026-06-06 @ 10:00 UTC';
 
 const getFunMessages = () => [
     
     "NETWORK_INTEGRITY: STABLE",
-    "SIGNAL_CAPACITY: OPTIMAL",
+ 
     
     "FATALE NETWORK ONLINE.",
     "xx.",
