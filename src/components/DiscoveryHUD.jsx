@@ -114,22 +114,44 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
     const { t } = useLanguage();
     const { showNotification } = useNotification();
     const [searchQuery, setSearchQuery] = useState('');
-    const [conversations, setConversations] = useState([]);
+    const [liveStations, setLiveStations] = useState([]);
+    const [followingIds, setFollowingIds] = useState([]);
     const [activeSector, setActiveSector] = useState(null);
 
     useEffect(() => {
-        const fetchConversations = async () => {
+        const fetchLiveAndFollowing = async () => {
             try {
-                const res = await API.Messages.getConversations();
-                setConversations(res.data || []);
+                // 1. Fetch all live stations
+                const stationsRes = await API.Stations.getAll();
+                let stations = (stationsRes.data || []).filter(s => s.isLive || s.IsLive);
+                
+                // 2. Fetch following users to sort them at the top
+                const userId = user?.id || user?.Id;
+                let fIds = [];
+                if (userId) {
+                    const followingRes = await API.Users.getFollowing(userId).catch(() => ({ data: [] }));
+                    fIds = (followingRes.data || []).map(f => String(f.id || f.Id));
+                    setFollowingIds(fIds);
+                }
+                
+                // Sort stations: followed users at the top
+                stations.sort((a, b) => {
+                    const aFollowed = fIds.includes(String(a.artistUserId || a.ArtistUserId));
+                    const bFollowed = fIds.includes(String(b.artistUserId || b.ArtistUserId));
+                    if (aFollowed && !bFollowed) return -1;
+                    if (!aFollowed && bFollowed) return 1;
+                    return 0;
+                });
+                
+                setLiveStations(stations);
             } catch (err) {
-                console.error("Failed to fetch conversations in DiscoveryHUD:", err);
+                console.error("Failed to fetch live stations in DiscoveryHUD:", err);
             }
         };
-        fetchConversations();
-        const interval = setInterval(fetchConversations, 5000); // Fetch conversations periodically
+        fetchLiveAndFollowing();
+        const interval = setInterval(fetchLiveAndFollowing, 5000); // Poll every 5s for live status updates
         return () => clearInterval(interval);
-    }, []);
+    }, [user]);
     const [isFounding, setIsFounding] = useState(false);
     const [newClanName, setNewClanName] = useState('');
     const [newClanDesc, setNewClanDesc] = useState('');
@@ -1530,39 +1552,45 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             </HUDWidget>
                         </div>
 
-                        {/* --- BOTTOM CENTER: MESSAGES --- */}
+                        {/* --- BOTTOM CENTER: LIVE STATIONS --- */}
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-4 lg:row-start-5 pointer-events-auto">
-                            <HUDWidget title={t('MSG_SYNC')} icon={<MessageSquare size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
-                                <div className="space-y-4">
-                                    {conversations.length > 0 ? conversations.map(c => (
-                                        <div key={c.conversationId || c.id} className="group cursor-pointer border-b border-white/5 pb-2 flex items-center gap-3" onClick={() => {
-                                            navigateToProfile(c.userId || c.UserId, 'messages');
-                                        }}>
-                                            <div className="w-6 h-6 bg-black border border-white/10 rounded-full overflow-hidden shrink-0">
-                                                <img src={getMediaUrl(c.profileImageUrl || c.ProfileImageUrl || c.profilePictureUrl || c.ProfilePictureUrl || c.imageUrl || c.ImageUrl)} className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://via.placeholder.com/100?text=USER'; }} alt="" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center justify-between mb-0.5">
-                                                    <div className="text-[10px] font-black group-hover:text-[#ff006e] transition-colors uppercase tracking-tight truncate flex-1">{c.username || c.Username}</div>
-                                                    {c.unreadCount > 0 && (
-                                                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse" />
-                                                            <span className="text-[7px] font-black text-[#ff006e]">{c.unreadCount} NEW</span>
-                                                        </div>
+                            <HUDWidget title="LIVE STATIONS" icon={<Radio size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                                <div className="space-y-4 max-h-[160px] overflow-y-auto custom-scrollbar-sharp pr-1">
+                                    {liveStations.length > 0 ? liveStations.map(c => {
+                                        const isFollowed = user && followingIds.includes(String(c.artistUserId || c.ArtistUserId));
+                                        return (
+                                            <div key={c.id || c.stationId} className="group cursor-pointer border-b border-white/5 pb-2 flex items-center gap-3" onClick={() => {
+                                                if (onPlayStation) onPlayStation(c);
+                                            }}>
+                                                <div className="w-6 h-6 bg-black border border-[#ff006e]/30 rounded-full overflow-hidden shrink-0 relative flex items-center justify-center">
+                                                    {c.imageUrl || c.ImageUrl ? (
+                                                        <img src={getMediaUrl(c.imageUrl || c.ImageUrl)} className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://via.placeholder.com/100?text=DJ'; }} alt="" />
+                                                    ) : (
+                                                        <Radio size={12} className="text-[#ff006e]" />
                                                     )}
+                                                    <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-black animate-pulse" />
                                                 </div>
-                                                <div className="text-[8px] opacity-30 truncate uppercase tracking-widest">
-                                                    {c.unreadCount > 0 
-                                                        ? `${c.unreadCount} UNREAD MESSAGE${c.unreadCount > 1 ? 'S' : ''}` 
-                                                        : (c.lastMessage || 'No messages yet')
-                                                    }
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between mb-0.5">
+                                                        <div className="text-[10px] font-black group-hover:text-[#ff006e] transition-colors uppercase tracking-tight truncate flex-1">
+                                                            {c.artistName || c.ArtistName || c.username || c.Username || 'LIVE DJ'}
+                                                        </div>
+                                                        {isFollowed && (
+                                                            <span className="text-[6px] font-black text-[#ff006e] border border-[#ff006e]/30 px-1.5 py-[1px] uppercase tracking-widest shrink-0 ml-2 animate-pulse">
+                                                                FOLLOWING
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-[8px] opacity-30 truncate uppercase tracking-widest">
+                                                        {c.sessionTitle || c.SessionTitle || 'LIVE SIGNAL'}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    )) : (
+                                        );
+                                    }) : (
                                         <div className="flex flex-col items-center justify-center py-6 opacity-20">
-                                            <MessageSquare size={16} className="mb-2" />
-                                            <div className="text-[8px] tracking-widest uppercase text-center px-4">{t('EMPTY') || 'NO_NEW_MESSAGES'}</div>
+                                            <Radio size={16} className="mb-2 animate-pulse" />
+                                            <div className="text-[8px] tracking-widest uppercase text-center px-4">NO_LIVE_TRANSMISSIONS</div>
                                         </div>
                                     )}
                                 </div>
