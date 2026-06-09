@@ -81,19 +81,29 @@ export const NotificationProvider = ({ children }) => {
                             animation: neon-line-buzz 0.15s infinite alternate;
                         }
 
+                        .mobile-vignette {
+                            display: none;
+                        }
+
                         @media (max-width: 768px) {
                             .neon-flash-wrapper {
-                                border-radius: 40px !important;
-                                margin: 4px;
-                                height: calc(100dvh - 8px) !important;
-                                width: calc(100vw - 8px) !important;
+                                border-radius: 0px !important;
+                                margin: 0px !important;
+                                height: 100dvh !important;
+                                width: 100vw !important;
                             }
-                            .neon-flash-wrapper .outer-border {
-                                border-radius: 36px !important;
-                            }
+                            .neon-flash-wrapper .outer-border,
                             .neon-flash-wrapper .inner-border {
-                                border-radius: 32px !important;
-                                inset: 4px !important;
+                                display: none !important;
+                            }
+                            .mobile-vignette {
+                                display: block;
+                                position: absolute;
+                                inset: 0;
+                                box-shadow: 
+                                    inset 0 0 30px rgba(255, 0, 110, 0.85),
+                                    inset 0 0 60px rgba(255, 0, 110, 0.35);
+                                pointer-events: none;
                             }
                         }
                     ` }} />
@@ -103,11 +113,14 @@ export const NotificationProvider = ({ children }) => {
                             animation: 'neon-single-pulse 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards'
                         }}
                     >
-                        {/* Outer thin border */}
+                        {/* Outer thin border (Desktop) */}
                         <div className="absolute inset-0 border-[1.5px] border-[#ff006e] neon-outer outer-border" />
                         
-                        {/* Inner thin border, extremely close to outer */}
+                        {/* Inner thin border, extremely close to outer (Desktop) */}
                         <div className="absolute inset-[4px] border border-[#ff006e] neon-inner inner-border" />
+
+                        {/* Mobile Soft Glow Vignette */}
+                        <div className="mobile-vignette" />
                     </div>
                 </>
             )}
