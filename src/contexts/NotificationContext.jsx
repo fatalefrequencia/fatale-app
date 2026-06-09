@@ -12,6 +12,7 @@ export const useNotification = () => {
 
 export const NotificationProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
+    const [isFlashing, setIsFlashing] = useState(false);
     const activeTimeoutRef = useRef(null);
 
     const showNotification = useCallback((title, message, type = 'info', duration = 5000) => {
@@ -22,6 +23,14 @@ export const NotificationProvider = ({ children }) => {
         }
 
         setNotifications([{ id, title, message, type }]);
+
+        // Hook up the visual flash effect if enabled in local storage
+        if (localStorage.getItem('fatale_visual_flash') !== 'false') {
+            setIsFlashing(true);
+            setTimeout(() => {
+                setIsFlashing(false);
+            }, 1000); // Duration matches the animation length (2 * 0.5s)
+        }
 
         if (duration !== Infinity) {
             activeTimeoutRef.current = setTimeout(() => {
@@ -41,6 +50,25 @@ export const NotificationProvider = ({ children }) => {
     return (
         <NotificationContext.Provider value={{ showNotification, removeNotification }}>
             {children}
+            
+            {/* Visual Flash Overlay */}
+            {isFlashing && (
+                <>
+                    <style dangerouslySetInnerHTML={{ __html: `
+                        @keyframes neon-border-flash {
+                            0%, 100% { opacity: 0; }
+                            50% { opacity: 1; }
+                        }
+                    ` }} />
+                    <div 
+                        className="fixed inset-0 pointer-events-none z-[99999] border-[6px] border-[#ff006e] shadow-[inset_0_0_30px_#ff006e,0_0_30px_#ff006e]"
+                        style={{
+                            animation: 'neon-border-flash 0.5s ease-in-out 2'
+                        }}
+                    />
+                </>
+            )}
+
             <div className="fixed top-[calc(env(safe-area-inset-top,0px)+80px)] md:top-6 right-4 left-4 md:left-auto md:right-6 z-[9999] flex flex-col items-center md:items-end pointer-events-none w-[calc(100%-2rem)] md:w-full md:max-w-sm">
                 <AnimatePresence mode="wait">
                     {notifications.map(n => (

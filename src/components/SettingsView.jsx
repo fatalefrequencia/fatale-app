@@ -46,7 +46,6 @@ const SettingsView = ({ user, setUser }) => {
     // --- Notification States ---
     const [soundAlerts, setSoundAlerts] = React.useState(() => localStorage.getItem('fatale_sound_alerts') !== 'false');
     const [visualFlash, setVisualFlash] = React.useState(() => localStorage.getItem('fatale_visual_flash') !== 'false');
-    const [systemFeed, setSystemFeed] = React.useState(() => localStorage.getItem('fatale_system_feed') !== 'false');
     const [tipAlerts, setTipAlerts] = React.useState(() => localStorage.getItem('fatale_tip_alerts') !== 'false');
     const [notificationDuration, setNotificationDuration] = React.useState(() => parseInt(localStorage.getItem('fatale_notification_duration') || '5', 10));
 
@@ -70,9 +69,6 @@ const SettingsView = ({ user, setUser }) => {
     React.useEffect(() => {
         localStorage.setItem('fatale_visual_flash', String(visualFlash));
     }, [visualFlash]);
-    React.useEffect(() => {
-        localStorage.setItem('fatale_system_feed', String(systemFeed));
-    }, [systemFeed]);
     React.useEffect(() => {
         localStorage.setItem('fatale_tip_alerts', String(tipAlerts));
     }, [tipAlerts]);
@@ -297,7 +293,11 @@ const SettingsView = ({ user, setUser }) => {
                 {/* Navigation Sidebar */}
                 <div className="space-y-2 col-span-1">
                     <button 
-                        onClick={() => setActiveSection('language')}
+                        type="button"
+                        onClick={() => {
+                            console.log("[SettingsView] Changing active section to: language");
+                            setActiveSection('language');
+                        }}
                         className={`w-full flex items-center justify-between p-4 transition-all group border ${
                             activeSection === 'language' 
                             ? 'bg-[#ff006e]/10 border-[#ff006e]/40 text-white' 
@@ -311,7 +311,11 @@ const SettingsView = ({ user, setUser }) => {
                         <ChevronRight size={14} className={activeSection === 'language' ? "opacity-100 text-[#ff006e]" : "opacity-20"} />
                     </button>
                     <button 
-                        onClick={() => setActiveSection('identity')}
+                        type="button"
+                        onClick={() => {
+                            console.log("[SettingsView] Changing active section to: identity");
+                            setActiveSection('identity');
+                        }}
                         className={`w-full flex items-center justify-between p-4 transition-all group border ${
                             activeSection === 'identity' 
                             ? 'bg-[#ff006e]/10 border-[#ff006e]/40 text-white' 
@@ -325,7 +329,11 @@ const SettingsView = ({ user, setUser }) => {
                         <ChevronRight size={14} className={activeSection === 'identity' ? "opacity-100 text-[#ff006e]" : "opacity-20"} />
                     </button>
                     <button 
-                        onClick={() => setActiveSection('security')}
+                        type="button"
+                        onClick={() => {
+                            console.log("[SettingsView] Changing active section to: security");
+                            setActiveSection('security');
+                        }}
                         className={`w-full flex items-center justify-between p-4 transition-all group border ${
                             activeSection === 'security' 
                             ? 'bg-[#ff006e]/10 border-[#ff006e]/40 text-white' 
@@ -339,7 +347,11 @@ const SettingsView = ({ user, setUser }) => {
                         <ChevronRight size={14} className={activeSection === 'security' ? "opacity-100 text-[#ff006e]" : "opacity-20"} />
                     </button>
                     <button 
-                        onClick={() => setActiveSection('notifications')}
+                        type="button"
+                        onClick={() => {
+                            console.log("[SettingsView] Changing active section to: notifications");
+                            setActiveSection('notifications');
+                        }}
                         className={`w-full flex items-center justify-between p-4 transition-all group border ${
                             activeSection === 'notifications' 
                             ? 'bg-[#ff006e]/10 border-[#ff006e]/40 text-white' 
@@ -835,30 +847,6 @@ const SettingsView = ({ user, setUser }) => {
                                             </button>
                                         </div>
 
-                                        {/* Toggle 3: System Feed */}
-                                        <div className="flex items-center justify-between p-4 border border-white/5 bg-white/[0.01]">
-                                            <div className="space-y-1 flex items-start gap-3">
-                                                <Laptop size={16} className="text-[#ff006e] mt-0.5" />
-                                                <div>
-                                                    <span className="text-[9px] font-black uppercase tracking-wider text-white">System Feed Overlays</span>
-                                                    <p className="text-[7px] font-mono text-white/30 uppercase tracking-widest">Display background event feeds on dashboard</p>
-                                                </div>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setSystemFeed(!systemFeed);
-                                                    showNotification("SYS_FEED_UPDATE", `Background Feed updates ${!systemFeed ? "ACTIVE" : "STANDBY"}`, "info");
-                                                }}
-                                                className={`w-10 h-5 border transition-all flex items-center p-0.5 ${
-                                                    systemFeed ? 'border-[#ff006e] bg-[#ff006e]/20' : 'border-white/10 bg-transparent'
-                                                }`}
-                                            >
-                                                <div className={`w-3.5 h-3.5 transition-all ${
-                                                    systemFeed ? 'translate-x-5 bg-[#ff006e]' : 'translate-x-0 bg-white/40'
-                                                }`} />
-                                            </button>
-                                        </div>
 
                                         {/* Toggle 4: Tip Alerts */}
                                         <div className="flex items-center justify-between p-4 border border-white/5 bg-white/[0.01]">
