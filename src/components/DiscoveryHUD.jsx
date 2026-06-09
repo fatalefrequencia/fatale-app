@@ -1554,7 +1554,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                         {/* --- BOTTOM CENTER: LIVE STATIONS --- */}
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-4 lg:row-start-5 pointer-events-auto">
-                            <HUDWidget title="LIVE STATIONS" icon={<Radio size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title="LIVE!" icon={<Radio size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="space-y-4 max-h-[160px] overflow-y-auto custom-scrollbar-sharp pr-1">
                                     {liveStations.length > 0 ? liveStations.map(c => {
                                         const isFollowed = user && followingIds.includes(String(c.artistUserId || c.ArtistUserId));
