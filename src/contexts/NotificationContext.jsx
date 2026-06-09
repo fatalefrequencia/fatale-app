@@ -87,9 +87,10 @@ export const NotificationProvider = ({ children }) => {
 
                         @media (max-width: 768px) {
                             .neon-flash-wrapper {
-                                border-radius: 0px !important;
+                                border-radius: 44px !important;
                                 margin: 0px !important;
-                                height: 100dvh !important;
+                                inset: 0px !important;
+                                height: 100vh !important;
                                 width: 100vw !important;
                             }
                             .neon-flash-wrapper .outer-border,
@@ -100,6 +101,7 @@ export const NotificationProvider = ({ children }) => {
                                 display: block;
                                 position: absolute;
                                 inset: 0;
+                                border-radius: 44px !important;
                                 box-shadow: 
                                     inset 0 0 12px rgba(255, 0, 110, 0.9),
                                     inset 0 0 24px rgba(255, 0, 110, 0.4);
@@ -108,7 +110,7 @@ export const NotificationProvider = ({ children }) => {
                         }
                     ` }} />
                     <div 
-                        className="fixed inset-0 pointer-events-none z-[99999] neon-flash-wrapper h-[100dvh] w-screen"
+                        className="fixed inset-0 pointer-events-none z-[99999] neon-flash-wrapper h-[100vh] w-screen"
                         style={{
                             animation: 'neon-single-pulse 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards'
                         }}
