@@ -29,7 +29,7 @@ export const NotificationProvider = ({ children }) => {
             setIsFlashing(true);
             setTimeout(() => {
                 setIsFlashing(false);
-            }, 1000); // Duration matches the animation length (2 * 0.5s)
+            }, 1800); // Matches the new 1.8s triple pulse animation duration
         }
 
         if (duration !== Infinity) {
@@ -55,11 +55,9 @@ export const NotificationProvider = ({ children }) => {
             {isFlashing && (
                 <>
                     <style dangerouslySetInnerHTML={{ __html: `
-                        @keyframes neon-double-pulse {
-                            0% { opacity: 0; filter: drop-shadow(0 0 0px #ff006e); }
-                            15% { opacity: 1; filter: drop-shadow(0 0 10px #ff006e); }
-                            85% { opacity: 1; filter: drop-shadow(0 0 10px #ff006e); }
-                            100% { opacity: 0; filter: drop-shadow(0 0 0px #ff006e); }
+                        @keyframes neon-triple-pulse {
+                            0%, 30%, 60%, 100% { opacity: 0; filter: drop-shadow(0 0 0px #ff006e); }
+                            15%, 45%, 75% { opacity: 1; filter: drop-shadow(0 0 12px #ff006e); }
                         }
 
                         @keyframes neon-line-buzz {
@@ -72,12 +70,14 @@ export const NotificationProvider = ({ children }) => {
                                 0 0 6px #ff006e, 
                                 0 0 12px #ff006e,
                                 inset 0 0 4px #ff006e;
+                            border-radius: 0px; /* Sharp corners on desktop */
                         }
 
                         .neon-inner {
                             box-shadow: 
                                 0 0 3px #ff006e, 
                                 inset 0 0 2px #ff006e;
+                            border-radius: 0px; /* Sharp corners on desktop */
                             animation: neon-line-buzz 0.15s infinite alternate;
                         }
 
@@ -100,14 +100,14 @@ export const NotificationProvider = ({ children }) => {
                     <div 
                         className="fixed inset-0 pointer-events-none z-[99999] neon-flash-wrapper h-[100dvh] w-screen"
                         style={{
-                            animation: 'neon-double-pulse 1s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+                            animation: 'neon-triple-pulse 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards'
                         }}
                     >
                         {/* Outer thin border */}
-                        <div className="absolute inset-0 border-[1.5px] border-[#ff006e] neon-outer outer-border rounded-[44px]" />
+                        <div className="absolute inset-0 border-[1.5px] border-[#ff006e] neon-outer outer-border" />
                         
                         {/* Inner thin border, extremely close to outer */}
-                        <div className="absolute inset-[4px] border border-[#ff006e] neon-inner inner-border rounded-[40px]" />
+                        <div className="absolute inset-[4px] border border-[#ff006e] neon-inner inner-border" />
                     </div>
                 </>
             )}
