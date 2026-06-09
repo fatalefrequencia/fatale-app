@@ -87,29 +87,7 @@ export const NotificationProvider = ({ children }) => {
 
                         @media (max-width: 768px) {
                             .neon-flash-wrapper {
-                                border-radius: 44px !important;
-                                margin: 0px !important;
-                                position: fixed !important;
-                                top: 0px !important;
-                                bottom: 0px !important;
-                                left: 0px !important;
-                                right: 0px !important;
-                                height: auto !important;
-                                width: auto !important;
-                            }
-                            .neon-flash-wrapper .outer-border,
-                            .neon-flash-wrapper .inner-border {
                                 display: none !important;
-                            }
-                            .mobile-vignette {
-                                display: block;
-                                position: absolute;
-                                inset: 0;
-                                background: radial-gradient(circle, rgba(255, 0, 110, 0.2) 0%, rgba(255, 0, 110, 0) 80%);
-                                background-color: rgba(255, 0, 110, 0.05);
-                                backdrop-filter: saturate(1.3) brightness(1.08);
-                                -webkit-backdrop-filter: saturate(1.3) brightness(1.08);
-                                pointer-events: none;
                             }
                         }
                     ` }} />

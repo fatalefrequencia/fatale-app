@@ -5895,14 +5895,14 @@ const SidebarLink = React.memo(({ icon, label, active, onClick, collapsed, hasNo
 
     <div className={`relative transition-all duration-300 ${active ? 'scale-110 text-[var(--theme-color)]' : 'opacity-60 group-hover:opacity-100 group-hover:scale-110'}`}>
       {icon}
+      {hasNotification && !active && (
+        <div className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-[#ff006e] rounded-full shadow-[0_0_8px_#ff006e] animate-pulse" />
+      )}
     </div>
     {!collapsed && (
       <span className={`relative mono text-[10px] font-black uppercase tracking-[0.2em] transition-opacity duration-300 ${active ? 'opacity-100' : 'opacity-40 group-hover:opacity-80'}`}>
         {label}
       </span>
-    )}
-    {hasNotification && !active && (
-      <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-[var(--theme-color)] rounded-full shadow-[0_0_8px_var(--theme-color)] animate-pulse" />
     )}
   </button>
 ));
