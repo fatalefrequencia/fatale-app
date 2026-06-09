@@ -55,36 +55,60 @@ export const NotificationProvider = ({ children }) => {
             {isFlashing && (
                 <>
                     <style dangerouslySetInnerHTML={{ __html: `
-                        @keyframes neon-border-flash {
+                        @keyframes neon-double-pulse {
                             0% { opacity: 0; filter: drop-shadow(0 0 0px #ff006e); }
-                            50% { opacity: 1; filter: drop-shadow(0 0 15px #ff006e); }
+                            15% { opacity: 1; filter: drop-shadow(0 0 10px #ff006e); }
+                            85% { opacity: 1; filter: drop-shadow(0 0 10px #ff006e); }
                             100% { opacity: 0; filter: drop-shadow(0 0 0px #ff006e); }
                         }
+
+                        @keyframes neon-line-buzz {
+                            0%, 100% { opacity: 0.75; filter: brightness(1); }
+                            50% { opacity: 1; filter: brightness(1.25); }
+                        }
                         
-                        .neon-flash-border {
+                        .neon-outer {
                             box-shadow: 
-                                0 0 10px #ff006e, 
-                                0 0 25px #ff006e, 
-                                0 0 50px #ff006e,
-                                inset 0 0 15px #ff006e,
-                                inset 0 0 30px #ff006e;
+                                0 0 6px #ff006e, 
+                                0 0 12px #ff006e,
+                                inset 0 0 4px #ff006e;
+                        }
+
+                        .neon-inner {
+                            box-shadow: 
+                                0 0 3px #ff006e, 
+                                inset 0 0 2px #ff006e;
+                            animation: neon-line-buzz 0.15s infinite alternate;
                         }
 
                         @media (max-width: 768px) {
-                            .neon-flash-border {
+                            .neon-flash-wrapper {
                                 border-radius: 40px !important;
                                 margin: 4px;
                                 height: calc(100dvh - 8px) !important;
                                 width: calc(100vw - 8px) !important;
                             }
+                            .neon-flash-wrapper .outer-border {
+                                border-radius: 36px !important;
+                            }
+                            .neon-flash-wrapper .inner-border {
+                                border-radius: 32px !important;
+                                inset: 4px !important;
+                            }
                         }
                     ` }} />
                     <div 
-                        className="fixed inset-0 pointer-events-none z-[99999] border-[5px] border-[#ff006e] neon-flash-border h-[100dvh] w-screen"
+                        className="fixed inset-0 pointer-events-none z-[99999] neon-flash-wrapper h-[100dvh] w-screen"
                         style={{
-                            animation: 'neon-border-flash 0.5s ease-in-out 2'
+                            animation: 'neon-double-pulse 1s cubic-bezier(0.16, 1, 0.3, 1) forwards'
                         }}
-                    />
+                    >
+                        {/* Outer thin border */}
+                        <div className="absolute inset-0 border-[1.5px] border-[#ff006e] neon-outer outer-border rounded-[44px]" />
+                        
+                        {/* Inner thin border, extremely close to outer */}
+                        <div className="absolute inset-[4px] border border-[#ff006e] neon-inner inner-border rounded-[40px]" />
+                    </div>
                 </>
             )}
 
