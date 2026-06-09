@@ -29,7 +29,7 @@ export const NotificationProvider = ({ children }) => {
             setIsFlashing(true);
             setTimeout(() => {
                 setIsFlashing(false);
-            }, 1200); // Matches the new 1.2s single glow animation duration
+            }, 700); // Matches the new 0.7s double pulse animation duration
         }
 
         if (duration !== Infinity) {
@@ -55,8 +55,8 @@ export const NotificationProvider = ({ children }) => {
             {isFlashing && (
                 <>
                     <style dangerouslySetInnerHTML={{ __html: `
-                        @keyframes neon-single-glow {
-                            0%, 100% { opacity: 0; filter: drop-shadow(0 0 0px #ff006e); }
+                        @keyframes neon-double-pulse {
+                            0%, 50%, 100% { opacity: 0; filter: drop-shadow(0 0 0px #ff006e); }
                             25%, 75% { opacity: 1; filter: drop-shadow(0 0 12px #ff006e); }
                         }
 
@@ -100,7 +100,7 @@ export const NotificationProvider = ({ children }) => {
                     <div 
                         className="fixed inset-0 pointer-events-none z-[99999] neon-flash-wrapper h-[100dvh] w-screen"
                         style={{
-                            animation: 'neon-single-glow 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards'
+                            animation: 'neon-double-pulse 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards'
                         }}
                     >
                         {/* Outer thin border */}
