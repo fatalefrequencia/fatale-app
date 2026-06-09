@@ -522,9 +522,45 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
     const artistsForGlobe = useMemo(() => {
         return trendingArtists.filter(a => {
             const name = (a.name || a.Name || "").toLowerCase();
-            return name !== 'the archive' && name !== 'youtube' && !a.isArchive;
+            const isArchive = a.isArchive || a.IsArchive;
+            if (name === 'the archive' || name === 'youtube' || isArchive) return false;
+
+            const artistIdStr = String(a.id || a.Id);
+            const artistUIDStr = String(a.userId || a.UserId);
+
+            // Check if they have tracks
+            const hasTracks = trendingTracks.some(t => {
+                const trkArtistId = String(t.artistId || t.ArtistId || "");
+                const trkArtistUID = String(t.artistUserId || t.ArtistUserId || "");
+                return trkArtistId === artistIdStr || trkArtistUID === artistUIDStr;
+            });
+            if (hasTracks) return true;
+
+            // Check if they have playlists
+            const hasPlaylists = trendingPlaylists.some(p => {
+                const plArtistId = String(p.artistId || p.ArtistId || "");
+                const plUID = String(p.userId || p.UserId || "");
+                return plArtistId === artistIdStr || plUID === artistUIDStr;
+            });
+            if (hasPlaylists) return true;
+
+            // Check if they have visual uploads
+            const hasVisuals = visualUploads.some(v => {
+                const visUID = String(v.artistUserId || v.ArtistUserId || v.userId || v.UserId || "");
+                return visUID === artistUIDStr;
+            });
+            if (hasVisuals) return true;
+
+            // Check if they have journal entries
+            const hasJournals = journalEntries.some(j => {
+                const jUID = String(j.userId || j.UserId || j.artistUserId || j.ArtistUserId || "");
+                return jUID === artistUIDStr;
+            });
+            if (hasJournals) return true;
+
+            return false;
         });
-    }, [trendingArtists]);
+    }, [trendingArtists, trendingTracks, trendingPlaylists, visualUploads, journalEntries]);
 
     // Enrich playlists with a resolved artistId so the globe can draw connections
     // reliably — same multi-profile-aware logic used for tracks.
