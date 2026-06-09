@@ -101,8 +101,8 @@ export const NotificationProvider = ({ children }) => {
                                 position: absolute;
                                 inset: 0;
                                 box-shadow: 
-                                    inset 0 0 30px rgba(255, 0, 110, 0.85),
-                                    inset 0 0 60px rgba(255, 0, 110, 0.35);
+                                    inset 0 0 12px rgba(255, 0, 110, 0.9),
+                                    inset 0 0 24px rgba(255, 0, 110, 0.4);
                                 pointer-events: none;
                             }
                         }
