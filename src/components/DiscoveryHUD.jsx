@@ -127,6 +127,8 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
             }
         };
         fetchConversations();
+        const interval = setInterval(fetchConversations, 5000); // Fetch conversations periodically
+        return () => clearInterval(interval);
     }, []);
     const [isFounding, setIsFounding] = useState(false);
     const [newClanName, setNewClanName] = useState('');
@@ -1549,7 +1551,12 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                         </div>
                                                     )}
                                                 </div>
-                                                <div className="text-[8px] opacity-30 truncate uppercase tracking-widest">{c.lastMessage || 'No messages yet'}</div>
+                                                <div className="text-[8px] opacity-30 truncate uppercase tracking-widest">
+                                                    {c.unreadCount > 0 
+                                                        ? `${c.unreadCount} UNREAD MESSAGE${c.unreadCount > 1 ? 'S' : ''}` 
+                                                        : (c.lastMessage || 'No messages yet')
+                                                    }
+                                                </div>
                                             </div>
                                         </div>
                                     )) : (
