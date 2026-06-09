@@ -56,12 +56,31 @@ export const NotificationProvider = ({ children }) => {
                 <>
                     <style dangerouslySetInnerHTML={{ __html: `
                         @keyframes neon-border-flash {
-                            0%, 100% { opacity: 0; }
-                            50% { opacity: 1; }
+                            0% { opacity: 0; filter: drop-shadow(0 0 0px #ff006e); }
+                            50% { opacity: 1; filter: drop-shadow(0 0 15px #ff006e); }
+                            100% { opacity: 0; filter: drop-shadow(0 0 0px #ff006e); }
+                        }
+                        
+                        .neon-flash-border {
+                            box-shadow: 
+                                0 0 10px #ff006e, 
+                                0 0 25px #ff006e, 
+                                0 0 50px #ff006e,
+                                inset 0 0 15px #ff006e,
+                                inset 0 0 30px #ff006e;
+                        }
+
+                        @media (max-width: 768px) {
+                            .neon-flash-border {
+                                border-radius: 40px !important;
+                                margin: 4px;
+                                height: calc(100dvh - 8px) !important;
+                                width: calc(100vw - 8px) !important;
+                            }
                         }
                     ` }} />
                     <div 
-                        className="fixed inset-0 pointer-events-none z-[99999] border-[6px] border-[#ff006e] shadow-[inset_0_0_30px_#ff006e,0_0_30px_#ff006e]"
+                        className="fixed inset-0 pointer-events-none z-[99999] border-[5px] border-[#ff006e] neon-flash-border h-[100dvh] w-screen"
                         style={{
                             animation: 'neon-border-flash 0.5s ease-in-out 2'
                         }}
