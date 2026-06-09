@@ -4964,7 +4964,7 @@ const FeedContent = React.memo(({
                                 {type === 'track' && `Uploaded track "${title}"`}
                                 {type === 'album' && <>Released album <span className="text-[#00f0ff] font-black">{title}</span></>}
                                 {type === 'studio' && (content || title)}
-                                {type === 'journal' && (content || title)}
+                                {type === 'journal' && (title ? `Logged entry: "${title}"` : 'Logged a new entry')}
                               </div>
                           </div>
                         </div>
@@ -5105,20 +5105,27 @@ const FeedContent = React.memo(({
                           )}
 
                           {type === 'journal' && (
-                            <div className="border-l-2 border-[#9b5de5]/50 pl-4 py-1 italic text-white/90 text-[11px] leading-relaxed max-w-xl bg-white/5 rounded-r">
-                              {content && content.length > 280 ? (
-                                <>
-                                  {content.substring(0, 280)}...
-                                  <button
-                                    onClick={() => handleMediaExpand({ ...item, type: 'JOURNAL' })}
-                                    className="ml-2 text-[#9b5de5] hover:text-white font-black uppercase text-[9px] tracking-widest transition-colors not-italic"
-                                  >
-                                    [ READ_SIGNAL ]
-                                  </button>
-                                </>
-                              ) : (
-                                content
+                            <div className="border-l-2 border-[#9b5de5]/50 pl-4 py-2.5 text-white/95 text-[11px] leading-relaxed max-w-xl bg-white/[0.02] hover:bg-white/[0.04] transition-all rounded-r">
+                              {title && (
+                                <div className="text-[9px] font-black uppercase tracking-[0.15em] text-[#9b5de5] font-mono mb-2">
+                                  {`// LOG_ENTRY: ${title}`}
+                                </div>
                               )}
+                              <div className="italic text-white/80">
+                                {content && content.length > 280 ? (
+                                  <>
+                                    {content.substring(0, 280)}...
+                                    <button
+                                      onClick={() => handleMediaExpand({ ...item, type: 'JOURNAL' })}
+                                      className="ml-2 text-[#9b5de5] hover:text-white font-black uppercase text-[9px] tracking-widest transition-colors not-italic font-mono"
+                                    >
+                                      [ READ_SIGNAL ]
+                                    </button>
+                                  </>
+                                ) : (
+                                  content
+                                )}
+                              </div>
                             </div>
                           )}
 

@@ -23,7 +23,7 @@ const LAST_DEPLOY_FALLBACK = '2026-06-06 @ 10:00 UTC';
 const getFunMessages = () => [
     
     "NETWORK_INTEGRITY: STABLE",
- 
+    "SIGNAL_CAPACITY: OPTIMAL",
     
     "FATALE NETWORK ONLINE.",
     "xx.",
