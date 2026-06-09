@@ -5107,11 +5107,11 @@ const FeedContent = React.memo(({
                           {type === 'journal' && (
                             <div className="border-l-2 border-[#9b5de5]/50 pl-4 py-2.5 text-white/95 text-[11px] leading-relaxed max-w-xl bg-white/[0.02] hover:bg-white/[0.04] transition-all rounded-r">
                               {title && (
-                                <div className="text-[9px] font-black uppercase tracking-[0.15em] text-[#9b5de5] font-mono mb-2">
+                                <div className="text-[9px] font-black uppercase tracking-[0.15em] text-[#9b5de5] font-mono mb-2 italic">
                                   {`// LOG_ENTRY: ${title}`}
                                 </div>
                               )}
-                              <div className="italic text-white/80">
+                              <div className="text-white/90">
                                 {content && content.length > 280 ? (
                                   <>
                                     {content.substring(0, 280)}...
