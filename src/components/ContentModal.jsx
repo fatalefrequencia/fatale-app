@@ -149,7 +149,7 @@ const ContentModal = ({
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex justify-between items-center p-6 border-b border-white/5 bg-black/40 relative z-10">
+                <div className="flex justify-between items-center p-4 sm:p-6 border-b border-white/5 bg-black/40 relative z-10">
                     <div className="flex items-center gap-3" style={{ color: activeTheme }}>
                         {isVideo && <Video size={18} />}
                         {!isVideo && <Camera size={18} />}
@@ -282,10 +282,10 @@ const ContentModal = ({
                                 </div>
                             </>
                         ) : (
-                            <div className="p-8 md:p-12 relative">
+                            <div className="p-4 sm:p-8 md:p-12 relative">
                                 {['JOURNAL', 'TEXT'].includes(normalizedType) && (
-                                    <div className="p-2 md:p-4">
-                                        <div className="border-2 border-[#9d00ff]/30 bg-black/40 p-6 md:p-8 rounded-sm shadow-[0_0_20px_rgba(157,0,255,0.15)] font-mono">
+                                    <div className="p-1 sm:p-2 md:p-4">
+                                        <div className="border-2 border-[#9d00ff]/30 bg-black/40 p-4 sm:p-6 md:p-8 rounded-sm shadow-[0_0_20px_rgba(157,0,255,0.15)] font-mono">
                                             <div className="mb-6 flex flex-col md:flex-row md:items-center gap-2 border-b border-[#9d00ff]/20 pb-4">
                                                 <div className="flex items-center text-[#9d00ff] text-xs md:text-sm tracking-widest" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>
                                                     <span className="mr-2">root@fatale.fm:~#</span>
@@ -319,8 +319,8 @@ const ContentModal = ({
 
                 {/* Footer */}
                 {!hideActions && (
-                    <div className="p-6 border-t border-white/5 bg-black/40 flex flex-wrap justify-between items-center gap-4 text-[9px] mono uppercase tracking-widest text-white/30 relative z-10">
-                        <div className="flex items-center gap-8">
+                    <div className="p-4 sm:p-6 border-t border-white/5 bg-black/40 flex flex-wrap justify-between items-center gap-4 text-[9px] mono uppercase tracking-widest text-white/30 relative z-10">
+                        <div className="flex items-center gap-4 sm:gap-8">
                             <div className="flex flex-col gap-1">
                                 <span className="text-[#9d00ff]/40 tracking-tighter">PACKAGE_ID</span>
                                 <span className="text-white/60 font-bold">{content?.Id || content?.id || 'GLOBAL_CORE'}</span>
@@ -330,14 +330,14 @@ const ContentModal = ({
                                 <span className="text-white/60 font-bold">{content?.CreatedAt ? new Date(content.CreatedAt).toLocaleString() : 'SYNCHRONIZED'}</span>
                             </div>
                         </div>
-                        <div className="flex gap-4">
-                            <button onClick={() => setShowTipModal(true)} className="px-4 py-2 bg-[#ff006e]/10 border border-[#ff006e]/30 hover:bg-[#ff006e] hover:text-black transition-all text-[#ff006e] font-black flex items-center gap-2 group">
+                        <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end sm:justify-start">
+                            <button onClick={() => setShowTipModal(true)} className="px-3 py-1.5 sm:px-4 sm:py-2 bg-[#ff006e]/10 border border-[#ff006e]/30 hover:bg-[#ff006e] hover:text-black transition-all text-[#ff006e] font-black flex items-center gap-2 group text-[8px] sm:text-[9px]">
                                 <Coins size={12} className="group-hover:animate-bounce" /> {t('TIP_ARTIST')}
                             </button>
-                            <button onClick={handleShare} className="px-4 py-2 bg-white/5 border border-white/10 hover:border-[#9d00ff]/50 hover:text-white transition-all text-white/60 flex items-center gap-2">
+                            <button onClick={handleShare} className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/5 border border-white/10 hover:border-[#9d00ff]/50 hover:text-white transition-all text-white/60 flex items-center gap-2 text-[8px] sm:text-[9px]">
                                 <Share2 size={12} /> {t('SHARE_SIGNAL')}
                             </button>
-                            <button onClick={onClose} className="text-white font-black px-8 py-2 uppercase transition-all border border-white/40 hover:border-white hover:bg-white hover:text-black text-[10px] tracking-[0.2em]">
+                            <button onClick={onClose} className="text-white font-black px-5 py-1.5 sm:px-8 sm:py-2 uppercase transition-all border border-white/40 hover:border-white hover:bg-white hover:text-black text-[8px] sm:text-[10px] tracking-[0.2em]">
                                 {t('CLOSE')}
                             </button>
                         </div>
