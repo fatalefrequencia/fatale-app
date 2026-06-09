@@ -105,10 +105,10 @@ export const NotificationProvider = ({ children }) => {
                                 display: block;
                                 position: absolute;
                                 inset: 0;
-                                border-radius: 44px !important;
-                                box-shadow: 
-                                    inset 0 0 12px rgba(255, 0, 110, 0.9),
-                                    inset 0 0 24px rgba(255, 0, 110, 0.4);
+                                background: radial-gradient(circle, rgba(255, 0, 110, 0.2) 0%, rgba(255, 0, 110, 0) 80%);
+                                background-color: rgba(255, 0, 110, 0.05);
+                                backdrop-filter: saturate(1.3) brightness(1.08);
+                                -webkit-backdrop-filter: saturate(1.3) brightness(1.08);
                                 pointer-events: none;
                             }
                         }
