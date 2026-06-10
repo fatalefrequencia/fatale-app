@@ -167,13 +167,13 @@ const ShoppingView = () => {
 
     // Lock body scroll when modals open
     useEffect(() => {
-        if (selectedShop || isModalOpen) {
+        if (!isMobile && (selectedShop || isModalOpen)) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = '';
         }
         return () => { document.body.style.overflow = ''; };
-    }, [selectedShop, isModalOpen]);
+    }, [selectedShop, isModalOpen, isMobile]);
 
     const fetchShops = async () => {
         setLoading(true);
@@ -801,16 +801,7 @@ const ShoppingView = () => {
         <div className="h-full w-full overflow-y-auto no-scrollbar bg-[#020202] relative text-white">
 
             {/* ── MAIN MALL VIEW ── */}
-            <AnimatePresence>
-                {!selectedShop && (
-                    <motion.div
-                        key="mall"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0, x: -30 }}
-                        transition={{ duration: 0.2 }}
-                        className="min-h-full flex flex-col"
-                    >
+            <div className="min-h-full flex flex-col">
                         {/* Mall Header */}
                         <div className="px-4 md:px-8 pt-6 pb-4 border-b border-white/5">
                             <div className="max-w-7xl mx-auto">
@@ -1012,9 +1003,7 @@ const ShoppingView = () => {
                                 )}
                             </div>
                         </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            </div>
 
             {/* ── STORE DETAIL — mobile vs desktop ── */}
             <AnimatePresence>

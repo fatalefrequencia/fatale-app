@@ -21,16 +21,16 @@ const WalletView = ({ user, onRefreshProfile }) => {
             </div>
 
             {/* Header */}
-            <div className="p-8 pb-0 z-10">
-                <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.3em] font-mono mb-6">// {t('SYSTEM_WALLET')}</div>
-                <p className="text-white/30 text-[11px] font-mono uppercase tracking-widest max-w-xl">
+            <div className="p-4 md:p-8 pb-0 z-10">
+                <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.3em] font-mono mb-4 md:mb-6">// {t('SYSTEM_WALLET')}</div>
+                <p className="text-white/30 text-[10px] md:text-[11px] font-mono uppercase tracking-widest max-w-xl">
                     {t('WALLET_DESC')}
                     <span className="text-[#ff006e]/50 ml-3">:: ENCRYPTED_v2.0</span>
                 </p>
             </div>
 
             {/* Navigation Tabs */}
-            <div className="px-8 mt-8 border-b border-white/5 z-10 flex justify-center gap-8 overflow-x-auto no-scrollbar">
+            <div className="px-4 md:px-8 mt-4 md:mt-8 border-b border-white/5 z-10 flex justify-start md:justify-center gap-4 md:gap-8 overflow-x-auto no-scrollbar whitespace-nowrap">
                 <TabButton
                     label={t('OVERVIEW')}
                     icon={<Wallet size={16} />}

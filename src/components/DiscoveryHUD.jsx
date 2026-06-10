@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Music, Disc, User, Users, Play, Pause, Heart, Layers, Radio, BookOpen, Camera, Zap, Share2, Activity, Globe, X, Star, ChevronLeft, Shuffle, MessageSquare, Grid, Plus } from 'lucide-react';
+import { Search, Music, Disc, User, Users, Play, Pause, Heart, Layers, Radio, BookOpen, Camera, Zap, Share2, Activity, Globe, X, Star, ChevronLeft, Shuffle, MessageSquare, Grid, Plus, Wallet, ShoppingBag, Settings, LogOut } from 'lucide-react';
 import API from '../services/api';
 import { SECTORS, getMediaUrl } from '../constants';
 import { useNotification } from '../contexts/NotificationContext';
@@ -9,6 +9,7 @@ import InteractiveGlobe from './discovery/InteractiveGlobe';
 import CommunityTerminal from './discovery/CommunityTerminal';
 import { useLanguage } from '../contexts/LanguageContext';
 import TrackActionsDropdown from './TrackActionsDropdown';
+import skullImg from '../assets/skull_neon_fuscia.png';
 
 const hashStr = (s) => {
     if (!s) return 0;
@@ -110,7 +111,7 @@ const MobileLEDBanner = () => {
         </div>
     );
 };
-const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, onPlayPlaylist, isPlayerActive, onExpandContent, onPlayStation, isLandscape, setShowGlobalIngest, setIngestMode, onMessageCommunity, onDownload, onTipArtist }) => {
+const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, onPlayPlaylist, isPlayerActive, onExpandContent, onPlayStation, isLandscape, setShowGlobalIngest, setIngestMode, onMessageCommunity, onDownload, onTipArtist, onLogout }) => {
     const { t } = useLanguage();
     const { showNotification } = useNotification();
     const [searchQuery, setSearchQuery] = useState('');
@@ -160,6 +161,14 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
     const [loading, setLoading] = useState(true);
     const [isBooting, setIsBooting] = useState(true);
     const [mobileViewMode, setMobileViewMode] = useState('globe'); // 'globe', 'data', 'search'
+    const [showSkullMenu, setShowSkullMenu] = useState(false);
+
+    useEffect(() => {
+        if (!showSkullMenu) return;
+        const closeMenu = () => setShowSkullMenu(false);
+        document.addEventListener('click', closeMenu);
+        return () => document.removeEventListener('click', closeMenu);
+    }, [showSkullMenu]);
 
     const resolveThumbnail = (vis) => {
         // Handle PascalCase and camelCase variants from backend
@@ -720,7 +729,78 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
         
             {/* --- TOP HUD BAR --- */}
-            <div className="z-[80] flex flex-col lg:flex-row items-center justify-between gap-4 mb-4 px-2 relative">
+            <div className="z-[80] flex flex-row items-center justify-between gap-4 mb-4 px-2 relative w-full">
+
+                {/* LEFT: FLOATING SYSTEM KERNEL (SKULL DROPDOWN) */}
+                <div className="relative pointer-events-auto shrink-0 z-[100]">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowSkullMenu(!showSkullMenu);
+                        }}
+                        className="relative w-10 h-10 md:w-12 md:h-12 p-1.5 flex items-center justify-center border border-[#ff006e]/30 hover:border-[#ff006e] bg-black/60 shadow-[0_0_15px_rgba(255,0,110,0.2)] hover:shadow-[0_0_20px_rgba(255,0,110,0.5)] transition-all rounded-sm active:scale-95 group"
+                        title="System Navigation"
+                    >
+                        <img
+                            src={skullImg}
+                            alt="System Kernel"
+                            className="w-full h-full object-contain filter transition-transform group-hover:scale-105"
+                            style={{ 
+                                filter: 'grayscale(1) brightness(8) contrast(1.5)', 
+                            }}
+                        />
+                        <div 
+                            className="absolute inset-0 w-full h-full pointer-events-none"
+                            style={{ 
+                                backgroundColor: 'var(--theme-color)',
+                                mixBlendMode: 'multiply',
+                                opacity: 0.95
+                            }}
+                        />
+                    </button>
+
+                    {/* Skull dropdown overlay */}
+                    <AnimatePresence>
+                        {showSkullMenu && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                transition={{ duration: 0.15 }}
+                                className="absolute left-0 mt-2 w-56 bg-black/95 backdrop-blur-xl border border-[#ff006e]/30 shadow-[0_0_30px_rgba(255,0,110,0.25)] rounded-sm z-[9999] overflow-hidden"
+                            >
+                                <div className="p-3 border-b border-white/5 bg-[#ff006e]/5">
+                                    <div className="text-[8px] font-black text-[#ff006e]/80 tracking-[0.3em] font-mono">// SYSTEM_KERNEL_v2.0</div>
+                                    <div className="text-[10px] text-white/40 font-mono mt-0.5 truncate uppercase">AUTH_USER: {user?.username || 'GUEST'}</div>
+                                </div>
+                                <div className="p-1 font-mono text-[10px] uppercase tracking-wider text-white">
+                                    <button onClick={() => { setView('profile'); setShowSkullMenu(false); }} className="w-full text-left px-4 py-2.5 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all flex items-center gap-3">
+                                        <User size={12} className="text-[#ff006e]/80" /> {t('USR_LINK') || 'Profile'}
+                                    </button>
+                                    <button onClick={() => { setView('wallet'); setShowSkullMenu(false); }} className="w-full text-left px-4 py-2.5 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all flex items-center gap-3">
+                                        <Wallet size={12} className="text-[#ff006e]/80" /> {t('WAL_BASE') || 'Wallet'}
+                                    </button>
+                                    <button onClick={() => { setView('messages'); setShowSkullMenu(false); }} className="w-full text-left px-4 py-2.5 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all flex items-center gap-3">
+                                        <MessageSquare size={12} className="text-[#ff006e]/80" /> {t('MSG_SYNC') || 'Messages'}
+                                    </button>
+                                    <button onClick={() => { setView('feed'); setShowSkullMenu(false); }} className="w-full text-left px-4 py-2.5 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all flex items-center gap-3">
+                                        <Grid size={12} className="text-[#ff006e]/80" /> {t('FEED_LNK') || 'Feed'}
+                                    </button>
+                                    <button onClick={() => { setView('shopping'); setShowSkullMenu(false); }} className="w-full text-left px-4 py-2.5 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all flex items-center gap-3">
+                                        <ShoppingBag size={12} className="text-[#ff006e]/80" /> {t('SHOP_LNK') || 'Marketplace'}
+                                    </button>
+                                    <button onClick={() => { setView('settings'); setShowSkullMenu(false); }} className="w-full text-left px-4 py-2.5 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all flex items-center gap-3">
+                                        <Settings size={12} className="text-[#ff006e]/80" /> {t('SYS_CONF') || 'Settings'}
+                                    </button>
+                                    <div className="h-px bg-white/5 my-1" />
+                                    <button onClick={() => { onLogout && onLogout(); setShowSkullMenu(false); }} className="w-full text-left px-4 py-2.5 hover:bg-[#ff006e]/20 text-[#ff006e] transition-all flex items-center gap-3 font-black">
+                                        <LogOut size={12} /> {t('LOGOUT_SYS') || 'Disconnect'}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
 
                 {/* CENTER: SEARCH */}
                 <div className="w-full lg:w-[450px] flex justify-center relative">
@@ -1157,7 +1237,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                 {!isMobile && (
                     <>
                         <div className="col-span-3 row-span-2 col-start-1 row-start-1 pointer-events-auto">
-                            <HUDWidget title={t('YT_FREQ_SCAN')} icon={<Search size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('player')}>{t('YT_FREQ_SCAN')}</span>} icon={<Search size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="space-y-4">
                                     {youtubeResults.length > 0 ? youtubeResults.map(y => (
                                         <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => {
@@ -1365,7 +1445,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-1 lg:row-start-3 pointer-events-auto">
                             <HUDWidget
-                                title={selectedPlaylist ? `${t('DESC_PL')}: ${(selectedPlaylist.name || selectedPlaylist.Name || '').toUpperCase()}` : "[ PLAYLISTS ]"}
+                                title={selectedPlaylist ? `${t('DESC_PL')}: ${(selectedPlaylist.name || selectedPlaylist.Name || '').toUpperCase()}` : <span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('player')}>{t('PLAYLISTS') || '[ PLAYLISTS ]'}</span>}
                                 icon={selectedPlaylist ? <ChevronLeft size={14} className="cursor-pointer hover:text-white transition-colors" onClick={() => setSelectedPlaylist(null)} /> : <Music size={14} />}
                                 searchQuery={searchQuery}
                                 activeColor={activeSectorColor}
@@ -1455,7 +1535,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         </div>
 
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-1 lg:row-start-5 pointer-events-auto">
-                            <HUDWidget title={t('ARTIST_NODES')} icon={<User size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('profile')}>{t('ARTIST_NODES')}</span>} icon={<User size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-2 pt-2">
                                     {filteredArtists.map(a => (
                                         <div key={a.id} className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => navigateToProfile(a.userId)}>
@@ -1480,7 +1560,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                         {/* --- RIGHT COLUMN: PLAYLISTS, VISUALS, JOURNALS --- */}
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-1 pointer-events-auto">
-                            <HUDWidget title="[ MARKETPLACE ]" icon={<Layers size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('shopping')}>{t('MARKETPLACE') || '[ MARKETPLACE ]'}</span>} icon={<Layers size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 {marketplaceItems.length > 0 ? (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in duration-500">
                                         {marketplaceItems.map(item => (
@@ -1564,7 +1644,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         </div>
 
                         <div className="col-span-3 row-span-2 col-start-10 row-start-5 pointer-events-auto">
-                            <HUDWidget title={t('FREQ_JOURNAL')} icon={<BookOpen size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('feed')}>{t('FREQ_JOURNAL')}</span>} icon={<BookOpen size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="space-y-4">
                                     {filteredJournals.length > 0 ? filteredJournals.map(j => (
                                         <div
@@ -1594,7 +1674,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                         {/* --- BOTTOM CENTER: LIVE STATIONS --- */}
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-4 lg:row-start-5 pointer-events-auto">
-                            <HUDWidget title="LIVE!" icon={<Radio size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('player')}>{t('LIVE') || 'LIVE!'}</span>} icon={<Radio size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="space-y-4 max-h-[160px] overflow-y-auto custom-scrollbar-sharp pr-1">
                                     {liveStations.length > 0 ? liveStations.map(c => {
                                         const isFollowed = user && followingIds.includes(String(c.artistUserId || c.ArtistUserId));

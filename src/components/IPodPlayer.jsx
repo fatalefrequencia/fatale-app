@@ -991,7 +991,7 @@ useEffect(() => {
 
         if (screen === 'PURCHASE_CONFIRM') {
             if (item.id === 'BACK_AM') {
-                setScreen('ACTION_MENU');
+                setScreen('NOW_PLAYING');
                 setSelectedIndex(0);
                 return;
             }
@@ -1006,7 +1006,7 @@ useEffect(() => {
         // --- TIP MENU ---
         if (screen === 'TIP_MENU') {
             if (item.id === 'BACK_AM') {
-                setScreen('ACTION_MENU');
+                setScreen('NOW_PLAYING');
                 setSelectedIndex(0);
                 return;
             }
@@ -1095,7 +1095,10 @@ useEffect(() => {
         } else if (screen === 'ACTION_MENU' || screen === 'SELECT_PLAYLIST') {
             setScreen('NOW_PLAYING');
             setSelectedIndex(0);
-        } else if (screen === 'TIP_MENU' || screen === 'PURCHASE_CONFIRM' || screen === 'STATION_CHAT' || screen === 'STATION_QUEUE') {
+        } else if (screen === 'TIP_MENU' || screen === 'PURCHASE_CONFIRM') {
+            setScreen('NOW_PLAYING');
+            setSelectedIndex(0);
+        } else if (screen === 'STATION_CHAT' || screen === 'STATION_QUEUE') {
             setScreen('ACTION_MENU');
             setSelectedIndex(0);
         } else if (screen === 'PLAYLIST_DETAILS') {
@@ -2091,6 +2094,7 @@ useEffect(() => {
                                                     onLike && onLike(currentTrack);
                                                 }}
                                                 className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1"
+                                                title="Like track"
                                             >
                                                 <Heart
                                                     size={isVertical ? 14 : 18}
@@ -2098,16 +2102,39 @@ useEffect(() => {
                                                     strokeWidth={3}
                                                 />
                                             </button>
+
+                                            {/* Tipping button (Direct to Tip Menu) */}
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    setScreen('ACTION_MENU');
+                                                    setScreen('TIP_MENU');
                                                     setSelectedIndex(0);
                                                 }}
                                                 className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1"
+                                                title="Tip Artist"
                                             >
-                                                <DownloadIcon size={isVertical ? 14 : 18} strokeWidth={3} />
+                                                <DollarSign size={isVertical ? 14 : 18} strokeWidth={3} />
                                             </button>
+
+                                            {/* Download / Purchase button (Native non-live tracks only) */}
+                                            {!(currentTrack.category === 'YouTube' || (currentTrack.source && currentTrack.source.startsWith('youtube:'))) && !activeStation && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (isLocked) {
+                                                            setScreen('PURCHASE_CONFIRM');
+                                                            setSelectedIndex(0);
+                                                        } else {
+                                                            onDownload && onDownload(currentTrack);
+                                                        }
+                                                    }}
+                                                    className={currentTrack.isCached ? "text-[#f00060] p-1" : "text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1"}
+                                                    title={isLocked ? "Purchase Track" : (currentTrack.isCached ? "Remove from Offline" : "Download Offline")}
+                                                >
+                                                    <DownloadIcon size={isVertical ? 14 : 18} strokeWidth={3} className={currentTrack.isCached ? "drop-shadow-[0_0_8px_#f00060]" : ""} />
+                                                </button>
+                                            )}
+
                                             <button
                                                 onClick={async (e) => {
                                                     e.stopPropagation();

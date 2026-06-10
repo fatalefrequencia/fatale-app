@@ -3492,7 +3492,7 @@ const Dashboard = React.memo(({
       <motion.aside 
         layout
         transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-        className={`hidden lg:flex flex-col border-r border-white/5 bg-black/20 backdrop-blur-2xl z-30 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.4)] ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}
+        className={`hidden ${activeView === 'discovery' ? 'lg:hidden' : 'lg:flex'} flex-col border-r border-white/5 bg-black/20 backdrop-blur-2xl z-30 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.4)] ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}
       >
         <div
           className={`cursor-pointer flex flex-col justify-center items-center transition-all group ${isSidebarCollapsed ? 'p-4' : 'p-6'}`}
@@ -3572,7 +3572,7 @@ const Dashboard = React.memo(({
       >
         {/* TOP NAV (Móvil) */}
         <header 
-          className="lg:hidden flex items-center justify-center px-1 border-b border-[var(--theme-color)]/10 bg-black/90 backdrop-blur-md z-40 relative"
+          className={`lg:hidden ${activeView === 'discovery' ? 'hidden' : 'flex'} items-center justify-center px-1 border-b border-[var(--theme-color)]/10 bg-black/90 backdrop-blur-md z-40 relative`}
           style={{ 
             paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)',
             paddingBottom: '12px'
@@ -3643,6 +3643,7 @@ const Dashboard = React.memo(({
                   isPlayerActive={currentTrackIndex >= 0 && !isMiniPlayerMinimized}
                   setShowGlobalIngest={setShowGlobalIngest}
                   setIngestMode={setIngestMode}
+                  onLogout={onLogout}
                 />
               </motion.div>
             )}
