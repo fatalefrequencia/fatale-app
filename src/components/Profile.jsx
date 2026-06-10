@@ -888,7 +888,9 @@ export const ProfileView = React.memo(({
     onRefreshPlaylists,
     onLike,
     onThemeChange,
-    hasMiniPlayer
+    hasMiniPlayer,
+    onDownload,
+    onTipArtist
 }) => {
     const { showNotification } = useNotification();
     const { t } = useLanguage();
@@ -2071,13 +2073,13 @@ export const ProfileView = React.memo(({
                     <SubsystemBlock title={t('MUSIC_RELEASES')} showBrackets={true} address="SIG_AUD_04" secondaryColor={profileSecondary}>
                         <div className="flex items-center justify-between px-6 py-3 bg-black/40 border-b border-white/5">
                             <div className="flex gap-6">
-                                {['ALL', 'ALBUMS', 'SINGLES'].map(f => (
+                                {(isMe ? ['ALL', 'ALBUMS', 'SINGLES', 'CLOUD'] : ['ALL', 'ALBUMS', 'SINGLES']).map(f => (
                                     <button 
                                         key={f}
                                         onClick={() => setMusicFilter(f)}
                                         className={`text-[9px] font-black uppercase tracking-[0.3em] transition-all hover:text-white ${musicFilter === f ? 'text-[var(--subsystem-accent)] border-b border-[var(--subsystem-accent)]' : 'text-white/20'}`}
                                     >
-                                        {t(f)}
+                                        {f === 'CLOUD' ? (t('CLOUD_COLLECTION') || 'CLOUD COLLECTION') : t(f)}
                                     </button>
                                 ))}
                             </div>
@@ -2088,12 +2090,22 @@ export const ProfileView = React.memo(({
                         </div>
                         <div className="p-6 max-h-[750px] overflow-y-auto custom-scrollbar space-y-4">
     {(() => {
-        const filtered = profileTracks.filter(t => {
-            const isAlbumTrack = t.albumTitle && t.albumTitle !== 'Singles';
-            if (musicFilter === 'ALL') return true;
-            if (musicFilter === 'ALBUMS') return isAlbumTrack;
-            return !isAlbumTrack;
-        });
+        const filtered = musicFilter === 'CLOUD' 
+            ? allTracks.filter(t => t.isOwned).map(t => ({
+                ...t,
+                id: t.id || t.Id,
+                title: t.title || t.Title || 'UNKNOWN_SIGNAL',
+                artist: t.artist || t.artistName || t.ArtistName || t.Artist || 'UNKNOWN_SOURCE',
+                source: t.source || getMediaUrl(t.filePath || t.FilePath),
+                cover: t.cover || getMediaUrl(t.coverImageUrl || t.CoverImageUrl),
+                albumTitle: t.album || t.albumTitle || 'Collection'
+              }))
+            : profileTracks.filter(t => {
+                const isAlbumTrack = t.albumTitle && t.albumTitle !== 'Singles';
+                if (musicFilter === 'ALL') return true;
+                if (musicFilter === 'ALBUMS') return isAlbumTrack;
+                return !isAlbumTrack;
+              });
 
         // Group by albumTitle
         const groups = filtered.reduce((acc, t) => {
@@ -2171,16 +2183,20 @@ export const ProfileView = React.memo(({
                                                 {t.title || t.Title}
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2 opacity-0 group-hover/track:opacity-100 transition-opacity">
-                                            <Play size={10} className="text-[var(--subsystem-accent)]" />
-                                            {isMe && (
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); handleDeleteTrack(t); }}
-                                                    className="p-1 text-red-500/40 hover:text-red-500 transition-colors"
-                                                >
-                                                    <X size={9} />
-                                                </button>
-                                            )}
+                                        <div className="flex items-center gap-2 opacity-0 group-hover/track:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                                            <TrackActionsDropdown
+                                                track={t}
+                                                isOwner={isMe}
+                                                playlists={currentUserPlaylists}
+                                                myLikes={myLikes}
+                                                isLikedInitial={myLikes.some(l => (l.trackId || l.TrackId) === (t.id || t.Id))}
+                                                onDelete={() => handleDeleteTrack(t)}
+                                                onAddToQueue={onQueueTrack}
+                                                onRefreshPlaylists={onRefreshPlaylists}
+                                                onLike={onLike}
+                                                onDownload={onDownload}
+                                                onTipArtist={onTipArtist}
+                                            />
                                         </div>
                                     </div>
                                 ))}
@@ -2387,8 +2403,21 @@ export const ProfileView = React.memo(({
                                                     <div className="text-[10px] font-black text-white uppercase truncate tracking-wider group-hover:text-[var(--subsystem-accent)] transition-colors">{t.title || t.Title}</div>
                                                     <div className="text-[7px] text-white/40 uppercase tracking-[0.2em] mt-0.5">{t.artistName || t.ArtistName || 'UNKNOWN_SOURCE'}</div>
                                                 </div>
-                                                <div className="opacity-0 group-hover:opacity-100 transition-all">
-                                                    <Play size={12} fill="currentColor" className="text-[var(--subsystem-accent)]" />
+                                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all" onClick={(e) => e.stopPropagation()}>
+                                                    <Play size={10} fill="currentColor" className="text-[var(--subsystem-accent)] cursor-pointer" onClick={() => onPlayTrack?.(t)} />
+                                                    <TrackActionsDropdown
+                                                        track={t}
+                                                        isOwner={isMe}
+                                                        playlists={currentUserPlaylists}
+                                                        myLikes={myLikes}
+                                                        isLikedInitial={myLikes.some(l => (l.trackId || l.TrackId) === (t.id || t.Id))}
+                                                        onDelete={() => onRemoveTrack?.(playlistDetails.id || playlistDetails.Id, t.id || t.Id)}
+                                                        onAddToQueue={onQueueTrack}
+                                                        onRefreshPlaylists={onRefreshPlaylists}
+                                                        onLike={onLike}
+                                                        onDownload={onDownload}
+                                                        onTipArtist={onTipArtist}
+                                                    />
                                                 </div>
                                                 <div className="absolute top-0 right-0 px-1 py-0.5 text-[5px] mono text-white/10 group-hover:text-white/30 truncate max-w-[40px]">
                                                     {t.id || t.Id}
@@ -3169,7 +3198,7 @@ const StatItem = ({ label, value }) => (
     </div>
 );
 
-const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, onRemoveTrack, onPlayAll, playlists = [], myLikes = [], onQueueTrack, onRefreshPlaylists, onLike }) => {
+const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, onRemoveTrack, onPlayAll, playlists = [], myLikes = [], onQueueTrack, onRefreshPlaylists, onLike, onDownload, onTipArtist }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [localImageUrl, setLocalImageUrl] = useState(playlist?.imageUrl || '');
 
@@ -3360,6 +3389,8 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
                                     onAddToQueue={onQueueTrack}
                                     onRefreshPlaylists={onRefreshPlaylists}
                                     onLike={onLike}
+                                    onDownload={onDownload}
+                                    onTipArtist={onTipArtist}
                                 />
                             </div>
                         ))}
@@ -3378,7 +3409,8 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
 const PlaylistPopup = ({ 
     playlist, tracks, isMe, onClose, onUpdate, onDelete, 
     onRemoveTrack, onPlayAll, playlists, myLikes, 
-    onQueueTrack, onRefreshPlaylists, onLike 
+    onQueueTrack, onRefreshPlaylists, onLike,
+    onDownload, onTipArtist
 }) => {
     return (
         <ContentModal onClose={onClose} title={`PLAYLIST // ${playlist.name?.toUpperCase()}`}>
@@ -3396,6 +3428,8 @@ const PlaylistPopup = ({
                     onQueueTrack={onQueueTrack}
                     onRefreshPlaylists={onRefreshPlaylists}
                     onLike={onLike}
+                    onDownload={onDownload}
+                    onTipArtist={onTipArtist}
                 />
             </div>
         </ContentModal>

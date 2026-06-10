@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     MoreHorizontal, PlayCircle, Library, Heart,
     Zap, Trash2, ChevronLeft, ChevronRight,
-    Lock, Globe
+    Lock, Globe, Download, Coins
 } from 'lucide-react';
 import ActionModal from './ActionModal';
 
@@ -45,7 +45,9 @@ const TrackActionsDropdown = ({
     isLikedInitial = false,
     myLikes = [],
     onAddToQueue,
-    onRefreshPlaylists
+    onRefreshPlaylists,
+    onDownload,
+    onTipArtist
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showPlaylists, setShowPlaylists] = useState(false);
@@ -60,6 +62,9 @@ const TrackActionsDropdown = ({
     });
     const [newPlaylistName, setNewPlaylistName] = useState('');
     const triggerRef = useRef(null);
+
+    const isYoutube = track.category === 'YouTube' || track.source?.startsWith('youtube:') || String(track.id).startsWith('youtube:');
+    const isNative = !isYoutube;
 
     // Sync if initial changes
     useEffect(() => {
@@ -293,12 +298,39 @@ const TrackActionsDropdown = ({
                                                 <Heart size={16} fill={isLiked ? "currentColor" : "none"} className={isLiked ? "text-[#ff006e]" : "text-[#ff006e]/50 group-hover/item:text-[#ff006e]"} /> {isLiked ? 'Liked' : 'Like'}
                                             </button>
 
-                                            {(track.price > 0 || track.Price > 0) && (
+                                            {isNative && !track.isOwned && !isOwner && (
                                                 <button
                                                     onClick={handlePurchase}
                                                     className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-sm group/item"
                                                 >
-                                                    <Zap size={16} className="text-[#ff006e]/50 group-hover/item:text-[#ff006e]" /> Purchase License
+                                                    <Zap size={16} className="text-[#ff006e]/50 group-hover/item:text-[#ff006e]" />
+                                                    {(track.price > 0 || track.Price > 0) ? `Purchase License (${track.price || track.Price} CRD)` : "Acquire License (FREE)"}
+                                                </button>
+                                            )}
+
+                                            {isNative && (track.isOwned || isOwner) && (
+                                                <button
+                                                    onClick={() => {
+                                                        onDownload?.(track);
+                                                        setIsOpen(false);
+                                                    }}
+                                                    className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-sm group/item"
+                                                >
+                                                    <Download size={16} className="text-[#ff006e]/50 group-hover/item:text-[#ff006e]" />
+                                                    {track.isCached ? "Remove Cache" : "Download / Cache"}
+                                                </button>
+                                            )}
+
+                                            {isNative && (
+                                                <button
+                                                    onClick={() => {
+                                                        onTipArtist?.(track);
+                                                        setIsOpen(false);
+                                                    }}
+                                                    className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-sm group/item"
+                                                >
+                                                    <Coins size={16} className="text-[#ff006e]/50 group-hover/item:text-[#ff006e]" />
+                                                    Tip Artist
                                                 </button>
                                             )}
 

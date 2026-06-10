@@ -110,7 +110,7 @@ const MobileLEDBanner = () => {
         </div>
     );
 };
-const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, onPlayPlaylist, isPlayerActive, onExpandContent, onPlayStation, isLandscape, setShowGlobalIngest, setIngestMode, onMessageCommunity }) => {
+const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, onPlayPlaylist, isPlayerActive, onExpandContent, onPlayStation, isLandscape, setShowGlobalIngest, setIngestMode, onMessageCommunity, onDownload, onTipArtist }) => {
     const { t } = useLanguage();
     const { showNotification } = useNotification();
     const [searchQuery, setSearchQuery] = useState('');
@@ -1236,6 +1236,8 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                                 return likes.some(l => l.id === y.id);
                                                             } catch { return false; }
                                                         })()}
+                                                        onDownload={onDownload}
+                                                        onTipArtist={onTipArtist}
                                                     />
                                                 </div>
                                             </div>
@@ -1311,6 +1313,8 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                                         return likes.some(l => l.id === y.id);
                                                                     } catch { return false; }
                                                                 })()}
+                                                                onDownload={onDownload}
+                                                                onTipArtist={onTipArtist}
                                                             />
                                                         </div>
                                                     </div>

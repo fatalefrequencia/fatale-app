@@ -38,12 +38,25 @@ const WalletView = ({ user, onRefreshProfile }) => {
                     onClick={() => setActiveTab('Overview')}
                 />
 
-
                 <TabButton
                     label={t('DEPOT')}
                     icon={<Zap size={16} />}
                     active={activeTab === 'Depot'}
                     onClick={() => setActiveTab('Depot')}
+                />
+
+                <TabButton
+                    label={t('TRANSACTIONS') || 'Transactions'}
+                    icon={<History size={16} />}
+                    active={activeTab === 'Transactions'}
+                    onClick={() => setActiveTab('Transactions')}
+                />
+
+                <TabButton
+                    label={t('EARNINGS') || 'Earnings'}
+                    icon={<DollarSign size={16} />}
+                    active={activeTab === 'Earnings'}
+                    onClick={() => setActiveTab('Earnings')}
                 />
             </div>
 

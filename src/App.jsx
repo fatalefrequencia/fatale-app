@@ -29,6 +29,7 @@ import TrackUploadView from './components/UploadTrackView';
 import WalletView from './components/WalletView';
 import ContentModal from './components/ContentModal';
 import SettingsView from './components/SettingsView';
+import TipArtistModal from './components/TipArtistModal';
 
 
 import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
@@ -207,6 +208,7 @@ function App() {
   });
   const [previousView, setPreviousView] = useState('discovery');
   const [viewingUserId, setViewingUserId] = useState(null);
+  const [tippingArtist, setTippingArtist] = useState(null);
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const { showNotification } = useNotification();
 
@@ -2230,6 +2232,15 @@ function App() {
     }
   };
 
+  const handleTipArtist = (track) => {
+    const artistId = track.artistId || track.ArtistId || track.userId || track.UserId;
+    const artistName = track.artist || track.Artist || track.artistName || track.ArtistName || "Unknown Artist";
+    if (!artistId) {
+      showNotification("SYSTEM_ERROR", "Cannot identify artist for tipping transmission.", "error");
+      return;
+    }
+    setTippingArtist({ id: artistId, name: artistName });
+  };
 
   const handleDownload = async (track) => {
     if (!track.isOwned) {
@@ -2995,6 +3006,21 @@ function App() {
         )}
       </AnimatePresence>
 
+      <TipArtistModal
+        isOpen={!!tippingArtist}
+        onClose={() => setTippingArtist(null)}
+        artist={tippingArtist || {}}
+        userBalance={user?.credits || 0}
+        onTipSuccess={async (newBalance) => {
+          if (newBalance !== undefined) {
+            setUser(prev => ({ ...prev, credits: newBalance }));
+          } else {
+            await fetchUserProfile();
+          }
+        }}
+        showNotification={showNotification}
+      />
+
       {/* ─── GLOBAL ACTION OVERLAY LAYER ─── */}
       <AnimatePresence>
         {/* ─── Go Live Modal ─── */}
@@ -3309,6 +3335,7 @@ const Dashboard = React.memo(({
   onQueueTrack,
   onPurchase, 
   onDownload, 
+  onTipArtist,
   onLike, 
   onCache, 
   onAddCredits, 
@@ -3489,7 +3516,7 @@ const Dashboard = React.memo(({
           <SidebarLink collapsed={isSidebarCollapsed} icon={<ShoppingBag size={isSidebarCollapsed ? 18 : 22} />} label={t('SHOP_LNK')} active={activeView === 'shopping'} onClick={() => handleNav('shopping')} />
 
           <div className="my-6 border-t border-white/5 opacity-50" />
-          {/* <SidebarLink collapsed={isSidebarCollapsed} icon={<Wallet size={isSidebarCollapsed ? 18 : 22} />} label={t('WAL_BASE')} active={activeView === 'wallet'} onClick={() => handleNav('wallet')} /> */}
+          <SidebarLink collapsed={isSidebarCollapsed} icon={<Wallet size={isSidebarCollapsed ? 18 : 22} />} label={t('WAL_BASE')} active={activeView === 'wallet'} onClick={() => handleNav('wallet')} />
           <SidebarLink collapsed={isSidebarCollapsed} icon={<Settings size={isSidebarCollapsed ? 18 : 22} />} label={t('SYS_CONF')} active={activeView === 'settings'} onClick={() => handleNav('settings')} />
         </nav>
 
@@ -3541,6 +3568,7 @@ const Dashboard = React.memo(({
               <NavButton icon={<Play size={20} />} active={activeView === 'player'} onClick={() => setView('player')} />
               <NavButton icon={<ShoppingBag size={20} />} active={activeView === 'shopping'} onClick={() => setView('shopping')} />
               <NavButton icon={<MessageSquare size={20} />} active={activeView === 'messages'} onClick={() => setView('messages')} hasNotification={hasNewMessages} />
+              <NavButton icon={<Wallet size={20} />} active={activeView === 'wallet'} onClick={() => setView('wallet')} />
               <NavButton icon={<User size={20} />} active={activeView === 'profile' && (!viewingUserId || String(viewingUserId) === String(user?.id || user?.Id))} onClick={() => navigateToProfile(null)} />
               <NavButton icon={<Settings size={20} />} active={activeView === 'settings'} onClick={() => setView('settings')} />
             </div>
@@ -3664,6 +3692,8 @@ const Dashboard = React.memo(({
                   onRefreshProfile={onRefreshProfile}
                   onRefreshTracks={onRefreshTracks}
                   onLike={onLike}
+                  onDownload={onDownload}
+                  onTipArtist={onTipArtist}
                   navigateToProfile={navigateToProfile}
                   onPlayPlaylist={handlePlayPlaylist}
                   onPlayTrack={onPlayTrack}
