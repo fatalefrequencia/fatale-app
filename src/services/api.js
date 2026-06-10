@@ -240,6 +240,23 @@ const API = {
         transferCredits: (toUserId, amount) => api.post('Wallet/transfer', { toUserId, amount }),
         requestWithdrawal: (amount, method) => api.post('Wallet/withdraw/request', { amount, method })
     },
+    Economy: {
+        getBundles: () => Promise.resolve({
+            data: [
+                { id: 1, name: 'MINIMAL_RESONANCE', credits: 10, price: 1.00 },
+                { id: 2, name: 'STANDARD_FREQUENCY', credits: 50, price: 5.00 },
+                { id: 3, name: 'ENHANCED_NODE', credits: 100, price: 10.00 },
+                { id: 4, name: 'CORE_INTERFACE', credits: 250, price: 25.00 }
+            ]
+        }),
+        purchaseCredits: (bundleId) => {
+            const creditsMap = { 1: 10, 2: 50, 3: 100, 4: 250 };
+            const amount = creditsMap[bundleId] || 50;
+            return api.post('Economy/add', { amount });
+        },
+        tipArtist: (artistId, amount) => api.post(`Economy/tip/${artistId}?amount=${amount}`),
+        add: (amount, userId) => api.post('Economy/add', { amount })
+    },
     Journal: {
         getMyJournal: () => api.get('Journal'),
         getUserJournal: (userId) => api.get(`Journal/user/${userId}`),

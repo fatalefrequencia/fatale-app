@@ -36,9 +36,7 @@ const TipArtistModal = ({ isOpen, onClose, artist, userBalance, onTipSuccess, sh
         setIsSubmitting(true);
         try {
             const artistId = artist.id || artist.Id;
-            const res = await API.Purchases.purchaseTrack(null); // Just imports API context, but let's call our tip endpoint directly:
-            // EconomyController tip endpoint: POST api/Economy/tip/{artistId}?amount=50
-            const tipRes = await API.post(`Economy/tip/${artistId}?amount=${finalAmount}`);
+            const tipRes = await API.Economy.tipArtist(artistId, finalAmount);
             
             showNotification?.("TIP_SUCCESS", `Successfully tipped ${finalAmount} credits ($${finalUSD}) to ${artist.name || artist.Name}!`, "success");
             onTipSuccess?.(tipRes.data.newBalance);

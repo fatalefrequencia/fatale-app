@@ -30,6 +30,7 @@ import WalletView from './components/WalletView';
 import ContentModal from './components/ContentModal';
 import SettingsView from './components/SettingsView';
 import TipArtistModal from './components/TipArtistModal';
+import TrackActionsDropdown from './components/TrackActionsDropdown';
 
 
 import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
@@ -3805,6 +3806,9 @@ const Dashboard = React.memo(({
               onPrev={handlePrev}
               onLike={onLike}
               onTipArtist={onTipArtist}
+              user={user}
+              playlists={playlists}
+              onDownload={onDownload}
               onExpand={() => {
                 console.log("[App] MiniPlayer expanded. Triggering redirect...", typeof setRedirectTrigger);
                 if (typeof setRedirectTrigger === 'function') {
@@ -3839,7 +3843,7 @@ const Dashboard = React.memo(({
 });
 
 // --- MINI PLAYER COMPONENT ---
-const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onNext, onPrev, onLike, onTipArtist, onExpand, activeView, isMuted, onToggleMute, currentTime, duration, isSidebarCollapsed, volume, setVolume, isMinimized, onToggleMinimize, isBroadcasting, onOpenMixer, isReceivingLiveAudio }) => {
+const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onNext, onPrev, onLike, onTipArtist, onExpand, activeView, isMuted, onToggleMute, currentTime, duration, isSidebarCollapsed, volume, setVolume, isMinimized, onToggleMinimize, isBroadcasting, onOpenMixer, isReceivingLiveAudio, user, playlists, onDownload }) => {
   const isMessages = activeView === 'messages';
 
   if (isMinimized) {
@@ -3990,6 +3994,20 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
           className={`cursor-pointer transition-all duration-300 ${track?.isLiked ? 'text-[#ff006e] fill-[#ff006e] drop-shadow-[0_0_8px_rgba(255,0,110,0.8)]' : 'text-white/20 hover:text-[#ff006e] hover:drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]'}`}
           onClick={(e) => { e.stopPropagation(); onLike && onLike(track); }}
         />
+
+        {track && (
+          <div className="z-50" onClick={(e) => e.stopPropagation()}>
+            <TrackActionsDropdown
+              track={track}
+              isOwner={track.artistUserId === (user?.id || user?.Id) || String(track.userId) === String(user?.id || user?.Id)}
+              onLike={onLike}
+              playlists={playlists || []}
+              isLikedInitial={track.isLiked}
+              onDownload={onDownload}
+              onTipArtist={onTipArtist}
+            />
+          </div>
+        )}
 
         <div className="flex items-center gap-3 group/vol pr-2 relative">
           <div onClick={(e) => { e.stopPropagation(); onToggleMute && onToggleMute(); }} className="cursor-pointer py-2">
