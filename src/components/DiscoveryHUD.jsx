@@ -1239,7 +1239,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     {!isPinterestView && (
                                         <button
                                             onClick={() => setIsGlobeSpinning(!isGlobeSpinning)}
-                                            className={`flex items-center justify-center w-10 h-10 rounded-sm border transition-all duration-300 ${isGlobeSpinning ? 'bg-[#b39ddb]/10 border-[#b39ddb] text-[#b39ddb] shadow-[0_0_15px_rgba(179,157,219,0.2)]' : 'bg-black/40 border-white/5 text-white/40 hover:border-[#b39ddb]/40 hover:text-[#b39ddb]'}`}
+                                            className={`flex items-center justify-center w-10 h-10 rounded-sm border transition-all duration-300 ${isGlobeSpinning ? 'bg-[#8c62d1]/10 border-[#8c62d1] text-[#8c62d1] shadow-[0_0_15px_rgba(140,98,209,0.2)]' : 'bg-black/40 border-white/5 text-white/40 hover:border-[#8c62d1]/40 hover:text-[#8c62d1]'}`}
                                             title={isGlobeSpinning ? t('PAUSE_SPIN') : t('START_SPIN')}
                                         >
                                             {isGlobeSpinning ? <Pause size={14} /> : <Play size={14} />}
