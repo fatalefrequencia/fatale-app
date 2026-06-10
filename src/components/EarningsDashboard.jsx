@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, DollarSign, Music, Gift, ArrowDown, ArrowDownLeft, X, Landmark, RefreshCw } from 'lucide-react';
 import API from '../services/api';
 import { useNotification } from '../contexts/NotificationContext';
