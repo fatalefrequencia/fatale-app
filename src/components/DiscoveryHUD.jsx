@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Music, Disc, User, Users, Play, Pause, Heart, Layers, Radio, BookOpen, Camera, Zap, Share2, Activity, Globe, X, Star, ChevronLeft, Shuffle, MessageSquare, Grid, Plus, Wallet, ShoppingBag, Settings, LogOut } from 'lucide-react';
+import { Search, Music, Disc, User, Users, Play, Pause, Heart, Layers, Radio, BookOpen, Camera, Zap, Share2, Activity, Globe, X, Star, ChevronLeft, Shuffle, MessageSquare, Grid, Plus, Wallet, ShoppingBag, Settings, LogOut, HelpCircle } from 'lucide-react';
 import API from '../services/api';
 import { SECTORS, getMediaUrl } from '../constants';
 import { useNotification } from '../contexts/NotificationContext';
@@ -162,6 +162,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
     const [isBooting, setIsBooting] = useState(true);
     const [mobileViewMode, setMobileViewMode] = useState('globe'); // 'globe', 'data', 'search'
     const [showSkullMenu, setShowSkullMenu] = useState(false);
+    const [showSystemGuide, setShowSystemGuide] = useState(false);
 
     useEffect(() => {
         if (!showSkullMenu) return;
@@ -1135,7 +1136,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
             animate={{ opacity: 1, scale: 1,    y: 0 }}
             exit={{    opacity: 0, scale: 0.92, y: 8 }}
             transition={{ type: 'spring', damping: 28, stiffness: 380 }}
-            className="absolute z-50 pointer-events-auto bottom-4 left-4"
+            className="absolute z-50 pointer-events-auto bottom-4 left-16"
         >
             <div
                 className="relative bg-black/96 backdrop-blur-xl border border-white/10 p-3"
@@ -1250,6 +1251,17 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         title={isPinterestView ? "View 3D Map" : "View Grid"}
                                     >
                                         {isPinterestView ? <Globe size={14} /> : <Grid size={14} />}
+                                    </button>
+                                </div>
+
+                                {/* Guide Button - Bottom Left Corner of Globe Terminal */}
+                                <div className="absolute bottom-4 left-4 z-50 scale-75 lg:scale-100">
+                                    <button
+                                        onClick={() => setShowSystemGuide(true)}
+                                        className="flex items-center justify-center w-10 h-10 rounded-sm border bg-[#020202] border-[#ff006e]/30 text-white/50 hover:border-[#ff006e] hover:text-[#ff006e] transition-all duration-300 shadow-[0_0_10px_rgba(255,0,110,0.15)] hover:shadow-[0_0_20px_rgba(255,0,110,0.3)]"
+                                        title="System Guide"
+                                    >
+                                        <HelpCircle size={15} />
                                     </button>
                                 </div>
 
@@ -2304,6 +2316,113 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                     </div>
                 )}
             </motion.div>
+
+            <AnimatePresence>
+                {showSystemGuide && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center p-4 md:p-8 pointer-events-auto"
+                        onClick={() => setShowSystemGuide(false)}
+                    >
+                        <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%] z-10" />
+
+                        <motion.div
+                            initial={{ scale: 0.95, y: 15 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.95, y: 15 }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-[#020202] border border-[#ff006e]/50 p-6 md:p-8 relative rounded-sm flex flex-col gap-6 z-20 no-scrollbar shadow-[0_0_50px_rgba(255,0,110,0.2)]"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#ff006e]" />
+                            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#ff006e]" />
+                            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#ff006e]" />
+                            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#ff006e]" />
+
+                            <div className="flex justify-between items-center border-b border-[#ff006e]/20 pb-4">
+                                <div>
+                                    <div className="text-[10px] font-black text-[#ff006e] tracking-[0.3em] font-mono">// SYSTEM_GUIDE_TERMINAL</div>
+                                    <div className="text-white/40 text-[8px] font-mono mt-0.5 uppercase tracking-widest">FATALE CORE // INTERACTION MANUAL</div>
+                                </div>
+                                <button
+                                    onClick={() => setShowSystemGuide(false)}
+                                    className="text-white/40 hover:text-[#ff006e] transition-colors border border-white/10 hover:border-[#ff006e]/50 px-3 py-1.5 text-[9px] font-mono uppercase tracking-widest rounded-sm"
+                                >
+                                    [ CLOSE ]
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-white/80 font-mono text-[10px] leading-relaxed">
+                                <div className="space-y-4">
+                                    <div className="border-b border-white/5 pb-1">
+                                        <span className="text-[#00ffff] font-black uppercase tracking-wider">// CORE HUD INTERFACE</span>
+                                    </div>
+                                    <ul className="space-y-2.5 list-none pl-0">
+                                        <li className="flex gap-2">
+                                            <span className="text-[#ff006e] shrink-0">■</span>
+                                            <div>
+                                                <strong className="text-white">YT FREQ SCAN:</strong> Intercept and stream music signals directly from external frequencies.
+                                            </div>
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <span className="text-[#ff006e] shrink-0">■</span>
+                                            <div>
+                                                <strong className="text-white">NATIVE_ARTISTS:</strong> Node network of creator profiles broadcasting in our sectors.
+                                            </div>
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <span className="text-[#ff006e] shrink-0">■</span>
+                                            <div>
+                                                <strong className="text-white">[ MARKETPLACE ]:</strong> Digital depot hosting visual data fragments, collectibles, and audio gear.
+                                            </div>
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <span className="text-[#ff006e] shrink-0">■</span>
+                                            <div>
+                                                <strong className="text-white">STUDIO TRANSMISSIONS:</strong> Real-time and archived audio-visual feeds from creators.
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="border-b border-white/5 pb-1">
+                                        <span className="text-[#00ffff] font-black uppercase tracking-wider">// SIGNAL NAVIGATION</span>
+                                    </div>
+                                    <ul className="space-y-2.5 list-none pl-0">
+                                        <li className="flex gap-2">
+                                            <span className="text-[#ff006e] shrink-0">■</span>
+                                            <div>
+                                                <strong className="text-white">INTERACTIVE GLOBE:</strong> Drag to rotate the node cluster. Hover or click on nodes to parse details. Use filter buttons on the right to toggle nodes by type.
+                                            </div>
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <span className="text-[#ff006e] shrink-0">■</span>
+                                            <div>
+                                                <strong className="text-white">COMMUNITIES:</strong> Connect with localized cliques or found a new cluster in your active sector.
+                                            </div>
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <span className="text-[#ff006e] shrink-0">■</span>
+                                            <div>
+                                                <strong className="text-white">SYSTEM KERNEL:</strong> Trigger the skull selector at the top-left to access your Profile, Messages, Wallet balance, and System Configuration.
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div className="border-t border-white/5 pt-4 text-[7px] text-white/20 font-mono tracking-widest flex justify-between">
+                                <span>SEC_LOG_VER_4.19</span>
+                                <span>FATALE NETWORKS // SYSTEM ONLINE</span>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* --- SCANLINE OVERLAY --- */}
             <div className="fixed inset-0 pointer-events-none z-[100] opacity-[0.03] select-none overflow-hidden h-screen w-screen">
