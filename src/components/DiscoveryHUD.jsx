@@ -767,7 +767,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 transition={{ duration: 0.18 }}
-                                className="fixed inset-0 bg-black/95 backdrop-blur-md z-[9999] flex items-center justify-center p-4 md:p-8 pointer-events-auto"
+                                className="fixed inset-0 bg-[#020202] z-[9999] flex items-center justify-center p-3 md:p-8 pointer-events-auto"
                             >
                                 {/* Scanlines & Noise multiply overlay */}
                                 <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%] z-10" />
@@ -777,7 +777,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     animate={{ scale: 1, y: 0 }}
                                     exit={{ scale: 0.95, y: 15 }}
                                     transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-                                    className="w-full max-w-2xl bg-[#030303] border border-[#ff006e]/30 p-6 md:p-8 relative overflow-hidden shadow-[0_0_50px_rgba(255,0,110,0.25)] rounded-sm flex flex-col gap-6 z-20"
+                                    className="w-full max-w-2xl max-h-[96vh] overflow-y-auto bg-black border border-[#ff006e]/30 p-4 md:p-8 relative rounded-sm flex flex-col gap-4 md:gap-6 z-20 no-scrollbar"
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     {/* Tech corners */}
@@ -787,55 +787,55 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#ff006e]" />
 
                                     {/* Header */}
-                                    <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                                    <div className="flex justify-between items-center border-b border-white/5 pb-3 md:pb-4">
                                         <div>
-                                            <div className="text-[10px] font-black text-[#ff006e] tracking-[0.3em] font-mono">// CORE_SYSTEM_SELECTOR</div>
-                                            <div className="text-white/40 text-[9px] font-mono mt-0.5 uppercase tracking-widest">USER: {user?.username || 'NEURAL_USER'} · STATUS: ACTIVE</div>
+                                            <div className="text-[9px] md:text-[10px] font-black text-[#ff006e] tracking-[0.3em] font-mono">// CORE_SYSTEM_SELECTOR</div>
+                                            <div className="text-white/40 text-[8px] md:text-[9px] font-mono mt-0.5 uppercase tracking-widest">USER: {user?.username || 'NEURAL_USER'} · STATUS: ACTIVE</div>
                                         </div>
                                         <button
                                             onClick={() => setShowSkullMenu(false)}
-                                            className="text-white/40 hover:text-[#ff006e] transition-colors border border-white/10 hover:border-[#ff006e]/50 px-3 py-1.5 text-[9px] font-mono uppercase tracking-widest rounded-sm"
+                                            className="text-white/40 hover:text-[#ff006e] transition-colors border border-white/10 hover:border-[#ff006e]/50 px-2 md:px-3 py-1 md:py-1.5 text-[8px] md:text-[9px] font-mono uppercase tracking-widest rounded-sm"
                                         >
                                             [ ESCAPE ]
                                         </button>
                                     </div>
 
                                     {/* Navigation Grid */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+                                    <div className="grid grid-cols-2 gap-2 md:gap-4 flex-1">
                                         {[
-                                            { id: 'profile', icon: <User size={18} />, label: t('USR_LINK') || 'Profile', desc: 'USER_IDENTITY_&_NODES' },
-                                            { id: 'wallet', icon: <Wallet size={18} />, label: t('WAL_BASE') || 'Wallet', desc: 'TRANSACTION_&_CREDITS' },
-                                            { id: 'messages', icon: <MessageSquare size={18} />, label: t('MSG_SYNC') || 'Messages', desc: 'COMMS_&_NEURAL_LINK', badge: hasNewMessages },
-                                            { id: 'feed', icon: <Grid size={18} />, label: t('FEED_LNK') || 'Feed', desc: 'SYSTEM_TRANSMISSIONS' },
-                                            { id: 'shopping', icon: <ShoppingBag size={18} />, label: t('SHOP_LNK') || 'Marketplace', desc: 'COMMERCE_&_ACQUISITION' },
-                                            { id: 'settings', icon: <Settings size={18} />, label: t('SYS_CONF') || 'Settings', desc: 'SYS_CONFIGURATION' },
+                                            { id: 'profile', icon: <User size={15} />, label: t('USR_LINK') || 'Profile', desc: 'IDENTITY' },
+                                            { id: 'wallet', icon: <Wallet size={15} />, label: t('WAL_BASE') || 'Wallet', desc: 'CREDITS' },
+                                            { id: 'messages', icon: <MessageSquare size={15} />, label: t('MSG_SYNC') || 'Messages', desc: 'COMMS', badge: hasNewMessages },
+                                            { id: 'feed', icon: <Grid size={15} />, label: t('FEED_LNK') || 'Feed', desc: 'FEED' },
+                                            { id: 'shopping', icon: <ShoppingBag size={15} />, label: t('SHOP_LNK') || 'Marketplace', desc: 'STORE' },
+                                            { id: 'settings', icon: <Settings size={15} />, label: t('SYS_CONF') || 'Settings', desc: 'SYSTEM' },
                                         ].map(node => (
                                             <button
                                                 key={node.id}
                                                 onClick={() => { setView(node.id); setShowSkullMenu(false); }}
-                                                className="group text-left p-4 bg-white/[0.015] border border-white/5 hover:border-[#ff006e]/50 hover:bg-[#ff006e]/5 transition-all flex items-center gap-4 relative overflow-hidden active:scale-[0.98] rounded-sm"
+                                                className="group text-left p-2 md:p-4 bg-white/[0.012] border border-white/5 hover:border-[#ff006e]/50 hover:bg-[#ff006e]/5 transition-all flex items-center gap-2 md:gap-4 relative overflow-hidden active:scale-[0.98] rounded-sm min-w-0"
                                             >
                                                 <div className="absolute inset-y-0 left-0 w-[2px] bg-transparent group-hover:bg-[#ff006e] transition-all" />
-                                                <div className="p-3 bg-black border border-white/10 text-white/40 group-hover:text-[#ff006e] group-hover:border-[#ff006e]/30 transition-all shrink-0">
+                                                <div className="p-1.5 md:p-3 bg-black border border-white/10 text-white/40 group-hover:text-[#ff006e] group-hover:border-[#ff006e]/30 transition-all shrink-0">
                                                     {node.icon}
                                                 </div>
                                                 <div className="min-w-0 flex-1">
-                                                    <div className="text-[11px] font-black uppercase tracking-widest text-white/80 group-hover:text-white transition-colors flex items-center gap-2">
+                                                    <div className="text-[9px] md:text-[11px] font-black uppercase tracking-widest text-white/80 group-hover:text-white transition-colors flex items-center gap-1.5 truncate">
                                                         {node.label}
-                                                        {node.badge && <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_8px_#ff006e]" />}
+                                                        {node.badge && <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_8px_#ff006e] shrink-0" />}
                                                     </div>
-                                                    <div className="text-[7.5px] font-mono text-white/20 group-hover:text-[#ff006e]/40 transition-colors uppercase tracking-wider mt-1">{node.desc}</div>
+                                                    <div className="text-[6.5px] md:text-[7.5px] font-mono text-white/20 group-hover:text-[#ff006e]/40 transition-colors uppercase tracking-wider mt-0.5 truncate">{node.desc}</div>
                                                 </div>
                                             </button>
                                         ))}
                                     </div>
 
                                     {/* Footer Disconnect */}
-                                    <div className="border-t border-white/5 pt-4 flex justify-between items-center">
-                                        <div className="text-[8px] text-white/10 font-mono tracking-widest">FATALE_SYSTEMS_v2.0_SECURE</div>
+                                    <div className="border-t border-white/5 pt-3 md:pt-4 flex justify-between items-center">
+                                        <div className="text-[7px] md:text-[8px] text-white/10 font-mono tracking-widest">FATALE_SYSTEMS_v2.0_SECURE</div>
                                         <button
                                             onClick={() => { onLogout && onLogout(); setShowSkullMenu(false); }}
-                                            className="px-6 py-2.5 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] hover:bg-[#ff006e]/20 hover:border-[#ff006e] font-black text-[10px] tracking-widest uppercase transition-all flex items-center gap-2 active:scale-95 rounded-sm"
+                                            className="px-4 md:px-6 py-2 md:py-2.5 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] hover:bg-[#ff006e]/20 hover:border-[#ff006e] font-black text-[9px] md:text-[10px] tracking-widest uppercase transition-all flex items-center gap-2 active:scale-95 rounded-sm"
                                         >
                                             <LogOut size={12} /> {t('LOGOUT_SYS') || 'Disconnect'}
                                         </button>
