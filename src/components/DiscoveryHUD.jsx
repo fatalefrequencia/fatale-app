@@ -1239,7 +1239,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     {!isPinterestView && (
                                         <button
                                             onClick={() => setIsGlobeSpinning(!isGlobeSpinning)}
-                                            className={`flex items-center justify-center w-10 h-10 rounded-sm border transition-all duration-300 ${isGlobeSpinning ? 'bg-[#00ffff]/10 border-[#00ffff] text-[#00ffff]' : 'bg-black/40 border-white/5 text-white/40'}`}
+                                            className={`flex items-center justify-center w-10 h-10 rounded-sm border transition-all duration-300 ${isGlobeSpinning ? 'bg-[#b39ddb]/10 border-[#b39ddb] text-[#b39ddb] shadow-[0_0_15px_rgba(179,157,219,0.2)]' : 'bg-black/40 border-white/5 text-white/40 hover:border-[#b39ddb]/40 hover:text-[#b39ddb]'}`}
                                             title={isGlobeSpinning ? t('PAUSE_SPIN') : t('START_SPIN')}
                                         >
                                             {isGlobeSpinning ? <Pause size={14} /> : <Play size={14} />}
@@ -2421,7 +2421,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">SKULL MENU:</strong> Click the skull icon in the top-left to open the main menu to view your Profile, Wallet balance, Messages, and Settings.
+                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">SKULL MENU:</strong> Click the skull icon in the top-left to open the main menu to view your Profile, Wallet balance, Messages, and Settings, etc.
                                             </div>
                                         </li>
                                     </ul>
