@@ -31,6 +31,8 @@ import ContentModal from './components/ContentModal';
 import SettingsView from './components/SettingsView';
 import TipArtistModal from './components/TipArtistModal';
 import TrackActionsDropdown from './components/TrackActionsDropdown';
+import TrackEconomyModal from './components/TrackEconomyModal';
+import PlaylistSelectModal from './components/PlaylistSelectModal';
 
 
 import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
@@ -210,6 +212,8 @@ function App() {
   const [previousView, setPreviousView] = useState('discovery');
   const [viewingUserId, setViewingUserId] = useState(null);
   const [tippingArtist, setTippingArtist] = useState(null);
+  const [economyTrack, setEconomyTrack] = useState(null);
+  const [playlistTrackToAdd, setPlaylistTrackToAdd] = useState(null);
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const { showNotification } = useNotification();
 
@@ -2916,6 +2920,9 @@ function App() {
                onQueueTrack={(track) => setTracks(prev => [...prev, track])}
                onPurchase={handlePurchase}
                onDownload={handleDownload}
+               onTipArtist={handleTipArtist}
+               onEconomyClick={setEconomyTrack}
+               onPlaylistAddClick={setPlaylistTrackToAdd}
                onLike={handleLike}
                onCache={handleCache}
                onAddCredits={addCreditsDebug}
@@ -3019,6 +3026,33 @@ function App() {
             await fetchUserProfile();
           }
         }}
+        showNotification={showNotification}
+      />
+
+      <TrackEconomyModal
+        isOpen={!!economyTrack}
+        onClose={() => setEconomyTrack(null)}
+        track={economyTrack}
+        isLiveBroadcast={!!activeStation}
+        userBalance={user?.credits || 0}
+        onTipSuccess={async (newBalance) => {
+          if (newBalance !== undefined) {
+            setUser(prev => ({ ...prev, credits: newBalance }));
+          } else {
+            await fetchUserProfile();
+          }
+        }}
+        onPurchase={handlePurchase}
+        onDownload={handleDownload}
+        showNotification={showNotification}
+      />
+
+      <PlaylistSelectModal
+        isOpen={!!playlistTrackToAdd}
+        onClose={() => setPlaylistTrackToAdd(null)}
+        track={playlistTrackToAdd}
+        playlists={userPlaylists || []}
+        onRefreshPlaylists={() => fetchPlaylists()}
         showNotification={showNotification}
       />
 
@@ -3337,6 +3371,8 @@ const Dashboard = React.memo(({
   onPurchase, 
   onDownload, 
   onTipArtist,
+  onEconomyClick,
+  onPlaylistAddClick,
   onLike, 
   onCache, 
   onAddCredits, 
@@ -3806,6 +3842,8 @@ const Dashboard = React.memo(({
               onPrev={handlePrev}
               onLike={onLike}
               onTipArtist={onTipArtist}
+              onEconomyClick={onEconomyClick}
+              onPlaylistAddClick={onPlaylistAddClick}
               user={user}
               playlists={playlists}
               onDownload={onDownload}
@@ -3843,7 +3881,7 @@ const Dashboard = React.memo(({
 });
 
 // --- MINI PLAYER COMPONENT ---
-const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onNext, onPrev, onLike, onTipArtist, onExpand, activeView, isMuted, onToggleMute, currentTime, duration, isSidebarCollapsed, volume, setVolume, isMinimized, onToggleMinimize, isBroadcasting, onOpenMixer, isReceivingLiveAudio, user, playlists, onDownload }) => {
+const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onNext, onPrev, onLike, onTipArtist, onExpand, activeView, isMuted, onToggleMute, currentTime, duration, isSidebarCollapsed, volume, setVolume, isMinimized, onToggleMinimize, isBroadcasting, onOpenMixer, isReceivingLiveAudio, user, playlists, onDownload, onEconomyClick, onPlaylistAddClick }) => {
   const isMessages = activeView === 'messages';
 
   if (isMinimized) {
@@ -3975,11 +4013,17 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
         
         <button
           className="group/tip relative w-8 h-8 flex items-center justify-center rounded-sm bg-black border border-white/10 hover:border-[#00ff00]/60 transition-all duration-300 font-mono font-black overflow-hidden shadow-lg"
-          title="Tip Artist"
+          title="Economy Terminal"
           onClick={(e) => { 
             e.stopPropagation(); 
-            if (track) {
-              onTipArtist?.(track);
+            if (activeStation) {
+              onEconomyClick?.({
+                title: activeStation.stationName || `Station ${activeStation.stationId}`,
+                artist: activeStation.hostName || activeStation.artistName || activeStation.ArtistName || 'Host',
+                artistId: activeStation.hostUserId || activeStation.HostUserId || activeStation.hostId || activeStation.HostId || activeStation.artistId || activeStation.ArtistId || activeStation.userId || activeStation.UserId,
+              });
+            } else if (track) {
+              onEconomyClick?.(track);
             } else {
               alert("No active track is currently playing.");
             }
@@ -3995,18 +4039,18 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
           onClick={(e) => { e.stopPropagation(); onLike && onLike(track); }}
         />
 
-        {track && (
-          <div className="z-50" onClick={(e) => e.stopPropagation()}>
-            <TrackActionsDropdown
-              track={track}
-              isOwner={track.artistUserId === (user?.id || user?.Id) || String(track.userId) === String(user?.id || user?.Id)}
-              onLike={onLike}
-              playlists={playlists || []}
-              isLikedInitial={track.isLiked}
-              onDownload={onDownload}
-              onTipArtist={onTipArtist}
-            />
-          </div>
+        {track && !activeStation && (
+          <button
+            className="group/add relative w-8 h-8 flex items-center justify-center rounded-sm bg-black border border-white/10 hover:border-[#ff006e]/60 transition-all duration-300 font-mono font-black overflow-hidden shadow-lg"
+            title="Add to Playlist"
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              onPlaylistAddClick?.(track);
+            }}
+          >
+            <div className="absolute inset-0 bg-[#ff006e]/10 opacity-0 group-hover/add:opacity-100 transition-opacity" />
+            <Plus size={16} className="text-white/40 group-hover/add:text-[#ff006e] group-hover/add:drop-shadow-[0_0_8px_rgba(255,0,110,0.8)] transition-all relative z-10" />
+          </button>
         )}
 
         <div className="flex items-center gap-3 group/vol pr-2 relative">
