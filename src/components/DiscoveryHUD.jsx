@@ -1617,7 +1617,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                         {/* --- RIGHT COLUMN: PLAYLISTS, VISUALS, JOURNALS --- */}
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-1 pointer-events-auto">
-                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('shopping')}>{t('MARKETPLACE') || '[ MARKETPLACE ]'}</span>} icon={<Layers size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('shopping')}>{t('SHOP_LNK')}</span>} icon={<Layers size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 {marketplaceItems.length > 0 ? (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in duration-500">
                                         {marketplaceItems.map(item => (
@@ -1662,7 +1662,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         </div>
 
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-3 pointer-events-auto">
-                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('feed')}>STUDIO_TRANSMISIONS</span>} icon={<Camera size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('feed')}>{t('STUDIO_TRANS')}</span>} icon={<Camera size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                                     {filteredVisuals.length > 0 ? filteredVisuals.map(vis => (
                                         <div
