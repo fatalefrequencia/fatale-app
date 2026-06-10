@@ -1294,7 +1294,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                 {!isMobile && (
                     <>
                         <div className="col-span-3 row-span-2 col-start-1 row-start-1 pointer-events-auto">
-                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('player')}>{t('YT_FREQ_SCAN')}</span>} icon={<Search size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('player')}>[ {t('YT_FREQ_SCAN')} ]</span>} icon={<Search size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="space-y-4">
                                     {youtubeResults.length > 0 ? youtubeResults.map(y => (
                                         <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => {
@@ -1502,7 +1502,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-1 lg:row-start-3 pointer-events-auto">
                             <HUDWidget
-                                title={selectedPlaylist ? `${t('DESC_PL')}: ${(selectedPlaylist.name || selectedPlaylist.Name || '').toUpperCase()}` : <span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('player')}>{t('PLAYLISTS') || '[ PLAYLISTS ]'}</span>}
+                                title={selectedPlaylist ? `${t('DESC_PL')}: ${(selectedPlaylist.name || selectedPlaylist.Name || '').toUpperCase()}` : <span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('player')}>[ {t('PLAYLISTS')} ]</span>}
                                 icon={selectedPlaylist ? <ChevronLeft size={14} className="cursor-pointer hover:text-white transition-colors" onClick={() => setSelectedPlaylist(null)} /> : <Music size={14} />}
                                 searchQuery={searchQuery}
                                 activeColor={activeSectorColor}
@@ -1662,7 +1662,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         </div>
 
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-3 pointer-events-auto">
-                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('feed')}>{t('STUDIO_TRANS')}</span>} icon={<Camera size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('feed')}>[ {t('STUDIO_TRANS')} ]</span>} icon={<Camera size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                                     {filteredVisuals.length > 0 ? filteredVisuals.map(vis => (
                                         <div
@@ -1775,7 +1775,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         </div>
 
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-7 lg:row-start-5 pointer-events-auto">
-                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('messages')}>COMMUNITIES</span>} icon={<Globe size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('messages')}>[ COMMUNITIES ]</span>} icon={<Globe size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="space-y-4">
                                     {/* Create Clique Trigger */}
                                     <div
@@ -2228,7 +2228,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         <div className="space-y-2">
                             <div className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center gap-2">
                                 <Camera size={14} />
-                                <span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('feed')}>{t('STUDIO_TRANS')}</span>
+                                <span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('feed')}>[ {t('STUDIO_TRANS')} ]</span>
                             </div>
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                                 {/* New Post/Track Button */}
