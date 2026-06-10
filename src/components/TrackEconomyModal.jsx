@@ -79,7 +79,7 @@ const TrackEconomyModal = ({
                         className="w-full max-w-lg bg-[#050505] border border-[#ff006e]/30 relative overflow-hidden shadow-[0_0_80px_rgba(255,0,110,0.2)] rounded-sm font-mono text-white"
                     >
                         {/* Status bar */}
-                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#ff006e] via-[#9b5de5] to-[#00ffff]" />
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#ff006e] via-[#d60036] to-[#9d00ff]" />
 
                         {/* Top close button */}
                         <div className="flex justify-between items-center p-5 border-b border-white/5 bg-black/50">
@@ -99,9 +99,13 @@ const TrackEconomyModal = ({
                             {/* Track Details Widget */}
                             <div className="flex items-center justify-between gap-4 bg-white/[0.02] border border-white/5 p-4 rounded-sm">
                                 <div className="flex items-center gap-4 min-w-0">
-                                    <div className="w-12 h-12 rounded-sm bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center font-black text-[#ff006e] shrink-0">
-                                        {resolveArtworkLetter(track)}
-                                    </div>
+                                    {track.cover || track.thumbnail || track.coverImageUrl ? (
+                                        <img src={track.cover || track.thumbnail || track.coverImageUrl} alt="Cover" className="w-12 h-12 object-cover rounded-sm border border-[#ff006e]/30 shrink-0" />
+                                    ) : (
+                                        <div className="w-12 h-12 rounded-sm bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center font-black text-[#ff006e] shrink-0">
+                                            {resolveArtworkLetter(track)}
+                                        </div>
+                                    )}
                                     <div className="min-w-0">
                                         <div className="text-xs font-black uppercase text-white tracking-widest truncate">{track.title}</div>
                                         <div className="text-[8px] text-white/40 uppercase tracking-widest mt-1 truncate">{track.artist}</div>
