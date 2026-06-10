@@ -3644,6 +3644,7 @@ const Dashboard = React.memo(({
                   setShowGlobalIngest={setShowGlobalIngest}
                   setIngestMode={setIngestMode}
                   onLogout={onLogout}
+                  hasNewMessages={hasNewMessages}
                 />
               </motion.div>
             )}
