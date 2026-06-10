@@ -738,7 +738,20 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             e.stopPropagation();
                             setShowSkullMenu(!showSkullMenu);
                         }}
-                        className="relative w-10 h-10 md:w-12 md:h-12 p-1.5 flex items-center justify-center border border-[#ff006e]/30 hover:border-[#ff006e] bg-black/60 shadow-[0_0_15px_rgba(255,0,110,0.2)] hover:shadow-[0_0_20px_rgba(255,0,110,0.5)] transition-all rounded-sm active:scale-95 group"
+                        className="relative w-10 h-10 md:w-12 md:h-12 p-1.5 flex items-center justify-center transition-all rounded-sm active:scale-95 group"
+                        style={{
+                            boxShadow: `0 0 15px rgba(255, 0, 110, 0.35)`,
+                            border: `1px solid rgba(255, 0, 110, 0.45)`,
+                            backgroundColor: '#000000'
+                        }}
+                        onMouseEnter={e => {
+                            e.currentTarget.style.boxShadow = '0 0 22px rgba(255, 0, 110, 0.6)';
+                            e.currentTarget.style.borderColor = 'rgba(255, 0, 110, 0.85)';
+                        }}
+                        onMouseLeave={e => {
+                            e.currentTarget.style.boxShadow = '0 0 15px rgba(255, 0, 110, 0.35)';
+                            e.currentTarget.style.borderColor = 'rgba(255, 0, 110, 0.45)';
+                        }}
                         title="System Navigation"
                     >
                         <img
@@ -767,7 +780,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 transition={{ duration: 0.18 }}
-                                className="fixed inset-0 bg-[#020202] z-[9999] flex items-center justify-center p-3 md:p-8 pointer-events-auto"
+                                className="fixed inset-0 bg-black z-[9999] flex items-center justify-center p-3 md:p-8 pointer-events-auto"
                             >
                                 {/* Scanlines & Noise multiply overlay */}
                                 <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%] z-10" />
@@ -777,7 +790,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     animate={{ scale: 1, y: 0 }}
                                     exit={{ scale: 0.95, y: 15 }}
                                     transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-                                    className="w-full max-w-2xl max-h-[96vh] overflow-y-auto bg-black border border-[#ff006e]/30 p-4 md:p-8 relative rounded-sm flex flex-col gap-4 md:gap-6 z-20 no-scrollbar"
+                                    className="w-full max-w-2xl max-h-[96vh] overflow-y-auto bg-black border border-[#ff006e]/40 p-4 md:p-8 relative rounded-sm flex flex-col gap-4 md:gap-6 z-20 no-scrollbar"
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     {/* Tech corners */}
