@@ -102,7 +102,7 @@ const PlaylistSelectModal = ({
                         className="w-full max-w-md bg-[#050505] border border-[#ff006e]/30 relative overflow-hidden shadow-[0_0_80px_rgba(255,0,110,0.2)] rounded-sm font-mono text-white"
                     >
                         {/* Status bar line */}
-                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#ff006e] via-[#9d00ff] to-[#d60036]" />
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#ff006e] to-[#d60036]" />
 
                         {/* Top header */}
                         <div className="flex justify-between items-center p-5 border-b border-white/5 bg-black/50">
