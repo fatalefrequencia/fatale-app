@@ -1258,7 +1258,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 <div className="absolute bottom-4 left-4 z-50 scale-75 lg:scale-100">
                                     <button
                                         onClick={() => setShowSystemGuide(true)}
-                                        className="flex items-center justify-center w-10 h-10 rounded-sm border bg-[#020202] border-[#ff006e]/30 text-white/50 hover:border-[#ff006e] hover:text-[#ff006e] transition-all duration-300 shadow-[0_0_10px_rgba(255,0,110,0.15)] hover:shadow-[0_0_20px_rgba(255,0,110,0.3)]"
+                                        className="flex items-center justify-center w-10 h-10 rounded-sm border bg-[#020202] border-[#b39ddb]/30 text-white/50 hover:border-[#b39ddb] hover:text-[#b39ddb] transition-all duration-300 shadow-[0_0_10px_rgba(179,157,219,0.15)] hover:shadow-[0_0_20px_rgba(179,157,219,0.3)]"
                                         title="System Guide"
                                     >
                                         <HelpCircle size={15} />
@@ -2334,81 +2334,94 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.95, y: 15 }}
                             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-[#020202] border border-[#ff006e]/50 p-6 md:p-8 relative rounded-sm flex flex-col gap-6 z-20 no-scrollbar shadow-[0_0_50px_rgba(255,0,110,0.2)]"
+                            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-[#020202] border border-[#b39ddb]/50 p-6 md:p-8 relative rounded-sm flex flex-col gap-6 z-20 no-scrollbar shadow-[0_0_50px_rgba(179,157,219,0.25)]"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#ff006e]" />
-                            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#ff006e]" />
-                            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#ff006e]" />
-                            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#ff006e]" />
+                            {/* Tech corners - Lavender */}
+                            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#b39ddb]" />
+                            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#b39ddb]" />
+                            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#b39ddb]" />
+                            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#b39ddb]" />
 
-                            <div className="flex justify-between items-center border-b border-[#ff006e]/20 pb-4">
+                            <div className="flex justify-between items-center border-b border-[#b39ddb]/20 pb-4">
                                 <div>
-                                    <div className="text-[10px] font-black text-[#ff006e] tracking-[0.3em] font-mono">// SYSTEM_GUIDE_TERMINAL</div>
+                                    <div className="text-[10px] font-black text-[#b39ddb] tracking-[0.3em] font-mono">// SYSTEM_GUIDE_TERMINAL</div>
                                     <div className="text-white/40 text-[8px] font-mono mt-0.5 uppercase tracking-widest">FATALE CORE // INTERACTION MANUAL</div>
                                 </div>
                                 <button
                                     onClick={() => setShowSystemGuide(false)}
-                                    className="text-white/40 hover:text-[#ff006e] transition-colors border border-white/10 hover:border-[#ff006e]/50 px-3 py-1.5 text-[9px] font-mono uppercase tracking-widest rounded-sm"
+                                    className="text-white/40 hover:text-[#b39ddb] transition-colors border border-white/10 hover:border-[#b39ddb]/50 px-3 py-1.5 text-[9px] font-mono uppercase tracking-widest rounded-sm"
                                 >
                                     [ CLOSE ]
                                 </button>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-white/80 font-mono text-[10px] leading-relaxed">
-                                <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-white/90 font-sans text-[11px] leading-relaxed">
+                                <div className="space-y-5">
                                     <div className="border-b border-white/5 pb-1">
-                                        <span className="text-[#00ffff] font-black uppercase tracking-wider">// CORE HUD INTERFACE</span>
+                                        <span className="text-[#00ffff] font-black font-mono uppercase tracking-wider">// CORE HUD INTERFACE</span>
                                     </div>
-                                    <ul className="space-y-2.5 list-none pl-0">
+                                    <ul className="space-y-3.5 list-none pl-0">
                                         <li className="flex gap-2">
-                                            <span className="text-[#ff006e] shrink-0">■</span>
+                                            <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-white">YT FREQ SCAN:</strong> Intercept and stream music signals directly from external frequencies.
+                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">YT FREQ SCAN:</strong> Search and play any song directly from YouTube.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
-                                            <span className="text-[#ff006e] shrink-0">■</span>
+                                            <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-white">NATIVE_ARTISTS:</strong> Node network of creator profiles broadcasting in our sectors.
+                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">NATIVE_ARTISTS:</strong> View profiles of artists who upload and release music directly on the platform.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
-                                            <span className="text-[#ff006e] shrink-0">■</span>
+                                            <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-white">[ MARKETPLACE ]:</strong> Digital depot hosting visual data fragments, collectibles, and audio gear.
+                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">[ MARKETPLACE ]:</strong> Buy digital collectibles, browse online stores, and explore artist gear.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
-                                            <span className="text-[#ff006e] shrink-0">■</span>
+                                            <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-white">STUDIO TRANSMISSIONS:</strong> Real-time and archived audio-visual feeds from creators.
+                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">STUDIO TRANSMISSIONS:</strong> Explore photos, videos, and studio updates shared by artists.
+                                            </div>
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
+                                            <div>
+                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">[ JOURNAL ]:</strong> Read blog posts, personal logs, and text updates from artists.
+                                            </div>
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
+                                            <div>
+                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">LIVE!:</strong> Tune in and listen to active live streams and DJ broadcasts.
                                             </div>
                                         </li>
                                     </ul>
                                 </div>
 
-                                <div className="space-y-4">
+                                <div className="space-y-5">
                                     <div className="border-b border-white/5 pb-1">
-                                        <span className="text-[#00ffff] font-black uppercase tracking-wider">// SIGNAL NAVIGATION</span>
+                                        <span className="text-[#00ffff] font-black font-mono uppercase tracking-wider">// SIGNAL NAVIGATION</span>
                                     </div>
-                                    <ul className="space-y-2.5 list-none pl-0">
+                                    <ul className="space-y-3.5 list-none pl-0">
                                         <li className="flex gap-2">
-                                            <span className="text-[#ff006e] shrink-0">■</span>
+                                            <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-white">INTERACTIVE GLOBE:</strong> Drag to rotate the node cluster. Hover or click on nodes to parse details. Use filter buttons on the right to toggle nodes by type.
+                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">INTERACTIVE GLOBE:</strong> Drag to spin the 3D globe. Click colored nodes to view tracks, artists, or groups. Use the filters on the right to toggle what you see.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
-                                            <span className="text-[#ff006e] shrink-0">■</span>
+                                            <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-white">COMMUNITIES:</strong> Connect with localized cliques or found a new cluster in your active sector.
+                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">COMMUNITIES:</strong> Find fan groups or start your own in your current sector.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
-                                            <span className="text-[#ff006e] shrink-0">■</span>
+                                            <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-white">SYSTEM KERNEL:</strong> Trigger the skull selector at the top-left to access your Profile, Messages, Wallet balance, and System Configuration.
+                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">SKULL MENU:</strong> Click the skull icon in the top-left to open the main menu to view your Profile, Wallet balance, Messages, and Settings.
                                             </div>
                                         </li>
                                     </ul>
