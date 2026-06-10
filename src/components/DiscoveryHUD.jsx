@@ -1592,7 +1592,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         </div>
 
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-1 lg:row-start-5 pointer-events-auto">
-                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('profile')}>{t('ARTIST_NODES')}</span>} icon={<User size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('profile')}>NATIVE_ARTISTS</span>} icon={<User size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-2 pt-2">
                                     {filteredArtists.map(a => (
                                         <div key={a.id} className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => navigateToProfile(a.userId)}>
@@ -1662,7 +1662,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         </div>
 
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-3 pointer-events-auto">
-                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('feed')}>{t('STUDIO_TRANS')}</span>} icon={<Camera size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('feed')}>STUDIO_TRANSMISIONS</span>} icon={<Camera size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                                     {filteredVisuals.length > 0 ? filteredVisuals.map(vis => (
                                         <div
@@ -1701,7 +1701,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         </div>
 
                         <div className="col-span-3 row-span-2 col-start-10 row-start-5 pointer-events-auto">
-                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('feed')}>{t('FREQ_JOURNAL')}</span>} icon={<BookOpen size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('feed')}>[ JOURNAL ]</span>} icon={<BookOpen size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="space-y-4">
                                     {filteredJournals.length > 0 ? filteredJournals.map(j => (
                                         <div
@@ -1731,7 +1731,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                         {/* --- BOTTOM CENTER: LIVE STATIONS --- */}
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-4 lg:row-start-5 pointer-events-auto">
-                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('player')}>{t('LIVE') || 'LIVE!'}</span>} icon={<Radio size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('player')}>LIVE!</span>} icon={<Radio size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="space-y-4 max-h-[160px] overflow-y-auto custom-scrollbar-sharp pr-1">
                                     {liveStations.length > 0 ? liveStations.map(c => {
                                         const isFollowed = user && followingIds.includes(String(c.artistUserId || c.ArtistUserId));
@@ -1775,7 +1775,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         </div>
 
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-7 lg:row-start-5 pointer-events-auto">
-                            <HUDWidget title={t('SECTOR_CLIQUES')} icon={<Globe size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('messages')}>COMMUNITIES</span>} icon={<Globe size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="space-y-4">
                                     {/* Create Clique Trigger */}
                                     <div
@@ -1872,7 +1872,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 {filteredArtists.length > 0 && (
                                     <div>
                                         <div className="text-[10px] font-black uppercase text-[#00ffaa] mb-3 tracking-widest flex items-center justify-between">
-                                            <span>:: ARTIST_NODES ::</span>
+                                            <span>:: NATIVE_ARTISTS ::</span>
                                             <span className="text-[8px] opacity-60">{filteredArtists.length} FOUND</span>
                                         </div>
                                         <div className="grid grid-cols-2 gap-3">
@@ -2279,7 +2279,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         <div className="space-y-2">
                             <div className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center gap-2">
                                 <User size={14} />
-                                {t('ARTIST_NODES')}
+                                <span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('profile')}>NATIVE_ARTISTS</span>
                             </div>
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-2 pt-2">
                                 {filteredArtists.map(a => (
