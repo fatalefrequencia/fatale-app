@@ -1138,7 +1138,9 @@ const DJMixerPlayer = ({
                                 <div className="ingest-info truncate">{deckA?.title || t('NO_SIGNAL_BROADCAST')}</div>
                                 <div className="ingest-actions">
                                     <button onClick={() => onLike(deckA)} className="ingest-btn" title={t('ADD_TO_PLAYLIST')}><Plus size={10} /></button>
-                                    {/* <button onClick={() => onPurchase(deckA)} className="ingest-btn" title={t('PURCHASE_FILE')}><DollarSign size={10} /></button> */}
+                                    {deckA && deckA.category !== 'YouTube' && !deckA.source?.startsWith('youtube:') && !String(deckA.id).startsWith('youtube:') && !deckA.isOwned && (
+                                        <button onClick={() => onPurchase(deckA)} className="ingest-btn text-[#00ff00]" title={t('PURCHASE_FILE') || 'Purchase License'}><DollarSign size={10} /></button>
+                                    )}
                                 </div>
                             </div>
 
@@ -1352,7 +1354,9 @@ const DJMixerPlayer = ({
                                 <div className="ingest-info truncate">{deckB?.title || t('NO_SIGNAL_BROADCAST')}</div>
                                 <div className="ingest-actions">
                                     <button onClick={() => onLike(deckB)} className="ingest-btn" title={t('ADD_TO_PLAYLIST')}><Plus size={10} /></button>
-                                    {/* <button onClick={() => onPurchase(deckB)} className="ingest-btn" title={t('PURCHASE_FILE')}><DollarSign size={10} /></button> */}
+                                    {deckB && deckB.category !== 'YouTube' && !deckB.source?.startsWith('youtube:') && !String(deckB.id).startsWith('youtube:') && !deckB.isOwned && (
+                                        <button onClick={() => onPurchase(deckB)} className="ingest-btn text-[#00ff00]" title={t('PURCHASE_FILE') || 'Purchase License'}><DollarSign size={10} /></button>
+                                    )}
                                 </div>
                             </div>
 

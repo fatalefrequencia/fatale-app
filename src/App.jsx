@@ -3804,6 +3804,7 @@ const Dashboard = React.memo(({
               onNext={handleNext}
               onPrev={handlePrev}
               onLike={onLike}
+              onTipArtist={handleTipArtist}
               onExpand={() => {
                 console.log("[App] MiniPlayer expanded. Triggering redirect...", typeof setRedirectTrigger);
                 if (typeof setRedirectTrigger === 'function') {
@@ -3838,7 +3839,7 @@ const Dashboard = React.memo(({
 });
 
 // --- MINI PLAYER COMPONENT ---
-const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onNext, onPrev, onLike, onExpand, activeView, isMuted, onToggleMute, currentTime, duration, isSidebarCollapsed, volume, setVolume, isMinimized, onToggleMinimize, isBroadcasting, onOpenMixer, isReceivingLiveAudio }) => {
+const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onNext, onPrev, onLike, onTipArtist, onExpand, activeView, isMuted, onToggleMute, currentTime, duration, isSidebarCollapsed, volume, setVolume, isMinimized, onToggleMinimize, isBroadcasting, onOpenMixer, isReceivingLiveAudio }) => {
   const isMessages = activeView === 'messages';
 
   if (isMinimized) {
@@ -3971,7 +3972,14 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
         <button
           className="group/tip relative w-8 h-8 flex items-center justify-center rounded-sm bg-black border border-white/10 hover:border-[#00ff00]/60 transition-all duration-300 font-mono font-black overflow-hidden shadow-lg"
           title="Tip Artist"
-          onClick={(e) => { e.stopPropagation(); /* Future Stripe Integration */ alert("Tip functionality initializing..."); }}
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            if (track) {
+              onTipArtist?.(track);
+            } else {
+              alert("No active track is currently playing.");
+            }
+          }}
         >
           <div className="absolute inset-0 bg-[#00ff00]/10 opacity-0 group-hover/tip:opacity-100 transition-opacity" />
           <span className="text-white/40 group-hover/tip:text-[#00ff00] group-hover/tip:drop-shadow-[0_0_8px_rgba(0,255,0,0.8)] transition-all relative z-10 text-xs pl-0.5">$</span>
