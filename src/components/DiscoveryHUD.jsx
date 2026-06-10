@@ -2359,43 +2359,43 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-white/90 font-sans text-[11px] leading-relaxed">
                                 <div className="space-y-5">
                                     <div className="border-b border-white/5 pb-1">
-                                        <span className="text-[#00ffff] font-black font-mono uppercase tracking-wider">// CORE HUD INTERFACE</span>
+                                        <span className="text-[#8c62d1] font-black font-mono uppercase tracking-wider">// CORE HUD INTERFACE</span>
                                     </div>
                                     <ul className="space-y-3.5 list-none pl-0">
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">YT FREQ SCAN:</strong> Search and play any song directly from YouTube.
+                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1">YT FREQ SCAN:</strong> Search and play any song directly from YouTube.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">NATIVE_ARTISTS:</strong> View profiles of artists who upload and release music directly on the platform.
+                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1">NATIVE_ARTISTS:</strong> View profiles of artists who upload and release music directly on the platform.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">[ MARKETPLACE ]:</strong> Buy digital collectibles, browse online stores, and explore artist gear.
+                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1">[ MARKETPLACE ]:</strong> Buy digital collectibles, browse online stores, and explore artist gear.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">STUDIO TRANSMISSIONS:</strong> Explore photos, videos, and studio updates shared by artists.
+                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1">STUDIO TRANSMISSIONS:</strong> Explore photos, videos, and studio updates shared by artists.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">[ JOURNAL ]:</strong> Read blog posts, personal logs, and text updates from artists.
+                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1">[ JOURNAL ]:</strong> Read blog posts, personal logs, and text updates from artists.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">LIVE!:</strong> Tune in and listen to active live streams and DJ broadcasts.
+                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1">LIVE!:</strong> Tune in and listen to active live streams and DJ broadcasts.
                                             </div>
                                         </li>
                                     </ul>
@@ -2403,25 +2403,25 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                                 <div className="space-y-5">
                                     <div className="border-b border-white/5 pb-1">
-                                        <span className="text-[#00ffff] font-black font-mono uppercase tracking-wider">// SIGNAL NAVIGATION</span>
+                                        <span className="text-[#8c62d1] font-black font-mono uppercase tracking-wider">// SIGNAL NAVIGATION</span>
                                     </div>
                                     <ul className="space-y-3.5 list-none pl-0">
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">INTERACTIVE GLOBE:</strong> Drag to spin the 3D globe. Click colored nodes to view tracks, artists, or groups. Use the filters on the right to toggle what you see.
+                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1">INTERACTIVE GLOBE:</strong> Drag to spin the 3D globe. Click colored nodes to view tracks, artists, or groups. Use the filters on the right to toggle what you see.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">COMMUNITIES:</strong> Find fan groups or start your own in your current sector.
+                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1">COMMUNITIES:</strong> Find fan groups or start your own in your current sector.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-white font-mono uppercase tracking-wide mr-1">SKULL MENU:</strong> Click the skull icon in the top-left to open the main menu to view your Profile, Wallet balance, Messages, and Settings, etc.
+                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1">SKULL MENU:</strong> Click the skull icon in the top-left to open the main menu to view your Profile, Wallet balance, Messages, and Settings, etc.
                                             </div>
                                         </li>
                                     </ul>
