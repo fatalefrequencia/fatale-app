@@ -3804,7 +3804,7 @@ const Dashboard = React.memo(({
               onNext={handleNext}
               onPrev={handlePrev}
               onLike={onLike}
-              onTipArtist={handleTipArtist}
+              onTipArtist={onTipArtist}
               onExpand={() => {
                 console.log("[App] MiniPlayer expanded. Triggering redirect...", typeof setRedirectTrigger);
                 if (typeof setRedirectTrigger === 'function') {
