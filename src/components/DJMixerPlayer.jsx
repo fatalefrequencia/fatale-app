@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SkipBack, SkipForward, Play, Pause, Zap, Disc, MessageSquare, List, Search, Plus, DollarSign, Users, Radio, Heart, Music, Shuffle, Settings, Check, Star, Coins } from 'lucide-react';
+import { SkipBack, SkipForward, Play, Pause, Zap, Disc, MessageSquare, List, Search, Plus, DollarSign, Users, Radio, Heart, Music, Shuffle, Settings, Check, Star, Coins, ChevronDown, ChevronRight } from 'lucide-react';
 import CreditTransferModal from './CreditTransferModal';
 import { useNotification } from '../contexts/NotificationContext';
 import { getMediaUrl, API_BASE_URL } from '../constants';
@@ -178,6 +178,8 @@ const DJMixerPlayer = ({
     const [viewingArtist, setViewingArtist] = useState(null);
     const [chatInput, setChatInput] = useState('');
     const [viewMode, setViewMode] = useState(!isBroadcaster ? 'LISTENER' : 'MIXER');
+    const [fataleFavsExpanded, setFataleFavsExpanded] = useState(true);
+    const [youtubeFavsExpanded, setYoutubeFavsExpanded] = useState(true);
 
     const [audioDevices, setAudioDevices] = useState([]);
     const [selectedDeviceId, setSelectedDeviceId] = useState('');
@@ -723,7 +725,7 @@ const DJMixerPlayer = ({
 
     // Get all tracks available in the crate for navigation
     const getCrateTrackList = () => {
-        const filtered = getFilteredTracks();
+        const filtered = filteredTracks;
         return [...(filtered.collection || []), ...(filtered.network || [])];
     };
 
@@ -948,7 +950,7 @@ const DJMixerPlayer = ({
     };
 
     const handleShuffle = () => {
-        const filtered = getFilteredTracks();
+        const filtered = filteredTracks;
         const allTracks = [...(filtered.collection || []), ...(filtered.network || [])];
         if (allTracks.length > 0) {
             // Shuffle the entire group
@@ -982,7 +984,7 @@ const DJMixerPlayer = ({
     };
 
     // Filtered Crate Logic
-    const getFilteredTracks = () => {
+    const filteredTracks = useMemo(() => {
         if (crateCategory === 'PLAYLISTS') {
             if (viewingPlaylist) {
                 return { collection: viewingPlaylist.tracks || viewingPlaylist.Tracks || [], network: [], playlists: [] };
@@ -1026,7 +1028,7 @@ const DJMixerPlayer = ({
             collection: collectionResults,
             network: networkResults
         };
-    };
+    }, [crateCategory, viewingPlaylist, userPlaylists, viewingArtist, libraryTracks, searchQuery, tracks]);
 
     const formatTime = (time) => {
         if (!time || isNaN(time) || time < 0) return "0:00";
@@ -1714,7 +1716,7 @@ const DJMixerPlayer = ({
                                             {isCrateLoading ? (
                                                 <tr className="signal-row"><td colSpan="5" className="text-center py-8 opacity-40 italic">{t('TUNING_FREQS')}</td></tr>
                                             ) : crateCategory === 'PLAYLISTS' && !viewingPlaylist ? (
-                                                (getFilteredTracks().playlists || []).map((p, i) => (
+                                                (filteredTracks.playlists || []).map((p, i) => (
                                                     <tr key={`pl-${i}`} className="signal-row cursor-pointer" onClick={() => handlePlaylistClick(p)}>
                                                         <td className="load-actions">
                                                             <button className="load-chip"><List size={8} /></button>
@@ -1727,7 +1729,7 @@ const DJMixerPlayer = ({
                                                     </tr>
                                                 ))
                                             ) : crateCategory === 'ARTISTS' && !viewingArtist ? (
-                                                (getFilteredTracks().artists || []).map((artist, i) => (
+                                                (filteredTracks.artists || []).map((artist, i) => (
                                                     <tr key={`art-${i}`} className="signal-row cursor-pointer" onClick={() => setViewingArtist(artist)}>
                                                         <td className="load-actions">
                                                             <button className="load-chip"><Users size={8} /></button>
@@ -1749,7 +1751,7 @@ const DJMixerPlayer = ({
                                                     {viewingArtist && (
                                                         <>
                                                             <tr className="section-header-row"><td colSpan="5">ARTIST_SEQUENCE: {viewingArtist}</td></tr>
-                                                            {getFilteredTracks().collection.map((t, i) => (
+                                                            {filteredTracks.collection.map((t, i) => (
                                                                 <tr key={`art-track-${i}`} className="signal-row">
                                                                     <td className="load-actions">
                                                                         <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
@@ -1766,10 +1768,17 @@ const DJMixerPlayer = ({
                                                             ))}
                                                         </>
                                                     )}
-                                                    {getFilteredTracks().collection.filter(t => !isYoutubeTrack(t)).length > 0 && !viewingPlaylist && !viewingArtist && (
+                                                    {filteredTracks.collection.filter(t => !isYoutubeTrack(t)).length > 0 && !viewingPlaylist && !viewingArtist && (
                                                         <>
-                                                            <tr className="section-header-row"><td colSpan="5">FATALE_FAVORITES</td></tr>
-                                                            {getFilteredTracks().collection.filter(t => !isYoutubeTrack(t)).map((t, i) => (
+                                                            <tr className="section-header-row" onClick={() => setFataleFavsExpanded(!fataleFavsExpanded)} style={{ cursor: 'pointer' }}>
+                                                                <td colSpan="5">
+                                                                    <div className="flex items-center justify-between pr-2">
+                                                                        <span>FATALE_FAVORITES</span>
+                                                                        {fataleFavsExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            {fataleFavsExpanded && filteredTracks.collection.filter(t => !isYoutubeTrack(t)).map((t, i) => (
                                                                 <tr key={`fav-${i}`} className="signal-row">
                                                                     <td className="load-actions">
                                                                         <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
@@ -1786,10 +1795,17 @@ const DJMixerPlayer = ({
                                                             ))}
                                                         </>
                                                     )}
-                                                    {getFilteredTracks().collection.filter(t => isYoutubeTrack(t)).length > 0 && !viewingPlaylist && !viewingArtist && (
+                                                    {filteredTracks.collection.filter(t => isYoutubeTrack(t)).length > 0 && !viewingPlaylist && !viewingArtist && (
                                                         <>
-                                                            <tr className="section-header-row"><td colSpan="5">{t('YOUTUBE_FAVS') || 'YOUTUBE FAVS'}</td></tr>
-                                                            {getFilteredTracks().collection.filter(t => isYoutubeTrack(t)).map((t, i) => (
+                                                            <tr className="section-header-row" onClick={() => setYoutubeFavsExpanded(!youtubeFavsExpanded)} style={{ cursor: 'pointer' }}>
+                                                                <td colSpan="5">
+                                                                    <div className="flex items-center justify-between pr-2">
+                                                                        <span>{t('YOUTUBE_FAVS') || 'YOUTUBE FAVS'}</span>
+                                                                        {youtubeFavsExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            {youtubeFavsExpanded && filteredTracks.collection.filter(t => isYoutubeTrack(t)).map((t, i) => (
                                                                 <tr key={`col-${i}`} className="signal-row">
                                                                     <td className="load-actions">
                                                                         <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
@@ -1807,10 +1823,10 @@ const DJMixerPlayer = ({
                                                         </>
                                                     )}
 
-                                                    {getFilteredTracks().network.length > 0 && !viewingPlaylist && (
+                                                    {filteredTracks.network.length > 0 && !viewingPlaylist && (
                                                         <tr className="section-header-row"><td colSpan="5">{t('GLOBAL_SIGNAL')}</td></tr>
                                                     )}
-                                                    {getFilteredTracks().network.map((t, i) => (
+                                                    {filteredTracks.network.map((t, i) => (
                                                         <tr key={`net-${i}`} className="signal-row discovery">
                                                             <td className="load-actions">
                                                                 <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
