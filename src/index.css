@@ -2,8 +2,8 @@
 
 
 @theme {
-    --font-sans: 'Share Tech Mono', monospace;
-    --font-mono: 'Share Tech Mono', monospace;
+    --font-sans: 'Fira Code', 'Consolas', 'Courier New', monospace;
+    --font-mono: 'Fira Code', 'Consolas', 'Courier New', monospace;
 }
 
 :root {
@@ -15,7 +15,7 @@
 
 html, body {
     background-color: #020202 !important;
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Fira Code', 'Consolas', 'Courier New', monospace;
     margin: 0;
     padding: 0;
     width: 100%;
