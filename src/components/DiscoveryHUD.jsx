@@ -1008,18 +1008,22 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                 {/* --- CENTER: THE GLOBE OR COMMUNITY TERMINAL --- */}
                 {(!isMobile || mobileViewMode === 'globe') && (
                     <div 
-                        className={`${isMobile ? 'h-[50vh] min-h-[360px] max-h-[460px] w-full' : 'h-[400px] lg:h-full'} lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 pointer-events-auto flex items-center justify-center relative transition-all duration-300 border bg-black/35 backdrop-blur-[2px] rounded-sm`}
-                        style={activeSectorColor ? {
+                        className={`${isMobile ? 'h-[50vh] min-h-[360px] max-h-[460px] w-full bg-transparent border-0' : 'h-[400px] lg:h-full lg:col-span-6 lg:row-span-4 lg:col-start-4 lg:row-start-1 border bg-black/35 backdrop-blur-[2px] rounded-sm'} pointer-events-auto flex items-center justify-center relative transition-all duration-300`}
+                        style={(!isMobile && activeSectorColor) ? {
                             borderColor: `${activeSectorColor}99`,
                             boxShadow: `0 0 20px ${activeSectorColor}26`,
                             outline: `1px solid ${activeSectorColor}4D`
-                        } : { borderColor: 'rgba(255,0,110,0.30)' }}
+                        } : (!isMobile ? { borderColor: 'rgba(255,0,110,0.30)' } : {})}
                     >
-                        {/* Corner Brackets */}
-                        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#ff006e]/55 z-20" style={activeSectorColor ? { borderColor: activeSectorColor } : {}} />
-                        <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#ff006e]/55 z-20" style={activeSectorColor ? { borderColor: activeSectorColor } : {}} />
-                        <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[#ff006e]/55 z-20" style={activeSectorColor ? { borderColor: activeSectorColor } : {}} />
-                        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#ff006e]/55 z-20" style={activeSectorColor ? { borderColor: activeSectorColor } : {}} />
+                        {/* Corner Brackets (Desktop only) */}
+                        {!isMobile && (
+                            <>
+                                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#ff006e]/55 z-20" style={activeSectorColor ? { borderColor: activeSectorColor } : {}} />
+                                <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#ff006e]/55 z-20" style={activeSectorColor ? { borderColor: activeSectorColor } : {}} />
+                                <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[#ff006e]/55 z-20" style={activeSectorColor ? { borderColor: activeSectorColor } : {}} />
+                                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#ff006e]/55 z-20" style={activeSectorColor ? { borderColor: activeSectorColor } : {}} />
+                            </>
+                        )}
 
                         {/* Pinterest Grid View */}
                         <div className={`absolute inset-0 w-full h-full bg-black/95 backdrop-blur-xl border border-white/10 p-5 pt-28 overflow-y-auto no-scrollbar transition-all duration-500 pointer-events-auto ${isPinterestView ? 'opacity-100 visible z-20' : 'opacity-0 invisible pointer-events-none -z-10'}`}>
