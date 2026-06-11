@@ -3655,7 +3655,7 @@ const Dashboard = React.memo(({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3, ease: 'easeInOut' }}
-                className="w-full h-full"
+                className={`w-full h-full ${currentTrackIndex >= 0 && !isMiniPlayerMinimized ? 'pb-[100px] lg:pb-0' : 'pb-0'}`}
               >
                 <React.Suspense fallback={<div className="w-full h-full bg-black animate-pulse" />}>
                   <ShoppingView />
@@ -3831,8 +3831,8 @@ const Dashboard = React.memo(({
       {/* MINI PLAYER (Todas las vistas excepto Player, y solo si hay track o station) */}
       <AnimatePresence>
         {activeView !== 'player' && (currentTrackIndex >= 0 || activeStation) && (
-          // Hide mini player on mobile if viewing profile or shopping to avoid crowding/overlap
-          !(window.innerWidth < 1024 && (activeView === 'profile' || activeView === 'shopping')) && (
+          // Hide mini player on mobile if viewing profile to avoid crowding/overlap
+          !(window.innerWidth < 1024 && activeView === 'profile') && (
             <MiniPlayer
               key={isMiniPlayerMinimized ? 'minimized' : 'expanded'}
               track={currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null}
