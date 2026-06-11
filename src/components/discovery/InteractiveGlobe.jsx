@@ -117,13 +117,13 @@ const ShimmerLine = memo(({ from, to, color, phaseOffset = 0, isSelected = false
         const t = clock.getElapsedTime();
         if (isSelected) {
             opRef.current = Math.min(opRef.current + 0.05, 1);
-            lineRef.current.material.opacity = 0.75;
+            lineRef.current.material.opacity = 0.95;
         } else if (isRelated) {
             opRef.current = Math.min(opRef.current + 0.04, 1);
-            lineRef.current.material.opacity = 0.45;
+            lineRef.current.material.opacity = 0.70;
         } else {
             opRef.current = Math.min(opRef.current + 0.025, 1);
-            lineRef.current.material.opacity = opRef.current * (0.10 + Math.sin(t * 0.6 + phaseOffset) * 0.07);
+            lineRef.current.material.opacity = opRef.current * (0.28 + Math.sin(t * 0.6 + phaseOffset) * 0.15);
         }
     });
 

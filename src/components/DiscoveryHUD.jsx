@@ -2177,7 +2177,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         {/* Playlists */}
                         <div className="space-y-2 border-b border-white/[0.03] pb-2">
                             <div 
-                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center justify-between cursor-pointer select-none"
+                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 pb-1 border-b border-[#ff006e]/30 flex items-center justify-between cursor-pointer select-none"
                                 onClick={() => setCollapsedSections(prev => ({ ...prev, playlists: !prev.playlists }))}
                             >
                                 <div className="flex items-center gap-2">
@@ -2278,7 +2278,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         {/* Feed (Visuals) */}
                         <div className="space-y-2 border-b border-white/[0.03] pb-2">
                             <div 
-                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center justify-between cursor-pointer select-none"
+                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 pb-1 border-b border-[#ff006e]/30 flex items-center justify-between cursor-pointer select-none"
                                 onClick={() => setCollapsedSections(prev => ({ ...prev, feed: !prev.feed }))}
                             >
                                 <div className="flex items-center gap-2">
@@ -2337,7 +2337,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         {/* Live Stations */}
                         <div className="space-y-2 border-b border-white/[0.03] pb-2">
                             <div 
-                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center justify-between cursor-pointer select-none"
+                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 pb-1 border-b border-[#ff006e]/30 flex items-center justify-between cursor-pointer select-none"
                                 onClick={() => setCollapsedSections(prev => ({ ...prev, stations: !prev.stations }))}
                             >
                                 <div className="flex items-center gap-2">
@@ -2393,7 +2393,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         {/* Marketplace */}
                         <div className="space-y-2 border-b border-white/[0.03] pb-2">
                             <div 
-                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center justify-between cursor-pointer select-none"
+                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 pb-1 border-b border-[#ff006e]/30 flex items-center justify-between cursor-pointer select-none"
                                 onClick={() => setCollapsedSections(prev => ({ ...prev, marketplace: !prev.marketplace }))}
                             >
                                 <div className="flex items-center gap-2">
@@ -2449,7 +2449,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         {/* Journal */}
                         <div className="space-y-2 border-b border-white/[0.03] pb-2">
                             <div 
-                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center justify-between cursor-pointer select-none"
+                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 pb-1 border-b border-[#ff006e]/30 flex items-center justify-between cursor-pointer select-none"
                                 onClick={() => setCollapsedSections(prev => ({ ...prev, journal: !prev.journal }))}
                             >
                                 <div className="flex items-center gap-2">
@@ -2482,7 +2482,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         {/* Communities */}
                         <div className="space-y-2 border-b border-white/[0.03] pb-2">
                             <div 
-                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center justify-between cursor-pointer select-none"
+                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 pb-1 border-b border-[#ff006e]/30 flex items-center justify-between cursor-pointer select-none"
                                 onClick={() => setCollapsedSections(prev => ({ ...prev, communities: !prev.communities }))}
                             >
                                 <div className="flex items-center gap-2">
@@ -2532,7 +2532,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         {/* Artists */}
                         <div className="space-y-2 border-b border-white/[0.03] pb-2">
                             <div 
-                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center justify-between cursor-pointer select-none"
+                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 pb-1 border-b border-[#ff006e]/30 flex items-center justify-between cursor-pointer select-none"
                                 onClick={() => setCollapsedSections(prev => ({ ...prev, artists: !prev.artists }))}
                             >
                                 <div className="flex items-center gap-2">
@@ -2582,8 +2582,9 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.95, y: 15 }}
                             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-[#020202] border border-[#b39ddb]/50 p-6 md:p-8 relative rounded-sm flex flex-col gap-6 z-20 no-scrollbar shadow-[0_0_50px_rgba(179,157,219,0.25)]"
+                            className="w-full max-w-3xl max-h-[85vh] md:max-h-[90vh] overflow-y-auto bg-[#020202] border border-[#b39ddb]/60 p-5 md:p-8 relative rounded-sm flex flex-col gap-5 md:gap-6 z-20 custom-scrollbar shadow-[0_0_50px_rgba(179,157,219,0.25)]"
                             onClick={(e) => e.stopPropagation()}
+                            style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom, 12px))' }}
                         >
                             {/* Tech corners - Lavender */}
                             <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#b39ddb]" />
@@ -2604,7 +2605,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 </button>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-white/90 font-sans text-[11px] leading-relaxed">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8 text-white/90 font-sans text-[11px] leading-relaxed pb-4">
                                 <div className="space-y-5">
                                     <div className="border-b border-white/5 pb-1">
                                         <span className="text-[#8c62d1] font-black font-mono uppercase tracking-wider">// CORE HUD INTERFACE</span>

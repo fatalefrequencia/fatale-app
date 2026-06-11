@@ -23,7 +23,7 @@ const HUDWidget = ({ title, children, icon, searchQuery, activeColor }) => {
                         {icon}
                     </div>
                     <div 
-                        className={`text-[10px] font-black tracking-[0.2em] uppercase transition-colors ${activeColor ? '' : 'text-[#ff006e]/80 group-hover/widget:text-[#ff006e]'}`}
+                        className={`text-[10px] font-black tracking-[0.2em] uppercase transition-colors border-b pb-0.5 ${activeColor ? 'border-current' : 'text-[#ff006e]/80 group-hover/widget:text-[#ff006e] border-[#ff006e]/35'}`}
                         style={activeColor ? { color: activeColor } : {}}
                     >
                         {title}
@@ -43,7 +43,7 @@ const HUDWidget = ({ title, children, icon, searchQuery, activeColor }) => {
                     borderColor: `${activeColor}99`, 
                     boxShadow: `0 0 20px ${activeColor}26`,
                     outline: `1px solid ${activeColor}4D`
-                } : { borderColor: 'rgba(255,0,110,0.1)' }}
+                } : { borderColor: 'rgba(255,0,110,0.30)' }}
             >
                 
                 {/* Top Content Labeling */}
@@ -55,10 +55,10 @@ const HUDWidget = ({ title, children, icon, searchQuery, activeColor }) => {
                 )}
 
                 {/* Corner Brackets */}
-                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#ff006e]/30 group-hover/widget:border-[#ff006e]/60 transition-colors" />
-                <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#ff006e]/30 group-hover/widget:border-[#ff006e]/60 transition-colors" />
-                <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[#ff006e]/30 group-hover/widget:border-[#ff006e]/60 transition-colors" />
-                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#ff006e]/30 group-hover/widget:border-[#ff006e]/60 transition-colors" />
+                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#ff006e]/55 group-hover/widget:border-[#ff006e]/80 transition-colors" />
+                <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#ff006e]/55 group-hover/widget:border-[#ff006e]/80 transition-colors" />
+                <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[#ff006e]/55 group-hover/widget:border-[#ff006e]/80 transition-colors" />
+                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#ff006e]/55 group-hover/widget:border-[#ff006e]/80 transition-colors" />
 
                 {/* Scanline Effect */}
                 <div className="absolute inset-0 pointer-events-none z-10 opacity-10">
