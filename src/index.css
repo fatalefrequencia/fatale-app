@@ -24,12 +24,12 @@ html, body {
     position: fixed;
     overflow: hidden;
     overscroll-behavior-y: none;
-    cursor: auto;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="%23ff006e" stroke="white" stroke-width="1.5"><polygon points="3 3 10 22 13 14 21 17 3 3"/></svg>') 3 3, auto !important;
 }
 
 /* Ensure custom cursor applies to clickable elements too */
 a, button, [role="button"], [class*="cursor-pointer"] {
-    cursor: pointer;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="%23ff006e" stroke="white" stroke-width="1.5"><polygon points="3 3 10 22 13 14 21 17 3 3"/></svg>') 3 3, pointer !important;
 }
 
 body {
