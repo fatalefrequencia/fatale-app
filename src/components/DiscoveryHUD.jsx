@@ -1681,7 +1681,8 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             <div key={item.id || item.Id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => {
                                                 const desc = item.description || item.Description;
                                                 if (desc && desc !== "#") {
-                                                    window.open(desc, '_blank');
+                                                    const targetUrl = desc.includes('|') ? desc.split('|')[0].trim() : desc;
+                                                    window.open(targetUrl, '_blank');
                                                 }
                                             }}>
                                                 {((item.type || item.Type) || '').toLowerCase() === 'video' ? (
@@ -1700,7 +1701,20 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                 {/* Content Bar */}
                                                 <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5 bg-black/70 p-2 backdrop-blur-sm border border-white/5 group-hover:border-[#ff006e]/20 transition-all">
                                                     <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight text-white transition-colors">
-                                                        {(item.description || item.Description) ? (item.description || item.Description) : ((item.title || item.Title) && !(item.title || item.Title).includes(' ') && (item.title || item.Title).length > 20 ? 'UNTITLED' : (item.title || item.Title))}
+                                                        {(() => {
+                                                            const desc = item.description || item.Description || '';
+                                                            if (desc.includes('|')) {
+                                                                const parts = desc.split('|');
+                                                                const caption = parts.slice(1).join('|').trim();
+                                                                const cleanCaption = caption.replace(/\[CAT:[A-Z]+\]/g, '').trim();
+                                                                if (cleanCaption) return cleanCaption;
+                                                            }
+                                                            const title = item.title || item.Title;
+                                                            if (title && !title.includes(' ') && title.length > 20) {
+                                                                return 'UNTITLED';
+                                                            }
+                                                            return title || 'UNTITLED';
+                                                        })()}
                                                     </div>
                                                     <div className="text-[7px] text-white/40 uppercase tracking-widest font-mono">
                                                         LOC: SEC_{hashStr(item.id || item.Id) % 99} // ID: {String(item.id || item.Id).substring(0, 6)}
