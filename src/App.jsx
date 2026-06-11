@@ -199,6 +199,7 @@ const ElectronTitleBar = () => {
 const CustomCursor = () => {
   const [pos, setPos] = useState({ x: -100, y: -100 });
   const [loaded, setLoaded] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
     const img = new Image();
