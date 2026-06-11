@@ -655,6 +655,9 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
         if (!s) return null;
         // Special case: Club (id: 0) gets a brighter pink to differentiate from the base theme
         if (s.id === 0) return "#ff33aa";
+        return s.color;
+    }, [activeSector]);
+
     const mobileMarketplaceGrid = useMemo(() => {
         const items = marketplaceItems.slice(0, 15);
         if (items.length === 0) {
