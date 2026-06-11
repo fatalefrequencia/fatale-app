@@ -38,12 +38,15 @@ const HUDWidget = ({ title, children, icon, searchQuery, activeColor }) => {
 
             {/* Main Content Container with Glassmorphism */}
             <div 
-                className={`flex-1 relative border transition-all duration-500 overflow-hidden bg-black backdrop-blur-md ${isRebooting ? 'border-[#ff006e]/60 bg-[#ff006e]/5 ring-1 ring-[#ff006e]/20' : ''}`}
+                className={`flex-1 relative border transition-all duration-500 overflow-hidden bg-black backdrop-blur-md ${isRebooting ? 'border-[#ff006e]/60 bg-[#ff006e]/5 ring-1 ring-[#ff006e]/20' : 'hover:border-[#ff006e]/70'}`}
                 style={activeColor ? { 
                     borderColor: `${activeColor}99`, 
-                    boxShadow: `0 0 20px ${activeColor}26`,
+                    boxShadow: `0 0 15px ${activeColor}33, inset 0 0 10px ${activeColor}1A`,
                     outline: `1px solid ${activeColor}4D`
-                } : { borderColor: 'rgba(255,0,110,0.30)' }}
+                } : { 
+                    borderColor: 'rgba(255,0,110,0.4)',
+                    boxShadow: '0 0 12px rgba(255,0,110,0.25), inset 0 0 8px rgba(255,0,110,0.08)'
+                }}
             >
                 
                 {/* Top Content Labeling */}
