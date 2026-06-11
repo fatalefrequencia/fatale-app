@@ -196,6 +196,48 @@ const ElectronTitleBar = () => {
     </div>
   );
 };
+const CustomCursor = () => {
+  const [pos, setPos] = useState({ x: -100, y: -100 });
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => setPos({ x: e.clientX, y: e.clientY });
+    const handleMouseEnter = () => setHidden(false);
+    const handleMouseLeave = () => setHidden(true);
+
+    window.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseenter', handleMouseEnter);
+    document.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseenter', handleMouseEnter);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, []);
+
+  if (hidden) return null;
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        left: pos.x,
+        top: pos.y,
+        width: '28px',
+        height: '28px',
+        backgroundImage: "url('/cursor.gif')",
+        backgroundSize: 'contain',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center',
+        pointerEvents: 'none',
+        zIndex: 999999,
+        transform: 'translate(-50%, -50%)',
+        imageRendering: 'pixelated'
+      }}
+    />
+  );
+};
 
 // --- COMPONENTE PRINCIPAL ---
 function App() {
@@ -6158,10 +6200,13 @@ import { LanguageProvider } from './contexts/LanguageContext';
 
 export default function AppWrapper() {
   return (
-    <NotificationProvider>
-      <LanguageProvider>
-        <App />
-      </LanguageProvider>
-    </NotificationProvider>
+    <>
+      <CustomCursor />
+      <NotificationProvider>
+        <LanguageProvider>
+          <App />
+        </LanguageProvider>
+      </NotificationProvider>
+    </>
   );
 }

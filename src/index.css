@@ -24,12 +24,12 @@ html, body {
     position: fixed;
     overflow: hidden;
     overscroll-behavior-y: none;
-    cursor: url('/cursor.gif') 16 16, auto;
+    cursor: none !important;
 }
 
 /* Ensure custom cursor applies to clickable elements too */
 a, button, [role="button"], [class*="cursor-pointer"] {
-    cursor: url('/cursor.gif') 16 16, pointer !important;
+    cursor: none !important;
 }
 
 body {
