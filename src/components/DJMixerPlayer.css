@@ -1829,3 +1829,34 @@
     border-color: var(--accent) !important;
     box-shadow: 0 0 15px var(--accent) !important;
 }
+
+/* Custom Desktop Layout Overhaul */
+@media (min-width: 1024px) {
+    .mixer-hud-wrapper {
+        flex-direction: row !important;
+        align-items: stretch !important;
+        gap: 20px !important;
+        max-height: 90vh !important;
+    }
+
+    .mixer-console-pane {
+        flex: 0 0 62% !important;
+        min-width: 800px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        height: auto !important;
+    }
+
+    .listener-now-playing-pane {
+        flex: 0 0 40% !important;
+        min-width: 400px !important;
+        height: auto !important;
+    }
+
+    .utility-interlink-pane {
+        flex: 1 !important;
+        height: auto !important;
+        min-height: unset !important;
+    }
+}

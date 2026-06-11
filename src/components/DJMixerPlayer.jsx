@@ -1099,11 +1099,15 @@ const DJMixerPlayer = ({
                         </div>
 
                         <div className="hud-readouts-compact mono">
-                            <div className="readout-item-nano">
-                                <Users size={10} className="text-[var(--accent)]" />
-                                <span className="val">{station?.listenerCount || '1.2K'}</span>
-                            </div>
-                            <div className="divider-nano">|</div>
+                            {station?.listenerCount !== undefined && station?.listenerCount !== null && (
+                                <>
+                                    <div className="readout-item-nano">
+                                        <Users size={10} className="text-[var(--accent)]" />
+                                        <span className="val">{station.listenerCount}</span>
+                                    </div>
+                                    <div className="divider-nano">|</div>
+                                </>
+                            )}
                             <button onClick={() => setViewMode('LISTENER')} className="readout-item-nano hover:text-[var(--accent)] transition-colors cursor-pointer border border-white/10 px-2 py-0.5 rounded bg-white/5">
                                 <Radio size={10} className="mr-1 inline" /> {t('LIVE')}
                             </button>

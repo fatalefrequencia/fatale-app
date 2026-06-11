@@ -38,7 +38,7 @@ import PlaylistSelectModal from './components/PlaylistSelectModal';
 import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
 import DJMixerPlayer from './components/DJMixerPlayer';
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
-import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack, onBroadcastSync, registerHost, unregisterHost, onListenerJoined, disconnectSignalR, onStationWentLive, onStationEnded } from './services/signalr';
+import { initSignalR, joinStation, leaveStation, syncTrack, sendMessage, requestTrack, onBroadcastSync, registerHost, unregisterHost, onListenerJoined, disconnectSignalR, onStationWentLive, onStationEnded, onListenerCount } from './services/signalr';
 import { useBroadcastSync } from './hooks/useBroadcastSync';
 import { useWebRTCBroadcast } from './hooks/useWebRTCBroadcast';
 import { useWebRTCListener } from './hooks/useWebRTCListener';
@@ -1206,9 +1206,17 @@ function App() {
       console.log("[App] Real-time: Station ended", payload);
       fetchLiveStations();
     });
+    const unsubCount = onListenerCount((count) => {
+      console.log("[App] Real-time: Listener count updated", count);
+      setActiveStation(prev => {
+        if (!prev) return null;
+        return { ...prev, listenerCount: count };
+      });
+    });
     return () => {
       if (typeof unsubLive === 'function') unsubLive();
       if (typeof unsubEnd === 'function') unsubEnd();
+      if (typeof unsubCount === 'function') unsubCount();
     };
   }, []);
 
