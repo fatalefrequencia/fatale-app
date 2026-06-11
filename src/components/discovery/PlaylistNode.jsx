@@ -106,7 +106,7 @@ const PlaylistNode = ({ data }) => {
                             textTransform: 'uppercase',
                             letterSpacing: hovered ? '0.08em' : '0.04em',
                             textShadow: '0 2px 4px rgba(0,0,0,0.8)',
-                            fontFamily: "'Share Tech Mono', monospace",
+                            fontFamily: "'Fira Code', 'Consolas', 'Courier New', monospace",
                             transition: 'all 0.2s ease',
                             whiteSpace: hovered ? 'nowrap' : 'normal',
                             wordBreak: hovered ? 'normal' : 'break-all'

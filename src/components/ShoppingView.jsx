@@ -21,7 +21,7 @@ const T = {
     purpleMid:   '#5c1a1a',
     descText:    '#8b3a3a',
     green:       '#2aff6e',
-    mono:        "'Share Tech Mono', monospace",
+    mono:        "'Fira Code', 'Consolas', 'Courier New', monospace",
 };
 
 const CATEGORIES = [

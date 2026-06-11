@@ -125,7 +125,7 @@ const ArtistNode = ({ data }) => {
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.04em',
                                 textShadow: hovered ? `0 0 5px ${artistColor}` : '0 0 4px rgba(0,0,0,1)',
-                                fontFamily: "'Share Tech Mono', monospace",
+                                fontFamily: "'Fira Code', 'Consolas', 'Courier New', monospace",
                                 transition: 'all 0.2s ease',
                                 whiteSpace: 'normal',
                                 wordBreak: 'break-all',

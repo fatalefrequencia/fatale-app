@@ -171,7 +171,7 @@ body {
     }
 
     .mono {
-        font-family: 'Share Tech Mono', monospace;
+        font-family: 'Fira Code', 'Consolas', 'Courier New', monospace;
     }
 
     @keyframes pulse-ring {
@@ -281,7 +281,7 @@ body {
 }
 
 .terminal-mono {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Fira Code', 'Consolas', 'Courier New', monospace;
     letter-spacing: 0.05em;
 }
 

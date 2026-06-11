@@ -134,7 +134,7 @@ const SectorHubPanel = ({
                     fontSize: 11,
                     color: `${color}cc`,
                     lineHeight: 1.5,
-                    fontFamily: "'Share Tech Mono', monospace",
+                    fontFamily: "'Fira Code', 'Consolas', 'Courier New', monospace",
                     letterSpacing: '0.03em'
                 }}>
                     {`> ${sector.desc || 'Establish your frequency in this sector.'}`}
@@ -299,7 +299,7 @@ const SectorHubPanel = ({
                     color: `${color}88`, 
                     fontSize: 8, 
                     marginTop: 12, 
-                    fontFamily: "'Share Tech Mono', monospace", 
+                    fontFamily: "'Fira Code', 'Consolas', 'Courier New', monospace", 
                     textTransform: 'uppercase',
                     letterSpacing: '0.1em'
                 }}>

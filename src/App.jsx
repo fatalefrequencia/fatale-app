@@ -267,6 +267,22 @@ function App() {
     }
   }, [user?.preferredLanguage, user?.PreferredLanguage, setLanguage]);
 
+  // Global Escape Listener for App-level Modals and Navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (tippingArtist) { setTippingArtist(null); return; }
+        if (economyTrack) { setEconomyTrack(null); return; }
+        if (playlistTrackToAdd) { setPlaylistTrackToAdd(null); return; }
+        if (activeView !== 'login' && activeView !== 'discovery') {
+          setView('discovery');
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [tippingArtist, economyTrack, playlistTrackToAdd, activeView]);
+
   const currentUserId = getUserId(user);
   const [tracks, setTracks] = useState(() => {
     try { return JSON.parse(localStorage.getItem('tracks') || '[]'); } catch { return []; }

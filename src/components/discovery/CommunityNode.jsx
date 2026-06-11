@@ -90,7 +90,7 @@ const CommunityNode = ({ data }) => {
                     lineHeight: 1.1,
                     marginBottom: 2,
                     zIndex: 2,
-                    fontFamily: "'Share Tech Mono', monospace",
+                    fontFamily: "'Fira Code', 'Consolas', 'Courier New', monospace",
                     letterSpacing: '0.04em',
                     textShadow: hovered ? `0 0 5px ${color}` : '0 1px 2px rgba(0,0,0,0.8)',
                     transition: 'all 0.2s ease',

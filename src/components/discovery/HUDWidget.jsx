@@ -41,11 +41,11 @@ const HUDWidget = ({ title, children, icon, searchQuery, activeColor }) => {
                 className={`flex-1 relative border transition-all duration-500 overflow-hidden bg-black backdrop-blur-md ${isRebooting ? 'border-[#ff006e]/60 bg-[#ff006e]/5 ring-1 ring-[#ff006e]/20' : 'hover:border-[#ff006e]/70'}`}
                 style={activeColor ? { 
                     borderColor: `${activeColor}99`, 
-                    boxShadow: `0 0 40px ${activeColor}40, inset 0 0 20px ${activeColor}1A`,
+                    boxShadow: `0 0 8px ${activeColor}99, 0 0 2px ${activeColor}cc, inset 0 0 4px ${activeColor}4D`,
                     outline: `1px solid ${activeColor}4D`
                 } : { 
-                    borderColor: 'rgba(255,0,110,0.4)',
-                    boxShadow: '0 0 40px rgba(255,0,110,0.3), inset 0 0 20px rgba(255,0,110,0.1)'
+                    borderColor: 'rgba(255,0,110,0.6)',
+                    boxShadow: '0 0 8px rgba(255,0,110,0.6), 0 0 2px rgba(255,0,110,0.8), inset 0 0 4px rgba(255,0,110,0.3)'
                 }}
             >
                 

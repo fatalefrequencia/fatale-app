@@ -112,7 +112,7 @@ const YoutubeNode = ({ data }) => {
                             textTransform: 'uppercase',
                             letterSpacing: hovered ? '0.08em' : '0.04em',
                             textShadow: hovered ? '0 0 5px #fff' : '0 1px 3px rgba(0,0,0,0.9)',
-                            fontFamily: "'Share Tech Mono', monospace",
+                            fontFamily: "'Fira Code', 'Consolas', 'Courier New', monospace",
                             transition: 'all 0.2s ease',
                             whiteSpace: hovered ? 'nowrap' : 'normal',
                             wordBreak: hovered ? 'normal' : 'break-all'
@@ -123,7 +123,7 @@ const YoutubeNode = ({ data }) => {
                     {author && (
                         <div style={{
                             color: 'rgba(255,255,255,0.5)', fontSize: 8,
-                            fontFamily: "'Share Tech Mono', monospace",
+                            fontFamily: "'Fira Code', 'Consolas', 'Courier New', monospace",
                             textTransform: 'uppercase',
                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                         }}>

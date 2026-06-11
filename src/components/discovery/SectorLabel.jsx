@@ -24,7 +24,7 @@ const SectorLabel = ({ data }) => {
             <div style={{
                 fontSize: 68,
                 fontWeight: 700,
-                fontFamily: "'Share Tech Mono', monospace",
+                fontFamily: "'Fira Code', 'Consolas', 'Courier New', monospace",
                 textTransform: 'uppercase',
                 letterSpacing: '0.15em',
                 color: `${color}15`,
@@ -37,7 +37,7 @@ const SectorLabel = ({ data }) => {
             {desc && (
                 <div style={{
                     fontSize: 12,
-                    fontFamily: "'Share Tech Mono', monospace",
+                    fontFamily: "'Fira Code', 'Consolas', 'Courier New', monospace",
                     color: `${color}66`,
                     letterSpacing: '0.4em',
                     textTransform: 'uppercase',

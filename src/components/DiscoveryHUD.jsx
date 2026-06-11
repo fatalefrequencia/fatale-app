@@ -399,6 +399,19 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
         }
     }, [searchQuery]);
 
+    // Handle Escape key logic
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                if (showSkullMenu) setShowSkullMenu(false);
+                if (showSystemGuide) setShowSystemGuide(false);
+                if (selectedGlobeItem) setSelectedGlobeItem(null);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [showSkullMenu, showSystemGuide, selectedGlobeItem]);
+
     // Fetch user playlists on mount and when user changes
     useEffect(() => {
         const fetchUserPlaylists = async () => {
@@ -969,6 +982,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             { id: 'feed', icon: <Grid size={15} />, label: t('FEED_LNK') || 'Feed', desc: 'FEED' },
                                             { id: 'shopping', icon: <ShoppingBag size={15} />, label: t('SHOP_LNK') || 'Marketplace', desc: 'STORE' },
                                             { id: 'settings', icon: <Settings size={15} />, label: t('SYS_CONF') || 'Settings', desc: 'SYSTEM' },
+                                            { id: 'player', icon: <Play size={15} />, label: t('PLAY_LNK') || 'Player', desc: 'AUDIO' },
                                         ].map(node => (
                                             <button
                                                 key={node.id}

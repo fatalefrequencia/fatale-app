@@ -77,7 +77,7 @@ const SectorHubNode = ({ data }) => {
                 fontWeight: 900,
                 letterSpacing: '0.4em',
                 textTransform: 'uppercase',
-                fontFamily: "'Share Tech Mono', monospace",
+                fontFamily: "'Fira Code', 'Consolas', 'Courier New', monospace",
                 marginBottom: 6,
                 opacity: 0.6
             }}>
@@ -94,7 +94,7 @@ const SectorHubNode = ({ data }) => {
                 textShadow: `0 0 10px ${color}`,
                 maxWidth: '90%',
                 lineHeight: 1.1,
-                fontFamily: "'Share Tech Mono', monospace",
+                fontFamily: "'Fira Code', 'Consolas', 'Courier New', monospace",
                 whiteSpace: 'normal',
                 wordBreak: 'break-word',
                 zIndex: 2,
@@ -113,7 +113,7 @@ const SectorHubNode = ({ data }) => {
                     padding: '6px 14px',
                     borderRadius: 4,
                     border: `1px solid ${color}33`,
-                    fontFamily: "'Share Tech Mono', monospace"
+                    fontFamily: "'Fira Code', 'Consolas', 'Courier New', monospace"
                 }}>
                     <Users size={16} style={{ color }} />
                     <span style={{
