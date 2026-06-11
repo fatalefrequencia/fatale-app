@@ -1766,10 +1766,10 @@ const DJMixerPlayer = ({
                                                             ))}
                                                         </>
                                                     )}
-                                                    {getFilteredTracks().collection.filter(t => t.isLiked).length > 0 && !viewingPlaylist && !viewingArtist && (
+                                                    {getFilteredTracks().collection.filter(t => !isYoutubeTrack(t)).length > 0 && !viewingPlaylist && !viewingArtist && (
                                                         <>
                                                             <tr className="section-header-row"><td colSpan="5">FATALE_FAVORITES</td></tr>
-                                                            {getFilteredTracks().collection.filter(t => t.isLiked).map((t, i) => (
+                                                            {getFilteredTracks().collection.filter(t => !isYoutubeTrack(t)).map((t, i) => (
                                                                 <tr key={`fav-${i}`} className="signal-row">
                                                                     <td className="load-actions">
                                                                         <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
@@ -1777,7 +1777,7 @@ const DJMixerPlayer = ({
                                                                     </td>
                                                                     <td className="sig-title truncate font-black flex items-center gap-2">
                                                                         {t.title}
-                                                                        <Heart size={8} fill="var(--accent)" className="text-[var(--accent)]" />
+                                                                        {t.isLiked && <Heart size={8} fill="var(--accent)" className="text-[var(--accent)]" />}
                                                                     </td>
                                                                     <td className="sig-artist truncate opacity-30">{getDisplayArtist(t)}</td>
                                                                     <td className="sig-bpm mono text-[var(--accent)]">{t.bpm || '--'}</td>
@@ -1786,10 +1786,10 @@ const DJMixerPlayer = ({
                                                             ))}
                                                         </>
                                                     )}
-                                                    {getFilteredTracks().collection.filter(t => !t.isLiked).length > 0 && !viewingPlaylist && !viewingArtist && (
+                                                    {getFilteredTracks().collection.filter(t => isYoutubeTrack(t)).length > 0 && !viewingPlaylist && !viewingArtist && (
                                                         <>
                                                             <tr className="section-header-row"><td colSpan="5">{t('YOUTUBE_FAVS') || 'YOUTUBE FAVS'}</td></tr>
-                                                            {getFilteredTracks().collection.filter(t => !t.isLiked).map((t, i) => (
+                                                            {getFilteredTracks().collection.filter(t => isYoutubeTrack(t)).map((t, i) => (
                                                                 <tr key={`col-${i}`} className="signal-row">
                                                                     <td className="load-actions">
                                                                         <button onClick={() => loadToDeck(t, 'A')} className="load-chip">A</button>
@@ -1797,6 +1797,7 @@ const DJMixerPlayer = ({
                                                                     </td>
                                                                     <td className="sig-title truncate font-black flex items-center gap-2">
                                                                         {t.title}
+                                                                        {t.isLiked && <Heart size={8} fill="var(--accent)" className="text-[var(--accent)]" />}
                                                                     </td>
                                                                     <td className="sig-artist truncate opacity-30">{getDisplayArtist(t)}</td>
                                                                     <td className="sig-bpm mono text-[var(--accent)]">{t.bpm || '--'}</td>
