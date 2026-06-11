@@ -3906,16 +3906,21 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
     );
   }
 
+  const isMobile = window.innerWidth < 1024;
+
   return (
     <motion.div
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 100, opacity: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 28 }}
-      className={`fixed bottom-0 lg:bottom-4 transition-[left] duration-500 left-0 right-0 ${isSidebarCollapsed ? 'lg:left-[6rem]' : 'lg:left-[17rem]'} lg:right-4 backdrop-blur-3xl p-1.5 lg:p-3 pb-3 lg:pb-3 flex items-center gap-3 z-[100] ${isMessages
+      className={`fixed bottom-0 lg:bottom-4 transition-[left] duration-500 left-0 right-0 ${isSidebarCollapsed ? 'lg:left-[6rem]' : 'lg:left-[17rem]'} lg:right-4 backdrop-blur-3xl z-[100] ${isMessages
         ? 'bg-black/95 border-t border-white/5 lg:border lg:rounded-sm lg:shadow-none'
         : 'bg-[#020202]/95 border-t border-white/5 lg:border-white/5 lg:rounded-md shadow-[0_-15px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_10px_60px_-15px_rgba(255,0,110,0.15)]'
-        } group/player overflow-hidden`}
+        } group/player overflow-hidden flex ${isMobile ? 'flex-col gap-2.5 p-3' : 'flex-row items-center gap-3 p-1.5 lg:p-3 pb-3 lg:pb-3'}`}
+      style={{
+        paddingBottom: isMobile ? 'calc(10px + env(safe-area-inset-bottom, 12px))' : undefined
+      }}
     >
       {/* Background Texture Overlay */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-fixed mix-blend-screen" />
@@ -3936,7 +3941,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
       </button>
 
       {/* Track Info (Click to expand) */}
-      <div className="flex items-center gap-3 lg:gap-4 flex-1 cursor-pointer group/info min-w-0 z-10 relative" onClick={onExpand}>
+      <div className={`flex items-center gap-3 lg:gap-4 flex-1 cursor-pointer group/info min-w-0 z-10 relative ${isMobile ? 'w-full pr-6' : ''}`} onClick={onExpand}>
         <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-sm border flex items-center justify-center relative overflow-hidden shrink-0 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.5)] ${isMessages ? 'bg-black border-white/5' : 'bg-[#0a0a0a] border-white/10 group-hover/info:border-[#ff006e]/50 group-hover/info:shadow-[0_0_20px_rgba(255,0,110,0.2)]'}`}>
           {activeStation ? (
             <Radio size={18} className={`transition-all duration-500 z-10 relative text-[#ff006e]`} />
@@ -3977,111 +3982,202 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
         </div>
       </div>
 
-      {/* Controls - Hollow Geometric Grid */}
-      <div className="flex items-center gap-4 lg:gap-8 px-2 lg:px-6 shrink-0 z-10 relative">
-        <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="text-white/30 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
-          <SkipBack size={18} fill="currentColor" />
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
-          className={`w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-sm border transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(0,0,0,0.4)] ${isMessages 
-            ? 'bg-transparent border-white/20 text-white hover:border-white/60' 
-            : 'bg-black/60 border-white/10 text-[#ff006e] hover:bg-[#ff006e]/10 hover:border-[#ff006e]/50 hover:shadow-[0_0_20px_rgba(255,0,110,0.2)]'}`}
-        >
-          {isPlaying ? (
-            <Pause size={18} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
-          ) : (
-            <Play size={18} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
-          )}
-        </button>
-        <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="text-white/30 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
-          <SkipForward size={18} fill="currentColor" />
-        </button>
+      {isMobile ? (
+        <div className="flex items-center justify-between w-full z-10 relative px-1 border-t border-white/5 pt-2">
+          {/* Controls */}
+          <div className="flex items-center gap-5 shrink-0">
+            <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="text-white/30 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
+              <SkipBack size={16} fill="currentColor" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
+              className={`w-9 h-9 flex items-center justify-center rounded-sm border transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(0,0,0,0.4)] ${isMessages 
+                ? 'bg-transparent border-white/20 text-white hover:border-white/60' 
+                : 'bg-black/60 border-white/10 text-[#ff006e] hover:bg-[#ff006e]/10 hover:border-[#ff006e]/50'}`}
+            >
+              {isPlaying ? (
+                <Pause size={15} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
+              ) : (
+                <Play size={15} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
+              )}
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="text-white/30 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
+              <SkipForward size={16} fill="currentColor" />
+            </button>
 
-        {isBroadcasting && (
-          <button 
-            onClick={(e) => { e.stopPropagation(); onOpenMixer(); }}
-            className="ml-2 p-2 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] rounded-sm hover:bg-[#ff006e] hover:text-black transition-all shadow-[0_0_15px_rgba(255,0,110,0.2)]"
-            title="OPEN_MIXER_CONSOLE"
-          >
-            <Radio size={16} className="animate-pulse" />
-          </button>
-        )}
-      </div>
-
-      {/* Extra Actions - Desktop/Side Panel */}
-      <div className={`flex items-center gap-5 lg:gap-8 px-4 lg:pl-8 z-10 relative`}>
-        <div className="hidden sm:block absolute left-0 top-1/2 -translate-y-1/2 w-px h-6 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
-        
-        <button
-          className="group/tip relative w-8 h-8 flex items-center justify-center rounded-sm bg-black border border-white/10 hover:border-[#00ff00]/60 transition-all duration-300 font-mono font-black overflow-hidden shadow-lg"
-          title="Economy Terminal"
-          onClick={(e) => { 
-            e.stopPropagation(); 
-            if (activeStation) {
-              onEconomyClick?.({
-                title: activeStation.stationName || `Station ${activeStation.stationId}`,
-                artist: activeStation.hostName || activeStation.artistName || activeStation.ArtistName || 'Host',
-                artistId: activeStation.hostUserId || activeStation.HostUserId || activeStation.hostId || activeStation.HostId || activeStation.artistId || activeStation.ArtistId || activeStation.userId || activeStation.UserId,
-              });
-            } else if (track) {
-              onEconomyClick?.(track);
-            } else {
-              alert("No active track is currently playing.");
-            }
-          }}
-        >
-          <div className="absolute inset-0 bg-[#00ff00]/10 opacity-0 group-hover/tip:opacity-100 transition-opacity" />
-          <span className="text-white/40 group-hover/tip:text-[#00ff00] group-hover/tip:drop-shadow-[0_0_8px_rgba(0,255,0,0.8)] transition-all relative z-10 text-xs pl-0.5">$</span>
-        </button>
-
-        <Heart
-          size={18}
-          className={`cursor-pointer transition-all duration-300 ${track?.isLiked ? 'text-[#ff006e] fill-[#ff006e] drop-shadow-[0_0_8px_rgba(255,0,110,0.8)]' : 'text-white/20 hover:text-[#ff006e] hover:drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]'}`}
-          onClick={(e) => { e.stopPropagation(); onLike && onLike(track); }}
-        />
-
-        {track && !activeStation && (
-          <button
-            className="group/add relative w-8 h-8 flex items-center justify-center rounded-sm bg-black border border-white/10 hover:border-[#ff006e]/60 transition-all duration-300 font-mono font-black overflow-hidden shadow-lg"
-            title="Add to Playlist"
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              onPlaylistAddClick?.(track);
-            }}
-          >
-            <div className="absolute inset-0 bg-[#ff006e]/10 opacity-0 group-hover/add:opacity-100 transition-opacity" />
-            <Plus size={16} className="text-white/40 group-hover/add:text-[#ff006e] group-hover/add:drop-shadow-[0_0_8px_rgba(255,0,110,0.8)] transition-all relative z-10" />
-          </button>
-        )}
-
-        <div className="flex items-center gap-3 group/vol pr-2 relative">
-          <div onClick={(e) => { e.stopPropagation(); onToggleMute && onToggleMute(); }} className="cursor-pointer py-2">
-            {isMuted || volume === 0 ? (
-              <VolumeX size={18} className="text-[#ff006e] drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]" />
-            ) : (
-              <Volume2 size={18} className="text-white/30 group-hover/vol:text-[#ff006e] group-hover/vol:drop-shadow-[0_0_8px_rgba(255,0,110,0.6)] transition-all duration-300" />
+            {isBroadcasting && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); onOpenMixer(); }}
+                className="p-1.5 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] rounded-sm hover:bg-[#ff006e] hover:text-black transition-all"
+                title="OPEN_MIXER_CONSOLE"
+              >
+                <Radio size={14} className="animate-pulse" />
+              </button>
             )}
           </div>
-          <div className="w-0 overflow-hidden group-hover/vol:w-20 transition-all duration-500 ease-in-out opacity-0 group-hover/vol:opacity-100 flex items-center">
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={isMuted ? 0 : (volume || 0)}
-              onChange={(e) => { 
+
+          {/* Extra Actions */}
+          <div className="flex items-center gap-5 shrink-0">
+            <button
+              className="group/tip relative w-8 h-8 flex items-center justify-center rounded-sm bg-black border border-white/10 hover:border-[#00ff00]/60 transition-all duration-300 font-mono font-black overflow-hidden shadow-lg"
+              title="Economy Terminal"
+              onClick={(e) => { 
                 e.stopPropagation(); 
-                const newVol = parseFloat(e.target.value);
-                setVolume && setVolume(newVol); 
-                if (newVol > 0 && isMuted) { onToggleMute && onToggleMute(); } 
+                if (activeStation) {
+                  onEconomyClick?.({
+                    title: activeStation.stationName || `Station ${activeStation.stationId}`,
+                    artist: activeStation.hostName || activeStation.artistName || activeStation.ArtistName || 'Host',
+                    artistId: activeStation.hostUserId || activeStation.HostUserId || activeStation.hostId || activeStation.HostId || activeStation.artistId || activeStation.ArtistId || activeStation.userId || activeStation.UserId,
+                  });
+                } else if (track) {
+                  onEconomyClick?.(track);
+                } else {
+                  alert("No active track is currently playing.");
+                }
               }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full h-[3px] bg-white/10 rounded-full appearance-none cursor-pointer accent-[#ff006e] outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]"
+            >
+              <div className="absolute inset-0 bg-[#00ff00]/10 opacity-0 group-hover/tip:opacity-100 transition-opacity" />
+              <span className="text-white/40 group-hover/tip:text-[#00ff00] group-hover/tip:drop-shadow-[0_0_8px_rgba(0,255,0,0.8)] transition-all relative z-10 text-xs pl-0.5">$</span>
+            </button>
+
+            <Heart
+              size={16}
+              className={`cursor-pointer transition-all duration-300 ${track?.isLiked ? 'text-[#ff006e] fill-[#ff006e] drop-shadow-[0_0_8px_rgba(255,0,110,0.8)]' : 'text-white/20 hover:text-[#ff006e] hover:drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]'}`}
+              onClick={(e) => { e.stopPropagation(); onLike && onLike(track); }}
             />
+
+            {track && !activeStation && (
+              <button
+                className="group/add relative w-8 h-8 flex items-center justify-center rounded-sm bg-black border border-white/10 hover:border-[#ff006e]/60 transition-all duration-300 font-mono font-black overflow-hidden shadow-lg"
+                title="Add to Playlist"
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  onPlaylistAddClick?.(track);
+                }}
+              >
+                <div className="absolute inset-0 bg-[#ff006e]/10 opacity-0 group-hover/add:opacity-100 transition-opacity" />
+                <Plus size={15} className="text-white/40 group-hover/add:text-[#ff006e] group-hover/add:drop-shadow-[0_0_8px_rgba(255,0,110,0.8)] transition-all relative z-10" />
+              </button>
+            )}
+
+            <div onClick={(e) => { e.stopPropagation(); onToggleMute && onToggleMute(); }} className="cursor-pointer py-1">
+              {isMuted || volume === 0 ? (
+                <VolumeX size={17} className="text-[#ff006e] drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]" />
+              ) : (
+                <Volume2 size={17} className="text-white/30 hover:text-[#ff006e] hover:drop-shadow-[0_0_8px_rgba(255,0,110,0.6)] transition-all duration-300" />
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Controls - Desktop */}
+          <div className="flex items-center gap-4 lg:gap-8 px-2 lg:px-6 shrink-0 z-10 relative">
+            <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="text-white/30 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
+              <SkipBack size={18} fill="currentColor" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
+              className={`w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-sm border transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(0,0,0,0.4)] ${isMessages 
+                ? 'bg-transparent border-white/20 text-white hover:border-white/60' 
+                : 'bg-black/60 border-white/10 text-[#ff006e] hover:bg-[#ff006e]/10 hover:border-[#ff006e]/50 hover:shadow-[0_0_20px_rgba(255,0,110,0.2)]'}`}
+            >
+              {isPlaying ? (
+                <Pause size={18} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
+              ) : (
+                <Play size={18} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
+              )}
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="text-white/30 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
+              <SkipForward size={18} fill="currentColor" />
+            </button>
+
+            {isBroadcasting && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); onOpenMixer(); }}
+                className="ml-2 p-2 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] rounded-sm hover:bg-[#ff006e] hover:text-black transition-all shadow-[0_0_15px_rgba(255,0,110,0.2)]"
+                title="OPEN_MIXER_CONSOLE"
+              >
+                <Radio size={16} className="animate-pulse" />
+              </button>
+            )}
+          </div>
+
+          {/* Extra Actions - Desktop */}
+          <div className="flex items-center gap-5 lg:gap-8 px-4 lg:pl-8 z-10 relative">
+            <div className="hidden sm:block absolute left-0 top-1/2 -translate-y-1/2 w-px h-6 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
+            
+            <button
+              className="group/tip relative w-8 h-8 flex items-center justify-center rounded-sm bg-black border border-white/10 hover:border-[#00ff00]/60 transition-all duration-300 font-mono font-black overflow-hidden shadow-lg"
+              title="Economy Terminal"
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                if (activeStation) {
+                  onEconomyClick?.({
+                    title: activeStation.stationName || `Station ${activeStation.stationId}`,
+                    artist: activeStation.hostName || activeStation.artistName || activeStation.ArtistName || 'Host',
+                    artistId: activeStation.hostUserId || activeStation.HostUserId || activeStation.hostId || activeStation.HostId || activeStation.artistId || activeStation.ArtistId || activeStation.userId || activeStation.UserId,
+                  });
+                } else if (track) {
+                  onEconomyClick?.(track);
+                } else {
+                  alert("No active track is currently playing.");
+                }
+              }}
+            >
+              <div className="absolute inset-0 bg-[#00ff00]/10 opacity-0 group-hover/tip:opacity-100 transition-opacity" />
+              <span className="text-white/40 group-hover/tip:text-[#00ff00] group-hover/tip:drop-shadow-[0_0_8px_rgba(0,255,0,0.8)] transition-all relative z-10 text-xs pl-0.5">$</span>
+            </button>
+
+            <Heart
+              size={18}
+              className={`cursor-pointer transition-all duration-300 ${track?.isLiked ? 'text-[#ff006e] fill-[#ff006e] drop-shadow-[0_0_8px_rgba(255,0,110,0.8)]' : 'text-white/20 hover:text-[#ff006e] hover:drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]'}`}
+              onClick={(e) => { e.stopPropagation(); onLike && onLike(track); }}
+            />
+
+            {track && !activeStation && (
+              <button
+                className="group/add relative w-8 h-8 flex items-center justify-center rounded-sm bg-black border border-white/10 hover:border-[#ff006e]/60 transition-all duration-300 font-mono font-black overflow-hidden shadow-lg"
+                title="Add to Playlist"
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  onPlaylistAddClick?.(track);
+                }}
+              >
+                <div className="absolute inset-0 bg-[#ff006e]/10 opacity-0 group-hover/add:opacity-100 transition-opacity" />
+                <Plus size={16} className="text-white/40 group-hover/add:text-[#ff006e] group-hover/add:drop-shadow-[0_0_8px_rgba(255,0,110,0.8)] transition-all relative z-10" />
+              </button>
+            )}
+
+            <div className="flex items-center gap-3 group/vol pr-2 relative">
+              <div onClick={(e) => { e.stopPropagation(); onToggleMute && onToggleMute(); }} className="cursor-pointer py-2">
+                {isMuted || volume === 0 ? (
+                  <VolumeX size={18} className="text-[#ff006e] drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]" />
+                ) : (
+                  <Volume2 size={18} className="text-white/30 group-hover/vol:text-[#ff006e] group-hover/vol:drop-shadow-[0_0_8px_rgba(255,0,110,0.6)] transition-all duration-300" />
+                )}
+              </div>
+              <div className="w-0 overflow-hidden group-hover/vol:w-20 transition-all duration-500 ease-in-out opacity-0 group-hover/vol:opacity-100 flex items-center">
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={isMuted ? 0 : (volume || 0)}
+                  onChange={(e) => { 
+                    e.stopPropagation(); 
+                    const newVol = parseFloat(e.target.value);
+                    setVolume && setVolume(newVol); 
+                    if (newVol > 0 && isMuted) { onToggleMute && onToggleMute(); } 
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-full h-[3px] bg-white/10 rounded-full appearance-none cursor-pointer accent-[#ff006e] outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]"
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </motion.div>
   );
 };
