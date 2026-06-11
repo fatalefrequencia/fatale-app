@@ -468,7 +468,7 @@ const InteractiveGlobe = memo(({
     return (
         <div className="w-full h-full cursor-grab active:cursor-grabbing">
             <Canvas dpr={[1, 2]} gl={{ logarithmicDepthBuffer: true, antialias: true }}>
-                <PerspectiveCamera makeDefault position={[0, 0, isMobile ? 12.5 : 15.5]} fov={isMobile ? 30 : 40} />
+                <PerspectiveCamera makeDefault position={[0, 0, isMobile ? 16.5 : 15.5]} fov={isMobile ? 30 : 40} />
                 {/* Fog starts far out so stars are fully visible */}
                 <fog attach="fog" args={['#000005', 38, 75]} />
                 <OrbitControls

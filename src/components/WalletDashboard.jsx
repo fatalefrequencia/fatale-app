@@ -37,22 +37,22 @@ const WalletDashboard = ({ user, onRefreshProfile, setActiveTab }) => {
 
     return (
         <div className="space-y-6">
-            {/* Balance + Stats Row */}
+             {/* Balance + Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Main Balance */}
-                <div className="col-span-1 md:col-span-2 bg-black/60 p-8 relative overflow-hidden border border-white/5">
+                <div className="col-span-1 md:col-span-2 bg-black/60 p-5 md:p-8 relative overflow-hidden border border-white/5">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#ff006e]/5 blur-3xl pointer-events-none" />
-                    <div className="text-[11px] font-black text-[#ff006e]/60 uppercase tracking-[0.3em] mb-3">// AVAILABLE_BALANCE</div>
-                    <div className="flex items-baseline gap-3 mb-8">
-                        <span className="text-6xl md:text-7xl font-black text-white tracking-tighter drop-shadow-[0_0_20px_rgba(255,0,110,0.4)]">
+                    <div className="text-[11px] font-black text-[#ff006e]/60 uppercase tracking-[0.3em] mb-2">// AVAILABLE_BALANCE</div>
+                    <div className="flex items-baseline gap-2 mb-6">
+                        <span className="text-5xl md:text-7xl font-black text-white tracking-tighter drop-shadow-[0_0_20px_rgba(255,0,110,0.4)]">
                             {user?.credits || 0}
                         </span>
-                        <span className="text-base font-black text-white/20 uppercase tracking-widest">CRD</span>
+                        <span className="text-xs font-black text-white/20 uppercase tracking-widest">CRD</span>
                     </div>
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setActiveTab('Depot')}
-                            className="relative overflow-hidden group bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] px-6 py-3 font-black text-xs uppercase tracking-widest hover:bg-[#ff006e]/20 hover:border-[#ff006e]/60 hover:text-white transition-all shadow-[0_0_15px_rgba(255,0,110,0.1)] active:scale-95"
+                            className="relative overflow-hidden group bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] px-4 py-2.5 md:px-6 md:py-3 font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-[#ff006e]/20 hover:border-[#ff006e]/60 hover:text-white transition-all shadow-[0_0_15px_rgba(255,0,110,0.1)] active:scale-95"
                         >
                             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-400" />
@@ -60,38 +60,38 @@ const WalletDashboard = ({ user, onRefreshProfile, setActiveTab }) => {
                         </button>
                         <button
                             onClick={() => setShowTransfer(true)}
-                            className="border border-white/10 text-white/60 px-6 py-3 font-black text-xs uppercase tracking-widest hover:border-white/40 hover:text-white transition-all flex items-center gap-2"
+                            className="border border-white/10 text-white/60 px-4 py-2.5 md:px-6 md:py-3 font-black text-[10px] md:text-xs uppercase tracking-widest hover:border-white/40 hover:text-white transition-all flex items-center gap-2"
                         >
-                            <Send size={12} /> TRANSFER
+                            <Send size={11} /> TRANSFER
                         </button>
                     </div>
                 </div>
 
                 {/* Quick Stats */}
-                <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-1 gap-4">
                     <div
                         onClick={() => setActiveTab('Earnings')}
-                        className="border border-[#ff006e]/10 bg-black/60 p-6 relative overflow-hidden cursor-pointer hover:border-[#ff006e]/30 transition-all group"
+                        className="border border-[#ff006e]/10 bg-black/60 p-4 md:p-6 relative overflow-hidden cursor-pointer hover:border-[#ff006e]/30 transition-all group"
                     >
-                        <div className="text-[11px] font-black text-white/30 uppercase tracking-[0.25em] mb-3 flex items-center justify-between">
+                        <div className="text-[10px] md:text-[11px] font-black text-white/30 uppercase tracking-[0.25em] mb-2 flex items-center justify-between">
                             <span>EARNINGS_(30D)</span>
-                            <ArrowUpRight size={12} className="text-[#ff006e]/40 group-hover:text-[#ff006e] transition-colors" />
+                            <ArrowUpRight size={11} className="text-[#ff006e]/40 group-hover:text-[#ff006e] transition-colors" />
                         </div>
-                        <div className="text-3xl font-black text-white tracking-tighter">
-                            {stats.last30Days} <span className="text-xs text-white/20 font-black">CRD</span>
+                        <div className="text-2xl md:text-3xl font-black text-white tracking-tighter">
+                            {stats.last30Days} <span className="text-[10px] md:text-xs text-white/20 font-black">CRD</span>
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 h-px bg-[#ff006e]/10">
                             <div className="h-full bg-[#ff006e]/40 w-[40%]" />
                         </div>
                     </div>
 
-                    <div className="border border-white/5 bg-black/60 p-6 relative overflow-hidden">
-                        <div className="text-[11px] font-black text-white/30 uppercase tracking-[0.25em] mb-3 flex items-center justify-between">
+                    <div className="border border-white/5 bg-black/60 p-4 md:p-6 relative overflow-hidden">
+                        <div className="text-[10px] md:text-[11px] font-black text-white/30 uppercase tracking-[0.25em] mb-2 flex items-center justify-between">
                             <span>LIFETIME_EARNED</span>
-                            <ArrowDownLeft size={12} className="text-white/10" />
+                            <ArrowDownLeft size={11} className="text-white/10" />
                         </div>
-                        <div className="text-3xl font-black text-white tracking-tighter">
-                            {stats.totalEarnings} <span className="text-xs text-white/20 font-black">CRD</span>
+                        <div className="text-2xl md:text-3xl font-black text-white tracking-tighter">
+                            {stats.totalEarnings} <span className="text-[10px] md:text-xs text-white/20 font-black">CRD</span>
                         </div>
                     </div>
                 </div>
