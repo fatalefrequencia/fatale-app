@@ -699,9 +699,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
                         <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
 
-                        <div className="absolute top-2 left-2 z-10">
-                            <span className="text-[7px] font-mono text-[#ff006e]/80 bg-black/80 px-1.5 py-0.5 border border-[#ff006e]/30 uppercase tracking-widest">OBJ_FOUND</span>
-                        </div>
+
 
                         <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5 bg-black/70 p-2 backdrop-blur-sm border border-white/5 group-hover:border-[#ff006e]/20 transition-all">
                             <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight text-white transition-colors">
@@ -757,9 +755,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
                         <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
 
-                        <div className="absolute top-2 left-2 z-10">
-                            <span className="text-[7px] font-mono text-[#ff006e]/80 bg-black/80 px-1.5 py-0.5 border border-[#ff006e]/30 uppercase tracking-widest">OBJ_FOUND</span>
-                        </div>
+
 
                         <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5 bg-black/70 p-2 backdrop-blur-sm border border-white/5 group-hover:border-[#ff006e]/20 transition-all">
                             <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight text-white transition-colors">
