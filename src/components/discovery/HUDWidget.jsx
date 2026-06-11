@@ -23,7 +23,7 @@ const HUDWidget = ({ title, children, icon, searchQuery, activeColor }) => {
                         {icon}
                     </div>
                     <div 
-                        className={`text-[10px] font-black tracking-[0.2em] uppercase transition-colors border-b pb-0.5 ${activeColor ? 'border-current' : 'text-[#ff006e]/80 group-hover/widget:text-[#ff006e] border-[#ff006e]/35'}`}
+                        className={`text-[10px] font-black tracking-[0.2em] uppercase transition-colors ${activeColor ? '' : 'text-[#ff006e]/80 group-hover/widget:text-[#ff006e]'}`}
                         style={activeColor ? { color: activeColor } : {}}
                     >
                         {title}

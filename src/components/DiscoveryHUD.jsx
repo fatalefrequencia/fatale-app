@@ -987,7 +987,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             <button
                                                 key={node.id}
                                                 onClick={() => { setView(node.id); setShowSkullMenu(false); }}
-                                                className="group text-left p-2 md:p-4 bg-white/[0.012] border border-white/5 hover:border-[#ff006e]/50 hover:bg-[#ff006e]/5 transition-all flex items-center gap-2 md:gap-4 relative overflow-hidden active:scale-[0.98] rounded-sm min-w-0"
+                                                className={`group text-left p-2 md:p-4 bg-white/[0.012] border border-white/5 hover:border-[#ff006e]/50 hover:bg-[#ff006e]/5 transition-all flex items-center gap-2 md:gap-4 relative overflow-hidden active:scale-[0.98] rounded-sm min-w-0 ${node.id === 'player' ? 'col-span-2 justify-self-center w-full md:w-[calc(50%-0.5rem)]' : ''}`}
                                             >
                                                 <div className="absolute inset-y-0 left-0 w-[2px] bg-transparent group-hover:bg-[#ff006e] transition-all" />
                                                 <div className="p-1.5 md:p-3 bg-black border border-white/10 text-white/40 group-hover:text-[#ff006e] group-hover:border-[#ff006e]/30 transition-all shrink-0">
@@ -2736,37 +2736,37 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1">YT FREQ SCAN:</strong> Search and play any song directly from YouTube.
+                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1 underline underline-offset-[3px] decoration-[#b39ddb]/50">YT FREQ SCAN:</strong> Search and play any song directly from YouTube.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1">NATIVE_ARTISTS:</strong> View profiles of artists who upload and release music directly on the platform.
+                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1 underline underline-offset-[3px] decoration-[#b39ddb]/50">NATIVE_ARTISTS:</strong> View profiles of artists who upload and release music directly on the platform.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1">[ MARKETPLACE ]:</strong> Buy digital collectibles, browse online stores, and explore artist gear.
+                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1 underline underline-offset-[3px] decoration-[#b39ddb]/50">[ MARKETPLACE ]:</strong> Buy digital collectibles, browse online stores, and explore artist gear.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1">STUDIO TRANSMISSIONS:</strong> Explore photos, videos, and studio updates shared by artists.
+                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1 underline underline-offset-[3px] decoration-[#b39ddb]/50">STUDIO TRANSMISSIONS:</strong> Explore photos, videos, and studio updates shared by artists.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1">[ JOURNAL ]:</strong> Read blog posts, personal logs, and text updates from artists.
+                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1 underline underline-offset-[3px] decoration-[#b39ddb]/50">[ JOURNAL ]:</strong> Read blog posts, personal logs, and text updates from artists.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1">LIVE!:</strong> Tune in and listen to active live streams and DJ broadcasts.
+                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1 underline underline-offset-[3px] decoration-[#b39ddb]/50">LIVE!:</strong> Tune in and listen to active live streams and DJ broadcasts.
                                             </div>
                                         </li>
                                     </ul>
@@ -2780,19 +2780,19 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1">INTERACTIVE GLOBE:</strong> Drag to spin the 3D globe. Click colored nodes to view tracks, artists, or groups. Use the filters on the right to toggle what you see.
+                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1 underline underline-offset-[3px] decoration-[#b39ddb]/50">INTERACTIVE GLOBE:</strong> Drag to spin the 3D globe. Click colored nodes to view tracks, artists, or groups. Use the filters on the right to toggle what you see.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1">COMMUNITIES:</strong> Find fan groups or start your own in your current sector.
+                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1 underline underline-offset-[3px] decoration-[#b39ddb]/50">COMMUNITIES:</strong> Find fan groups or start your own in your current sector.
                                             </div>
                                         </li>
                                         <li className="flex gap-2">
                                             <span className="text-[#b39ddb] shrink-0 font-mono">■</span>
                                             <div>
-                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1">SKULL MENU:</strong> Click the skull icon in the top-left to open the main menu to view your Profile, Wallet balance, Messages, and Settings, etc.
+                                                <strong className="text-[#b39ddb] font-mono uppercase tracking-wide mr-1 underline underline-offset-[3px] decoration-[#b39ddb]/50">SKULL MENU:</strong> Click the skull icon in the top-left to open the main menu to view your Profile, Wallet balance, Messages, and Settings, etc.
                                             </div>
                                         </li>
                                     </ul>
