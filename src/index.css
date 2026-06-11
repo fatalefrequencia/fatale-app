@@ -24,12 +24,12 @@ html, body {
     position: fixed;
     overflow: hidden;
     overscroll-behavior-y: none;
-    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="%23ff006e" stroke="white" stroke-width="1.5"><polygon points="3 3 10 22 13 14 21 17 3 3"/></svg>') 3 3, auto !important;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><filter id="g"><feDropShadow dx="0" dy="0" stdDeviation="1.5" flood-color="%23ff006e" flood-opacity="1"/></filter><polygon points="6 6 13 25 16 17 24 20 6 6" fill="%23ff006e" filter="url(%23g)"/></svg>') 6 6, auto !important;
 }
 
 /* Ensure custom cursor applies to clickable elements too */
 a, button, [role="button"], [class*="cursor-pointer"] {
-    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="%23ff006e" stroke="white" stroke-width="1.5"><polygon points="3 3 10 22 13 14 21 17 3 3"/></svg>') 3 3, pointer !important;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><filter id="g"><feDropShadow dx="0" dy="0" stdDeviation="1.5" flood-color="%23ff006e" flood-opacity="1"/></filter><polygon points="6 6 13 25 16 17 24 20 6 6" fill="%23ff006e" filter="url(%23g)"/></svg>') 6 6, pointer !important;
 }
 
 body {
