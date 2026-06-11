@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Music, Disc, User, Users, Play, Pause, Heart, Layers, Radio, BookOpen, Camera, Zap, Share2, Activity, Globe, X, Star, ChevronLeft, Shuffle, MessageSquare, Grid, Plus, Wallet, ShoppingBag, Settings, LogOut, HelpCircle } from 'lucide-react';
+import { Search, Music, Disc, User, Users, Play, Pause, Heart, Layers, Radio, BookOpen, Camera, Zap, Share2, Activity, Globe, X, Star, ChevronLeft, Shuffle, MessageSquare, Grid, Plus, Wallet, ShoppingBag, Settings, LogOut, HelpCircle, ArrowUpRight } from 'lucide-react';
 import API from '../services/api';
 import { SECTORS, getMediaUrl } from '../constants';
 import { useNotification } from '../contexts/NotificationContext';
@@ -2214,6 +2214,13 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 <div className="flex items-center gap-2">
                                     {selectedPlaylist ? <ChevronLeft size={14} className="cursor-pointer hover:text-white transition-colors" onClick={(e) => { e.stopPropagation(); setSelectedPlaylist(null); }} /> : <Music size={14} />}
                                     <span>{selectedPlaylist ? `${t('DESC_PL')}: ${(selectedPlaylist.name || selectedPlaylist.Name || '').toUpperCase()}` : "[ PLAYLISTS ]"}</span>
+                                    {!selectedPlaylist && !collapsedSections.playlists && (
+                                        <ArrowUpRight 
+                                            size={12} 
+                                            className="text-[#ff006e]/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
+                                            onClick={(e) => { e.stopPropagation(); setView('player'); }} 
+                                        />
+                                    )}
                                 </div>
                                 {!selectedPlaylist && (
                                     <span className="text-[8px] opacity-65 font-bold font-mono">{collapsedSections.playlists ? '[ + ]' : '[ - ]'}</span>
@@ -2226,7 +2233,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             <div className="text-[8px] opacity-40 text-center py-4">LOADING...</div>
                                         ) : (
                                             <div className="space-y-2 max-h-64 overflow-y-auto no-scrollbar">
-                                                {playlistTracks.length > 0 ? playlistTracks.map(trk => (
+                                                {playlistTracks.slice(0, 15).length > 0 ? playlistTracks.slice(0, 15).map(trk => (
                                                     <div key={trk.id} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 cursor-pointer group" onClick={() => onPlayTrack(trk)}>
                                                         <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
                                                         <div className="flex-1 min-w-0">
@@ -2244,7 +2251,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             {/* User Playlists */}
                                             <div>
                                                 <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">TUS_PLAYLISTS</div>
-                                                {userPlaylists.length > 0 ? userPlaylists.map(p => (
+                                                {userPlaylists.slice(0, 15).length > 0 ? userPlaylists.slice(0, 15).map(p => (
                                                     <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={async () => {
                                                         setSelectedPlaylist(p);
                                                         setLoadingPlaylist(true);
@@ -2274,7 +2281,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             {/* Recommended Playlists */}
                                             <div>
                                                 <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">RECOMENDADAS</div>
-                                                {trendingPlaylists.length > 0 ? trendingPlaylists.map(p => (
+                                                {trendingPlaylists.slice(0, 15).length > 0 ? trendingPlaylists.slice(0, 15).map(p => (
                                                     <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={async () => {
                                                         setSelectedPlaylist(p);
                                                         setLoadingPlaylist(true);
@@ -2315,6 +2322,13 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 <div className="flex items-center gap-2">
                                     <Camera size={14} />
                                     <span className="hover:text-[#ff006e] transition-colors">{t('STUDIO_TRANS')}</span>
+                                    {!collapsedSections.feed && (
+                                        <ArrowUpRight 
+                                            size={12} 
+                                            className="text-[#ff006e]/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
+                                            onClick={(e) => { e.stopPropagation(); setView('feed'); }} 
+                                        />
+                                    )}
                                 </div>
                                 <span className="text-[8px] opacity-65 font-bold font-mono">{collapsedSections.feed ? '[ + ]' : '[ - ]'}</span>
                             </div>
@@ -2329,7 +2343,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         <span className="text-[8px] font-black uppercase tracking-widest text-[#ff006e] opacity-60 group-hover:opacity-100">PUBLICAR</span>
                                     </div>
 
-                                    {filteredVisuals.length > 0 ? filteredVisuals.map(vis => (
+                                    {filteredVisuals.slice(0, 15).length > 0 ? filteredVisuals.slice(0, 15).map(vis => (
                                         <div
                                             key={vis.id}
                                             className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-[#ff006e]/60 transition-all shadow-xl"
@@ -2374,12 +2388,19 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 <div className="flex items-center gap-2">
                                     <Radio size={14} />
                                     <span className="hover:text-[#ff006e] transition-colors">LIVE!</span>
+                                    {!collapsedSections.stations && (
+                                        <ArrowUpRight 
+                                            size={12} 
+                                            className="text-[#ff006e]/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
+                                            onClick={(e) => { e.stopPropagation(); setView('player'); }} 
+                                        />
+                                    )}
                                 </div>
                                 <span className="text-[8px] opacity-65 font-bold font-mono">{collapsedSections.stations ? '[ + ]' : '[ - ]'}</span>
                             </div>
                             {!collapsedSections.stations && (
                                 <div className="space-y-4 max-h-[240px] overflow-y-auto pr-1 animate-in fade-in duration-300">
-                                    {liveStations.length > 0 ? liveStations.map(c => {
+                                    {liveStations.slice(0, 15).length > 0 ? liveStations.slice(0, 15).map(c => {
                                         const isFollowed = user && followingIds.includes(String(c.artistUserId || c.ArtistUserId));
                                         return (
                                             <div key={c.id || c.stationId} className="group cursor-pointer border-b border-white/5 pb-2 flex items-center gap-3" onClick={() => {
@@ -2430,18 +2451,26 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 <div className="flex items-center gap-2">
                                     <Layers size={14} />
                                     <span className="hover:text-[#ff006e] transition-colors">{t('SHOP_LNK')}</span>
+                                    {!collapsedSections.marketplace && (
+                                        <ArrowUpRight 
+                                            size={12} 
+                                            className="text-[#ff006e]/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
+                                            onClick={(e) => { e.stopPropagation(); setView('shopping'); }} 
+                                        />
+                                    )}
                                 </div>
                                 <span className="text-[8px] opacity-65 font-bold font-mono">{collapsedSections.marketplace ? '[ + ]' : '[ - ]'}</span>
                             </div>
                             {!collapsedSections.marketplace && (
                                 <div className="animate-in fade-in duration-500">
-                                    {marketplaceItems.length > 0 ? (
+                                    {marketplaceItems.slice(0, 15).length > 0 ? (
                                         <div className="grid grid-cols-2 gap-3">
-                                            {marketplaceItems.map(item => (
+                                            {marketplaceItems.slice(0, 15).map(item => (
                                                 <div key={item.id || item.Id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => {
                                                     const desc = item.description || item.Description;
                                                     if (desc && desc !== "#") {
-                                                        window.open(desc, '_blank');
+                                                        const targetUrl = desc.includes('|') ? desc.split('|')[0].trim() : desc;
+                                                        window.open(targetUrl, '_blank');
                                                     }
                                                 }}>
                                                     {((item.type || item.Type) || '').toLowerCase() === 'video' ? (
@@ -2458,7 +2487,20 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                                                     <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5 bg-black/70 p-2 backdrop-blur-sm border border-white/5 group-hover:border-[#ff006e]/20 transition-all">
                                                         <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight text-white transition-colors">
-                                                            {(item.description || item.Description) ? (item.description || item.Description) : ((item.title || item.Title) && !(item.title || item.Title).includes(' ') && (item.title || item.Title).length > 20 ? 'UNTITLED' : (item.title || item.Title))}
+                                                            {(() => {
+                                                                const desc = item.description || item.Description || '';
+                                                                if (desc.includes('|')) {
+                                                                    const parts = desc.split('|');
+                                                                    const caption = parts.slice(1).join('|').trim();
+                                                                    const cleanCaption = caption.replace(/\[CAT:[A-Z]+\]/g, '').trim();
+                                                                    if (cleanCaption) return cleanCaption;
+                                                                }
+                                                                const title = item.title || item.Title;
+                                                                if (title && !title.includes(' ') && title.length > 20) {
+                                                                    return 'UNTITLED';
+                                                                }
+                                                                return title || 'UNTITLED';
+                                                            })()}
                                                         </div>
                                                         <div className="text-[7px] text-white/40 uppercase tracking-widest font-mono">
                                                             LOC: SEC_{hashStr(item.id || item.Id) % 99}
@@ -2486,12 +2528,19 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 <div className="flex items-center gap-2">
                                     <BookOpen size={14} />
                                     <span className="hover:text-[#ff006e] transition-colors">[ JOURNAL ]</span>
+                                    {!collapsedSections.journal && (
+                                        <ArrowUpRight 
+                                            size={12} 
+                                            className="text-[#ff006e]/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
+                                            onClick={(e) => { e.stopPropagation(); setView('feed'); }} 
+                                        />
+                                    )}
                                 </div>
                                 <span className="text-[8px] opacity-65 font-bold font-mono">{collapsedSections.journal ? '[ + ]' : '[ - ]'}</span>
                             </div>
                             {!collapsedSections.journal && (
                                 <div className="space-y-4 animate-in fade-in duration-300">
-                                    {filteredJournals.length > 0 ? filteredJournals.map(j => (
+                                    {filteredJournals.slice(0, 15).length > 0 ? filteredJournals.slice(0, 15).map(j => (
                                         <div
                                             key={j.id}
                                             className="border-l border-[#ff006e]/10 pl-4 py-2 relative group cursor-pointer hover:bg-white/[0.02] transition-all"
@@ -2519,12 +2568,19 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 <div className="flex items-center gap-2">
                                     <Globe size={14} />
                                     <span className="hover:text-[#ff006e] transition-colors">COMMUNITIES</span>
+                                    {!collapsedSections.communities && (
+                                        <ArrowUpRight 
+                                            size={12} 
+                                            className="text-[#ff006e]/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
+                                            onClick={(e) => { e.stopPropagation(); setView('messages'); }} 
+                                        />
+                                    )}
                                 </div>
                                 <span className="text-[8px] opacity-65 font-bold font-mono">{collapsedSections.communities ? '[ + ]' : '[ - ]'}</span>
                             </div>
                             {!collapsedSections.communities && (
                                 <div className="space-y-3 animate-in fade-in duration-300">
-                                    {filteredCommunities.map(c => {
+                                    {filteredCommunities.slice(0, 15).map(c => {
                                         const isJoined = (user?.communityId || user?.CommunityId) === c.id;
                                         return (
                                             <div key={c.id} className="flex items-center gap-3 p-2 hover:bg-white/5 border border-transparent hover:border-white/10 transition-all group cursor-pointer" onClick={() => {
@@ -2569,12 +2625,19 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 <div className="flex items-center gap-2">
                                     <User size={14} />
                                     <span className="hover:text-[#ff006e] transition-colors">NATIVE_ARTISTS</span>
+                                    {!collapsedSections.artists && (
+                                        <ArrowUpRight 
+                                            size={12} 
+                                            className="text-[#ff006e]/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
+                                            onClick={(e) => { e.stopPropagation(); setView('profile'); }} 
+                                        />
+                                    )}
                                 </div>
                                 <span className="text-[8px] opacity-65 font-bold font-mono">{collapsedSections.artists ? '[ + ]' : '[ - ]'}</span>
                             </div>
                             {!collapsedSections.artists && (
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-2 pt-2 animate-in fade-in duration-300">
-                                    {filteredArtists.map(a => (
+                                    {filteredArtists.slice(0, 15).map(a => (
                                         <div key={a.id} className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => navigateToProfile(a.userId)}>
                                             <div className="relative w-14 h-14">
                                                 <div className="absolute inset-0 rounded-full border border-[#ff006e]/20 group-hover:border-[#ff006e]/60 transition-colors" />
