@@ -246,9 +246,11 @@ const TrackActionsDropdown = ({
         <div className="relative" ref={triggerRef}>
             <button
                 onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); setShowPlaylists(false); }}
-                className={`p-2 rounded-sm transition-all border-2 ${isOpen ? 'border-[#ff006e] bg-[#ff006e]/10 text-[#ff006e] shadow-[0_0_20px_rgba(255,0,110,0.2)]' : 'text-[#ff006e]/60 border-[#ff006e]/10 hover:border-[#ff006e]/40 hover:text-[#ff006e] bg-white/5'}`}
+                className={`p-1.5 transition-all flex items-center justify-center gap-[3px] group/dots ${isOpen ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`}
             >
-                <MoreHorizontal size={20} />
+                <div className={`w-[4px] h-[4px] rounded-full border transition-colors ${isOpen ? 'border-[#ff006e] bg-[#ff006e]/20' : 'border-[#ff006e] group-hover/dots:border-[#ff006e] group-hover/dots:bg-[#ff006e]/10'}`} />
+                <div className={`w-[4px] h-[4px] rounded-full border transition-colors ${isOpen ? 'border-[#ff006e] bg-[#ff006e]/20' : 'border-[#ff006e] group-hover/dots:border-[#ff006e] group-hover/dots:bg-[#ff006e]/10'}`} />
+                <div className={`w-[4px] h-[4px] rounded-full border transition-colors ${isOpen ? 'border-[#ff006e] bg-[#ff006e]/20' : 'border-[#ff006e] group-hover/dots:border-[#ff006e] group-hover/dots:bg-[#ff006e]/10'}`} />
             </button>
 
             <AnimatePresence>
