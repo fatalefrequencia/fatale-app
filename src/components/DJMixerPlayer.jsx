@@ -1608,7 +1608,9 @@ const DJMixerPlayer = ({
                                 {isPlayingA ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
                             </button>
                             <button onClick={onNext} className="control-btn" title="Next"><SkipForward size={16} /></button>
-                            <button onClick={() => setShowTipModal(true)} className="control-btn" title={t('TIP_ARTIST')}><Coins size={16} /></button>
+                            {(!deckA || !isYoutubeTrack(deckA)) && (
+                                <button onClick={() => setShowTipModal(true)} className="control-btn" title={t('TIP_ARTIST')}><Coins size={16} /></button>
+                            )}
                         </div>
 
                         <div className="listener-mode-toggle">

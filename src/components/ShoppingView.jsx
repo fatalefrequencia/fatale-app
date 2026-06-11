@@ -1265,4 +1265,4 @@ const ShoppingView = () => {
     );
 };
 
-export default ShoppingView;
+export default React.memo(ShoppingView);
