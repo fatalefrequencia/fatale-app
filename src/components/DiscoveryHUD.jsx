@@ -672,20 +672,39 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
     };
 
     return (
-        <div className="relative w-full h-full overflow-y-auto lg:overflow-hidden bg-[#020202] text-white font-mono flex flex-col p-4 select-none no-scrollbar">
-            {/* Global Style Inject for Total Scrollbar Invisibility */}
+        <div 
+            className="relative w-full h-full overflow-y-auto lg:overflow-hidden bg-[#020202] text-white font-mono flex flex-col p-4 select-none no-scrollbar"
+            style={{ paddingTop: 'calc(max(16px, env(safe-area-inset-top, 16px)) + 8px)' }}
+        >
+            {/* Global Style Inject for Premium Scrollbars */}
             <style dangerouslySetInnerHTML={{
                 __html: `
-                * {
+                .no-scrollbar {
                     scrollbar-width: none !important;
                     -ms-overflow-style: none !important;
                 }
-                *::-webkit-scrollbar {
+                .no-scrollbar::-webkit-scrollbar {
                     display: none !important;
                     width: 0 !important;
                     height: 0 !important;
                 }
-                    @keyframes led-scroll {
+                /* Custom Premium Dark Scrollbars */
+                ::-webkit-scrollbar {
+                    width: 4px;
+                    height: 4px;
+                }
+                ::-webkit-scrollbar-track {
+                    background: rgba(0, 0, 0, 0.4);
+                }
+                ::-webkit-scrollbar-thumb {
+                    background: rgba(255, 0, 110, 0.35);
+                    border-radius: 2px;
+                }
+                ::-webkit-scrollbar-thumb:hover {
+                    background: rgba(255, 0, 110, 0.7);
+                    box-shadow: 0 0 10px rgba(255, 0, 110, 0.5);
+                }
+                @keyframes led-scroll {
                     0%   { left: 100%; }
                     100% { left: -200%; }
                 }
@@ -2145,7 +2164,8 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                 )}
 
                 {isMobile && mobileViewMode === 'data' && (
-                    <div className="flex flex-col gap-6 pointer-events-auto mt-4 overflow-y-auto no-scrollbar max-h-[70vh]">
+                    <div className="flex flex-col gap-6 pointer-events-auto mt-4 flex-1 overflow-y-auto pr-1 pb-16">
+                        {/* Playlists */}
                         <div className="space-y-2">
                             <div className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center gap-2">
                                 {selectedPlaylist ? <ChevronLeft size={14} className="cursor-pointer hover:text-white transition-colors" onClick={() => setSelectedPlaylist(null)} /> : <Music size={14} />}
@@ -2287,6 +2307,167 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             </div>
                         </div>
 
+                        {/* Live Stations */}
+                        <div className="space-y-2">
+                            <div className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center gap-2">
+                                <Radio size={14} />
+                                <span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('player')}>LIVE!</span>
+                            </div>
+                            <div className="space-y-4 max-h-[240px] overflow-y-auto pr-1">
+                                {liveStations.length > 0 ? liveStations.map(c => {
+                                    const isFollowed = user && followingIds.includes(String(c.artistUserId || c.ArtistUserId));
+                                    return (
+                                        <div key={c.id || c.stationId} className="group cursor-pointer border-b border-white/5 pb-2 flex items-center gap-3" onClick={() => {
+                                            if (onPlayStation) onPlayStation(c);
+                                            setMobileViewMode('globe');
+                                        }}>
+                                            <div className="w-6 h-6 bg-black border border-[#ff006e]/30 rounded-full overflow-hidden shrink-0 relative flex items-center justify-center">
+                                                {c.imageUrl || c.ImageUrl ? (
+                                                    <img src={getMediaUrl(c.imageUrl || c.ImageUrl)} className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://via.placeholder.com/100?text=DJ'; }} alt="" />
+                                                ) : (
+                                                    <Radio size={12} className="text-[#ff006e]" />
+                                                )}
+                                                <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-black animate-pulse" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center justify-between mb-0.5">
+                                                    <div className="text-[10px] font-black group-hover:text-[#ff006e] transition-colors uppercase tracking-tight truncate flex-1">
+                                                        {c.artistName || c.ArtistName || c.username || c.Username || 'LIVE DJ'}
+                                                    </div>
+                                                    {isFollowed && (
+                                                        <span className="text-[6px] font-black text-[#ff006e] border border-[#ff006e]/30 px-1.5 py-[1px] uppercase tracking-widest shrink-0 ml-2 animate-pulse">
+                                                            FOLLOWING
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="text-[8px] opacity-30 truncate uppercase tracking-widest">
+                                                    {c.sessionTitle || c.SessionTitle || 'LIVE SIGNAL'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                }) : (
+                                    <div className="flex flex-col items-center justify-center py-6 opacity-20">
+                                        <Radio size={16} className="mb-2 animate-pulse" />
+                                        <div className="text-[8px] tracking-widest uppercase text-center px-4">NO_LIVE_TRANSMISSIONS</div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Marketplace */}
+                        <div className="space-y-2">
+                            <div className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center gap-2">
+                                <Layers size={14} />
+                                <span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('shopping')}>{t('SHOP_LNK')}</span>
+                            </div>
+                            {marketplaceItems.length > 0 ? (
+                                <div className="grid grid-cols-2 gap-3">
+                                    {marketplaceItems.map(item => (
+                                        <div key={item.id || item.Id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => {
+                                            const desc = item.description || item.Description;
+                                            if (desc && desc !== "#") {
+                                                window.open(desc, '_blank');
+                                            }
+                                        }}>
+                                            {((item.type || item.Type) || '').toLowerCase() === 'video' ? (
+                                                <video src={getMediaUrl(item.url || item.Url)} className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" muted loop autoPlay playsInline />
+                                            ) : (
+                                                <img src={getMediaUrl(item.url || item.Url)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
+                                            )}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                                            <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
+
+                                            <div className="absolute top-2 left-2 z-10">
+                                                <span className="text-[7px] font-mono text-[#ff006e]/80 bg-black/80 px-1.5 py-0.5 border border-[#ff006e]/30 uppercase tracking-widest">OBJ_FOUND</span>
+                                            </div>
+
+                                            <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5 bg-black/70 p-2 backdrop-blur-sm border border-white/5 group-hover:border-[#ff006e]/20 transition-all">
+                                                <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight text-white transition-colors">
+                                                    {(item.description || item.Description) ? (item.description || item.Description) : ((item.title || item.Title) && !(item.title || item.Title).includes(' ') && (item.title || item.Title).length > 20 ? 'UNTITLED' : (item.title || item.Title))}
+                                                </div>
+                                                <div className="text-[7px] text-white/40 uppercase tracking-widest font-mono">
+                                                    LOC: SEC_{hashStr(item.id || item.Id) % 99}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-6 opacity-20">
+                                    <Layers size={16} className="mb-2" />
+                                    <div className="text-[8px] tracking-widest uppercase text-center px-4">SIN_TIENDAS_DISPONIBLES</div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Journal */}
+                        <div className="space-y-2">
+                            <div className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center gap-2">
+                                <BookOpen size={14} />
+                                <span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('feed')}>[ JOURNAL ]</span>
+                            </div>
+                            <div className="space-y-4">
+                                {filteredJournals.length > 0 ? filteredJournals.map(j => (
+                                    <div
+                                        key={j.id}
+                                        className="border-l border-[#ff006e]/10 pl-4 py-2 relative group cursor-pointer hover:bg-white/[0.02] transition-all"
+                                        onClick={() => onExpandContent(j, 'journal', { themeColor: '#9d00ff', backgroundColor: '#000000' })}
+                                    >
+                                        <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-[#ff006e] scale-y-0 group-hover:scale-y-100 transition-transform" />
+                                        <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase mb-1 tracking-tight">{j.title}</div>
+                                        <div className="text-[8px] opacity-35 line-clamp-2 italic font-light leading-relaxed">{j.content?.substring(0, 80)}...</div>
+                                    </div>
+                                )) : (
+                                    <div className="border-l-2 border-[#ff006e]/20 pl-4 py-4 opacity-40">
+                                        <div className="text-[10px] font-black uppercase mb-1">{t('EMPTY_JOURNAL')}</div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Communities */}
+                        <div className="space-y-2">
+                            <div className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center gap-2">
+                                <Globe size={14} />
+                                <span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('messages')}>COMMUNITIES</span>
+                            </div>
+                            <div className="space-y-3">
+                                {filteredCommunities.map(c => {
+                                    const isJoined = (user?.communityId || user?.CommunityId) === c.id;
+                                    return (
+                                        <div key={c.id} className="flex items-center gap-3 p-2 hover:bg-white/5 border border-transparent hover:border-white/10 transition-all group cursor-pointer" onClick={() => {
+                                            if (onMessageCommunity) {
+                                                onMessageCommunity(c);
+                                            } else {
+                                                setActiveTerminalCommunity(c);
+                                            }
+                                        }}>
+                                            <div className="w-8 h-8 rounded-sm bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center shrink-0 relative overflow-hidden">
+                                                {(c.imageUrl || c.ImageUrl || c.profilePicture || c.ProfilePicture) ? (
+                                                    <img src={getMediaUrl(c.imageUrl || c.ImageUrl || c.profilePicture || c.ProfilePicture)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
+                                                ) : (
+                                                    <Globe size={12} className="text-[#ff006e] opacity-40 group-hover:opacity-100 transition-opacity" />
+                                                )}
+                                                {(isJoined || followedCommunities.includes(c.id)) && (
+                                                    <div className="absolute top-0.5 right-0.5">
+                                                        <Star size={10} className="text-yellow-400 fill-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="text-[10px] font-black group-hover:text-[#ff006e] transition-colors uppercase tracking-tight truncate flex items-center gap-2">
+                                                    {c.name}
+                                                    {isJoined && <span className="text-[7px] text-yellow-400/60 mono font-normal border border-yellow-400/20 px-1">{t('HOME')}</span>}
+                                                </div>
+                                                <div className="text-[7px] opacity-35 tracking-[0.2em] font-light uppercase mt-0.5">{c.memberCount || 0} {t('CLIQUE_AGENTS')}</div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
                         {/* Artists */}
                         <div className="space-y-2">
                             <div className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 flex items-center gap-2">
@@ -2311,8 +2492,6 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 ))}
                             </div>
                         </div>
-
-
                     </div>
                 )}
             </motion.div>
