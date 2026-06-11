@@ -24,12 +24,12 @@ html, body {
     position: fixed;
     overflow: hidden;
     overscroll-behavior-y: none;
-    cursor: none !important;
+    cursor: auto;
 }
 
 /* Ensure custom cursor applies to clickable elements too */
 a, button, [role="button"], [class*="cursor-pointer"] {
-    cursor: none !important;
+    cursor: pointer;
 }
 
 body {

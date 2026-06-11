@@ -198,9 +198,27 @@ const ElectronTitleBar = () => {
 };
 const CustomCursor = () => {
   const [pos, setPos] = useState({ x: -100, y: -100 });
-  const [hidden, setHidden] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    const img = new Image();
+    img.src = '/cursor.gif';
+    img.onload = () => {
+      setLoaded(true);
+      // Inject global cursor: none only if the custom cursor loads successfully
+      const style = document.createElement('style');
+      style.id = 'custom-cursor-style';
+      style.innerHTML = `* { cursor: none !important; }`;
+      document.head.appendChild(style);
+    };
+    return () => {
+      const style = document.getElementById('custom-cursor-style');
+      if (style) style.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
     const handleMouseMove = (e) => setPos({ x: e.clientX, y: e.clientY });
     const handleMouseEnter = () => setHidden(false);
     const handleMouseLeave = () => setHidden(true);
@@ -214,9 +232,9 @@ const CustomCursor = () => {
       document.removeEventListener('mouseenter', handleMouseEnter);
       document.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, []);
+  }, [loaded]);
 
-  if (hidden) return null;
+  if (hidden || !loaded) return null;
 
   return (
     <div
