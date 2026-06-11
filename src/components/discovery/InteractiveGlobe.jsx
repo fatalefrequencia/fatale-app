@@ -413,7 +413,7 @@ const GlobeCore = memo(({
 
             {/* 3. Fine wireframe latitude/longitude grid */}
             <Sphere args={[2.50, 36, 18]} renderOrder={3}>
-                <meshBasicMaterial color={accentColor} wireframe transparent opacity={0.040} toneMapped={false} />
+                <meshBasicMaterial color={accentColor} wireframe transparent opacity={0.18} toneMapped={false} />
             </Sphere>
 
             {/* 4. Atmosphere rim — BackSide, very thin, just like the reference images */}

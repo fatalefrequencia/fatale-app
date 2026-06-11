@@ -164,12 +164,13 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
     const [showSkullMenu, setShowSkullMenu] = useState(false);
     const [showSystemGuide, setShowSystemGuide] = useState(false);
     const [collapsedSections, setCollapsedSections] = useState({
-        playlists: false,
-        feed: false,
-        stations: false,
-        marketplace: false,
-        journal: false,
-        communities: false
+        playlists: true,
+        feed: true,
+        stations: true,
+        marketplace: true,
+        journal: true,
+        communities: true,
+        artists: true
     });
 
     useEffect(() => {
