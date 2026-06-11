@@ -655,8 +655,123 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
         if (!s) return null;
         // Special case: Club (id: 0) gets a brighter pink to differentiate from the base theme
         if (s.id === 0) return "#ff33aa";
-        return s.color;
-    }, [activeSector]);
+    const mobileMarketplaceGrid = useMemo(() => {
+        const items = marketplaceItems.slice(0, 15);
+        if (items.length === 0) {
+            return (
+                <div className="flex flex-col items-center justify-center py-6 opacity-20">
+                    <Layers size={16} className="mb-2" />
+                    <div className="text-[8px] tracking-widest uppercase text-center px-4">SIN_TIENDAS_DISPONIBLES</div>
+                </div>
+            );
+        }
+        return (
+            <div className="grid grid-cols-2 gap-3">
+                {items.map((item, index) => (
+                    <div key={item.id || item.Id || `mk-${index}`} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => {
+                        const desc = item.description || item.Description;
+                        if (desc && desc !== "#") {
+                            const targetUrl = desc.includes('|') ? desc.split('|')[0].trim() : desc;
+                            window.open(targetUrl, '_blank');
+                        }
+                    }}>
+                        {((item.type || item.Type) || '').toLowerCase() === 'video' ? (
+                            <video src={getMediaUrl(item.url || item.Url)} className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" muted loop autoPlay playsInline />
+                        ) : (
+                            <img src={getMediaUrl(item.url || item.Url)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                        <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
+
+                        <div className="absolute top-2 left-2 z-10">
+                            <span className="text-[7px] font-mono text-[#ff006e]/80 bg-black/80 px-1.5 py-0.5 border border-[#ff006e]/30 uppercase tracking-widest">OBJ_FOUND</span>
+                        </div>
+
+                        <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5 bg-black/70 p-2 backdrop-blur-sm border border-white/5 group-hover:border-[#ff006e]/20 transition-all">
+                            <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight text-white transition-colors">
+                                {(() => {
+                                    const desc = item.description || item.Description || '';
+                                    if (desc.includes('|')) {
+                                        const parts = desc.split('|');
+                                        const caption = parts.slice(1).join('|').trim();
+                                        const cleanCaption = caption.replace(/\[CAT:[A-Z]+\]/g, '').trim();
+                                        if (cleanCaption) return cleanCaption;
+                                    }
+                                    const title = item.title || item.Title;
+                                    if (title && !title.includes(' ') && title.length > 20) {
+                                        return 'UNTITLED';
+                                    }
+                                    return title || 'UNTITLED';
+                                })()}
+                            </div>
+                            <div className="text-[7px] text-white/40 uppercase tracking-widest font-mono">
+                                LOC: SEC_{hashStr(item.id || item.Id) % 99}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+    }, [marketplaceItems]);
+
+    const desktopMarketplaceGrid = useMemo(() => {
+        if (marketplaceItems.length === 0) {
+            return (
+                <div className="flex flex-col items-center justify-center py-10 opacity-20">
+                    <Layers size={16} className="mb-2" />
+                    <div className="text-[8px] tracking-widest uppercase text-center px-4">SIN_TIENDAS_DISPONIBLES</div>
+                </div>
+            );
+        }
+        return (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in duration-500">
+                {marketplaceItems.map((item, index) => (
+                    <div key={item.id || item.Id || `dk-${index}`} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => {
+                        const desc = item.description || item.Description;
+                        if (desc && desc !== "#") {
+                            const targetUrl = desc.includes('|') ? desc.split('|')[0].trim() : desc;
+                            window.open(targetUrl, '_blank');
+                        }
+                    }}>
+                        {((item.type || item.Type) || '').toLowerCase() === 'video' ? (
+                            <video src={getMediaUrl(item.url || item.Url)} className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" muted loop autoPlay playsInline />
+                        ) : (
+                            <img src={getMediaUrl(item.url || item.Url)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                        <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
+
+                        <div className="absolute top-2 left-2 z-10">
+                            <span className="text-[7px] font-mono text-[#ff006e]/80 bg-black/80 px-1.5 py-0.5 border border-[#ff006e]/30 uppercase tracking-widest">OBJ_FOUND</span>
+                        </div>
+
+                        <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5 bg-black/70 p-2 backdrop-blur-sm border border-white/5 group-hover:border-[#ff006e]/20 transition-all">
+                            <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight text-white transition-colors">
+                                {(() => {
+                                    const desc = item.description || item.Description || '';
+                                    if (desc.includes('|')) {
+                                        const parts = desc.split('|');
+                                        const caption = parts.slice(1).join('|').trim();
+                                        const cleanCaption = caption.replace(/\[CAT:[A-Z]+\]/g, '').trim();
+                                        if (cleanCaption) return cleanCaption;
+                                    }
+                                    const title = item.title || item.Title;
+                                    if (title && !title.includes(' ') && title.length > 20) {
+                                        return 'UNTITLED';
+                                    }
+                                    return title || 'UNTITLED';
+                                })()}
+                            </div>
+                            <div className="text-[7px] text-white/40 uppercase tracking-widest font-mono">
+                                LOC: SEC_{hashStr(item.id || item.Id) % 99} // ID: {String(item.id || item.Id).substring(0, 6)}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+    }, [marketplaceItems]);
+
 
     const handleFoundCommunity = async (e) => {
         e.preventDefault();
@@ -1675,60 +1790,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         {/* --- RIGHT COLUMN: PLAYLISTS, VISUALS, JOURNALS --- */}
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-1 pointer-events-auto">
                             <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('shopping')}>{t('SHOP_LNK')}</span>} icon={<Layers size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
-                                {marketplaceItems.length > 0 ? (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in duration-500">
-                                        {marketplaceItems.map(item => (
-                                            <div key={item.id || item.Id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => {
-                                                const desc = item.description || item.Description;
-                                                if (desc && desc !== "#") {
-                                                    const targetUrl = desc.includes('|') ? desc.split('|')[0].trim() : desc;
-                                                    window.open(targetUrl, '_blank');
-                                                }
-                                            }}>
-                                                {((item.type || item.Type) || '').toLowerCase() === 'video' ? (
-                                                    <video src={getMediaUrl(item.url || item.Url)} className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" muted loop autoPlay playsInline />
-                                                ) : (
-                                                    <img src={getMediaUrl(item.url || item.Url)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
-                                                )}
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                                                <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
-
-                                                {/* Tag / Label */}
-                                                <div className="absolute top-2 left-2 z-10">
-                                                    <span className="text-[7px] font-mono text-[#ff006e]/80 bg-black/80 px-1.5 py-0.5 border border-[#ff006e]/30 uppercase tracking-widest">OBJ_FOUND</span>
-                                                </div>
-
-                                                {/* Content Bar */}
-                                                <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5 bg-black/70 p-2 backdrop-blur-sm border border-white/5 group-hover:border-[#ff006e]/20 transition-all">
-                                                    <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight text-white transition-colors">
-                                                        {(() => {
-                                                            const desc = item.description || item.Description || '';
-                                                            if (desc.includes('|')) {
-                                                                const parts = desc.split('|');
-                                                                const caption = parts.slice(1).join('|').trim();
-                                                                const cleanCaption = caption.replace(/\[CAT:[A-Z]+\]/g, '').trim();
-                                                                if (cleanCaption) return cleanCaption;
-                                                            }
-                                                            const title = item.title || item.Title;
-                                                            if (title && !title.includes(' ') && title.length > 20) {
-                                                                return 'UNTITLED';
-                                                            }
-                                                            return title || 'UNTITLED';
-                                                        })()}
-                                                    </div>
-                                                    <div className="text-[7px] text-white/40 uppercase tracking-widest font-mono">
-                                                        LOC: SEC_{hashStr(item.id || item.Id) % 99} // ID: {String(item.id || item.Id).substring(0, 6)}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center py-10 opacity-20">
-                                        <Layers size={16} className="mb-2" />
-                                        <div className="text-[8px] tracking-widest uppercase text-center px-4">SIN_TIENDAS_DISPONIBLES</div>
-                                    </div>
-                                )}
+                                {desktopMarketplaceGrid}
                             </HUDWidget>
                         </div>
 
@@ -2463,58 +2525,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             </div>
                             {!collapsedSections.marketplace && (
                                 <div className="animate-in fade-in duration-500">
-                                    {marketplaceItems.slice(0, 15).length > 0 ? (
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {marketplaceItems.slice(0, 15).map(item => (
-                                                <div key={item.id || item.Id} className="relative aspect-square border border-white/5 group cursor-pointer overflow-hidden bg-black" onClick={() => {
-                                                    const desc = item.description || item.Description;
-                                                    if (desc && desc !== "#") {
-                                                        const targetUrl = desc.includes('|') ? desc.split('|')[0].trim() : desc;
-                                                        window.open(targetUrl, '_blank');
-                                                    }
-                                                }}>
-                                                    {((item.type || item.Type) || '').toLowerCase() === 'video' ? (
-                                                        <video src={getMediaUrl(item.url || item.Url)} className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" muted loop autoPlay playsInline />
-                                                    ) : (
-                                                        <img src={getMediaUrl(item.url || item.Url)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
-                                                    )}
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                                                    <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
-
-                                                    <div className="absolute top-2 left-2 z-10">
-                                                        <span className="text-[7px] font-mono text-[#ff006e]/80 bg-black/80 px-1.5 py-0.5 border border-[#ff006e]/30 uppercase tracking-widest">OBJ_FOUND</span>
-                                                    </div>
-
-                                                    <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5 bg-black/70 p-2 backdrop-blur-sm border border-white/5 group-hover:border-[#ff006e]/20 transition-all">
-                                                        <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight text-white transition-colors">
-                                                            {(() => {
-                                                                const desc = item.description || item.Description || '';
-                                                                if (desc.includes('|')) {
-                                                                    const parts = desc.split('|');
-                                                                    const caption = parts.slice(1).join('|').trim();
-                                                                    const cleanCaption = caption.replace(/\[CAT:[A-Z]+\]/g, '').trim();
-                                                                    if (cleanCaption) return cleanCaption;
-                                                                }
-                                                                const title = item.title || item.Title;
-                                                                if (title && !title.includes(' ') && title.length > 20) {
-                                                                    return 'UNTITLED';
-                                                                }
-                                                                return title || 'UNTITLED';
-                                                            })()}
-                                                        </div>
-                                                        <div className="text-[7px] text-white/40 uppercase tracking-widest font-mono">
-                                                            LOC: SEC_{hashStr(item.id || item.Id) % 99}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="flex flex-col items-center justify-center py-6 opacity-20">
-                                            <Layers size={16} className="mb-2" />
-                                            <div className="text-[8px] tracking-widest uppercase text-center px-4">SIN_TIENDAS_DISPONIBLES</div>
-                                        </div>
-                                    )}
+                                    {mobileMarketplaceGrid}
                                 </div>
                             )}
                         </div>
