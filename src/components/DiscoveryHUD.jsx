@@ -23,7 +23,7 @@ const LAST_DEPLOY_FALLBACK = '2026-06-11 @ 12:23 UTC';
 
 const getFunMessages = () => [
     
-    "HAS ANYONE SEEN THE MOON RECENTLY?",
+    "HAS ANYONE SEEN THE MOON?",
     "the stars fallen and dancing along ribbons of satire",
     
     "FATALE NETWORK ONLINE.",
