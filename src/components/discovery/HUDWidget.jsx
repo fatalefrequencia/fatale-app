@@ -23,7 +23,7 @@ const HUDWidget = ({ title, children, icon, searchQuery, activeColor }) => {
                         {icon}
                     </div>
                     <div 
-                        className={`text-[10px] font-black tracking-[0.2em] uppercase transition-colors ${activeColor ? '' : 'text-fatale/80 group-hover/widget:text-fatale'}`}
+                        className={`text-[10px] font-black tracking-[0.2em] uppercase transition-colors ${activeColor ? '' : 'text-colorLabel opacity-80 group-hover/widget:text-colorLabel group-hover/widget:opacity-100'}`}
                         style={activeColor ? { color: activeColor } : {}}
                     >
                         {title}
@@ -38,7 +38,7 @@ const HUDWidget = ({ title, children, icon, searchQuery, activeColor }) => {
 
             {/* Main Content Container with Glassmorphism */}
             <div 
-                className={`flex-1 relative border transition-all duration-500 overflow-hidden bg-black backdrop-blur-md ${isRebooting ? 'border-fatale/60 bg-fatale/5 ring-1 ring-fatale/20' : 'hover:border-fatale/70'}`}
+                className={`flex-1 relative border transition-all duration-500 overflow-hidden bg-black backdrop-blur-md ${isRebooting ? 'border-colorBorder bg-colorBorder/5 ring-1 ring-colorBorder/20' : 'border-colorBorder/50 hover:border-colorBorder'}`}
                 style={activeColor ? { 
                     borderColor: `${activeColor}4D`, 
                     boxShadow: `inset 0 0 5px ${activeColor}0D`,
@@ -58,10 +58,10 @@ const HUDWidget = ({ title, children, icon, searchQuery, activeColor }) => {
                 )}
 
                 {/* Corner Brackets */}
-                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-fatale/55 group-hover/widget:border-fatale/80 transition-colors" />
-                <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-fatale/55 group-hover/widget:border-fatale/80 transition-colors" />
-                <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-fatale/55 group-hover/widget:border-fatale/80 transition-colors" />
-                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-fatale/55 group-hover/widget:border-fatale/80 transition-colors" />
+                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-colorBorder/50 group-hover/widget:border-colorBorder transition-colors" />
+                <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-colorBorder/50 group-hover/widget:border-colorBorder transition-colors" />
+                <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-colorBorder/50 group-hover/widget:border-colorBorder transition-colors" />
+                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-colorBorder/50 group-hover/widget:border-colorBorder transition-colors" />
 
                 {/* Scanline Effect */}
                 <div className="absolute inset-0 pointer-events-none z-10 opacity-10">
@@ -98,10 +98,10 @@ const HUDWidget = ({ title, children, icon, searchQuery, activeColor }) => {
 
                 {/* Footer Status */}
                 <div className="absolute bottom-1 right-2 flex items-center gap-2 pointer-events-none">
-                    <div className="text-[7px] text-fatale opacity-20 uppercase font-light tracking-tighter transition-opacity duration-300">
+                    <div className="text-[7px] text-colorLabel opacity-20 uppercase font-light tracking-tighter transition-opacity duration-300">
                         {isRebooting ? "RECALIBRATING_SIGNAL..." : ""}
                     </div>
-                    <div className={`w-1 h-1 rounded-full ${isRebooting ? 'bg-amber-500 animate-pulse' : 'bg-fatale/20'}`} />
+                    <div className={`w-1 h-1 rounded-full ${isRebooting ? 'bg-amber-500 animate-pulse' : 'bg-colorLabel/20'}`} />
                 </div>
             </div>
         </div>

@@ -11,6 +11,14 @@
     --text-color-rgb: var(--theme-primary-rgb);
     --theme-color: rgb(var(--theme-primary));
     --theme-color-rgb: var(--theme-primary-rgb);
+    --color-border: rgba(255, 255, 255, 0.1);
+    --color-border-rgb: 255, 255, 255;
+    --color-label: rgba(255, 255, 255, 0.6);
+    --color-label-rgb: 255, 255, 255;
+    --color-data-primary: rgba(255, 255, 255, 1);
+    --color-data-primary-rgb: 255, 255, 255;
+    --color-data-secondary: rgba(0, 255, 255, 1);
+    --color-data-secondary-rgb: 0, 255, 255;
 }
 
 html, body {
@@ -24,12 +32,12 @@ html, body {
     position: fixed;
     overflow: hidden;
     overscroll-behavior-y: none;
-    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><filter id="g"><feDropShadow dx="0" dy="0" stdDeviation="1.5" flood-color="%23ffffff" flood-opacity="1"/></filter><polygon points="6 6 13 25 16 17 24 20 6 6" fill="%23ffffff" filter="url(%23g)"/></svg>') 6 6, auto !important;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><filter id="g"><feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="%23ff003c" flood-opacity="1"/></filter><polygon points="6 6 13 25 16 17 24 20 6 6" fill="%23ff003c" filter="url(%23g)"/></svg>') 6 6, auto !important;
 }
 
 /* Ensure custom cursor applies to clickable elements too */
 a, button, [role="button"], [class*="cursor-pointer"] {
-    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><filter id="g"><feDropShadow dx="0" dy="0" stdDeviation="1.5" flood-color="%23ffffff" flood-opacity="1"/></filter><polygon points="6 6 13 25 16 17 24 20 6 6" fill="%23ffffff" filter="url(%23g)"/></svg>') 6 6, pointer !important;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><filter id="g"><feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="%23ff003c" flood-opacity="1"/></filter><polygon points="6 6 13 25 16 17 24 20 6 6" fill="%23ff003c" filter="url(%23g)"/></svg>') 6 6, pointer !important;
 }
 
 body {

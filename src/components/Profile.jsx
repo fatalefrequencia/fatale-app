@@ -2591,8 +2591,8 @@ export const ProfileView = React.memo(({
             <AnimatePresence>
             {showEditProfile && (
     <ContentModal onClose={() => setShowEditProfile(false)} title={t('MODIFY_IDENTITY')} hideActions={true}>
-                         <div className="p-8 h-full bg-black/90 backdrop-blur-3xl border border-white/5 overflow-y-auto custom-scrollbar">
-                            <h2 className="text-xs font-black text-white/80 mb-6 uppercase tracking-[0.4em] flex items-center gap-2">
+                         <div className="p-4 md:p-8 h-full bg-[#0a0a0a]/95 backdrop-blur-md border border-white/5 overflow-y-auto custom-scrollbar">
+                            <h2 className="hidden md:flex text-xs font-black text-white/80 mb-6 uppercase tracking-[0.4em] items-center gap-2">
                                 IDENTITY_CORE_UPDATE
                             </h2>
                             <EditProfileForm
@@ -2723,8 +2723,12 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
         return c && !String(c).includes('var(') ? c : 'rgb(var(--theme-primary))';
     });
     const [textColor, setTextColor] = useState(user?.textColor || user?.TextColor || '#ffffff');
-    const [backgroundColor, setBackgroundColor] = useState(user?.backgroundColor || user?.BackgroundColor || '#000000');
+    const [backgroundColor, setBackgroundColor] = useState('#000000');
     const [secondaryColor, setSecondaryColor] = useState(user?.secondaryColor || user?.SecondaryColor || 'rgb(var(--theme-secondary))');
+    const [colorBorder, setColorBorder] = useState(user?.colorBorder || user?.ColorBorder || '#ff006e');
+    const [colorLabel, setColorLabel] = useState(user?.colorLabel || user?.ColorLabel || '#ff00ff');
+    const [colorDataPrimary, setColorDataPrimary] = useState(user?.colorDataPrimary || user?.ColorDataPrimary || '#00ffff');
+    const [colorDataSecondary, setColorDataSecondary] = useState(user?.colorDataSecondary || user?.ColorDataSecondary || '#00ff00');
     const [isGlass, setIsGlass] = useState(user?.isGlass || user?.IsGlass || false);
 
     // Social Links
@@ -2744,8 +2748,12 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             setFeaturedTrackId(user.featuredTrackId || user.FeaturedTrackId || -1);
             setThemeColor(user.themeColor || user.ThemeColor || 'var(--text-color)');
             setTextColor(user.textColor || user.TextColor || '#ffffff');
-            setBackgroundColor(user.backgroundColor || user.BackgroundColor || '#000000');
+            setBackgroundColor('#000000');
             setSecondaryColor(user.secondaryColor || user.SecondaryColor || 'rgb(var(--theme-secondary))');
+            setColorBorder(user.colorBorder || user.ColorBorder || '#ff006e');
+            setColorLabel(user.colorLabel || user.ColorLabel || '#ff00ff');
+            setColorDataPrimary(user.colorDataPrimary || user.ColorDataPrimary || '#00ffff');
+            setColorDataSecondary(user.colorDataSecondary || user.ColorDataSecondary || '#00ff00');
             setIsGlass(user.isGlass || user.IsGlass || false);
             setInstagramUrl(user.instagramUrl || user.InstagramUrl || '');
             setTwitterUrl(user.twitterUrl || user.TwitterUrl || '');
@@ -2755,15 +2763,18 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
     }, [user]);
 
     // Notify parent of color changes for live preview
-    React.useEffect(() => {
         if (onColorPreview) onColorPreview({ 
             themeColor, 
             textColor, 
             backgroundColor, 
             secondaryColor,
+            colorBorder,
+            colorLabel,
+            colorDataPrimary,
+            colorDataSecondary,
             isGlass 
         });
-    }, [themeColor, textColor, backgroundColor, secondaryColor, isGlass]);
+    }, [themeColor, textColor, backgroundColor, secondaryColor, colorBorder, colorLabel, colorDataPrimary, colorDataSecondary, isGlass]);
 
     // Sort and filter tracks
     const processedTracks = React.useMemo(() => {
@@ -2819,6 +2830,10 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             formData.append('TextColor', textColor);
             formData.append('BackgroundColor', backgroundColor);
             formData.append('SecondaryColor', secondaryColor);
+            formData.append('ColorBorder', colorBorder);
+            formData.append('ColorLabel', colorLabel);
+            formData.append('ColorDataPrimary', colorDataPrimary);
+            formData.append('ColorDataSecondary', colorDataSecondary);
             formData.append('IsGlass', isGlass);
             formData.append('InstagramUrl', instagramUrl);
             formData.append('TwitterUrl', twitterUrl);
@@ -2849,24 +2864,32 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             '--theme-color-rgb': hexToRgb(themeColor),
             '--panel-bg': backgroundColor,
             '--panel-bg-rgb': hexToRgb(backgroundColor),
+            '--color-border': colorBorder,
+            '--color-label': colorLabel,
+            '--color-data-primary': colorDataPrimary,
+            '--color-data-secondary': colorDataSecondary,
+            '--color-border-rgb': hexToRgb(colorBorder),
+            '--color-label-rgb': hexToRgb(colorLabel),
+            '--color-data-primary-rgb': hexToRgb(colorDataPrimary),
+            '--color-data-secondary-rgb': hexToRgb(colorDataSecondary),
             '--glass-opacity': isGlass ? '0.2' : '0.95',
             '--glass-blur': isGlass ? '20px' : '0px'
         }}>
             <h3 className="text-3xl font-bold text-[var(--text-color)] uppercase tracking-tighter mb-6 pb-4 border-b border-[var(--theme-color)]/20">// SIGNAL_MODIFICATION_REQ</h3>
 
             {/* Tabs */}
-            <div className="flex gap-4 mb-8">
+            <div className="flex flex-col md:flex-row gap-2 md:gap-4 mb-8">
                 <button
                     type="button"
                     onClick={() => setActiveTab('identity')}
-                    className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] border transition-all ${activeTab === 'identity' ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)]' : 'bg-black text-[var(--text-color)]/70 border-[var(--text-color)]/10 hover:border-[var(--text-color)]/30 hover:text-[var(--text-color)]'}`}
+                    className={`w-full py-3 md:py-4 text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] border transition-all ${activeTab === 'identity' ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)] shadow-[0_0_20px_rgba(var(--theme-color-rgb),0.3)]' : 'bg-black text-[var(--text-color)]/70 border-[var(--text-color)]/10 hover:border-[var(--text-color)]/30 hover:text-[var(--text-color)]'}`}
                 >
                     [ IDENTITY_CORE ]
                 </button>
                 <button
                     type="button"
                     onClick={() => setActiveTab('interface')}
-                    className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] border transition-all ${activeTab === 'interface' ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)]' : 'bg-black text-[var(--text-color)]/70 border-[var(--text-color)]/10 hover:border-[var(--text-color)]/30 hover:text-[var(--text-color)]'}`}
+                    className={`w-full py-3 md:py-4 text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] border transition-all ${activeTab === 'interface' ? 'bg-[var(--theme-color)] text-black border-[var(--theme-color)] shadow-[0_0_20px_rgba(var(--theme-color-rgb),0.3)]' : 'bg-black text-[var(--text-color)]/70 border-[var(--text-color)]/10 hover:border-[var(--text-color)]/30 hover:text-[var(--text-color)]'}`}
                 >
                     [ INTERFACE_CALIBRATION ]
                 </button>
@@ -2875,8 +2898,8 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             {/* IDENTITY TAB */}
             {activeTab === 'identity' && (
                 <div className="space-y-10 animate-in fade-in slide-in-from-left-4 duration-300">
-                    <div className="flex items-center gap-8">
-                        <div className="w-32 h-32 bg-black border border-[var(--text-color)]/20 rounded-full flex items-center justify-center overflow-hidden relative group">
+                    <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 bg-black/40 p-6 border border-white/5">
+                        <div className="w-24 h-24 md:w-32 md:h-32 bg-black border border-[var(--text-color)]/20 rounded-full flex items-center justify-center overflow-hidden relative group shrink-0">
                             {file ? (
                                 <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" />
                             ) : user?.profileImageUrl ? (
@@ -2894,21 +2917,23 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                 <Camera size={24} className="text-white" />
                             </div>
                         </div>
-                        <div className="space-y-1">
-                            <div className="text-xs font-bold text-[var(--text-color)] uppercase tracking-widest">Profile Picture</div>
-                            <div className="text-[10px] text-white/40 uppercase">Recommended: 400x400 PNG/JPG</div>
+                        <div className="space-y-2 text-center md:text-left w-full">
+                            <div className="text-sm font-bold text-[var(--text-color)] uppercase tracking-widest">AVATAR_UPLOAD</div>
+                            <div className="text-[10px] text-white/40 uppercase tracking-widest leading-relaxed">
+                                Optimal Resolution: 400x400<br/>Supported: PNG, JPG, WEBP
+                            </div>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                         <div className="space-y-3">
-                            <label className="text-xs font-bold text-[var(--text-color)]/60 uppercase tracking-widest ml-1">Username</label>
+                            <label className="text-xs font-bold text-[var(--text-color)]/60 uppercase tracking-widest ml-1">_HANDLE / USERNAME</label>
                             <input
                                 type="text"
                                 value={name}
                                 onChange={e => setName(e.target.value)}
-                                className="w-full bg-black/40 border border-white/10 p-4 text-white font-bold outline-none focus:border-[var(--text-color)] transition-all"
-                                placeholder="Enter Username..."
+                                className="w-full bg-black/40 border border-white/10 p-4 text-[var(--text-color)] font-bold outline-none focus:border-[var(--text-color)] transition-all uppercase tracking-widest"
+                                placeholder="ENTER_USERNAME..."
                             />
                         </div>
                     </div>
@@ -2925,7 +2950,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                         />
                     </div>
 
-                    <div className="text-[10px] font-black text-[var(--text-color)]/40 uppercase tracking-[0.4em] pt-4 border-t border-white/5">Neural_Links_Config</div>
+                    <div className="text-[10px] font-black text-[var(--text-color)]/40 uppercase tracking-[0.4em] pt-8 border-t border-white/5">_NEURAL_LINKS_CONFIG</div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <label className="text-[8px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">Instagram_Link</label>
@@ -2945,16 +2970,16 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-white/5">
                         <div className="space-y-3">
-                            <label className="text-xs font-bold text-[var(--text-color)]/60 uppercase tracking-widest ml-1">Featured Track</label>
+                            <label className="text-xs font-bold text-[var(--text-color)]/60 uppercase tracking-widest ml-1">_FEATURED_SIGNAL</label>
                             <div className="relative">
                                 <div
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    className={`w-full bg-black/40 border p-4 flex items-center justify-between cursor-pointer transition-all ${isDropdownOpen ? 'border-[var(--theme-color)]' : 'border-white/10 hover:border-white/30'}`}
+                                    className={`w-full bg-black/40 border p-4 flex items-center justify-between cursor-pointer transition-all ${isDropdownOpen ? 'border-[var(--theme-color)] shadow-[0_0_15px_rgba(var(--theme-color-rgb),0.2)]' : 'border-white/10 hover:border-white/30'}`}
                                 >
                                     <span className={`text-xs font-bold uppercase tracking-widest truncate ${featuredTrackId == -1 ? 'text-white/50' : 'text-white'}`}>
-                                        {featuredTrackId == -1 ? 'None Selected' : (selectedTrack?.title || 'Unknown Track').toUpperCase()}
+                                        {featuredTrackId == -1 ? 'NO_SIGNAL_SELECTED' : (selectedTrack?.title || 'UNKNOWN_SIGNAL').toUpperCase()}
                                     </span>
                                     <ChevronDown size={14} className={`transition-transform duration-300 ${isDropdownOpen ? 'rotate-180 text-[var(--theme-color)]' : 'text-white/50'}`} />
                                 </div>
@@ -3148,27 +3173,84 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                             </div>
 
                             <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {/* Primary Color Picker */}
                                     <div className="space-y-3">
-                                    <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">SYSTEM_HUE_SIGNAL</label>
-                                    <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--theme-color)] transition-all">
-                                        <input type="color" value={themeColor} onChange={e => setThemeColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
-                                        <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20 shadow-[0_0_15px_rgba(var(--theme-color-rgb),0.3)]" style={{ backgroundColor: themeColor }} />
-                                        <span className="text-[10px] font-bold text-[var(--theme-color)] mono">{themeColor}</span>
+                                        <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest flex flex-col gap-1">
+                                            <span>SYSTEM_HUE_SIGNAL</span>
+                                        </label>
+                                        <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--theme-color)] transition-all">
+                                            <input type="color" value={themeColor} onChange={e => setThemeColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
+                                            <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20 shadow-[0_0_15px_rgba(var(--theme-color-rgb),0.3)]" style={{ backgroundColor: themeColor }} />
+                                            <span className="text-[10px] font-bold text-[var(--theme-color)] mono">{themeColor}</span>
+                                        </div>
                                     </div>
-                                </div>
 
-                                {/* Secondary Color Picker */}
-                                <div className="space-y-3">
-                                    <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest">SECONDARY_ACCENT_SIGNAL</label>
-                                    <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--theme-color)] transition-all">
-                                        <input type="color" value={secondaryColor} onChange={e => setSecondaryColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
-                                        <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20 shadow-[0_0_15px_rgba(var(--secondary-color-rgb,0,255,255),0.3)]" style={{ backgroundColor: secondaryColor }} />
-                                        <span className="text-[10px] font-bold mono" style={{ color: secondaryColor }}>{secondaryColor}</span>
+                                    {/* Secondary Color Picker */}
+                                    <div className="space-y-3">
+                                        <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest flex flex-col gap-1">
+                                            <span>SECONDARY_ACCENT</span>
+                                            <span className="text-[7px] normal-case opacity-60">For the rotating globe</span>
+                                        </label>
+                                        <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--text-color)]/30 transition-all">
+                                            <input type="color" value={secondaryColor} onChange={e => setSecondaryColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
+                                            <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20 shadow-[0_0_15px_rgba(var(--secondary-color-rgb,0,255,255),0.3)]" style={{ backgroundColor: secondaryColor }} />
+                                            <span className="text-[10px] font-bold mono uppercase" style={{ color: secondaryColor }}>{secondaryColor}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* BORDER COLOR */}
+                                    <div className="space-y-3">
+                                        <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest flex flex-col gap-1">
+                                            <span>BORDER_HUE</span>
+                                            <span className="text-[7px] normal-case opacity-60">For panels, tables, and dividers</span>
+                                        </label>
+                                        <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--color-border)] transition-all">
+                                            <input type="color" value={colorBorder} onChange={e => setColorBorder(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
+                                            <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20 shadow-[0_0_15px_rgba(var(--color-border-rgb),0.3)]" style={{ backgroundColor: colorBorder }} />
+                                            <span className="text-[10px] font-bold mono uppercase" style={{ color: colorBorder }}>{colorBorder}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* LABEL COLOR */}
+                                    <div className="space-y-3">
+                                        <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest flex flex-col gap-1">
+                                            <span>LABEL_HUE</span>
+                                            <span className="text-[7px] normal-case opacity-60">For column headers and static text</span>
+                                        </label>
+                                        <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--color-label)] transition-all">
+                                            <input type="color" value={colorLabel} onChange={e => setColorLabel(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
+                                            <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20 shadow-[0_0_15px_rgba(var(--color-label-rgb),0.3)]" style={{ backgroundColor: colorLabel }} />
+                                            <span className="text-[10px] font-bold mono uppercase" style={{ color: colorLabel }}>{colorLabel}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* DATA PRIMARY COLOR */}
+                                    <div className="space-y-3">
+                                        <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest flex flex-col gap-1">
+                                            <span>PRIMARY_DATA_HUE</span>
+                                            <span className="text-[7px] normal-case opacity-60">For main content or names</span>
+                                        </label>
+                                        <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--color-data-primary)] transition-all">
+                                            <input type="color" value={colorDataPrimary} onChange={e => setColorDataPrimary(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
+                                            <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20 shadow-[0_0_15px_rgba(var(--color-data-primary-rgb),0.3)]" style={{ backgroundColor: colorDataPrimary }} />
+                                            <span className="text-[10px] font-bold mono uppercase" style={{ color: colorDataPrimary }}>{colorDataPrimary}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* DATA SECONDARY COLOR */}
+                                    <div className="space-y-3">
+                                        <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest flex flex-col gap-1">
+                                            <span>SECONDARY_DATA_HUE</span>
+                                            <span className="text-[7px] normal-case opacity-60">For numbers, stats, or secondary info</span>
+                                        </label>
+                                        <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--color-data-secondary)] transition-all">
+                                            <input type="color" value={colorDataSecondary} onChange={e => setColorDataSecondary(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
+                                            <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20 shadow-[0_0_15px_rgba(var(--color-data-secondary-rgb),0.3)]" style={{ backgroundColor: colorDataSecondary }} />
+                                            <span className="text-[10px] font-bold mono uppercase" style={{ color: colorDataSecondary }}>{colorDataSecondary}</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
                         </div>
                     </div>
                 </div>

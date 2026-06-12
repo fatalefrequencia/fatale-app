@@ -298,6 +298,10 @@ function App() {
       applyThemeColor('--theme-secondary', appThemeColor, '255 255 255', '255, 255, 255'); 
       applyThemeColor('--theme-bg', appBackgroundColor, '0 0 0', '0, 0, 0'); 
       applyThemeColor('--theme-text', appThemeColor, '255 255 255', '255, 255, 255'); 
+      applyThemeColor('--color-border', user?.colorBorder || user?.ColorBorder || '#ff006e', '255 0 110', '255, 0, 110');
+      applyThemeColor('--color-label', user?.colorLabel || user?.ColorLabel || '#ff00ff', '255 0 255', '255, 0, 255');
+      applyThemeColor('--color-data-primary', user?.colorDataPrimary || user?.ColorDataPrimary || '#00ffff', '0 255 255', '0, 255, 255');
+      applyThemeColor('--color-data-secondary', user?.colorDataSecondary || user?.ColorDataSecondary || '#00ff00', '0 255 0', '0, 255, 0');
     } else {
       document.documentElement.style.setProperty('--theme-primary', '255 255 255');
       document.documentElement.style.setProperty('--theme-primary-rgb', '255, 255, 255');
@@ -307,6 +311,14 @@ function App() {
       document.documentElement.style.setProperty('--theme-bg-rgb', '0, 0, 0');
       document.documentElement.style.setProperty('--theme-text', '255 255 255');
       document.documentElement.style.setProperty('--theme-text-rgb', '255, 255, 255');
+      document.documentElement.style.setProperty('--color-border', '255 0 110');
+      document.documentElement.style.setProperty('--color-border-rgb', '255, 0, 110');
+      document.documentElement.style.setProperty('--color-label', '255 0 255');
+      document.documentElement.style.setProperty('--color-label-rgb', '255, 0, 255');
+      document.documentElement.style.setProperty('--color-data-primary', '0 255 255');
+      document.documentElement.style.setProperty('--color-data-primary-rgb', '0, 255, 255');
+      document.documentElement.style.setProperty('--color-data-secondary', '0 255 0');
+      document.documentElement.style.setProperty('--color-data-secondary-rgb', '0, 255, 0');
     }
   }, [user, appThemeColor, appBackgroundColor, activeView]);
 

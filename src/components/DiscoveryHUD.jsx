@@ -1483,7 +1483,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             <HUDWidget title={<span className="cursor-pointer hover:text-fatale transition-colors" onClick={() => setView && setView('player')}>{t('YT_FREQ_SCAN')}</span>} icon={<Search size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="space-y-4">
                                     {youtubeResults.length > 0 ? youtubeResults.map(y => (
-                                        <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-fatale/10 border border-transparent hover:border-fatale/20 group cursor-pointer transition-all" onClick={() => {
+                                        <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-colorDataPrimary/10 border border-transparent hover:border-colorBorder group cursor-pointer transition-all" onClick={() => {
                                             onPlayTrack(y);
                                             // Save to local storage history
                                             try {
@@ -1519,8 +1519,8 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                 <div className="absolute inset-0 bg-fatale/10 mix-blend-overlay group-hover:opacity-0" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="text-[10px] font-black truncate group-hover:text-fatale transition-colors uppercase tracking-tight">{y.title}</div>
-                                                <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">{y.author}</div>
+                                                <div className="text-[10px] font-black truncate group-hover:text-colorDataPrimary transition-colors uppercase tracking-tight">{y.title}</div>
+                                                <div className="text-[8px] opacity-60 text-colorDataSecondary truncate uppercase font-bold tracking-[0.2em] mt-0.5">{y.author}</div>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <Play size={10} className="text-fatale opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -1568,7 +1568,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     )) : recentYoutubeTracks && recentYoutubeTracks.length > 0 ? (
                                         <div className="space-y-2">
                                             <div className="flex justify-between items-center mb-2 px-2">
-                                                <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40">{t('YOUTUBE_CACHE')}</div>
+                                                <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 text-colorLabel">{t('YOUTUBE_CACHE')}</div>
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
@@ -1579,16 +1579,16 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                             console.error("Failed to clear recent tracks:", err);
                                                         }
                                                     }}
-                                                    className="text-[7px] font-bold text-fatale/60 hover:text-fatale transition-all uppercase tracking-wider bg-transparent cursor-pointer"
+                                                    className="text-[7px] font-bold text-colorLabel/60 hover:text-colorDataPrimary transition-all uppercase tracking-wider bg-transparent cursor-pointer"
                                                 >
                                                     [ {t('CLEAR')} ]
                                                 </button>
                                             </div>
                                             {recentYoutubeTracks.map(y => (
-                                                <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-fatale/10 border border-transparent hover:border-fatale/20 group cursor-pointer transition-all" onClick={() => {
+                                                <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-colorDataPrimary/10 border border-transparent hover:border-colorBorder group cursor-pointer transition-all" onClick={() => {
                                                     onPlayTrack(y);
                                                 }}>
-                                                    <div className="w-10 h-10 bg-black overflow-hidden relative border border-white/5 group-hover:border-fatale/40 shadow-lg">
+                                                    <div className="w-10 h-10 bg-black overflow-hidden relative border border-white/5 group-hover:border-colorBorder shadow-lg">
                                                         <img
                                                             src={y.thumbnailUrl || `https://img.youtube.com/vi/${y.id}/hqdefault.jpg`}
                                                             alt=""
@@ -1596,8 +1596,8 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                         />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="text-[10px] font-black truncate group-hover:text-fatale transition-colors uppercase tracking-tight">{y.title}</div>
-                                                        <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">{y.author}</div>
+                                                        <div className="text-[10px] font-black truncate group-hover:text-colorDataPrimary transition-colors uppercase tracking-tight">{y.title}</div>
+                                                        <div className="text-[8px] opacity-60 text-colorDataSecondary truncate uppercase font-bold tracking-[0.2em] mt-0.5">{y.author}</div>
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <Play size={10} className="text-fatale opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -1715,9 +1715,9 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     <div className="space-y-4 animate-in fade-in duration-500">
                                         {/* User Playlists */}
                                         <div>
-                                            <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">TUS_PLAYLISTS</div>
+                                            <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2 text-colorLabel">TUS_PLAYLISTS</div>
                                             {userPlaylists.length > 0 ? userPlaylists.map(p => (
-                                                <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-fatale/10 border border-transparent hover:border-fatale/20 group cursor-pointer transition-all" onClick={async () => {
+                                                <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-colorDataPrimary/10 border border-transparent hover:border-colorBorder group cursor-pointer transition-all" onClick={async () => {
                                                     setSelectedPlaylist(p);
                                                     setLoadingPlaylist(true);
                                                     try {
@@ -1729,12 +1729,12 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                         setLoadingPlaylist(false);
                                                     }
                                                 }}>
-                                                    <div className="w-8 h-8 bg-black border border-white/10 flex items-center justify-center group-hover:border-fatale/40">
-                                                        <Layers size={12} className="text-white/40 group-hover:text-fatale" />
+                                                    <div className="w-8 h-8 bg-black border border-white/10 flex items-center justify-center group-hover:border-colorBorder">
+                                                        <Layers size={12} className="text-white/40 group-hover:text-colorDataPrimary" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="text-[10px] font-black truncate group-hover:text-fatale transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
-                                                        <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">{p.tracks?.length || 0} SIGNALS</div>
+                                                        <div className="text-[10px] font-black truncate group-hover:text-colorDataPrimary transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
+                                                        <div className="text-[8px] opacity-60 truncate uppercase font-bold tracking-[0.2em] mt-0.5 text-colorDataSecondary">{p.tracks?.length || 0} SIGNALS</div>
                                                     </div>
                                                     <Play size={10} className="text-fatale opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 </div>
@@ -1745,9 +1745,9 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                                         {/* Recommended Playlists */}
                                         <div>
-                                            <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">RECOMENDADAS</div>
+                                            <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2 text-colorLabel">RECOMENDADAS</div>
                                             {trendingPlaylists.length > 0 ? trendingPlaylists.map(p => (
-                                                <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-fatale/10 border border-transparent hover:border-fatale/20 group cursor-pointer transition-all" onClick={async () => {
+                                                <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-colorDataPrimary/10 border border-transparent hover:border-colorBorder group cursor-pointer transition-all" onClick={async () => {
                                                     setSelectedPlaylist(p);
                                                     setLoadingPlaylist(true);
                                                     try {
@@ -1759,12 +1759,12 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                         setLoadingPlaylist(false);
                                                     }
                                                 }}>
-                                                    <div className="w-8 h-8 bg-black border border-white/10 flex items-center justify-center group-hover:border-fatale/40">
-                                                        <Layers size={12} className="text-white/40 group-hover:text-fatale" />
+                                                    <div className="w-8 h-8 bg-black border border-white/10 flex items-center justify-center group-hover:border-colorBorder">
+                                                        <Layers size={12} className="text-white/40 group-hover:text-colorDataPrimary" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="text-[10px] font-black truncate group-hover:text-fatale transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
-                                                        <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">BY {p.authorName || p.AuthorName || p.userName || p.UserName || "UNKNOWN"}</div>
+                                                        <div className="text-[10px] font-black truncate group-hover:text-colorDataPrimary transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
+                                                        <div className="text-[8px] opacity-60 truncate uppercase font-bold tracking-[0.2em] mt-0.5 text-colorDataSecondary">BY {p.authorName || p.AuthorName || p.userName || p.UserName || "UNKNOWN"}</div>
                                                     </div>
                                                     <Play size={10} className="text-fatale opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 </div>
