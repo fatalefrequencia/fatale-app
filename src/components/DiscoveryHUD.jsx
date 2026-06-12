@@ -1166,7 +1166,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         <div className="text-[8px] font-mono text-fatale uppercase tracking-widest">PLAYLIST</div>
                                         <div className="z-10">
                                             <div className="text-xs font-black truncate group-hover:text-fatale uppercase">{p.name || p.Name}</div>
-                                            <div className="text-[8px] opacity-40 uppercase mt-0.5">BY {p.authorName || p.AuthorName || p.userName || p.UserName || "UNKNOWN"}</div>
+                                            <div className="text-[8px] text-colorDataSecondary uppercase mt-0.5">BY {p.authorName || p.AuthorName || p.userName || p.UserName || "UNKNOWN"}</div>
                                         </div>
                                         <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <Play size={16} fill="rgb(var(--theme-primary))" className="text-fatale" />
@@ -1184,7 +1184,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         <div className="text-[8px] font-mono text-secondary uppercase tracking-widest z-10">SONG</div>
                                         <div className="z-10">
                                             <div className="text-xs font-black truncate group-hover:text-fatale uppercase">{trk.title}</div>
-                                            <div className="text-[8px] opacity-40 uppercase mt-0.5">BY {trk.artist}</div>
+                                            <div className="text-[8px] text-colorDataSecondary uppercase mt-0.5">BY {trk.artist}</div>
                                         </div>
                                         <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                             <Play size={16} fill="rgb(var(--theme-primary))" className="text-fatale" />
@@ -1202,7 +1202,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         <div className="text-[8px] font-mono text-[#9d00ff] uppercase tracking-widest z-10">ARTIST</div>
                                         <div className="z-10">
                                             <div className="text-xs font-black truncate group-hover:text-fatale uppercase">{a.name}</div>
-                                            <div className="text-[8px] opacity-40 uppercase mt-0.5">{a.genre || "NATIVE"}</div>
+                                            <div className="text-[8px] text-colorDataSecondary uppercase mt-0.5">{a.genre || "NATIVE"}</div>
                                         </div>
                                     </div>
                                 ))}

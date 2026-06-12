@@ -271,7 +271,11 @@ function App() {
     if (userLang && userLang !== language) {
       setLanguage(userLang);
     }
-  }, [user?.preferredLanguage, user?.PreferredLanguage, setLanguage]);
+    if (user) {
+      setAppThemeColor(user.themeColor || user.ThemeColor || '#ffffff');
+      setAppBackgroundColor(user.backgroundColor || user.BackgroundColor || '#000000');
+    }
+  }, [user?.preferredLanguage, user?.PreferredLanguage, setLanguage, user]);
 
   useEffect(() => {
     const hexToRgbVals = (hex) => {
