@@ -972,13 +972,13 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     {/* Navigation Grid */}
                                     <div className="grid grid-cols-2 gap-2 md:gap-4 flex-1">
                                         {[
+                                            { id: 'feed', icon: <Hash size={15} />, label: t('FEED_LNK') || 'Feed', desc: 'FEED' },
                                             { id: 'profile', icon: <User size={15} />, label: t('USR_LINK') || 'Profile', desc: 'IDENTITY' },
-                                            { id: 'wallet', icon: <Wallet size={15} />, label: t('WAL_BASE') || 'Wallet', desc: 'CREDITS' },
+                                            { id: 'player', icon: <Play size={15} />, label: t('PLY_CORE') || 'Player', desc: 'AUDIO' },
                                             { id: 'messages', icon: <MessageSquare size={15} />, label: t('MSG_SYNC') || 'Messages', desc: 'COMMS', badge: hasNewMessages },
-                                            { id: 'feed', icon: <Grid size={15} />, label: t('FEED_LNK') || 'Feed', desc: 'FEED' },
                                             { id: 'shopping', icon: <ShoppingBag size={15} />, label: t('SHOP_LNK') || 'Marketplace', desc: 'STORE' },
+                                            { id: 'wallet', icon: <Wallet size={15} />, label: t('WAL_BASE') || 'Wallet', desc: 'CREDITS' },
                                             { id: 'settings', icon: <Settings size={15} />, label: t('SYS_CONF') || 'Settings', desc: 'SYSTEM' },
-                                            { id: 'player', icon: <Play size={15} />, label: t('PLAY_LNK') || 'Player', desc: 'AUDIO' },
                                         ].map(node => (
                                             <button
                                                 key={node.id}

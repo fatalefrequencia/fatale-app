@@ -14,13 +14,13 @@ export default {
     // --- GLOBE VIEWS ---
 
     // --- SIDEBAR ---
-    "FEED_LNK": "FEED_LNK",
-    "USR_LINK": "USR_LINK",
-    "PLY_CORE": "PLY_CORE",
-    "MSG_SYNC": "MSG_SYNC",
-    "SHOP_LNK": "[ MARKETPLACE ]",
-    "WAL_BASE": "WAL_BASE",
-    "LOG_OUT": "LOG_OUT_SYSTEM",
+    "FEED_LNK": "Feed",
+    "USR_LINK": "Profile",
+    "PLY_CORE": "Player",
+    "MSG_SYNC": "Messages",
+    "SHOP_LNK": "Marketplace",
+    "WAL_BASE": "Wallet",
+    "LOG_OUT": "Logout",
 
     // --- BUTTONS ---
     "GLOBAL_VIEW": "GLOBAL_VIEW",
@@ -32,8 +32,8 @@ export default {
     "SECURITY": "SECURITY",
     "NOTIFICATIONS": "NOTIFICATIONS",
     "INTERFACE_LANGUAGE": "INTERFACE_LANGUAGE",
-    "LOGOUT_SYS": "LOG_OUT_SYSTEM",
-    "SYS_CONF": "SYS_CONF",
+    "LOGOUT_SYS": "Logout",
+    "SYS_CONF": "Settings",
     "SEARCH_ARTISTS": "Search artists...",
     "SYNCING_FREQS": "Syncing frequencies...",
     "REFRESH_MAP": "Refresh Map",
