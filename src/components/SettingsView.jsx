@@ -21,10 +21,10 @@ const SettingsView = ({ user, setUser }) => {
     const [username, setUsername] = React.useState(user?.username || user?.Username || '');
     const [biography, setBiography] = React.useState(user?.biography || user?.Biography || '');
     const [residentSectorId, setResidentSectorId] = React.useState(user?.residentSectorId || user?.ResidentSectorId || 0);
-    const [themeColor, setThemeColor] = React.useState(user?.themeColor || user?.ThemeColor || 'rgb(var(--theme-primary))');
+    const [themeColor, setThemeColor] = React.useState(user?.themeColor || user?.ThemeColor || '#ff006e');
     const [textColor, setTextColor] = React.useState(user?.textColor || user?.TextColor || '#ffffff');
     const [backgroundColor, setBackgroundColor] = React.useState(user?.backgroundColor || user?.BackgroundColor || '#000000');
-    const [secondaryColor, setSecondaryColor] = React.useState(user?.secondaryColor || user?.SecondaryColor || 'rgb(var(--theme-secondary))');
+    const [secondaryColor, setSecondaryColor] = React.useState(user?.secondaryColor || user?.SecondaryColor || '#00ffff');
     const [isGlass, setIsGlass] = React.useState(user?.isGlass || user?.IsGlass || false);
     const [statusMessage, setStatusMessage] = React.useState(user?.statusMessage || user?.StatusMessage || '');
     
@@ -55,10 +55,10 @@ const SettingsView = ({ user, setUser }) => {
             setUsername(user.username || user.Username || '');
             setBiography(user.biography || user.Biography || '');
             setResidentSectorId(user.residentSectorId || user.ResidentSectorId || 0);
-            setThemeColor(user.themeColor || user.ThemeColor || 'rgb(var(--theme-primary))');
+            setThemeColor(user.themeColor || user.ThemeColor || '#ff006e');
             setTextColor(user.textColor || user.TextColor || '#ffffff');
             setBackgroundColor(user.backgroundColor || user.BackgroundColor || '#000000');
-            setSecondaryColor(user.secondaryColor || user.SecondaryColor || 'rgb(var(--theme-secondary))');
+            setSecondaryColor(user.secondaryColor || user.SecondaryColor || '#00ffff');
             setIsGlass(user.isGlass || user.IsGlass || false);
             setStatusMessage(user.statusMessage || user.StatusMessage || '');
             setEmail(user.email || user.Email || '');

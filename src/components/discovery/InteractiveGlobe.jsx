@@ -35,8 +35,21 @@ const getSphericalPos = (id, radius = NODE_R) => {
 };
 
 // Tight city-light glow — bright hard core, fast falloff
-const createGlowTexture = (color) => {
+const resolveColorToHex = (color) => {
+    if (color && color.includes('var(')) {
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (color.includes('--theme-primary')) return user?.themeColor || user?.ThemeColor || '#ff006e';
+            if (color.includes('--theme-secondary')) return user?.secondaryColor || user?.SecondaryColor || '#00ffff';
+        } catch(e) {}
+        return '#ff006e';
+    }
+    return color;
+};
+
+const createGlowTexture = (rawColor) => {
     if (typeof document === 'undefined') return null;
+    const color = resolveColorToHex(rawColor);
     const canvas = document.createElement('canvas');
     canvas.width = 128; canvas.height = 128;
     const ctx = canvas.getContext('2d');
@@ -178,7 +191,8 @@ const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeVi
 // ─── FLAT CITY-LIGHT NODE ─────────────────────────────────────────────────────
 // Sits at NODE_R. depthTest=false → never clipped by globe geometry.
 
-const LightPointNode = ({ id, name, subtitle, color, size = 0.02, isSelected, onClick, cameraDist }) => {
+const LightPointNode = ({ id, name, subtitle, color: rawColor, size = 0.02, isSelected, onClick, cameraDist }) => {
+    const color = useMemo(() => resolveColorToHex(rawColor), [rawColor]);
     const billRef  = useRef();
     const ringRef  = useRef();
     const [hovered, setHovered] = useState(false);
@@ -395,7 +409,8 @@ const GlobeCore = memo(({
         (activeView === 'TRACKS'      || !activeView ? tracks_.length      : 0)
     );
     const density     = Math.max(0.4, 1 / (1 + 0.015 * totalNodes));
-    const accentColor = activeSectorColor || 'rgb(var(--theme-primary))';
+    const accentColorRaw = activeSectorColor || 'rgb(var(--theme-primary))';
+    const accentColor = useMemo(() => resolveColorToHex(accentColorRaw), [accentColorRaw]);
 
     return (
         <group>
@@ -464,6 +479,8 @@ const InteractiveGlobe = memo(({
 }) => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
     const [initialRotation] = useState(() => [0.1, -0.2, 0]);
+    
+    const pointLightColor = useMemo(() => resolveColorToHex(SECTORS.find(s => s.id === activeSector)?.color || 'rgb(var(--theme-primary))'), [activeSector]);
 
     return (
         <div className="w-full h-full cursor-grab active:cursor-grabbing">
@@ -482,7 +499,7 @@ const InteractiveGlobe = memo(({
                 <StarField />
 
                 <ambientLight intensity={0.18} />
-                <pointLight position={[10, 10, 10]} intensity={2.5} color={SECTORS.find(s => s.id === activeSector)?.color || 'rgb(var(--theme-primary))'} />
+                <pointLight position={[10, 10, 10]} intensity={2.5} color={pointLightColor} />
                 <pointLight position={[-8, -8, -8]} intensity={1.6} color="#001833" />
 
                 <Float
