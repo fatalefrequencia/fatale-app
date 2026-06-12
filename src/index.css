@@ -11,14 +11,14 @@
     --text-color-rgb: var(--theme-primary-rgb);
     --theme-color: rgb(var(--theme-primary));
     --theme-color-rgb: var(--theme-primary-rgb);
-    --color-border: rgba(255, 255, 255, 0.1);
-    --color-border-rgb: 255, 255, 255;
-    --color-label: rgba(255, 255, 255, 0.6);
-    --color-label-rgb: 255, 255, 255;
-    --color-data-primary: rgba(255, 255, 255, 1);
-    --color-data-primary-rgb: 255, 255, 255;
-    --color-data-secondary: rgba(0, 255, 255, 1);
-    --color-data-secondary-rgb: 0, 255, 255;
+    --color-border: 255 0 110;
+    --color-border-rgb: 255, 0, 110;
+    --color-label: 255 0 255;
+    --color-label-rgb: 255, 0, 255;
+    --color-data-primary: 0 255 255;
+    --color-data-primary-rgb: 0, 255, 255;
+    --color-data-secondary: 0 255 0;
+    --color-data-secondary-rgb: 0, 255, 0;
 }
 
 html, body {
