@@ -14,7 +14,7 @@ const SectorHubPanel = ({
 }) => {
     if (!sector) return null;
 
-    const color = sector.color || '#ff006e';
+    const color = sector.color || 'rgb(var(--theme-primary))';
 
     return (
         <motion.div

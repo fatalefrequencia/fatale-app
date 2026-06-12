@@ -12,7 +12,7 @@ const YoutubeNode = ({ data }) => {
         CoverImageUrl,
         coverImageUrl,
         id,
-        sectorColor = '#ff006e',
+        sectorColor = 'rgb(var(--theme-primary))',
         onPlay,
         zoom = 1,
     } = data;

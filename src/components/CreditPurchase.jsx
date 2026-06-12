@@ -83,8 +83,8 @@ const CreditPurchase = ({ user, refreshProfile }) => {
         <div className="bg-black/60 p-6 md:p-8 relative overflow-hidden border border-white/5 font-mono text-white">
             {/* Corner accents */}
             <div className="absolute top-0 right-0 p-3 opacity-30">
-                <div className="w-12 h-px bg-[#ff006e]/40 mb-1" />
-                <div className="w-6 h-px bg-[#ff006e]/40 ml-auto" />
+                <div className="w-12 h-px bg-fatale/40 mb-1" />
+                <div className="w-6 h-px bg-fatale/40 ml-auto" />
             </div>
 
             {/* Header */}
@@ -96,14 +96,14 @@ const CreditPurchase = ({ user, refreshProfile }) => {
                     animate={{ rotateY: 360 }}
                     transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                 />
-                <div className="text-[11px] font-black text-[#ff006e]/60 uppercase tracking-[0.3em]">// CREDIT_ACQUISITION</div>
+                <div className="text-[11px] font-black text-fatale/60 uppercase tracking-[0.3em]">// CREDIT_ACQUISITION</div>
             </div>
 
             {/* Info banner */}
-            <div className="mb-8 px-4 py-3 border border-[#ff006e]/10 bg-[#ff006e]/5 flex items-start gap-3">
-                <span className="text-[#ff006e]/40 font-black text-[10px] mt-0.5">&gt;</span>
+            <div className="mb-8 px-4 py-3 border border-fatale/10 bg-fatale/5 flex items-start gap-3">
+                <span className="text-fatale/40 font-black text-[10px] mt-0.5">&gt;</span>
                 <p className="text-xs text-white/40 uppercase tracking-wide leading-relaxed">
-                    Artists keep <span className="text-[#ff006e]/80 font-black">100%</span> of credits spent on their tracks.
+                    Artists keep <span className="text-fatale/80 font-black">100%</span> of credits spent on their tracks.
                     Direct support, zero platform cut on artist earnings.
                 </p>
             </div>
@@ -116,7 +116,7 @@ const CreditPurchase = ({ user, refreshProfile }) => {
                         <div
                             key={bundle.id}
                             className={`relative flex flex-col p-5 border transition-all hover:-translate-y-0.5 ${bundle.bestValue
-                                ? 'border-[#ff006e]/40 bg-[#ff006e]/5'
+                                ? 'border-fatale/40 bg-fatale/5'
                                 : bundle.popular
                                     ? 'border-white/10 bg-white/[0.03]'
                                     : 'border-white/5 bg-black/40'
@@ -124,10 +124,10 @@ const CreditPurchase = ({ user, refreshProfile }) => {
                         >
                             {/* Badge */}
                             {bundle.bestValue && (
-                                <div className="absolute -top-px left-0 right-0 h-px bg-[#ff006e]" />
+                                <div className="absolute -top-px left-0 right-0 h-px bg-fatale" />
                             )}
                             {bundle.bestValue && (
-                                <div className="text-[10px] font-black text-[#ff006e] uppercase tracking-widest mb-3">&#9670; BEST_VALUE</div>
+                                <div className="text-[10px] font-black text-fatale uppercase tracking-widest mb-3">&#9670; BEST_VALUE</div>
                             )}
                             {bundle.popular && !bundle.bestValue && (
                                 <div className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-3">&#9670; MOST_POPULAR</div>
@@ -143,7 +143,7 @@ const CreditPurchase = ({ user, refreshProfile }) => {
                             <div className="text-xs text-white/20 uppercase tracking-widest font-black mb-4">CREDITS</div>
 
                             {/* Artist value */}
-                            <div className="text-xs text-[#ff006e]/60 mb-1">
+                            <div className="text-xs text-fatale/60 mb-1">
                                 ${(bundle.credits * 0.10).toFixed(2)} → ARTISTS
                             </div>
 
@@ -162,8 +162,8 @@ const CreditPurchase = ({ user, refreshProfile }) => {
                             <button
                                 onClick={() => setSelectedBundle(bundle)}
                                 className={`w-full py-2.5 font-black text-xs uppercase tracking-widest transition-all mt-4 relative overflow-hidden group active:scale-95 ${bundle.bestValue
-                                    ? 'bg-[#ff006e]/20 border border-[#ff006e]/50 text-white hover:bg-[#ff006e]/40 hover:border-[#ff006e] shadow-[0_0_20px_rgba(255,0,110,0.2)]'
-                                    : 'bg-white/5 border border-white/10 text-white/60 hover:border-[#ff006e]/40 hover:text-white'
+                                    ? 'bg-fatale/20 border border-fatale/50 text-white hover:bg-fatale/40 hover:border-fatale shadow-[0_0_20px_rgba(255,0,110,0.2)]'
+                                    : 'bg-white/5 border border-white/10 text-white/60 hover:border-fatale/40 hover:text-white'
                                     }`}
                             >
                                 <span className="relative z-10">BUY_CREDITS</span>
@@ -185,17 +185,17 @@ const CreditPurchase = ({ user, refreshProfile }) => {
                             initial={{ opacity: 0, scale: 0.98, y: 15 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.98, y: 15 }}
-                            className="w-full max-w-md bg-[#050505] border border-[#ff006e]/30 relative overflow-hidden shadow-[0_0_50px_rgba(255,0,110,0.25)] rounded-sm"
+                            className="w-full max-w-md bg-[#050505] border border-fatale/30 relative overflow-hidden shadow-[0_0_50px_rgba(255,0,110,0.25)] rounded-sm"
                         >
                             {/* Header */}
                             <div className="flex justify-between items-center p-5 border-b border-white/5 bg-black">
-                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#ff006e] flex items-center gap-2">
-                                    <CreditCard size={14} className="text-[#ff006e]" />
+                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-fatale flex items-center gap-2">
+                                    <CreditCard size={14} className="text-fatale" />
                                     STRIPE_SECURE_PAYMENT
                                 </div>
                                 <button
                                     onClick={() => setSelectedBundle(null)}
-                                    className="text-white/40 hover:text-[#ff006e] transition-all hover:rotate-90 p-1"
+                                    className="text-white/40 hover:text-fatale transition-all hover:rotate-90 p-1"
                                 >
                                     <X size={18} />
                                 </button>
@@ -219,8 +219,8 @@ const CreditPurchase = ({ user, refreshProfile }) => {
                                     </div>
                                     <div className="h-px bg-white/5 my-2" />
                                     <div className="flex justify-between text-[10px] uppercase tracking-widest font-black">
-                                        <span className="text-[#ff006e]">TOTAL CHARGE:</span>
-                                        <span className="text-[#ff006e]">${calculateStripeFee(selectedBundle.price).total} USD</span>
+                                        <span className="text-fatale">TOTAL CHARGE:</span>
+                                        <span className="text-fatale">${calculateStripeFee(selectedBundle.price).total} USD</span>
                                     </div>
                                 </div>
 
@@ -233,7 +233,7 @@ const CreditPurchase = ({ user, refreshProfile }) => {
                                             required
                                             value={cardName}
                                             onChange={(e) => setCardName(e.target.value.toUpperCase())}
-                                            className="w-full bg-white/5 border border-white/10 focus:border-[#ff006e] outline-none text-[10px] text-white px-3 py-3 rounded-sm uppercase tracking-wider"
+                                            className="w-full bg-white/5 border border-white/10 focus:border-fatale outline-none text-[10px] text-white px-3 py-3 rounded-sm uppercase tracking-wider"
                                         />
                                     </div>
 
@@ -245,7 +245,7 @@ const CreditPurchase = ({ user, refreshProfile }) => {
                                                 required
                                                 value={cardNumber}
                                                 onChange={(e) => setCardNumber(e.target.value)}
-                                                className="w-full bg-white/5 border border-white/10 focus:border-[#ff006e] outline-none text-[10px] text-white px-3 py-3 rounded-sm tracking-wider pl-10"
+                                                className="w-full bg-white/5 border border-white/10 focus:border-fatale outline-none text-[10px] text-white px-3 py-3 rounded-sm tracking-wider pl-10"
                                             />
                                             <CreditCard size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" />
                                         </div>
@@ -260,7 +260,7 @@ const CreditPurchase = ({ user, refreshProfile }) => {
                                                 placeholder="MM/YY"
                                                 value={cardExpiry}
                                                 onChange={(e) => setCardExpiry(e.target.value)}
-                                                className="w-full bg-white/5 border border-white/10 focus:border-[#ff006e] outline-none text-[10px] text-white px-3 py-3 rounded-sm tracking-wider text-center"
+                                                className="w-full bg-white/5 border border-white/10 focus:border-fatale outline-none text-[10px] text-white px-3 py-3 rounded-sm tracking-wider text-center"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -272,7 +272,7 @@ const CreditPurchase = ({ user, refreshProfile }) => {
                                                 maxLength="3"
                                                 value={cardCvv}
                                                 onChange={(e) => setCardCvv(e.target.value)}
-                                                className="w-full bg-white/5 border border-white/10 focus:border-[#ff006e] outline-none text-[10px] text-white px-3 py-3 rounded-sm tracking-wider text-center"
+                                                className="w-full bg-white/5 border border-white/10 focus:border-fatale outline-none text-[10px] text-white px-3 py-3 rounded-sm tracking-wider text-center"
                                             />
                                         </div>
                                     </div>
@@ -298,7 +298,7 @@ const CreditPurchase = ({ user, refreshProfile }) => {
                                     <button
                                         type="submit"
                                         disabled={processing}
-                                        className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest bg-[#ff006e] text-black hover:bg-white transition-all shadow-[0_0_15px_rgba(255,0,110,0.3)] disabled:opacity-50"
+                                        className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest bg-fatale text-black hover:bg-white transition-all shadow-[0_0_15px_rgba(255,0,110,0.3)] disabled:opacity-50"
                                     >
                                         {processing ? 'VERIFYING...' : `PAY $${calculateStripeFee(selectedBundle.price).total}`}
                                     </button>

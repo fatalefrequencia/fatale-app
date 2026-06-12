@@ -22,7 +22,7 @@ import { isVideoFile } from '../utils/profileMediaUpload';
 
 const SECTORS = [
     { id: 0, name: 'NEON SLUMS', color: 'var(--text-color)' },
-    { id: 1, name: 'SILICON HEIGHTS', color: '#00ffff' },
+    { id: 1, name: 'SILICON HEIGHTS', color: 'rgb(var(--theme-secondary))' },
     { id: 2, name: 'DATA VOID', color: '#9b5de5' },
     { id: 3, name: 'CENTRAL HUB', color: '#ffcc00' },
     { id: 4, name: 'OUTER RIM', color: '#00ff88' },
@@ -967,7 +967,7 @@ export const ProfileView = React.memo(({
     const isMe = String(effectiveId) === String(currentUser?.id || currentUser?.Id);
     const displayUser = isMe ? currentUser : profileData;
     const profileAccent = displayUser?.previewThemeColor || displayUser?.themeColor || displayUser?.ThemeColor || displayUser?.profileColor || displayUser?.ProfileColor || '#ff3131';
-    const profileSecondary = displayUser?.previewSecondaryColor || displayUser?.secondaryColor || displayUser?.SecondaryColor || '#00ffff';
+    const profileSecondary = displayUser?.previewSecondaryColor || displayUser?.secondaryColor || displayUser?.SecondaryColor || 'rgb(var(--theme-secondary))';
 
     const sector = SECTORS.find(s => s.id === (displayUser?.residentSectorId || displayUser?.ResidentSectorId || 0));
     const communityName = (displayUser?.communityName || displayUser?.CommunityName) || (displayUser?.communityId || displayUser?.CommunityId ? 'SYNCING...' : 'N/A');
@@ -1816,7 +1816,7 @@ export const ProfileView = React.memo(({
                     exit={{ opacity: 0, scale: 1.05 }}
                     className="console-outer-frame"
                 >
-                    <LBrackets className="opacity-60" color="#ff006e" />
+                    <LBrackets className="opacity-60" color="rgb(var(--theme-primary))" />
                     
 
 
@@ -1981,7 +1981,7 @@ export const ProfileView = React.memo(({
                                     {!isMe && (
                                         <button 
                                             onClick={() => setShowTipModal(true)}
-                                            className="px-3 py-1 bg-[#ff006e]/10 border border-[#ff006e]/30 hover:bg-[#ff006e] hover:text-black transition-all text-[#ff006e] font-black uppercase text-[8px] flex items-center gap-1.5 group"
+                                            className="px-3 py-1 bg-fatale/10 border border-fatale/30 hover:bg-fatale hover:text-black transition-all text-fatale font-black uppercase text-[8px] flex items-center gap-1.5 group"
                                         >
                                             <Coins size={10} className="group-hover:animate-bounce" /> TIP_ARTIST
                                         </button>
@@ -2720,11 +2720,11 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
     const [wallpaperVideoFile, setWallpaperVideoFile] = useState(null);
     const [themeColor, setThemeColor] = useState(() => {
         const c = user?.themeColor || user?.ThemeColor;
-        return c && !String(c).includes('var(') ? c : '#ff006e';
+        return c && !String(c).includes('var(') ? c : 'rgb(var(--theme-primary))';
     });
     const [textColor, setTextColor] = useState(user?.textColor || user?.TextColor || '#ffffff');
     const [backgroundColor, setBackgroundColor] = useState(user?.backgroundColor || user?.BackgroundColor || '#000000');
-    const [secondaryColor, setSecondaryColor] = useState(user?.secondaryColor || user?.SecondaryColor || '#00ffff');
+    const [secondaryColor, setSecondaryColor] = useState(user?.secondaryColor || user?.SecondaryColor || 'rgb(var(--theme-secondary))');
     const [isGlass, setIsGlass] = useState(user?.isGlass || user?.IsGlass || false);
 
     // Social Links
@@ -2745,7 +2745,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
             setThemeColor(user.themeColor || user.ThemeColor || 'var(--text-color)');
             setTextColor(user.textColor || user.TextColor || '#ffffff');
             setBackgroundColor(user.backgroundColor || user.BackgroundColor || '#000000');
-            setSecondaryColor(user.secondaryColor || user.SecondaryColor || '#00ffff');
+            setSecondaryColor(user.secondaryColor || user.SecondaryColor || 'rgb(var(--theme-secondary))');
             setIsGlass(user.isGlass || user.IsGlass || false);
             setInstagramUrl(user.instagramUrl || user.InstagramUrl || '');
             setTwitterUrl(user.twitterUrl || user.TwitterUrl || '');
@@ -3259,7 +3259,7 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
                     </div>
 
                     <div className="flex gap-6">
-                        <button onClick={handleSave} className="w-full py-4 bg-[#ff006e]/10 border border-[#ff006e] text-[#ff006e] font-black uppercase tracking-[0.3em] hover:bg-[#ff006e] hover:text-black transition-all text-[10px] shadow-[0_0_30px_rgba(255,0,110,0.1)] rounded-sm">
+                        <button onClick={handleSave} className="w-full py-4 bg-fatale/10 border border-fatale text-fatale font-black uppercase tracking-[0.3em] hover:bg-fatale hover:text-black transition-all text-[10px] shadow-[0_0_30px_rgba(255,0,110,0.1)] rounded-sm">
                             SYNC_SIGNALS
                         </button>
                     </div>

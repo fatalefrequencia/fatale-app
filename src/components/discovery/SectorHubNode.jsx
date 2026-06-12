@@ -6,7 +6,7 @@ import OrganicSkull from './OrganicSkull';
 const SectorHubNode = ({ data }) => {
     const {
         name,
-        color = '#ff006e',
+        color = 'rgb(var(--theme-primary))',
         communityCount = 0,
         isMember = false,
         zoom = 1,

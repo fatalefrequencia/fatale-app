@@ -16,16 +16,16 @@ const WalletView = ({ user, onRefreshProfile }) => {
         <div className="w-full h-full flex flex-col bg-[#020202] text-white overflow-hidden relative">
             {/* Background Ambience */}
             <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#ff006e]/5 blur-[150px] rounded-full" />
+                <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-fatale/5 blur-[150px] rounded-full" />
                 <div className="absolute bottom-[-20%] right-[-10%] w-[40%] h-[40%] bg-purple-900/10 blur-[150px] rounded-full" />
             </div>
 
             {/* Header */}
             <div className="p-4 md:p-8 pb-0 z-10">
-                <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.3em] font-mono mb-4 md:mb-6">// {t('SYSTEM_WALLET')}</div>
+                <div className="text-[10px] font-black text-fatale/50 uppercase tracking-[0.3em] font-mono mb-4 md:mb-6">// {t('SYSTEM_WALLET')}</div>
                 <p className="text-white/30 text-[10px] md:text-[11px] font-mono uppercase tracking-widest max-w-xl">
                     {t('WALLET_DESC')}
-                    <span className="text-[#ff006e]/50 ml-3">:: ENCRYPTED_v2.0</span>
+                    <span className="text-fatale/50 ml-3">:: ENCRYPTED_v2.0</span>
                 </p>
             </div>
 
@@ -119,7 +119,7 @@ const WalletView = ({ user, onRefreshProfile }) => {
 const TabButton = ({ label, icon, active, onClick }) => (
     <button
         onClick={onClick}
-        className={`pb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest transition-all relative ${active ? 'text-[#ff006e]' : 'text-white/30 hover:text-white'
+        className={`pb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest transition-all relative ${active ? 'text-fatale' : 'text-white/30 hover:text-white'
             }`}
     >
         {icon}
@@ -127,7 +127,7 @@ const TabButton = ({ label, icon, active, onClick }) => (
         {active && (
             <motion.div
                 layoutId="activeTabWallet"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ff006e] shadow-[0_0_10px_#ff006e]"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-fatale shadow-[0_0_10px_rgb(var(--theme-primary))]"
             />
         )}
     </button>

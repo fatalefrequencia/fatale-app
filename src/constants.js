@@ -25,7 +25,7 @@ export const SECTORS = [
     name: 'CLUB / BASS',
     x: 800,
     y: 800,
-    color: '#ff006e',
+    color: 'rgb(var(--theme-primary))',
     desc: 'Underground beats & raw signal',
     subgenres: ['House', 'Techno', 'Bass', 'UKG']
   },
@@ -34,7 +34,7 @@ export const SECTORS = [
     name: 'POP / R&B',
     x: 4000,
     y: 800,
-    color: '#00ffff',
+    color: 'rgb(var(--theme-secondary))',
     desc: 'Synthetic highs & digital dreams',
     subgenres: ['Hyperpop', 'R&B', 'Pop', 'Dance']
   },

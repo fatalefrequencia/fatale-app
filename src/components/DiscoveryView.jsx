@@ -4,11 +4,11 @@ import { Search, Music, Disc, User, Play, Heart } from 'lucide-react';
 
 const DISCOVERY_ITEMS = [
     { id: 1, title: 'Sophia Mitchell', type: 'Artist', image: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=600&auto=format&fit=crop', color: '#e0e020', span: 'col-span-1 row-span-2' },
-    { id: 2, title: 'Neon Nights', type: 'Playlist', image: 'https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=600&auto=format&fit=crop', color: '#ff006e', span: 'col-span-1 row-span-1' },
+    { id: 2, title: 'Neon Nights', type: 'Playlist', image: 'https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=600&auto=format&fit=crop', color: 'rgb(var(--theme-primary))', span: 'col-span-1 row-span-1' },
     { id: 3, title: 'Ava Sullivan', type: 'Artist', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600&auto=format&fit=crop', color: '#ffffff', span: 'col-span-1 row-span-2' },
     { id: 4, title: 'William Brown', type: 'Album', image: 'https://images.unsplash.com/photo-1514525253440-b393452e233e?q=80&w=600&auto=format&fit=crop', color: '#a020f0', span: 'col-span-1 row-span-1' },
-    { id: 5, title: 'Retro Glitch', type: 'Mix', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=600&auto=format&fit=crop', color: '#00ffff', span: 'col-span-1 row-span-1' },
-    { id: 6, title: 'Deep Focus', type: 'Playlist', image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=600&auto=format&fit=crop', color: '#ff006e', span: 'col-span-1 row-span-2' },
+    { id: 5, title: 'Retro Glitch', type: 'Mix', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=600&auto=format&fit=crop', color: 'rgb(var(--theme-secondary))', span: 'col-span-1 row-span-1' },
+    { id: 6, title: 'Deep Focus', type: 'Playlist', image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=600&auto=format&fit=crop', color: 'rgb(var(--theme-primary))', span: 'col-span-1 row-span-2' },
     { id: 7, title: 'Oliver Ben', type: 'Artist', image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=600&auto=format&fit=crop', color: '#ffffff', span: 'col-span-1 row-span-1' },
     { id: 8, title: 'System Error', type: 'Track', image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=600&auto=format&fit=crop', color: '#e0e020', span: 'col-span-1 row-span-1' },
 ];
@@ -36,7 +36,7 @@ export const DiscoveryView = () => {
                 <button className="bg-white/10 backdrop-blur-md rounded-full px-5 py-3 text-white text-xs font-bold border border-white/10 shadow-lg whitespace-nowrap">
                     Electro
                 </button>
-                <button className="bg-[#ff006e] backdrop-blur-md rounded-full px-5 py-3 text-white text-xs font-black border border-[#ff006e] shadow-lg shadow-[#ff006e]/20 whitespace-nowrap">
+                <button className="bg-fatale backdrop-blur-md rounded-full px-5 py-3 text-white text-xs font-black border border-fatale shadow-lg shadow-fatale/20 whitespace-nowrap">
                     Featured
                 </button>
             </div>
@@ -60,13 +60,13 @@ export const DiscoveryView = () => {
                                 <h3 className="text-xl font-black text-white leading-none mb-1 shadow-black drop-shadow-lg">{item.title}</h3>
                                 <div className="flex items-center gap-2">
                                     <span className="text-[10px] uppercase font-bold text-white/60 tracking-widest">{item.type}</span>
-                                    {item.type === 'Artist' && <span className="text-[10px] text-[#ff006e]">★</span>}
+                                    {item.type === 'Artist' && <span className="text-[10px] text-fatale">★</span>}
                                 </div>
                             </div>
 
                             {/* Hover Overlay */}
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-                                <button className="w-12 h-12 bg-[#ff006e] rounded-full flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform delay-75 shadow-[0_0_20px_#ff006e]">
+                                <button className="w-12 h-12 bg-fatale rounded-full flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform delay-75 shadow-[0_0_20px_rgb(var(--theme-primary))]">
                                     <Play fill="black" size={20} className="ml-1" />
                                 </button>
                             </div>

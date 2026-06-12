@@ -31,20 +31,20 @@ const AlbumTrackRow = ({ track, index, onChange, onRemove, canRemove }) => {
             className="border border-white/5 bg-black p-5 space-y-4 relative group rounded-sm"
         >
             {/* HUD Brackets for track unit */}
-            <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#ff006e]/40 transition-colors group-hover:border-[#ff006e]" />
-            <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#ff006e]/40 transition-colors group-hover:border-[#ff006e]" />
+            <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-fatale/40 transition-colors group-hover:border-fatale" />
+            <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-fatale/40 transition-colors group-hover:border-fatale" />
 
             {/* Track unit metadata */}
             <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
-                    <div className="w-1 h-1 bg-[#ff006e] rotate-45" />
-                    <span className="text-[8px] mono text-[#ff006e]/80 tracking-[0.4em] uppercase font-black">UN_ID // TRACK_{String(index + 1).padStart(2, '0')}</span>
+                    <div className="w-1 h-1 bg-fatale rotate-45" />
+                    <span className="text-[8px] mono text-fatale/80 tracking-[0.4em] uppercase font-black">UN_ID // TRACK_{String(index + 1).padStart(2, '0')}</span>
                 </div>
                 {canRemove && (
                     <button
                         type="button"
                         onClick={() => onRemove(index)}
-                        className="text-[8px] mono text-white/20 hover:text-[#ff006e] transition-colors border border-white/5 px-2 py-0.5 hover:border-[#ff006e]/30"
+                        className="text-[8px] mono text-white/20 hover:text-fatale transition-colors border border-white/5 px-2 py-0.5 hover:border-fatale/30"
                     >
                         [ DELETE_SEQ ]
                     </button>
@@ -59,7 +59,7 @@ const AlbumTrackRow = ({ track, index, onChange, onRemove, canRemove }) => {
                         placeholder="track_id"
                         value={track.title}
                         onChange={e => onChange(index, { title: e.target.value })}
-                        className="w-full bg-white/[0.02] border border-white/5 p-3 text-white text-[10px] font-black outline-none focus:border-[#ff006e] tracking-[0.1em] transition-all rounded-sm"
+                        className="w-full bg-white/[0.02] border border-white/5 p-3 text-white text-[10px] font-black outline-none focus:border-fatale tracking-[0.1em] transition-all rounded-sm"
                         required
                     />
                 </div>
@@ -97,20 +97,20 @@ const AlbumTrackRow = ({ track, index, onChange, onRemove, canRemove }) => {
                             const val = parseFloat(e.target.value);
                             onChange(index, { price: isNaN(val) ? 0 : Math.min(1, Math.max(0, val)) });
                         }}
-                        className="w-full bg-white/[0.02] border border-white/5 p-3 text-white text-[10px] font-bold outline-none focus:border-[#ff006e]/30 tracking-widest transition-all rounded-sm"
+                        className="w-full bg-white/[0.02] border border-white/5 p-3 text-white text-[10px] font-bold outline-none focus:border-fatale/30 tracking-widest transition-all rounded-sm"
                     />
                 </div>
             </div>
 
             {/* Audio file picker */}
-            <div className={`relative border p-3 flex items-center justify-between cursor-pointer transition-all rounded-sm ${track.audioFile ? 'border-[#ff006e]/50 bg-[#ff006e]/5' : 'border-white/5 bg-white/[0.02] hover:border-[#ff006e]/30'}`}>
+            <div className={`relative border p-3 flex items-center justify-between cursor-pointer transition-all rounded-sm ${track.audioFile ? 'border-fatale/50 bg-fatale/5' : 'border-white/5 bg-white/[0.02] hover:border-fatale/30'}`}>
                 <input type="file" accept="audio/*,.mp3,.wav,.flac,.aac,.ogg,.m4a" onChange={e => handleFileChange(e, 'audioFile')} className="hidden" id={`audio-${track.id}`} />
                 <label htmlFor={`audio-${track.id}`} className="flex items-center gap-3 cursor-pointer w-full">
-                    <div className={`w-8 h-8 rounded-sm border flex items-center justify-center transition-all ${track.audioFile ? 'border-[#ff006e] bg-[#ff006e]/20' : 'border-white/10'}`}>
-                        <Music size={12} className={track.audioFile ? 'text-[#ff006e]' : 'text-white/20'} />
+                    <div className={`w-8 h-8 rounded-sm border flex items-center justify-center transition-all ${track.audioFile ? 'border-fatale bg-fatale/20' : 'border-white/10'}`}>
+                        <Music size={12} className={track.audioFile ? 'text-fatale' : 'text-white/20'} />
                     </div>
                     <div className="flex flex-col">
-                        <span className={`text-[8px] font-black uppercase tracking-widest ${track.audioFile ? 'text-[#ff006e]' : 'text-white/30'}`}>
+                        <span className={`text-[8px] font-black uppercase tracking-widest ${track.audioFile ? 'text-fatale' : 'text-white/30'}`}>
                             {track.audioFile ? track.audioFile.name : 'UPLOAD_SIGNAL_STREAM'}
                         </span>
                         <span className="text-[6px] mono text-white/10 uppercase">MIME: AUDIO/WAV_MP3</span>
@@ -122,27 +122,27 @@ const AlbumTrackRow = ({ track, index, onChange, onRemove, canRemove }) => {
             <div className="space-y-2">
                 <div
                     onClick={() => onChange(index, { isLocked: !track.isLocked })}
-                    className={`flex items-center justify-between p-3 border cursor-pointer transition-all rounded-sm ${track.isLocked ? 'bg-[#ff006e]/10 border-[#ff006e]/40 shadow-[inset_0_0_10px_#ff006e10]' : 'bg-white/[0.02] border-white/5 hover:border-white/20'}`}
+                    className={`flex items-center justify-between p-3 border cursor-pointer transition-all rounded-sm ${track.isLocked ? 'bg-fatale/10 border-fatale/40 shadow-[inset_0_0_10px_rgb(var(--theme-primary))10]' : 'bg-white/[0.02] border-white/5 hover:border-white/20'}`}
                 >
                     <div className="flex items-center gap-2">
                         {track.isLocked
-                            ? <Lock size={12} className="text-[#ff006e]" />
+                            ? <Lock size={12} className="text-fatale" />
                             : <Unlock size={12} className="text-white/20" />
                         }
-                        <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${track.isLocked ? 'text-[#ff006e]' : 'text-white/30'}`}>
+                        <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${track.isLocked ? 'text-fatale' : 'text-white/30'}`}>
                             {track.isLocked ? 'PROTOCOL: LOCKED' : 'PROTOCOL: OPEN'}
                         </span>
                     </div>
-                    <div className={`w-3 h-3 rounded-full transition-all ${track.isLocked ? 'bg-[#ff006e] animate-pulse shadow-[0_0_8px_#ff006e]' : 'bg-white/5'}`} />
+                    <div className={`w-3 h-3 rounded-full transition-all ${track.isLocked ? 'bg-fatale animate-pulse shadow-[0_0_8px_rgb(var(--theme-primary))]' : 'bg-white/5'}`} />
                 </div>
                 {track.isLocked && (
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
-                        className="px-3 py-2 border-l border-[#ff006e]/30 bg-[#ff006e]/5 flex items-start gap-2"
+                        className="px-3 py-2 border-l border-fatale/30 bg-fatale/5 flex items-start gap-2"
                     >
-                        <AlertCircle size={10} className="text-[#ff006e] mt-0.5 shrink-0" />
-                        <span className="text-[7px] mono text-[#ff006e]/70 uppercase leading-relaxed tracking-wider">
+                        <AlertCircle size={10} className="text-fatale mt-0.5 shrink-0" />
+                        <span className="text-[7px] mono text-fatale/70 uppercase leading-relaxed tracking-wider">
                             ENCRYPTION DETECTED. ACCESS REQUIRES [{track.price || 0} CRD] TRANSFER.
                         </span>
                     </motion.div>
@@ -273,7 +273,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                 initial={{ opacity: 0, scale: 0.98, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.98, y: 10 }}
-                className="relative w-full max-w-lg bg-[#000000] border border-white/10 p-8 shadow-[0_0_100px_rgba(0,0,0,1)] rounded-sm overflow-visible"
+                className="relative w-full max-w-lg bg-systemBg border border-white/10 p-8 shadow-[0_0_100px_rgba(0,0,0,1)] rounded-sm overflow-visible"
                     style={{ maxHeight: 'calc(100dvh - env(safe-area-inset-top, 44px) - env(safe-area-inset-bottom, 34px) - 32px)', overflowY: 'auto' }}
             >
                 {/* HUD Elements */}
@@ -284,7 +284,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                     {/* Header */}
                     <div className="flex justify-between items-start mb-10 mt-1 ml-1 cursor-default">
                         <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-white/5 border border-white/10 rounded-sm">
-                            <div className="w-1 h-1 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_8px_#ff006e]" />
+                            <div className="w-1 h-1 rounded-full bg-fatale animate-pulse shadow-[0_0_8px_rgb(var(--theme-primary))]" />
                             <span className="text-[8px] mono font-black text-white/40 tracking-[0.4em] uppercase">
                                 SIGNAL_UPLOAD_INIT
                             </span>
@@ -292,7 +292,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                         <button 
                             onClick={onClose} 
                             disabled={uploading}
-                            className="text-white/20 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300 transform active:scale-90"
+                            className="text-white/20 hover:text-fatale hover:rotate-90 transition-all duration-300 transform active:scale-90"
                         >
                             <X size={20} />
                         </button>
@@ -302,13 +302,13 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                     <div className="flex gap-4 mb-8">
                         <button
                             onClick={() => { setMode('single'); setStatus('idle'); }}
-                            className={`flex-1 py-3 px-4 transition-all flex items-center justify-center gap-2 mono text-[10px] font-black tracking-[0.2em] border rounded-sm ${mode === 'single' ? 'bg-[#ff006e]/10 border-[#ff006e] text-[#ff006e] shadow-[0_0_20px_rgba(255,0,110,0.2)]' : 'bg-white/[0.03] border-white/10 text-white/40 hover:text-white/60 hover:border-white/20'}`}
+                            className={`flex-1 py-3 px-4 transition-all flex items-center justify-center gap-2 mono text-[10px] font-black tracking-[0.2em] border rounded-sm ${mode === 'single' ? 'bg-fatale/10 border-fatale text-fatale shadow-[0_0_20px_rgba(255,0,110,0.2)]' : 'bg-white/[0.03] border-white/10 text-white/40 hover:text-white/60 hover:border-white/20'}`}
                         >
                             [ SINGLE_SIG ]
                         </button>
                         <button
                             onClick={() => { setMode('album'); setStatus('idle'); }}
-                            className={`flex-1 py-3 px-4 transition-all flex items-center justify-center gap-2 mono text-[10px] font-black tracking-[0.2em] border rounded-sm ${mode === 'album' ? 'bg-[#ff006e]/10 border-[#ff006e] text-[#ff006e] shadow-[0_0_20px_rgba(255,0,110,0.2)]' : 'bg-white/[0.03] border-white/10 text-white/40 hover:text-white/60 hover:border-white/20'}`}
+                            className={`flex-1 py-3 px-4 transition-all flex items-center justify-center gap-2 mono text-[10px] font-black tracking-[0.2em] border rounded-sm ${mode === 'album' ? 'bg-fatale/10 border-fatale text-fatale shadow-[0_0_20px_rgba(255,0,110,0.2)]' : 'bg-white/[0.03] border-white/10 text-white/40 hover:text-white/60 hover:border-white/20'}`}
                         >
                             [ BATCH_LINK ]
                         </button>
@@ -320,17 +320,17 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                             <motion.div
                                 initial={{ scale: 0.8, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
-                                className="w-24 h-24 bg-[#ff006e]/5 border border-[#ff006e] flex items-center justify-center mx-auto shadow-[0_0_40px_rgba(255,0,110,0.2)] relative"
+                                className="w-24 h-24 bg-fatale/5 border border-fatale flex items-center justify-center mx-auto shadow-[0_0_40px_rgba(255,0,110,0.2)] relative"
                             >
-                                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#ff006e]" />
-                                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#ff006e]" />
-                                <CheckCircle size={48} className="text-[#ff006e]" />
+                                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-fatale" />
+                                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-fatale" />
+                                <CheckCircle size={48} className="text-fatale" />
                             </motion.div>
                             <div className="space-y-4">
                                 <p className="text-2xl font-black text-white tracking-[0.3em] uppercase italic">
                                     TRANSMISSION_COMPLETE
                                 </p>
-                                <div className="text-[10px] mono text-[#ff006e] opacity-60 uppercase tracking-[0.5em] animate-pulse">
+                                <div className="text-[10px] mono text-fatale opacity-60 uppercase tracking-[0.5em] animate-pulse">
                                     SYNCING_CORE_GRID...
                                 </div>
                             </div>
@@ -345,7 +345,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                             type="text"
                                             value={formData.title}
                                             onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                            className="w-full bg-black border border-white/10 p-4 text-white font-black outline-none focus:border-[#ff006e] tracking-[0.2em] transition-all rounded-sm"
+                                            className="w-full bg-black border border-white/10 p-4 text-white font-black outline-none focus:border-fatale tracking-[0.2em] transition-all rounded-sm"
                                             placeholder="track_id"
                                             required
                                         />
@@ -353,7 +353,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="col-span-2 space-y-2">
-                                            <label className="text-[10px] text-[#ff006e]/60 uppercase tracking-widest">Select Sector</label>
+                                            <label className="text-[10px] text-fatale/60 uppercase tracking-widest">Select Sector</label>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {SECTORS.map((sector, idx) => (
                                                     <button
@@ -383,7 +383,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                                     const val = parseFloat(e.target.value);
                                                     setFormData({ ...formData, price: isNaN(val) ? 0 : Math.min(1, Math.max(0, val)) });
                                                 }}
-                                                className="w-full bg-white/[0.03] border border-white/10 p-4 text-white font-black outline-none focus:border-[#ff006e]/40 transition-all text-[11px] tracking-widest rounded-sm"
+                                                className="w-full bg-white/[0.03] border border-white/10 p-4 text-white font-black outline-none focus:border-fatale/40 transition-all text-[11px] tracking-widest rounded-sm"
                                                 placeholder="0"
                                             />
                                         </div>
@@ -393,17 +393,17 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                     <div className="space-y-1">
                                         <div
                                             onClick={() => setFormData({ ...formData, isLocked: !formData.isLocked })}
-                                            className={`flex items-center justify-between p-4 border cursor-pointer transition-all group ${formData.isLocked ? 'bg-[#ff006e]/5 border-[#ff006e]/40' : 'bg-black border-white/5 hover:border-white/10'}`}
+                                            className={`flex items-center justify-between p-4 border cursor-pointer transition-all group ${formData.isLocked ? 'bg-fatale/5 border-fatale/40' : 'bg-black border-white/5 hover:border-white/10'}`}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-all ${formData.isLocked ? 'border-[#ff006e] bg-[#ff006e]/20 shadow-[0_0_10px_#ff006e40]' : 'border-white/20'}`}>
-                                                    {formData.isLocked && <div className="w-1.5 h-1.5 bg-[#ff006e]" />}
+                                                <div className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-all ${formData.isLocked ? 'border-fatale bg-fatale/20 shadow-[0_0_10px_rgb(var(--theme-primary))40]' : 'border-white/20'}`}>
+                                                    {formData.isLocked && <div className="w-1.5 h-1.5 bg-fatale" />}
                                                 </div>
-                                                <span className={`text-[10px] font-black uppercase tracking-widest ${formData.isLocked ? 'text-[#ff006e]' : 'text-white/40 group-hover:text-white'}`}>
+                                                <span className={`text-[10px] font-black uppercase tracking-widest ${formData.isLocked ? 'text-fatale' : 'text-white/40 group-hover:text-white'}`}>
                                                     TOGGLE_ENCRYPTION_PROTOCOL
                                                 </span>
                                             </div>
-                                            <span className={`text-[8px] mono font-bold uppercase ${formData.isLocked ? 'text-[#ff006e] animate-pulse' : 'text-white/10'}`}>
+                                            <span className={`text-[8px] mono font-bold uppercase ${formData.isLocked ? 'text-fatale animate-pulse' : 'text-white/10'}`}>
                                                 {formData.isLocked ? 'ENCRYPTED' : 'OPEN_SOURCE'}
                                             </span>
                                         </div>
@@ -411,11 +411,11 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                             <motion.div
                                                 initial={{ opacity: 0, height: 0 }}
                                                 animate={{ opacity: 1, height: 'auto' }}
-                                                className="px-4 py-2 border border-dashed border-[#ff006e]/30 bg-[#ff006e]/5"
+                                                className="px-4 py-2 border border-dashed border-fatale/30 bg-fatale/5"
                                             >
                                                 <div className="flex items-start gap-2">
-                                                    <AlertCircle size={10} className="text-[#ff006e] mt-0.5 shrink-0" />
-                                                    <span className="text-[7px] mono text-[#ff006e]/80 uppercase leading-relaxed tracking-wider">
+                                                    <AlertCircle size={10} className="text-fatale mt-0.5 shrink-0" />
+                                                    <span className="text-[7px] mono text-fatale/80 uppercase leading-relaxed tracking-wider">
                                                         Protocol_Active: Encryption restricts signal access. Users will be required to commit the specified [CRD] balance to decrypt and interact with this transmission.
                                                     </span>
                                                 </div>
@@ -425,7 +425,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
 
                                     {/* File pickers */}
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className={`relative border border-dashed p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all rounded-sm ${formData.audioFile ? 'bg-[#ff006e]/10 border-[#ff006e]/50' : 'border-white/5 bg-white/[0.02] hover:border-[#ff006e]/30'}`}>
+                                        <div className={`relative border border-dashed p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all rounded-sm ${formData.audioFile ? 'bg-fatale/10 border-fatale/50' : 'border-white/5 bg-white/[0.02] hover:border-fatale/30'}`}>
                                             <input 
                                                 type="file" 
                                                 accept="audio/*,.mp3,.wav,.flac,.aac,.ogg,.m4a" 
@@ -434,22 +434,22 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                                 id="audio-upload" 
 />
                                             <label htmlFor="audio-upload" className="flex flex-col items-center cursor-pointer text-center w-full">
-                                                <div className={`w-12 h-12 border flex items-center justify-center mb-2 transition-all ${formData.audioFile ? 'border-[#ff006e] bg-[#ff006e]/20' : 'border-white/10'}`}>
-                                                    <Music size={20} className={formData.audioFile ? 'text-[#ff006e]' : 'text-white/20'} />
+                                                <div className={`w-12 h-12 border flex items-center justify-center mb-2 transition-all ${formData.audioFile ? 'border-fatale bg-fatale/20' : 'border-white/10'}`}>
+                                                    <Music size={20} className={formData.audioFile ? 'text-fatale' : 'text-white/20'} />
                                                 </div>
-                                                <span className={`text-[8px] font-black uppercase tracking-widest ${formData.audioFile ? 'text-[#ff006e]' : 'text-white/40'}`}>
+                                                <span className={`text-[8px] font-black uppercase tracking-widest ${formData.audioFile ? 'text-fatale' : 'text-white/40'}`}>
                                                     {formData.audioFile ? formData.audioFile.name : 'UPLOAD_SIGNAL'}
                                                 </span>
                                                 <div className="text-[6px] mono text-white/10 mt-2 uppercase tracking-tight">MP3 / WAV / OGG</div>
                                             </label>
                                         </div>
-                                        <div className={`relative border border-dashed p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all rounded-sm ${formData.coverFile ? 'bg-[#ff006e]/10 border-[#ff006e]/50' : 'border-white/5 bg-white/[0.02] hover:border-[#ff006e]/30'}`}>
+                                        <div className={`relative border border-dashed p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all rounded-sm ${formData.coverFile ? 'bg-fatale/10 border-fatale/50' : 'border-white/5 bg-white/[0.02] hover:border-fatale/30'}`}>
                                             <input type="file" accept="image/*" onChange={e => { const f = e.target.files[0]; if (f) setFormData(p => ({ ...p, coverFile: f })); }} className="hidden" id="cover-upload" />
                                             <label htmlFor="cover-upload" className="flex flex-col items-center cursor-pointer text-center w-full">
-                                                <div className={`w-12 h-12 border flex items-center justify-center mb-2 transition-all ${formData.coverFile ? 'border-[#ff006e] bg-[#ff006e]/20' : 'border-white/10'}`}>
-                                                    <ImageIcon size={20} className={formData.coverFile ? 'text-[#ff006e]' : 'text-white/20'} />
+                                                <div className={`w-12 h-12 border flex items-center justify-center mb-2 transition-all ${formData.coverFile ? 'border-fatale bg-fatale/20' : 'border-white/10'}`}>
+                                                    <ImageIcon size={20} className={formData.coverFile ? 'text-fatale' : 'text-white/20'} />
                                                 </div>
-                                                <span className={`text-[8px] font-black uppercase tracking-widest ${formData.coverFile ? 'text-[#ff006e]' : 'text-white/40'}`}>
+                                                <span className={`text-[8px] font-black uppercase tracking-widest ${formData.coverFile ? 'text-fatale' : 'text-white/40'}`}>
                                                     {formData.coverFile ? formData.coverFile.name : 'ATTACH_VISUAL'}
                                                 </span>
                                                 <div className="text-[6px] mono text-white/10 mt-2 uppercase tracking-tight">JPG / PNG / WEBP</div>
@@ -470,11 +470,11 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                         <button 
                                             type="submit" 
                                             disabled={uploading} 
-                                            className="w-full py-4 border border-[#ff006e] bg-[#ff006e]/10 text-[#ff006e] text-[10px] font-black uppercase tracking-widest transition-all hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_40px_rgba(255,0,110,0.4)] disabled:opacity-50 disabled:shadow-none"
+                                            className="w-full py-4 border border-fatale bg-fatale/10 text-fatale text-[10px] font-black uppercase tracking-widest transition-all hover:bg-fatale hover:text-black hover:shadow-[0_0_40px_rgba(255,0,110,0.4)] disabled:opacity-50 disabled:shadow-none"
                                         >
                                             {uploading ? (
                                                 <div className="flex items-center justify-center gap-3">
-                                                    <div className="w-2 h-2 bg-[#ff006e] animate-ping" /> TRANSMITTING...
+                                                    <div className="w-2 h-2 bg-fatale animate-ping" /> TRANSMITTING...
                                                 </div>
                                             ) : 'Init_Upload'}
                                         </button>
@@ -491,19 +491,19 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                             type="text"
                                             value={albumData.title}
                                             onChange={e => setAlbumData({ ...albumData, title: e.target.value })}
-                                            className="w-full bg-white/[0.03] border border-white/10 p-4 text-white font-black outline-none focus:border-[#ff006e] tracking-[0.2em] transition-all rounded-sm"
+                                            className="w-full bg-white/[0.03] border border-white/10 p-4 text-white font-black outline-none focus:border-fatale tracking-[0.2em] transition-all rounded-sm"
                                             placeholder="album_title"
                                             required
                                         />
                                     </div>
 
                                     {/* Album cover */}
-                                    <div className={`relative border border-dashed p-4 flex items-center gap-4 cursor-pointer transition-all ${albumData.coverFile ? 'border-[#ff006e]/50 bg-[#ff006e]/5' : 'border-white/10 hover:border-[#ff006e]/30'}`}>
+                                    <div className={`relative border border-dashed p-4 flex items-center gap-4 cursor-pointer transition-all ${albumData.coverFile ? 'border-fatale/50 bg-fatale/5' : 'border-white/10 hover:border-fatale/30'}`}>
                                         <input type="file" accept="image/*" onChange={e => { const f = e.target.files[0]; if (f) setAlbumData(p => ({ ...p, coverFile: f })); }} className="hidden" id="album-cover-upload" />
                                         <label htmlFor="album-cover-upload" className="flex items-center gap-4 cursor-pointer w-full">
-                                            <ImageIcon size={20} className={albumData.coverFile ? 'text-[#ff006e]' : 'text-white/20'} />
+                                            <ImageIcon size={20} className={albumData.coverFile ? 'text-fatale' : 'text-white/20'} />
                                             <div>
-                                                <div className={`text-[9px] font-black uppercase tracking-widest ${albumData.coverFile ? 'text-[#ff006e]' : 'text-white/40'}`}>
+                                                <div className={`text-[9px] font-black uppercase tracking-widest ${albumData.coverFile ? 'text-fatale' : 'text-white/40'}`}>
                                                     {albumData.coverFile ? albumData.coverFile.name : 'Album_Cover_Image'}
                                                 </div>
                                                 <div className="text-[7px] text-white/20">Shared across all tracks unless overridden per-track</div>
@@ -514,7 +514,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                     {/* Track list */}
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <label className="text-[9px] font-black text-[#ff006e]/50 uppercase tracking-[0.3em]">Tracks ({albumTracks.length})</label>
+                                            <label className="text-[9px] font-black text-fatale/50 uppercase tracking-[0.3em]">Tracks ({albumTracks.length})</label>
                                             <button
                                                 type="button"
                                                 onClick={addTrack}
@@ -550,11 +550,11 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                         <button 
                                             type="submit" 
                                             disabled={uploading} 
-                                            className="w-full py-4 border border-[#ff006e] bg-[#ff006e]/10 text-[#ff006e] text-[10px] font-black uppercase tracking-widest transition-all hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_40px_rgba(255,0,110,0.4)] disabled:opacity-50 disabled:shadow-none"
+                                            className="w-full py-4 border border-fatale bg-fatale/10 text-fatale text-[10px] font-black uppercase tracking-widest transition-all hover:bg-fatale hover:text-black hover:shadow-[0_0_40px_rgba(255,0,110,0.4)] disabled:opacity-50 disabled:shadow-none"
                                         >
                                             {uploading ? (
                                                 <div className="flex items-center justify-center gap-3">
-                                                    <div className="w-2 h-2 bg-[#ff006e] animate-ping" /> TRANSMITTING...
+                                                    <div className="w-2 h-2 bg-fatale animate-ping" /> TRANSMITTING...
                                                 </div>
                                             ) : 'Init_Upload'}
                                         </button>

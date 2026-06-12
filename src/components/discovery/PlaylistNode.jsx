@@ -11,7 +11,7 @@ const PlaylistNode = ({ data }) => {
         trackCount = 0,
         creatorName,
         onClick,
-        sectorColor = '#ff006e', // Default to Fatale Pink
+        sectorColor = 'rgb(var(--theme-primary))', // Default to Fatale Pink
         zoom = 1,
     } = data;
     const showLabel = zoom > 0.55;

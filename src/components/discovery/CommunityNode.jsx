@@ -7,7 +7,7 @@ const CommunityNode = ({ data }) => {
     const [hovered, setHovered] = React.useState(false);
     const {
         name,
-        color = '#ff006e',
+        color = 'rgb(var(--theme-primary))',
         memberCount = 0,
         imageUrl = null,
         zoom = 1,

@@ -23,7 +23,7 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
     const sectorColor = (community?.sectorId !== undefined && community?.sectorId !== null) 
         ? SECTORS.find(s => s.id === community.sectorId)?.color 
         : null;
-    const color = sectorColor || community?.color || '#ff006e';
+    const color = sectorColor || community?.color || 'rgb(var(--theme-primary))';
     const userCommunityId = currentUser?.communityId ?? currentUser?.CommunityId;
     const userId = currentUser?.id ?? currentUser?.Id;
     const isMember = userCommunityId != null && String(userCommunityId) === String(community?.id);
@@ -300,7 +300,7 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                                 e.stopPropagation();
                                 onClose();
                             }}
-                            className="p-3 text-[#ff006e] opacity-60 hover:opacity-100 hover:rotate-90 transition-all cursor-pointer relative z-[1100]"
+                            className="p-3 text-fatale opacity-60 hover:opacity-100 hover:rotate-90 transition-all cursor-pointer relative z-[1100]"
                         >
                             <X size={24} />
                         </button>
@@ -426,9 +426,9 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                                         {/* Avatar */}
                                         <div className="w-6 h-6 rounded-sm shrink-0 overflow-hidden border flex items-center justify-center text-[7px] font-black"
                                             style={{
-                                                borderColor: `${msg.themeColor || '#ff006e'}50`,
-                                                color: msg.themeColor || '#ff006e',
-                                                background: `${msg.themeColor || '#ff006e'}15`
+                                                borderColor: `${msg.themeColor || 'rgb(var(--theme-primary))'}50`,
+                                                color: msg.themeColor || 'rgb(var(--theme-primary))',
+                                                background: `${msg.themeColor || 'rgb(var(--theme-primary))'}15`
                                             }}>
                                             {msg.profilePictureUrl ? (
                                                 <img src={getMediaUrl(msg.profilePictureUrl)}
@@ -440,7 +440,7 @@ export const CommunityDetailsModal = ({ community, onClose, onMinimize, onJoin, 
                                         {/* Bubble */}
                                         <div className={`max-w-[75%] ${isMe ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
                                             <div className={`flex items-center gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
-                                                <span className="text-[9px] font-black mono" style={{ color: msg.themeColor || '#ff006e' }}>
+                                                <span className="text-[9px] font-black mono" style={{ color: msg.themeColor || 'rgb(var(--theme-primary))' }}>
                                                     {msg.username}
                                                 </span>
                                                 <span className="text-[8px] mono text-white/20">
@@ -594,7 +594,7 @@ export const CreateCommunityModal = ({ onClose, onSubmit, loading, user_credits 
                         <button 
                             onClick={(e) => { e.stopPropagation(); onClose(); }} 
                             onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); onClose(); }}
-                            className="text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300 cursor-pointer p-2"
+                            className="text-fatale/40 hover:text-fatale hover:rotate-90 transition-all duration-300 cursor-pointer p-2"
                         >
                             <X size={18} />
                         </button>

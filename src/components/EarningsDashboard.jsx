@@ -74,11 +74,11 @@ const EarningsDashboard = ({ user, onBack }) => {
             <div>
                 <div className="flex items-center gap-4 mb-2">
                     {onBack && (
-                        <button onClick={onBack} className="p-2 -ml-2 hover:bg-[#ff006e]/10 rounded-full transition-colors group">
-                            <ArrowDownLeft size={24} className="rotate-45 text-[#ff006e]/60 group-hover:text-[#ff006e]" />
+                        <button onClick={onBack} className="p-2 -ml-2 hover:bg-fatale/10 rounded-full transition-colors group">
+                            <ArrowDownLeft size={24} className="rotate-45 text-fatale/60 group-hover:text-fatale" />
                         </button>
                     )}
-                    <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.25em] font-mono">// MY_EARNINGS</div>
+                    <div className="text-[10px] font-black text-fatale/50 uppercase tracking-[0.25em] font-mono">// MY_EARNINGS</div>
                 </div>
                 <p className="text-xs text-white/40 uppercase tracking-widest pl-1">
                     {hasEarnings ? 'Track your revenue from sales and tips.' : 'Start uploading music to earn credits.'}
@@ -137,7 +137,7 @@ const EarningsDashboard = ({ user, onBack }) => {
                 <button
                     onClick={() => setShowWiseModal(true)}
                     disabled={!hasEarnings}
-                    className="px-8 py-4 bg-[#ff006e] text-black font-black uppercase tracking-widest rounded-sm hover:bg-white transition-all disabled:opacity-30 flex items-center gap-2 shadow-[0_0_15px_rgba(255,0,110,0.25)]"
+                    className="px-8 py-4 bg-fatale text-black font-black uppercase tracking-widest rounded-sm hover:bg-white transition-all disabled:opacity-30 flex items-center gap-2 shadow-[0_0_15px_rgba(255,0,110,0.25)]"
                 >
                     Request Payout <ArrowDown size={16} />
                 </button>
@@ -151,17 +151,17 @@ const EarningsDashboard = ({ user, onBack }) => {
                         initial={{ opacity: 0, scale: 0.98, y: 15 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.98, y: 15 }}
-                        className="w-full max-w-md bg-[#050505] border border-[#ff006e]/30 relative overflow-hidden shadow-[0_0_50px_rgba(255,0,110,0.25)] rounded-sm"
+                        className="w-full max-w-md bg-[#050505] border border-fatale/30 relative overflow-hidden shadow-[0_0_50px_rgba(255,0,110,0.25)] rounded-sm"
                     >
                         {/* Header */}
                         <div className="flex justify-between items-center p-5 border-b border-white/5 bg-black">
-                            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#ff006e] flex items-center gap-2">
-                                <Landmark size={14} className="text-[#ff006e]" />
+                            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-fatale flex items-center gap-2">
+                                <Landmark size={14} className="text-fatale" />
                                 WISE_REVENUE_RETRIEVAL
                             </div>
                             <button
                                 onClick={() => setShowWiseModal(false)}
-                                className="text-white/40 hover:text-[#ff006e] transition-all hover:rotate-90 p-1"
+                                className="text-white/40 hover:text-fatale transition-all hover:rotate-90 p-1"
                             >
                                 <X size={18} />
                             </button>
@@ -178,7 +178,7 @@ const EarningsDashboard = ({ user, onBack }) => {
                                         required
                                         value={withdrawAmount}
                                         onChange={(e) => setWithdrawAmount(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 focus:border-[#ff006e] outline-none text-[10px] text-white px-3 py-3 rounded-sm tracking-wider"
+                                        className="w-full bg-white/5 border border-white/10 focus:border-fatale outline-none text-[10px] text-white px-3 py-3 rounded-sm tracking-wider"
                                     />
                                     <div className="text-[8px] text-white/20 uppercase tracking-wide">Minimum: 500 Credits</div>
                                 </div>
@@ -193,7 +193,7 @@ const EarningsDashboard = ({ user, onBack }) => {
                                         <span className="font-bold text-white/50">${wiseFee.toFixed(2)} USD</span>
                                     </div>
                                     <div className="h-px bg-white/5 my-2" />
-                                    <div className="flex justify-between text-[10px] uppercase tracking-widest font-black text-[#00ffff]">
+                                    <div className="flex justify-between text-[10px] uppercase tracking-widest font-black text-secondary">
                                         <span>Estimated Received:</span>
                                         <span>${finalAmountUSD} USD</span>
                                     </div>
@@ -206,7 +206,7 @@ const EarningsDashboard = ({ user, onBack }) => {
                                         required
                                         value={recipientName}
                                         onChange={(e) => setRecipientName(e.target.value.toUpperCase())}
-                                        className="w-full bg-white/5 border border-white/10 focus:border-[#ff006e] outline-none text-[10px] text-white px-3 py-3 rounded-sm uppercase tracking-wider"
+                                        className="w-full bg-white/5 border border-white/10 focus:border-fatale outline-none text-[10px] text-white px-3 py-3 rounded-sm uppercase tracking-wider"
                                     />
                                 </div>
 
@@ -217,7 +217,7 @@ const EarningsDashboard = ({ user, onBack }) => {
                                         required
                                         value={bankName}
                                         onChange={(e) => setBankName(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 focus:border-[#ff006e] outline-none text-[10px] text-white px-3 py-3 rounded-sm tracking-wider"
+                                        className="w-full bg-white/5 border border-white/10 focus:border-fatale outline-none text-[10px] text-white px-3 py-3 rounded-sm tracking-wider"
                                     />
                                 </div>
 
@@ -229,7 +229,7 @@ const EarningsDashboard = ({ user, onBack }) => {
                                             required
                                             value={accountNumber}
                                             onChange={(e) => setAccountNumber(e.target.value)}
-                                            className="w-full bg-white/5 border border-white/10 focus:border-[#ff006e] outline-none text-[10px] text-white px-3 py-3 rounded-sm tracking-wider"
+                                            className="w-full bg-white/5 border border-white/10 focus:border-fatale outline-none text-[10px] text-white px-3 py-3 rounded-sm tracking-wider"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -239,7 +239,7 @@ const EarningsDashboard = ({ user, onBack }) => {
                                             required
                                             value={swiftCode}
                                             onChange={(e) => setSwiftCode(e.target.value)}
-                                            className="w-full bg-white/5 border border-white/10 focus:border-[#ff006e] outline-none text-[10px] text-white px-3 py-3 rounded-sm tracking-wider"
+                                            className="w-full bg-white/5 border border-white/10 focus:border-fatale outline-none text-[10px] text-white px-3 py-3 rounded-sm tracking-wider"
                                         />
                                     </div>
                                 </div>
@@ -258,7 +258,7 @@ const EarningsDashboard = ({ user, onBack }) => {
                                 <button
                                     type="submit"
                                     disabled={isWithdrawing || withdrawAmountInt < 500}
-                                    className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest bg-[#ff006e] text-black hover:bg-white transition-all shadow-[0_0_15px_rgba(255,0,110,0.3)] disabled:opacity-50"
+                                    className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest bg-fatale text-black hover:bg-white transition-all shadow-[0_0_15px_rgba(255,0,110,0.3)] disabled:opacity-50"
                                 >
                                     {isWithdrawing ? 'PROCESSING...' : 'DISPATCH PAYOUT'}
                                 </button>

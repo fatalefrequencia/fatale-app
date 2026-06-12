@@ -558,7 +558,7 @@
 }
 
 .vu-led { width: 3px; background: rgba(0,0,0,0.3); position: relative; border-radius: 1px; }
-.vu-led-fill { position: absolute; bottom: 0; width: 100%; background: linear-gradient(to top, #00ff6e, #ffea00, #ff006e); box-shadow: 0 0 10px var(--accent); border-radius: 1px; }
+.vu-led-fill { position: absolute; bottom: 0; width: 100%; background: linear-gradient(to top, #00ff6e, #ffea00, rgb(var(--theme-primary))); box-shadow: 0 0 10px var(--accent); border-radius: 1px; }
 
 .deck-crossfader {
     display: flex;

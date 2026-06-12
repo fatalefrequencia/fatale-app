@@ -84,7 +84,7 @@ const TransactionHistory = ({ user, onBack }) => {
                             placeholder="Search..."
                             value={search}
                             onChange={e => setSearch(e.target.value)}
-                            className="bg-black border border-white/10 rounded-full pl-10 pr-4 py-2 text-xs text-white focus:border-[#ff006e] outline-none w-40 focus:w-60 transition-all font-mono"
+                            className="bg-black border border-white/10 rounded-full pl-10 pr-4 py-2 text-xs text-white focus:border-fatale outline-none w-40 focus:w-60 transition-all font-mono"
                         />
                     </div>
                     <button className="p-2 bg-white/5 rounded-full text-white/40 hover:text-white transition-colors">
@@ -118,7 +118,7 @@ const TransactionHistory = ({ user, onBack }) => {
                                             {tx.type.replace('_', ' ')}
                                         </span>
                                     </td>
-                                    <td className="p-4 text-sm font-bold text-white/90 group-hover:text-[#ff006e] transition-colors">
+                                    <td className="p-4 text-sm font-bold text-white/90 group-hover:text-fatale transition-colors">
                                         {tx.description}
                                     </td>
                                     <td className="p-4 text-xs text-white/40 font-mono">

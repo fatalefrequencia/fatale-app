@@ -143,10 +143,10 @@ const ArtistNode = ({ data }) => {
                         position: 'absolute', top: '15%', left: '50%',
                         transform: 'translateX(-50%)',
                         width: 8, height: 8,
-                        background: '#ff006e',
+                        background: 'rgb(var(--theme-primary))',
                         borderRadius: '50%',
                         animation: 'pulse 1.5s infinite',
-                        boxShadow: '0 0 10px #ff006e',
+                        boxShadow: '0 0 10px rgb(var(--theme-primary))',
                     }} />
                 )}
             </div>

@@ -256,7 +256,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
     }
 
     const isJoined = (user?.communityId || user?.CommunityId) === community.id;
-    const color = sectorColor || community.color || '#ff006e';
+    const color = sectorColor || community.color || 'rgb(var(--theme-primary))';
 
     const fetchMessages = useCallback(async (afterId = null) => {
         if (!community?.id) return;
@@ -434,7 +434,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
                             {isFounder && (
                                 <button 
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="absolute inset-0 bg-[#ff006e]/60 opacity-0 group-hover/icon:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
+                                    className="absolute inset-0 bg-fatale/60 opacity-0 group-hover/icon:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
                                     title="RECALIBRATE_ICON"
                                 >
                                     <ImagePlus size={14} className="text-white" />
@@ -480,7 +480,7 @@ const CommunityTerminal = ({ community, user, followedCommunities = [], onFollow
                     ) : (
                         <button 
                             onClick={handleLeave}
-                            className="text-[#ff006e]/60 hover:text-[#ff006e] border border-[#ff006e]/20 px-2 py-0.5 rounded-sm transition-all"
+                            className="text-fatale/60 hover:text-fatale border border-fatale/20 px-2 py-0.5 rounded-sm transition-all"
                         >
                             {t('LEAVE_CLIQUE')}
                         </button>

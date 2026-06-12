@@ -230,7 +230,7 @@ const ContentModal = ({
                                         {/* Caption */}
                                         {(content.caption || content.Caption || content.description || content.Description || content.Content || content.content) && (
                                             <div className="text-[10px] text-white/80 leading-relaxed mono border-b border-white/5 pb-4 break-words break-all">
-                                                <span className="text-[#ff006e] font-black mr-2">
+                                                <span className="text-fatale font-black mr-2">
                                                     @{content.artist || content.Artist || content.artistName || 'user'}:
                                                 </span>
                                                 {content.caption || content.Caption || content.description || content.Description || content.Content || content.content}
@@ -247,7 +247,7 @@ const ContentModal = ({
                                                 comments.map(comment => (
                                                     <div key={comment.Id} className="text-[10px] text-white/70 leading-relaxed mono bg-white/5 p-2 rounded-sm border border-white/5">
                                                         <div className="flex justify-between items-center mb-1">
-                                                            <span className="text-[#00ffff] font-black">@{comment.Username || 'anon'}</span>
+                                                            <span className="text-secondary font-black">@{comment.Username || 'anon'}</span>
                                                             <span className="text-[7px] text-white/30">{new Date(comment.CreatedAt).toLocaleString()}</span>
                                                         </div>
                                                         <p className="text-white/90 break-words">{comment.Content}</p>
@@ -267,13 +267,13 @@ const ContentModal = ({
                                                 value={commentText}
                                                 onChange={(e) => setCommentText(e.target.value)}
                                                 placeholder="ADD_RESPONSE..."
-                                                className="flex-1 bg-black/40 border border-white/10 px-3 py-2 text-[10px] text-white mono focus:outline-none focus:border-[#ff006e]/50 placeholder-white/20"
+                                                className="flex-1 bg-black/40 border border-white/10 px-3 py-2 text-[10px] text-white mono focus:outline-none focus:border-fatale/50 placeholder-white/20"
                                                 onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
                                             />
                                             <button
                                                 onClick={handleAddComment}
                                                 disabled={isSubmittingComment || !commentText.trim()}
-                                                className="px-3 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] hover:bg-[#ff006e] hover:text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                                                className="px-3 bg-fatale/10 border border-fatale/30 text-fatale hover:bg-fatale hover:text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                                             >
                                                 <Send size={12} />
                                             </button>
@@ -331,7 +331,7 @@ const ContentModal = ({
                             </div>
                         </div>
                         <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end sm:justify-start">
-                            <button onClick={() => setShowTipModal(true)} className="px-3 py-1.5 sm:px-4 sm:py-2 bg-[#ff006e]/10 border border-[#ff006e]/30 hover:bg-[#ff006e] hover:text-black transition-all text-[#ff006e] font-black flex items-center gap-2 group text-[8px] sm:text-[9px]">
+                            <button onClick={() => setShowTipModal(true)} className="px-3 py-1.5 sm:px-4 sm:py-2 bg-fatale/10 border border-fatale/30 hover:bg-fatale hover:text-black transition-all text-fatale font-black flex items-center gap-2 group text-[8px] sm:text-[9px]">
                                 <Coins size={12} className="group-hover:animate-bounce" /> {t('TIP_ARTIST')}
                             </button>
                             <button onClick={handleShare} className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/5 border border-white/10 hover:border-[#9d00ff]/50 hover:text-white transition-all text-white/60 flex items-center gap-2 text-[8px] sm:text-[9px]">

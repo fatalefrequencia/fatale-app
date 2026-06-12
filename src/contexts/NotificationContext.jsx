@@ -56,8 +56,8 @@ export const NotificationProvider = ({ children }) => {
                 <>
                     <style dangerouslySetInnerHTML={{ __html: `
                         @keyframes neon-single-pulse {
-                            0%, 100% { opacity: 0; filter: drop-shadow(0 0 0px #ff006e); }
-                            50% { opacity: 1; filter: drop-shadow(0 0 12px #ff006e); }
+                            0%, 100% { opacity: 0; filter: drop-shadow(0 0 0px rgb(var(--theme-primary))); }
+                            50% { opacity: 1; filter: drop-shadow(0 0 12px rgb(var(--theme-primary))); }
                         }
 
                         @keyframes neon-line-buzz {
@@ -67,16 +67,16 @@ export const NotificationProvider = ({ children }) => {
                         
                         .neon-outer {
                             box-shadow: 
-                                0 0 6px #ff006e, 
-                                0 0 12px #ff006e,
-                                inset 0 0 4px #ff006e;
+                                0 0 6px rgb(var(--theme-primary)), 
+                                0 0 12px rgb(var(--theme-primary)),
+                                inset 0 0 4px rgb(var(--theme-primary));
                             border-radius: 0px; /* Sharp corners on desktop */
                         }
 
                         .neon-inner {
                             box-shadow: 
-                                0 0 3px #ff006e, 
-                                inset 0 0 2px #ff006e;
+                                0 0 3px rgb(var(--theme-primary)), 
+                                inset 0 0 2px rgb(var(--theme-primary));
                             border-radius: 0px; /* Sharp corners on desktop */
                             animation: neon-line-buzz 0.15s infinite alternate;
                         }
@@ -98,10 +98,10 @@ export const NotificationProvider = ({ children }) => {
                         }}
                     >
                         {/* Outer thin border (Desktop) */}
-                        <div className="absolute inset-0 border-[1.5px] border-[#ff006e] neon-outer outer-border" />
+                        <div className="absolute inset-0 border-[1.5px] border-fatale neon-outer outer-border" />
                         
                         {/* Inner thin border, extremely close to outer (Desktop) */}
-                        <div className="absolute inset-[4px] border border-[#ff006e] neon-inner inner-border" />
+                        <div className="absolute inset-[4px] border border-fatale neon-inner inner-border" />
 
                         {/* Mobile Soft Glow Vignette */}
                         <div className="mobile-vignette" />
@@ -124,12 +124,12 @@ export const NotificationProvider = ({ children }) => {
                                 {/* CRT Effect Overlay */}
                                 <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%] pointer-events-none z-10 opacity-40" />
 
-                                <div className="bg-black/90 border border-[#ff006e]/30 backdrop-blur-2xl p-3.5 px-4 shadow-[0_12px_40px_rgba(0,0,0,0.8),_0_0_20px_rgba(255,0,110,0.15)] relative overflow-hidden rounded-xl">
+                                <div className="bg-black/90 border border-fatale/30 backdrop-blur-2xl p-3.5 px-4 shadow-[0_12px_40px_rgba(0,0,0,0.8),_0_0_20px_rgba(255,0,110,0.15)] relative overflow-hidden rounded-xl">
                                     {/* Glitch lines */}
-                                    <div className="absolute top-0 left-0 w-full h-[1px] bg-[#ff006e]/20 animate-scanline" />
+                                    <div className="absolute top-0 left-0 w-full h-[1px] bg-fatale/20 animate-scanline" />
 
                                     <div className="flex gap-3">
-                                        <div className={`mt-0.5 shrink-0 ${n.type === 'error' ? 'text-red-500' : 'text-[#ff006e]'}`}>
+                                        <div className={`mt-0.5 shrink-0 ${n.type === 'error' ? 'text-red-500' : 'text-fatale'}`}>
                                             {n.type === 'error' ? <AlertCircle size={16} /> :
                                                 n.type === 'success' ? <CheckCircle size={16} /> :
                                                     n.type === 'warning' ? <Zap size={16} /> :
@@ -155,7 +155,7 @@ export const NotificationProvider = ({ children }) => {
                                     </div>
 
                                     {/* Aesthetic scanline footer */}
-                                    <div className="mt-2.5 pt-2 border-t border-white/5 flex justify-between items-center text-[5px] mono text-[#ff006e]/25">
+                                    <div className="mt-2.5 pt-2 border-t border-white/5 flex justify-between items-center text-[5px] mono text-fatale/25">
                                         <span className="animate-pulse">DECRYPTING_SIGNAL...</span>
                                         <span>ID: {n.id}</span>
                                     </div>

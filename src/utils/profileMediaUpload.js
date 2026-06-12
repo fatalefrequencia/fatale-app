@@ -46,7 +46,7 @@ export function isBlobLike(value) {
 }
 
 /** Backend expects hex colors — CSS vars like var(--text-color) break profile sync. */
-export function sanitizeColor(value, fallback = '#ff006e') {
+export function sanitizeColor(value, fallback = 'rgb(var(--theme-primary))') {
     const str = String(value ?? '').trim();
     if (!str || str.includes('var(') || str.includes('calc(')) return fallback;
     return str;
@@ -162,10 +162,10 @@ export function appendProfileFieldsToFormData(target, formData, media = {}) {
     set('StatusMessage', formData.get('StatusMessage'));
     set('ResidentSectorId', formData.get('ResidentSectorId'));
     set('IsLive', formData.get('IsLive'));
-    set('ThemeColor', sanitizeColor(formData.get('ThemeColor'), '#ff006e'));
+    set('ThemeColor', sanitizeColor(formData.get('ThemeColor'), 'rgb(var(--theme-primary))'));
     set('TextColor', sanitizeColor(formData.get('TextColor'), '#ffffff'));
     set('BackgroundColor', sanitizeColor(formData.get('BackgroundColor'), '#000000'));
-    set('SecondaryColor', sanitizeColor(formData.get('SecondaryColor'), '#00ffff'));
+    set('SecondaryColor', sanitizeColor(formData.get('SecondaryColor'), 'rgb(var(--theme-secondary))'));
     set('IsGlass', formData.get('IsGlass'));
     set('InstagramUrl', formData.get('InstagramUrl'));
     set('TwitterUrl', formData.get('TwitterUrl'));
@@ -256,10 +256,10 @@ export function buildProfileUpdatePayload(formData, media = {}) {
         isGlassRaw === 1 ||
         isGlassRaw === '1';
 
-    const themeColor = sanitizeColor(formData.get('ThemeColor'), '#ff006e');
+    const themeColor = sanitizeColor(formData.get('ThemeColor'), 'rgb(var(--theme-primary))');
     const textColor = sanitizeColor(formData.get('TextColor'), '#ffffff');
     const backgroundColor = sanitizeColor(formData.get('BackgroundColor'), '#000000');
-    const secondaryColor = sanitizeColor(formData.get('SecondaryColor'), '#00ffff');
+    const secondaryColor = sanitizeColor(formData.get('SecondaryColor'), 'rgb(var(--theme-secondary))');
 
     const payload = {
         username: formData.get('Username') ?? '',

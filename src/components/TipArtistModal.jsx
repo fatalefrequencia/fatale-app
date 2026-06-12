@@ -57,20 +57,20 @@ const TipArtistModal = ({ isOpen, onClose, artist, userBalance, onTipSuccess, sh
                         initial={{ opacity: 0, scale: 0.98, y: 15 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.98, y: 15 }}
-                        className="w-full max-w-md bg-[#050505] border border-[#ff006e]/30 relative overflow-hidden shadow-[0_0_50px_rgba(255,0,110,0.25)] rounded-sm font-mono text-white"
+                        className="w-full max-w-md bg-[#050505] border border-fatale/30 relative overflow-hidden shadow-[0_0_50px_rgba(255,0,110,0.25)] rounded-sm font-mono text-white"
                     >
                         {/* Header banner */}
-                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#ff006e] via-[#9b5de5] to-[#00ffff]" />
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-fatale via-[#9b5de5] to-secondary" />
 
                         {/* Top close button */}
                         <div className="flex justify-between items-center p-5 border-b border-white/5">
-                            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#ff006e] flex items-center gap-2">
-                                <Heart size={14} className="text-[#ff006e] animate-pulse" />
+                            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-fatale flex items-center gap-2">
+                                <Heart size={14} className="text-fatale animate-pulse" />
                                 SUPPORT_ARTIST_RESONANCE
                             </div>
                             <button
                                 onClick={onClose}
-                                className="text-white/40 hover:text-[#ff006e] transition-all hover:rotate-90 p-1"
+                                className="text-white/40 hover:text-fatale transition-all hover:rotate-90 p-1"
                             >
                                 <X size={18} />
                             </button>
@@ -79,7 +79,7 @@ const TipArtistModal = ({ isOpen, onClose, artist, userBalance, onTipSuccess, sh
                         <div className="p-6 space-y-6">
                             {/* Artist Profile mini widget */}
                             <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 p-4 rounded-sm">
-                                <div className="w-10 h-10 rounded-full bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center font-black text-[#ff006e] text-xs">
+                                <div className="w-10 h-10 rounded-full bg-fatale/10 border border-fatale/20 flex items-center justify-center font-black text-fatale text-xs">
                                     {(artist.name || artist.Name || "A").substring(0, 2).toUpperCase()}
                                 </div>
                                 <div>
@@ -102,7 +102,7 @@ const TipArtistModal = ({ isOpen, onClose, artist, userBalance, onTipSuccess, sh
                                             }}
                                             className={`py-2 text-[10px] font-black tracking-wider rounded-sm border uppercase transition-all ${
                                                 amount === amt && !customAmount
-                                                    ? 'bg-[#ff006e]/15 border-[#ff006e] text-[#ff006e] shadow-[0_0_10px_rgba(255,0,110,0.15)]'
+                                                    ? 'bg-fatale/15 border-fatale text-fatale shadow-[0_0_10px_rgba(255,0,110,0.15)]'
                                                     : 'bg-white/5 border-white/10 hover:border-white/30 text-white/70 hover:text-white'
                                             }`}
                                         >
@@ -126,7 +126,7 @@ const TipArtistModal = ({ isOpen, onClose, artist, userBalance, onTipSuccess, sh
                                             setAmount(0);
                                         }}
                                         placeholder="CUSTOM_CREDIT_AMOUNT"
-                                        className="w-full bg-white/5 border border-white/10 hover:border-white/20 focus:border-[#ff006e] outline-none text-[10px] text-white uppercase px-3 py-3 rounded-sm tracking-widest transition-all"
+                                        className="w-full bg-white/5 border border-white/10 hover:border-white/20 focus:border-fatale outline-none text-[10px] text-white uppercase px-3 py-3 rounded-sm tracking-widest transition-all"
                                     />
                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-white/30 tracking-widest">CRD</span>
                                 </div>
@@ -136,7 +136,7 @@ const TipArtistModal = ({ isOpen, onClose, artist, userBalance, onTipSuccess, sh
                             <div className="p-4 bg-black border border-white/5 rounded-sm space-y-2">
                                 <div className="flex justify-between items-center text-[9px] uppercase tracking-wider">
                                     <span className="text-white/40">ESTIMATED VALUE:</span>
-                                    <span className="font-bold text-[#00ffff]">${finalUSD} USD</span>
+                                    <span className="font-bold text-secondary">${finalUSD} USD</span>
                                 </div>
                                 <div className="flex justify-between items-center text-[9px] uppercase tracking-wider">
                                     <span className="text-white/40">YOUR CURRENT BALANCE:</span>
@@ -166,7 +166,7 @@ const TipArtistModal = ({ isOpen, onClose, artist, userBalance, onTipSuccess, sh
                                 <button
                                     onClick={handleTip}
                                     disabled={isSubmitting || finalAmount <= 0 || !hasEnoughBalance}
-                                    className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest bg-[#ff006e] text-black hover:bg-white transition-all disabled:opacity-30 disabled:hover:bg-[#ff006e] disabled:hover:text-black rounded-sm shadow-[0_0_15px_rgba(255,0,110,0.25)]"
+                                    className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest bg-fatale text-black hover:bg-white transition-all disabled:opacity-30 disabled:hover:bg-fatale disabled:hover:text-black rounded-sm shadow-[0_0_15px_rgba(255,0,110,0.25)]"
                                 >
                                     {isSubmitting ? 'TRANSMITTING...' : 'EXECUTE TIP'}
                                 </button>

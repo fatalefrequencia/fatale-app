@@ -21,10 +21,10 @@ const SettingsView = ({ user, setUser }) => {
     const [username, setUsername] = React.useState(user?.username || user?.Username || '');
     const [biography, setBiography] = React.useState(user?.biography || user?.Biography || '');
     const [residentSectorId, setResidentSectorId] = React.useState(user?.residentSectorId || user?.ResidentSectorId || 0);
-    const [themeColor, setThemeColor] = React.useState(user?.themeColor || user?.ThemeColor || '#ff006e');
+    const [themeColor, setThemeColor] = React.useState(user?.themeColor || user?.ThemeColor || 'rgb(var(--theme-primary))');
     const [textColor, setTextColor] = React.useState(user?.textColor || user?.TextColor || '#ffffff');
     const [backgroundColor, setBackgroundColor] = React.useState(user?.backgroundColor || user?.BackgroundColor || '#000000');
-    const [secondaryColor, setSecondaryColor] = React.useState(user?.secondaryColor || user?.SecondaryColor || '#00ffff');
+    const [secondaryColor, setSecondaryColor] = React.useState(user?.secondaryColor || user?.SecondaryColor || 'rgb(var(--theme-secondary))');
     const [isGlass, setIsGlass] = React.useState(user?.isGlass || user?.IsGlass || false);
     const [statusMessage, setStatusMessage] = React.useState(user?.statusMessage || user?.StatusMessage || '');
     
@@ -55,10 +55,10 @@ const SettingsView = ({ user, setUser }) => {
             setUsername(user.username || user.Username || '');
             setBiography(user.biography || user.Biography || '');
             setResidentSectorId(user.residentSectorId || user.ResidentSectorId || 0);
-            setThemeColor(user.themeColor || user.ThemeColor || '#ff006e');
+            setThemeColor(user.themeColor || user.ThemeColor || 'rgb(var(--theme-primary))');
             setTextColor(user.textColor || user.TextColor || '#ffffff');
             setBackgroundColor(user.backgroundColor || user.BackgroundColor || '#000000');
-            setSecondaryColor(user.secondaryColor || user.SecondaryColor || '#00ffff');
+            setSecondaryColor(user.secondaryColor || user.SecondaryColor || 'rgb(var(--theme-secondary))');
             setIsGlass(user.isGlass || user.IsGlass || false);
             setStatusMessage(user.statusMessage || user.StatusMessage || '');
             setEmail(user.email || user.Email || '');
@@ -307,7 +307,7 @@ const SettingsView = ({ user, setUser }) => {
     return (
         <div className="max-w-6xl mx-auto p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header */}
-            <div className="space-y-2 border-b border-[#ff006e]/10 pb-6">
+            <div className="space-y-2 border-b border-fatale/10 pb-6">
                 <h1 className="text-3xl font-black italic text-white tracking-tighter uppercase">
                     {t('SYS_CONF')}
                 </h1>
@@ -325,15 +325,15 @@ const SettingsView = ({ user, setUser }) => {
                         }}
                         className={`w-full flex items-center justify-between p-4 transition-all group border ${
                             activeSection === 'language' 
-                            ? 'bg-[#ff006e]/10 border-[#ff006e]/40 text-white' 
+                            ? 'bg-fatale/10 border-fatale/40 text-white' 
                             : 'border-white/5 text-white/40 hover:bg-white/5 hover:text-white'
                         }`}
                     >
                         <div className="flex items-center gap-3">
-                            <Globe size={16} className={activeSection === 'language' ? "text-[#ff006e]" : ""} />
+                            <Globe size={16} className={activeSection === 'language' ? "text-fatale" : ""} />
                             <span className="text-[10px] font-black uppercase tracking-widest">{t('LANGUAGE')}</span>
                         </div>
-                        <ChevronRight size={14} className={activeSection === 'language' ? "opacity-100 text-[#ff006e]" : "opacity-20"} />
+                        <ChevronRight size={14} className={activeSection === 'language' ? "opacity-100 text-fatale" : "opacity-20"} />
                     </button>
                     <button 
                         type="button"
@@ -343,15 +343,15 @@ const SettingsView = ({ user, setUser }) => {
                         }}
                         className={`w-full flex items-center justify-between p-4 transition-all group border ${
                             activeSection === 'identity' 
-                            ? 'bg-[#ff006e]/10 border-[#ff006e]/40 text-white' 
+                            ? 'bg-fatale/10 border-fatale/40 text-white' 
                             : 'border-white/5 text-white/40 hover:bg-white/5 hover:text-white'
                         }`}
                     >
                         <div className="flex items-center gap-3">
-                            <User size={16} className={activeSection === 'identity' ? "text-[#ff006e]" : ""} />
-                            <span className="text-[10px] font-black uppercase tracking-widest">{t('IDENTITY')}</span>
+                            <Laptop size={16} className={activeSection === 'identity' ? "text-fatale" : ""} />
+                            <span className="text-[10px] font-black uppercase tracking-widest">{t('APPEARANCE') || 'Appearance'}</span>
                         </div>
-                        <ChevronRight size={14} className={activeSection === 'identity' ? "opacity-100 text-[#ff006e]" : "opacity-20"} />
+                        <ChevronRight size={14} className={activeSection === 'identity' ? "opacity-100 text-fatale" : "opacity-20"} />
                     </button>
                     <button 
                         type="button"
@@ -361,15 +361,15 @@ const SettingsView = ({ user, setUser }) => {
                         }}
                         className={`w-full flex items-center justify-between p-4 transition-all group border ${
                             activeSection === 'security' 
-                            ? 'bg-[#ff006e]/10 border-[#ff006e]/40 text-white' 
+                            ? 'bg-fatale/10 border-fatale/40 text-white' 
                             : 'border-white/5 text-white/40 hover:bg-white/5 hover:text-white'
                         }`}
                     >
                         <div className="flex items-center gap-3">
-                            <Shield size={16} className={activeSection === 'security' ? "text-[#ff006e]" : ""} />
+                            <Shield size={16} className={activeSection === 'security' ? "text-fatale" : ""} />
                             <span className="text-[10px] font-black uppercase tracking-widest">{t('SECURITY')}</span>
                         </div>
-                        <ChevronRight size={14} className={activeSection === 'security' ? "opacity-100 text-[#ff006e]" : "opacity-20"} />
+                        <ChevronRight size={14} className={activeSection === 'security' ? "opacity-100 text-fatale" : "opacity-20"} />
                     </button>
                     <button 
                         type="button"
@@ -379,15 +379,15 @@ const SettingsView = ({ user, setUser }) => {
                         }}
                         className={`w-full flex items-center justify-between p-4 transition-all group border ${
                             activeSection === 'notifications' 
-                            ? 'bg-[#ff006e]/10 border-[#ff006e]/40 text-white' 
+                            ? 'bg-fatale/10 border-fatale/40 text-white' 
                             : 'border-white/5 text-white/40 hover:bg-white/5 hover:text-white'
                         }`}
                     >
                         <div className="flex items-center gap-3">
-                            <Bell size={16} className={activeSection === 'notifications' ? "text-[#ff006e]" : ""} />
+                            <Bell size={16} className={activeSection === 'notifications' ? "text-fatale" : ""} />
                             <span className="text-[10px] font-black uppercase tracking-widest">{t('NOTIFICATIONS')}</span>
                         </div>
-                        <ChevronRight size={14} className={activeSection === 'notifications' ? "opacity-100 text-[#ff006e]" : "opacity-20"} />
+                        <ChevronRight size={14} className={activeSection === 'notifications' ? "opacity-100 text-fatale" : "opacity-20"} />
                     </button>
                 </div>
 
@@ -404,7 +404,7 @@ const SettingsView = ({ user, setUser }) => {
                             >
                                 <div className="bg-black/40 border border-white/5 p-6 space-y-6">
                                     <div className="space-y-1">
-                                        <h2 className="text-xs font-black text-[#ff006e] uppercase tracking-widest">{t('INTERFACE_LANGUAGE')}</h2>
+                                        <h2 className="text-xs font-black text-fatale uppercase tracking-widest">{t('INTERFACE_LANGUAGE')}</h2>
                                         <p className="text-[9px] text-white/20 uppercase tracking-widest">{t('WAITING_INPUT')}</p>
                                     </div>
 
@@ -416,7 +416,7 @@ const SettingsView = ({ user, setUser }) => {
                                                 onClick={() => handleLanguageChange(lang.code)}
                                                 className={`relative flex items-center justify-between p-4 border transition-all group ${
                                                     language === lang.code 
-                                                    ? 'border-[#ff006e] bg-[#ff006e]/5 text-white' 
+                                                    ? 'border-fatale bg-fatale/5 text-white' 
                                                     : 'border-white/5 bg-white/[0.02] text-white/40 hover:border-white/20'
                                                 } ${isSaving ? 'opacity-50 cursor-wait' : ''}`}
                                             >
@@ -428,7 +428,7 @@ const SettingsView = ({ user, setUser }) => {
                                                     </div>
                                                 </div>
                                                 {language === lang.code && (
-                                                    <div className="w-5 h-5 bg-[#ff006e] flex items-center justify-center rounded-full shadow-[0_0_10px_#ff006e]">
+                                                    <div className="w-5 h-5 bg-fatale flex items-center justify-center rounded-full shadow-[0_0_10px_rgb(var(--theme-primary))]">
                                                         <Check size={12} className="text-black" strokeWidth={4} />
                                                     </div>
                                                 )}
@@ -438,7 +438,7 @@ const SettingsView = ({ user, setUser }) => {
 
                                     <div className="pt-6 border-t border-white/5">
                                         <div className="flex items-start gap-4 p-4 bg-white/[0.02] border border-white/5">
-                                            <div className="p-2 bg-[#ff006e]/10 text-[#ff006e]">
+                                            <div className="p-2 bg-fatale/10 text-fatale">
                                                 <Globe size={16} />
                                             </div>
                                             <div className="space-y-1">
@@ -461,82 +461,8 @@ const SettingsView = ({ user, setUser }) => {
                             >
                                 <form onSubmit={handleIdentitySubmit} className="bg-black/40 border border-white/5 p-6 space-y-6">
                                     <div className="space-y-1 border-b border-white/5 pb-4">
-                                        <h2 className="text-xs font-black text-[#ff006e] uppercase tracking-widest">{t('MODIFY_IDENTITY')}</h2>
-                                        <p className="text-[8px] text-white/30 uppercase tracking-[0.2em] font-mono">CORE_IDENTITY_MGMT</p>
-                                    </div>
-
-                                    {/* Profile Image Preview & Select */}
-                                    <div className="flex flex-col sm:flex-row gap-6 items-center">
-                                        <div className="relative w-24 h-24 border border-white/10 overflow-hidden bg-black flex items-center justify-center group">
-                                            {pfpPreview || user?.profilePictureUrl ? (
-                                                <img 
-                                                    src={pfpPreview || user?.profilePictureUrl} 
-                                                    alt="Avatar Preview" 
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300"
-                                                />
-                                            ) : (
-                                                <User size={32} className="text-white/20" />
-                                            )}
-                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all cursor-pointer">
-                                                <span className="text-[8px] font-black uppercase text-[#ff006e] tracking-wider">REPLACE</span>
-                                            </div>
-                                            <input 
-                                                type="file" 
-                                                accept="image/*"
-                                                onChange={handlePfpChange}
-                                                className="absolute inset-0 opacity-0 cursor-pointer"
-                                            />
-                                        </div>
-                                        <div className="flex-1 space-y-2">
-                                            <label className="text-[8px] font-black uppercase tracking-widest text-[#ff006e]">AVATAR_SIGNAL</label>
-                                            <p className="text-[9px] text-white/40 leading-relaxed uppercase tracking-wider font-mono">
-                                                Upload custom jpeg/png format neural representation. Maximum size recommended: 2MB.
-                                            </p>
-                                            <div className="relative inline-block">
-                                                <button type="button" className="px-3 py-1.5 border border-white/10 text-[8px] font-black uppercase tracking-widest text-white/60 hover:text-white hover:border-[#ff006e] transition-all">
-                                                    CHOOSE IMAGE
-                                                </button>
-                                                <input 
-                                                    type="file" 
-                                                    accept="image/*" 
-                                                    onChange={handlePfpChange}
-                                                    className="absolute inset-0 opacity-0 cursor-pointer"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Name & Status */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div className="space-y-1.5">
-                                            <label className="text-[8px] font-black uppercase tracking-widest text-white/60">Display Name</label>
-                                            <input 
-                                                type="text" 
-                                                value={username}
-                                                onChange={(e) => setUsername(e.target.value)}
-                                                className="w-full bg-black/50 border border-white/10 p-3 text-[10px] text-white focus:border-[#ff006e] outline-none font-mono uppercase tracking-wider"
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <label className="text-[8px] font-black uppercase tracking-widest text-white/60">Uplink Status Msg</label>
-                                            <input 
-                                                type="text" 
-                                                value={statusMessage}
-                                                onChange={(e) => setStatusMessage(e.target.value)}
-                                                className="w-full bg-black/50 border border-white/10 p-3 text-[10px] text-white focus:border-[#ff006e] outline-none font-mono uppercase tracking-wider"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Biography */}
-                                    <div className="space-y-1.5">
-                                        <label className="text-[8px] font-black uppercase tracking-widest text-white/60">Biography Buffer</label>
-                                        <textarea 
-                                            rows={3}
-                                            value={biography}
-                                            onChange={(e) => setBiography(e.target.value)}
-                                            className="w-full bg-black/50 border border-white/10 p-3 text-[10px] text-white focus:border-[#ff006e] outline-none font-mono uppercase tracking-wider leading-relaxed"
-                                        />
+                                        <h2 className="text-xs font-black text-fatale uppercase tracking-widest">APPEARANCE & THEMES</h2>
+                                        <p className="text-[8px] text-white/30 uppercase tracking-[0.2em] font-mono">UI_PERSONALIZATION_MATRIX</p>
                                     </div>
 
                                     {/* Resident Sector */}
@@ -569,7 +495,7 @@ const SettingsView = ({ user, setUser }) => {
 
                                     {/* Personalization (Colors) */}
                                     <div className="pt-4 border-t border-white/5 space-y-4">
-                                        <h3 className="text-[9px] font-black text-[#ff006e] uppercase tracking-widest">Interface Theme Colors</h3>
+                                        <h3 className="text-[9px] font-black text-fatale uppercase tracking-widest">Interface Theme Colors</h3>
                                         
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                             <div className="space-y-1.5">
@@ -621,29 +547,13 @@ const SettingsView = ({ user, setUser }) => {
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <div className="flex items-center justify-between p-3 border border-white/5 bg-white/[0.01]">
-                                            <div className="space-y-0.5">
-                                                <span className="text-[9px] font-black uppercase tracking-wider text-white">Glassmorphism UI Engine</span>
-                                                <p className="text-[7px] font-mono text-white/30 uppercase tracking-widest">Enables glass background-blur effects across subsystems</p>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsGlass(!isGlass)}
-                                                className={`w-10 h-5 border transition-all flex items-center p-0.5 ${
-                                                    isGlass ? 'border-[#ff006e] bg-[#ff006e]/20' : 'border-white/10 bg-transparent'
-                                                }`}
-                                            >
-                                                <div className={`w-3.5 h-3.5 transition-all ${
-                                                    isGlass ? 'translate-x-5 bg-[#ff006e]' : 'translate-x-0 bg-white/40'
-                                                }`} />
-                                            </button>
-                                        </div>
                                     </div>
+
+
 
                                     {/* Asset Node Uploads */}
                                     <div className="pt-4 border-t border-white/5 space-y-4">
-                                        <h3 className="text-[9px] font-black text-[#ff006e] uppercase tracking-widest">Digital Asset Uplink</h3>
+                                        <h3 className="text-[9px] font-black text-fatale uppercase tracking-widest">Digital Asset Uplink</h3>
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                             <div className="space-y-1.5 border border-white/5 p-3 bg-white/[0.01]">
                                                 <label className="text-[8px] font-black uppercase tracking-widest text-white/60">Banner Layer</label>
@@ -651,7 +561,7 @@ const SettingsView = ({ user, setUser }) => {
                                                     type="file" 
                                                     accept="image/*"
                                                     onChange={(e) => setBannerFile(e.target.files[0])}
-                                                    className="w-full text-[8px] text-white/40 file:bg-white/5 file:border-white/10 file:text-white/60 file:text-[8px] file:font-black file:uppercase file:py-1.5 file:px-3 file:mr-2 hover:file:bg-[#ff006e]/20 hover:file:border-[#ff006e]/40"
+                                                    className="w-full text-[8px] text-white/40 file:bg-white/5 file:border-white/10 file:text-white/60 file:text-[8px] file:font-black file:uppercase file:py-1.5 file:px-3 file:mr-2 hover:file:bg-fatale/20 hover:file:border-fatale/40"
                                                 />
                                             </div>
                                             <div className="space-y-1.5 border border-white/5 p-3 bg-white/[0.01]">
@@ -660,7 +570,7 @@ const SettingsView = ({ user, setUser }) => {
                                                     type="file" 
                                                     accept="video/*"
                                                     onChange={(e) => setVideoFile(e.target.files[0])}
-                                                    className="w-full text-[8px] text-white/40 file:bg-white/5 file:border-white/10 file:text-white/60 file:text-[8px] file:font-black file:uppercase file:py-1.5 file:px-3 file:mr-2 hover:file:bg-[#ff006e]/20 hover:file:border-[#ff006e]/40"
+                                                    className="w-full text-[8px] text-white/40 file:bg-white/5 file:border-white/10 file:text-white/60 file:text-[8px] file:font-black file:uppercase file:py-1.5 file:px-3 file:mr-2 hover:file:bg-fatale/20 hover:file:border-fatale/40"
                                                 />
                                             </div>
                                             <div className="space-y-1.5 border border-white/5 p-3 bg-white/[0.01] relative">
@@ -670,7 +580,7 @@ const SettingsView = ({ user, setUser }) => {
                                                     accept="image/*"
                                                     disabled={clearMonitor}
                                                     onChange={(e) => setMonitorFile(e.target.files[0])}
-                                                    className="w-full text-[8px] text-white/40 file:bg-white/5 file:border-white/10 file:text-white/60 file:text-[8px] file:font-black file:uppercase file:py-1.5 file:px-3 file:mr-2 hover:file:bg-[#ff006e]/20 hover:file:border-[#ff006e]/40 disabled:opacity-30"
+                                                    className="w-full text-[8px] text-white/40 file:bg-white/5 file:border-white/10 file:text-white/60 file:text-[8px] file:font-black file:uppercase file:py-1.5 file:px-3 file:mr-2 hover:file:bg-fatale/20 hover:file:border-fatale/40 disabled:opacity-30"
                                                 />
                                                 <div className="mt-2 flex items-center justify-between">
                                                     <span className="text-[7px] font-mono text-white/40 uppercase">Clear Current Monitor Image</span>
@@ -693,7 +603,7 @@ const SettingsView = ({ user, setUser }) => {
                                         <button
                                             type="submit"
                                             disabled={isSaving}
-                                            className="px-6 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all bg-[#ff006e] text-black shadow-[0_0_25px_rgba(255,0,110,0.4)] hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] active:scale-95 disabled:opacity-40 disabled:cursor-wait"
+                                            className="px-6 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all bg-fatale text-black shadow-[0_0_25px_rgba(255,0,110,0.4)] hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] active:scale-95 disabled:opacity-40 disabled:cursor-wait"
                                         >
                                             {isSaving ? "SYNCING..." : "[ COMMIT_CHANGES ]"}
                                         </button>
@@ -712,7 +622,7 @@ const SettingsView = ({ user, setUser }) => {
                             >
                                 <form onSubmit={handlePasswordChangeSubmit} className="bg-black/40 border border-white/5 p-6 space-y-6">
                                     <div className="space-y-1 border-b border-white/5 pb-4">
-                                        <h2 className="text-xs font-black text-[#ff006e] uppercase tracking-widest">{t('SECURITY')}</h2>
+                                        <h2 className="text-xs font-black text-fatale uppercase tracking-widest">{t('SECURITY')}</h2>
                                         <p className="text-[8px] text-white/30 uppercase tracking-[0.2em] font-mono">SECURITY_PROTOCOLS</p>
                                     </div>
 
@@ -725,7 +635,7 @@ const SettingsView = ({ user, setUser }) => {
                                                     value={email}
                                                     onChange={(e) => setEmail(e.target.value)}
                                                     required
-                                                    className="w-full bg-black/50 border border-white/10 p-3 text-[10px] text-white focus:border-[#ff006e] outline-none font-mono uppercase tracking-wider"
+                                                    className="w-full bg-black/50 border border-white/10 p-3 text-[10px] text-white focus:border-fatale outline-none font-mono uppercase tracking-wider"
                                                 />
                                                 <button
                                                     type="button"
@@ -752,7 +662,7 @@ const SettingsView = ({ user, setUser }) => {
                                                     value={currentPassword}
                                                     onChange={(e) => setCurrentPassword(e.target.value)}
                                                     required
-                                                    className="w-full bg-black/50 border border-white/10 p-3 text-[10px] text-white focus:border-[#ff006e] outline-none font-mono uppercase tracking-wider pr-10"
+                                                    className="w-full bg-black/50 border border-white/10 p-3 text-[10px] text-white focus:border-fatale outline-none font-mono uppercase tracking-wider pr-10"
                                                 />
                                                 <button
                                                     type="button"
@@ -773,7 +683,7 @@ const SettingsView = ({ user, setUser }) => {
                                                         value={newPassword}
                                                         onChange={(e) => setNewPassword(e.target.value)}
                                                         required
-                                                        className="w-full bg-black/50 border border-white/10 p-3 text-[10px] text-white focus:border-[#ff006e] outline-none font-mono uppercase tracking-wider pr-10"
+                                                        className="w-full bg-black/50 border border-white/10 p-3 text-[10px] text-white focus:border-fatale outline-none font-mono uppercase tracking-wider pr-10"
                                                     />
                                                     <button
                                                         type="button"
@@ -791,7 +701,7 @@ const SettingsView = ({ user, setUser }) => {
                                                     value={confirmNewPassword}
                                                     onChange={(e) => setConfirmNewPassword(e.target.value)}
                                                     required
-                                                    className="w-full bg-black/50 border border-white/10 p-3 text-[10px] text-white focus:border-[#ff006e] outline-none font-mono uppercase tracking-wider"
+                                                    className="w-full bg-black/50 border border-white/10 p-3 text-[10px] text-white focus:border-fatale outline-none font-mono uppercase tracking-wider"
                                                 />
                                             </div>
                                         </div>
@@ -802,7 +712,7 @@ const SettingsView = ({ user, setUser }) => {
                                         <button
                                             type="submit"
                                             disabled={isSaving}
-                                            className="px-6 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all bg-[#ff006e] text-black shadow-[0_0_25px_rgba(255,0,110,0.4)] hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] active:scale-95 disabled:opacity-40 disabled:cursor-wait"
+                                            className="px-6 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all bg-fatale text-black shadow-[0_0_25px_rgba(255,0,110,0.4)] hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] active:scale-95 disabled:opacity-40 disabled:cursor-wait"
                                         >
                                             {isSaving ? "UPDATING KEY..." : "[ RECALIBRATE_KEY ]"}
                                         </button>
@@ -811,7 +721,7 @@ const SettingsView = ({ user, setUser }) => {
 
                                 {/* Terminal Telemetry */}
                                 <div className="bg-black/40 border border-white/5 p-6 space-y-4">
-                                    <h3 className="text-[9px] font-black text-[#ff006e] uppercase tracking-widest">System Telemetry</h3>
+                                    <h3 className="text-[9px] font-black text-fatale uppercase tracking-widest">System Telemetry</h3>
                                     <div className="grid grid-cols-2 gap-4 text-[8px] mono text-white/40 uppercase tracking-widest">
                                         <div className="border border-white/5 p-3 bg-white/[0.01] space-y-1">
                                             <div className="text-white/20">SYSTEM ID NODE</div>
@@ -827,7 +737,7 @@ const SettingsView = ({ user, setUser }) => {
                                         </div>
                                         <div className="border border-white/5 p-3 bg-white/[0.01] space-y-1">
                                             <div className="text-white/20">CREDIT BALANCE</div>
-                                            <div className="text-white text-[#ff006e]">{user?.creditsBalance || user?.CreditsBalance || 0} CR</div>
+                                            <div className="text-white text-fatale">{user?.creditsBalance || user?.CreditsBalance || 0} CR</div>
                                         </div>
                                     </div>
                                 </div>
@@ -844,7 +754,7 @@ const SettingsView = ({ user, setUser }) => {
                             >
                                 <div className="bg-black/40 border border-white/5 p-6 space-y-6">
                                     <div className="space-y-1 border-b border-white/5 pb-4">
-                                        <h2 className="text-xs font-black text-[#ff006e] uppercase tracking-widest">{t('NOTIFICATIONS')}</h2>
+                                        <h2 className="text-xs font-black text-fatale uppercase tracking-widest">{t('NOTIFICATIONS')}</h2>
                                         <p className="text-[8px] text-white/30 uppercase tracking-[0.2em] font-mono">NOTIFICATION_PREFERENCES</p>
                                     </div>
 
@@ -852,7 +762,7 @@ const SettingsView = ({ user, setUser }) => {
                                         {/* Toggle 1: Sound Alerts */}
                                         <div className="flex items-center justify-between p-4 border border-white/5 bg-white/[0.01]">
                                             <div className="space-y-1 flex items-start gap-3">
-                                                <Volume2 size={16} className="text-[#ff006e] mt-0.5" />
+                                                <Volume2 size={16} className="text-fatale mt-0.5" />
                                                 <div>
                                                     <span className="text-[9px] font-black uppercase tracking-wider text-white">Interface Audio Cues</span>
                                                     <p className="text-[7px] font-mono text-white/30 uppercase tracking-widest">Enables audio signal hums on notifications</p>
@@ -865,11 +775,11 @@ const SettingsView = ({ user, setUser }) => {
                                                     showNotification("AUDIO_STATE_MODIFIED", `Sound Alerts ${!soundAlerts ? "ONLINE" : "MUTED"}`, "info");
                                                 }}
                                                 className={`w-10 h-5 border transition-all flex items-center p-0.5 ${
-                                                    soundAlerts ? 'border-[#ff006e] bg-[#ff006e]/20' : 'border-white/10 bg-transparent'
+                                                    soundAlerts ? 'border-fatale bg-fatale/20' : 'border-white/10 bg-transparent'
                                                 }`}
                                             >
                                                 <div className={`w-3.5 h-3.5 transition-all ${
-                                                    soundAlerts ? 'translate-x-5 bg-[#ff006e]' : 'translate-x-0 bg-white/40'
+                                                    soundAlerts ? 'translate-x-5 bg-fatale' : 'translate-x-0 bg-white/40'
                                                 }`} />
                                             </button>
                                         </div>
@@ -877,7 +787,7 @@ const SettingsView = ({ user, setUser }) => {
                                         {/* Toggle 2: Visual Flash */}
                                         <div className="flex items-center justify-between p-4 border border-white/5 bg-white/[0.01]">
                                             <div className="space-y-1 flex items-start gap-3">
-                                                <Zap size={16} className="text-[#ff006e] mt-0.5" />
+                                                <Zap size={16} className="text-fatale mt-0.5" />
                                                 <div>
                                                     <span className="text-[9px] font-black uppercase tracking-wider text-white">Visual Matrix Flashes</span>
                                                     <p className="text-[7px] font-mono text-white/30 uppercase tracking-widest">Flash screen borders on key notifications</p>
@@ -890,11 +800,11 @@ const SettingsView = ({ user, setUser }) => {
                                                     showNotification("MATRIX_FLASH_UPDATED", `Visual flashing ${!visualFlash ? "ENABLED" : "DISABLED"}`, "info");
                                                 }}
                                                 className={`w-10 h-5 border transition-all flex items-center p-0.5 ${
-                                                    visualFlash ? 'border-[#ff006e] bg-[#ff006e]/20' : 'border-white/10 bg-transparent'
+                                                    visualFlash ? 'border-fatale bg-fatale/20' : 'border-white/10 bg-transparent'
                                                 }`}
                                             >
                                                 <div className={`w-3.5 h-3.5 transition-all ${
-                                                    visualFlash ? 'translate-x-5 bg-[#ff006e]' : 'translate-x-0 bg-white/40'
+                                                    visualFlash ? 'translate-x-5 bg-fatale' : 'translate-x-0 bg-white/40'
                                                 }`} />
                                             </button>
                                         </div>
@@ -903,7 +813,7 @@ const SettingsView = ({ user, setUser }) => {
                                         {/* Toggle 4: Tip Alerts */}
                                         <div className="flex items-center justify-between p-4 border border-white/5 bg-white/[0.01]">
                                             <div className="space-y-1 flex items-start gap-3">
-                                                <Check size={16} className="text-[#ff006e] mt-0.5" />
+                                                <Check size={16} className="text-fatale mt-0.5" />
                                                 <div>
                                                     <span className="text-[9px] font-black uppercase tracking-wider text-white">Tip Resonances</span>
                                                     <p className="text-[7px] font-mono text-white/30 uppercase tracking-widest">Trigger notification banner whenever credits are received</p>
@@ -916,11 +826,11 @@ const SettingsView = ({ user, setUser }) => {
                                                     showNotification("TIP_ALERT_SYNC", `Tip Resonance Alerts ${!tipAlerts ? "ONLINE" : "MUTED"}`, "info");
                                                 }}
                                                 className={`w-10 h-5 border transition-all flex items-center p-0.5 ${
-                                                    tipAlerts ? 'border-[#ff006e] bg-[#ff006e]/20' : 'border-white/10 bg-transparent'
+                                                    tipAlerts ? 'border-fatale bg-fatale/20' : 'border-white/10 bg-transparent'
                                                 }`}
                                             >
                                                 <div className={`w-3.5 h-3.5 transition-all ${
-                                                    tipAlerts ? 'translate-x-5 bg-[#ff006e]' : 'translate-x-0 bg-white/40'
+                                                    tipAlerts ? 'translate-x-5 bg-fatale' : 'translate-x-0 bg-white/40'
                                                 }`} />
                                             </button>
                                         </div>
@@ -930,7 +840,7 @@ const SettingsView = ({ user, setUser }) => {
                                     <div className="pt-6 border-t border-white/5 space-y-3">
                                         <div className="flex justify-between items-center">
                                             <span className="text-[9px] font-black uppercase tracking-wider text-white">Notification Persist Duration</span>
-                                            <span className="text-[9px] font-mono text-[#ff006e] font-black">{notificationDuration}S</span>
+                                            <span className="text-[9px] font-mono text-fatale font-black">{notificationDuration}S</span>
                                         </div>
                                         <input 
                                             type="range" 
@@ -938,7 +848,7 @@ const SettingsView = ({ user, setUser }) => {
                                             max="15" 
                                             value={notificationDuration}
                                             onChange={(e) => setNotificationDuration(parseInt(e.target.value, 10))}
-                                            className="w-full h-1 bg-white/10 appearance-none outline-none accent-[#ff006e]"
+                                            className="w-full h-1 bg-white/10 appearance-none outline-none accent-fatale"
                                         />
                                         <div className="flex justify-between text-[6px] mono text-white/20 uppercase tracking-widest">
                                             <span>2 Seconds</span>
@@ -953,16 +863,16 @@ const SettingsView = ({ user, setUser }) => {
                     {/* Dedicated Programmatic Force Update Card */}
                     <div className={`border p-6 space-y-4 relative overflow-hidden transition-all duration-700 ${
                         updateAvailable 
-                        ? 'border-[#ff006e] bg-[#ff006e]/5 shadow-[0_0_35px_rgba(255,0,110,0.12),inset_0_0_15px_rgba(255,0,110,0.05)]' 
+                        ? 'border-fatale bg-fatale/5 shadow-[0_0_35px_rgba(255,0,110,0.12),inset_0_0_15px_rgba(255,0,110,0.05)]' 
                         : 'border-white/5 bg-black/40 shadow-[0_0_15px_rgba(255,0,110,0.01)]'
                     }`}>
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[#ff006e]/5 to-transparent pointer-events-none" />
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-fatale/5 to-transparent pointer-events-none" />
                         <div className="space-y-1">
                             <h2 className="text-[10px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
-                                <Activity size={14} className={`text-[#ff006e] ${updateAvailable ? 'animate-bounce' : 'animate-pulse opacity-40'}`} />
+                                <Activity size={14} className={`text-fatale ${updateAvailable ? 'animate-bounce' : 'animate-pulse opacity-40'}`} />
                                 [ SYSTEM_FORCE_UPDATE ]
                                 {updateAvailable && (
-                                    <span className="ml-2 text-[7px] font-black bg-[#ff006e] text-black px-1.5 py-0.5 rounded-sm animate-pulse tracking-widest leading-none">
+                                    <span className="ml-2 text-[7px] font-black bg-fatale text-black px-1.5 py-0.5 rounded-sm animate-pulse tracking-widest leading-none">
                                         UPDATE AVAILABLE
                                     </span>
                                 )}
@@ -997,10 +907,10 @@ const SettingsView = ({ user, setUser }) => {
                                  onClick={handleForceUpdate}
                                  className={`px-6 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 ${
                                      isSaving 
-                                     ? 'bg-[#ff006e]/20 text-white/40 cursor-wait' 
+                                     ? 'bg-fatale/20 text-white/40 cursor-wait' 
                                      : updateAvailable 
-                                       ? 'bg-[#ff006e] text-black shadow-[0_0_25px_rgba(255,0,110,0.4)] hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]'
-                                       : 'bg-transparent border border-white/10 text-white/40 hover:text-white hover:border-[#ff006e] hover:bg-[#ff006e]/5 hover:shadow-[0_0_15px_rgba(255,0,110,0.1)]'
+                                       ? 'bg-fatale text-black shadow-[0_0_25px_rgba(255,0,110,0.4)] hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]'
+                                       : 'bg-transparent border border-white/10 text-white/40 hover:text-white hover:border-fatale hover:bg-fatale/5 hover:shadow-[0_0_15px_rgba(255,0,110,0.1)]'
                                  }`}
                              >
                                  {isSaving 

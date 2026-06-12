@@ -41,8 +41,8 @@ const WalletDashboard = ({ user, onRefreshProfile, setActiveTab }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Main Balance */}
                 <div className="col-span-1 md:col-span-2 bg-black/60 p-5 md:p-8 relative overflow-hidden border border-white/5">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#ff006e]/5 blur-3xl pointer-events-none" />
-                    <div className="text-[11px] font-black text-[#ff006e]/60 uppercase tracking-[0.3em] mb-2">// AVAILABLE_BALANCE</div>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-fatale/5 blur-3xl pointer-events-none" />
+                    <div className="text-[11px] font-black text-fatale/60 uppercase tracking-[0.3em] mb-2">// AVAILABLE_BALANCE</div>
                     <div className="flex items-baseline gap-2 mb-6">
                         <span className="text-5xl md:text-7xl font-black text-white tracking-tighter drop-shadow-[0_0_20px_rgba(255,0,110,0.4)]">
                             {user?.credits || 0}
@@ -52,7 +52,7 @@ const WalletDashboard = ({ user, onRefreshProfile, setActiveTab }) => {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setActiveTab('Depot')}
-                            className="relative overflow-hidden group bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] px-4 py-2.5 md:px-6 md:py-3 font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-[#ff006e]/20 hover:border-[#ff006e]/60 hover:text-white transition-all shadow-[0_0_15px_rgba(255,0,110,0.1)] active:scale-95"
+                            className="relative overflow-hidden group bg-fatale/10 border border-fatale/30 text-fatale px-4 py-2.5 md:px-6 md:py-3 font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-fatale/20 hover:border-fatale/60 hover:text-white transition-all shadow-[0_0_15px_rgba(255,0,110,0.1)] active:scale-95"
                         >
                             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-400" />
@@ -71,17 +71,17 @@ const WalletDashboard = ({ user, onRefreshProfile, setActiveTab }) => {
                 <div className="grid grid-cols-2 md:grid-cols-1 gap-4">
                     <div
                         onClick={() => setActiveTab('Earnings')}
-                        className="border border-[#ff006e]/10 bg-black/60 p-4 md:p-6 relative overflow-hidden cursor-pointer hover:border-[#ff006e]/30 transition-all group"
+                        className="border border-fatale/10 bg-black/60 p-4 md:p-6 relative overflow-hidden cursor-pointer hover:border-fatale/30 transition-all group"
                     >
                         <div className="text-[10px] md:text-[11px] font-black text-white/30 uppercase tracking-[0.25em] mb-2 flex items-center justify-between">
                             <span>EARNINGS_(30D)</span>
-                            <ArrowUpRight size={11} className="text-[#ff006e]/40 group-hover:text-[#ff006e] transition-colors" />
+                            <ArrowUpRight size={11} className="text-fatale/40 group-hover:text-fatale transition-colors" />
                         </div>
                         <div className="text-2xl md:text-3xl font-black text-white tracking-tighter">
                             {stats.last30Days} <span className="text-[10px] md:text-xs text-white/20 font-black">CRD</span>
                         </div>
-                        <div className="absolute bottom-0 left-0 right-0 h-px bg-[#ff006e]/10">
-                            <div className="h-full bg-[#ff006e]/40 w-[40%]" />
+                        <div className="absolute bottom-0 left-0 right-0 h-px bg-fatale/10">
+                            <div className="h-full bg-fatale/40 w-[40%]" />
                         </div>
                     </div>
 
@@ -103,7 +103,7 @@ const WalletDashboard = ({ user, onRefreshProfile, setActiveTab }) => {
                     <div className="text-[11px] font-black text-white/40 uppercase tracking-[0.3em]">// RECENT_ACTIVITY</div>
                     <button
                         onClick={() => setActiveTab('Transactions')}
-                        className="text-[11px] text-[#ff006e]/60 font-black uppercase tracking-widest hover:text-[#ff006e] transition-colors flex items-center gap-1"
+                        className="text-[11px] text-fatale/60 font-black uppercase tracking-widest hover:text-fatale transition-colors flex items-center gap-1"
                     >
                         VIEW_ALL <ArrowRight size={10} />
                     </button>
@@ -134,7 +134,7 @@ const TransactionItem = ({ tx }) => {
     return (
         <div className="flex items-center justify-between py-4 border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors group px-2">
             <div className="flex items-center gap-4">
-                <div className={`w-6 h-6 flex items-center justify-center ${isPositive ? 'text-[#ff006e]' : 'text-white/20'}`}>
+                <div className={`w-6 h-6 flex items-center justify-center ${isPositive ? 'text-fatale' : 'text-white/20'}`}>
                     {isPositive ? <ArrowDownLeft size={14} /> : <ArrowUpRight size={14} />}
                 </div>
                 <div>
@@ -142,7 +142,7 @@ const TransactionItem = ({ tx }) => {
                     <div className="text-[11px] text-white/20 font-mono uppercase tracking-widest">{date} · {tx.type?.replace('_', ' ')}</div>
                 </div>
             </div>
-            <div className={`font-mono font-black text-sm ${isPositive ? 'text-[#ff006e]' : 'text-white/30'}`}>
+            <div className={`font-mono font-black text-sm ${isPositive ? 'text-fatale' : 'text-white/30'}`}>
                 {isPositive ? '+' : ''}{tx.amount}
             </div>
         </div>

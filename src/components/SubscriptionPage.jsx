@@ -26,7 +26,7 @@ const SubscriptionPage = ({ user, onRefreshProfile }) => {
                             </span>
                         </h1>
                         {/* Artisanal Underline */}
-                        <div className="absolute -bottom-2 left-12 right-12 h-[2px] bg-gradient-to-r from-transparent via-[#10b981] via-[#ff006e] to-transparent opacity-50 blur-[1px]"></div>
+                        <div className="absolute -bottom-2 left-12 right-12 h-[2px] bg-gradient-to-r from-transparent via-[#10b981] via-fatale to-transparent opacity-50 blur-[1px]"></div>
                         <div className="absolute -bottom-2 left-24 right-24 h-[1px] bg-white opacity-30 shadow-[0_0_8px_white]"></div>
                     </div>
 
@@ -48,7 +48,7 @@ const SubscriptionPage = ({ user, onRefreshProfile }) => {
                 {/* Subscription Manager - Floating Glass Card */}
                 <div className="relative">
                     {/* Subtle Glow behind */}
-                    <div className="absolute inset-x-0 -top-10 -bottom-10 bg-[#ff006e]/5 blur-3xl rounded-full opacity-50"></div>
+                    <div className="absolute inset-x-0 -top-10 -bottom-10 bg-fatale/5 blur-3xl rounded-full opacity-50"></div>
 
                     <div className="relative">
                         <SubscriptionManager user={user} refreshProfile={onRefreshProfile} />
@@ -62,11 +62,11 @@ const SubscriptionPage = ({ user, onRefreshProfile }) => {
                     </div>
                     <div className="relative flex justify-center">
                         <div className="bg-black px-6 py-2 border border-white/20 rounded-none flex items-center gap-2 shadow-[0_0_15px_rgba(0,255,0,0.1)]">
-                            <span className="text-[#ff006e] font-mono font-bold text-xs">{`>>>`}</span>
+                            <span className="text-fatale font-mono font-bold text-xs">{`>>>`}</span>
                             <span className="text-[10px] font-black text-white tracking-[0.3em] uppercase font-mono">
                                 DIRECT_ARTIST_UPLINK
                             </span>
-                            <span className="text-[#ff006e] font-mono font-bold text-xs">{`<<<`}</span>
+                            <span className="text-fatale font-mono font-bold text-xs">{`<<<`}</span>
                         </div>
                     </div>
                 </div>

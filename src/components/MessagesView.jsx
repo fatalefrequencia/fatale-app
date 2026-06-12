@@ -290,7 +290,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                                 setCurrentChat(null);
                                 if (onChatChange) onChatChange(null);
                             }} 
-                            className="p-1 hover:bg-[#ff006e] hover:text-black text-[#ff006e] transition-all border border-[#ff006e]/20"
+                            className="p-1 hover:bg-fatale hover:text-black text-fatale transition-all border border-fatale/20"
                         >
                             <ChevronLeft size={14} />
                         </button>
@@ -333,7 +333,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                                     <div className="flex items-center gap-2 mb-1">
                                         <span
                                             onClick={() => !isMe && navigateToProfile(m.senderId || m.SenderId)}
-                                            className={`font-black uppercase tracking-tight cursor-pointer text-[10px] ${isMe ? 'text-[#ff006e]' : 'text-cyan-400 hover:underline'}`}
+                                            className={`font-black uppercase tracking-tight cursor-pointer text-[10px] ${isMe ? 'text-fatale' : 'text-cyan-400 hover:underline'}`}
                                         >
                                             {senderUsername}
                                         </span>
@@ -341,16 +341,16 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                                             {new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
                                         </span>
                                     </div>
-                                    <div className={`p-3 border ${isMe ? 'border-[#ff006e]/20 bg-[#ff006e]/5 text-white' : 'border-white/10 bg-white/[0.02] text-white/80'} max-w-[80%] break-words`}>
+                                    <div className={`p-3 border ${isMe ? 'border-fatale/20 bg-fatale/5 text-white' : 'border-white/10 bg-white/[0.02] text-white/80'} max-w-[80%] break-words`}>
                                         {content}
                                     </div>
                                 </div>
                                 {isMe && (
-                                    <div className="w-6 h-6 flex-shrink-0 border border-[#ff006e]/20 flex items-center justify-center overflow-hidden relative bg-black mt-0.5">
+                                    <div className="w-6 h-6 flex-shrink-0 border border-fatale/20 flex items-center justify-center overflow-hidden relative bg-black mt-0.5">
                                         {senderAvatar ? (
                                             <img src={getMediaUrl(senderAvatar)} alt="User" className="w-full h-full object-cover" />
                                         ) : (
-                                            <span className="font-mono text-[#ff006e]/40 text-[10px] font-black">{senderUsername?.[0]?.toUpperCase()}</span>
+                                            <span className="font-mono text-fatale/40 text-[10px] font-black">{senderUsername?.[0]?.toUpperCase()}</span>
                                         )}
                                     </div>
                                 )}
@@ -364,17 +364,17 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                         {/* Terminal Input Area */}
                         <form onSubmit={handleSendMessage} className={`px-6 pt-6 ${padBottom} lg:pb-6 bg-black border-t border-white/5`}>
                             <div className="relative flex items-center">
-                                <div className="absolute left-4 text-[#ff006e] font-mono text-xs select-none">&gt;</div>
+                                <div className="absolute left-4 text-fatale font-mono text-xs select-none">&gt;</div>
                                 <input
                                     type="text"
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}
                                     placeholder={t('WAITING_INPUT')}
-                                    className="w-full bg-[#080808] border border-white/5 py-4 pl-10 pr-24 text-white text-[16px] md:text-[13px] outline-none focus:border-[#ff006e]/40 transition-all font-mono tracking-widest placeholder:text-[10px] md:placeholder:text-[10px] placeholder:text-white/10"
+                                    className="w-full bg-[#080808] border border-white/5 py-4 pl-10 pr-24 text-white text-[16px] md:text-[13px] outline-none focus:border-fatale/40 transition-all font-mono tracking-widest placeholder:text-[10px] md:placeholder:text-[10px] placeholder:text-white/10"
                                 />
                                 <button
                                     type="submit"
-                                    className="absolute right-4 px-4 py-2 bg-[#ff006e]/10 text-[#ff006e] border border-[#ff006e]/20 hover:bg-[#ff006e] hover:text-black transition-all font-mono text-[10px] font-black uppercase tracking-widest"
+                                    className="absolute right-4 px-4 py-2 bg-fatale/10 text-fatale border border-fatale/20 hover:bg-fatale hover:text-black transition-all font-mono text-[10px] font-black uppercase tracking-widest"
                                 >
                                     {t('SEND')}
                                 </button>
@@ -413,21 +413,21 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                         className="absolute inset-0 z-[60] bg-black/98 backdrop-blur-3xl p-8 flex flex-col"
                     >
                         {/* High-end decorative background elements */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#ff006e]/5 blur-[120px] rounded-full pointer-events-none" />
-                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#ff006e]/5 blur-[120px] rounded-full pointer-events-none" />
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-fatale/5 blur-[120px] rounded-full pointer-events-none" />
+                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-fatale/5 blur-[120px] rounded-full pointer-events-none" />
 
                         {/* Scanline Effect Overlay */}
                         <div className="absolute inset-0 pointer-events-none opacity-[0.02] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
 
                         <div className="flex justify-between items-center mb-8 relative">
                             <div>
-                                <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.3em] font-mono mb-1">// {t('SUBSPACE_SYNC')}</div>
+                                <div className="text-[10px] font-black text-fatale/50 uppercase tracking-[0.3em] font-mono mb-1">// {t('SUBSPACE_SYNC')}</div>
                                 <h2 className="text-2xl font-black text-white tracking-tighter uppercase">{t('NEW_TRANS')}</h2>
                             </div>
                             <button 
                                 onClick={(e) => { e.stopPropagation(); setIsSearching(false); setSearchQuery(''); setSearchResults([]); }} 
                                 onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setIsSearching(false); setSearchQuery(''); setSearchResults([]); }}
-                                className="p-2 border border-white/10 hover:border-[#ff006e]/40 text-white/40 hover:text-white transition-all cursor-pointer relative z-[70]"
+                                className="p-2 border border-white/10 hover:border-fatale/40 text-white/40 hover:text-white transition-all cursor-pointer relative z-[70]"
                             >
                                 <X size={16} />
                             </button>
@@ -435,7 +435,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
 
                         <div className="relative mb-8 group">
                             <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-                                <Search className="text-[#ff006e]/40 group-focus-within:text-[#ff006e] transition-colors" size={16} />
+                                <Search className="text-fatale/40 group-focus-within:text-fatale transition-colors" size={16} />
                             </div>
                             <input
                                 autoFocus
@@ -443,25 +443,25 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                                 value={searchQuery}
                                 onChange={handleSearch}
                                 placeholder={t('IDENTIFY_TARGET')}
-                                className="w-full bg-black border border-white/10 py-4 pl-12 pr-6 text-white text-[16px] md:text-sm outline-none focus:border-[#ff006e]/40 transition-all font-mono tracking-widest uppercase placeholder:text-white/10 placeholder:tracking-widest"
+                                className="w-full bg-black border border-white/10 py-4 pl-12 pr-6 text-white text-[16px] md:text-sm outline-none focus:border-fatale/40 transition-all font-mono tracking-widest uppercase placeholder:text-white/10 placeholder:tracking-widest"
                             />
                         </div>
 
                         <div className="flex-1 overflow-y-auto space-y-2 no-scrollbar relative">
                             {isSearchingUsers ? (
                                 <div className="text-center py-16 flex flex-col items-center justify-center">
-                                    <div className="w-6 h-6 border border-[#ff006e]/20 border-t-[#ff006e] animate-spin mb-4" />
-                                    <div className="text-[#ff006e]/40 font-mono tracking-widest uppercase text-[10px]">{t('CALIBRATING_FREQ')}</div>
+                                    <div className="w-6 h-6 border border-fatale/20 border-t-fatale animate-spin mb-4" />
+                                    <div className="text-fatale/40 font-mono tracking-widest uppercase text-[10px]">{t('CALIBRATING_FREQ')}</div>
                                 </div>
                             ) : searchResults.length > 0 ? (
                                 searchResults.filter(u => u && (u.id || u.Id)).map(u => (
                                     <div
                                         key={u.id || u.Id}
-                                        className="group p-4 border border-white/5 hover:border-[#ff006e]/20 flex items-center gap-4 transition-all cursor-pointer"
+                                        className="group p-4 border border-white/5 hover:border-fatale/20 flex items-center gap-4 transition-all cursor-pointer"
                                     >
                                         <div
                                             onClick={() => navigateToProfile(u.id || u.Id)}
-                                            className="w-10 h-10 overflow-hidden border border-white/10 group-hover:border-[#ff006e]/30 transition-all cursor-pointer flex-shrink-0"
+                                            className="w-10 h-10 overflow-hidden border border-white/10 group-hover:border-fatale/30 transition-all cursor-pointer flex-shrink-0"
                                         >
                                             {u.profilePictureUrl || u.ProfilePictureUrl ? (
                                                 <img src={getMediaUrl(u.profilePictureUrl || u.ProfilePictureUrl)} className="w-full h-full object-cover" />
@@ -470,21 +470,21 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                                             )}
                                         </div>
                                         <div onClick={() => navigateToProfile(u.id || u.Id)} className="cursor-pointer flex-1">
-                                            <div className="text-white font-black tracking-widest uppercase text-xs group-hover:text-[#ff006e] transition-colors">{u.username || u.Username}</div>
+                                            <div className="text-white font-black tracking-widest uppercase text-xs group-hover:text-fatale transition-colors">{u.username || u.Username}</div>
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <button
                                                 onClick={(e) => handleSearchFollow(e, u.id || u.Id, u.isFollowing)}
                                                 className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all ${u.isFollowing
-                                                    ? 'bg-[#ff006e] text-black'
-                                                    : 'border border-[#ff006e]/30 text-[#ff006e]/60 hover:bg-[#ff006e] hover:text-black'
+                                                    ? 'bg-fatale text-black'
+                                                    : 'border border-fatale/30 text-fatale/60 hover:bg-fatale hover:text-black'
                                                     }`}
                                             >
                                                 {u.isFollowing ? t('LINKED') : t('LINK')}
                                             </button>
                                             <button
                                                 onClick={() => startNewChat(u)}
-                                                className="p-2 border border-[#ff006e]/20 text-[#ff006e]/60 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all"
+                                                className="p-2 border border-fatale/20 text-fatale/60 hover:bg-fatale/10 hover:text-fatale transition-all"
                                             >
                                                 <Send size={14} />
                                             </button>
@@ -494,7 +494,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                             ) : searchQuery.length > 0 ? (
                                 <div className="text-center py-16">
                                     <div className="text-white/20 font-mono uppercase tracking-widest text-[10px] mb-1">&gt; {t('NO_CONN')}</div>
-                                    <div className="text-[#ff006e]/40 font-mono uppercase tracking-widest text-[10px]">{t('SIGNAL_LOST')}</div>
+                                    <div className="text-fatale/40 font-mono uppercase tracking-widest text-[10px]">{t('SIGNAL_LOST')}</div>
                                 </div>
                             ) : (
                                 <div className="text-center py-16">
@@ -509,7 +509,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
             {/* Inbox Header */}
             <div className="px-8 pt-8 pb-6 flex justify-between items-center z-10 relative border-b border-white/5">
                 <div>
-                    <div className="text-[10px] font-black text-[#ff006e] uppercase tracking-[0.3em] font-mono mb-1">// {t('COMMS_HUB')}</div>
+                    <div className="text-[10px] font-black text-fatale uppercase tracking-[0.3em] font-mono mb-1">// {t('COMMS_HUB')}</div>
                     <div className="flex items-center gap-1.5">
                         <div className="w-1.5 h-1.5 bg-[#4eda2c] animate-pulse shadow-[0_0_8px_#4eda2c]" />
                         <span className="text-[9px] text-[#4eda2c]/50 font-mono uppercase tracking-widest">{t('ONLINE')}</span>
@@ -518,7 +518,7 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
 
                 <button
                     onClick={() => setIsSearching(true)}
-                    className="p-2.5 border border-white/10 hover:border-[#ff006e]/40 text-[#ff006e]/60 hover:text-[#ff006e] transition-all"
+                    className="p-2.5 border border-white/10 hover:border-fatale/40 text-fatale/60 hover:text-fatale transition-all"
                     title="New Transmission"
                 >
                     <Edit size={15} />
@@ -529,17 +529,17 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
             <div className="flex-1 overflow-y-auto pb-4 no-scrollbar">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center h-48">
-                        <div className="w-px h-8 bg-[#ff006e]/40 animate-pulse" />
-                        <div className="text-[10px] text-[#ff006e]/40 font-mono tracking-widest mt-4 uppercase">{t('CALIBRATING_FREQ')}</div>
+                        <div className="w-px h-8 bg-fatale/40 animate-pulse" />
+                        <div className="text-[10px] text-fatale/40 font-mono tracking-widest mt-4 uppercase">{t('CALIBRATING_FREQ')}</div>
                     </div>
                 ) : allConversations.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-48 text-center px-8">
                         <div className="text-white/15 font-mono uppercase tracking-widest text-[10px] mb-4">&gt; {t('NO_DATA_PULSES')}</div>
                         <button
                             onClick={() => setIsSearching(true)}
-                            className="text-[#ff006e]/50 text-[10px] font-mono uppercase tracking-widest hover:text-[#ff006e] transition-all flex items-center gap-2"
+                            className="text-fatale/50 text-[10px] font-mono uppercase tracking-widest hover:text-fatale transition-all flex items-center gap-2"
                         >
-                            <span className="h-px w-6 bg-[#ff006e]/20" /> {t('ESTABLISH_BRIDGE')} <span className="h-px w-6 bg-[#ff006e]/20" />
+                            <span className="h-px w-6 bg-fatale/20" /> {t('ESTABLISH_BRIDGE')} <span className="h-px w-6 bg-fatale/20" />
                         </button>
                     </div>
                 ) : (
@@ -555,33 +555,33 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                             <div
                                 key={cid}
                                 onClick={() => openChat(conv)}
-                                className={`group px-6 py-4 flex gap-4 cursor-pointer relative transition-all border-b border-white/[0.03] hover:bg-white/[0.02] ${cunread > 0 ? 'border-l-2 border-l-[#ff006e]/60' : 'border-l-2 border-l-transparent'
+                                className={`group px-6 py-4 flex gap-4 cursor-pointer relative transition-all border-b border-white/[0.03] hover:bg-white/[0.02] ${cunread > 0 ? 'border-l-2 border-l-fatale/60' : 'border-l-2 border-l-transparent'
                                     }`}
                             >
-                                <div className="w-10 h-10 flex-shrink-0 border border-white/10 flex items-center justify-center overflow-hidden group-hover:border-[#ff006e]/30 transition-all relative bg-black">
+                                <div className="w-10 h-10 flex-shrink-0 border border-white/10 flex items-center justify-center overflow-hidden group-hover:border-fatale/30 transition-all relative bg-black">
                                     {cimg ? (
                                         <img src={getMediaUrl(cimg)} alt="User" className="w-full h-full object-cover" />
                                     ) : (
                                         <span className="font-mono text-white/20 text-xs font-black">{cusername?.[0]?.toUpperCase()}</span>
                                     )}
-                                    {cunread > 0 && <div className="absolute top-0 right-0 w-2 h-2 bg-[#ff006e] border border-black" />}
+                                    {cunread > 0 && <div className="absolute top-0 right-0 w-2 h-2 bg-fatale border border-black" />}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-baseline mb-1">
                                         <h3 className={`text-xs font-black tracking-widest uppercase transition-colors ${cunread > 0 ? 'text-white' : 'text-white/60 group-hover:text-white'
                                             }`}>{cusername}</h3>
-                                        <span className={`text-[9px] font-mono ${cunread > 0 ? 'text-[#ff006e]' : 'text-white/20'}`}>
+                                        <span className={`text-[9px] font-mono ${cunread > 0 ? 'text-fatale' : 'text-white/20'}`}>
                                             {new Date(ctimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
                                         </span>
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <p className={`text-[11px] truncate pr-4 font-mono ${cunread > 0 ? 'text-white/70' : 'text-white/25'
                                             }`}>
-                                            {cunread > 0 && <span className="text-[#ff006e] mr-1">&gt;</span>}
+                                            {cunread > 0 && <span className="text-fatale mr-1">&gt;</span>}
                                             {ccontent}
                                         </p>
                                         {cunread > 0 && (
-                                            <div className="shrink-0 text-[9px] font-mono font-black text-[#ff006e] bg-[#ff006e]/10 px-1">
+                                            <div className="shrink-0 text-[9px] font-mono font-black text-fatale bg-fatale/10 px-1">
                                                 {cunread}
                                             </div>
                                         )}

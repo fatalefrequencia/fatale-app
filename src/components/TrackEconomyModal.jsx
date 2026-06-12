@@ -76,20 +76,20 @@ const TrackEconomyModal = ({
                         initial={{ opacity: 0, scale: 0.98, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.98, y: 20 }}
-                        className="w-full max-w-lg bg-[#050505] border border-[#ff006e]/30 relative overflow-hidden shadow-[0_0_80px_rgba(255,0,110,0.2)] rounded-sm font-mono text-white"
+                        className="w-full max-w-lg bg-[#050505] border border-fatale/30 relative overflow-hidden shadow-[0_0_80px_rgba(255,0,110,0.2)] rounded-sm font-mono text-white"
                     >
                         {/* Status bar */}
-                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#ff006e] via-[#d60036] to-[#ff006e]" />
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-fatale via-[#d60036] to-fatale" />
 
                         {/* Top close button */}
                         <div className="flex justify-between items-center p-5 border-b border-white/5 bg-black/50">
-                            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#ff006e] flex items-center gap-2">
-                                <Coins size={14} className="text-[#ff006e] animate-pulse" />
+                            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-fatale flex items-center gap-2">
+                                <Coins size={14} className="text-fatale animate-pulse" />
                                 {isLiveBroadcast ? "BROADCAST_RESONANCE_SUPPORT" : "SIGNAL_TRANSACTION_TERMINAL"}
                             </div>
                             <button
                                 onClick={onClose}
-                                className="text-white/40 hover:text-[#ff006e] transition-all hover:rotate-90 p-1"
+                                className="text-white/40 hover:text-fatale transition-all hover:rotate-90 p-1"
                             >
                                 <X size={18} />
                             </button>
@@ -100,9 +100,9 @@ const TrackEconomyModal = ({
                             <div className="flex items-center justify-between gap-4 bg-white/[0.02] border border-white/5 p-4 rounded-sm">
                                 <div className="flex items-center gap-4 min-w-0">
                                     {track.cover || track.thumbnail || track.coverImageUrl ? (
-                                        <img src={track.cover || track.thumbnail || track.coverImageUrl} alt="Cover" className="w-12 h-12 object-cover rounded-sm border border-[#ff006e]/30 shrink-0" />
+                                        <img src={track.cover || track.thumbnail || track.coverImageUrl} alt="Cover" className="w-12 h-12 object-cover rounded-sm border border-fatale/30 shrink-0" />
                                     ) : (
-                                        <div className="w-12 h-12 rounded-sm bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center font-black text-[#ff006e] shrink-0">
+                                        <div className="w-12 h-12 rounded-sm bg-fatale/10 border border-fatale/20 flex items-center justify-center font-black text-fatale shrink-0">
                                             {resolveArtworkLetter(track)}
                                         </div>
                                     )}
@@ -113,7 +113,7 @@ const TrackEconomyModal = ({
                                 </div>
                                 <div className="shrink-0">
                                     {isLiveBroadcast ? (
-                                        <span className="px-2 py-0.5 border border-[#ff006e]/30 bg-[#ff006e]/10 text-[#ff006e] text-[8px] font-bold uppercase tracking-widest">LIVE BROADCAST</span>
+                                        <span className="px-2 py-0.5 border border-fatale/30 bg-fatale/10 text-fatale text-[8px] font-bold uppercase tracking-widest">LIVE BROADCAST</span>
                                     ) : isOwned ? (
                                         <span className="px-2 py-0.5 border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[8px] font-bold uppercase tracking-widest flex items-center gap-1"><ShieldCheck size={10} /> OWNED</span>
                                     ) : (
@@ -141,7 +141,7 @@ const TrackEconomyModal = ({
                                                     onPurchase?.(track);
                                                     onClose();
                                                 }}
-                                                className="w-full py-2.5 text-[8px] font-black uppercase tracking-widest bg-[#ff006e] text-black hover:bg-white transition-all rounded-sm flex items-center justify-center gap-1.5"
+                                                className="w-full py-2.5 text-[8px] font-black uppercase tracking-widest bg-fatale text-black hover:bg-white transition-all rounded-sm flex items-center justify-center gap-1.5"
                                             >
                                                 <Zap size={10} /> {(track.price > 0 || track.Price > 0) ? `BUY (${track.price || track.Price} CRD)` : "CLAIM FREE"}
                                             </button>
@@ -180,7 +180,7 @@ const TrackEconomyModal = ({
 
                             {/* Tipping Panel */}
                             <div className="space-y-4 border-t border-white/5 pt-6">
-                                <div className="text-[9px] font-black uppercase tracking-[0.2em] text-[#ff006e] flex items-center gap-1.5">
+                                <div className="text-[9px] font-black uppercase tracking-[0.2em] text-fatale flex items-center gap-1.5">
                                     <Heart size={10} /> TRANSMIT_APPRECIATION_TIP
                                 </div>
 
@@ -196,7 +196,7 @@ const TrackEconomyModal = ({
                                             }}
                                             className={`py-2 text-[9px] font-black tracking-wider rounded-sm border uppercase transition-all ${
                                                 tipAmount === amt && !customTip
-                                                    ? 'bg-[#ff006e]/15 border-[#ff006e] text-[#ff006e]'
+                                                    ? 'bg-fatale/15 border-fatale text-fatale'
                                                     : 'bg-white/5 border-white/10 hover:border-white/30 text-white/70 hover:text-white'
                                             }`}
                                         >
@@ -217,7 +217,7 @@ const TrackEconomyModal = ({
                                             setTipAmount(0);
                                         }}
                                         placeholder="ENTER_CUSTOM_TIP_AMOUNT"
-                                        className="w-full bg-white/5 border border-white/10 hover:border-white/20 focus:border-[#ff006e] outline-none text-[9px] text-white px-3 py-3 rounded-sm tracking-widest"
+                                        className="w-full bg-white/5 border border-white/10 hover:border-white/20 focus:border-fatale outline-none text-[9px] text-white px-3 py-3 rounded-sm tracking-widest"
                                     />
                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[8px] text-white/30 tracking-widest">CRD</span>
                                 </div>
@@ -226,7 +226,7 @@ const TrackEconomyModal = ({
                                 <div className="grid grid-cols-2 gap-4 p-4 bg-black border border-white/5 rounded-sm">
                                     <div className="text-left space-y-1">
                                         <div className="text-[7px] text-white/40 uppercase">VALUE (USD)</div>
-                                        <div className="text-xs font-black text-[#00ffff]">${tipUSD} USD</div>
+                                        <div className="text-xs font-black text-secondary">${tipUSD} USD</div>
                                     </div>
                                     <div className="text-right space-y-1">
                                         <div className="text-[7px] text-white/40 uppercase">WALLET BALANCE</div>
@@ -248,7 +248,7 @@ const TrackEconomyModal = ({
                                 <button
                                     onClick={handleTipExecution}
                                     disabled={isSubmittingTip || finalTip <= 0 || !hasEnoughForTip}
-                                    className="w-full py-3.5 text-[9px] font-black uppercase tracking-widest bg-[#ff006e] text-black hover:bg-white transition-all disabled:opacity-30 disabled:hover:bg-[#ff006e] disabled:hover:text-black rounded-sm shadow-[0_0_20px_rgba(255,0,110,0.25)]"
+                                    className="w-full py-3.5 text-[9px] font-black uppercase tracking-widest bg-fatale text-black hover:bg-white transition-all disabled:opacity-30 disabled:hover:bg-fatale disabled:hover:text-black rounded-sm shadow-[0_0_20px_rgba(255,0,110,0.25)]"
                                 >
                                     {isSubmittingTip ? "TRANSMITTING APPRECIATION RESONANCE..." : "EXECUTE TIP TRANSMISSION"}
                                 </button>

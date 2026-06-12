@@ -38,18 +38,18 @@ const CreditTransferModal = ({ user, onClose, onRefresh, initialTargetId = '', i
             <motion.div
                 initial={{ opacity: 0, scale: 0.98, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="bg-black/90 border-l-2 border-[#ff006e]/50 backdrop-blur-xl p-8 w-full max-w-md shadow-2xl relative overflow-hidden group"
+                className="bg-black/90 border-l-2 border-fatale/50 backdrop-blur-xl p-8 w-full max-w-md shadow-2xl relative overflow-hidden group"
             >
                 {/* Corner Accent */}
                 <div className="absolute top-0 right-0 p-2 opacity-30">
-                    <div className="w-12 h-0.5 bg-[#ff006e]/30 mb-1"></div>
-                    <div className="w-6 h-0.5 bg-[#ff006e]/30 ml-auto"></div>
+                    <div className="w-12 h-0.5 bg-fatale/30 mb-1"></div>
+                    <div className="w-6 h-0.5 bg-fatale/30 ml-auto"></div>
                 </div>
 
                 <button onClick={onClose} className="absolute top-4 right-4 text-white/20 hover:text-white transition-colors"><X size={18} /></button>
 
                 <div className="mb-8 flex items-center gap-4">
-                    <div className="w-10 h-10 bg-[#ff006e]/10 flex items-center justify-center text-[#ff006e] rounded-lg border border-[#ff006e]/20">
+                    <div className="w-10 h-10 bg-fatale/10 flex items-center justify-center text-fatale rounded-lg border border-fatale/20">
                         <Send size={18} />
                     </div>
                     <div>
@@ -77,11 +77,11 @@ const CreditTransferModal = ({ user, onClose, onRefresh, initialTargetId = '', i
                 ) : (
                     <form onSubmit={handleTransfer} className="space-y-6">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-extrabold text-[#ff006e] uppercase tracking-widest ml-1">Recipient_Signal</label>
+                            <label className="text-[10px] font-extrabold text-fatale uppercase tracking-widest ml-1">Recipient_Signal</label>
                             {initialTargetName ? (
-                                <div className="w-full bg-[#ff006e]/5 border border-[#ff006e]/20 rounded-lg p-4 flex items-center justify-between">
+                                <div className="w-full bg-fatale/5 border border-fatale/20 rounded-lg p-4 flex items-center justify-between">
                                     <span className="text-white font-black uppercase tracking-widest text-sm">{initialTargetName}</span>
-                                    <span className="text-[#ff006e]/40 text-[8px] mono">ID: {targetId}</span>
+                                    <span className="text-fatale/40 text-[8px] mono">ID: {targetId}</span>
                                 </div>
                             ) : (
                                 <input
@@ -89,13 +89,13 @@ const CreditTransferModal = ({ user, onClose, onRefresh, initialTargetId = '', i
                                     value={targetId}
                                     onChange={e => setTargetId(e.target.value)}
                                     placeholder="Target System ID"
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-4 text-white text-sm font-bold outline-none focus:border-[#ff006e]/50 transition-colors placeholder:text-white/10"
+                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-4 text-white text-sm font-bold outline-none focus:border-fatale/50 transition-colors placeholder:text-white/10"
                                 />
                             )}
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-extrabold text-[#ff006e] uppercase tracking-widest ml-1">Transfer_Amount</label>
+                            <label className="text-[10px] font-extrabold text-fatale uppercase tracking-widest ml-1">Transfer_Amount</label>
                             <input
                                 type="number"
                                 value={amount}
@@ -103,7 +103,7 @@ const CreditTransferModal = ({ user, onClose, onRefresh, initialTargetId = '', i
                                 placeholder="0.00"
                                 min="1"
                                 max={user?.credits || 0}
-                                className="w-full bg-white/5 border border-white/10 rounded-lg p-4 text-white text-sm font-bold outline-none focus:border-[#ff006e]/50 transition-colors placeholder:text-white/10"
+                                className="w-full bg-white/5 border border-white/10 rounded-lg p-4 text-white text-sm font-bold outline-none focus:border-fatale/50 transition-colors placeholder:text-white/10"
                             />
                             <div className="text-right text-[10px] text-white/20 font-mono uppercase tracking-widest pr-2">Balance: {user?.credits} CRD</div>
                         </div>
@@ -121,7 +121,7 @@ const CreditTransferModal = ({ user, onClose, onRefresh, initialTargetId = '', i
                         <button
                             type="submit"
                             disabled={status === 'processing' || !amount || !targetId}
-                            className="w-full py-4 bg-transparent border border-[#ff006e]/50 text-[#ff006e] font-black uppercase tracking-widest text-xs rounded-lg hover:bg-[#ff006e] hover:text-black transition-all disabled:opacity-50 shadow-[0_0_15px_rgba(255,0,110,0.1)] hover:shadow-[0_0_30px_rgba(255,0,110,0.4)]"
+                            className="w-full py-4 bg-transparent border border-fatale/50 text-fatale font-black uppercase tracking-widest text-xs rounded-lg hover:bg-fatale hover:text-black transition-all disabled:opacity-50 shadow-[0_0_15px_rgba(255,0,110,0.1)] hover:shadow-[0_0_30px_rgba(255,0,110,0.4)]"
                         >
                             {status === 'processing' ? 'Processing...' : 'Execute_Transfer'}
                         </button>

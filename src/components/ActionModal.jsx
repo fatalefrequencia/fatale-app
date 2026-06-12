@@ -10,29 +10,29 @@ const ActionModal = ({ isOpen, onClose, onConfirm, title, message, confirmText =
                         initial={{ opacity: 0, scale: 0.98, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.98, y: 10 }}
-                        className="w-full max-w-sm bg-black border border-[#ff006e]/30 relative overflow-hidden group shadow-[0_0_40px_rgba(0,0,0,0.5)]"
+                        className="w-full max-w-sm bg-black border border-fatale/30 relative overflow-hidden group shadow-[0_0_40px_rgba(0,0,0,0.5)]"
                     >
                         {/* Corner Accent & Close */}
                         <div className="absolute top-0 right-0 p-3 flex items-start gap-4">
                             <button 
                                 onClick={onClose}
-                                className="text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300 p-1"
+                                className="text-fatale/40 hover:text-fatale hover:rotate-90 transition-all duration-300 p-1"
                             >
                                 <X size={20} />
                             </button>
                             <div className="opacity-40">
-                                <div className="w-8 h-0.5 bg-[#ff006e]/40 mb-0.5"></div>
-                                <div className="w-4 h-0.5 bg-[#ff006e]/40 ml-auto"></div>
+                                <div className="w-8 h-0.5 bg-fatale/40 mb-0.5"></div>
+                                <div className="w-4 h-0.5 bg-fatale/40 ml-auto"></div>
                             </div>
                         </div>
 
                         <div className="p-6 md:p-8 space-y-6">
                             <div className="flex items-center gap-3">
                                 <div
-                                    className="text-[10px] font-extrabold uppercase italic tracking-[0.2em] text-[#ff006e] flex items-center gap-2"
+                                    className="text-[10px] font-extrabold uppercase italic tracking-[0.2em] text-fatale flex items-center gap-2"
                                     style={{ transform: 'skewX(-2deg)' }}
                                 >
-                                    <span className="w-1.5 h-1.5 bg-[#ff006e] rounded-full animate-pulse shadow-[0_0_8px_rgba(255,0,110,0.8)]" />
+                                    <span className="w-1.5 h-1.5 bg-fatale rounded-full animate-pulse shadow-[0_0_8px_rgba(255,0,110,0.8)]" />
                                     {title}
                                 </div>
                             </div>
@@ -44,7 +44,7 @@ const ActionModal = ({ isOpen, onClose, onConfirm, title, message, confirmText =
                             <div className="flex gap-3 pt-4">
                                 <button
                                     onClick={() => { if (onConfirm) onConfirm(); onClose(); }}
-                                    className="w-full px-4 py-3 text-[10px] font-black uppercase tracking-widest bg-[#ff006e] text-black hover:bg-white transition-all rounded-lg shadow-[0_0_15px_rgba(255,0,110,0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+                                    className="w-full px-4 py-3 text-[10px] font-black uppercase tracking-widest bg-fatale text-black hover:bg-white transition-all rounded-lg shadow-[0_0_15px_rgba(255,0,110,0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
                                 >
                                     {confirmText}
                                 </button>

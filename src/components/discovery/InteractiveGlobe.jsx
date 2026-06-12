@@ -395,7 +395,7 @@ const GlobeCore = memo(({
         (activeView === 'TRACKS'      || !activeView ? tracks_.length      : 0)
     );
     const density     = Math.max(0.4, 1 / (1 + 0.015 * totalNodes));
-    const accentColor = activeSectorColor || '#ff006e';
+    const accentColor = activeSectorColor || 'rgb(var(--theme-primary))';
 
     return (
         <group>
@@ -438,7 +438,7 @@ const GlobeCore = memo(({
                 <LightPointNode key={`track-${t.id || t.Id}`} id={`track-${t.id || t.Id}`} name={t.title || t.Title} subtitle={t.artist || t.Artist} color="#00aaff" size={0.038 * density} isSelected={selectedId === `track-${t.id || t.Id}`} cameraDist={cameraDist} onClick={() => onTrackClick?.(t)} />
             ))}
             {(activeView === 'PLAYLISTS' || !activeView) && playlists_.map(p => (
-                <LightPointNode key={`playlist-${p.id || p.Id}`} id={`playlist-${p.id || p.Id}`} name={p.name || p.Name} color="#ff006e" size={0.048 * density} isSelected={selectedId === `playlist-${p.id || p.Id}`} cameraDist={cameraDist} onClick={() => onPlaylistClick?.(p)} />
+                <LightPointNode key={`playlist-${p.id || p.Id}`} id={`playlist-${p.id || p.Id}`} name={p.name || p.Name} color="rgb(var(--theme-primary))" size={0.048 * density} isSelected={selectedId === `playlist-${p.id || p.Id}`} cameraDist={cameraDist} onClick={() => onPlaylistClick?.(p)} />
             ))}
 
             <FataleCoreNode
@@ -482,7 +482,7 @@ const InteractiveGlobe = memo(({
                 <StarField />
 
                 <ambientLight intensity={0.18} />
-                <pointLight position={[10, 10, 10]} intensity={2.5} color={SECTORS.find(s => s.id === activeSector)?.color || '#ff006e'} />
+                <pointLight position={[10, 10, 10]} intensity={2.5} color={SECTORS.find(s => s.id === activeSector)?.color || 'rgb(var(--theme-primary))'} />
                 <pointLight position={[-8, -8, -8]} intensity={1.6} color="#001833" />
 
                 <Float

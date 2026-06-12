@@ -148,7 +148,7 @@ const DiscoveryCanvas = ({
                     data: {
                         name: a.name || a.Name || 'ARTIST',
                         imageUrl: a.imageUrl || a.ImageUrl || a.profileImageUrl || null,
-                        sectorColor: '#ff006e', // Fixed color for Individuals
+                        sectorColor: 'rgb(var(--theme-primary))', // Fixed color for Individuals
                         sectorId: sec.id, // For filtering
                         isLive,
                         trackCount,
@@ -203,7 +203,7 @@ const DiscoveryCanvas = ({
                     position: pos,
                     data: {
                         name: comm.name || 'COMMUNITY',
-                        color: '#00ffff', // Fixed color for Communities
+                        color: 'rgb(var(--theme-secondary))', // Fixed color for Communities
                         sectorId: sec.id, // For filtering
                         memberCount: comm.memberCount || 0,
                         imageUrl: comm.imageUrl,
@@ -665,7 +665,7 @@ const DiscoveryCanvas = ({
                         background: 'rgba(10,10,10,0.92)',
                         border: '1px solid rgba(255,255,255,0.1)',
                         borderRadius: 8,
-                        color: searchOpen ? '#ff006e' : 'rgba(255,255,255,0.6)',
+                        color: searchOpen ? 'rgb(var(--theme-primary))' : 'rgba(255,255,255,0.6)',
                         padding: '8px 10px',
                         cursor: 'pointer',
                         display: 'flex',
@@ -706,12 +706,12 @@ const DiscoveryCanvas = ({
                     flexDirection: 'column', gap: 12,
                 }}>
                     <div style={{
-                        width: 40, height: 40, border: '3px solid #ff006e',
+                        width: 40, height: 40, border: '3px solid rgb(var(--theme-primary))',
                         borderTopColor: 'transparent', borderRadius: '50%',
                         animation: 'spin 0.8s linear infinite',
                     }} />
                     <div style={{
-                        color: '#ff006e', fontFamily: 'monospace',
+                        color: 'rgb(var(--theme-primary))', fontFamily: 'monospace',
                         fontSize: 11, letterSpacing: '0.25em', textTransform: 'uppercase',
                     }}>
                         {t('TUNING_FREQS')}
@@ -843,8 +843,8 @@ const DiscoveryCanvas = ({
                 .react-flow__controls-button:hover {
                     background: rgba(255,0,110,0.15) !important;
                     border-color: rgba(255,0,110,0.4) !important;
-                    color: #ff006e !important;
-                    fill: #ff006e !important;
+                    color: rgb(var(--theme-primary)) !important;
+                    fill: rgb(var(--theme-primary)) !important;
                 }
                 .react-flow__minimap-mask { fill: rgba(2,2,2,0.7); }
             `}</style>

@@ -5,7 +5,14 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        fatale: 'rgb(var(--theme-primary) / <alpha-value>)',
+        secondary: 'rgb(var(--theme-secondary) / <alpha-value>)',
+        systemBg: 'rgb(var(--theme-bg) / <alpha-value>)',
+        systemText: 'rgb(var(--theme-text) / <alpha-value>)',
+      }
+    },
   },
   plugins: [],
 }

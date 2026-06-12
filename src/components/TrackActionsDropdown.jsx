@@ -248,9 +248,9 @@ const TrackActionsDropdown = ({
                 onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); setShowPlaylists(false); }}
                 className={`p-1.5 transition-all flex items-center justify-center gap-[3px] group/dots ${isOpen ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`}
             >
-                <div className={`w-[4px] h-[4px] rounded-full border transition-colors ${isOpen ? 'border-[#ff006e] bg-[#ff006e]/20' : 'border-[#ff006e] group-hover/dots:border-[#ff006e] group-hover/dots:bg-[#ff006e]/10'}`} />
-                <div className={`w-[4px] h-[4px] rounded-full border transition-colors ${isOpen ? 'border-[#ff006e] bg-[#ff006e]/20' : 'border-[#ff006e] group-hover/dots:border-[#ff006e] group-hover/dots:bg-[#ff006e]/10'}`} />
-                <div className={`w-[4px] h-[4px] rounded-full border transition-colors ${isOpen ? 'border-[#ff006e] bg-[#ff006e]/20' : 'border-[#ff006e] group-hover/dots:border-[#ff006e] group-hover/dots:bg-[#ff006e]/10'}`} />
+                <div className={`w-[4px] h-[4px] rounded-full border transition-colors ${isOpen ? 'border-fatale bg-fatale/20' : 'border-fatale group-hover/dots:border-fatale group-hover/dots:bg-fatale/10'}`} />
+                <div className={`w-[4px] h-[4px] rounded-full border transition-colors ${isOpen ? 'border-fatale bg-fatale/20' : 'border-fatale group-hover/dots:border-fatale group-hover/dots:bg-fatale/10'}`} />
+                <div className={`w-[4px] h-[4px] rounded-full border transition-colors ${isOpen ? 'border-fatale bg-fatale/20' : 'border-fatale group-hover/dots:border-fatale group-hover/dots:bg-fatale/10'}`} />
             </button>
 
             <AnimatePresence>
@@ -270,7 +270,7 @@ const TrackActionsDropdown = ({
                                 transition={{ duration: 0.15 }}
                                 onClick={(e) => e.stopPropagation()}
                                 style={{ minWidth: '220px' }}
-                                className="bg-[#000000] border border-[#ff006e]/60 rounded-sm overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_30px_rgba(255,0,110,0.2)] ring-1 ring-white/10 font-mono"
+                                className="bg-systemBg border border-fatale/60 rounded-sm overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_30px_rgba(255,0,110,0.2)] ring-1 ring-white/10 font-mono"
                             >
                                 <div className="p-2 space-y-1">
                                     {!showPlaylists ? (
@@ -280,32 +280,32 @@ const TrackActionsDropdown = ({
                                                     onAddToQueue?.(track);
                                                     setIsOpen(false);
                                                 }}
-                                                className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-sm group/item"
+                                                className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-fatale/10 hover:text-fatale transition-all rounded-sm group/item"
                                             >
-                                                <PlayCircle size={16} className="text-[#ff006e]/50 group-hover/item:text-[#ff006e]" /> Add to Queue
+                                                <PlayCircle size={16} className="text-fatale/50 group-hover/item:text-fatale" /> Add to Queue
                                             </button>
                                             <button
                                                 onClick={() => setShowPlaylists(true)}
-                                                className="w-full flex items-center justify-between px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-sm group/item"
+                                                className="w-full flex items-center justify-between px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-fatale/10 hover:text-fatale transition-all rounded-sm group/item"
                                             >
                                                 <div className="flex items-center gap-3">
-                                                    <Library size={16} className="text-[#ff006e]/50 group-hover/item:text-[#ff006e]" /> Add to Playlist
+                                                    <Library size={16} className="text-fatale/50 group-hover/item:text-fatale" /> Add to Playlist
                                                 </div>
                                                 <ChevronRight size={14} className="opacity-40 group-hover/item:opacity-100" />
                                             </button>
                                             <button
                                                 onClick={handleToggleLike}
-                                                className={`w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] transition-all rounded-sm group/item ${isLiked ? 'text-[#ff006e] bg-[#ff006e]/5' : 'text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e]'}`}
+                                                className={`w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] transition-all rounded-sm group/item ${isLiked ? 'text-fatale bg-fatale/5' : 'text-white/90 hover:bg-fatale/10 hover:text-fatale'}`}
                                             >
-                                                <Heart size={16} fill={isLiked ? "currentColor" : "none"} className={isLiked ? "text-[#ff006e]" : "text-[#ff006e]/50 group-hover/item:text-[#ff006e]"} /> {isLiked ? 'Liked' : 'Like'}
+                                                <Heart size={16} fill={isLiked ? "currentColor" : "none"} className={isLiked ? "text-fatale" : "text-fatale/50 group-hover/item:text-fatale"} /> {isLiked ? 'Liked' : 'Like'}
                                             </button>
 
                                             {isNative && !track.isOwned && !isOwner && (
                                                 <button
                                                     onClick={handlePurchase}
-                                                    className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-sm group/item"
+                                                    className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-fatale/10 hover:text-fatale transition-all rounded-sm group/item"
                                                 >
-                                                    <Zap size={16} className="text-[#ff006e]/50 group-hover/item:text-[#ff006e]" />
+                                                    <Zap size={16} className="text-fatale/50 group-hover/item:text-fatale" />
                                                     {(track.price > 0 || track.Price > 0) ? `Purchase License (${track.price || track.Price} CRD)` : "Acquire License (FREE)"}
                                                 </button>
                                             )}
@@ -316,9 +316,9 @@ const TrackActionsDropdown = ({
                                                         onDownload?.(track);
                                                         setIsOpen(false);
                                                     }}
-                                                    className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-sm group/item"
+                                                    className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-fatale/10 hover:text-fatale transition-all rounded-sm group/item"
                                                 >
-                                                    <Download size={16} className="text-[#ff006e]/50 group-hover/item:text-[#ff006e]" />
+                                                    <Download size={16} className="text-fatale/50 group-hover/item:text-fatale" />
                                                     {track.isCached ? "Remove Cache" : "Download / Cache"}
                                                 </button>
                                             )}
@@ -329,9 +329,9 @@ const TrackActionsDropdown = ({
                                                         onTipArtist?.(track);
                                                         setIsOpen(false);
                                                     }}
-                                                    className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-sm group/item"
+                                                    className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/90 hover:bg-fatale/10 hover:text-fatale transition-all rounded-sm group/item"
                                                 >
-                                                    <Coins size={16} className="text-[#ff006e]/50 group-hover/item:text-[#ff006e]" />
+                                                    <Coins size={16} className="text-fatale/50 group-hover/item:text-fatale" />
                                                     Tip Artist
                                                 </button>
                                             )}
@@ -346,7 +346,7 @@ const TrackActionsDropdown = ({
                                         <>
                                             <button
                                                 onClick={() => setShowPlaylists(false)}
-                                                className="w-full flex items-center gap-3 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#ff006e] hover:bg-[#ff006e]/5 transition-all"
+                                                className="w-full flex items-center gap-3 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-fatale hover:bg-fatale/5 transition-all"
                                             >
                                                 <ChevronLeft size={14} /> Back
                                             </button>
@@ -359,9 +359,9 @@ const TrackActionsDropdown = ({
                                                         <button
                                                             key={pId}
                                                             onClick={() => handleAddTrackToPlaylist(pId, pName)}
-                                                            className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-white/70 hover:bg-[#ff006e]/10 hover:text-[#ff006e] transition-all rounded-sm"
+                                                            className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-white/70 hover:bg-fatale/10 hover:text-fatale transition-all rounded-sm"
                                                         >
-                                                            <div className={`w-1.5 h-1.5 rounded-full ${pPublic ? 'bg-[#ff006e]' : 'bg-white/20'}`} />
+                                                            <div className={`w-1.5 h-1.5 rounded-full ${pPublic ? 'bg-fatale' : 'bg-white/20'}`} />
                                                             {pName}
                                                         </button>
                                                     );
@@ -376,12 +376,12 @@ const TrackActionsDropdown = ({
                                                             value={newPlaylistName}
                                                             onChange={(e) => setNewPlaylistName(e.target.value)}
                                                             placeholder="NEW_PLAYLIST_NAME" 
-                                                            className="flex-1 bg-white/5 border border-white/10 text-[9px] text-white uppercase px-2 py-1 outline-none focus:border-[#ff006e]"
+                                                            className="flex-1 bg-white/5 border border-white/10 text-[9px] text-white uppercase px-2 py-1 outline-none focus:border-fatale"
                                                         />
                                                         <button 
                                                             disabled={!newPlaylistName.trim()}
                                                             onClick={handleCreatePlaylist}
-                                                            className="px-2 py-1 bg-[#ff006e]/20 text-[#ff006e] border border-[#ff006e]/30 text-[9px] uppercase font-bold hover:bg-[#ff006e] hover:text-white transition-all disabled:opacity-30"
+                                                            className="px-2 py-1 bg-fatale/20 text-fatale border border-fatale/30 text-[9px] uppercase font-bold hover:bg-fatale hover:text-white transition-all disabled:opacity-30"
                                                         >
                                                             Create
                                                         </button>

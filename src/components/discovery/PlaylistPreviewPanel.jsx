@@ -110,7 +110,7 @@ const PlaylistPreviewPanel = ({ playlist, onClose, onPlayTrack, onPlayPlaylist }
                             onClick={() => onPlayPlaylist && onPlayPlaylist(playlist)}
                             style={{
                                 width: '100%',
-                                background: '#ff006e',
+                                background: 'rgb(var(--theme-primary))',
                                 border: 'none',
                                 borderRadius: 8,
                                 color: '#fff',

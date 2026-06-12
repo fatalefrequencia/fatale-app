@@ -266,6 +266,39 @@ function App() {
     }
   }, [user?.preferredLanguage, user?.PreferredLanguage, setLanguage]);
 
+  useEffect(() => {
+    const hexToRgb = (hex) => {
+      if (!hex || !hex.startsWith('#')) return null;
+      try {
+        let r = parseInt(hex.slice(1, 3), 16);
+        let g = parseInt(hex.slice(3, 5), 16);
+        let b = parseInt(hex.slice(5, 7), 16);
+        if (isNaN(r) || isNaN(g) || isNaN(b)) return null;
+        return `${r} ${g} ${b}`;
+      } catch (e) {
+        return null;
+      }
+    };
+
+    const applyThemeColor = (cssVar, hexValue, defaultRgb) => {
+      const rgb = hexToRgb(hexValue) || defaultRgb;
+      document.documentElement.style.setProperty(cssVar, rgb);
+    };
+
+    if (user) {
+      applyThemeColor('--theme-primary', user.themeColor || user.ThemeColor, '255 0 110'); // rgb(var(--theme-primary))
+      applyThemeColor('--theme-secondary', user.secondaryColor || user.SecondaryColor, '0 255 255'); // rgb(var(--theme-secondary))
+      applyThemeColor('--theme-bg', user.backgroundColor || user.BackgroundColor, '0 0 0'); // #000000
+      applyThemeColor('--theme-text', user.textColor || user.TextColor, '255 255 255'); // #ffffff
+    } else {
+      document.documentElement.style.setProperty('--theme-primary', '255 0 110');
+      document.documentElement.style.setProperty('--theme-secondary', '0 255 255');
+      document.documentElement.style.setProperty('--theme-bg', '0 0 0');
+      document.documentElement.style.setProperty('--theme-text', '255 255 255');
+    }
+  }, [user?.themeColor, user?.ThemeColor, user?.secondaryColor, user?.SecondaryColor, user?.backgroundColor, user?.BackgroundColor, user?.textColor, user?.TextColor]);
+
+
   // Global Escape Listener for App-level Modals and Navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -2102,7 +2135,7 @@ function App() {
           monitorImageUrl: getMediaUrl(rawData?.monitorImageUrl || rawData?.MonitorImageUrl) || user?.monitorImageUrl,
           monitorBackgroundColor: rawData?.monitorBackgroundColor || rawData?.MonitorBackgroundColor || user?.monitorBackgroundColor || '#000000',
           monitorIsGlass: rawData?.monitorIsGlass !== undefined ? rawData?.monitorIsGlass : (rawData?.MonitorIsGlass !== undefined ? rawData?.MonitorIsGlass : (user?.monitorIsGlass || false)),
-          themeColor: rawData?.themeColor || rawData?.ThemeColor || user?.themeColor || '#ff006e',
+          themeColor: rawData?.themeColor || rawData?.ThemeColor || user?.themeColor || 'rgb(var(--theme-primary))',
           textColor: rawData?.textColor || rawData?.TextColor || user?.textColor || '#ffffff',
           backgroundColor: rawData?.backgroundColor || rawData?.BackgroundColor || user?.backgroundColor || '#000000',
           isGlass: rawData?.isGlass !== undefined ? rawData?.isGlass : (rawData?.IsGlass !== undefined ? rawData?.IsGlass : (user?.isGlass || false)),
@@ -2782,7 +2815,7 @@ function App() {
   };
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-[#020202] text-[#ff006e] font-mono selection:bg-[#ff006e] selection:text-black overflow-hidden">
+    <div className="h-[100dvh] flex flex-col bg-[#020202] text-fatale font-mono selection:bg-fatale selection:text-black overflow-hidden">
       <ElectronTitleBar />
       <div className="flex-1 flex overflow-hidden relative">
       {/* Hidden Global Ingest Inputs */}
@@ -3085,7 +3118,7 @@ function App() {
         {showGlobalGoLive && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[500] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/98 backdrop-blur-md" onClick={() => setShowGlobalGoLive(false)} />
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative w-full max-w-lg bg-[#000000] border border-white/10 p-8 shadow-[0_0_100px_rgba(0,0,0,1)] rounded-sm">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative w-full max-w-lg bg-systemBg border border-white/10 p-8 shadow-[0_0_100px_rgba(0,0,0,1)] rounded-sm">
               {/* HUD Elements */}
               <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-white/5 pointer-events-none" />
               <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-white/5 pointer-events-none" />
@@ -3093,13 +3126,13 @@ function App() {
               <div className="flex justify-between items-start mb-10">
                 <div className="space-y-1">
                   <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-white/5 border border-white/10 rounded-sm">
-                    <div className="w-1 h-1 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_8px_#ff006e]" />
+                    <div className="w-1 h-1 rounded-full bg-fatale animate-pulse shadow-[0_0_8px_rgb(var(--theme-primary))]" />
                     <span className="text-[8px] mono font-black text-white/40 tracking-[0.4em] uppercase">SIGNAL_BROADCAST_INIT</span>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowGlobalGoLive(false)}
-                  className="text-white/20 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300 transform active:scale-90"
+                  className="text-white/20 hover:text-fatale hover:rotate-90 transition-all duration-300 transform active:scale-90"
                 >
                   <X size={20} />
                 </button>
@@ -3107,11 +3140,11 @@ function App() {
 
               {activeStation && String(activeStation.artistUserId || activeStation.ArtistUserId) === String(user?.id || user?.Id) ? (
                 <div className="space-y-6 text-center py-6">
-                  <div className="text-[10px] font-black uppercase text-[#ff006e] tracking-widest animate-pulse">
+                  <div className="text-[10px] font-black uppercase text-fatale tracking-widest animate-pulse">
                     [ TRANSMISSION_ACTIVE ]
                   </div>
                   <div className="text-xs font-mono text-white/80">
-                    Your station is currently live: <span className="text-[#ff006e] font-black">{activeStation.sessionTitle || activeStation.SessionTitle}</span>
+                    Your station is currently live: <span className="text-fatale font-black">{activeStation.sessionTitle || activeStation.SessionTitle}</span>
                   </div>
                   <div className="pt-6">
                     <button
@@ -3130,7 +3163,7 @@ function App() {
                       type="text"
                       value={goLiveFormData.sessionTitle}
                       onChange={e => setGoLiveFormData(p => ({ ...p, sessionTitle: e.target.value }))}
-                      className="w-full bg-[#050505] border border-white/5 p-4 text-white font-black outline-none focus:border-[#ff006e]/40 tracking-widest text-xs transition-all placeholder:text-white/5"
+                      className="w-full bg-[#050505] border border-white/5 p-4 text-white font-black outline-none focus:border-fatale/40 tracking-widest text-xs transition-all placeholder:text-white/5"
                       placeholder="establish_session_id..."
                     />
                   </div>
@@ -3141,7 +3174,7 @@ function App() {
                       <select
                         value={goLiveFormData.sectorId ?? ''}
                         onChange={e => setGoLiveFormData(p => ({ ...p, sectorId: e.target.value === '' ? null : Number(e.target.value) }))}
-                        className="w-full bg-black/60 border border-[#ff006e]/20 hover:border-[#ff006e]/50 focus:border-[#ff006e]/60 p-3 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
+                        className="w-full bg-black/60 border border-fatale/20 hover:border-fatale/50 focus:border-fatale/60 p-3 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
                       >
                         <option value="">ALL_SECTORS // UNALLOCATED</option>
                         {SECTORS.map(s => (
@@ -3149,12 +3182,12 @@ function App() {
                         ))}
                       </select>
                       <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                        <ChevronDown size={12} className="text-[#ff006e]/40" />
+                        <ChevronDown size={12} className="text-fatale/40" />
                       </div>
                       {goLiveFormData.sectorId !== null && goLiveFormData.sectorId !== '' && (
                         <div
                           className="absolute left-0 top-0 bottom-0 w-0.5 pointer-events-none"
-                          style={{ backgroundColor: SECTORS[goLiveFormData.sectorId]?.color || '#ff006e', boxShadow: `0 0 8px ${SECTORS[goLiveFormData.sectorId]?.color || '#ff006e'}` }}
+                          style={{ backgroundColor: SECTORS[goLiveFormData.sectorId]?.color || 'rgb(var(--theme-primary))', boxShadow: `0 0 8px ${SECTORS[goLiveFormData.sectorId]?.color || 'rgb(var(--theme-primary))'}` }}
                         />
                       )}
                     </div>
@@ -3172,17 +3205,17 @@ function App() {
                       <select
                         value={goLiveFormData.sourceType}
                         onChange={e => setGoLiveFormData(p => ({ ...p, sourceType: e.target.value }))}
-                        className="w-full bg-black/60 border border-[#ff006e]/20 hover:border-[#ff006e]/50 focus:border-[#ff006e]/60 p-3 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
+                        className="w-full bg-black/60 border border-fatale/20 hover:border-fatale/50 focus:border-fatale/60 p-3 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
                       >
                         <option value="app">Direct App Deck Sync</option>
                         <option value="hardware">External Audio (Line-In/Mics/Hardware)</option>
                       </select>
                       <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                        <ChevronDown size={12} className="text-[#ff006e]/40" />
+                        <ChevronDown size={12} className="text-fatale/40" />
                       </div>
                     </div>
                     {goLiveFormData.sourceType === 'hardware' && (
-                      <div className="text-[7px] font-mono tracking-widest text-[#ff006e] ml-1 mt-1 animate-pulse">
+                      <div className="text-[7px] font-mono tracking-widest text-fatale ml-1 mt-1 animate-pulse">
                         WARNING: EXTERNAL AUDIO SOURCE WILL CAPTURE SELECTED INPUT DEVICE
                       </div>
                     )}
@@ -3193,7 +3226,7 @@ function App() {
                     <textarea
                       value={goLiveFormData.description}
                       onChange={e => setGoLiveFormData(p => ({ ...p, description: e.target.value }))}
-                      className="w-full bg-[#050505] border border-white/5 p-4 text-white font-medium outline-none focus:border-[#ff006e]/20 min-h-[100px] text-[10px] resize-none transition-all placeholder:text-white/5"
+                      className="w-full bg-[#050505] border border-white/5 p-4 text-white font-medium outline-none focus:border-fatale/20 min-h-[100px] text-[10px] resize-none transition-all placeholder:text-white/5"
                       placeholder="Optional signal details..."
                     />
                   </div>
@@ -3201,7 +3234,7 @@ function App() {
                     <button
                       onClick={() => handleGlobalGoLive()}
                       disabled={!goLiveFormData.sessionTitle.trim()}
-                      className="w-full py-4 border border-[#ff006e] bg-[#ff006e]/10 text-[#ff006e] text-[10px] font-black uppercase tracking-widest transition-all hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_40px_rgba(255,0,110,0.4)] disabled:opacity-50 disabled:shadow-none"
+                      className="w-full py-4 border border-fatale bg-fatale/10 text-fatale text-[10px] font-black uppercase tracking-widest transition-all hover:bg-fatale hover:text-black hover:shadow-[0_0_40px_rgba(255,0,110,0.4)] disabled:opacity-50 disabled:shadow-none"
                     >
                       Init_Broadcast
                     </button>
@@ -3229,11 +3262,11 @@ function App() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[500] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" onClick={() => { setShowGlobalIngest(false); setIngestMode('ALL'); }} />
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative w-full max-w-xl text-center space-y-8 bg-black p-8 border border-white/10">
-              <button onClick={() => { setShowGlobalIngest(false); setIngestMode('ALL'); }} className="absolute top-4 right-4 p-2 text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300">
+              <button onClick={() => { setShowGlobalIngest(false); setIngestMode('ALL'); }} className="absolute top-4 right-4 p-2 text-fatale/40 hover:text-fatale hover:rotate-90 transition-all duration-300">
                 <X size={20} />
               </button>
               <div className="space-y-4">
-                <p className="text-[10px] text-[#ff006e] mono uppercase tracking-[0.6em] animate-pulse">
+                <p className="text-[10px] text-fatale mono uppercase tracking-[0.6em] animate-pulse">
                     {ingestMode === 'JOURNAL' ? '/ New Journal Entry /' : '/ New Transmission /'}
                 </p>
                 <div className="flex items-center gap-3 justify-center">
@@ -3246,29 +3279,29 @@ function App() {
 
               <div className="space-y-6 text-left">
                   <div className="space-y-2">
-                      <label className="text-[10px] text-[#ff006e]/60 uppercase tracking-widest">Post Content (Required)</label>
+                      <label className="text-[10px] text-fatale/60 uppercase tracking-widest">Post Content (Required)</label>
                       <textarea 
                           value={postText}
                           onChange={(e) => setPostText(e.target.value)}
-                          className="w-full bg-[#050505] border border-white/5 p-4 text-white text-xs outline-none focus:border-[#ff006e]/40 min-h-[120px] resize-none font-sans"
+                          className="w-full bg-[#050505] border border-white/5 p-4 text-white text-xs outline-none focus:border-fatale/40 min-h-[120px] resize-none font-sans"
                           placeholder="What's on your mind?..."
                       />
                   </div>
                   {ingestMode !== 'JOURNAL' && (
                       <div className="space-y-2">
-                          <label className="text-[10px] text-[#ff006e]/60 uppercase tracking-widest">Attach Media (Optional)</label>
+                          <label className="text-[10px] text-fatale/60 uppercase tracking-widest">Attach Media (Optional)</label>
                           <input 
                               type="file"
                               accept="image/*,video/*"
                               onChange={(e) => setPostFile(e.target.files[0])}
-                              className="w-full bg-[#050505] border border-white/5 p-4 text-white text-xs outline-none focus:border-[#ff006e]/40 font-sans"
+                              className="w-full bg-[#050505] border border-white/5 p-4 text-white text-xs outline-none focus:border-fatale/40 font-sans"
                           />
                       </div>
                   )}
                   <button
                       onClick={handleNewPostSubmit}
                       disabled={!postText.trim() || isSubmittingPost}
-                      className="w-full py-4 bg-[#ff006e]/10 border border-[#ff006e] text-[#ff006e] text-[10px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all disabled:opacity-30 disabled:pointer-events-none"
+                      className="w-full py-4 bg-fatale/10 border border-fatale text-fatale text-[10px] font-black uppercase tracking-widest hover:bg-fatale hover:text-black transition-all disabled:opacity-30 disabled:pointer-events-none"
                   >
                       {isSubmittingPost ? 'TRANSMITTING...' : 'TRANSMIT_SIGNAL'}
                   </button>
@@ -3358,13 +3391,13 @@ const LoginView = ({ onLogin }) => (
     initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -20 }}
     className="h-screen flex flex-col items-center justify-center p-6 relative"
   >
-    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#ff006e15_0%,_transparent_70%)] animate-pulse" />
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgb(var(--theme-primary))15_0%,_transparent_70%)] animate-pulse" />
     <div className="z-10 text-center space-y-12">
-      <h1 className="text-7xl font-black italic tracking-tighter text-white drop-shadow-[0_0_20px_#ff006e]">
-        CYBER<span className="text-[#ff006e]">GOTH</span>
+      <h1 className="text-7xl font-black italic tracking-tighter text-white drop-shadow-[0_0_20px_rgb(var(--theme-primary))]">
+        CYBER<span className="text-fatale">GOTH</span>
       </h1>
-      <div className="bg-black/40 p-8 border border-[#ff006e]/20 backdrop-blur-xl rounded-2xl space-y-4">
-        <button onClick={onLogin} className="w-full bg-[#ff006e] text-black font-black py-4 px-12 rounded-sm hover:bg-white transition-all shadow-[0_0_30px_#ff006e50] uppercase italic tracking-tighter">
+      <div className="bg-black/40 p-8 border border-fatale/20 backdrop-blur-xl rounded-2xl space-y-4">
+        <button onClick={onLogin} className="w-full bg-fatale text-black font-black py-4 px-12 rounded-sm hover:bg-white transition-all shadow-[0_0_30px_rgb(var(--theme-primary))50] uppercase italic tracking-tighter">
           ENTRAR AL SISTEMA
         </button>
       </div>
@@ -3483,9 +3516,9 @@ const Dashboard = React.memo(({
     if (activeView === 'profile') {
       // Profile handles its own theme via onThemeChange
     } else {
-      root.style.setProperty('--theme-color', '#ff006e');
+      root.style.setProperty('--theme-color', 'rgb(var(--theme-primary))');
       root.style.setProperty('--theme-color-rgb', '255, 0, 110');
-      root.style.setProperty('--text-color', '#ff006e');
+      root.style.setProperty('--text-color', 'rgb(var(--theme-primary))');
       root.style.setProperty('--text-color-rgb', '255, 0, 110');
     }
   }, [activeView]);
@@ -3507,7 +3540,7 @@ const Dashboard = React.memo(({
   };
 
   return (
-    <div className="flex h-screen h-full w-full overflow-hidden relative bg-black bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-[#1a1a1a] via-[#050505] to-[#000000]">
+    <div className="flex h-screen h-full w-full overflow-hidden relative bg-black bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-[#1a1a1a] via-[#050505] to-systemBg">
       {/* Global Noise Texture */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-0" />
 
@@ -3921,10 +3954,10 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
         title="EXPAND_PLAYER"
       >
         {/* Subtle HUD bracket holding the crosshair */}
-        <div className="absolute bottom-2 right-2 lg:bottom-1 lg:right-1 w-4 h-4 border-b border-r border-[#ff006e]/20 group-hover/min:border-[#ff006e]/60 transition-colors pointer-events-none" />
+        <div className="absolute bottom-2 right-2 lg:bottom-1 lg:right-1 w-4 h-4 border-b border-r border-fatale/20 group-hover/min:border-fatale/60 transition-colors pointer-events-none" />
         
         {/* The minimal plus crosshair */}
-        <Plus size={16} strokeWidth={2.5} className="relative z-10 text-[#ff006e]/40 group-hover/min:text-[#ff006e] group-hover/min:drop-shadow-[0_0_8px_#ff006e] transition-all group-active/min:scale-90" />
+        <Plus size={16} strokeWidth={2.5} className="relative z-10 text-fatale/40 group-hover/min:text-fatale group-hover/min:drop-shadow-[0_0_8px_rgb(var(--theme-primary))] transition-all group-active/min:scale-90" />
       </motion.div>
     );
   }
@@ -3949,15 +3982,15 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
       <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-fixed mix-blend-screen" />
 
       {/* Cyberpunk HUD Corner Brackets (Desktop) */}
-      <div className="hidden lg:block absolute top-0 left-0 w-3 h-3 border-t border-l border-[#ff006e]/40 pointer-events-none" />
-      <div className="hidden lg:block absolute top-0 right-0 w-3 h-3 border-t border-r border-[#ff006e]/40 pointer-events-none" />
-      <div className="hidden lg:block absolute bottom-0 left-0 w-3 h-3 border-b border-l border-[#ff006e]/40 pointer-events-none" />
-      <div className="hidden lg:block absolute bottom-0 right-0 w-3 h-3 border-b border-r border-[#ff006e]/40 pointer-events-none" />
+      <div className="hidden lg:block absolute top-0 left-0 w-3 h-3 border-t border-l border-fatale/40 pointer-events-none" />
+      <div className="hidden lg:block absolute top-0 right-0 w-3 h-3 border-t border-r border-fatale/40 pointer-events-none" />
+      <div className="hidden lg:block absolute bottom-0 left-0 w-3 h-3 border-b border-l border-fatale/40 pointer-events-none" />
+      <div className="hidden lg:block absolute bottom-0 right-0 w-3 h-3 border-b border-r border-fatale/40 pointer-events-none" />
 
       {/* --- MINIMIZE TOGGLE (Top Right) --- */}
       <button 
         onClick={(e) => { e.stopPropagation(); onToggleMinimize(); }}
-        className="absolute top-1 right-2 z-50 p-1 text-white/20 hover:text-[#ff006e] transition-all group/minitoggle scale-75 lg:scale-100"
+        className="absolute top-1 right-2 z-50 p-1 text-white/20 hover:text-fatale transition-all group/minitoggle scale-75 lg:scale-100"
         title="MINIMIZE_PLAYER"
       >
         <Minus size={14} className="group-hover/minitoggle:translate-y-0.5 transition-transform" />
@@ -3965,28 +3998,28 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
 
       {/* Track Info (Click to expand) */}
       <div className={`flex items-center gap-3 lg:gap-4 flex-1 cursor-pointer group/info min-w-0 z-10 relative ${isMobile ? 'w-full pr-6' : ''}`} onClick={onExpand}>
-        <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-sm border flex items-center justify-center relative overflow-hidden shrink-0 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.5)] ${isMessages ? 'bg-black border-white/5' : 'bg-[#0a0a0a] border-white/10 group-hover/info:border-[#ff006e]/50 group-hover/info:shadow-[0_0_20px_rgba(255,0,110,0.2)]'}`}>
+        <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-sm border flex items-center justify-center relative overflow-hidden shrink-0 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.5)] ${isMessages ? 'bg-black border-white/5' : 'bg-[#0a0a0a] border-white/10 group-hover/info:border-fatale/50 group-hover/info:shadow-[0_0_20px_rgba(255,0,110,0.2)]'}`}>
           {activeStation ? (
-            <Radio size={18} className={`transition-all duration-500 z-10 relative text-[#ff006e]`} />
+            <Radio size={18} className={`transition-all duration-500 z-10 relative text-fatale`} />
           ) : track?.cover || track?.thumbnail ? (
             <img src={track.cover || track.thumbnail} alt="Cover" className="w-full h-full object-cover filter brightness-[0.7] contrast-[1.2] saturate-[0.8] group-hover/info:filter-none transition-all duration-500 z-10 relative" />
           ) : (
-            <Music size={18} className={`transition-all duration-500 z-10 relative ${isMessages ? 'text-white/50' : 'text-[#ff006e]/40 group-hover/info:text-[#ff006e] group-hover/info:drop-shadow-[0_0_8px_#ff006e]'}`} />
+            <Music size={18} className={`transition-all duration-500 z-10 relative ${isMessages ? 'text-white/50' : 'text-fatale/40 group-hover/info:text-fatale group-hover/info:drop-shadow-[0_0_8px_rgb(var(--theme-primary))]'}`} />
           )}
         </div>
         <div className="flex-1 min-w-0 overflow-hidden flex flex-col justify-center gap-0.5">
-          <h4 className={`text-[11px] lg:text-[13px] font-black uppercase truncate transition-colors leading-none tracking-wide ${isMessages ? 'text-white' : 'text-white group-hover/info:text-transparent group-hover/info:bg-clip-text group-hover/info:bg-gradient-to-r group-hover/info:from-white group-hover/info:to-[#ff006e]'}`}>
+          <h4 className={`text-[11px] lg:text-[13px] font-black uppercase truncate transition-colors leading-none tracking-wide ${isMessages ? 'text-white' : 'text-white group-hover/info:text-transparent group-hover/info:bg-clip-text group-hover/info:bg-gradient-to-r group-hover/info:from-white group-hover/info:to-fatale'}`}>
             {activeStation ? activeStation.stationName || `Station ${activeStation.stationId}` : track?.title || 'No Track'}
           </h4>
-          <p className={`text-[9px] lg:text-[10px] font-bold uppercase truncate tracking-widest leading-none flex items-center gap-2 ${isMessages ? 'text-white/40' : 'text-[#ff006e]/50 group-hover/info:text-[#ff006e]/90'}`}>
+          <p className={`text-[9px] lg:text-[10px] font-bold uppercase truncate tracking-widest leading-none flex items-center gap-2 ${isMessages ? 'text-white/40' : 'text-fatale/50 group-hover/info:text-fatale/90'}`}>
             {activeStation ? (
               <>
                 {isReceivingLiveAudio ? (
-                  <span className="text-[8px] px-1 py-[1px] bg-[#ff006e] text-black rounded-sm animate-pulse whitespace-nowrap font-black">
+                  <span className="text-[8px] px-1 py-[1px] bg-fatale text-black rounded-sm animate-pulse whitespace-nowrap font-black">
                     ▶ LIVE AUDIO
                   </span>
                 ) : (
-                  <span className="text-[8px] px-1 py-[1px] bg-[#ff006e]/20 text-[#ff006e] rounded-sm animate-pulse whitespace-nowrap">
+                  <span className="text-[8px] px-1 py-[1px] bg-fatale/20 text-fatale rounded-sm animate-pulse whitespace-nowrap">
                     [ TUNED_IN ]
                   </span>
                 )}
@@ -3997,7 +4030,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
             )}
           </p>
           {!activeStation && track?.isBroadcast && (
-            <span className="text-[7px] font-black text-[#ff006e] border border-[#ff006e]/30
+            <span className="text-[7px] font-black text-fatale border border-fatale/30
                             px-1 uppercase tracking-widest animate-pulse ml-1 w-max mt-0.5">
               LIVE
             </span>
@@ -4016,7 +4049,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
               onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
               className={`w-9 h-9 flex items-center justify-center rounded-sm border transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(0,0,0,0.4)] ${isMessages 
                 ? 'bg-transparent border-white/20 text-white hover:border-white/60' 
-                : 'bg-black/60 border-white/10 text-[#ff006e] hover:bg-[#ff006e]/10 hover:border-[#ff006e]/50'}`}
+                : 'bg-black/60 border-white/10 text-fatale hover:bg-fatale/10 hover:border-fatale/50'}`}
             >
               {isPlaying ? (
                 <Pause size={15} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
@@ -4031,7 +4064,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
             {isBroadcasting && (
               <button 
                 onClick={(e) => { e.stopPropagation(); onOpenMixer(); }}
-                className="p-1.5 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] rounded-sm hover:bg-[#ff006e] hover:text-black transition-all"
+                className="p-1.5 bg-fatale/10 border border-fatale/30 text-fatale rounded-sm hover:bg-fatale hover:text-black transition-all"
                 title="OPEN_MIXER_CONSOLE"
               >
                 <Radio size={14} className="animate-pulse" />
@@ -4065,29 +4098,29 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
 
             <Heart
               size={16}
-              className={`cursor-pointer transition-all duration-300 ${track?.isLiked ? 'text-[#ff006e] fill-[#ff006e] drop-shadow-[0_0_8px_rgba(255,0,110,0.8)]' : 'text-white/20 hover:text-[#ff006e] hover:drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]'}`}
+              className={`cursor-pointer transition-all duration-300 ${track?.isLiked ? 'text-fatale fill-fatale drop-shadow-[0_0_8px_rgba(255,0,110,0.8)]' : 'text-white/20 hover:text-fatale hover:drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]'}`}
               onClick={(e) => { e.stopPropagation(); onLike && onLike(track); }}
             />
 
             {track && !activeStation && (
               <button
-                className="group/add relative w-8 h-8 flex items-center justify-center rounded-sm bg-black border border-white/10 hover:border-[#ff006e]/60 transition-all duration-300 font-mono font-black overflow-hidden shadow-lg"
+                className="group/add relative w-8 h-8 flex items-center justify-center rounded-sm bg-black border border-white/10 hover:border-fatale/60 transition-all duration-300 font-mono font-black overflow-hidden shadow-lg"
                 title="Add to Playlist"
                 onClick={(e) => { 
                   e.stopPropagation(); 
                   onPlaylistAddClick?.(track);
                 }}
               >
-                <div className="absolute inset-0 bg-[#ff006e]/10 opacity-0 group-hover/add:opacity-100 transition-opacity" />
-                <Plus size={15} className="text-white/40 group-hover/add:text-[#ff006e] group-hover/add:drop-shadow-[0_0_8px_rgba(255,0,110,0.8)] transition-all relative z-10" />
+                <div className="absolute inset-0 bg-fatale/10 opacity-0 group-hover/add:opacity-100 transition-opacity" />
+                <Plus size={15} className="text-white/40 group-hover/add:text-fatale group-hover/add:drop-shadow-[0_0_8px_rgba(255,0,110,0.8)] transition-all relative z-10" />
               </button>
             )}
 
             <div onClick={(e) => { e.stopPropagation(); onToggleMute && onToggleMute(); }} className="cursor-pointer py-1">
               {isMuted || volume === 0 ? (
-                <VolumeX size={17} className="text-[#ff006e] drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]" />
+                <VolumeX size={17} className="text-fatale drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]" />
               ) : (
-                <Volume2 size={17} className="text-white/30 hover:text-[#ff006e] hover:drop-shadow-[0_0_8px_rgba(255,0,110,0.6)] transition-all duration-300" />
+                <Volume2 size={17} className="text-white/30 hover:text-fatale hover:drop-shadow-[0_0_8px_rgba(255,0,110,0.6)] transition-all duration-300" />
               )}
             </div>
           </div>
@@ -4103,7 +4136,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
               onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
               className={`w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-sm border transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(0,0,0,0.4)] ${isMessages 
                 ? 'bg-transparent border-white/20 text-white hover:border-white/60' 
-                : 'bg-black/60 border-white/10 text-[#ff006e] hover:bg-[#ff006e]/10 hover:border-[#ff006e]/50 hover:shadow-[0_0_20px_rgba(255,0,110,0.2)]'}`}
+                : 'bg-black/60 border-white/10 text-fatale hover:bg-fatale/10 hover:border-fatale/50 hover:shadow-[0_0_20px_rgba(255,0,110,0.2)]'}`}
             >
               {isPlaying ? (
                 <Pause size={18} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
@@ -4118,7 +4151,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
             {isBroadcasting && (
               <button 
                 onClick={(e) => { e.stopPropagation(); onOpenMixer(); }}
-                className="ml-2 p-2 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] rounded-sm hover:bg-[#ff006e] hover:text-black transition-all shadow-[0_0_15px_rgba(255,0,110,0.2)]"
+                className="ml-2 p-2 bg-fatale/10 border border-fatale/30 text-fatale rounded-sm hover:bg-fatale hover:text-black transition-all shadow-[0_0_15px_rgba(255,0,110,0.2)]"
                 title="OPEN_MIXER_CONSOLE"
               >
                 <Radio size={16} className="animate-pulse" />
@@ -4154,30 +4187,30 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
 
             <Heart
               size={18}
-              className={`cursor-pointer transition-all duration-300 ${track?.isLiked ? 'text-[#ff006e] fill-[#ff006e] drop-shadow-[0_0_8px_rgba(255,0,110,0.8)]' : 'text-white/20 hover:text-[#ff006e] hover:drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]'}`}
+              className={`cursor-pointer transition-all duration-300 ${track?.isLiked ? 'text-fatale fill-fatale drop-shadow-[0_0_8px_rgba(255,0,110,0.8)]' : 'text-white/20 hover:text-fatale hover:drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]'}`}
               onClick={(e) => { e.stopPropagation(); onLike && onLike(track); }}
             />
 
             {track && !activeStation && (
               <button
-                className="group/add relative w-8 h-8 flex items-center justify-center rounded-sm bg-black border border-white/10 hover:border-[#ff006e]/60 transition-all duration-300 font-mono font-black overflow-hidden shadow-lg"
+                className="group/add relative w-8 h-8 flex items-center justify-center rounded-sm bg-black border border-white/10 hover:border-fatale/60 transition-all duration-300 font-mono font-black overflow-hidden shadow-lg"
                 title="Add to Playlist"
                 onClick={(e) => { 
                   e.stopPropagation(); 
                   onPlaylistAddClick?.(track);
                 }}
               >
-                <div className="absolute inset-0 bg-[#ff006e]/10 opacity-0 group-hover/add:opacity-100 transition-opacity" />
-                <Plus size={16} className="text-white/40 group-hover/add:text-[#ff006e] group-hover/add:drop-shadow-[0_0_8px_rgba(255,0,110,0.8)] transition-all relative z-10" />
+                <div className="absolute inset-0 bg-fatale/10 opacity-0 group-hover/add:opacity-100 transition-opacity" />
+                <Plus size={16} className="text-white/40 group-hover/add:text-fatale group-hover/add:drop-shadow-[0_0_8px_rgba(255,0,110,0.8)] transition-all relative z-10" />
               </button>
             )}
 
             <div className="flex items-center gap-3 group/vol pr-2 relative">
               <div onClick={(e) => { e.stopPropagation(); onToggleMute && onToggleMute(); }} className="cursor-pointer py-2">
                 {isMuted || volume === 0 ? (
-                  <VolumeX size={18} className="text-[#ff006e] drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]" />
+                  <VolumeX size={18} className="text-fatale drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]" />
                 ) : (
-                  <Volume2 size={18} className="text-white/30 group-hover/vol:text-[#ff006e] group-hover/vol:drop-shadow-[0_0_8px_rgba(255,0,110,0.6)] transition-all duration-300" />
+                  <Volume2 size={18} className="text-white/30 group-hover/vol:text-fatale group-hover/vol:drop-shadow-[0_0_8px_rgba(255,0,110,0.6)] transition-all duration-300" />
                 )}
               </div>
               <div className="w-0 overflow-hidden group-hover/vol:w-20 transition-all duration-500 ease-in-out opacity-0 group-hover/vol:opacity-100 flex items-center">
@@ -4194,7 +4227,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
                     if (newVol > 0 && isMuted) { onToggleMute && onToggleMute(); } 
                   }}
                   onClick={(e) => e.stopPropagation()}
-                  className="w-full h-[3px] bg-white/10 rounded-full appearance-none cursor-pointer accent-[#ff006e] outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]"
+                  className="w-full h-[3px] bg-white/10 rounded-full appearance-none cursor-pointer accent-fatale outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]"
                 />
               </div>
             </div>
@@ -4224,9 +4257,9 @@ const CommentNode = ({ comment, depth = 0, setReplyingToComment, onDelete, curre
   };
 
   return (
-    <div className={`group/node relative ${depth > 0 ? 'ml-3 sm:ml-6 mt-3 sm:mt-4 pl-3 sm:pl-4 border-l border-[#ff006e]/20' : ''}`}>
+    <div className={`group/node relative ${depth > 0 ? 'ml-3 sm:ml-6 mt-3 sm:mt-4 pl-3 sm:pl-4 border-l border-fatale/20' : ''}`}>
       {depth > 0 && (
-        <div className="absolute top-5 left-0 w-2 sm:w-4 h-[1px] bg-[#ff006e]/20 -translate-x-full" />
+        <div className="absolute top-5 left-0 w-2 sm:w-4 h-[1px] bg-fatale/20 -translate-x-full" />
       )}
 
       <div className="space-y-3">
@@ -4238,7 +4271,7 @@ const CommentNode = ({ comment, depth = 0, setReplyingToComment, onDelete, curre
           className="group/comment relative cursor-pointer active:opacity-70 transition-opacity"
         >
           <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1 text-[7px] font-mono text-white/30 uppercase mb-1">
-            <span className={depth > 0 ? 'text-[#00ffff]' : 'text-[#ff006e] font-black'}>
+            <span className={depth > 0 ? 'text-secondary' : 'text-fatale font-black'}>
               [PKT_{hashStr(comment.Id).toString().substr(0, 4)}]
               {depth > 0 && '_RE'}
               {isOwner && <span className="text-[#00ff00] ml-1 opacity-80 brightness-125 select-none">[OWNER]</span>}
@@ -4262,7 +4295,7 @@ const CommentNode = ({ comment, depth = 0, setReplyingToComment, onDelete, curre
               {(showActions || window.innerWidth >= 640) && (
                 <button
                   onClick={(e) => { e.stopPropagation(); setReplyingToComment(comment); }}
-                  className="text-[#ff006e] hover:text-white transition-colors opacity-100 font-black"
+                  className="text-fatale hover:text-white transition-colors opacity-100 font-black"
                 >
                   [ REPLY ]
                 </button>
@@ -4270,7 +4303,7 @@ const CommentNode = ({ comment, depth = 0, setReplyingToComment, onDelete, curre
             </div>
           </div>
 
-          <div className={`border bg-black/40 group-hover/comment:border-[#ff006e]/40 transition-colors p-3 relative ${comment.IsOperator ? 'border-amber-400/30 shadow-[0_0_15px_rgba(251,191,36,0.05)]' : 'border-white/10'}`}>
+          <div className={`border bg-black/40 group-hover/comment:border-fatale/40 transition-colors p-3 relative ${comment.IsOperator ? 'border-amber-400/30 shadow-[0_0_15px_rgba(251,191,36,0.05)]' : 'border-white/10'}`}>
             <div className="absolute top-0 right-0 p-1 text-[7px] text-white/10 tabular-nums">
               {new Date(comment.CreatedAt).toLocaleTimeString('en-GB', { hour12: false })}
             </div>
@@ -4460,8 +4493,8 @@ const FeedContent = React.memo(({
 
   const getColor = (type) => {
     switch (type) {
-      case 'track': return 'text-[#ff006e]';
-      case 'studio': return 'text-[#00ffff]';
+      case 'track': return 'text-fatale';
+      case 'studio': return 'text-secondary';
       case 'journal': return 'text-[#9b5de5]';
       case 'system': return 'text-[#ffc300]';
       default: return 'text-white/60';
@@ -4728,14 +4761,14 @@ const FeedContent = React.memo(({
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col lg:flex-row h-full font-mono relative">
 
       {/* Izquierda: Acciones */}
-      <div className="hidden lg:block w-72 p-6 space-y-6 border-r border-[#ff006e]/5 relative z-20">
-        <div className="bg-[#0a0a0a]/50 backdrop-blur-xl border border-[#ff006e]/20 rounded-lg overflow-hidden">
-          <div className="p-3 bg-[#ff006e]/5 border-b border-[#ff006e]/10 flex justify-between items-center text-[10px] font-black uppercase text-white">:: TERMINAL_CMDS :: <ChevronDown size={14} /></div>
+      <div className="hidden lg:block w-72 p-6 space-y-6 border-r border-fatale/5 relative z-20">
+        <div className="bg-[#0a0a0a]/50 backdrop-blur-xl border border-fatale/20 rounded-lg overflow-hidden">
+          <div className="p-3 bg-fatale/5 border-b border-fatale/10 flex justify-between items-center text-[10px] font-black uppercase text-white">:: TERMINAL_CMDS :: <ChevronDown size={14} /></div>
           <div className="p-4 space-y-1">
-            <button onClick={() => setShowGlobalIngest(true)} className="w-full text-left p-2 text-[10px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e10] transition-all uppercase tracking-widest">{`> NEW_POST`} </button>
-            <button onClick={() => setShowGlobalUpload(true)} className="w-full text-left p-2 text-[10px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/5 transition-all uppercase tracking-widest">{`> UPLOAD_TRACK`} </button>
-            <button onClick={() => setShowGlobalGoLive(true)} className="w-full text-left p-2 text-[10px] text-[#ff006e]/80 hover:text-white hover:bg-[#ff006e]/5 transition-all uppercase tracking-widest flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_6px_#ff006e] shrink-0" />
+            <button onClick={() => setShowGlobalIngest(true)} className="w-full text-left p-2 text-[10px] text-fatale/80 hover:text-white hover:bg-[rgb(var(--theme-primary))10] transition-all uppercase tracking-widest">{`> NEW_POST`} </button>
+            <button onClick={() => setShowGlobalUpload(true)} className="w-full text-left p-2 text-[10px] text-fatale/80 hover:text-white hover:bg-fatale/5 transition-all uppercase tracking-widest">{`> UPLOAD_TRACK`} </button>
+            <button onClick={() => setShowGlobalGoLive(true)} className="w-full text-left p-2 text-[10px] text-fatale/80 hover:text-white hover:bg-fatale/5 transition-all uppercase tracking-widest flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-fatale animate-pulse shadow-[0_0_6px_rgb(var(--theme-primary))] shrink-0" />
               {`> GO_LIVE`}
             </button>
           </div>
@@ -4745,11 +4778,11 @@ const FeedContent = React.memo(({
 
         <div className="space-y-4 px-2">
           <div className="flex justify-between items-center px-2">
-            <h3 className="text-[10px] font-black uppercase text-[#00ffff] tracking-widest">:: COMMUNITY_LINKS ::</h3>
+            <h3 className="text-[10px] font-black uppercase text-secondary tracking-widest">:: COMMUNITY_LINKS ::</h3>
             {selectedCommunityId !== null && (
               <button
                 onClick={() => setSelectedCommunityId(null)}
-                className="text-[8px] text-[#00ffff]/40 hover:text-[#00ffff] uppercase tracking-tighter blink"
+                className="text-[8px] text-secondary/40 hover:text-secondary uppercase tracking-tighter blink"
               >
                 [ RESET_LINK ]
               </button>
@@ -4793,8 +4826,8 @@ const FeedContent = React.memo(({
                       setSelectedSector(null);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded transition-all border ${String(selectedCommunityId) === String(cid)
-                      ? 'bg-[#00ffff]/10 border-[#00ffff]/30'
-                      : 'bg-black/20 border-white/5 hover:border-[#00ffff]/20'}`}
+                      ? 'bg-secondary/10 border-secondary/30'
+                      : 'bg-black/20 border-white/5 hover:border-secondary/20'}`}
                   >
                     <div className="flex items-center gap-2 overflow-hidden">
                       <div className="w-1 h-1 rounded-full shadow-[0_0_5px_currentColor] shrink-0" style={{ backgroundColor: sectorColor, color: sectorColor }} />
@@ -4804,9 +4837,9 @@ const FeedContent = React.memo(({
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {isMemberBadge && (
-                        <span className="text-[7px] font-black text-[#00ffff]/60 border border-[#00ffff]/30 px-1 rounded-sm bg-[#00ffff]/5">MEMBER</span>
+                        <span className="text-[7px] font-black text-secondary/60 border border-secondary/30 px-1 rounded-sm bg-secondary/5">MEMBER</span>
                       )}
-                      {String(selectedCommunityId) === String(cid) && <Zap size={10} className="text-[#00ffff] animate-pulse" />}
+                      {String(selectedCommunityId) === String(cid) && <Zap size={10} className="text-secondary animate-pulse" />}
                     </div>
                   </button>
                 );
@@ -4820,9 +4853,9 @@ const FeedContent = React.memo(({
       <div className="flex-1 flex flex-col h-full bg-[#05050a]/40 relative">
 
         {loading && (
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#ff006e]/20 z-50 overflow-hidden" style={{ zIndex: 100 }}>
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-fatale/20 z-50 overflow-hidden" style={{ zIndex: 100 }}>
             <motion.div
-              className="h-full bg-[#ff006e] shadow-[0_0_10px_#ff006e]"
+              className="h-full bg-fatale shadow-[0_0_10px_rgb(var(--theme-primary))]"
               initial={{ x: "-100%" }}
               animate={{ x: "100%" }}
               transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
@@ -4831,12 +4864,12 @@ const FeedContent = React.memo(({
         )}
 
         {/* ── MOBILE HEADER / RELOAD CONTAINER ── */}
-        <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-[#ff006e]/10 px-4 py-2 flex items-center justify-between gap-4 shrink-0">
+        <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-fatale/10 px-4 py-2 flex items-center justify-between gap-4 shrink-0">
 
 
           <div className="hidden lg:flex items-center gap-2">
             <span className="text-[9px] text-white/20 font-black uppercase tracking-[0.2em]">{`TERMINAL_FEED_STREAM_V3`}</span>
-            <div className="w-24 h-px bg-[#ff006e]/10 border-t border-dashed border-[#ff006e]/20" />
+            <div className="w-24 h-px bg-fatale/10 border-t border-dashed border-fatale/20" />
           </div>
 
           <div className="flex items-center gap-1">
@@ -4846,7 +4879,7 @@ const FeedContent = React.memo(({
                 onClick={() => setFeedFilter(f)}
                 className={`px-3 py-1 text-[8px] font-black uppercase tracking-widest border transition-all ${
                   feedFilter === f
-                    ? 'border-[#ff006e]/60 bg-[#ff006e]/10 text-[#ff006e]'
+                    ? 'border-fatale/60 bg-fatale/10 text-fatale'
                     : 'border-white/5 text-white/20 hover:text-white/40'
                 }`}
               >
@@ -4858,7 +4891,7 @@ const FeedContent = React.memo(({
 <div className="flex lg:hidden items-center gap-1 ml-auto">
   <button
     onClick={() => { setMobilePanelTab('actions'); setMobilePanelOpen(true); }}
-    className="w-7 h-7 flex items-center justify-center border border-white/10 text-white/40 hover:text-[#ff006e] hover:border-[#ff006e]/40 transition-all rounded-sm"
+    className="w-7 h-7 flex items-center justify-center border border-white/10 text-white/40 hover:text-fatale hover:border-fatale/40 transition-all rounded-sm"
     title="Quick Actions"
   >
     <Plus size={16} />
@@ -4866,18 +4899,18 @@ const FeedContent = React.memo(({
   {(liveStations || []).length > 0 && (
     <button
       onClick={() => { setMobilePanelTab('stations'); setMobilePanelOpen(true); }}
-      className="flex items-center gap-1 px-2 py-1 border bg-[#ff006e]/10 border-[#ff006e]/40 text-[#ff006e] text-[8px] font-black uppercase tracking-widest transition-all"
+      className="flex items-center gap-1 px-2 py-1 border bg-fatale/10 border-fatale/40 text-fatale text-[8px] font-black uppercase tracking-widest transition-all"
     >
-      <span className="w-1 h-1 rounded-full bg-[#ff006e] animate-pulse shrink-0" />
+      <span className="w-1 h-1 rounded-full bg-fatale animate-pulse shrink-0" />
       {liveStations.length} LIVE
     </button>
   )}
 </div>
 
-<div className="bg-black/60 backdrop-blur-sm p-1 rounded-sm border border-[#ff006e]/10 shrink-0">
+<div className="bg-black/60 backdrop-blur-sm p-1 rounded-sm border border-fatale/10 shrink-0">
   <RefreshCw
     size={16}
-    className={`text-[#ff006e]/60 hover:text-[#ff006e] cursor-pointer transition-colors ${loading ? 'animate-spin' : ''}`}
+    className={`text-fatale/60 hover:text-fatale cursor-pointer transition-colors ${loading ? 'animate-spin' : ''}`}
     onClick={fetchFeed}
   />
 </div>
@@ -4888,12 +4921,12 @@ const FeedContent = React.memo(({
           {(liveStations || []).length > 0 && (
             <div className="lg:hidden -mx-6 px-4 mb-4">
               <div className="flex items-center gap-1.5 mb-2">
-                <span className="w-1 h-1 rounded-full bg-[#ff006e] animate-pulse" />
-                <span className="text-[8px] font-black text-[#ff006e]/60 uppercase tracking-widest">LIVE_FREQ</span>
+                <span className="w-1 h-1 rounded-full bg-fatale animate-pulse" />
+                <span className="text-[8px] font-black text-fatale/60 uppercase tracking-widest">LIVE_FREQ</span>
               </div>
               <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                 {(liveStations || []).map((station, idx) => {
-                  const sc = SECTORS[station.sectorId ?? station.SectorId]?.color || '#ff006e';
+                  const sc = SECTORS[station.sectorId ?? station.SectorId]?.color || 'rgb(var(--theme-primary))';
                   const isActive = activeStation && String(activeStation.id || activeStation.Id) === String(station.id || station.Id);
                   return (
                     <button
@@ -4901,7 +4934,7 @@ const FeedContent = React.memo(({
                       onClick={() => setActiveStation(station)}
                       className={`flex items-center gap-2 px-3 py-2 border rounded-sm shrink-0 transition-all ${
                         isActive
-                          ? 'border-[#ff006e]/60 bg-[#ff006e]/10'
+                          ? 'border-fatale/60 bg-fatale/10'
                           : 'border-white/10 bg-black/40 hover:border-white/30'
                       }`}
                     >
@@ -4910,7 +4943,7 @@ const FeedContent = React.memo(({
                         <div className="text-[9px] font-black uppercase text-white truncate max-w-[110px]">{station.sessionTitle || station.SessionTitle}</div>
                         <div className="text-[7px] font-mono text-white/30 uppercase truncate max-w-[110px]">{station.artistName || station.ArtistName}</div>
                       </div>
-                      {isActive && <Radio size={9} className="text-[#ff006e] animate-pulse shrink-0" />}
+                      {isActive && <Radio size={9} className="text-fatale animate-pulse shrink-0" />}
                     </button>
                   );
                 })}
@@ -4919,17 +4952,17 @@ const FeedContent = React.memo(({
           )}
 
           {selectedSector !== null && (
-            <div className="mb-6 p-4 bg-[#ff006e]/5 border border-[#ff006e]/20 rounded flex items-center justify-between">
+            <div className="mb-6 p-4 bg-fatale/5 border border-fatale/20 rounded flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-2 h-2 rounded-full bg-[#ff006e] shadow-[0_0_10px_#ff006e] animate-pulse" />
+                <div className="w-2 h-2 rounded-full bg-fatale shadow-[0_0_10px_rgb(var(--theme-primary))] animate-pulse" />
                 <div>
-                  <div className="text-[10px] font-black text-[#ff006e] tracking-[0.3em] uppercase">FREQ // {SECTORS[selectedSector].name.replace(' ', '_')}</div>
+                  <div className="text-[10px] font-black text-fatale tracking-[0.3em] uppercase">FREQ // {SECTORS[selectedSector].name.replace(' ', '_')}</div>
                   <div className="text-[8px] text-white/30 uppercase tracking-widest">{SECTORS[selectedSector].desc}</div>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedSector(null)}
-                className="px-3 py-1 border border-[#ff006e]/30 text-[#ff006e] text-[8px] font-black uppercase hover:bg-[#ff006e] hover:text-black transition-all"
+                className="px-3 py-1 border border-fatale/30 text-fatale text-[8px] font-black uppercase hover:bg-fatale hover:text-black transition-all"
               >
                 DISCONNECT_LINK
               </button>
@@ -4938,7 +4971,7 @@ const FeedContent = React.memo(({
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4 opacity-50">
-              <div className="text-[10px] text-[#ff006e] blink uppercase tracking-[0.4em]">Deciphering Signal Packets...</div>
+              <div className="text-[10px] text-fatale blink uppercase tracking-[0.4em]">Deciphering Signal Packets...</div>
             </div>
           ) : (
             <>
@@ -4955,24 +4988,24 @@ const FeedContent = React.memo(({
                 return true;
               }).length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4 opacity-40">
-                  <div className="text-[10px] text-[#ff006e] uppercase tracking-[0.4em]">
+                  <div className="text-[10px] text-fatale uppercase tracking-[0.4em]">
                     {selectedSector !== null ? `-- NO_SIGNALS_IN_SECTOR --` : (selectedCommunityId !== null ? `-- NO_COMMUNITY_SIGNALS --` : `-- NO_SIGNALS_DETECTED --`)}
                   </div>
                 </div>
               ) : (
                 <>
                   {selectedCommunityId !== null && (
-                    <div className="mb-6 p-4 bg-[#00ffff]/5 border border-[#00ffff]/20 rounded flex items-center justify-between">
+                    <div className="mb-6 p-4 bg-secondary/5 border border-secondary/20 rounded flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="w-2 h-2 rounded-full bg-[#00ffff] shadow-[0_0_10px_#00ffff] animate-pulse" />
+                        <div className="w-2 h-2 rounded-full bg-secondary shadow-[0_0_10px_rgb(var(--theme-secondary))] animate-pulse" />
                         <div>
-                          <div className="text-[10px] font-black text-[#00ffff] tracking-[0.3em] uppercase">LINK // {allCommunities.find(c => String(c.id) === String(selectedCommunityId))?.name.toUpperCase().replace(' ', '_')}</div>
+                          <div className="text-[10px] font-black text-secondary tracking-[0.3em] uppercase">LINK // {allCommunities.find(c => String(c.id) === String(selectedCommunityId))?.name.toUpperCase().replace(' ', '_')}</div>
                           <div className="text-[8px] text-white/30 uppercase tracking-widest">Community signal link established.</div>
                         </div>
                       </div>
                       <button
                         onClick={() => setSelectedCommunityId(null)}
-                        className="px-3 py-1 border border-[#00ffff]/30 text-[#00ffff] text-[8px] font-black uppercase hover:bg-[#00ffff] hover:text-black transition-all"
+                        className="px-3 py-1 border border-secondary/30 text-secondary text-[8px] font-black uppercase hover:bg-secondary hover:text-black transition-all"
                       >
                         DISCONNECT_LINK
                       </button>
@@ -5017,7 +5050,7 @@ const FeedContent = React.memo(({
                     const getPostAccent = () => {
                       if (isMarketplace) return { color: '#ffaa00', glow: 'rgba(255, 170, 0, 0.18)' };
                       if (type === 'track' || type === 'album') return { color: '#00f0ff', glow: 'rgba(0, 240, 255, 0.18)' };
-                      if (type === 'studio') return { color: '#ff006e', glow: 'rgba(255, 0, 110, 0.18)' };
+                      if (type === 'studio') return { color: 'rgb(var(--theme-primary))', glow: 'rgba(255, 0, 110, 0.18)' };
                       if (type === 'journal') return { color: '#9d00ff', glow: 'rgba(157, 0, 255, 0.18)' };
                       return { color: '#ffffff', glow: 'rgba(255, 255, 255, 0.08)' };
                     };
@@ -5064,8 +5097,8 @@ const FeedContent = React.memo(({
                         <div key={item.Id} className="group hover:-translate-y-1 transition-all duration-300 hover:bg-white/[0.05] py-2 px-3 sm:py-4 sm:px-5 rounded border border-white/5 hover:border-white/10 relative mb-3 sm:mb-6 max-w-2xl mx-auto w-full bg-black/20 flex flex-col max-h-[80vh]" style={{ boxShadow: `0 12px 24px -4px ${accent.glow}` }}>
                           {!isOriginal && repostedBy && (
                             <div className="flex items-center gap-2 mb-1 px-1">
-                              <Repeat size={10} className="text-[#ff006e] animate-pulse" />
-                              <span className="text-[8px] font-black text-[#ff006e] uppercase tracking-[0.2em] bg-[#ff006e]/5 px-2 border border-[#ff006e]/20">
+                              <Repeat size={10} className="text-fatale animate-pulse" />
+                              <span className="text-[8px] font-black text-fatale uppercase tracking-[0.2em] bg-fatale/5 px-2 border border-fatale/20">
                                 [ RE_SIGNAL_FROM // @{repostedBy} ]
                               </span>
                             </div>
@@ -5079,7 +5112,7 @@ const FeedContent = React.memo(({
                                 <div className="flex items-center gap-2">
                                     <button
                                       onClick={() => navigateToProfile(item.ArtistUserId || item.artistUserId)}
-                                      className="text-[12px] text-white font-black uppercase tracking-tighter hover:text-[#ff006e] transition-colors"
+                                      className="text-[12px] text-white font-black uppercase tracking-tighter hover:text-fatale transition-colors"
                                     >
                                       {artist}
                                     </button>
@@ -5160,8 +5193,8 @@ const FeedContent = React.memo(({
                       <div key={item.Id} className="group hover:-translate-y-1 transition-all duration-300 hover:bg-white/[0.05] py-2 px-3 sm:py-4 sm:px-5 rounded border border-white/5 hover:border-white/10 relative mb-3 sm:mb-6 max-w-2xl mx-auto w-full bg-black/20 flex flex-col max-h-[80vh]" style={{ boxShadow: `0 12px 24px -4px ${accent.glow}` }}>
                         {!isOriginal && repostedBy && (
                           <div className="flex items-center gap-2 mb-1 px-1">
-                            <Repeat size={10} className="text-[#ff006e] animate-pulse" />
-                            <span className="text-[8px] font-black text-[#ff006e] uppercase tracking-[0.2em] bg-[#ff006e]/5 px-2 border border-[#ff006e]/20">
+                            <Repeat size={10} className="text-fatale animate-pulse" />
+                            <span className="text-[8px] font-black text-fatale uppercase tracking-[0.2em] bg-fatale/5 px-2 border border-fatale/20">
                               [ RE_SIGNAL_FROM // @{repostedBy} ]
                             </span>
                           </div>
@@ -5175,7 +5208,7 @@ const FeedContent = React.memo(({
                               <div className="flex items-center gap-2">
                                   <button
                                     onClick={() => navigateToProfile(item.ArtistUserId || item.artistUserId)}
-                                    className="text-[12px] text-white font-black uppercase tracking-tighter hover:text-[#ff006e] transition-colors"
+                                    className="text-[12px] text-white font-black uppercase tracking-tighter hover:text-fatale transition-colors"
                                   >
                                     {artist}
                                   </button>
@@ -5203,11 +5236,11 @@ const FeedContent = React.memo(({
                                 {imageUrl ? (
                                   <img src={imageUrl} className="w-full h-full object-cover opacity-80 group-hover/track:opacity-100 transition-opacity" alt="" />
                                 ) : (
-                                  <Music size={20} className="text-[#ff006e]/40" />
+                                  <Music size={20} className="text-fatale/40" />
                                 )}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="text-[11px] text-white font-black uppercase truncate group-hover/track:text-[#ff006e] transition-colors">{title}</div>
+                                <div className="text-[11px] text-white font-black uppercase truncate group-hover/track:text-fatale transition-colors">{title}</div>
                               </div>
                               <div className="w-8 h-8 rounded border border-white/10 flex items-center justify-center text-white/40 group-hover/track:bg-white/10 group-hover/track:text-white transition-all shadow-md">
                                 <Play size={14} fill="currentColor" className="drop-shadow-[0_0_5px_currentColor]" />
@@ -5353,21 +5386,21 @@ const FeedContent = React.memo(({
                           <div className="flex gap-6 text-[9px] font-black text-white/60 uppercase pt-2">
                             <button
                               onClick={() => handleFeedLike(item)}
-                              className={`flex items-center gap-1.5 transition-all group/social ${item.IsLiked ? 'text-[#ff006e]' : 'hover:text-[#ff006e]'}`}
+                              className={`flex items-center gap-1.5 transition-all group/social ${item.IsLiked ? 'text-fatale' : 'hover:text-fatale'}`}
                             >
                               <Heart size={12} fill={item.IsLiked ? "currentColor" : "none"} className={item.IsLiked ? 'scale-110' : 'group-hover/social:scale-110'} />
                               <span className="tracking-tighter">LIKE_{item.LikeCount || 0}</span>
                             </button>
                             <button
                               onClick={() => setReplyingTo(item)}
-                              className="flex items-center gap-1.5 hover:text-[#ff006e] transition-colors group/social"
+                              className="flex items-center gap-1.5 hover:text-fatale transition-colors group/social"
                             >
                               <MessageSquare size={12} className="group-hover/social:scale-110" />
                               <span className="tracking-tighter">REPLY_{item.CommentCount || 0}</span>
                             </button>
                             <button
                               onClick={() => handleFeedRepost(item)}
-                              className={`flex items-center gap-1.5 transition-all group/social ${item.IsReposted ? 'text-[#ff006e]' : 'hover:text-[#ff006e]'}`}
+                              className={`flex items-center gap-1.5 transition-all group/social ${item.IsReposted ? 'text-fatale' : 'hover:text-fatale'}`}
                             >
                               <Repeat size={12} className={item.IsReposted ? 'animate-pulse' : 'group-hover/social:scale-110'} />
                               <span className="tracking-tighter">RE_SYNC_{item.RepostCount || 0}</span>
@@ -5390,7 +5423,7 @@ const FeedContent = React.memo(({
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="w-full max-w-2xl hud-panel border border-[#ff006e]/30 rounded-sm overflow-hidden shadow-[0_0_100px_rgba(255,0,110,0.1)] relative"
+                className="w-full max-w-2xl hud-panel border border-fatale/30 rounded-sm overflow-hidden shadow-[0_0_100px_rgba(255,0,110,0.1)] relative"
               >
                 {/* Animated Scanline Overlay */}
                 <style>{`
@@ -5407,41 +5440,41 @@ const FeedContent = React.memo(({
                 </div>
 
                 {/* HUD Brackets Decor */}
-                <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[#ff006e]/40 z-[105]" />
-                <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-[#ff006e]/40 z-[105]" />
-                <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-[#ff006e]/40 z-[105]" />
-                <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-[#ff006e]/40 z-[105]" />
+                <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-fatale/40 z-[105]" />
+                <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-fatale/40 z-[105]" />
+                <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-fatale/40 z-[105]" />
+                <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-fatale/40 z-[105]" />
 
                 {/* Diagnostic Corners (Hidden on Mobile) */}
                 <div className="hidden sm:flex absolute top-12 left-2 flex-col gap-1 z-[105] opacity-20 pointer-events-none font-mono">
-                  <div className="text-[5px] text-[#ff006e]">LAT: 35.6895° N</div>
-                  <div className="text-[5px] text-[#ff006e]">LNG: 139.6917° E</div>
-                  <div className="text-[5px] text-[#ff006e]">ENC: RSA-4096</div>
+                  <div className="text-[5px] text-fatale">LAT: 35.6895° N</div>
+                  <div className="text-[5px] text-fatale">LNG: 139.6917° E</div>
+                  <div className="text-[5px] text-fatale">ENC: RSA-4096</div>
                 </div>
                 <div className="hidden sm:flex absolute top-12 right-2 flex-col items-end gap-1 z-[105] opacity-20 pointer-events-none font-mono">
-                  <div className="text-[5px] text-[#ff006e]">PKT_LOSS: 0.00%</div>
-                  <div className="text-[5px] text-[#ff006e]">BUFFER: 1024KB</div>
-                  <div className="text-[5px] text-[#ff006e]">SYNC: ESTABLISHED</div>
+                  <div className="text-[5px] text-fatale">PKT_LOSS: 0.00%</div>
+                  <div className="text-[5px] text-fatale">BUFFER: 1024KB</div>
+                  <div className="text-[5px] text-fatale">SYNC: ESTABLISHED</div>
                 </div>
 
-                <div className="px-5 py-3 border-b border-[#ff006e]/20 flex justify-between items-center bg-[#ff006e]/10 backdrop-blur-md">
+                <div className="px-5 py-3 border-b border-fatale/20 flex justify-between items-center bg-fatale/10 backdrop-blur-md">
                   <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_15px_#ff006e]" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-fatale animate-pulse shadow-[0_0_15px_rgb(var(--theme-primary))]" />
                     <div className="flex flex-col">
-                      <span className="text-[10px] font-black uppercase text-white tracking-[0.4em] drop-shadow-[0_0_8px_#ff006e]">SIGNAL_INTERCEPT_V2.5</span>
-                      <span className="text-[6px] font-mono text-[#ff006e]/60 tracking-[0.2em] -mt-0.5">UPLINK_STABLE // PORT_AUTH_8080</span>
+                      <span className="text-[10px] font-black uppercase text-white tracking-[0.4em] drop-shadow-[0_0_8px_rgb(var(--theme-primary))]">SIGNAL_INTERCEPT_V2.5</span>
+                      <span className="text-[6px] font-mono text-fatale/60 tracking-[0.2em] -mt-0.5">UPLINK_STABLE // PORT_AUTH_8080</span>
                     </div>
                   </div>
-                  <button onClick={() => setReplyingTo(null)} className="text-[#ff006e]/40 hover:text-[#ff006e] transition-all hover:rotate-90">
+                  <button onClick={() => setReplyingTo(null)} className="text-fatale/40 hover:text-fatale transition-all hover:rotate-90">
                     <X size={18} />
                   </button>
                 </div>
 
                 <div className="p-4 sm:p-8 space-y-6 sm:space-y-8 relative max-h-[85vh] overflow-y-auto no-scrollbar">
                   {/* Target Signal Header */}
-                  <div className="bg-[#050505] border-l-2 border-[#ff006e] p-4 relative group/target">
-                    <div className="absolute top-0 right-0 p-1 px-3 text-[7px] font-black uppercase tracking-[0.2em] bg-[#ff006e]/10 text-[#ff006e]">SOURCE_NODE_CAPTURED</div>
-                    <div className="text-[9px] text-[#ff006e]/80 font-black uppercase mb-1 tracking-widest">{replyingTo.Artist}</div>
+                  <div className="bg-[#050505] border-l-2 border-fatale p-4 relative group/target">
+                    <div className="absolute top-0 right-0 p-1 px-3 text-[7px] font-black uppercase tracking-[0.2em] bg-fatale/10 text-fatale">SOURCE_NODE_CAPTURED</div>
+                    <div className="text-[9px] text-fatale/80 font-black uppercase mb-1 tracking-widest">{replyingTo.Artist}</div>
                     <div className="text-[11px] text-white/90 leading-relaxed font-mono italic">
                       "{replyingTo.Title || replyingTo.Content}"
                     </div>
@@ -5451,8 +5484,8 @@ const FeedContent = React.memo(({
                   <div className="space-y-8 pb-4">
                     {loadingComments ? (
                       <div className="flex flex-col items-center justify-center py-12 gap-4 border border-white/5 bg-white/[0.02]">
-                        <RefreshCw className="animate-spin text-[#ff006e]" size={24} />
-                        <span className="text-[10px] text-[#ff006e] animate-pulse tracking-[0.5em]">HANDSHAKING_ENCRYPTED_SIGNAL...</span>
+                        <RefreshCw className="animate-spin text-fatale" size={24} />
+                        <span className="text-[10px] text-fatale animate-pulse tracking-[0.5em]">HANDSHAKING_ENCRYPTED_SIGNAL...</span>
                       </div>
                     ) : comments.length === 0 ? (
                       <div className="text-center py-12 border border-dashed border-white/5 rounded">
@@ -5480,7 +5513,7 @@ const FeedContent = React.memo(({
                         <div className="flex items-center gap-2">
                           <span className="text-amber-400">:: RE_SIGNAL_TO //</span>
                           <span className="text-white/60">@{replyingToComment.Username}</span>
-                          <button onClick={() => setReplyingToComment(null)} className="text-[#ff006e] hover:text-white ml-2 transition-colors">
+                          <button onClick={() => setReplyingToComment(null)} className="text-fatale hover:text-white ml-2 transition-colors">
                             <X size={14} />
                           </button>
                         </div>
@@ -5496,7 +5529,7 @@ const FeedContent = React.memo(({
                         value={commentText}
                         onChange={(e) => setCommentText(e.target.value.substring(0, 280))}
                         placeholder="Enter raw signal content..."
-                        className="w-full h-24 bg-black border border-white/10 focus:border-[#ff006e]/50 p-4 text-[11px] text-white outline-none resize-none font-mono placeholder:text-white/5 transition-all"
+                        className="w-full h-24 bg-black border border-white/10 focus:border-fatale/50 p-4 text-[11px] text-white outline-none resize-none font-mono placeholder:text-white/5 transition-all"
                       />
                     </div>
 
@@ -5504,16 +5537,16 @@ const FeedContent = React.memo(({
                       {/* Input Area Diagnostics (Hidden on Mobile) */}
                       <div className="hidden sm:flex flex-between items-center gap-4 flex-1">
                         <div className="flex flex-col gap-1">
-                          <span className="text-[7px] text-[#ff006e]/60 font-mono">ENCRYPTION: AES-256-GCM_V2</span>
+                          <span className="text-[7px] text-fatale/60 font-mono">ENCRYPTION: AES-256-GCM_V2</span>
                           <span className="text-[7px] text-white/20 font-mono">SIG_ID: {replyingTo.Id} // PKT_TYPE: {replyingTo.Type?.toUpperCase()}</span>
                         </div>
-                        <div className="flex-1 border-b border-[#ff006e]/10 border-dashed mx-4 mb-2" />
+                        <div className="flex-1 border-b border-fatale/10 border-dashed mx-4 mb-2" />
                       </div>
 
                       <button
                         onClick={submitComment}
                         disabled={isSubmittingComment || !commentText.trim()}
-                        className="w-full sm:w-auto px-8 py-2.5 bg-[#ff006e]/10 border border-[#ff006e]/40 text-[#ff006e] text-[10px] font-black uppercase tracking-[0.3em] hover:bg-[#ff006e] hover:text-black hover:shadow-[0_0_30px_rgba(255,0,110,0.3)] transition-all disabled:opacity-20 text-center"
+                        className="w-full sm:w-auto px-8 py-2.5 bg-fatale/10 border border-fatale/40 text-fatale text-[10px] font-black uppercase tracking-[0.3em] hover:bg-fatale hover:text-black hover:shadow-[0_0_30px_rgba(255,0,110,0.3)] transition-all disabled:opacity-20 text-center"
                       >
                         {isSubmittingComment ? 'TRANSMITTING...' : '[ BROADCAST_PAYLOAD ]'}
                       </button>
@@ -5544,10 +5577,10 @@ const FeedContent = React.memo(({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 26, stiffness: 300 }}
-            className="lg:hidden fixed inset-x-0 bottom-0 z-[200] bg-black border-t-2 border-[#ff006e]/30 shadow-[0_-20px_60px_rgba(0,0,0,0.8)] max-h-[70vh] flex flex-col"
+            className="lg:hidden fixed inset-x-0 bottom-0 z-[200] bg-black border-t-2 border-fatale/30 shadow-[0_-20px_60px_rgba(0,0,0,0.8)] max-h-[70vh] flex flex-col"
           >
             {/* Drag handle + header */}
-            <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-[#ff006e]/10 shrink-0">
+            <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-fatale/10 shrink-0">
               <div className="flex gap-2">
                 {[
                   ['actions', <Plus size={10} key="p" />, 'NEW'],
@@ -5557,12 +5590,12 @@ const FeedContent = React.memo(({
                     key={tab}
                     onClick={() => setMobilePanelTab(tab)}
                     className={`flex items-center gap-1 px-2 py-1 text-[9px] font-black uppercase tracking-widest border rounded-sm transition-all ${mobilePanelTab === tab
-                      ? 'border-[#ff006e]/50 bg-[#ff006e]/10 text-[#ff006e]'
+                      ? 'border-fatale/50 bg-fatale/10 text-fatale'
                       : 'border-white/5 text-white/30 hover:text-white/60'
-                      } ${tab === 'stations' && (liveStations||[]).length > 0 ? 'border-[#ff006e]/20' : ''}`}
+                      } ${tab === 'stations' && (liveStations||[]).length > 0 ? 'border-fatale/20' : ''}`}
                   >
                     {tab === 'stations' && (liveStations||[]).length > 0
-                      ? <span className="w-1 h-1 rounded-full bg-[#ff006e] animate-pulse shrink-0" />
+                      ? <span className="w-1 h-1 rounded-full bg-fatale animate-pulse shrink-0" />
                       : icon}
                     {label}
                   </button>
@@ -5570,7 +5603,7 @@ const FeedContent = React.memo(({
               </div>
               <button
                 onClick={() => setMobilePanelOpen(false)}
-                className="text-[#ff006e]/40 hover:text-[#ff006e] hover:rotate-90 transition-all duration-300 p-1"
+                className="text-fatale/40 hover:text-fatale hover:rotate-90 transition-all duration-300 p-1"
               >
                 <X size={16} />
               </button>
@@ -5584,14 +5617,14 @@ const FeedContent = React.memo(({
   <div className="space-y-3 pt-1">
     <button
       onClick={() => { setShowGlobalIngest(true); setMobilePanelOpen(false); }}
-      className="w-full px-4 py-4 border border-white/10 bg-black/20 hover:border-[#ff006e]/40 hover:bg-[#ff006e]/5 text-white/60 hover:text-white transition-all rounded-sm text-left"
+      className="w-full px-4 py-4 border border-white/10 bg-black/20 hover:border-fatale/40 hover:bg-fatale/5 text-white/60 hover:text-white transition-all rounded-sm text-left"
     >
       <div className="text-[10px] font-black uppercase tracking-widest">New Post</div>
       <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest mt-0.5">Journal · Photo · Video</div>
     </button>
     <button
       onClick={() => { setShowGlobalUpload(true); setMobilePanelOpen(false); }}
-      className="w-full px-4 py-4 border border-white/10 bg-black/20 hover:border-[#ff006e]/40 hover:bg-[#ff006e]/5 text-white/60 hover:text-white transition-all rounded-sm text-left"
+      className="w-full px-4 py-4 border border-white/10 bg-black/20 hover:border-fatale/40 hover:bg-fatale/5 text-white/60 hover:text-white transition-all rounded-sm text-left"
     >
       <div className="text-[10px] font-black uppercase tracking-widest">Upload Track</div>
       <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest mt-0.5">MP3 · WAV · FLAC</div>
@@ -5607,9 +5640,9 @@ const FeedContent = React.memo(({
       return (
         <div className="space-y-2 mt-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-[9px] font-black uppercase text-[#00ffff] tracking-widest">:: COMMUNITY_LINKS ::</h3>
+            <h3 className="text-[9px] font-black uppercase text-secondary tracking-widest">:: COMMUNITY_LINKS ::</h3>
             {selectedCommunityId !== null && (
-              <button onClick={() => { setSelectedCommunityId(null); setMobilePanelOpen(false); }} className="text-[8px] text-[#00ffff]/40 hover:text-[#00ffff] uppercase tracking-tighter">[ RESET ]</button>
+              <button onClick={() => { setSelectedCommunityId(null); setMobilePanelOpen(false); }} className="text-[8px] text-secondary/40 hover:text-secondary uppercase tracking-tighter">[ RESET ]</button>
             )}
           </div>
           <div className="space-y-1.5">
@@ -5623,15 +5656,15 @@ const FeedContent = React.memo(({
                   key={`mob-comm-${cid}`}
                   onClick={() => { setSelectedCommunityId(String(selectedCommunityId) === String(cid) ? null : cid); setSelectedSector(null); setMobilePanelOpen(false); }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded border text-[9px] transition-all ${String(selectedCommunityId) === String(cid)
-                    ? 'bg-[#00ffff]/10 border-[#00ffff]/30 text-white'
-                    : 'bg-black/20 border-white/5 text-white/40 hover:border-[#00ffff]/20'
+                    ? 'bg-secondary/10 border-secondary/30 text-white'
+                    : 'bg-black/20 border-white/5 text-white/40 hover:border-secondary/20'
                     }`}
                 >
                   <div className="flex items-center gap-2 overflow-hidden">
                     <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: sectorColor }} />
                     <span className="font-bold uppercase tracking-widest truncate">{comm.name.replace(' ', '_')}</span>
                   </div>
-                  {isMember && <span className="text-[7px] font-black text-[#00ffff]/60 border border-[#00ffff]/30 px-1 rounded-sm bg-[#00ffff]/5 shrink-0">MEMBER</span>}
+                  {isMember && <span className="text-[7px] font-black text-secondary/60 border border-secondary/30 px-1 rounded-sm bg-secondary/5 shrink-0">MEMBER</span>}
                 </button>
               );
             })}
@@ -5645,7 +5678,7 @@ const FeedContent = React.memo(({
               {/* ── TAB: FAVORITES ── */}
               {mobilePanelTab === 'favorites' && (
                 <div className="space-y-3">
-                  <h3 className="text-[9px] font-black uppercase text-[#ff006e] tracking-widest">:: LIVE_FAVORITES ::</h3>
+                  <h3 className="text-[9px] font-black uppercase text-fatale tracking-widest">:: LIVE_FAVORITES ::</h3>
                   <div className="px-3 py-8 border border-dashed border-white/5 rounded text-center opacity-20">
                     <div className="text-[8px] uppercase tracking-widest">MÓDULO PENDIENTE</div>
                   </div>
@@ -5656,12 +5689,12 @@ const FeedContent = React.memo(({
               {mobilePanelTab === 'stations' && (
   <div className="space-y-4">
     <div className="flex items-center justify-between">
-      <h3 className="text-[9px] font-black uppercase text-[#ff006e] tracking-widest flex items-center gap-1.5">
+      <h3 className="text-[9px] font-black uppercase text-fatale tracking-widest flex items-center gap-1.5">
         <Radio size={10} className="animate-pulse" /> LIVE_STATIONS
       </h3>
       <button
         onClick={() => { setShowGlobalGoLive(true); setMobilePanelOpen(false); }}
-        className="flex items-center gap-1 px-2 py-1 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] text-[8px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all rounded-sm"
+        className="flex items-center gap-1 px-2 py-1 bg-fatale/10 border border-fatale/30 text-fatale text-[8px] font-black uppercase tracking-widest hover:bg-fatale hover:text-black transition-all rounded-sm"
       >
         <span className="w-1 h-1 rounded-full bg-current animate-pulse" /> GO_LIVE
       </button>
@@ -5673,7 +5706,7 @@ const FeedContent = React.memo(({
         <select
           value={selectedSector ?? ''}
           onChange={e => setSelectedSector(e.target.value === '' ? null : Number(e.target.value))}
-          className="w-full bg-black/60 border border-[#ff006e]/20 hover:border-[#ff006e]/40 p-2.5 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
+          className="w-full bg-black/60 border border-fatale/20 hover:border-fatale/40 p-2.5 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
         >
           <option value="">ALL_SECTORS</option>
           {SECTORS.map(s => (
@@ -5681,7 +5714,7 @@ const FeedContent = React.memo(({
           ))}
         </select>
         <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2">
-          <ChevronDown size={10} className="text-[#ff006e]/40" />
+          <ChevronDown size={10} className="text-fatale/40" />
         </div>
       </div>
     </div>
@@ -5693,18 +5726,18 @@ const FeedContent = React.memo(({
         );
         if (filtered.length === 0) return (
           <div className="py-8 border border-dashed border-white/5 text-center">
-            <Radio size={20} className="mx-auto mb-2 text-[#ff006e]/10" />
+            <Radio size={20} className="mx-auto mb-2 text-fatale/10" />
             <div className="text-[8px] font-mono uppercase tracking-widest text-white/10">NO_ACTIVE_FREQUENCIES_DETECTED</div>
           </div>
         );
         return filtered.map((station, idx) => {
-          const sc = SECTORS[station.sectorId ?? station.SectorId]?.color || '#ff006e';
+          const sc = SECTORS[station.sectorId ?? station.SectorId]?.color || 'rgb(var(--theme-primary))';
           const isActive = activeStation && String(activeStation.id || activeStation.Id) === String(station.id || station.Id);
           return (
             <button
               key={station.id || idx}
               onClick={() => { setActiveStation(station); setMobilePanelOpen(false); }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 border text-left transition-all rounded-sm ${isActive ? 'border-[#ff006e]/60 bg-[#ff006e]/10' : 'border-white/5 bg-black/20 hover:border-white/20'}`}
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 border text-left transition-all rounded-sm ${isActive ? 'border-fatale/60 bg-fatale/10' : 'border-white/5 bg-black/20 hover:border-white/20'}`}
             >
               <div className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse" style={{ backgroundColor: sc, boxShadow: `0 0 6px ${sc}` }} />
               <div className="flex-1 min-w-0">
@@ -5712,7 +5745,7 @@ const FeedContent = React.memo(({
                 <div className="text-[7px] font-mono text-white/30 uppercase truncate">{station.artistName || station.ArtistName}</div>
               </div>
               <div className="flex flex-col items-end gap-0.5 shrink-0">
-                {isActive && <Radio size={10} className="text-[#ff006e] animate-pulse" />}
+                {isActive && <Radio size={10} className="text-fatale animate-pulse" />}
                 <span className="text-[6px] font-mono uppercase tracking-widest px-1 border rounded-sm" style={{ color: sc, borderColor: `${sc}30`, backgroundColor: `${sc}10` }}>
                   {SECTORS[station.sectorId ?? station.SectorId]?.name || 'FREQ'}
                 </span>
@@ -5745,24 +5778,24 @@ const FeedContent = React.memo(({
       </AnimatePresence>
 
       {/* Derecha: Radios & Broadcaster Panel */}
-      <div className="hidden xl:block w-80 p-6 space-y-8 bg-black border-l border-[#ff006e]/5 relative z-10 overflow-y-auto no-scrollbar">
+      <div className="hidden xl:block w-80 p-6 space-y-8 bg-black border-l border-fatale/5 relative z-10 overflow-y-auto no-scrollbar">
         {activeStation && (String(activeStation.artistUserId || activeStation.ArtistUserId) === String(user?.id || user?.Id)) && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-            <div className="flex items-center gap-3 pb-3 border-b border-[#ff006e]/20">
-              <div className="w-2 h-2 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_10px_#ff006e]" />
-              <h3 className="text-[10px] font-black uppercase text-[#ff006e] tracking-[0.3em]">BROADCASTING_PANEL</h3>
+            <div className="flex items-center gap-3 pb-3 border-b border-fatale/20">
+              <div className="w-2 h-2 rounded-full bg-fatale animate-pulse shadow-[0_0_10px_rgb(var(--theme-primary))]" />
+              <h3 className="text-[10px] font-black uppercase text-fatale tracking-[0.3em]">BROADCASTING_PANEL</h3>
             </div>
 
             {/* Mini Chat */}
             <div className="space-y-3">
               <div className="flex justify-between items-center text-[8px] font-bold text-white/40 uppercase tracking-widest">
                 <span>COMM_LINK</span>
-                <span className="text-[#ff006e]/40">ENCRYPTED</span>
+                <span className="text-fatale/40">ENCRYPTED</span>
               </div>
-              <div className="h-48 bg-black/40 border border-[#ff006e]/10 rounded-sm p-3 font-mono text-[9px] overflow-y-auto custom-scrollbar space-y-2">
+              <div className="h-48 bg-black/40 border border-fatale/10 rounded-sm p-3 font-mono text-[9px] overflow-y-auto custom-scrollbar space-y-2">
                 {stationChat && stationChat.length > 0 ? stationChat.map((msg, idx) => (
                   <div key={idx} className="break-words">
-                    <span className="text-[#ff006e] font-bold">[{msg.username}]</span> <span className="text-white/80">{msg.message}</span>
+                    <span className="text-fatale font-bold">[{msg.username}]</span> <span className="text-white/80">{msg.message}</span>
                   </div>
                 )) : (
                   <div className="h-full flex items-center justify-center opacity-20 italic">LINK_IDLE...</div>
@@ -5778,14 +5811,14 @@ const FeedContent = React.memo(({
               </div>
               <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-2">
                 {stationQueue && stationQueue.length > 0 ? stationQueue.map((req, idx) => (
-                  <div key={idx} className="p-2 border border-[#ff006e]/10 bg-black/60 flex justify-between items-center group hover:border-[#ff006e]/40 transition-all">
+                  <div key={idx} className="p-2 border border-fatale/10 bg-black/60 flex justify-between items-center group hover:border-fatale/40 transition-all">
                     <div className="min-w-0">
                       <div className="text-[9px] font-bold text-white truncate">{req.trackTitle}</div>
-                      <div className="text-[7px] text-[#ff006e]/60 font-mono">FROM: {req.username}</div>
+                      <div className="text-[7px] text-fatale/60 font-mono">FROM: {req.username}</div>
                     </div>
                     <button
                       onClick={() => onPlayPlaylist && onPlayPlaylist([{ id: req.trackId, title: req.trackTitle, artist: 'REQUEST' }], 0)}
-                      className="w-6 h-6 rounded-full border border-[#ff006e]/20 flex items-center justify-center text-[#ff006e] hover:bg-[#ff006e] hover:text-black transition-all"
+                      className="w-6 h-6 rounded-full border border-fatale/20 flex items-center justify-center text-fatale hover:bg-fatale hover:text-black transition-all"
                     >
                       <Play size={10} fill="currentColor" />
                     </button>
@@ -5798,7 +5831,7 @@ const FeedContent = React.memo(({
               </div>
             </div>
 
-            <div className="pt-4 border-t border-[#ff006e]/10 space-y-2">
+            <div className="pt-4 border-t border-fatale/10 space-y-2">
               <button
                 onClick={onEndBroadcast}
                 className="w-full py-2 bg-red-950/20 border border-red-500/40 text-red-500 text-[9px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-black transition-all"
@@ -5807,7 +5840,7 @@ const FeedContent = React.memo(({
               </button>
               <button
                 onClick={() => setView('player')}
-                className="w-full py-2 bg-[#ff006e]/10 border border-[#ff006e]/40 text-[#ff006e] text-[9px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all"
+                className="w-full py-2 bg-fatale/10 border border-fatale/40 text-fatale text-[9px] font-black uppercase tracking-widest hover:bg-fatale hover:text-black transition-all"
               >
                 [ OPEN_FULL_DASHBOARD ]
               </button>
@@ -5818,22 +5851,22 @@ const FeedContent = React.memo(({
         {/* ── LISTENER MODE (tuned in, not host) ── */}
         {activeStation && (String(activeStation.artistUserId || activeStation.ArtistUserId) !== String(user?.id || user?.Id)) && (
           <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-500">
-            <div className="border border-[#ff006e]/30 rounded-sm overflow-hidden">
-              <div className="flex items-center gap-2 px-3 py-2 bg-[#ff006e]/10 border-b border-[#ff006e]/20">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_8px_#ff006e]" />
-                <span className="text-[9px] font-black uppercase text-[#ff006e] tracking-widest">TUNED_IN</span>
+            <div className="border border-fatale/30 rounded-sm overflow-hidden">
+              <div className="flex items-center gap-2 px-3 py-2 bg-fatale/10 border-b border-fatale/20">
+                <div className="w-1.5 h-1.5 rounded-full bg-fatale animate-pulse shadow-[0_0_8px_rgb(var(--theme-primary))]" />
+                <span className="text-[9px] font-black uppercase text-fatale tracking-widest">TUNED_IN</span>
               </div>
               <div className="p-3">
                 <div className="text-[12px] font-black uppercase text-white truncate">{activeStation.sessionTitle || activeStation.SessionTitle}</div>
-                <div className="text-[9px] font-mono text-[#ff006e]/60 uppercase tracking-widest truncate">{activeStation.artistName || activeStation.ArtistName}</div>
+                <div className="text-[9px] font-mono text-fatale/60 uppercase tracking-widest truncate">{activeStation.artistName || activeStation.ArtistName}</div>
               </div>
             </div>
             <div className="space-y-2">
               <div className="text-[8px] font-bold text-white/40 uppercase tracking-widest">COMM_LINK</div>
-              <div className="h-40 bg-black/40 border border-[#ff006e]/10 rounded-sm p-3 font-mono text-[9px] overflow-y-auto custom-scrollbar space-y-2">
+              <div className="h-40 bg-black/40 border border-fatale/10 rounded-sm p-3 font-mono text-[9px] overflow-y-auto custom-scrollbar space-y-2">
                 {stationChat && stationChat.length > 0 ? stationChat.map((msg, idx) => (
                   <div key={idx} className="break-words">
-                    <span className="text-[#ff006e] font-bold">[{msg.username}]</span> <span className="text-white/80">{msg.message}</span>
+                    <span className="text-fatale font-bold">[{msg.username}]</span> <span className="text-white/80">{msg.message}</span>
                   </div>
                 )) : (
                   <div className="h-full flex items-center justify-center opacity-20 italic">LINK_IDLE...</div>
@@ -5846,18 +5879,18 @@ const FeedContent = React.memo(({
                     onChange={e => setListenerChatInput(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter' && listenerChatInput.trim()) { onSendMessage(listenerChatInput); setListenerChatInput(''); } }}
                     placeholder="Send signal..."
-                    className="flex-1 bg-black/60 border border-[#ff006e]/20 focus:border-[#ff006e]/50 px-2 py-1.5 text-[9px] font-mono text-white outline-none placeholder:text-white/10 transition-all"
+                    className="flex-1 bg-black/60 border border-fatale/20 focus:border-fatale/50 px-2 py-1.5 text-[9px] font-mono text-white outline-none placeholder:text-white/10 transition-all"
                   />
                   <button
                     onClick={() => { if (listenerChatInput.trim()) { onSendMessage(listenerChatInput); setListenerChatInput(''); } }}
-                    className="px-2 py-1.5 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] text-[8px] font-black uppercase hover:bg-[#ff006e] hover:text-black transition-all"
+                    className="px-2 py-1.5 bg-fatale/10 border border-fatale/30 text-fatale text-[8px] font-black uppercase hover:bg-fatale hover:text-black transition-all"
                   >TX</button>
                 </div>
               )}
             </div>
             <button
               onClick={() => setActiveStation(null)}
-              className="w-full py-2 border border-[#ff006e]/30 text-[#ff006e]/60 text-[9px] font-black uppercase tracking-widest hover:border-[#ff006e] hover:text-[#ff006e] transition-all"
+              className="w-full py-2 border border-fatale/30 text-fatale/60 text-[9px] font-black uppercase tracking-widest hover:border-fatale hover:text-fatale transition-all"
             >
               [ DISCONNECT_LINK ]
             </button>
@@ -5873,12 +5906,12 @@ const FeedContent = React.memo(({
             <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#ff006e]/40 animate-pulse" />
-                  <h3 className="text-[10px] font-black uppercase text-[#ff006e]/70 tracking-[0.3em]">LIVE_FREQ</h3>
+                  <div className="w-1.5 h-1.5 rounded-full bg-fatale/40 animate-pulse" />
+                  <h3 className="text-[10px] font-black uppercase text-fatale/70 tracking-[0.3em]">LIVE_FREQ</h3>
                 </div>
                 <button
                   onClick={() => setShowGlobalGoLive(true)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] text-[8px] font-black uppercase tracking-widest hover:bg-[#ff006e] hover:text-black transition-all rounded-sm"
+                  className="flex items-center gap-1.5 px-2.5 py-1 bg-fatale/10 border border-fatale/30 text-fatale text-[8px] font-black uppercase tracking-widest hover:bg-fatale hover:text-black transition-all rounded-sm"
                 >
                   <span className="w-1 h-1 rounded-full bg-current animate-pulse" /> GO_LIVE
                 </button>
@@ -5891,7 +5924,7 @@ const FeedContent = React.memo(({
                   <select
                     value={sidebarSector ?? ''}
                     onChange={e => setSidebarSector(e.target.value === '' ? null : Number(e.target.value))}
-                    className="w-full bg-black/60 border border-[#ff006e]/20 hover:border-[#ff006e]/50 focus:border-[#ff006e]/60 p-2.5 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
+                    className="w-full bg-black/60 border border-fatale/20 hover:border-fatale/50 focus:border-fatale/60 p-2.5 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
                   >
                     <option value="">ALL_SECTORS</option>
                     {SECTORS.map(s => (
@@ -5899,7 +5932,7 @@ const FeedContent = React.memo(({
                     ))}
                   </select>
                   <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2">
-                    <ChevronDown size={10} className="text-[#ff006e]/40" />
+                    <ChevronDown size={10} className="text-fatale/40" />
                   </div>
                   {sidebarSector !== null && (
                     <div className="absolute left-0 top-0 bottom-0 w-0.5 pointer-events-none transition-colors"
@@ -5918,12 +5951,12 @@ const FeedContent = React.memo(({
                 <div className="text-[7px] font-mono text-white/20 uppercase tracking-widest">ACTIVE_FREQUENCIES [{filteredStations.length}]</div>
                 {filteredStations.length === 0 ? (
                   <div className="py-8 border border-dashed border-white/5 text-center">
-                    <Radio size={20} className="mx-auto mb-2 text-[#ff006e]/10" />
+                    <Radio size={20} className="mx-auto mb-2 text-fatale/10" />
                     <div className="text-[8px] font-mono uppercase tracking-widest text-white/10">NO_ACTIVE_FREQUENCIES_DETECTED</div>
                   </div>
                 ) : (
                   filteredStations.map((station, idx) => {
-                    const sectorColor = SECTORS[station.sectorId ?? station.SectorId]?.color || '#ff006e';
+                    const sectorColor = SECTORS[station.sectorId ?? station.SectorId]?.color || 'rgb(var(--theme-primary))';
                     return (
                       <button
                         key={station.id || station.Id || idx}
@@ -5934,10 +5967,10 @@ const FeedContent = React.memo(({
                           <div className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse"
                             style={{ backgroundColor: sectorColor, boxShadow: `0 0 8px ${sectorColor}` }} />
                           <div className="flex-1 min-w-0">
-                            <div className="text-[10px] font-black uppercase text-white truncate group-hover/st:text-[#ff006e] transition-colors">{station.sessionTitle || station.SessionTitle}</div>
+                            <div className="text-[10px] font-black uppercase text-white truncate group-hover/st:text-fatale transition-colors">{station.sessionTitle || station.SessionTitle}</div>
                             <div className="text-[7px] font-mono text-white/30 uppercase tracking-widest truncate">{station.artistName || station.ArtistName}</div>
                           </div>
-                          <div className="text-[7px] font-mono text-white/10 group-hover/st:text-[#ff006e]/40 transition-colors shrink-0">TUNE_IN ›</div>
+                          <div className="text-[7px] font-mono text-white/10 group-hover/st:text-fatale/40 transition-colors shrink-0">TUNE_IN ›</div>
                         </div>
                         <div className="mt-1.5 ml-4">
                           <span className="text-[7px] font-mono uppercase tracking-widest px-1 border rounded-sm"
@@ -6117,7 +6150,7 @@ const SidebarLink = React.memo(({ icon, label, active, onClick, collapsed, hasNo
     <div className={`relative transition-all duration-300 ${active ? 'scale-110 text-[var(--theme-color)]' : 'opacity-60 group-hover:opacity-100 group-hover:scale-110'}`}>
       {icon}
       {hasNotification && !active && (
-        <div className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-[#ff006e] rounded-full shadow-[0_0_8px_#ff006e] animate-pulse" />
+        <div className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-fatale rounded-full shadow-[0_0_8px_rgb(var(--theme-primary))] animate-pulse" />
       )}
     </div>
     {!collapsed && (
@@ -6135,21 +6168,21 @@ const NavButton = React.memo(({ icon, active, onClick, hasNotification }) => (
 
     {active && (
       <div className="absolute inset-0 pointer-events-none animate-in fade-in duration-500">
-        <div className="hud-bracket-tl text-[#ff006e] opacity-80" />
-        <div className="hud-bracket-tr text-[#ff006e] opacity-80" />
-        <div className="hud-bracket-bl text-[#ff006e] opacity-80" />
-        <div className="hud-bracket-br text-[#ff006e] opacity-80" />
+        <div className="hud-bracket-tl text-fatale opacity-80" />
+        <div className="hud-bracket-tr text-fatale opacity-80" />
+        <div className="hud-bracket-bl text-fatale opacity-80" />
+        <div className="hud-bracket-br text-fatale opacity-80" />
       </div>
     )}
     <div className={`relative transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-110'} `}>{icon}</div>
     {hasNotification && !active && (
-      <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-[#ff006e] rounded-full shadow-[0_0_5px_#ff006e]" />
+      <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-fatale rounded-full shadow-[0_0_5px_rgb(var(--theme-primary))]" />
     )}
   </button>
 ));
 
 const QuickActionButton = React.memo(({ label, icon }) => (
-  <button className="w-full flex items-center justify-between p-3 rounded-lg border border-[#ff006e]/10 text-[10px] font-bold text-[#ff006e]/60 hover:bg-[#ff006e10] hover:text-white transition-all uppercase">{label} {icon}</button>
+  <button className="w-full flex items-center justify-between p-3 rounded-lg border border-fatale/10 text-[10px] font-bold text-fatale/60 hover:bg-[rgb(var(--theme-primary))10] hover:text-white transition-all uppercase">{label} {icon}</button>
 ));
 
 

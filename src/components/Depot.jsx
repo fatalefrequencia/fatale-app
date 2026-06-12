@@ -12,7 +12,7 @@ const Depot = ({ user, refreshProfile }) => {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-white/10 pb-6">
                 <div>
-                    <div className="text-[10px] font-black text-[#ff006e]/50 uppercase tracking-[0.3em] font-mono mb-4">// THE_DEPOT</div>
+                    <div className="text-[10px] font-black text-fatale/50 uppercase tracking-[0.3em] font-mono mb-4">// THE_DEPOT</div>
                     <p className="text-[11px] text-white/30 font-mono uppercase tracking-widest max-w-lg">
                         Secure exchange &amp; system upgrades
                         <span className="text-white/15 ml-3">::: AUTH_ID: {user?.id || 'GUEST'}</span>
@@ -23,12 +23,12 @@ const Depot = ({ user, refreshProfile }) => {
                 <div className="flex border-b border-white/10 relative">
                     <button
                         onClick={() => setActiveSection('CREDITS')}
-                        className={`flex items-center gap-2 px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all relative ${activeSection === 'CREDITS' ? 'text-[#ff006e]' : 'text-white/30 hover:text-white'
+                        className={`flex items-center gap-2 px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all relative ${activeSection === 'CREDITS' ? 'text-fatale' : 'text-white/30 hover:text-white'
                             }`}
                     >
                         <Skull size={13} /> CREDITS
                         {activeSection === 'CREDITS' && (
-                            <motion.div layoutId="depotSwitch" className="absolute bottom-0 left-0 right-0 h-px bg-[#ff006e] shadow-[0_0_8px_#ff006e]" />
+                            <motion.div layoutId="depotSwitch" className="absolute bottom-0 left-0 right-0 h-px bg-fatale shadow-[0_0_8px_rgb(var(--theme-primary))]" />
                         )}
                     </button>
                     <button

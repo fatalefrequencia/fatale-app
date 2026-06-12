@@ -99,20 +99,20 @@ const PlaylistSelectModal = ({
                         initial={{ opacity: 0, scale: 0.98, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.98, y: 20 }}
-                        className="w-full max-w-md bg-[#050505] border border-[#ff006e]/30 relative overflow-hidden shadow-[0_0_80px_rgba(255,0,110,0.2)] rounded-sm font-mono text-white"
+                        className="w-full max-w-md bg-[#050505] border border-fatale/30 relative overflow-hidden shadow-[0_0_80px_rgba(255,0,110,0.2)] rounded-sm font-mono text-white"
                     >
                         {/* Status bar line */}
-                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#ff006e] via-[#d60036] to-[#ff006e]" />
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-fatale via-[#d60036] to-fatale" />
 
                         {/* Top header */}
                         <div className="flex justify-between items-center p-5 border-b border-white/5 bg-black/50">
-                            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#ff006e] flex items-center gap-2">
-                                <ListMusic size={14} className="text-[#ff006e]" />
+                            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-fatale flex items-center gap-2">
+                                <ListMusic size={14} className="text-fatale" />
                                 SELECT_ROUTE_DESTINATION
                             </div>
                             <button
                                 onClick={onClose}
-                                className="text-white/40 hover:text-[#ff006e] transition-all hover:rotate-90 p-1"
+                                className="text-white/40 hover:text-fatale transition-all hover:rotate-90 p-1"
                             >
                                 <X size={18} />
                             </button>
@@ -122,9 +122,9 @@ const PlaylistSelectModal = ({
                             {/* Track Details */}
                             <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 p-4 rounded-sm">
                                 {track.cover || track.thumbnail || track.coverImageUrl ? (
-                                    <img src={track.cover || track.thumbnail || track.coverImageUrl} alt="Cover" className="w-10 h-10 object-cover rounded-sm border border-[#ff006e]/30 shrink-0" />
+                                    <img src={track.cover || track.thumbnail || track.coverImageUrl} alt="Cover" className="w-10 h-10 object-cover rounded-sm border border-fatale/30 shrink-0" />
                                 ) : (
-                                    <div className="w-10 h-10 rounded-sm bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center font-black text-[#ff006e] shrink-0 text-xs">
+                                    <div className="w-10 h-10 rounded-sm bg-fatale/10 border border-fatale/20 flex items-center justify-center font-black text-fatale shrink-0 text-xs">
                                         {(track.title || "T").substring(0, 2).toUpperCase()}
                                     </div>
                                 )}
@@ -150,7 +150,7 @@ const PlaylistSelectModal = ({
                                                     key={pl.id || pl.Id}
                                                     disabled={isSubmitting}
                                                     onClick={() => handleAddTrack(pl.id || pl.Id, pl.name || pl.Name)}
-                                                    className="w-full text-left p-3 bg-white/[0.01] hover:bg-[#ff006e]/5 border border-white/5 hover:border-[#ff006e]/40 transition-all rounded-sm flex items-center justify-between group"
+                                                    className="w-full text-left p-3 bg-white/[0.01] hover:bg-fatale/5 border border-white/5 hover:border-fatale/40 transition-all rounded-sm flex items-center justify-between group"
                                                 >
                                                     <span className="text-[9px] font-black uppercase tracking-widest text-white/80 group-hover:text-white truncate">
                                                         {pl.name || pl.Name}
@@ -165,7 +165,7 @@ const PlaylistSelectModal = ({
 
                                     <button
                                         onClick={() => setIsCreating(true)}
-                                        className="w-full py-3 text-[8px] font-black uppercase tracking-widest border border-dashed border-white/20 hover:border-[#ff006e]/50 text-white/60 hover:text-white transition-all rounded-sm flex items-center justify-center gap-1.5"
+                                        className="w-full py-3 text-[8px] font-black uppercase tracking-widest border border-dashed border-white/20 hover:border-fatale/50 text-white/60 hover:text-white transition-all rounded-sm flex items-center justify-center gap-1.5"
                                     >
                                         <FolderPlus size={12} /> INITIALIZE_NEW_ARCHIVE
                                     </button>
@@ -180,7 +180,7 @@ const PlaylistSelectModal = ({
                                         value={newPlaylistName}
                                         onChange={(e) => setNewPlaylistName(e.target.value)}
                                         placeholder="ENTER_ARCHIVE_IDENTIFIER"
-                                        className="w-full bg-white/5 border border-white/10 hover:border-white/20 focus:border-[#ff006e] outline-none text-[9px] text-white px-3 py-3 rounded-sm tracking-widest"
+                                        className="w-full bg-white/5 border border-white/10 hover:border-white/20 focus:border-fatale outline-none text-[9px] text-white px-3 py-3 rounded-sm tracking-widest"
                                     />
                                     <div className="grid grid-cols-2 gap-3">
                                         <button
@@ -193,7 +193,7 @@ const PlaylistSelectModal = ({
                                         <button
                                             type="submit"
                                             disabled={isSubmitting || !newPlaylistName.trim()}
-                                            className="py-2.5 text-[8px] font-black uppercase tracking-widest bg-[#ff006e] text-black hover:bg-white transition-all rounded-sm flex items-center justify-center gap-1.5 disabled:opacity-30"
+                                            className="py-2.5 text-[8px] font-black uppercase tracking-widest bg-fatale text-black hover:bg-white transition-all rounded-sm flex items-center justify-center gap-1.5 disabled:opacity-30"
                                         >
                                             <Plus size={10} /> CREATE_AND_ADD
                                         </button>

@@ -13,7 +13,7 @@ const T = {
     border:      '#2a0a0a',
     borderDim:   '#1a0404',
     borderFaint: '#0f0202',
-    pink:        '#ff006e',
+    pink:        'rgb(var(--theme-primary))',
     fuchsia:     '#ff0000',
     purple:      '#8b1a1a',
     purpleDim:   '#4a0a0a',
@@ -821,7 +821,7 @@ const ShoppingView = () => {
                                             placeholder={labels.searchPlaceholder}
                                             value={searchTerm}
                                             onChange={e => setSearchTerm(e.target.value)}
-                                            className="w-full bg-white/[0.04] border border-white/10 focus:border-[#ff006e]/40 pl-8 pr-3 py-2 text-xs rounded-none focus:outline-none transition-colors placeholder:text-white/20"
+                                            className="w-full bg-white/[0.04] border border-white/10 focus:border-fatale/40 pl-8 pr-3 py-2 text-xs rounded-none focus:outline-none transition-colors placeholder:text-white/20"
                                         />
                                     </div>
 
@@ -940,14 +940,14 @@ const ShoppingView = () => {
                                         <motion.div
                                             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                                             onClick={() => isLoggedIn ? setIsModalOpen(true) : alert('Please log in first.')}
-                                            className="group cursor-pointer relative flex flex-col rounded-none overflow-hidden border border-dashed border-white/10 hover:border-[#ff006e]/40 bg-white/[0.015] transition-all duration-300 aspect-[3/4]"
+                                            className="group cursor-pointer relative flex flex-col rounded-none overflow-hidden border border-dashed border-white/10 hover:border-fatale/40 bg-white/[0.015] transition-all duration-300 aspect-[3/4]"
                                         >
                                             <div className="flex-1 flex flex-col items-center justify-center gap-3 p-4">
-                                                <div className="w-12 h-12 border border-white/10 group-hover:border-[#ff006e]/50 flex items-center justify-center transition-all">
-                                                    <Plus size={20} className="text-white/30 group-hover:text-[#ff006e] transition-colors" />
+                                                <div className="w-12 h-12 border border-white/10 group-hover:border-fatale/50 flex items-center justify-center transition-all">
+                                                    <Plus size={20} className="text-white/30 group-hover:text-fatale transition-colors" />
                                                 </div>
                                                 <div className="text-center">
-                                                    <div className="text-[10px] font-bold uppercase tracking-wider text-white/40 group-hover:text-[#ff006e] transition-colors">{labels.uploadTitle}</div>
+                                                    <div className="text-[10px] font-bold uppercase tracking-wider text-white/40 group-hover:text-fatale transition-colors">{labels.uploadTitle}</div>
                                                     <div className="text-[9px] text-white/20 mt-1">{isLoggedIn ? (isEs ? 'Añadir enlace externo' : 'Add external link') : 'Login required'}</div>
                                                 </div>
                                             </div>
@@ -963,14 +963,14 @@ const ShoppingView = () => {
                                                     transition={{ delay: Math.min(i * 0.04, 0.3), type: 'spring', stiffness: 120, damping: 18 }}
                                                     whileHover={{ y: -4 }} whileTap={{ scale: 0.97 }}
                                                     onClick={() => setSelectedShop(shop)}
-                                                    className="group cursor-pointer relative flex flex-col rounded-none overflow-visible border border-[#1a0404] hover:border-[#ff006e] bg-[#060606] transition-all duration-300 aspect-[3/4]"
+                                                    className="group cursor-pointer relative flex flex-col rounded-none overflow-visible border border-[#1a0404] hover:border-fatale bg-[#060606] transition-all duration-300 aspect-[3/4]"
                                                     onMouseEnter={e => e.currentTarget.style.boxShadow = '0 0 14px rgba(255,0,110,0.18), inset 0 0 20px rgba(255,0,110,0.03)'}
                                                     onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
                                                 >
-                                                    <div className="absolute -top-px -left-px w-2.5 h-2.5 border-t-2 border-l-2 border-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 pointer-events-none" />
-                                                    <div className="absolute -top-px -right-px w-2.5 h-2.5 border-t-2 border-r-2 border-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 pointer-events-none" />
-                                                    <div className="absolute -bottom-px -left-px w-2.5 h-2.5 border-b-2 border-l-2 border-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 pointer-events-none" />
-                                                    <div className="absolute -bottom-px -right-px w-2.5 h-2.5 border-b-2 border-r-2 border-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 pointer-events-none" />
+                                                    <div className="absolute -top-px -left-px w-2.5 h-2.5 border-t-2 border-l-2 border-fatale opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 pointer-events-none" />
+                                                    <div className="absolute -top-px -right-px w-2.5 h-2.5 border-t-2 border-r-2 border-fatale opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 pointer-events-none" />
+                                                    <div className="absolute -bottom-px -left-px w-2.5 h-2.5 border-b-2 border-l-2 border-fatale opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 pointer-events-none" />
+                                                    <div className="absolute -bottom-px -right-px w-2.5 h-2.5 border-b-2 border-r-2 border-fatale opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 pointer-events-none" />
 
                                                     <div className="relative flex-1 overflow-hidden bg-black/40">
                                                         {shop.type === 'VIDEO' ? (
@@ -985,15 +985,15 @@ const ShoppingView = () => {
                                                         <div className="absolute top-2 left-2 text-[8px] bg-black/70 text-white/50 px-1.5 py-0.5 rounded-none">
                                                             {getDomain(shop.url)}
                                                         </div>
-                                                        <div className="absolute inset-0 bg-[#ff006e]/0 group-hover:bg-[#ff006e]/5 transition-colors duration-300 flex items-center justify-center">
-                                                            <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 bg-[#ff006e] text-black text-[9px] font-black tracking-[0.2em] px-3 py-1.5" style={{ borderRadius: 0 }}>
+                                                        <div className="absolute inset-0 bg-fatale/0 group-hover:bg-fatale/5 transition-colors duration-300 flex items-center justify-center">
+                                                            <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 bg-fatale text-black text-[9px] font-black tracking-[0.2em] px-3 py-1.5" style={{ borderRadius: 0 }}>
                                                                 {labels.enterStore}
                                                             </div>
                                                         </div>
                                                     </div>
 
                                                     <div className="px-3 py-2.5 bg-[#060606] border-t border-[#0f0202]">
-                                                        <div className="text-[11px] font-bold text-white truncate group-hover:text-[#ff006e] transition-colors leading-tight" style={{ fontFamily: T.mono, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{shop.shopName}</div>
+                                                        <div className="text-[11px] font-bold text-white truncate group-hover:text-fatale transition-colors leading-tight" style={{ fontFamily: T.mono, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{shop.shopName}</div>
                                                         <div className="text-[9px] mt-0.5 truncate" style={{ color: T.purpleDim, fontFamily: T.mono, letterSpacing: '0.1em' }}>// {shop.artistName}</div>
                                                     </div>
                                                 </motion.div>
@@ -1180,7 +1180,7 @@ const ShoppingView = () => {
                             className="bg-[#060608] border border-white/8 rounded-none w-full max-w-2xl relative shadow-2xl max-h-[90dvh] overflow-y-auto no-scrollbar"
                         >
                             <div className="flex items-center justify-between p-5 border-b border-white/5 sticky top-0 z-10 bg-[#060608]">
-                                <div className="text-sm font-black uppercase tracking-widest text-[#ff006e]">[ {labels.uploadTitle} ]</div>
+                                <div className="text-sm font-black uppercase tracking-widest text-fatale">[ {labels.uploadTitle} ]</div>
                                 <button onClick={() => setIsModalOpen(false)} className="text-white/30 hover:text-white p-1.5 rounded-none hover:bg-white/5 transition-colors">
                                     <X size={16} />
                                 </button>
@@ -1198,9 +1198,9 @@ const ShoppingView = () => {
                                             <input type="file" id="file-change" onChange={handleFileChange} className="hidden" accept="image/*,video/*" />
                                         </div>
                                     ) : (
-                                        <label htmlFor="file-upload" className="aspect-square rounded-none border border-dashed border-white/10 hover:border-[#ff006e]/40 bg-white/[0.01] flex flex-col items-center justify-center gap-3 cursor-pointer transition-all group">
-                                            <div className="w-10 h-10 border border-white/10 group-hover:border-[#ff006e]/30 flex items-center justify-center transition-all">
-                                                <Upload size={16} className="text-white/30 group-hover:text-[#ff006e]" />
+                                        <label htmlFor="file-upload" className="aspect-square rounded-none border border-dashed border-white/10 hover:border-fatale/40 bg-white/[0.01] flex flex-col items-center justify-center gap-3 cursor-pointer transition-all group">
+                                            <div className="w-10 h-10 border border-white/10 group-hover:border-fatale/30 flex items-center justify-center transition-all">
+                                                <Upload size={16} className="text-white/30 group-hover:text-fatale" />
                                             </div>
                                             <span className="text-[10px] text-white/40 uppercase tracking-wider group-hover:text-white">CHOOSE FILE</span>
                                             <input type="file" id="file-upload" onChange={handleFileChange} className="hidden" accept="image/*,video/*" />
@@ -1215,7 +1215,7 @@ const ShoppingView = () => {
                                     ].map(f => (
                                         <div key={f.label}>
                                             <label className="text-[9px] text-white/30 uppercase tracking-widest block mb-1.5">{f.label}</label>
-                                            <input value={f.value} onChange={e => f.set(e.target.value)} placeholder={f.placeholder} required={f.required} className="w-full bg-white/[0.04] border border-white/8 focus:border-[#ff006e]/40 px-3 py-2.5 text-xs rounded-none focus:outline-none transition-colors placeholder:text-white/15" />
+                                            <input value={f.value} onChange={e => f.set(e.target.value)} placeholder={f.placeholder} required={f.required} className="w-full bg-white/[0.04] border border-white/8 focus:border-fatale/40 px-3 py-2.5 text-xs rounded-none focus:outline-none transition-colors placeholder:text-white/15" />
                                         </div>
                                     ))}
                                     <div>
@@ -1233,9 +1233,9 @@ const ShoppingView = () => {
                                     </div>
                                     <div>
                                         <label className="text-[9px] text-white/30 uppercase tracking-widest block mb-1.5">Description</label>
-                                        <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} placeholder="Product description..." className="w-full bg-white/[0.04] border border-white/8 focus:border-[#ff006e]/40 px-3 py-2.5 text-xs rounded-none focus:outline-none transition-colors resize-none placeholder:text-white/15" />
+                                        <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} placeholder="Product description..." className="w-full bg-white/[0.04] border border-white/8 focus:border-fatale/40 px-3 py-2.5 text-xs rounded-none focus:outline-none transition-colors resize-none placeholder:text-white/15" />
                                     </div>
-                                    <button type="submit" disabled={isUploading} className="w-full py-3.5 bg-gradient-to-r from-[#ff006e] to-[#ff409f] hover:from-[#ff0080] hover:to-[#ff50af] text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-none disabled:opacity-50 transition-all mt-auto">
+                                    <button type="submit" disabled={isUploading} className="w-full py-3.5 bg-gradient-to-r from-fatale to-[#ff409f] hover:from-[#ff0080] hover:to-[#ff50af] text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-none disabled:opacity-50 transition-all mt-auto">
                                         {isUploading ? '[ PUBLISHING... ]' : labels.uploadBtn}
                                     </button>
                                 </div>

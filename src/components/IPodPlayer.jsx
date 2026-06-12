@@ -1800,11 +1800,11 @@ useEffect(() => {
                                                                 setFullViewTab('queue');
                                                             }}
                                                         >
-                                                            <div className="w-12 h-12 bg-[#ff006e]/10 flex items-center justify-center rounded-lg border border-white/10 group-hover/row:border-[#ff006e]/30 transition-all shrink-0">
-                                                                <Heart size={18} className="text-[#ff006e]" fill="currentColor" />
+                                                            <div className="w-12 h-12 bg-fatale/10 flex items-center justify-center rounded-lg border border-white/10 group-hover/row:border-fatale/30 transition-all shrink-0">
+                                                                <Heart size={18} className="text-fatale" fill="currentColor" />
                                                             </div>
                                                             <div className="flex-1 min-w-0">
-                                                                <div className="text-xs font-bold text-white group-hover/row:text-[#ff006e] transition-colors tracking-wide">{trk.title || trk.Title || 'Untitled'}</div>
+                                                                <div className="text-xs font-bold text-white group-hover/row:text-fatale transition-colors tracking-wide">{trk.title || trk.Title || 'Untitled'}</div>
                                                                 <div className="text-[10px] text-white/40 mt-1 font-mono">{t('SIGNAL')} // {trk.artist || trk.Artist || t('UNKNOWN')}</div>
                                                             </div>
                                                         </div>
@@ -1959,7 +1959,7 @@ useEffect(() => {
                     {/* STATUS BAR - REDESIGNED */}
                     <div className="h-7 bg-gradient-to-b from-[#1a1a1a] to-black/40 backdrop-blur-md border-b border-[#f00060]/30 flex justify-between items-center px-4 z-20">
                         <div className="flex items-center gap-2">
-                            {isPlaying ? <Pause size={12} fill="#ff006e" /> : <Play size={12} fill="#ff006e" />}
+                            {isPlaying ? <Pause size={12} fill="rgb(var(--theme-primary))" /> : <Play size={12} fill="rgb(var(--theme-primary))" />}
                             
                         </div>
                         <div className="flex items-center gap-2">

@@ -1129,7 +1129,7 @@ const DJMixerPlayer = ({
                                         <option key={d.deviceId} value={d.deviceId}>{d.label || `Audio Input ${d.deviceId.substring(0,5)}...`}</option>
                                     ))}
                                 </select>
-                                <div className="text-[9px] font-black uppercase tracking-widest text-[#ff006e] animate-pulse whitespace-nowrap">
+                                <div className="text-[9px] font-black uppercase tracking-widest text-fatale animate-pulse whitespace-nowrap">
                                     {micStreamRef.current ? 'LIVE MIC ACTIVE' : 'WAITING FOR SOURCE'}
                                 </div>
                             </div>
@@ -1657,7 +1657,7 @@ const DJMixerPlayer = ({
                                             </button>
                                             <button 
                                                 onClick={handleShuffle}
-                                                className="filter-chip shuffle-btn flex items-center gap-2 bg-[#ff006e]/10 border-[#ff006e]/20 text-[#ff006e]"
+                                                className="filter-chip shuffle-btn flex items-center gap-2 bg-fatale/10 border-fatale/20 text-fatale"
                                                 title={t('SHUFFLE_ALL')}
                                             >
                                                 <Shuffle size={10} /> {t('SHUFFLE')}
@@ -1667,7 +1667,7 @@ const DJMixerPlayer = ({
                                         <div className="flex items-center gap-2">
                                             <button 
                                                 onClick={handleShuffle}
-                                                className="filter-chip shuffle-btn flex items-center gap-2 bg-[#ff006e]/10 border-[#ff006e]/20 text-[#ff006e]"
+                                                className="filter-chip shuffle-btn flex items-center gap-2 bg-fatale/10 border-fatale/20 text-fatale"
                                                 title={t('SHUFFLE_ALL')}
                                             >
                                                 <Shuffle size={10} /> {t('SHUFFLE')}

@@ -7,9 +7,9 @@
 }
 
 :root {
-    --text-color: #ff006e;
+    --text-color: rgb(var(--theme-primary));
     --text-color-rgb: 255, 0, 110;
-    --theme-color: #ff006e;
+    --theme-color: rgb(var(--theme-primary));
     --theme-color-rgb: 255, 0, 110;
 }
 
@@ -117,12 +117,12 @@ body {
 
         0%,
         100% {
-            filter: drop-shadow(0 0 4px #ff006e) drop-shadow(0 0 10px rgba(255, 0, 110, 0.3));
+            filter: drop-shadow(0 0 4px rgb(var(--theme-primary))) drop-shadow(0 0 10px rgba(255, 0, 110, 0.3));
             transform: scale(1);
         }
 
         50% {
-            filter: drop-shadow(0 0 6px #ff006e) drop-shadow(0 0 14px rgba(255, 0, 110, 0.5));
+            filter: drop-shadow(0 0 6px rgb(var(--theme-primary))) drop-shadow(0 0 14px rgba(255, 0, 110, 0.5));
             transform: scale(1.03);
         }
     }

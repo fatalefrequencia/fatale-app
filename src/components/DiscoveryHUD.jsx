@@ -82,12 +82,12 @@ const LEDSign = () => {
 
     return (
         <div className="flex items-center gap-2 flex-1 overflow-hidden">
-            <div className="text-[8px] font-black tracking-[0.25em] text-[#ff006e] border border-[#ff006e]/40 px-1.5 py-0.5 opacity-80 shrink-0">
+            <div className="text-[8px] font-black tracking-[0.25em] text-fatale border border-fatale/40 px-1.5 py-0.5 opacity-80 shrink-0">
                 SYS_LOG
             </div>
-            <div className="overflow-hidden flex-1 border border-[#ff006e]/15 bg-[#ff006e]/[0.03] h-5 relative">
+            <div className="overflow-hidden flex-1 border border-fatale/15 bg-fatale/[0.03] h-5 relative">
                 <div
-                    className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[9px] font-black tracking-[0.25em] text-[#ff006e]/80"
+                    className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[9px] font-black tracking-[0.25em] text-fatale/80"
                     style={{ animation: 'led-scroll 30s linear infinite' }}
                 >
                     {ledString}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ledString}
@@ -101,9 +101,9 @@ const MobileLEDBanner = () => {
     const ledString = useLEDString();
 
     return (
-        <div className="w-full overflow-hidden border border-[#ff006e]/15 bg-[#ff006e]/[0.03] h-5 relative">
+        <div className="w-full overflow-hidden border border-fatale/15 bg-fatale/[0.03] h-5 relative">
             <div
-                className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[9px] font-black tracking-[0.25em] text-[#ff006e]/80"
+                className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[9px] font-black tracking-[0.25em] text-fatale/80"
                 style={{ animation: 'led-scroll 30s linear infinite' }}
             >
                 {ledString}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ledString}
@@ -698,12 +698,12 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             <img src={getMediaUrl(item.url || item.Url)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                        <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
+                        <div className="absolute inset-0 border border-fatale/0 group-hover:border-fatale/40 transition-all" />
 
 
 
-                        <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5 bg-black/70 p-2 backdrop-blur-sm border border-white/5 group-hover:border-[#ff006e]/20 transition-all duration-300 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0">
-                            <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight text-white transition-colors">
+                        <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5 bg-black/70 p-2 backdrop-blur-sm border border-white/5 group-hover:border-fatale/20 transition-all duration-300 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0">
+                            <div className="text-[9px] font-black truncate group-hover:text-fatale uppercase tracking-tight text-white transition-colors">
                                 {(() => {
                                     const desc = item.description || item.Description || '';
                                     if (desc.includes('|')) {
@@ -754,12 +754,12 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             <img src={getMediaUrl(item.url || item.Url)} alt="" className="absolute inset-0 w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                        <div className="absolute inset-0 border border-[#ff006e]/0 group-hover:border-[#ff006e]/40 transition-all" />
+                        <div className="absolute inset-0 border border-fatale/0 group-hover:border-fatale/40 transition-all" />
 
 
 
-                        <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5 bg-black/70 p-2 backdrop-blur-sm border border-white/5 group-hover:border-[#ff006e]/20 transition-all duration-300 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0">
-                            <div className="text-[9px] font-black truncate group-hover:text-[#ff006e] uppercase tracking-tight text-white transition-colors">
+                        <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5 bg-black/70 p-2 backdrop-blur-sm border border-white/5 group-hover:border-fatale/20 transition-all duration-300 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0">
+                            <div className="text-[9px] font-black truncate group-hover:text-fatale uppercase tracking-tight text-white transition-colors">
                                 {(() => {
                                     const desc = item.description || item.Description || '';
                                     if (desc.includes('|')) {
@@ -861,19 +861,19 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             animate={{ scale: 1, opacity: 1 }}
                             className="max-w-md w-full space-y-4"
                         >
-                            <div className="text-[10px] text-[#ff006e] font-black tracking-[0.5em] mb-8 animate-pulse">{t('INITIATING_LINK')}</div>
+                            <div className="text-[10px] text-fatale font-black tracking-[0.5em] mb-8 animate-pulse">{t('INITIATING_LINK')}</div>
                             <div className="space-y-1 font-mono text-[8px] opacity-40">
                                 <div>[SYS] {t('BOOTING_KERNEL')}... OK</div>
                                 <div>[SYS] {t('CALIBRATING_SENSORS')}... OK</div>
                                 <div>[SYS] {t('ESTABLISHING_SIGNAL')}... OK</div>
                                 <div>[SYS] {t('LOADING_MAP')}... OK</div>
                             </div>
-                            <div className="h-1 w-full bg-[#ff006e]/20 relative overflow-hidden">
+                            <div className="h-1 w-full bg-fatale/20 relative overflow-hidden">
                                 <motion.div
                                     initial={{ left: '-100%' }}
                                     animate={{ left: '0%' }}
                                     transition={{ duration: 1.2, ease: "easeInOut" }}
-                                    className="absolute inset-0 bg-[#ff006e]/80"
+                                    className="absolute inset-0 bg-fatale/80"
                                 />
                             </div>
                         </motion.div>
@@ -882,7 +882,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
             </AnimatePresence>
 
             {/* Top scanning lines effect */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#ff006e]/10 z-[60] shadow-[0_0_20px_#ff006e]" />
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-fatale/10 z-[60] shadow-[0_0_20px_rgb(var(--theme-primary))]" />
 
         
             {/* --- TOP HUD BAR --- */}
@@ -947,14 +947,14 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     animate={{ scale: 1, y: 0 }}
                                     exit={{ scale: 0.95, y: 15 }}
                                     transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-                                    className="w-full max-w-2xl max-h-[96vh] overflow-y-auto bg-black border border-[#ff006e]/40 p-4 md:p-8 relative rounded-sm flex flex-col gap-4 md:gap-6 z-20 no-scrollbar"
+                                    className="w-full max-w-2xl max-h-[96vh] overflow-y-auto bg-black border border-fatale/40 p-4 md:p-8 relative rounded-sm flex flex-col gap-4 md:gap-6 z-20 no-scrollbar"
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     {/* Tech corners */}
-                                    <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#ff006e]" />
-                                    <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#ff006e]" />
-                                    <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#ff006e]" />
-                                    <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#ff006e]" />
+                                    <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-fatale" />
+                                    <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-fatale" />
+                                    <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-fatale" />
+                                    <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-fatale" />
 
                                     {/* Header */}
                                     <div className="flex justify-between items-center border-b border-white/5 pb-3 md:pb-4">
@@ -963,7 +963,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         </div>
                                         <button
                                             onClick={() => setShowSkullMenu(false)}
-                                            className="text-white/40 hover:text-[#ff006e] transition-colors border border-white/10 hover:border-[#ff006e]/50 px-2 md:px-3 py-1 md:py-1.5 text-[8px] md:text-[9px] font-mono uppercase tracking-widest rounded-sm"
+                                            className="text-white/40 hover:text-fatale transition-colors border border-white/10 hover:border-fatale/50 px-2 md:px-3 py-1 md:py-1.5 text-[8px] md:text-[9px] font-mono uppercase tracking-widest rounded-sm"
                                         >
                                             [ ESCAPE ]
                                         </button>
@@ -983,17 +983,17 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             <button
                                                 key={node.id}
                                                 onClick={() => { setView(node.id); setShowSkullMenu(false); }}
-                                                className={`group text-left p-2 md:p-4 bg-white/[0.012] border border-white/5 hover:border-[#ff006e] hover:shadow-[0_0_15px_rgba(255,0,110,0.4)] hover:bg-[#ff006e]/5 transition-all flex items-center gap-2 md:gap-4 relative overflow-hidden active:scale-[0.98] rounded-sm min-w-0 ${node.id === 'settings' ? 'col-span-2 justify-self-center w-full md:w-[calc(50%-0.5rem)]' : ''}`}
+                                                className={`group text-left p-2 md:p-4 bg-white/[0.012] border border-white/5 hover:border-fatale hover:shadow-[0_0_15px_rgba(255,0,110,0.4)] hover:bg-fatale/5 transition-all flex items-center gap-2 md:gap-4 relative overflow-hidden active:scale-[0.98] rounded-sm min-w-0 ${node.id === 'settings' ? 'col-span-2 justify-self-center w-full md:w-[calc(50%-0.5rem)]' : ''}`}
                                             >
-                                                <div className="p-1.5 md:p-3 bg-black border border-white/10 text-white/40 group-hover:text-[#ff006e] group-hover:border-[#ff006e]/30 transition-all shrink-0">
+                                                <div className="p-1.5 md:p-3 bg-black border border-white/10 text-white/40 group-hover:text-fatale group-hover:border-fatale/30 transition-all shrink-0">
                                                     {node.icon}
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <div className="text-[9px] md:text-[11px] font-black uppercase tracking-widest text-white/80 group-hover:text-white transition-colors flex items-center gap-1.5 truncate">
                                                         {node.label}
-                                                        {node.badge && <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_8px_#ff006e] shrink-0" />}
+                                                        {node.badge && <span className="w-1.5 h-1.5 rounded-full bg-fatale animate-pulse shadow-[0_0_8px_rgb(var(--theme-primary))] shrink-0" />}
                                                     </div>
-                                                    <div className="text-[6.5px] md:text-[7.5px] font-mono text-white/20 group-hover:text-[#ff006e]/40 transition-colors uppercase tracking-wider mt-0.5 truncate">
+                                                    <div className="text-[6.5px] md:text-[7.5px] font-mono text-white/20 group-hover:text-fatale/40 transition-colors uppercase tracking-wider mt-0.5 truncate">
                                                         {node.desc}
                                                     </div>
                                                 </div>
@@ -1006,7 +1006,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         <div className="text-[7px] md:text-[8px] text-white/10 font-mono tracking-widest">FATALE_SYSTEMS_v2.0_SECURE</div>
                                         <button
                                             onClick={() => { onLogout && onLogout(); setShowSkullMenu(false); }}
-                                            className="px-4 md:px-6 py-2 md:py-2.5 bg-[#ff006e]/10 border border-[#ff006e]/30 text-[#ff006e] hover:bg-[#ff006e]/20 hover:border-[#ff006e] font-black text-[9px] md:text-[10px] tracking-widest uppercase transition-all flex items-center gap-2 active:scale-95 rounded-sm"
+                                            className="px-4 md:px-6 py-2 md:py-2.5 bg-fatale/10 border border-fatale/30 text-fatale hover:bg-fatale/20 hover:border-fatale font-black text-[9px] md:text-[10px] tracking-widest uppercase transition-all flex items-center gap-2 active:scale-95 rounded-sm"
                                         >
                                             <LogOut size={12} /> {t('LOGOUT_SYS') || 'Disconnect'}
                                         </button>
@@ -1022,7 +1022,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                     {isMobile && mobileViewMode !== 'search' && !searchQuery ? (
                         <button
                             onClick={() => setMobileViewMode('search')}
-                            className="p-2 text-[#ff006e] hover:text-white transition-colors self-center lg:hidden"
+                            className="p-2 text-fatale hover:text-white transition-colors self-center lg:hidden"
                         >
                             <Search size={20} />
                         </button>
@@ -1030,14 +1030,14 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         <div className="relative group w-full">
                             <div
                                 className="absolute -inset-1 rounded-lg blur opacity-0 group-focus-within:opacity-100 transition duration-1000 group-focus-within:duration-200"
-                                style={{ backgroundColor: activeSectorColor || '#ff006e', opacity: activeSectorColor ? 0.3 : 0 }}
+                                style={{ backgroundColor: activeSectorColor || 'rgb(var(--theme-primary))', opacity: activeSectorColor ? 0.3 : 0 }}
                             ></div>
                             <div className="relative flex items-center">
                                 <div className="absolute left-3 flex items-center pointer-events-none">
                                     <Search
                                         size={16}
                                         className="group-focus-within:opacity-100 transition-opacity"
-                                        style={{ color: activeSectorColor || '#ff006e', opacity: activeSector ? 1 : 0.4 }}
+                                        style={{ color: activeSectorColor || 'rgb(var(--theme-primary))', opacity: activeSector ? 1 : 0.4 }}
                                     />
                                 </div>
                                 <input
@@ -1047,10 +1047,10 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onTouchStart={(e) => e.stopPropagation()}
                                     onTouchEnd={(e) => e.stopPropagation()}
-                                    className="w-full bg-black/60 border rounded px-10 py-2.5 text-xs tracking-[0.2em] focus:outline-none focus:ring-1 transition-all placeholder:text-[#ff006e]/20"
+                                    className="w-full bg-black/60 border rounded px-10 py-2.5 text-xs tracking-[0.2em] focus:outline-none focus:ring-1 transition-all placeholder:text-fatale/20"
                                     style={{
                                         borderColor: activeSectorColor ? `${activeSectorColor}99` : 'rgba(255,0,110,0.3)',
-                                        focusBorderColor: activeSectorColor || '#ff006e',
+                                        focusBorderColor: activeSectorColor || 'rgb(var(--theme-primary))',
                                         color: activeSectorColor || 'white',
                                         '--tw-ring-color': activeSectorColor ? `${activeSectorColor}33` : 'rgba(255,0,110,0.2)'
                                     }}
@@ -1092,9 +1092,9 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
             {/* MOBILE: LED banner — sits below search, above globe/data toggle */}
             {isMobile && (
-                <div className="w-full overflow-hidden border border-[#ff006e]/15 bg-[#ff006e]/[0.03] h-5 relative shrink-0 z-[80]">
+                <div className="w-full overflow-hidden border border-fatale/15 bg-fatale/[0.03] h-5 relative shrink-0 z-[80]">
                     <div
-                        className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[9px] font-black tracking-[0.25em] text-[#ff006e]/80"
+                        className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[9px] font-black tracking-[0.25em] text-fatale/80"
                         style={{ animation: 'led-scroll 30s linear infinite' }}
                     >
                         {[`LAST_UPDATE: ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`, ...getFunMessages()].join('  //  ')}
@@ -1105,21 +1105,21 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
             {/* MOBILE VIEW TOGGLE */}
             {isMobile && (
                 <div
-                    className="mt-2 mb-2 flex bg-black/40 border border-[#ff006e]/20 rounded-sm p-1 gap-1 pointer-events-auto relative z-[90] w-full shrink-0"
+                    className="mt-2 mb-2 flex bg-black/40 border border-fatale/20 rounded-sm p-1 gap-1 pointer-events-auto relative z-[90] w-full shrink-0"
                     onTouchStart={(e) => e.stopPropagation()}
                     onTouchEnd={(e) => e.stopPropagation()}
                 >
                     <button
                         onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('globe'); }}
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('globe'); }}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'globe' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'globe' ? 'border border-fatale text-fatale shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-fatale/40 border border-transparent hover:bg-fatale/10'}`}
                     >
                         <Globe size={12} /> {t('GLOBE_SENSE')}
                     </button>
                     <button
                         onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('data'); }}
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('data'); }}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'data' ? 'border border-[#ff006e] text-[#ff006e] shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-[#ff006e]/40 border border-transparent hover:bg-[#ff006e]/10'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'data' ? 'border border-fatale text-fatale shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-fatale/40 border border-transparent hover:bg-fatale/10'}`}
                     >
                         <Activity size={12} /> {t('DATA_STREAM')}
                     </button>
@@ -1147,61 +1147,61 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         {/* Corner Brackets (Desktop only) */}
                         {!isMobile && (
                             <>
-                                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#ff006e]/55 z-20" style={activeSectorColor ? { borderColor: activeSectorColor } : {}} />
-                                <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#ff006e]/55 z-20" style={activeSectorColor ? { borderColor: activeSectorColor } : {}} />
-                                <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[#ff006e]/55 z-20" style={activeSectorColor ? { borderColor: activeSectorColor } : {}} />
-                                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#ff006e]/55 z-20" style={activeSectorColor ? { borderColor: activeSectorColor } : {}} />
+                                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-fatale/55 z-20" style={activeSectorColor ? { borderColor: activeSectorColor } : {}} />
+                                <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-fatale/55 z-20" style={activeSectorColor ? { borderColor: activeSectorColor } : {}} />
+                                <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-fatale/55 z-20" style={activeSectorColor ? { borderColor: activeSectorColor } : {}} />
+                                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-fatale/55 z-20" style={activeSectorColor ? { borderColor: activeSectorColor } : {}} />
                             </>
                         )}
 
                         {/* Pinterest Grid View */}
                         <div className={`absolute inset-0 w-full h-full bg-black/95 backdrop-blur-xl border border-white/10 p-5 pt-28 overflow-y-auto no-scrollbar transition-all duration-500 pointer-events-auto ${isPinterestView ? 'opacity-100 visible z-20' : 'opacity-0 invisible pointer-events-none -z-10'}`}>
-                            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[#ff006e] mb-6 border-b border-[#ff006e]/20 pb-2 pl-14 md:pl-16">DISCOVERED_SIGNALS</div>
+                            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-fatale mb-6 border-b border-fatale/20 pb-2 pl-14 md:pl-16">DISCOVERED_SIGNALS</div>
 
                             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                                 {/* Playlists */}
                                 {trendingPlaylists.slice(0, 4).map(p => (
-                                    <div key={p.id || p.Id} className="aspect-square bg-black border border-white/5 hover:border-[#ff006e]/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => onPlayTrack(p)}>
+                                    <div key={p.id || p.Id} className="aspect-square bg-black border border-white/5 hover:border-fatale/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => onPlayTrack(p)}>
                                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                                        <div className="text-[8px] font-mono text-[#ff006e] uppercase tracking-widest">PLAYLIST</div>
+                                        <div className="text-[8px] font-mono text-fatale uppercase tracking-widest">PLAYLIST</div>
                                         <div className="z-10">
-                                            <div className="text-xs font-black truncate group-hover:text-[#ff006e] uppercase">{p.name || p.Name}</div>
+                                            <div className="text-xs font-black truncate group-hover:text-fatale uppercase">{p.name || p.Name}</div>
                                             <div className="text-[8px] opacity-40 uppercase mt-0.5">BY {p.authorName || p.AuthorName || p.userName || p.UserName || "UNKNOWN"}</div>
                                         </div>
                                         <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Play size={16} fill="#ff006e" className="text-[#ff006e]" />
+                                            <Play size={16} fill="rgb(var(--theme-primary))" className="text-fatale" />
                                         </div>
                                     </div>
                                 ))}
 
                                 {/* Tracks */}
                                 {trendingTracks.slice(0, 6).map(trk => (
-                                    <div key={trk.id} className="aspect-square bg-black border border-white/5 hover:border-[#ff006e]/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => onPlayTrack(trk)}>
+                                    <div key={trk.id} className="aspect-square bg-black border border-white/5 hover:border-fatale/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => onPlayTrack(trk)}>
                                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
                                         <div className="absolute inset-0">
                                             <img src={getMediaUrl(trk.imageUrl || trk.ImageUrl || trk.coverImageUrl || trk.CoverImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-20 group-hover:opacity-40 group-hover:scale-110 transition-all duration-700" />
                                         </div>
-                                        <div className="text-[8px] font-mono text-[#00ffff] uppercase tracking-widest z-10">SONG</div>
+                                        <div className="text-[8px] font-mono text-secondary uppercase tracking-widest z-10">SONG</div>
                                         <div className="z-10">
-                                            <div className="text-xs font-black truncate group-hover:text-[#ff006e] uppercase">{trk.title}</div>
+                                            <div className="text-xs font-black truncate group-hover:text-fatale uppercase">{trk.title}</div>
                                             <div className="text-[8px] opacity-40 uppercase mt-0.5">BY {trk.artist}</div>
                                         </div>
                                         <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                            <Play size={16} fill="#ff006e" className="text-[#ff006e]" />
+                                            <Play size={16} fill="rgb(var(--theme-primary))" className="text-fatale" />
                                         </div>
                                     </div>
                                 ))}
 
                                 {/* Artists */}
                                 {trendingArtists.slice(0, 4).map(a => (
-                                    <div key={a.id} className="aspect-square bg-black border border-white/5 hover:border-[#ff006e]/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => navigateToProfile(a.userId)}>
+                                    <div key={a.id} className="aspect-square bg-black border border-white/5 hover:border-fatale/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => navigateToProfile(a.userId)}>
                                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
                                         <div className="absolute inset-0">
                                             <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-20 group-hover:opacity-40 group-hover:scale-110 transition-all duration-700" />
                                         </div>
                                         <div className="text-[8px] font-mono text-[#9d00ff] uppercase tracking-widest z-10">ARTIST</div>
                                         <div className="z-10">
-                                            <div className="text-xs font-black truncate group-hover:text-[#ff006e] uppercase">{a.name}</div>
+                                            <div className="text-xs font-black truncate group-hover:text-fatale uppercase">{a.name}</div>
                                             <div className="text-[8px] opacity-40 uppercase mt-0.5">{a.genre || "NATIVE"}</div>
                                         </div>
                                     </div>
@@ -1350,7 +1350,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 color:
                                     selectedGlobeItem.type === 'artist'    ? '#00ffaa' :
                                     selectedGlobeItem.type === 'community' ? '#ffaa00' :
-                                    selectedGlobeItem.type === 'playlist'  ? '#ff006e' : '#00aaff'
+                                    selectedGlobeItem.type === 'playlist'  ? 'rgb(var(--theme-primary))' : '#00aaff'
                             }}
                         >
                             {selectedGlobeItem.type === 'community' ? 'CLUSTER' :
@@ -1394,7 +1394,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             }
                             setSelectedGlobeItem(null);
                         }}
-                        className="w-full border border-[#ff006e]/30 text-[#ff006e] hover:bg-[#ff006e]/10 py-1.5 text-[7px] font-black tracking-[0.3em] uppercase transition-all flex items-center justify-center gap-2"
+                        className="w-full border border-fatale/30 text-fatale hover:bg-fatale/10 py-1.5 text-[7px] font-black tracking-[0.3em] uppercase transition-all flex items-center justify-center gap-2"
                     >
                         <Play size={8} fill="currentColor" />
                         {selectedGlobeItem.type === 'track' ? 'PLAY TRACK' : 'PLAY PLAYLIST'}
@@ -1421,7 +1421,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     )}
                                     <button
                                         onClick={() => setIsPinterestView(!isPinterestView)}
-                                        className={`flex items-center justify-center w-10 h-10 rounded-sm border transition-all duration-300 ${isPinterestView ? 'bg-[#ff006e]/10 border-[#ff006e] text-[#ff006e]' : 'bg-black/40 border-white/5 text-white/40'}`}
+                                        className={`flex items-center justify-center w-10 h-10 rounded-sm border transition-all duration-300 ${isPinterestView ? 'bg-fatale/10 border-fatale text-fatale' : 'bg-black/40 border-white/5 text-white/40'}`}
                                         title={isPinterestView ? "View 3D Map" : "View Grid"}
                                     >
                                         {isPinterestView ? <Globe size={14} /> : <Grid size={14} />}
@@ -1480,10 +1480,10 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                 {!isMobile && (
                     <>
                         <div className="col-span-3 row-span-2 col-start-1 row-start-1 pointer-events-auto">
-                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('player')}>{t('YT_FREQ_SCAN')}</span>} icon={<Search size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-fatale transition-colors" onClick={() => setView && setView('player')}>{t('YT_FREQ_SCAN')}</span>} icon={<Search size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="space-y-4">
                                     {youtubeResults.length > 0 ? youtubeResults.map(y => (
-                                        <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => {
+                                        <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-fatale/10 border border-transparent hover:border-fatale/20 group cursor-pointer transition-all" onClick={() => {
                                             onPlayTrack(y);
                                             // Save to local storage history
                                             try {
@@ -1510,20 +1510,20 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                 console.error("Failed to save to local storage:", err);
                                             }
                                         }}>
-                                            <div className="w-12 h-12 bg-black overflow-hidden relative border border-white/5 group-hover:border-[#ff006e]/40 shadow-lg">
+                                            <div className="w-12 h-12 bg-black overflow-hidden relative border border-white/5 group-hover:border-fatale/40 shadow-lg">
                                                 <img
                                                     src={y.thumbnailUrl || y.ThumbnailUrl || y.coverImageUrl || y.CoverImageUrl || (y.id ? `https://img.youtube.com/vi/${y.id}/hqdefault.jpg` : null)}
                                                     alt=""
                                                     className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500"
                                                 />
-                                                <div className="absolute inset-0 bg-[#ff006e]/10 mix-blend-overlay group-hover:opacity-0" />
+                                                <div className="absolute inset-0 bg-fatale/10 mix-blend-overlay group-hover:opacity-0" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{y.title}</div>
+                                                <div className="text-[10px] font-black truncate group-hover:text-fatale transition-colors uppercase tracking-tight">{y.title}</div>
                                                 <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">{y.author}</div>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                <Play size={10} className="text-fatale opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 <div onClick={(e) => e.stopPropagation()}>
                                                     <TrackActionsDropdown
                                                         track={{ ...y, category: 'YouTube' }}
@@ -1579,16 +1579,16 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                             console.error("Failed to clear recent tracks:", err);
                                                         }
                                                     }}
-                                                    className="text-[7px] font-bold text-[#ff006e]/60 hover:text-[#ff006e] transition-all uppercase tracking-wider bg-transparent cursor-pointer"
+                                                    className="text-[7px] font-bold text-fatale/60 hover:text-fatale transition-all uppercase tracking-wider bg-transparent cursor-pointer"
                                                 >
                                                     [ {t('CLEAR')} ]
                                                 </button>
                                             </div>
                                             {recentYoutubeTracks.map(y => (
-                                                <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => {
+                                                <div key={y.id} className="flex items-center gap-4 p-2.5 hover:bg-fatale/10 border border-transparent hover:border-fatale/20 group cursor-pointer transition-all" onClick={() => {
                                                     onPlayTrack(y);
                                                 }}>
-                                                    <div className="w-10 h-10 bg-black overflow-hidden relative border border-white/5 group-hover:border-[#ff006e]/40 shadow-lg">
+                                                    <div className="w-10 h-10 bg-black overflow-hidden relative border border-white/5 group-hover:border-fatale/40 shadow-lg">
                                                         <img
                                                             src={y.thumbnailUrl || `https://img.youtube.com/vi/${y.id}/hqdefault.jpg`}
                                                             alt=""
@@ -1596,11 +1596,11 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                         />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{y.title}</div>
+                                                        <div className="text-[10px] font-black truncate group-hover:text-fatale transition-colors uppercase tracking-tight">{y.title}</div>
                                                         <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">{y.author}</div>
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                        <Play size={10} className="text-fatale opacity-0 group-hover:opacity-100 transition-opacity" />
                                                         <div onClick={(e) => e.stopPropagation()}>
                                                             <TrackActionsDropdown
                                                                 track={{ ...y, category: 'YouTube' }}
@@ -1658,23 +1658,23 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                             console.error("Failed to clear recent searches:", err);
                                                         }
                                                     }}
-                                                    className="text-[7px] font-bold text-[#ff006e]/60 hover:text-[#ff006e] transition-all uppercase tracking-wider bg-transparent cursor-pointer"
+                                                    className="text-[7px] font-bold text-fatale/60 hover:text-fatale transition-all uppercase tracking-wider bg-transparent cursor-pointer"
                                                 >
                                                     [ {t('CLEAR')} ]
                                                 </button>
                                             </div>
                                             {recentYoutubeSearches.map(s => (
-                                                <div key={s} className="flex items-center gap-4 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => setSearchQuery(s)}>
-                                                    <Search size={10} className="text-white/40 group-hover:text-[#ff006e]" />
+                                                <div key={s} className="flex items-center gap-4 p-2.5 hover:bg-fatale/10 border border-transparent hover:border-fatale/20 group cursor-pointer transition-all" onClick={() => setSearchQuery(s)}>
+                                                    <Search size={10} className="text-white/40 group-hover:text-fatale" />
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{s}</div>
+                                                        <div className="text-[10px] font-black truncate group-hover:text-fatale transition-colors uppercase tracking-tight">{s}</div>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     ) : (
                                         <div className="flex flex-col items-center justify-center h-full opacity-40 py-10 text-center px-4 group">
-                                            <div className="w-8 h-8 border border-white/20 rounded-full flex items-center justify-center mb-3 group-hover:border-[#ff006e] group-hover:text-[#ff006e] transition-all animate-pulse">
+                                            <div className="w-8 h-8 border border-white/20 rounded-full flex items-center justify-center mb-3 group-hover:border-fatale group-hover:text-fatale transition-all animate-pulse">
                                                 <Search size={14} />
                                             </div>
                                             <div className="text-[10px] font-black tracking-widest uppercase mb-1">{t('RADAR_YOUTUBE_ESPERANDO')}</div>
@@ -1688,7 +1688,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-1 lg:row-start-3 pointer-events-auto">
                             <HUDWidget
-                                title={selectedPlaylist ? `${t('DESC_PL')}: ${(selectedPlaylist.name || selectedPlaylist.Name || '').toUpperCase()}` : <span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('player')}>{t('PLAYLISTS')}</span>}
+                                title={selectedPlaylist ? `${t('DESC_PL')}: ${(selectedPlaylist.name || selectedPlaylist.Name || '').toUpperCase()}` : <span className="cursor-pointer hover:text-fatale transition-colors" onClick={() => setView && setView('player')}>{t('PLAYLISTS')}</span>}
                                 icon={selectedPlaylist ? <ChevronLeft size={14} className="cursor-pointer hover:text-white transition-colors" onClick={() => setSelectedPlaylist(null)} /> : <Music size={14} />}
                                 searchQuery={searchQuery}
                                 activeColor={activeSectorColor}
@@ -1699,10 +1699,10 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     ) : (
                                         <div className="space-y-2 max-h-64 overflow-y-auto no-scrollbar">
                                             {playlistTracks.length > 0 ? playlistTracks.map(trk => (
-                                                <div key={trk.id} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 cursor-pointer group" onClick={() => onPlayTrack(trk)}>
-                                                    <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                <div key={trk.id} className="flex items-center gap-3 p-2 hover:bg-fatale/10 cursor-pointer group" onClick={() => onPlayTrack(trk)}>
+                                                    <Play size={10} className="text-fatale opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] uppercase">{trk.title}</div>
+                                                        <div className="text-[10px] font-black truncate group-hover:text-fatale uppercase">{trk.title}</div>
                                                         <div className="text-[8px] opacity-30 truncate uppercase">{trk.artist}</div>
                                                     </div>
                                                 </div>
@@ -1717,7 +1717,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         <div>
                                             <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">TUS_PLAYLISTS</div>
                                             {userPlaylists.length > 0 ? userPlaylists.map(p => (
-                                                <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={async () => {
+                                                <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-fatale/10 border border-transparent hover:border-fatale/20 group cursor-pointer transition-all" onClick={async () => {
                                                     setSelectedPlaylist(p);
                                                     setLoadingPlaylist(true);
                                                     try {
@@ -1729,14 +1729,14 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                         setLoadingPlaylist(false);
                                                     }
                                                 }}>
-                                                    <div className="w-8 h-8 bg-black border border-white/10 flex items-center justify-center group-hover:border-[#ff006e]/40">
-                                                        <Layers size={12} className="text-white/40 group-hover:text-[#ff006e]" />
+                                                    <div className="w-8 h-8 bg-black border border-white/10 flex items-center justify-center group-hover:border-fatale/40">
+                                                        <Layers size={12} className="text-white/40 group-hover:text-fatale" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
+                                                        <div className="text-[10px] font-black truncate group-hover:text-fatale transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
                                                         <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">{p.tracks?.length || 0} SIGNALS</div>
                                                     </div>
-                                                    <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    <Play size={10} className="text-fatale opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 </div>
                                             )) : (
                                                 <div className="text-[8px] opacity-30 px-2 py-1">NO_PLAYLISTS_CREATED</div>
@@ -1747,7 +1747,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         <div>
                                             <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">RECOMENDADAS</div>
                                             {trendingPlaylists.length > 0 ? trendingPlaylists.map(p => (
-                                                <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={async () => {
+                                                <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-fatale/10 border border-transparent hover:border-fatale/20 group cursor-pointer transition-all" onClick={async () => {
                                                     setSelectedPlaylist(p);
                                                     setLoadingPlaylist(true);
                                                     try {
@@ -1759,14 +1759,14 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                         setLoadingPlaylist(false);
                                                     }
                                                 }}>
-                                                    <div className="w-8 h-8 bg-black border border-white/10 flex items-center justify-center group-hover:border-[#ff006e]/40">
-                                                        <Layers size={12} className="text-white/40 group-hover:text-[#ff006e]" />
+                                                    <div className="w-8 h-8 bg-black border border-white/10 flex items-center justify-center group-hover:border-fatale/40">
+                                                        <Layers size={12} className="text-white/40 group-hover:text-fatale" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
+                                                        <div className="text-[10px] font-black truncate group-hover:text-fatale transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
                                                         <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">BY {p.authorName || p.AuthorName || p.userName || p.UserName || "UNKNOWN"}</div>
                                                     </div>
-                                                    <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    <Play size={10} className="text-fatale opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 </div>
                                             )) : (
                                                 <div className="text-[8px] opacity-30 px-2 py-1">NO_RECOMMENDATIONS_AVAILABLE</div>
@@ -1778,23 +1778,23 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         </div>
 
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-1 lg:row-start-5 pointer-events-auto">
-                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('profile')}>NATIVE_ARTISTS</span>} icon={<User size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-fatale transition-colors" onClick={() => setView && setView('profile')}>NATIVE_ARTISTS</span>} icon={<User size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-2 pt-2">
                                     {filteredArtists.map(a => (
                                         <div key={a.id} className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => navigateToProfile(a.userId)}>
                                             <div className="relative w-14 h-14">
                                                 {/* Radar Node Circle */}
-                                                <div className="absolute inset-0 rounded-full border border-[#ff006e]/20 group-hover:border-[#ff006e]/60 transition-colors" />
-                                                <div className="absolute inset-[-4px] rounded-full border border-dashed border-[#ff006e]/10 group-hover:ring-1 group-hover:ring-[#ff006e]/20 group-hover:animate-spin transition-all duration-[3000ms]" />
+                                                <div className="absolute inset-0 rounded-full border border-fatale/20 group-hover:border-fatale/60 transition-colors" />
+                                                <div className="absolute inset-[-4px] rounded-full border border-dashed border-fatale/10 group-hover:ring-1 group-hover:ring-fatale/20 group-hover:animate-spin transition-all duration-[3000ms]" />
 
                                                 <div className="absolute inset-[4px] rounded-full overflow-hidden border-2 border-black z-10 bg-black">
                                                     <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all scale-110 group-hover:scale-100" />
                                                 </div>
 
                                                 {/* Scan sweep line */}
-                                                <div className="absolute inset-0 z-20 pointer-events-none rounded-full bg-gradient-to-tr from-[#ff006e]/30 via-transparent to-transparent animate-spin opacity-0 group-hover:opacity-100" style={{ animationDuration: '2s' }} />
+                                                <div className="absolute inset-0 z-20 pointer-events-none rounded-full bg-gradient-to-tr from-fatale/30 via-transparent to-transparent animate-spin opacity-0 group-hover:opacity-100" style={{ animationDuration: '2s' }} />
                                             </div>
-                                            <span className="text-[8px] text-center truncate w-full uppercase font-black tracking-widest opacity-40 group-hover:opacity-100 group-hover:text-[#ff006e] transition-all">{a.name}</span>
+                                            <span className="text-[8px] text-center truncate w-full uppercase font-black tracking-widest opacity-40 group-hover:opacity-100 group-hover:text-fatale transition-all">{a.name}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -1803,18 +1803,18 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                         {/* --- RIGHT COLUMN: PLAYLISTS, VISUALS, JOURNALS --- */}
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-1 pointer-events-auto">
-                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('shopping')}>{t('SHOP_LNK')}</span>} icon={<Layers size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-fatale transition-colors" onClick={() => setView && setView('shopping')}>{t('SHOP_LNK')}</span>} icon={<Layers size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 {desktopMarketplaceGrid}
                             </HUDWidget>
                         </div>
 
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-10 lg:row-start-3 pointer-events-auto">
-                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('feed')}>{t('STUDIO_TRANS')}</span>} icon={<Camera size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-fatale transition-colors" onClick={() => setView && setView('feed')}>{t('STUDIO_TRANS')}</span>} icon={<Camera size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                                     {filteredVisuals.length > 0 ? filteredVisuals.map(vis => (
                                         <div
                                             key={vis.id}
-                                            className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-[#ff006e]/60 transition-all shadow-xl"
+                                            className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-fatale/60 transition-all shadow-xl"
                                             onClick={() => onExpandContent(
                                                 vis,
                                                 (vis.mediaType || '').toLowerCase() === 'video' ? 'video' : 'photo',
@@ -1826,20 +1826,20 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             ) : (
                                                 <img src={resolveThumbnail(vis)} alt="" className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
                                             )}
-                                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ff006e] scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+                                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-fatale scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
                                             {(vis.mediaType || vis.MediaType || '').toLowerCase() === 'video' && (
                                                 <div className="absolute top-1 right-1">
-                                                    <Play size={8} className="text-[#ff006e]" />
+                                                    <Play size={8} className="text-fatale" />
                                                 </div>
                                             )}
                                         </div>
                                     )) : (
                                         <div
                                             onClick={() => setShowGlobalIngest && setShowGlobalIngest(true)}
-                                            className="col-span-full border border-dashed border-white/20 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-[#ff006e]/60 hover:bg-[#ff006e]/5 transition-all group"
+                                            className="col-span-full border border-dashed border-white/20 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-fatale/60 hover:bg-fatale/5 transition-all group"
                                         >
-                                            <Camera size={20} className="opacity-40 group-hover:text-[#ff006e] group-hover:opacity-100 mb-2 transition-all" />
-                                            <span className="text-[9px] font-black uppercase tracking-widest opacity-60 group-hover:text-[#ff006e] group-hover:opacity-100">SIN_TRANSMISIONES_VISUALES</span>
+                                            <Camera size={20} className="opacity-40 group-hover:text-fatale group-hover:opacity-100 mb-2 transition-all" />
+                                            <span className="text-[9px] font-black uppercase tracking-widest opacity-60 group-hover:text-fatale group-hover:opacity-100">SIN_TRANSMISIONES_VISUALES</span>
                                             <span className="text-[7px] uppercase tracking-[0.2em] opacity-40 mt-1">[ {t('START_TRANSMISSION')} ]</span>
                                         </div>
                                     )}
@@ -1848,28 +1848,28 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         </div>
 
                         <div className="col-span-3 row-span-2 col-start-10 row-start-5 pointer-events-auto">
-                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('feed')}>[ JOURNAL ]</span>} icon={<BookOpen size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-fatale transition-colors" onClick={() => setView && setView('feed')}>[ JOURNAL ]</span>} icon={<BookOpen size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="space-y-4">
                                     {filteredJournals.length > 0 ? filteredJournals.map(j => (
                                         <div
                                             key={j.id}
-                                            className="border-l border-[#ff006e]/10 pl-4 py-2 relative group cursor-pointer hover:bg-white/[0.02] transition-all"
+                                            className="border-l border-fatale/10 pl-4 py-2 relative group cursor-pointer hover:bg-white/[0.02] transition-all"
                                             onClick={() => onExpandContent(j, 'journal', { themeColor: '#9d00ff', backgroundColor: '#000000' })}
                                         >
-                                            <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-[#ff006e] scale-y-0 group-hover:scale-y-100 transition-transform" />
-                                            <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase mb-1 tracking-tight">{j.title}</div>
+                                            <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-fatale scale-y-0 group-hover:scale-y-100 transition-transform" />
+                                            <div className="text-[10px] font-black truncate group-hover:text-fatale transition-colors uppercase mb-1 tracking-tight">{j.title}</div>
                                             <div className="text-[8px] opacity-30 line-clamp-2 italic font-light leading-relaxed">{j.content?.substring(0, 80)}...</div>
                                             <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <div className="text-[7px] text-[#ff006e] font-black uppercase">{t('READ_SIGNAL')} {">"}{">"}</div>
+                                                <div className="text-[7px] text-fatale font-black uppercase">{t('READ_SIGNAL')} {">"}{">"}</div>
                                             </div>
                                         </div>
                                     )) : (
                                         <div
                                             onClick={() => { if (setIngestMode) setIngestMode('JOURNAL'); if (setShowGlobalIngest) setShowGlobalIngest(true); }}
-                                            className="border-l-2 border-[#ff006e]/20 pl-4 py-4 cursor-pointer hover:border-[#ff006e] group transition-all"
+                                            className="border-l-2 border-fatale/20 pl-4 py-4 cursor-pointer hover:border-fatale group transition-all"
                                         >
                                             <div className="text-[10px] font-black text-white/60 group-hover:text-white tracking-widest uppercase mb-1">{t('EMPTY_JOURNAL')}</div>
-                                            <div className="text-[8px] opacity-40 group-hover:text-[#ff006e] transition-colors">[+] {t('ADD_NEW_ENTRY')}</div>
+                                            <div className="text-[8px] opacity-40 group-hover:text-fatale transition-colors">[+] {t('ADD_NEW_ENTRY')}</div>
                                         </div>
                                     )}
                                 </div>
@@ -1878,7 +1878,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                         {/* --- BOTTOM CENTER: LIVE STATIONS --- */}
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-4 lg:row-start-5 pointer-events-auto">
-                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('player')}>LIVE!</span>} icon={<Radio size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-fatale transition-colors" onClick={() => setView && setView('player')}>LIVE!</span>} icon={<Radio size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="space-y-4 max-h-[160px] overflow-y-auto custom-scrollbar-sharp pr-1">
                                     {liveStations.length > 0 ? liveStations.map(c => {
                                         const isFollowed = user && followingIds.includes(String(c.artistUserId || c.ArtistUserId));
@@ -1886,21 +1886,21 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             <div key={c.id || c.stationId} className="group cursor-pointer border-b border-white/5 pb-2 flex items-center gap-3" onClick={() => {
                                                 if (onPlayStation) onPlayStation(c);
                                             }}>
-                                                <div className="w-6 h-6 bg-black border border-[#ff006e]/30 rounded-full overflow-hidden shrink-0 relative flex items-center justify-center">
+                                                <div className="w-6 h-6 bg-black border border-fatale/30 rounded-full overflow-hidden shrink-0 relative flex items-center justify-center">
                                                     {c.imageUrl || c.ImageUrl ? (
                                                         <img src={getMediaUrl(c.imageUrl || c.ImageUrl)} className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://via.placeholder.com/100?text=DJ'; }} alt="" />
                                                     ) : (
-                                                        <Radio size={12} className="text-[#ff006e]" />
+                                                        <Radio size={12} className="text-fatale" />
                                                     )}
                                                     <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-black animate-pulse" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center justify-between mb-0.5">
-                                                        <div className="text-[10px] font-black group-hover:text-[#ff006e] transition-colors uppercase tracking-tight truncate flex-1">
+                                                        <div className="text-[10px] font-black group-hover:text-fatale transition-colors uppercase tracking-tight truncate flex-1">
                                                             {c.artistName || c.ArtistName || c.username || c.Username || 'LIVE DJ'}
                                                         </div>
                                                         {isFollowed && (
-                                                            <span className="text-[6px] font-black text-[#ff006e] border border-[#ff006e]/30 px-1.5 py-[1px] uppercase tracking-widest shrink-0 ml-2 animate-pulse">
+                                                            <span className="text-[6px] font-black text-fatale border border-fatale/30 px-1.5 py-[1px] uppercase tracking-widest shrink-0 ml-2 animate-pulse">
                                                                 FOLLOWING
                                                             </span>
                                                         )}
@@ -1922,7 +1922,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         </div>
 
                         <div className="flex-none lg:col-span-3 lg:row-span-2 lg:col-start-7 lg:row-start-5 pointer-events-auto">
-                            <HUDWidget title={<span className="cursor-pointer hover:text-[#ff006e] transition-colors" onClick={() => setView && setView('messages')}>COMMUNITIES</span>} icon={<Globe size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
+                            <HUDWidget title={<span className="cursor-pointer hover:text-fatale transition-colors" onClick={() => setView && setView('messages')}>COMMUNITIES</span>} icon={<Globe size={14} />} searchQuery={searchQuery} activeColor={activeSectorColor}>
                                 <div className="space-y-4">
                                     {/* Create Clique Trigger */}
                                     <div
@@ -1944,7 +1944,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                     value={newClanName}
                                                     onChange={(e) => setNewClanName(e.target.value)}
                                                     placeholder="..."
-                                                    className="w-full bg-black/40 border border-white/10 p-1.5 text-[9px] mono outline-none focus:border-[#ff006e]/50"
+                                                    className="w-full bg-black/40 border border-white/10 p-1.5 text-[9px] mono outline-none focus:border-fatale/50"
                                                     autoFocus
                                                 />
                                             </div>
@@ -1963,7 +1963,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             <button
                                                 type="submit"
                                                 disabled={!newClanName.trim()}
-                                                className="w-full bg-[#ff006e]/80 hover:bg-[#ff006e] text-white text-[8px] font-black py-1.5 rounded-sm transition-all disabled:opacity-20"
+                                                className="w-full bg-fatale/80 hover:bg-fatale text-white text-[8px] font-black py-1.5 rounded-sm transition-all disabled:opacity-20"
                                             >
                                                 {t('ESTABLISH_SIGNAL')}
                                             </button>
@@ -1981,11 +1981,11 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                         setActiveTerminalCommunity(c);
                                                     }
                                                 }}>
-                                                    <div className="w-8 h-8 rounded-sm bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center shrink-0 relative overflow-hidden">
+                                                    <div className="w-8 h-8 rounded-sm bg-fatale/10 border border-fatale/20 flex items-center justify-center shrink-0 relative overflow-hidden">
                                                         {(c.imageUrl || c.ImageUrl || c.profilePicture || c.ProfilePicture) ? (
                                                             <img src={getMediaUrl(c.imageUrl || c.ImageUrl || c.profilePicture || c.ProfilePicture)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
                                                         ) : (
-                                                            <Globe size={12} className="text-[#ff006e] opacity-40 group-hover:opacity-100 transition-opacity" />
+                                                            <Globe size={12} className="text-fatale opacity-40 group-hover:opacity-100 transition-opacity" />
                                                         )}
                                                         {(isJoined || followedCommunities.includes(c.id)) && (
                                                             <div className="absolute top-0.5 right-0.5">
@@ -1994,7 +1994,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                         )}
                                                     </div>
                                                     <div className="min-w-0 flex-1">
-                                                        <div className="text-[10px] font-black group-hover:text-[#ff006e] transition-colors uppercase tracking-tight truncate flex items-center gap-2">
+                                                        <div className="text-[10px] font-black group-hover:text-fatale transition-colors uppercase tracking-tight truncate flex items-center gap-2">
                                                             {c.name}
                                                             {isJoined && <span className="text-[7px] text-yellow-400/60 mono font-normal border border-yellow-400/20 px-1">{t('HOME')}</span>}
                                                         </div>
@@ -2011,7 +2011,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                 )}
 
                 {isMobile && mobileViewMode === 'search' && (
-                    <div className="flex-1 pointer-events-auto flex flex-col p-4 bg-black/90 border border-[#ff006e]/20 rounded-sm mt-4 overflow-y-auto no-scrollbar">
+                    <div className="flex-1 pointer-events-auto flex flex-col p-4 bg-black/90 border border-fatale/20 rounded-sm mt-4 overflow-y-auto no-scrollbar">
                         {/* NATIVE RESULTS INTEGRATION */}
                         {searchQuery.length >= 2 && (
                             <div className="space-y-6 mb-8 border-b border-white/10 pb-6">
@@ -2070,7 +2070,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             </div>
                         )}
 
-                        <div className="text-[10px] font-black uppercase text-[#ff006e] mb-4 tracking-widest flex items-center justify-between">
+                        <div className="text-[10px] font-black uppercase text-fatale mb-4 tracking-widest flex items-center justify-between">
                             <span>:: SEARCH_SIGNAL_DENSITY ::</span>
                             <span className="text-[8px] opacity-60">{youtubeResults.length} FOUND</span>
                         </div>
@@ -2106,14 +2106,14 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 return (
                                     <>
                                         {/* Subtabs Filter Bar */}
-                                        <div className="flex gap-1 border-b border-[#ff006e]/10 pb-2 overflow-x-auto scrollbar-none" onTouchStart={(e) => e.stopPropagation()}>
+                                        <div className="flex gap-1 border-b border-fatale/10 pb-2 overflow-x-auto scrollbar-none" onTouchStart={(e) => e.stopPropagation()}>
                                             {['ALL', 'SONGS', 'ALBUMS', 'ARTISTS'].map(cat => (
                                                 <button
                                                     key={cat}
                                                     onClick={() => setSelectedSearchCategory(cat)}
                                                     className={`text-[7px] font-black uppercase tracking-[0.1em] px-2 py-1 transition-all shrink-0 ${
                                                         selectedSearchCategory === cat 
-                                                            ? 'bg-[#ff006e] text-black shadow-[0_0_10px_#ff006e]' 
+                                                            ? 'bg-fatale text-black shadow-[0_0_10px_rgb(var(--theme-primary))]' 
                                                             : 'text-white/40 hover:text-white hover:bg-white/5 border border-white/5'
                                                     }`}
                                                 >
@@ -2126,9 +2126,9 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         {(selectedSearchCategory === 'ALL' || selectedSearchCategory === 'ARTISTS') && (() => {
                                             const topResult = youtubeResults[0];
                                             return (
-                                                <div className="hud-panel p-3 border border-[#ff006e]/20 bg-black/60 relative overflow-hidden" onTouchStart={(e) => e.stopPropagation()}>
+                                                <div className="hud-panel p-3 border border-fatale/20 bg-black/60 relative overflow-hidden" onTouchStart={(e) => e.stopPropagation()}>
                                                     <div className="flex items-center gap-3 relative z-10">
-                                                        <div className="w-12 h-12 rounded-full overflow-hidden border border-[#ff006e] shadow-[0_0_10px_#ff006e50] shrink-0 relative bg-black">
+                                                        <div className="w-12 h-12 rounded-full overflow-hidden border border-fatale shadow-[0_0_10px_rgb(var(--theme-primary))50] shrink-0 relative bg-black">
                                                             <img 
                                                                 src={topResult.thumbnailUrl} 
                                                                 className="w-full h-full object-cover"
@@ -2137,7 +2137,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <div className="text-[10px] font-black text-white uppercase tracking-wider truncate">{topResult.author}</div>
-                                                            <div className="text-[6px] font-bold text-[#ff006e] mono mt-0.5 tracking-widest uppercase">
+                                                            <div className="text-[6px] font-bold text-fatale mono mt-0.5 tracking-widest uppercase">
                                                                 NEURAL EMITTER ACTIVE
                                                             </div>
                                                         </div>
@@ -2164,7 +2164,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                             }}
                                                             className="flex-1 border border-white/20 text-white font-black text-[7px] py-1 px-2 transition-all uppercase tracking-widest flex items-center justify-center gap-1"
                                                         >
-                                                            <Radio size={8} className="text-[#ff006e]" /> RADIO
+                                                            <Radio size={8} className="text-fatale" /> RADIO
                                                         </button>
                                                     </div>
                                                 </div>
@@ -2178,7 +2178,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                     <div className="text-[8px] font-black text-white/40 uppercase tracking-[0.3em] mb-1 px-1">:: {t('SONGS')} ::</div>
                                                 )}
                                                 {(selectedSearchCategory === 'SONGS' ? youtubeResults : youtubeResults.slice(0, 5)).map(y => (
-                                                    <div key={y.id} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => {
+                                                    <div key={y.id} className="flex items-center gap-3 p-2 hover:bg-fatale/10 border border-transparent hover:border-fatale/20 group cursor-pointer transition-all" onClick={() => {
                                                         onPlayTrack(y);
                                                         setMobileViewMode('globe');
                                                         try {
@@ -2223,7 +2223,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                 )}
                                                 <div className="grid grid-cols-2 gap-2">
                                                     {uniqueAlbums.map((a, idx) => (
-                                                        <div key={idx} className="hud-panel p-1.5 border border-white/5 bg-black/40 hover:border-[#ff006e]/40 cursor-pointer group transition-all" onClick={() => {
+                                                        <div key={idx} className="hud-panel p-1.5 border border-white/5 bg-black/40 hover:border-fatale/40 cursor-pointer group transition-all" onClick={() => {
                                                             const albumTrack = youtubeResults.find(trk => (trk.originalTrack?.album || t.originalTrack?.Album || "").toLowerCase() === a.title.toLowerCase());
                                                             if (albumTrack) {
                                                                 onPlayTrack(albumTrack);
@@ -2249,7 +2249,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         {selectedSearchCategory === 'ARTISTS' && uniqueArtists.length > 0 && (
                                             <div className="space-y-2 mt-1" onTouchStart={(e) => e.stopPropagation()}>
                                                 {uniqueArtists.map((art, idx) => (
-                                                    <div key={idx} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={() => {
+                                                    <div key={idx} className="flex items-center gap-3 p-2 hover:bg-fatale/10 border border-transparent hover:border-fatale/20 group cursor-pointer transition-all" onClick={() => {
                                                         const artistTrack = youtubeResults.find(trk => trk.author.toLowerCase() === art.name.toLowerCase());
                                                         if (artistTrack) {
                                                             onPlayTrack(artistTrack);
@@ -2284,7 +2284,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         {/* Playlists */}
                         <div className="space-y-2 border-b border-white/[0.03] pb-2">
                             <div 
-                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 pb-1 border-b border-[#ff006e]/30 flex items-center justify-between cursor-pointer select-none"
+                                className="text-[10px] font-black tracking-[0.2em] uppercase text-fatale mb-2 px-1 pb-1 border-b border-fatale/30 flex items-center justify-between cursor-pointer select-none"
                                 onClick={() => setCollapsedSections(prev => ({ ...prev, playlists: !prev.playlists }))}
                             >
                                 <div className="flex items-center gap-2">
@@ -2293,7 +2293,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     {!selectedPlaylist && !collapsedSections.playlists && (
                                         <ArrowUpRight 
                                             size={12} 
-                                            className="text-[#ff006e]/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
+                                            className="text-fatale/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
                                             onClick={(e) => { e.stopPropagation(); setView('player'); }} 
                                         />
                                     )}
@@ -2310,10 +2310,10 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         ) : (
                                             <div className="space-y-2 max-h-64 overflow-y-auto no-scrollbar">
                                                 {playlistTracks.slice(0, 15).length > 0 ? playlistTracks.slice(0, 15).map(trk => (
-                                                    <div key={trk.id} className="flex items-center gap-3 p-2 hover:bg-[#ff006e]/10 cursor-pointer group" onClick={() => onPlayTrack(trk)}>
-                                                        <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    <div key={trk.id} className="flex items-center gap-3 p-2 hover:bg-fatale/10 cursor-pointer group" onClick={() => onPlayTrack(trk)}>
+                                                        <Play size={10} className="text-fatale opacity-0 group-hover:opacity-100 transition-opacity" />
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] uppercase">{trk.title}</div>
+                                                            <div className="text-[10px] font-black truncate group-hover:text-fatale uppercase">{trk.title}</div>
                                                             <div className="text-[8px] opacity-30 truncate uppercase">{trk.artist}</div>
                                                         </div>
                                                     </div>
@@ -2328,7 +2328,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             <div>
                                                 <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">TUS_PLAYLISTS</div>
                                                 {userPlaylists.slice(0, 15).length > 0 ? userPlaylists.slice(0, 15).map(p => (
-                                                    <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={async () => {
+                                                    <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-fatale/10 border border-transparent hover:border-fatale/20 group cursor-pointer transition-all" onClick={async () => {
                                                         setSelectedPlaylist(p);
                                                         setLoadingPlaylist(true);
                                                         try {
@@ -2340,14 +2340,14 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                             setLoadingPlaylist(false);
                                                         }
                                                     }}>
-                                                        <div className="w-8 h-8 bg-black border border-white/10 flex items-center justify-center group-hover:border-[#ff006e]/40">
-                                                            <Layers size={12} className="text-white/40 group-hover:text-[#ff006e]" />
+                                                        <div className="w-8 h-8 bg-black border border-white/10 flex items-center justify-center group-hover:border-fatale/40">
+                                                            <Layers size={12} className="text-white/40 group-hover:text-fatale" />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
+                                                            <div className="text-[10px] font-black truncate group-hover:text-fatale transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
                                                             <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">{p.tracks?.length || 0} SIGNALS</div>
                                                         </div>
-                                                        <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                        <Play size={10} className="text-fatale opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     </div>
                                                 )) : (
                                                     <div className="text-[8px] opacity-30 px-2 py-1">NO_PLAYLISTS_CREATED</div>
@@ -2358,7 +2358,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             <div>
                                                 <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">RECOMENDADAS</div>
                                                 {trendingPlaylists.slice(0, 15).length > 0 ? trendingPlaylists.slice(0, 15).map(p => (
-                                                    <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-[#ff006e]/10 border border-transparent hover:border-[#ff006e]/20 group cursor-pointer transition-all" onClick={async () => {
+                                                    <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-fatale/10 border border-transparent hover:border-fatale/20 group cursor-pointer transition-all" onClick={async () => {
                                                         setSelectedPlaylist(p);
                                                         setLoadingPlaylist(true);
                                                         try {
@@ -2370,14 +2370,14 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                             setLoadingPlaylist(false);
                                                         }
                                                     }}>
-                                                        <div className="w-8 h-8 bg-black border border-white/10 flex items-center justify-center group-hover:border-[#ff006e]/40">
-                                                            <Layers size={12} className="text-white/40 group-hover:text-[#ff006e]" />
+                                                        <div className="w-8 h-8 bg-black border border-white/10 flex items-center justify-center group-hover:border-fatale/40">
+                                                            <Layers size={12} className="text-white/40 group-hover:text-fatale" />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
+                                                            <div className="text-[10px] font-black truncate group-hover:text-fatale transition-colors uppercase tracking-tight">{p.name || p.Name}</div>
                                                             <div className="text-[8px] opacity-30 truncate uppercase font-bold tracking-[0.2em] mt-0.5">BY {p.authorName || p.AuthorName || p.userName || p.UserName || "UNKNOWN"}</div>
                                                         </div>
-                                                        <Play size={10} className="text-[#ff006e] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                        <Play size={10} className="text-fatale opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     </div>
                                                 )) : (
                                                     <div className="text-[8px] opacity-30 px-2 py-1">NO_RECOMMENDATIONS_AVAILABLE</div>
@@ -2392,16 +2392,16 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         {/* Feed (Visuals) */}
                         <div className="space-y-2 border-b border-white/[0.03] pb-2">
                             <div 
-                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 pb-1 border-b border-[#ff006e]/30 flex items-center justify-between cursor-pointer select-none"
+                                className="text-[10px] font-black tracking-[0.2em] uppercase text-fatale mb-2 px-1 pb-1 border-b border-fatale/30 flex items-center justify-between cursor-pointer select-none"
                                 onClick={() => setCollapsedSections(prev => ({ ...prev, feed: !prev.feed }))}
                             >
                                 <div className="flex items-center gap-2">
                                     <Camera size={14} />
-                                    <span className="hover:text-[#ff006e] transition-colors">{t('STUDIO_TRANS')}</span>
+                                    <span className="hover:text-fatale transition-colors">{t('STUDIO_TRANS')}</span>
                                     {!collapsedSections.feed && (
                                         <ArrowUpRight 
                                             size={12} 
-                                            className="text-[#ff006e]/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
+                                            className="text-fatale/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
                                             onClick={(e) => { e.stopPropagation(); setView('feed'); }} 
                                         />
                                     )}
@@ -2413,16 +2413,16 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     {/* New Post/Track Button */}
                                     <div
                                         onClick={() => { if (setIngestMode) setIngestMode('ALL'); if (setShowGlobalIngest) setShowGlobalIngest(true); }}
-                                        className="aspect-square border border-dashed border-[#ff006e]/40 flex flex-col items-center justify-center cursor-pointer hover:border-[#ff006e] hover:bg-[#ff006e]/5 transition-all group"
+                                        className="aspect-square border border-dashed border-fatale/40 flex flex-col items-center justify-center cursor-pointer hover:border-fatale hover:bg-fatale/5 transition-all group"
                                     >
-                                        <Plus size={16} className="text-[#ff006e] opacity-60 group-hover:opacity-100 mb-1 transition-all" />
-                                        <span className="text-[8px] font-black uppercase tracking-widest text-[#ff006e] opacity-60 group-hover:opacity-100">PUBLICAR</span>
+                                        <Plus size={16} className="text-fatale opacity-60 group-hover:opacity-100 mb-1 transition-all" />
+                                        <span className="text-[8px] font-black uppercase tracking-widest text-fatale opacity-60 group-hover:opacity-100">PUBLICAR</span>
                                     </div>
 
                                     {filteredVisuals.slice(0, 15).length > 0 ? filteredVisuals.slice(0, 15).map(vis => (
                                         <div
                                             key={vis.id}
-                                            className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-[#ff006e]/60 transition-all shadow-xl"
+                                            className="aspect-square bg-black border border-white/5 relative group cursor-pointer overflow-hidden hover:border-fatale/60 transition-all shadow-xl"
                                             onClick={() => onExpandContent(
                                                 vis,
                                                 (vis.mediaType || '').toLowerCase() === 'video' ? 'video' : 'photo',
@@ -2434,20 +2434,20 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             ) : (
                                                 <img src={resolveThumbnail(vis)} alt="" className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
                                             )}
-                                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ff006e] scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+                                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-fatale scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
                                             {(vis.mediaType || vis.MediaType || '').toLowerCase() === 'video' && (
                                                 <div className="absolute top-1 right-1">
-                                                    <Play size={8} className="text-[#ff006e]" />
+                                                    <Play size={8} className="text-fatale" />
                                                 </div>
                                             )}
                                         </div>
                                     )) : (
                                         <div
                                             onClick={() => setShowGlobalIngest && setShowGlobalIngest(true)}
-                                            className="col-span-full border border-dashed border-white/20 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-[#ff006e]/60 hover:bg-[#ff006e]/5 transition-all group"
+                                            className="col-span-full border border-dashed border-white/20 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-fatale/60 hover:bg-fatale/5 transition-all group"
                                         >
-                                            <Camera size={20} className="opacity-40 group-hover:text-[#ff006e] group-hover:opacity-100 mb-2 transition-all" />
-                                            <span className="text-[9px] font-black uppercase tracking-widest opacity-60 group-hover:text-[#ff006e] group-hover:opacity-100">SIN_TRANSMISIONES_VISUALES</span>
+                                            <Camera size={20} className="opacity-40 group-hover:text-fatale group-hover:opacity-100 mb-2 transition-all" />
+                                            <span className="text-[9px] font-black uppercase tracking-widest opacity-60 group-hover:text-fatale group-hover:opacity-100">SIN_TRANSMISIONES_VISUALES</span>
                                             <span className="text-[7px] uppercase tracking-[0.2em] opacity-40 mt-1">[ {t('START_TRANSMISSION')} ]</span>
                                         </div>
                                     )}
@@ -2458,16 +2458,16 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         {/* Live Stations */}
                         <div className="space-y-2 border-b border-white/[0.03] pb-2">
                             <div 
-                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 pb-1 border-b border-[#ff006e]/30 flex items-center justify-between cursor-pointer select-none"
+                                className="text-[10px] font-black tracking-[0.2em] uppercase text-fatale mb-2 px-1 pb-1 border-b border-fatale/30 flex items-center justify-between cursor-pointer select-none"
                                 onClick={() => setCollapsedSections(prev => ({ ...prev, stations: !prev.stations }))}
                             >
                                 <div className="flex items-center gap-2">
                                     <Radio size={14} />
-                                    <span className="hover:text-[#ff006e] transition-colors">LIVE!</span>
+                                    <span className="hover:text-fatale transition-colors">LIVE!</span>
                                     {!collapsedSections.stations && (
                                         <ArrowUpRight 
                                             size={12} 
-                                            className="text-[#ff006e]/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
+                                            className="text-fatale/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
                                             onClick={(e) => { e.stopPropagation(); setView('player'); }} 
                                         />
                                     )}
@@ -2483,21 +2483,21 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                 if (onPlayStation) onPlayStation(c);
                                                 setMobileViewMode('globe');
                                             }}>
-                                                <div className="w-6 h-6 bg-black border border-[#ff006e]/30 rounded-full overflow-hidden shrink-0 relative flex items-center justify-center">
+                                                <div className="w-6 h-6 bg-black border border-fatale/30 rounded-full overflow-hidden shrink-0 relative flex items-center justify-center">
                                                     {c.imageUrl || c.ImageUrl ? (
                                                         <img src={getMediaUrl(c.imageUrl || c.ImageUrl)} className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://via.placeholder.com/100?text=DJ'; }} alt="" />
                                                     ) : (
-                                                        <Radio size={12} className="text-[#ff006e]" />
+                                                        <Radio size={12} className="text-fatale" />
                                                     )}
                                                     <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-black animate-pulse" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center justify-between mb-0.5">
-                                                        <div className="text-[10px] font-black group-hover:text-[#ff006e] transition-colors uppercase tracking-tight truncate flex-1">
+                                                        <div className="text-[10px] font-black group-hover:text-fatale transition-colors uppercase tracking-tight truncate flex-1">
                                                             {c.artistName || c.ArtistName || c.username || c.Username || 'LIVE DJ'}
                                                         </div>
                                                         {isFollowed && (
-                                                            <span className="text-[6px] font-black text-[#ff006e] border border-[#ff006e]/30 px-1.5 py-[1px] uppercase tracking-widest shrink-0 ml-2 animate-pulse">
+                                                            <span className="text-[6px] font-black text-fatale border border-fatale/30 px-1.5 py-[1px] uppercase tracking-widest shrink-0 ml-2 animate-pulse">
                                                                 FOLLOWING
                                                             </span>
                                                         )}
@@ -2521,16 +2521,16 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         {/* Marketplace */}
                         <div className="space-y-2 border-b border-white/[0.03] pb-2">
                             <div 
-                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 pb-1 border-b border-[#ff006e]/30 flex items-center justify-between cursor-pointer select-none"
+                                className="text-[10px] font-black tracking-[0.2em] uppercase text-fatale mb-2 px-1 pb-1 border-b border-fatale/30 flex items-center justify-between cursor-pointer select-none"
                                 onClick={() => setCollapsedSections(prev => ({ ...prev, marketplace: !prev.marketplace }))}
                             >
                                 <div className="flex items-center gap-2">
                                     <Layers size={14} />
-                                    <span className="hover:text-[#ff006e] transition-colors">{t('SHOP_LNK')}</span>
+                                    <span className="hover:text-fatale transition-colors">{t('SHOP_LNK')}</span>
                                     {!collapsedSections.marketplace && (
                                         <ArrowUpRight 
                                             size={12} 
-                                            className="text-[#ff006e]/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
+                                            className="text-fatale/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
                                             onClick={(e) => { e.stopPropagation(); setView('shopping'); }} 
                                         />
                                     )}
@@ -2547,16 +2547,16 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         {/* Journal */}
                         <div className="space-y-2 border-b border-white/[0.03] pb-2">
                             <div 
-                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 pb-1 border-b border-[#ff006e]/30 flex items-center justify-between cursor-pointer select-none"
+                                className="text-[10px] font-black tracking-[0.2em] uppercase text-fatale mb-2 px-1 pb-1 border-b border-fatale/30 flex items-center justify-between cursor-pointer select-none"
                                 onClick={() => setCollapsedSections(prev => ({ ...prev, journal: !prev.journal }))}
                             >
                                 <div className="flex items-center gap-2">
                                     <BookOpen size={14} />
-                                    <span className="hover:text-[#ff006e] transition-colors">[ JOURNAL ]</span>
+                                    <span className="hover:text-fatale transition-colors">[ JOURNAL ]</span>
                                     {!collapsedSections.journal && (
                                         <ArrowUpRight 
                                             size={12} 
-                                            className="text-[#ff006e]/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
+                                            className="text-fatale/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
                                             onClick={(e) => { e.stopPropagation(); setView('feed'); }} 
                                         />
                                     )}
@@ -2568,15 +2568,15 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     {filteredJournals.slice(0, 15).length > 0 ? filteredJournals.slice(0, 15).map(j => (
                                         <div
                                             key={j.id}
-                                            className="border-l border-[#ff006e]/10 pl-4 py-2 relative group cursor-pointer hover:bg-white/[0.02] transition-all"
+                                            className="border-l border-fatale/10 pl-4 py-2 relative group cursor-pointer hover:bg-white/[0.02] transition-all"
                                             onClick={() => onExpandContent(j, 'journal', { themeColor: '#9d00ff', backgroundColor: '#000000' })}
                                         >
-                                            <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-[#ff006e] scale-y-0 group-hover:scale-y-100 transition-transform" />
-                                            <div className="text-[10px] font-black truncate group-hover:text-[#ff006e] transition-colors uppercase mb-1 tracking-tight">{j.title}</div>
+                                            <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-fatale scale-y-0 group-hover:scale-y-100 transition-transform" />
+                                            <div className="text-[10px] font-black truncate group-hover:text-fatale transition-colors uppercase mb-1 tracking-tight">{j.title}</div>
                                             <div className="text-[8px] opacity-35 line-clamp-2 italic font-light leading-relaxed">{j.content?.substring(0, 80)}...</div>
                                         </div>
                                     )) : (
-                                        <div className="border-l-2 border-[#ff006e]/20 pl-4 py-4 opacity-40">
+                                        <div className="border-l-2 border-fatale/20 pl-4 py-4 opacity-40">
                                             <div className="text-[10px] font-black uppercase mb-1">{t('EMPTY_JOURNAL')}</div>
                                         </div>
                                     )}
@@ -2587,16 +2587,16 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         {/* Communities */}
                         <div className="space-y-2 border-b border-white/[0.03] pb-2">
                             <div 
-                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 pb-1 border-b border-[#ff006e]/30 flex items-center justify-between cursor-pointer select-none"
+                                className="text-[10px] font-black tracking-[0.2em] uppercase text-fatale mb-2 px-1 pb-1 border-b border-fatale/30 flex items-center justify-between cursor-pointer select-none"
                                 onClick={() => setCollapsedSections(prev => ({ ...prev, communities: !prev.communities }))}
                             >
                                 <div className="flex items-center gap-2">
                                     <Globe size={14} />
-                                    <span className="hover:text-[#ff006e] transition-colors">COMMUNITIES</span>
+                                    <span className="hover:text-fatale transition-colors">COMMUNITIES</span>
                                     {!collapsedSections.communities && (
                                         <ArrowUpRight 
                                             size={12} 
-                                            className="text-[#ff006e]/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
+                                            className="text-fatale/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
                                             onClick={(e) => { e.stopPropagation(); setView('messages'); }} 
                                         />
                                     )}
@@ -2615,11 +2615,11 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                     setActiveTerminalCommunity(c);
                                                 }
                                             }}>
-                                                <div className="w-8 h-8 rounded-sm bg-[#ff006e]/10 border border-[#ff006e]/20 flex items-center justify-center shrink-0 relative overflow-hidden">
+                                                <div className="w-8 h-8 rounded-sm bg-fatale/10 border border-fatale/20 flex items-center justify-center shrink-0 relative overflow-hidden">
                                                     {(c.imageUrl || c.ImageUrl || c.profilePicture || c.ProfilePicture) ? (
                                                         <img src={getMediaUrl(c.imageUrl || c.ImageUrl || c.profilePicture || c.ProfilePicture)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
                                                     ) : (
-                                                        <Globe size={12} className="text-[#ff006e] opacity-40 group-hover:opacity-100 transition-opacity" />
+                                                        <Globe size={12} className="text-fatale opacity-40 group-hover:opacity-100 transition-opacity" />
                                                     )}
                                                     {(isJoined || followedCommunities.includes(c.id)) && (
                                                         <div className="absolute top-0.5 right-0.5">
@@ -2628,7 +2628,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                     )}
                                                 </div>
                                                 <div className="min-w-0 flex-1">
-                                                    <div className="text-[10px] font-black group-hover:text-[#ff006e] transition-colors uppercase tracking-tight truncate flex items-center gap-2">
+                                                    <div className="text-[10px] font-black group-hover:text-fatale transition-colors uppercase tracking-tight truncate flex items-center gap-2">
                                                         {c.name}
                                                         {isJoined && <span className="text-[7px] text-yellow-400/60 mono font-normal border border-yellow-400/20 px-1">{t('HOME')}</span>}
                                                     </div>
@@ -2644,16 +2644,16 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         {/* Artists */}
                         <div className="space-y-2 border-b border-white/[0.03] pb-2">
                             <div 
-                                className="text-[10px] font-black tracking-[0.2em] uppercase text-[#ff006e] mb-2 px-1 pb-1 border-b border-[#ff006e]/30 flex items-center justify-between cursor-pointer select-none"
+                                className="text-[10px] font-black tracking-[0.2em] uppercase text-fatale mb-2 px-1 pb-1 border-b border-fatale/30 flex items-center justify-between cursor-pointer select-none"
                                 onClick={() => setCollapsedSections(prev => ({ ...prev, artists: !prev.artists }))}
                             >
                                 <div className="flex items-center gap-2">
                                     <User size={14} />
-                                    <span className="hover:text-[#ff006e] transition-colors">NATIVE_ARTISTS</span>
+                                    <span className="hover:text-fatale transition-colors">NATIVE_ARTISTS</span>
                                     {!collapsedSections.artists && (
                                         <ArrowUpRight 
                                             size={12} 
-                                            className="text-[#ff006e]/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
+                                            className="text-fatale/60 hover:text-white transition-all cursor-pointer ml-1 animate-pulse" 
                                             onClick={(e) => { e.stopPropagation(); setView('profile'); }} 
                                         />
                                     )}
@@ -2665,16 +2665,16 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     {filteredArtists.slice(0, 15).map(a => (
                                         <div key={a.id} className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => navigateToProfile(a.userId)}>
                                             <div className="relative w-14 h-14">
-                                                <div className="absolute inset-0 rounded-full border border-[#ff006e]/20 group-hover:border-[#ff006e]/60 transition-colors" />
-                                                <div className="absolute inset-[-4px] rounded-full border border-dashed border-[#ff006e]/10 group-hover:ring-1 group-hover:ring-[#ff006e]/20 group-hover:animate-spin transition-all duration-[3000ms]" />
+                                                <div className="absolute inset-0 rounded-full border border-fatale/20 group-hover:border-fatale/60 transition-colors" />
+                                                <div className="absolute inset-[-4px] rounded-full border border-dashed border-fatale/10 group-hover:ring-1 group-hover:ring-fatale/20 group-hover:animate-spin transition-all duration-[3000ms]" />
 
                                                 <div className="absolute inset-[4px] rounded-full overflow-hidden border-2 border-black z-10 bg-black">
                                                     <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all scale-110 group-hover:scale-100" />
                                                 </div>
 
-                                                <div className="absolute inset-0 z-20 pointer-events-none rounded-full bg-gradient-to-tr from-[#ff006e]/30 via-transparent to-transparent animate-spin opacity-0 group-hover:opacity-100" style={{ animationDuration: '2s' }} />
+                                                <div className="absolute inset-0 z-20 pointer-events-none rounded-full bg-gradient-to-tr from-fatale/30 via-transparent to-transparent animate-spin opacity-0 group-hover:opacity-100" style={{ animationDuration: '2s' }} />
                                             </div>
-                                            <span className="text-[8px] text-center truncate w-full uppercase font-black tracking-widest opacity-40 group-hover:opacity-100 group-hover:text-[#ff006e] transition-all">{a.name}</span>
+                                            <span className="text-[8px] text-center truncate w-full uppercase font-black tracking-widest opacity-40 group-hover:opacity-100 group-hover:text-fatale transition-all">{a.name}</span>
                                         </div>
                                     ))}
                                 </div>
