@@ -2763,6 +2763,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
     }, [user]);
 
     // Notify parent of color changes for live preview
+    React.useEffect(() => {
         if (onColorPreview) onColorPreview({ 
             themeColor, 
             textColor, 
