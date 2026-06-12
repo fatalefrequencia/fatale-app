@@ -959,7 +959,6 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     {/* Header */}
                                     <div className="flex justify-between items-center border-b border-white/5 pb-3 md:pb-4">
                                         <div>
-                                            <div className="text-[9px] md:text-[10px] font-black text-[#ff006e] tracking-[0.3em] font-mono">// CORE_SYSTEM_SELECTOR</div>
                                             <div className="text-white/40 text-[8px] md:text-[9px] font-mono mt-0.5 uppercase tracking-widest">USER: {user?.username || 'NEURAL_USER'} · STATUS: ACTIVE</div>
                                         </div>
                                         <button

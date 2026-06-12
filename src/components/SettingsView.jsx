@@ -37,6 +37,7 @@ const SettingsView = ({ user, setUser }) => {
     const [clearMonitor, setClearMonitor] = React.useState(false);
 
     // --- Security States ---
+    const [email, setEmail] = React.useState('');
     const [currentPassword, setCurrentPassword] = React.useState('');
     const [newPassword, setNewPassword] = React.useState('');
     const [confirmNewPassword, setConfirmNewPassword] = React.useState('');
@@ -60,6 +61,7 @@ const SettingsView = ({ user, setUser }) => {
             setSecondaryColor(user.secondaryColor || user.SecondaryColor || '#00ffff');
             setIsGlass(user.isGlass || user.IsGlass || false);
             setStatusMessage(user.statusMessage || user.StatusMessage || '');
+            setEmail(user.email || user.Email || '');
         }
     }, [user]);
 
@@ -204,6 +206,29 @@ const SettingsView = ({ user, setUser }) => {
         } catch (error) {
             console.error("Failed to update profile:", error);
             showNotification("SYNC_FAILURE", "Failed to persist identity parameters.", "error");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleEmailChangeSubmit = async (e) => {
+        e.preventDefault();
+        if (!user) return;
+
+        setIsSaving(true);
+        try {
+            const formData = new FormData();
+            formData.append('Email', email);
+
+            const response = await API.Users.updateProfile(formData, user?.id || user?.Id);
+            if (response.data?.user) {
+                setUser(response.data.user);
+                localStorage.setItem('user', JSON.stringify(response.data.user));
+                showNotification("SECURITY_SYNC", "Email routing address updated.", "success");
+            }
+        } catch (error) {
+            console.error("Failed to update email:", error);
+            showNotification("SECURITY_FAILURE", "Failed to update email address.", "error");
         } finally {
             setIsSaving(false);
         }
@@ -689,6 +714,33 @@ const SettingsView = ({ user, setUser }) => {
                                     <div className="space-y-1 border-b border-white/5 pb-4">
                                         <h2 className="text-xs font-black text-[#ff006e] uppercase tracking-widest">{t('SECURITY')}</h2>
                                         <p className="text-[8px] text-white/30 uppercase tracking-[0.2em] font-mono">SECURITY_PROTOCOLS</p>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[8px] font-black uppercase tracking-widest text-white/60">Primary Routing Address (Email)</label>
+                                            <div className="flex gap-4">
+                                                <input 
+                                                    type="email"
+                                                    value={email}
+                                                    onChange={(e) => setEmail(e.target.value)}
+                                                    required
+                                                    className="w-full bg-black/50 border border-white/10 p-3 text-[10px] text-white focus:border-[#ff006e] outline-none font-mono uppercase tracking-wider"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    disabled={isSaving || email === (user?.email || user?.Email)}
+                                                    onClick={handleEmailChangeSubmit}
+                                                    className="px-6 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all bg-white/5 text-white hover:bg-white/10 hover:border-white/30 active:scale-95 disabled:opacity-40 disabled:cursor-wait shrink-0 border border-white/10"
+                                                >
+                                                    [ UPDATE_EMAIL ]
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1 border-b border-white/5 pt-4 pb-4">
+                                        <h3 className="text-[10px] font-black text-white/80 uppercase tracking-widest">ACCESS KEY OVERRIDE</h3>
                                     </div>
 
                                     <div className="space-y-4">
