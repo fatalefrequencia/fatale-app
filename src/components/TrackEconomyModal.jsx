@@ -76,10 +76,10 @@ const TrackEconomyModal = ({
                         initial={{ opacity: 0, scale: 0.98, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.98, y: 20 }}
-                        className="w-full max-w-lg bg-[#050505] border border-fatale/30 relative overflow-hidden shadow-[0_0_80px_rgba(255,0,110,0.2)] rounded-sm font-mono text-white"
+                        className="w-full max-w-lg bg-[#050505] border border-fatale/30 relative overflow-hidden shadow-[0_0_80px_rgba(var(--theme-primary-rgb),0.2)] rounded-sm font-mono text-white"
                     >
                         {/* Status bar */}
-                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-fatale via-[#d60036] to-fatale" />
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-fatale via-fatale to-fatale" />
 
                         {/* Top close button */}
                         <div className="flex justify-between items-center p-5 border-b border-white/5 bg-black/50">
@@ -248,7 +248,7 @@ const TrackEconomyModal = ({
                                 <button
                                     onClick={handleTipExecution}
                                     disabled={isSubmittingTip || finalTip <= 0 || !hasEnoughForTip}
-                                    className="w-full py-3.5 text-[9px] font-black uppercase tracking-widest bg-fatale text-black hover:bg-white transition-all disabled:opacity-30 disabled:hover:bg-fatale disabled:hover:text-black rounded-sm shadow-[0_0_20px_rgba(255,0,110,0.25)]"
+                                    className="w-full py-3.5 text-[9px] font-black uppercase tracking-widest bg-fatale text-black hover:bg-white transition-all disabled:opacity-30 disabled:hover:bg-fatale disabled:hover:text-black rounded-sm shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.25)]"
                                 >
                                     {isSubmittingTip ? "TRANSMITTING APPRECIATION RESONANCE..." : "EXECUTE TIP TRANSMISSION"}
                                 </button>

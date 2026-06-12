@@ -39,10 +39,10 @@ const resolveColorToHex = (color) => {
     if (color && color.includes('var(')) {
         try {
             const user = JSON.parse(localStorage.getItem('user'));
-            if (color.includes('--theme-primary')) return user?.themeColor || user?.ThemeColor || '#ff006e';
+            if (color.includes('--theme-primary')) return user?.themeColor || user?.ThemeColor || 'rgb(var(--theme-primary-rgb))';
             if (color.includes('--theme-secondary')) return user?.secondaryColor || user?.SecondaryColor || '#00ffff';
         } catch(e) {}
-        return '#ff006e';
+        return 'rgb(var(--theme-primary-rgb))';
     }
     return color;
 };

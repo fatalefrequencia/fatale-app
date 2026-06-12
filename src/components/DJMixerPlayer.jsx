@@ -31,7 +31,7 @@ const NeuralSpectrum = ({ analyser, isActive }) => {
                 
                 for (let i = 0; i < bufferLength; i++) {
                     const barHeight = (dataArray[i] / 255) * canvas.height;
-                    ctx.fillStyle = `rgba(255, 0, 110, 1)`;
+                    ctx.fillStyle = `rgba(var(--theme-primary-rgb), 1)`;
                     ctx.fillRect(i * (barWidth + 1), canvas.height - barHeight, barWidth, barHeight);
                 }
             } else if (isActive) {
@@ -44,7 +44,7 @@ const NeuralSpectrum = ({ analyser, isActive }) => {
                 for (let i = 0; i < barCount; i++) {
                     const noise = Math.sin(time + i * 0.5) * 0.5 + 0.5;
                     const barHeight = (0.2 + noise * 0.6) * canvas.height;
-                    ctx.fillStyle = `rgba(255, 0, 110, 0.4)`;
+                    ctx.fillStyle = `rgba(var(--theme-primary-rgb), 0.4)`;
                     ctx.fillRect(i * barWidth, canvas.height - barHeight, barWidth - 1, barHeight);
                 }
 
@@ -1599,9 +1599,9 @@ const DJMixerPlayer = ({
                                 }} 
                                 className="control-btn" 
                                 title="Like"
-                                style={{ color: deckA?.isLiked ? '#f00060' : 'rgba(255, 255, 255, 0.5)' }}
+                                style={{ color: deckA?.isLiked ? 'rgb(var(--theme-primary-rgb))' : 'rgba(255, 255, 255, 0.5)' }}
                             >
-                                <Heart size={16} fill={deckA?.isLiked ? '#f00060' : 'transparent'} />
+                                <Heart size={16} fill={deckA?.isLiked ? 'rgb(var(--theme-primary-rgb))' : 'transparent'} />
                             </button>
                             <button onClick={onPrev} className="control-btn" title="Previous"><SkipBack size={16} /></button>
                             <button onClick={handleTogglePlayA} className={`control-btn play-btn ${isPlayingA ? 'active' : ''}`}>

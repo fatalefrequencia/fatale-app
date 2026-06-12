@@ -1268,7 +1268,7 @@ useEffect(() => {
                     onClick={() => setShowCreateModal(false)}
                 >
                     <div 
-                        className="w-full max-w-sm bg-[#0a0a0a] border border-[#f00060]/30 rounded-2xl p-6 space-y-5 shadow-[0_0_40px_rgba(255,0,110,0.2)]"
+                        className="w-full max-w-sm bg-[#0a0a0a] border border-fatale/30 rounded-2xl p-6 space-y-5 shadow-[0_0_40px_rgba(var(--theme-primary-rgb),0.2)]"
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="flex justify-between items-center">
@@ -1284,13 +1284,13 @@ useEffect(() => {
                         </div>
 
                         <div 
-                            className="relative w-full aspect-square max-h-40 bg-black border border-[#f00060]/20 rounded-xl overflow-hidden flex items-center justify-center cursor-pointer group"
+                            className="relative w-full aspect-square max-h-40 bg-black border border-fatale/20 rounded-xl overflow-hidden flex items-center justify-center cursor-pointer group"
                             onClick={() => createModalImageRef.current?.click()}
                         >
                             {createModalPreview ? (
                                 <img src={createModalPreview} className="w-full h-full object-cover" alt="cover" />
                             ) : (
-                                <div className="flex flex-col items-center gap-2 text-white/20 group-hover:text-[#f00060] transition-colors">
+                                <div className="flex flex-col items-center gap-2 text-white/20 group-hover:text-fatale transition-colors">
                                     <Plus size={28} />
                                     <span className="text-[9px] font-mono uppercase tracking-widest">Add Cover</span>
                                 </div>
@@ -1321,7 +1321,7 @@ useEffect(() => {
                             onKeyDown={e => e.key === 'Enter' && handleCreateModalSubmit()}
                             placeholder="PLAYLIST NAME..."
                             autoFocus
-                            className="w-full bg-black border border-white/10 focus:border-[#f00060]/50 rounded-lg px-4 py-3 text-white text-xs font-mono uppercase tracking-widest outline-none placeholder:text-white/20 transition-colors"
+                            className="w-full bg-black border border-white/10 focus:border-fatale/50 rounded-lg px-4 py-3 text-white text-xs font-mono uppercase tracking-widest outline-none placeholder:text-white/20 transition-colors"
                         />
 
                         <div className="flex gap-3">
@@ -1334,7 +1334,7 @@ useEffect(() => {
                             <button
                                 onClick={handleCreateModalSubmit}
                                 disabled={!createModalName.trim()}
-                                className="flex-1 py-3 bg-[#f00060] disabled:bg-[#f00060]/20 disabled:text-white/20 text-black text-[10px] font-black uppercase tracking-widest rounded-lg transition-all hover:bg-[#ff2277]"
+                                className="flex-1 py-3 bg-fatale disabled:bg-fatale/20 disabled:text-white/20 text-black text-[10px] font-black uppercase tracking-widest rounded-lg transition-all hover:bg-[#ff2277]"
                             >
                                 Create
                             </button>
@@ -1369,28 +1369,28 @@ useEffect(() => {
                                     <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
                                 </div>
                             ) : (
-                                <div className="absolute inset-0 z-0 pointer-events-none bg-black/90 backdrop-blur-md" style={{ background: 'radial-gradient(circle at 10% 20%, rgba(255, 0, 110, 0.08) 0%, rgba(0, 0, 0, 0.95) 90%)' }} />
+                                <div className="absolute inset-0 z-0 pointer-events-none bg-black/90 backdrop-blur-md" style={{ background: 'radial-gradient(circle at 10% 20%, rgba(var(--theme-primary-rgb), 0.08) 0%, rgba(0, 0, 0, 0.95) 90%)' }} />
                             )}
 
                             {/* Wireframe Grid Overlay */}
-                            <div className="absolute inset-0 opacity-[0.015] pointer-events-none bg-[linear-gradient(rgba(240,0,96,0.1)_1px,_transparent_1px),_linear-gradient(90deg,_rgba(240,0,96,0.1)_1px,_transparent_1px)] bg-[size:32px_32px]" />
+                            <div className="absolute inset-0 opacity-[0.015] pointer-events-none bg-[linear-gradient(rgba(var(--theme-primary-rgb),0.1)_1px,_transparent_1px),_linear-gradient(90deg,_rgba(var(--theme-primary-rgb),0.1)_1px,_transparent_1px)] bg-[size:32px_32px]" />
 
                             {/* Top Header */}
                             <div className="flex justify-between items-center mb-6 z-10 shrink-0">
                                 <div className="flex items-center gap-4">
                                     <button 
                                         onClick={() => setIsFullView(false)} 
-                                        className="w-10 h-10 flex items-center justify-center bg-white/5 border border-white/10 rounded-full hover:border-[#f00060]/50 hover:bg-[#f00060]/10 transition-all text-white/80 hover:text-white"
+                                        className="w-10 h-10 flex items-center justify-center bg-white/5 border border-white/10 rounded-full hover:border-fatale/50 hover:bg-fatale/10 transition-all text-white/80 hover:text-white"
                                     >
                                         <ArrowLeft size={18} />
                                     </button>
-                                    <h1 className="text-lg sm:text-xl font-black text-white tracking-[0.2em] uppercase drop-shadow-[0_0_10px_rgba(240,0,96,0.3)]">
+                                    <h1 className="text-lg sm:text-xl font-black text-white tracking-[0.2em] uppercase drop-shadow-[0_0_10px_rgba(var(--theme-primary-rgb),0.3)]">
                                         {t('YOUR_LIBRARY')}
                                     </h1>
                                 </div>
                                 <div className="flex items-center gap-4">
                                     {/* Search Bar Toggle */}
-                                    <div className={`flex items-center gap-2 bg-black/40 border transition-all duration-300 rounded px-2 py-1 ${showLibrarySearch ? 'border-[#f00060]/50 w-44 sm:w-64' : 'border-transparent w-10 overflow-hidden'}`}>
+                                    <div className={`flex items-center gap-2 bg-black/40 border transition-all duration-300 rounded px-2 py-1 ${showLibrarySearch ? 'border-fatale/50 w-44 sm:w-64' : 'border-transparent w-10 overflow-hidden'}`}>
                                         <Search 
                                             size={16} 
                                             className="cursor-pointer text-white/60 hover:text-white shrink-0" 
@@ -1421,43 +1421,43 @@ useEffect(() => {
                                 <div className="flex lg:flex-col gap-2 mb-4 lg:mb-0 overflow-x-auto no-scrollbar shrink-0 lg:pr-2 border-r lg:border-white/5">
                                     <button 
                                         onClick={() => setFullViewTab('queue')} 
-                                        className={`px-4 py-3 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-3 w-full border text-left ${fullViewTab === 'queue' ? 'bg-[#f00060]/10 border-[#f00060] text-white shadow-[0_0_15px_rgba(240,0,96,0.15)] font-black' : 'bg-white/[0.02] border-white/5 text-white/50 hover:text-white/80 hover:bg-white/[0.04]'}`}
+                                        className={`px-4 py-3 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-3 w-full border text-left ${fullViewTab === 'queue' ? 'bg-fatale/10 border-fatale text-white shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.15)] font-black' : 'bg-white/[0.02] border-white/5 text-white/50 hover:text-white/80 hover:bg-white/[0.04]'}`}
                                     >
-                                        <List size={14} className={fullViewTab === 'queue' ? 'text-[#f00060]' : ''} />
+                                        <List size={14} className={fullViewTab === 'queue' ? 'text-fatale' : ''} />
                                         <span className="flex-1 tracking-wider uppercase">{t('QUEUE')}</span>
                                     </button>
 
                                     <button 
                                         onClick={() => setFullViewTab('history')} 
-                                        className={`px-4 py-3 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-3 w-full border text-left ${fullViewTab === 'history' ? 'bg-[#f00060]/10 border-[#f00060] text-white shadow-[0_0_15px_rgba(240,0,96,0.15)] font-black' : 'bg-white/[0.02] border-white/5 text-white/50 hover:text-white/80 hover:bg-white/[0.04]'}`}
+                                        className={`px-4 py-3 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-3 w-full border text-left ${fullViewTab === 'history' ? 'bg-fatale/10 border-fatale text-white shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.15)] font-black' : 'bg-white/[0.02] border-white/5 text-white/50 hover:text-white/80 hover:bg-white/[0.04]'}`}
                                     >
-                                        <HistoryIcon size={14} className={fullViewTab === 'history' ? 'text-[#f00060]' : ''} />
+                                        <HistoryIcon size={14} className={fullViewTab === 'history' ? 'text-fatale' : ''} />
                                         <span className="flex-1 tracking-wider uppercase">{t('HISTORY')}</span>
                                     </button>
                                     
                                     <button 
                                         onClick={() => setFullViewTab('library')} 
-                                        className={`px-4 py-3 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-3 w-full border text-left ${fullViewTab === 'library' ? 'bg-[#f00060]/10 border-[#f00060] text-white shadow-[0_0_15px_rgba(240,0,96,0.15)] font-black' : 'bg-white/[0.02] border-white/5 text-white/50 hover:text-white/80 hover:bg-white/[0.04]'}`}
+                                        className={`px-4 py-3 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-3 w-full border text-left ${fullViewTab === 'library' ? 'bg-fatale/10 border-fatale text-white shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.15)] font-black' : 'bg-white/[0.02] border-white/5 text-white/50 hover:text-white/80 hover:bg-white/[0.04]'}`}
                                     >
-                                        <Layers size={14} className={fullViewTab === 'library' ? 'text-[#f00060]' : ''} />
+                                        <Layers size={14} className={fullViewTab === 'library' ? 'text-fatale' : ''} />
                                         <span className="flex-1 tracking-wider uppercase">{t('PLAYLISTS')}</span>
                                         <span className="text-[9px] bg-white/10 px-1.5 py-0.5 rounded font-mono text-white/60">{userPlaylists.length}</span>
                                     </button>
                                     
                                     <button 
                                         onClick={() => setFullViewTab('favorites')} 
-                                        className={`px-4 py-3 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-3 w-full border text-left ${fullViewTab === 'favorites' ? 'bg-[#f00060]/10 border-[#f00060] text-white shadow-[0_0_15px_rgba(240,0,96,0.15)] font-black' : 'bg-white/[0.02] border-white/5 text-white/50 hover:text-white/80 hover:bg-white/[0.04]'}`}
+                                        className={`px-4 py-3 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-3 w-full border text-left ${fullViewTab === 'favorites' ? 'bg-fatale/10 border-fatale text-white shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.15)] font-black' : 'bg-white/[0.02] border-white/5 text-white/50 hover:text-white/80 hover:bg-white/[0.04]'}`}
                                     >
-                                        <Heart size={14} className={fullViewTab === 'favorites' ? 'text-[#f00060]' : ''} />
+                                        <Heart size={14} className={fullViewTab === 'favorites' ? 'text-fatale' : ''} />
                                         <span className="flex-1 tracking-wider uppercase">{t('FAVORITES')}</span>
                                         <span className="text-[9px] bg-white/10 px-1.5 py-0.5 rounded font-mono text-white/60">{libraryTracks.filter(trk => trk.isLiked).length}</span>
                                     </button>
                                     
                                     <button 
                                         onClick={() => setFullViewTab('player')} 
-                                        className={`px-4 py-3 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-3 w-full border text-left ${fullViewTab === 'player' ? 'bg-[#f00060]/10 border-[#f00060] text-white shadow-[0_0_15px_rgba(240,0,96,0.15)] font-black' : 'bg-white/[0.02] border-white/5 text-white/50 hover:text-white/80 hover:bg-white/[0.04]'}`}
+                                        className={`px-4 py-3 rounded-lg text-xs font-bold whitespace-nowrap transition-all flex items-center gap-3 w-full border text-left ${fullViewTab === 'player' ? 'bg-fatale/10 border-fatale text-white shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.15)] font-black' : 'bg-white/[0.02] border-white/5 text-white/50 hover:text-white/80 hover:bg-white/[0.04]'}`}
                                     >
-                                        <Disc size={14} className={`${fullViewTab === 'player' ? 'text-[#f00060]' : ''} ${isPlaying && fullViewTab === 'player' ? 'animate-spin' : ''}`} />
+                                        <Disc size={14} className={`${fullViewTab === 'player' ? 'text-fatale' : ''} ${isPlaying && fullViewTab === 'player' ? 'animate-spin' : ''}`} />
                                         <span className="flex-1 tracking-wider uppercase">{t('PLAYER_EXPANDED')}</span>
                                     </button>
                                 </div>
@@ -1466,7 +1466,7 @@ useEffect(() => {
                                 <div className="flex-1 bg-white/[0.02] border border-white/5 backdrop-blur-md rounded-2xl p-4 sm:p-6 flex flex-col min-h-0 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
                                     
                                     {/* Grid Glow Overlay inside panel */}
-                                    <div className="absolute inset-0 bg-gradient-to-b from-[#f00060]/5 to-transparent pointer-events-none opacity-20" />
+                                    <div className="absolute inset-0 bg-gradient-to-b from-fatale/5 to-transparent pointer-events-none opacity-20" />
                                     
                                     <div className="flex-1 overflow-y-auto no-scrollbar space-y-3 z-10 min-h-0 relative">
                                         
@@ -1496,7 +1496,7 @@ useEffect(() => {
                                                         return (
                                                             <div 
                                                                 key={idx} 
-                                                                className={`flex items-center gap-4 p-3 rounded-xl border transition-all duration-300 group/row cursor-pointer ${isActive ? 'bg-[#f00060]/10 border-[#f00060]/30 shadow-[0_0_15px_rgba(240,0,96,0.05)]' : 'bg-black/20 border-white/5 hover:bg-white/[0.03] hover:border-white/10'}`}
+                                                                className={`flex items-center gap-4 p-3 rounded-xl border transition-all duration-300 group/row cursor-pointer ${isActive ? 'bg-fatale/10 border-fatale/30 shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.05)]' : 'bg-black/20 border-white/5 hover:bg-white/[0.03] hover:border-white/10'}`}
                                                                 onClick={() => {
                                                                     if (onPlayTrackAtIndex) {
                                                                         onPlayTrackAtIndex(actualIndex);
@@ -1507,7 +1507,7 @@ useEffect(() => {
                                                                 }}
                                                             >
                                                                 {/* Cover Art Box with hover overlay */}
-                                                                <div className={`w-12 h-12 bg-white/5 flex items-center justify-center rounded-lg overflow-hidden shrink-0 relative border transition-all ${isActive ? 'border-[#f00060]/50 shadow-[0_0_10px_rgba(240,0,96,0.2)]' : 'border-white/10 group-hover/row:border-white/20'}`}>
+                                                                <div className={`w-12 h-12 bg-white/5 flex items-center justify-center rounded-lg overflow-hidden shrink-0 relative border transition-all ${isActive ? 'border-fatale/50 shadow-[0_0_10px_rgba(var(--theme-primary-rgb),0.2)]' : 'border-white/10 group-hover/row:border-white/20'}`}>
                                                                     {t.ImageUrl || t.imageUrl || t.cover || t.coverUrl ? (
                                                                         <img src={getMediaUrl(t.ImageUrl || t.imageUrl || t.cover || t.coverUrl)} alt="" className="w-full h-full object-cover" />
                                                                     ) : (
@@ -1517,14 +1517,14 @@ useEffect(() => {
                                                                     {/* Dynamic soundwave animator if active & playing */}
                                                                     {isActive && isPlaying ? (
                                                                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-0.5">
-                                                                            <div className="w-0.5 h-3 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.1s' }} />
-                                                                            <div className="w-0.5 h-4 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.3s' }} />
-                                                                            <div className="w-0.5 h-2 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.5s' }} />
-                                                                            <div className="w-0.5 h-3.5 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.2s' }} />
+                                                                            <div className="w-0.5 h-3 bg-fatale rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.1s' }} />
+                                                                            <div className="w-0.5 h-4 bg-fatale rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.3s' }} />
+                                                                            <div className="w-0.5 h-2 bg-fatale rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.5s' }} />
+                                                                            <div className="w-0.5 h-3.5 bg-fatale rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.2s' }} />
                                                                         </div>
                                                                     ) : isActive ? (
                                                                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                                                            <Play size={14} className="text-[#f00060]" />
+                                                                            <Play size={14} className="text-fatale" />
                                                                         </div>
                                                                     ) : (
                                                                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/row:opacity-100 transition-opacity flex items-center justify-center">
@@ -1535,7 +1535,7 @@ useEffect(() => {
                                                                 
                                                                 {/* Title & Artist details */}
                                                                 <div className="flex-1 min-w-0">
-                                                                    <div className={`text-xs font-bold truncate tracking-wide ${isActive ? 'text-[#f00060]' : 'text-white/90 group-hover/row:text-white'}`}>{t.title || t.Title || 'Untitled'}</div>
+                                                                    <div className={`text-xs font-bold truncate tracking-wide ${isActive ? 'text-fatale' : 'text-white/90 group-hover/row:text-white'}`}>{t.title || t.Title || 'Untitled'}</div>
                                                                     <div className="text-[10px] text-white/40 truncate mt-0.5 flex items-center gap-1.5 font-mono">
                                                                         {(() => {
                                                                             const artist = t.artist || t.artistName || t.ArtistName || t.author || t.Author || t.channelTitle || t.ChannelTitle;
@@ -1581,7 +1581,7 @@ useEffect(() => {
                                                                         return (
                                                                             <div 
                                                                                 key={idx} 
-                                                                                className={`flex items-center gap-4 p-3 rounded-xl border transition-all duration-300 group/row cursor-pointer ${isActive ? 'bg-[#f00060]/10 border-[#f00060]/30 shadow-[0_0_15px_rgba(240,0,96,0.05)]' : 'bg-black/20 border-white/5 hover:bg-white/[0.03] hover:border-white/10'}`}
+                                                                                className={`flex items-center gap-4 p-3 rounded-xl border transition-all duration-300 group/row cursor-pointer ${isActive ? 'bg-fatale/10 border-fatale/30 shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.05)]' : 'bg-black/20 border-white/5 hover:bg-white/[0.03] hover:border-white/10'}`}
                                                                                 onClick={() => {
                                                                                     if (actualIndex >= 0) {
                                                                                         if (onPlayTrackAtIndex) {
@@ -1596,7 +1596,7 @@ useEffect(() => {
                                                                                 }}
                                                                             >
                                                                                 {/* Cover Art Box with hover overlay */}
-                                                                                <div className={`w-12 h-12 bg-white/5 flex items-center justify-center rounded-lg overflow-hidden shrink-0 relative border transition-all ${isActive ? 'border-[#f00060]/50 shadow-[0_0_10px_rgba(240,0,96,0.2)]' : 'border-white/10 group-hover/row:border-white/20'}`}>
+                                                                                <div className={`w-12 h-12 bg-white/5 flex items-center justify-center rounded-lg overflow-hidden shrink-0 relative border transition-all ${isActive ? 'border-fatale/50 shadow-[0_0_10px_rgba(var(--theme-primary-rgb),0.2)]' : 'border-white/10 group-hover/row:border-white/20'}`}>
                                                                                     {t.ImageUrl || t.imageUrl || t.cover || t.coverUrl || t.ThumbnailUrl || t.thumbnailUrl || t.coverImageUrl || t.CoverImageUrl || t.thumbnail ? (
                                                                                         <img src={getMediaUrl(t.ImageUrl || t.imageUrl || t.cover || t.coverUrl || t.ThumbnailUrl || t.thumbnailUrl || t.coverImageUrl || t.CoverImageUrl || t.thumbnail)} alt="" className="w-full h-full object-cover" />
                                                                                     ) : (
@@ -1606,14 +1606,14 @@ useEffect(() => {
                                                                                     {/* Dynamic soundwave animator if active & playing */}
                                                                                     {isActive && isPlaying ? (
                                                                                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-0.5">
-                                                                                            <div className="w-0.5 h-3 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.1s' }} />
-                                                                                            <div className="w-0.5 h-4 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.3s' }} />
-                                                                                            <div className="w-0.5 h-2 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.5s' }} />
-                                                                                            <div className="w-0.5 h-3.5 bg-[#f00060] rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.2s' }} />
+                                                                                            <div className="w-0.5 h-3 bg-fatale rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.1s' }} />
+                                                                                            <div className="w-0.5 h-4 bg-fatale rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.3s' }} />
+                                                                                            <div className="w-0.5 h-2 bg-fatale rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.5s' }} />
+                                                                                            <div className="w-0.5 h-3.5 bg-fatale rounded-full animate-[bounce_0.8s_infinite]" style={{ animationDelay: '0.2s' }} />
                                                                                         </div>
                                                                                     ) : isActive ? (
                                                                                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                                                                            <Play size={14} className="text-[#f00060]" />
+                                                                                            <Play size={14} className="text-fatale" />
                                                                                         </div>
                                                                                     ) : (
                                                                                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/row:opacity-100 transition-opacity flex items-center justify-center">
@@ -1624,7 +1624,7 @@ useEffect(() => {
                                                                                 
                                                                                 {/* Title & Artist details */}
                                                                                 <div className="flex-1 min-w-0">
-                                                                                    <div className={`text-xs font-bold truncate tracking-wide ${isActive ? 'text-[#f00060]' : 'text-white/90 group-hover/row:text-white'}`}>{t.title || t.Title || 'Untitled'}</div>
+                                                                                    <div className={`text-xs font-bold truncate tracking-wide ${isActive ? 'text-fatale' : 'text-white/90 group-hover/row:text-white'}`}>{t.title || t.Title || 'Untitled'}</div>
                                                                                     <div className="text-[10px] text-white/40 truncate mt-0.5 flex items-center gap-1.5 font-mono">
                                                                                         {(() => {
                                                                                             const artist = t.artist || t.artistName || t.ArtistName || t.author || t.Author || t.channelTitle || t.ChannelTitle;
@@ -1645,7 +1645,7 @@ useEffect(() => {
                                                             {recommendedTracks && recommendedTracks.length > 0 && !librarySearchQuery && (
                                                                 <div className="mt-8 pt-6 border-t border-white/5">
                                                                     <h2 className="text-[10px] font-black text-white/50 mb-4 uppercase tracking-[0.2em] flex items-center gap-2">
-                                                                        <Zap size={10} className="text-[#f00060] animate-pulse" />
+                                                                        <Zap size={10} className="text-fatale animate-pulse" />
                                                                         {t('SUGGESTIONS_TODAY')}
                                                                     </h2>
                                                                     <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
@@ -1657,11 +1657,11 @@ useEffect(() => {
                                                                                     className="w-32 shrink-0 cursor-pointer group/card"
                                                                                     onClick={() => onPlayPlaylist && onPlayPlaylist(recommendedTracks, idx)}
                                                                                 >
-                                                                                    <div className="w-32 h-32 bg-black border border-white/5 flex items-center justify-center rounded-xl overflow-hidden mb-2 relative group-hover/card:border-[#f00060]/30 transition-all">
+                                                                                    <div className="w-32 h-32 bg-black border border-white/5 flex items-center justify-center rounded-xl overflow-hidden mb-2 relative group-hover/card:border-fatale/30 transition-all">
                                                                                         {imgSource ? (
                                                                                             <img src={getMediaUrl(imgSource)} alt="" className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" />
                                                                                         ) : (
-                                                                                            <Music size={24} className="text-[#f00060]/40" />
+                                                                                            <Music size={24} className="text-fatale/40" />
                                                                                         )}
                                                                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
                                                                                             <Play size={20} className="text-white" />
@@ -1675,7 +1675,7 @@ useEffect(() => {
                                                                     </div>
 
                                                                     <h2 className="text-[10px] font-black text-white/50 mb-4 mt-8 uppercase tracking-[0.2em] flex items-center gap-2">
-                                                                        <Disc size={10} className="text-[#f00060] animate-pulse" />
+                                                                        <Disc size={10} className="text-fatale animate-pulse" />
                                                                         {t('BACK_TO_MUSIC')}
                                                                     </h2>
                                                                     <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
@@ -1706,11 +1706,11 @@ useEffect(() => {
                                                                                             setFullViewTab('queue');
                                                                                         }}
                                                                                     >
-                                                                                        <div className="w-32 h-32 bg-black border border-white/5 flex items-center justify-center rounded-xl overflow-hidden mb-2 relative group-hover/card:border-[#f00060]/30 transition-all">
+                                                                                        <div className="w-32 h-32 bg-black border border-white/5 flex items-center justify-center rounded-xl overflow-hidden mb-2 relative group-hover/card:border-fatale/30 transition-all">
                                                                                             {imgSource ? (
                                                                                                 <img src={getMediaUrl(imgSource)} alt="" className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" />
                                                                                             ) : (
-                                                                                                <Music size={24} className="text-[#f00060]/40" />
+                                                                                                <Music size={24} className="text-fatale/40" />
                                                                                             )}
                                                                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
                                                                                                 <Play size={20} className="text-white" />
@@ -1751,17 +1751,17 @@ useEffect(() => {
                                                     return filteredPlaylists.map((p, idx) => (
                                                         <div 
                                                             key={idx} 
-                                                            className="flex items-center gap-4 p-3 rounded-xl border border-white/5 bg-black/20 hover:bg-white/[0.03] hover:border-[#f00060]/30 transition-all duration-300 group/row cursor-pointer"
+                                                            className="flex items-center gap-4 p-3 rounded-xl border border-white/5 bg-black/20 hover:bg-white/[0.03] hover:border-fatale/30 transition-all duration-300 group/row cursor-pointer"
                                                             onClick={() => {
                                                                 onPlayPlaylist && onPlayPlaylist(p.tracks || [], 0);
                                                                 setFullViewTab('queue');
                                                             }}
                                                         >
-                                                            <div className="w-12 h-12 bg-[#f00060]/10 flex items-center justify-center rounded-lg border border-white/10 group-hover/row:border-[#f00060]/30 transition-all shrink-0">
-                                                                <Layers size={20} className="text-[#f00060]" />
+                                                            <div className="w-12 h-12 bg-fatale/10 flex items-center justify-center rounded-lg border border-white/10 group-hover/row:border-fatale/30 transition-all shrink-0">
+                                                                <Layers size={20} className="text-fatale" />
                                                             </div>
                                                             <div className="flex-1 min-w-0">
-                                                                <div className="text-xs font-bold text-white group-hover/row:text-[#f00060] transition-colors tracking-wide uppercase">{p.name || p.Name || 'Untitled'}</div>
+                                                                <div className="text-xs font-bold text-white group-hover/row:text-fatale transition-colors tracking-wide uppercase">{p.name || p.Name || 'Untitled'}</div>
                                                                 <div className="text-[10px] text-white/40 mt-1 font-mono">PLAYLIST // {p.tracks?.length || 0} {t('SIGNALS')}</div>
                                                             </div>
                                                         </div>
@@ -1792,7 +1792,7 @@ useEffect(() => {
                                                     return filteredFavs.map((trk, idx) => (
                                                         <div 
                                                             key={idx} 
-                                                            className="flex items-center gap-4 p-3 rounded-xl border border-white/5 bg-black/20 hover:bg-white/[0.03] hover:border-[#f00060]/30 transition-all duration-300 group/row cursor-pointer"
+                                                            className="flex items-center gap-4 p-3 rounded-xl border border-white/5 bg-black/20 hover:bg-white/[0.03] hover:border-fatale/30 transition-all duration-300 group/row cursor-pointer"
                                                             onClick={() => {
                                                                 const favorites = libraryTracks.filter(track => track.isLiked);
                                                                 const favIndex = favorites.findIndex(original => original === trk);
@@ -1821,7 +1821,7 @@ useEffect(() => {
                                                 <div className="relative shrink-0 flex items-center justify-center">
                                                     
                                                     {/* Glowing visualizer ring behind record */}
-                                                    <div className={`absolute inset-0 rounded-full bg-[#f00060]/10 blur-3xl transition-transform duration-1000 ${isPlaying ? 'scale-125 opacity-100' : 'scale-100 opacity-30'}`} />
+                                                    <div className={`absolute inset-0 rounded-full bg-fatale/10 blur-3xl transition-transform duration-1000 ${isPlaying ? 'scale-125 opacity-100' : 'scale-100 opacity-30'}`} />
 
                                                     {/* Physical record body */}
                                                     <div 
@@ -1842,7 +1842,7 @@ useEffect(() => {
                                                             {currentTrack.cover ? (
                                                                 <img src={getMediaUrl(currentTrack.cover)} alt="" className="w-full h-full object-cover" />
                                                             ) : (
-                                                                <Music size={28} className="text-[#f00060]/50" />
+                                                                <Music size={28} className="text-fatale/50" />
                                                             )}
                                                             
                                                             {/* Spill Spindle Hole */}
@@ -1861,7 +1861,7 @@ useEffect(() => {
                                                         <svg width="40" height="90" viewBox="0 0 40 90" fill="none">
                                                             <path d="M5 2 L5 65 L25 80 L32 80" stroke="#444" strokeWidth="2" strokeLinecap="round" />
                                                             <circle cx="5" cy="5" r="4" fill="#666" />
-                                                            <rect x="23" y="76" width="12" height="6" rx="1" fill="#f00060" />
+                                                            <rect x="23" y="76" width="12" height="6" rx="1" fill="rgb(var(--theme-primary-rgb))" />
                                                         </svg>
                                                     </div>
                                                 </div>
@@ -1892,8 +1892,8 @@ useEffect(() => {
                                                             onSeek(percent * duration);
                                                         }}
                                                     >
-                                                        <div className="absolute top-0 left-0 h-full bg-[#f00060] rounded-full shadow-[0_0_10px_#f00060]" style={{ width: `${(currentTime / duration) * 100}%` }}></div>
-                                                        <div className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-white rounded-full shadow-lg border border-[#f00060]/30 transition-transform scale-70 group-hover/seek:scale-100" style={{ left: `${(currentTime / duration) * 100}%` }}></div>
+                                                        <div className="absolute top-0 left-0 h-full bg-fatale rounded-full shadow-[0_0_10px_rgb(var(--theme-primary-rgb))]" style={{ width: `${(currentTime / duration) * 100}%` }}></div>
+                                                        <div className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-white rounded-full shadow-lg border border-fatale/30 transition-transform scale-70 group-hover/seek:scale-100" style={{ left: `${(currentTime / duration) * 100}%` }}></div>
                                                     </div>
                                                     <div className="flex justify-between text-[9px] text-white/40 font-mono tracking-widest">
                                                         <span>{formatTime(currentTime)}</span>
@@ -1903,7 +1903,7 @@ useEffect(() => {
                                                 
                                                 {/* Interactive mechanical Deck Controls */}
                                                 <div className="flex items-center gap-6 z-10 shrink-0">
-                                                    <button className="text-white/30 hover:text-[#f00060] transition-colors p-1">
+                                                    <button className="text-white/30 hover:text-fatale transition-colors p-1">
                                                         <RefreshCw size={16} />
                                                     </button>
                                                     <button 
@@ -1914,10 +1914,10 @@ useEffect(() => {
                                                     </button>
                                                     <button 
                                                         onClick={() => setIsPlaying(!isPlaying)} 
-                                                        className="w-14 h-14 bg-white/5 border border-white/10 hover:border-[#f00060]/50 hover:bg-[#f00060]/10 text-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg relative group/playbtn"
+                                                        className="w-14 h-14 bg-white/5 border border-white/10 hover:border-fatale/50 hover:bg-fatale/10 text-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg relative group/playbtn"
                                                     >
-                                                        <div className="absolute inset-[-4px] border border-[#f00060]/20 rounded-full animate-pulse group-hover/playbtn:border-[#f00060]/45" />
-                                                        {isPlaying ? <Pause size={20} className="text-[#f00060]" fill="currentColor" /> : <Play size={20} className="ml-1 text-white" fill="currentColor" />}
+                                                        <div className="absolute inset-[-4px] border border-fatale/20 rounded-full animate-pulse group-hover/playbtn:border-fatale/45" />
+                                                        {isPlaying ? <Pause size={20} className="text-fatale" fill="currentColor" /> : <Play size={20} className="ml-1 text-white" fill="currentColor" />}
                                                     </button>
                                                     <button 
                                                         onClick={() => setCurrentTrackIndex(prev => Math.min(tracks.length - 1, prev + 1))} 
@@ -1925,7 +1925,7 @@ useEffect(() => {
                                                     >
                                                         <SkipForward size={24} />
                                                     </button>
-                                                    <button className="text-white/30 hover:text-[#f00060] transition-colors p-1">
+                                                    <button className="text-white/30 hover:text-fatale transition-colors p-1">
                                                         <Layers size={16} />
                                                     </button>
                                                 </div>
@@ -1941,29 +1941,29 @@ useEffect(() => {
             )}
 
             {/* LARGE PREMIUM FRAME - REDUCED BORDER (NEVER DISTORTS WHEN LIBRARY IS OPEN!) */}
-            <div className={`relative w-full ${isVertical ? 'max-w-[280px] h-[480px] rounded-[30px] p-4' : 'max-w-[500px] h-[700px] max-h-[95vh] sm:max-h-[700px] rounded-[55px] p-8'} bg-[#000] border-[6px] border-[#333] shadow-[0_50px_120px_rgba(255,0,110,0.2),inset_0_2px_10px_rgba(255,0,110,0.1)] flex flex-col items-center select-none shrink-0 border-t-[#333] border-l-[#222] transition-all duration-500`}>
+            <div className={`relative w-full ${isVertical ? 'max-w-[280px] h-[480px] rounded-[30px] p-4' : 'max-w-[500px] h-[700px] max-h-[95vh] sm:max-h-[700px] rounded-[55px] p-8'} bg-[#000] border-[6px] border-[#333] shadow-[0_50px_120px_rgba(var(--theme-primary-rgb),0.2),inset_0_2px_10px_rgba(var(--theme-primary-rgb),0.1)] flex flex-col items-center select-none shrink-0 border-t-[#333] border-l-[#222] transition-all duration-500`}>
 
 
                 {/* STATUS BAR - REDESIGNED */}
                 <div className="absolute inset-x-8 top-12 h-6 flex justify-between items-center z-10 select-none pointer-events-none">
-                    <span className="text-[10px] font-black text-[#f00060] tracking-widest font-mono">FATALE_FM</span>
+                    <span className="text-[10px] font-black text-fatale tracking-widest font-mono">FATALE_FM</span>
                     <div className="flex items-center gap-1.5">
-                        <div className="w-1.5 h-1.5 bg-[#f00060] rounded-full animate-ping" />
+                        <div className="w-1.5 h-1.5 bg-fatale rounded-full animate-ping" />
                         <span className="text-[10px] font-bold text-white/40 font-mono uppercase">ONLINE</span>
                     </div>
                 </div>
 
                 {/* SCREEN CONTAINER */}
-                <div className={`w-full ${isVertical ? 'h-[222px]' : 'h-[320px]'} bg-black rounded-2xl border-4 border-[#f00060]/20 overflow-hidden relative shadow-[inset_0_0_50px_rgba(255,0,110,0.1)] flex flex-col transition-all duration-300 z-10`}>
+                <div className={`w-full ${isVertical ? 'h-[222px]' : 'h-[320px]'} bg-black rounded-2xl border-4 border-fatale/20 overflow-hidden relative shadow-[inset_0_0_50px_rgba(var(--theme-primary-rgb),0.1)] flex flex-col transition-all duration-300 z-10`}>
 
                     {/* STATUS BAR - REDESIGNED */}
-                    <div className="h-7 bg-gradient-to-b from-[#1a1a1a] to-black/40 backdrop-blur-md border-b border-[#f00060]/30 flex justify-between items-center px-4 z-20">
+                    <div className="h-7 bg-gradient-to-b from-[#1a1a1a] to-black/40 backdrop-blur-md border-b border-fatale/30 flex justify-between items-center px-4 z-20">
                         <div className="flex items-center gap-2">
                             {isPlaying ? <Pause size={12} fill="rgb(var(--theme-primary))" /> : <Play size={12} fill="rgb(var(--theme-primary))" />}
                             
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-[#f00060] font-mono">{currentClock}</span>
+                            <span className="text-[10px] font-bold text-fatale font-mono">{currentClock}</span>
                             {currentTrack.isCached && <Zap size={10} className="text-green-500 fill-green-500" />}
                             
                         </div>
@@ -1985,11 +1985,11 @@ useEffect(() => {
                                     {/* CYBERPUNK EVOLVE BUTTON */}
                                     <motion.button
                                         onClick={(e) => { e.stopPropagation(); onNext && onNext(); }}
-                                        className="absolute top-1.5 right-2 z-50 bg-white/[0.03] border border-white/10 px-2 h-4 rounded-sm hover:border-[#f00060]/60 active:scale-95 transition-colors group overflow-hidden"
-                                        whileHover={{ boxShadow: "0 0 15px rgba(240,0,96,0.2)" }}
+                                        className="absolute top-1.5 right-2 z-50 bg-white/[0.03] border border-white/10 px-2 h-4 rounded-sm hover:border-fatale/60 active:scale-95 transition-colors group overflow-hidden"
+                                        whileHover={{ boxShadow: "0 0 15px rgba(var(--theme-primary-rgb),0.2)" }}
                                         title="Evolve Signal"
                                     >
-                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#f00060]/20 to-transparent w-full h-full -translate-x-full group-hover:animate-[scan_1.5s_infinite] pointer-events-none" />
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-fatale/20 to-transparent w-full h-full -translate-x-full group-hover:animate-[scan_1.5s_infinite] pointer-events-none" />
                                         <motion.span
                                             className="text-[7px] font-black text-white/40 tracking-[0.2em] font-mono group-hover:text-white transition-colors relative z-10 block leading-none"
                                             whileHover={{ x: [0, -1, 1, -1, 0] }}
@@ -2001,7 +2001,7 @@ useEffect(() => {
 
                                     {/* LEFT/TOP: COVER ART */}
                                     <div className={`${isVertical ? 'w-full flex justify-center py-1' : 'w-[200px] flex-shrink-0 flex items-center justify-center'}`}>
-                                        <div className={`${isVertical ? 'w-20 h-20' : 'w-[180px] h-[180px]'} bg-black border-2 border-[#f00060]/30 shadow-[0_0_40px_rgba(255,0,110,0.15)] flex items-center justify-center relative overflow-hidden rounded-xl group/cover transition-all duration-300`}>
+                                        <div className={`${isVertical ? 'w-20 h-20' : 'w-[180px] h-[180px]'} bg-black border-2 border-fatale/30 shadow-[0_0_40px_rgba(var(--theme-primary-rgb),0.15)] flex items-center justify-center relative overflow-hidden rounded-xl group/cover transition-all duration-300`}>
                                         {currentTrack.cover ? (
                                             <img src={currentTrack.cover} alt="Cover" className={`w-full h-full object-cover transition-all duration-500 ${isLocked ? 'blur-md grayscale opacity-40 scale-110' : 'group-hover/cover:scale-105'}`} />
                                         ) : (
@@ -2016,11 +2016,11 @@ useEffect(() => {
                                         )}
                                         {isLocked && (
                                             <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/40">
-                                                <div className={`bg-[#f00060] text-black font-black ${isVertical ? 'text-[10px]' : 'text-[12px]'} px-3 py-1 rounded-sm leading-none mb-1 shadow-[0_0_15px_#f00060]`}>LOCKED</div>
+                                                <div className={`bg-fatale text-black font-black ${isVertical ? 'text-[10px]' : 'text-[12px]'} px-3 py-1 rounded-sm leading-none mb-1 shadow-[0_0_15px_rgb(var(--theme-primary-rgb))]`}>LOCKED</div>
                                                 <div className={`text-white font-bold ${isVertical ? 'text-[8px]' : 'text-[10px]'} tracking-[0.2em]`}>{currentTrack.price} CRD</div>
                                             </div>
                                         )}
-                                        <div className="absolute -inset-10 border border-[#f00060]/5 rotate-45 pointer-events-none" />
+                                        <div className="absolute -inset-10 border border-fatale/5 rotate-45 pointer-events-none" />
                                         </div>
                                     </div>
 
@@ -2031,7 +2031,7 @@ useEffect(() => {
                                                 {activeStation ? (activeStation.name || activeStation.Name) : currentTrack.title}
                                             </h3>
                                             <p
-                                                className={`${isVertical ? 'text-[7px]' : 'text-[10px]'} font-bold text-[#f00060] truncate tracking-[0.2em] cursor-pointer hover:underline hover:text-white transition-all`}
+                                                className={`${isVertical ? 'text-[7px]' : 'text-[10px]'} font-bold text-fatale truncate tracking-[0.2em] cursor-pointer hover:underline hover:text-white transition-all`}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     const targetId = activeStation ? (activeStation.artistUserId || activeStation.ArtistUserId) : currentTrack.artistUserId;
@@ -2044,13 +2044,13 @@ useEffect(() => {
 
                                         {/* NEURO-COGNITIVE VIBE SCANNER HUD */}
                                         {vibeFeatures && !isVertical && (
-                                            <div className="my-1.5 p-1.5 bg-black/40 border border-[#f00060]/10 rounded-sm font-mono text-[6.5px] text-[#f00060]/85 uppercase tracking-[0.05em] space-y-1 select-none">
-                                                <div className="flex justify-between items-center text-[7.5px] border-b border-[#f00060]/15 pb-0.5 mb-1 text-white/90">
+                                            <div className="my-1.5 p-1.5 bg-black/40 border border-fatale/10 rounded-sm font-mono text-[6.5px] text-fatale/85 uppercase tracking-[0.05em] space-y-1 select-none">
+                                                <div className="flex justify-between items-center text-[7.5px] border-b border-fatale/15 pb-0.5 mb-1 text-white/90">
                                                     <span className="flex items-center gap-1">
-                                                        <span className="w-1.5 h-1.5 bg-[#f00060] rounded-full animate-ping" />
+                                                        <span className="w-1.5 h-1.5 bg-fatale rounded-full animate-ping" />
                                                         NEURAL EMOTIVE VIBE
                                                     </span>
-                                                    <span className="text-[7px] text-[#f00060] font-black">
+                                                    <span className="text-[7px] text-fatale font-black">
                                                         {vibeFeatures.valence < 0.35 ? 'MELANCHOLIC DEEP SIGNAL' : 
                                                          vibeFeatures.valence >= 0.65 ? 'EUPHORIC NEURAL WAVE' : 'BALANCED AMBIENT PULSE'}
                                                     </span>
@@ -2062,7 +2062,7 @@ useEffect(() => {
                                                             <span className="text-white font-bold">{Math.round(vibeFeatures.valence * 100)}%</span>
                                                         </div>
                                                         <div className="w-full bg-white/5 h-1 rounded-sm overflow-hidden border border-white/5">
-                                                            <div className="bg-gradient-to-r from-blue-500 to-[#f00060] h-full" style={{ width: `${vibeFeatures.valence * 100}%` }} />
+                                                            <div className="bg-gradient-to-r from-blue-500 to-fatale h-full" style={{ width: `${vibeFeatures.valence * 100}%` }} />
                                                         </div>
                                                     </div>
                                                     <div className="space-y-0.5">
@@ -2093,12 +2093,12 @@ useEffect(() => {
                                                     e.stopPropagation();
                                                     onLike && onLike(currentTrack);
                                                 }}
-                                                className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1"
+                                                className="text-fatale/50 hover:text-fatale transition-colors p-1"
                                                 title="Like track"
                                             >
                                                 <Heart
                                                     size={isVertical ? 14 : 18}
-                                                    fill={currentTrack.isLiked ? "#f00060" : "transparent"}
+                                                    fill={currentTrack.isLiked ? "rgb(var(--theme-primary-rgb))" : "transparent"}
                                                     strokeWidth={3}
                                                 />
                                             </button>
@@ -2110,7 +2110,7 @@ useEffect(() => {
                                                     setScreen('TIP_MENU');
                                                     setSelectedIndex(0);
                                                 }}
-                                                className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1"
+                                                className="text-fatale/50 hover:text-fatale transition-colors p-1"
                                                 title="Tip Artist"
                                             >
                                                 <DollarSign size={isVertical ? 14 : 18} strokeWidth={3} />
@@ -2128,10 +2128,10 @@ useEffect(() => {
                                                             onDownload && onDownload(currentTrack);
                                                         }
                                                     }}
-                                                    className={currentTrack.isCached ? "text-[#f00060] p-1" : "text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1"}
+                                                    className={currentTrack.isCached ? "text-fatale p-1" : "text-fatale/50 hover:text-fatale transition-colors p-1"}
                                                     title={isLocked ? "Purchase Track" : (currentTrack.isCached ? "Remove from Offline" : "Download Offline")}
                                                 >
-                                                    <DownloadIcon size={isVertical ? 14 : 18} strokeWidth={3} className={currentTrack.isCached ? "drop-shadow-[0_0_8px_#f00060]" : ""} />
+                                                    <DownloadIcon size={isVertical ? 14 : 18} strokeWidth={3} className={currentTrack.isCached ? "drop-shadow-[0_0_8px_rgb(var(--theme-primary-rgb))]" : ""} />
                                                 </button>
                                             )}
 
@@ -2154,7 +2154,7 @@ useEffect(() => {
                                                         setLoadingStations(false);
                                                     }
                                                 }}
-                                                className="text-[#f00060]/50 hover:text-[#f00060] transition-colors p-1 relative"
+                                                className="text-fatale/50 hover:text-fatale transition-colors p-1 relative"
                                                 title="Resonant Stations"
                                             >
                                                 <AntennaIcon size={isVertical ? 14 : 18} strokeWidth={3} />
@@ -2164,8 +2164,8 @@ useEffect(() => {
                                         {/* PROGRESS BAR */}
                                         {activeStation ? (
                                             <div className="flex items-center gap-2 pb-0.5">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-[#f00060] animate-pulse shrink-0 shadow-[0_0_8px_#f00060]" />
-                                                <span className={`${isVertical ? 'text-[8px]' : 'text-[9px]'} font-mono text-[#f00060] font-black tracking-widest uppercase`}>
+                                                <span className="w-1.5 h-1.5 rounded-full bg-fatale animate-pulse shrink-0 shadow-[0_0_8px_rgb(var(--theme-primary-rgb))]" />
+                                                <span className={`${isVertical ? 'text-[8px]' : 'text-[9px]'} font-mono text-fatale font-black tracking-widest uppercase`}>
                                                     LIVE BROADCAST
                                                 </span>
                                             </div>
@@ -2181,14 +2181,14 @@ useEffect(() => {
                                                     onSeek && onSeek(targetTime);
                                                 }}
                                             >
-                                                <div className={`${isVertical ? 'h-1.5' : 'h-2'} bg-[#1a1a1a] rounded-full overflow-hidden border border-[#f00060]/20 relative transition-all`}>
+                                                <div className={`${isVertical ? 'h-1.5' : 'h-2'} bg-[#1a1a1a] rounded-full overflow-hidden border border-fatale/20 relative transition-all`}>
                                                     <motion.div
-                                                        className="h-full bg-gradient-to-r from-[#f00060] to-[#c70055] shadow-[0_0_15px_#f00060]"
+                                                        className="h-full bg-gradient-to-r from-fatale to-[#c70055] shadow-[0_0_15px_rgb(var(--theme-primary-rgb))]"
                                                         animate={{ width: `${(visualTime / trackDurationSec) * 100}%` }}
                                                         transition={{ type: "spring", bounce: 0, duration: 0.1 }}
                                                     />
                                                 </div>
-                                                <div className={`flex justify-between ${isVertical ? 'text-[8px]' : 'text-[9px]'} font-mono text-[#f00060]/60 font-black tracking-widest transition-all`}>
+                                                <div className={`flex justify-between ${isVertical ? 'text-[8px]' : 'text-[9px]'} font-mono text-fatale/60 font-black tracking-widest transition-all`}>
                                                     <span>{formatTime(visualTime)}</span>
                                                     <span>-{formatTime(Math.max(0, trackDurationSec - visualTime))}</span>
                                                 </div>
@@ -2208,11 +2208,11 @@ useEffect(() => {
                                     transition={{ duration: 0.2 }}
                                     className="flex flex-col h-full bg-[#050505] no-scrollbar overflow-hidden"
                                 >
-                                    <div className="p-3 border-b border-[#f00060]/30 bg-gradient-to-r from-black/80 via-[#1a1a1a] to-black/80 backdrop-blur-sm flex items-center justify-between h-[42px] relative overflow-hidden">
+                                    <div className="p-3 border-b border-fatale/30 bg-gradient-to-r from-black/80 via-[#1a1a1a] to-black/80 backdrop-blur-sm flex items-center justify-between h-[42px] relative overflow-hidden">
                                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5 pointer-events-none" />
                                         {isSearching ? (
                                             <div className="flex items-center w-full gap-2">
-                                                <Search size={12} className="text-[#f00060] animate-pulse" />
+                                                <Search size={12} className="text-fatale animate-pulse" />
                                                 <input
                                                     autoFocus
                                                     type="text"
@@ -2242,8 +2242,8 @@ useEffect(() => {
                                                 }}
                                                 className={`flex items-center gap-1.5 min-w-0 ${screen === 'MAIN' ? 'cursor-pointer' : ''}`}
                                             >
-                                                {screen === 'MAIN' && <Search size={11} className="text-[#f00060] shrink-0" />}
-                                                <h2 className={`text-[11px] font-black tracking-[0.3em] font-mono ${screen === 'PLAYLIST_DETAILS' ? '' : 'uppercase'} truncate max-w-[180px] ${screen === 'MAIN' ? 'text-white/40' : 'text-[#f00060]'}`}>
+                                                {screen === 'MAIN' && <Search size={11} className="text-fatale shrink-0" />}
+                                                <h2 className={`text-[11px] font-black tracking-[0.3em] font-mono ${screen === 'PLAYLIST_DETAILS' ? '' : 'uppercase'} truncate max-w-[180px] ${screen === 'MAIN' ? 'text-white/40' : 'text-fatale'}`}>
                                                     {screen === 'MAIN' ? t('BUSCA_ALGO') + '...' :
                                                         screen === 'ACTION_MENU' ? 'OPTIONS' :
                                                             screen === 'TIP_MENU' ? 'SELECT TIP' :
@@ -2270,7 +2270,7 @@ useEffect(() => {
                                                     setSelectedIndex(0);
                                                 }
                                             }}
-                                            className={`transition-colors ${isSearching ? 'text-white hover:text-red-500' : 'text-[#f00060] hover:text-[#f00060]/80'}`}
+                                            className={`transition-colors ${isSearching ? 'text-white hover:text-red-500' : 'text-fatale hover:text-fatale/80'}`}
                                         >
                                             {isSearching || screen === 'MAIN' ? <Minimize2 size={12} /> : <Search size={12} />}
                                         </button>
@@ -2302,10 +2302,10 @@ useEffect(() => {
                                                         }}
                                                         className={`flex items-center justify-between px-4 ${isVertical ? 'py-1' : 'py-3'} rounded-lg mb-1 transition-all cursor-pointer 
                                                             ${idx === selectedIndex
-                                                                ? 'bg-gradient-to-r from-[#f00060] to-[#c70055] text-black shadow-[0_0_25px_rgba(240,0,96,0.8),inset_0_0_10px_rgba(0,0,0,0.2)] font-black'
+                                                                ? 'bg-gradient-to-r from-fatale to-[#c70055] text-black shadow-[0_0_25px_rgba(var(--theme-primary-rgb),0.8),inset_0_0_10px_rgba(0,0,0,0.2)] font-black'
                                                                 : isDisabled
                                                                     ? 'text-[#666] opacity-50 cursor-not-allowed'
-                                                                    : isAction ? 'text-[#f00060] font-black' : 'text-[#f00060]/90 hover:text-[#f00060]'
+                                                                    : isAction ? 'text-fatale font-black' : 'text-fatale/90 hover:text-fatale'
                                                             }`}
                                                         onClick={(e) => {
                                                             if (isDisabled) return;
@@ -2318,13 +2318,13 @@ useEffect(() => {
                                                             {item.type === 'YOUTUBE_SIGNAL' && <span className="text-white/20 mr-2">[SIGNAL]</span>}
                                                             {item.label}
                                                         </span>
-                                                        <ChevronRight size={14} className={idx === selectedIndex ? 'text-black animate-pulse' : isDisabled ? 'text-transparent' : 'text-[#f00060]/60'} />
+                                                        <ChevronRight size={14} className={idx === selectedIndex ? 'text-black animate-pulse' : isDisabled ? 'text-transparent' : 'text-fatale/60'} />
                                                     </motion.div>
                                                 );
                                             })}
                                         </div>
                                         {!isVertical && (
-                                            <div className="w-[180px] bg-black border-l border-[#f00060]/20 flex items-center justify-center p-4">
+                                            <div className="w-[180px] bg-black border-l border-fatale/20 flex items-center justify-center p-4">
                                                 {/* Preview Art */}
                                                 {(() => {
                                                     const selectedItem = getCurrentItems()[selectedIndex];
@@ -2335,7 +2335,7 @@ useEffect(() => {
                                                     else if (playlist) coverUrl = playlist.coverImageUrl || playlist.imageUrl;
 
                                                     return (
-                                                        <div className="w-[140px] h-[140px] bg-black border-2 border-[#f00060]/30 shadow-[0_0_40px_rgba(255,0,110,0.15)] flex items-center justify-center relative overflow-hidden rounded-xl">
+                                                        <div className="w-[140px] h-[140px] bg-black border-2 border-fatale/30 shadow-[0_0_40px_rgba(var(--theme-primary-rgb),0.15)] flex items-center justify-center relative overflow-hidden rounded-xl">
                                                             {coverUrl ? (
                                                                 <img src={coverUrl} alt="Preview" className="w-full h-full object-cover" />
                                                             ) : (
@@ -2348,7 +2348,7 @@ useEffect(() => {
                                                                     }} 
                                                                 />
                                                             )}
-                                                            <div className="absolute -inset-10 border border-[#f00060]/5 rotate-45 pointer-events-none" />
+                                                            <div className="absolute -inset-10 border border-fatale/5 rotate-45 pointer-events-none" />
                                                         </div>
                                                     );
                                                 })()}
@@ -2378,16 +2378,16 @@ useEffect(() => {
                         className={`${isVertical ? 'w-40 h-40' : 'w-64 h-64'} rounded-full bg-[#111] border-2 border-[#333] shadow-[0_15px_60px_rgba(0,0,0,1),inset_0_2px_10px_rgba(255,255,255,0.05)] relative flex items-center justify-center cursor-pointer active:scale-[0.99] transition-all duration-300 group touch-none`}
                     >
                         {/* WHEEL BUTTONS - POLISHED */}
-                        <button onClick={handleMenuClick} className={`absolute ${isVertical ? 'top-4' : 'top-6'} text-xs font-black text-[#f00060]/40 hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] tracking-widest transition-all font-mono uppercase z-50`}>MENU</button>
-                        <button onClick={(e) => { e.stopPropagation(); onMinimize(); }} className={`absolute ${isVertical ? 'bottom-4' : 'bottom-6'} text-[#666] hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] transition-all z-50`}><Minimize2 size={isVertical ? 20 : 24} /></button>
-                        <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className={`absolute ${isVertical ? 'left-4' : 'left-6'} text-[#666] hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] transition-all active:scale-95 z-50`}><SkipBack size={isVertical ? 24 : 28} fill="currentColor" /></button>
-                        <button onClick={(e) => { e.stopPropagation(); onNext(); }} className={`absolute ${isVertical ? 'right-4' : 'right-6'} text-[#666] hover:text-[#f00060] hover:drop-shadow-[0_0_10px_#f00060] transition-all active:scale-95 z-50`}><SkipForward size={isVertical ? 24 : 28} fill="currentColor" /></button>
+                        <button onClick={handleMenuClick} className={`absolute ${isVertical ? 'top-4' : 'top-6'} text-xs font-black text-fatale/40 hover:text-fatale hover:drop-shadow-[0_0_10px_rgb(var(--theme-primary-rgb))] tracking-widest transition-all font-mono uppercase z-50`}>MENU</button>
+                        <button onClick={(e) => { e.stopPropagation(); onMinimize(); }} className={`absolute ${isVertical ? 'bottom-4' : 'bottom-6'} text-[#666] hover:text-fatale hover:drop-shadow-[0_0_10px_rgb(var(--theme-primary-rgb))] transition-all z-50`}><Minimize2 size={isVertical ? 20 : 24} /></button>
+                        <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className={`absolute ${isVertical ? 'left-4' : 'left-6'} text-[#666] hover:text-fatale hover:drop-shadow-[0_0_10px_rgb(var(--theme-primary-rgb))] transition-all active:scale-95 z-50`}><SkipBack size={isVertical ? 24 : 28} fill="currentColor" /></button>
+                        <button onClick={(e) => { e.stopPropagation(); onNext(); }} className={`absolute ${isVertical ? 'right-4' : 'right-6'} text-[#666] hover:text-fatale hover:drop-shadow-[0_0_10px_rgb(var(--theme-primary-rgb))] transition-all active:scale-95 z-50`}><SkipForward size={isVertical ? 24 : 28} fill="currentColor" /></button>
 
 
                         {/* CENTER "SELECT" BUTTON */}
                         <button
                             onClick={handleCenterClick}
-                            className={`${isVertical ? 'w-14 h-14' : 'w-24 h-24'} rounded-full bg-[#080808] border-2 border-[#222] shadow-[0_0_30px_rgba(0,0,0,1)] flex items-center justify-center active:bg-[#f00060] transition-all group/select overflow-hidden relative z-50`}
+                            className={`${isVertical ? 'w-14 h-14' : 'w-24 h-24'} rounded-full bg-[#080808] border-2 border-[#222] shadow-[0_0_30px_rgba(0,0,0,1)] flex items-center justify-center active:bg-fatale transition-all group/select overflow-hidden relative z-50`}
                         >
                             <AnimatePresence mode="wait">
                                 {isLocked && screen === 'NOW_PLAYING' ? (
@@ -2396,8 +2396,8 @@ useEffect(() => {
                                         initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
                                         className="flex flex-col items-center"
                                     >
-                                        <span className="text-2xl font-black text-[#f00060] group-active/select:text-black">$</span>
-                                        <span className="text-[8px] font-black text-[#f00060] group-active/select:text-black font-mono">PURCHASE</span>
+                                        <span className="text-2xl font-black text-fatale group-active/select:text-black">$</span>
+                                        <span className="text-[8px] font-black text-fatale group-active/select:text-black font-mono">PURCHASE</span>
                                     </motion.div>
                                 ) : (
                                     <motion.div
@@ -2405,9 +2405,9 @@ useEffect(() => {
                                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                                     >
                                         {isPlaying ? (
-                                            <Pause size={isVertical ? 24 : 32} fill="#f00060" className="drop-shadow-[0_0_8px_#f00060]" />
+                                            <Pause size={isVertical ? 24 : 32} fill="rgb(var(--theme-primary-rgb))" className="drop-shadow-[0_0_8px_rgb(var(--theme-primary-rgb))]" />
                                         ) : (
-                                            <Play size={isVertical ? 24 : 32} fill="#f00060" className="drop-shadow-[0_0_8px_#f00060] ml-1" />
+                                            <Play size={isVertical ? 24 : 32} fill="rgb(var(--theme-primary-rgb))" className="drop-shadow-[0_0_8px_rgb(var(--theme-primary-rgb))] ml-1" />
                                         )}
                                     </motion.div>
                                 )}
@@ -2419,7 +2419,7 @@ useEffect(() => {
                     {/* EXPAND BUTTON IN LOWER CORNER */}
                     <button 
                         onClick={() => setIsFullView(true)} 
-                        className="absolute bottom-4 right-4 text-[#f00060] hover:text-white transition-colors bg-black/80 border border-[#f00060]/30 rounded-full p-2 z-50 shadow-[0_0_10px_rgba(255,0,110,0.3)]"
+                        className="absolute bottom-4 right-4 text-fatale hover:text-white transition-colors bg-black/80 border border-fatale/30 rounded-full p-2 z-50 shadow-[0_0_10px_rgba(var(--theme-primary-rgb),0.3)]"
                         title="Expand Player"
                     >
                         <Maximize2 size={16} />

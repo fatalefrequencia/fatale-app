@@ -302,13 +302,13 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                     <div className="flex gap-4 mb-8">
                         <button
                             onClick={() => { setMode('single'); setStatus('idle'); }}
-                            className={`flex-1 py-3 px-4 transition-all flex items-center justify-center gap-2 mono text-[10px] font-black tracking-[0.2em] border rounded-sm ${mode === 'single' ? 'bg-fatale/10 border-fatale text-fatale shadow-[0_0_20px_rgba(255,0,110,0.2)]' : 'bg-white/[0.03] border-white/10 text-white/40 hover:text-white/60 hover:border-white/20'}`}
+                            className={`flex-1 py-3 px-4 transition-all flex items-center justify-center gap-2 mono text-[10px] font-black tracking-[0.2em] border rounded-sm ${mode === 'single' ? 'bg-fatale/10 border-fatale text-fatale shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.2)]' : 'bg-white/[0.03] border-white/10 text-white/40 hover:text-white/60 hover:border-white/20'}`}
                         >
                             [ SINGLE_SIG ]
                         </button>
                         <button
                             onClick={() => { setMode('album'); setStatus('idle'); }}
-                            className={`flex-1 py-3 px-4 transition-all flex items-center justify-center gap-2 mono text-[10px] font-black tracking-[0.2em] border rounded-sm ${mode === 'album' ? 'bg-fatale/10 border-fatale text-fatale shadow-[0_0_20px_rgba(255,0,110,0.2)]' : 'bg-white/[0.03] border-white/10 text-white/40 hover:text-white/60 hover:border-white/20'}`}
+                            className={`flex-1 py-3 px-4 transition-all flex items-center justify-center gap-2 mono text-[10px] font-black tracking-[0.2em] border rounded-sm ${mode === 'album' ? 'bg-fatale/10 border-fatale text-fatale shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.2)]' : 'bg-white/[0.03] border-white/10 text-white/40 hover:text-white/60 hover:border-white/20'}`}
                         >
                             [ BATCH_LINK ]
                         </button>
@@ -320,7 +320,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                             <motion.div
                                 initial={{ scale: 0.8, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
-                                className="w-24 h-24 bg-fatale/5 border border-fatale flex items-center justify-center mx-auto shadow-[0_0_40px_rgba(255,0,110,0.2)] relative"
+                                className="w-24 h-24 bg-fatale/5 border border-fatale flex items-center justify-center mx-auto shadow-[0_0_40px_rgba(var(--theme-primary-rgb),0.2)] relative"
                             >
                                 <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-fatale" />
                                 <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-fatale" />
@@ -470,7 +470,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                         <button 
                                             type="submit" 
                                             disabled={uploading} 
-                                            className="w-full py-4 border border-fatale bg-fatale/10 text-fatale text-[10px] font-black uppercase tracking-widest transition-all hover:bg-fatale hover:text-black hover:shadow-[0_0_40px_rgba(255,0,110,0.4)] disabled:opacity-50 disabled:shadow-none"
+                                            className="w-full py-4 border border-fatale bg-fatale/10 text-fatale text-[10px] font-black uppercase tracking-widest transition-all hover:bg-fatale hover:text-black hover:shadow-[0_0_40px_rgba(var(--theme-primary-rgb),0.4)] disabled:opacity-50 disabled:shadow-none"
                                         >
                                             {uploading ? (
                                                 <div className="flex items-center justify-center gap-3">
@@ -550,7 +550,7 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                         <button 
                                             type="submit" 
                                             disabled={uploading} 
-                                            className="w-full py-4 border border-fatale bg-fatale/10 text-fatale text-[10px] font-black uppercase tracking-widest transition-all hover:bg-fatale hover:text-black hover:shadow-[0_0_40px_rgba(255,0,110,0.4)] disabled:opacity-50 disabled:shadow-none"
+                                            className="w-full py-4 border border-fatale bg-fatale/10 text-fatale text-[10px] font-black uppercase tracking-widest transition-all hover:bg-fatale hover:text-black hover:shadow-[0_0_40px_rgba(var(--theme-primary-rgb),0.4)] disabled:opacity-50 disabled:shadow-none"
                                         >
                                             {uploading ? (
                                                 <div className="flex items-center justify-center gap-3">

@@ -121,7 +121,7 @@ const CreditTransferModal = ({ user, onClose, onRefresh, initialTargetId = '', i
                         <button
                             type="submit"
                             disabled={status === 'processing' || !amount || !targetId}
-                            className="w-full py-4 bg-transparent border border-fatale/50 text-fatale font-black uppercase tracking-widest text-xs rounded-lg hover:bg-fatale hover:text-black transition-all disabled:opacity-50 shadow-[0_0_15px_rgba(255,0,110,0.1)] hover:shadow-[0_0_30px_rgba(255,0,110,0.4)]"
+                            className="w-full py-4 bg-transparent border border-fatale/50 text-fatale font-black uppercase tracking-widest text-xs rounded-lg hover:bg-fatale hover:text-black transition-all disabled:opacity-50 shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.1)] hover:shadow-[0_0_30px_rgba(var(--theme-primary-rgb),0.4)]"
                         >
                             {status === 'processing' ? 'Processing...' : 'Execute_Transfer'}
                         </button>

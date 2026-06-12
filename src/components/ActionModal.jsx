@@ -32,7 +32,7 @@ const ActionModal = ({ isOpen, onClose, onConfirm, title, message, confirmText =
                                     className="text-[10px] font-extrabold uppercase italic tracking-[0.2em] text-fatale flex items-center gap-2"
                                     style={{ transform: 'skewX(-2deg)' }}
                                 >
-                                    <span className="w-1.5 h-1.5 bg-fatale rounded-full animate-pulse shadow-[0_0_8px_rgba(255,0,110,0.8)]" />
+                                    <span className="w-1.5 h-1.5 bg-fatale rounded-full animate-pulse shadow-[0_0_8px_rgba(var(--theme-primary-rgb),0.8)]" />
                                     {title}
                                 </div>
                             </div>
@@ -44,7 +44,7 @@ const ActionModal = ({ isOpen, onClose, onConfirm, title, message, confirmText =
                             <div className="flex gap-3 pt-4">
                                 <button
                                     onClick={() => { if (onConfirm) onConfirm(); onClose(); }}
-                                    className="w-full px-4 py-3 text-[10px] font-black uppercase tracking-widest bg-fatale text-black hover:bg-white transition-all rounded-lg shadow-[0_0_15px_rgba(255,0,110,0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+                                    className="w-full px-4 py-3 text-[10px] font-black uppercase tracking-widest bg-fatale text-black hover:bg-white transition-all rounded-lg shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
                                 >
                                     {confirmText}
                                 </button>

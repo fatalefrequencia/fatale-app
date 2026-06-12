@@ -647,7 +647,7 @@ const DiscoveryCanvas = ({
                             placeholder={t('SEARCH_ARTISTS')}
                             style={{
                                 background: 'rgba(10,10,10,0.92)',
-                                border: '1px solid rgba(255,0,110,0.4)',
+                                border: '1px solid rgba(var(--theme-primary-rgb),0.4)',
                                 borderRadius: 8,
                                 color: '#fff',
                                 padding: '8px 12px',
@@ -749,7 +749,7 @@ const DiscoveryCanvas = ({
                     variant={BackgroundVariant.Dots}
                     gap={28}
                     size={1}
-                    color="rgba(255,0,110,0.08)"
+                    color="rgba(var(--theme-primary-rgb),0.08)"
                 />
                 <Controls position="bottom-left" style={{ bottom: isPlayerActive ? 150 : 60, background: "rgba(10,10,10,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10 }} showInteractive={false} />
 
@@ -841,8 +841,8 @@ const DiscoveryCanvas = ({
                     fill: rgba(255,255,255,0.6) !important;
                 }
                 .react-flow__controls-button:hover {
-                    background: rgba(255,0,110,0.15) !important;
-                    border-color: rgba(255,0,110,0.4) !important;
+                    background: rgba(var(--theme-primary-rgb),0.15) !important;
+                    border-color: rgba(var(--theme-primary-rgb),0.4) !important;
                     color: rgb(var(--theme-primary)) !important;
                     fill: rgb(var(--theme-primary)) !important;
                 }

@@ -270,7 +270,7 @@ const TrackActionsDropdown = ({
                                 transition={{ duration: 0.15 }}
                                 onClick={(e) => e.stopPropagation()}
                                 style={{ minWidth: '220px' }}
-                                className="bg-systemBg border border-fatale/60 rounded-sm overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_30px_rgba(255,0,110,0.2)] ring-1 ring-white/10 font-mono"
+                                className="bg-systemBg border border-fatale/60 rounded-sm overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_30px_rgba(var(--theme-primary-rgb),0.2)] ring-1 ring-white/10 font-mono"
                             >
                                 <div className="p-2 space-y-1">
                                     {!showPlaylists ? (

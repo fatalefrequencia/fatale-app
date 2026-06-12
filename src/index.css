@@ -8,9 +8,9 @@
 
 :root {
     --text-color: rgb(var(--theme-primary));
-    --text-color-rgb: 255, 0, 110;
+    --text-color-rgb: var(--theme-primary-rgb);
     --theme-color: rgb(var(--theme-primary));
-    --theme-color-rgb: 255, 0, 110;
+    --theme-color-rgb: var(--theme-primary-rgb);
 }
 
 html, body {
@@ -24,12 +24,12 @@ html, body {
     position: fixed;
     overflow: hidden;
     overscroll-behavior-y: none;
-    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><filter id="g"><feDropShadow dx="0" dy="0" stdDeviation="1.5" flood-color="%23ff006e" flood-opacity="1"/></filter><polygon points="6 6 13 25 16 17 24 20 6 6" fill="%23ff006e" filter="url(%23g)"/></svg>') 6 6, auto !important;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><filter id="g"><feDropShadow dx="0" dy="0" stdDeviation="1.5" flood-color="%23ffffff" flood-opacity="1"/></filter><polygon points="6 6 13 25 16 17 24 20 6 6" fill="%23ffffff" filter="url(%23g)"/></svg>') 6 6, auto !important;
 }
 
 /* Ensure custom cursor applies to clickable elements too */
 a, button, [role="button"], [class*="cursor-pointer"] {
-    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><filter id="g"><feDropShadow dx="0" dy="0" stdDeviation="1.5" flood-color="%23ff006e" flood-opacity="1"/></filter><polygon points="6 6 13 25 16 17 24 20 6 6" fill="%23ff006e" filter="url(%23g)"/></svg>') 6 6, pointer !important;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><filter id="g"><feDropShadow dx="0" dy="0" stdDeviation="1.5" flood-color="%23ffffff" flood-opacity="1"/></filter><polygon points="6 6 13 25 16 17 24 20 6 6" fill="%23ffffff" filter="url(%23g)"/></svg>') 6 6, pointer !important;
 }
 
 body {
@@ -117,12 +117,12 @@ body {
 
         0%,
         100% {
-            filter: drop-shadow(0 0 4px rgb(var(--theme-primary))) drop-shadow(0 0 10px rgba(255, 0, 110, 0.3));
+            filter: drop-shadow(0 0 4px rgb(var(--theme-primary))) drop-shadow(0 0 10px rgba(var(--theme-primary-rgb), 0.3));
             transform: scale(1);
         }
 
         50% {
-            filter: drop-shadow(0 0 6px rgb(var(--theme-primary))) drop-shadow(0 0 14px rgba(255, 0, 110, 0.5));
+            filter: drop-shadow(0 0 6px rgb(var(--theme-primary))) drop-shadow(0 0 14px rgba(var(--theme-primary-rgb), 0.5));
             transform: scale(1.03);
         }
     }

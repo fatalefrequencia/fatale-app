@@ -3259,7 +3259,7 @@ const PlaylistDetailsModal = ({ playlist, tracks, isOwner, onUpdate, onDelete, o
                     </div>
 
                     <div className="flex gap-6">
-                        <button onClick={handleSave} className="w-full py-4 bg-fatale/10 border border-fatale text-fatale font-black uppercase tracking-[0.3em] hover:bg-fatale hover:text-black transition-all text-[10px] shadow-[0_0_30px_rgba(255,0,110,0.1)] rounded-sm">
+                        <button onClick={handleSave} className="w-full py-4 bg-fatale/10 border border-fatale text-fatale font-black uppercase tracking-[0.3em] hover:bg-fatale hover:text-black transition-all text-[10px] shadow-[0_0_30px_rgba(var(--theme-primary-rgb),0.1)] rounded-sm">
                             SYNC_SIGNALS
                         </button>
                     </div>

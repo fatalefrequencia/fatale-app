@@ -57,7 +57,7 @@ const TipArtistModal = ({ isOpen, onClose, artist, userBalance, onTipSuccess, sh
                         initial={{ opacity: 0, scale: 0.98, y: 15 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.98, y: 15 }}
-                        className="w-full max-w-md bg-[#050505] border border-fatale/30 relative overflow-hidden shadow-[0_0_50px_rgba(255,0,110,0.25)] rounded-sm font-mono text-white"
+                        className="w-full max-w-md bg-[#050505] border border-fatale/30 relative overflow-hidden shadow-[0_0_50px_rgba(var(--theme-primary-rgb),0.25)] rounded-sm font-mono text-white"
                     >
                         {/* Header banner */}
                         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-fatale via-[#9b5de5] to-secondary" />
@@ -102,7 +102,7 @@ const TipArtistModal = ({ isOpen, onClose, artist, userBalance, onTipSuccess, sh
                                             }}
                                             className={`py-2 text-[10px] font-black tracking-wider rounded-sm border uppercase transition-all ${
                                                 amount === amt && !customAmount
-                                                    ? 'bg-fatale/15 border-fatale text-fatale shadow-[0_0_10px_rgba(255,0,110,0.15)]'
+                                                    ? 'bg-fatale/15 border-fatale text-fatale shadow-[0_0_10px_rgba(var(--theme-primary-rgb),0.15)]'
                                                     : 'bg-white/5 border-white/10 hover:border-white/30 text-white/70 hover:text-white'
                                             }`}
                                         >
@@ -166,7 +166,7 @@ const TipArtistModal = ({ isOpen, onClose, artist, userBalance, onTipSuccess, sh
                                 <button
                                     onClick={handleTip}
                                     disabled={isSubmitting || finalAmount <= 0 || !hasEnoughBalance}
-                                    className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest bg-fatale text-black hover:bg-white transition-all disabled:opacity-30 disabled:hover:bg-fatale disabled:hover:text-black rounded-sm shadow-[0_0_15px_rgba(255,0,110,0.25)]"
+                                    className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest bg-fatale text-black hover:bg-white transition-all disabled:opacity-30 disabled:hover:bg-fatale disabled:hover:text-black rounded-sm shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.25)]"
                                 >
                                     {isSubmitting ? 'TRANSMITTING...' : 'EXECUTE TIP'}
                                 </button>

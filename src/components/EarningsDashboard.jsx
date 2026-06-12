@@ -137,7 +137,7 @@ const EarningsDashboard = ({ user, onBack }) => {
                 <button
                     onClick={() => setShowWiseModal(true)}
                     disabled={!hasEarnings}
-                    className="px-8 py-4 bg-fatale text-black font-black uppercase tracking-widest rounded-sm hover:bg-white transition-all disabled:opacity-30 flex items-center gap-2 shadow-[0_0_15px_rgba(255,0,110,0.25)]"
+                    className="px-8 py-4 bg-fatale text-black font-black uppercase tracking-widest rounded-sm hover:bg-white transition-all disabled:opacity-30 flex items-center gap-2 shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.25)]"
                 >
                     Request Payout <ArrowDown size={16} />
                 </button>
@@ -151,7 +151,7 @@ const EarningsDashboard = ({ user, onBack }) => {
                         initial={{ opacity: 0, scale: 0.98, y: 15 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.98, y: 15 }}
-                        className="w-full max-w-md bg-[#050505] border border-fatale/30 relative overflow-hidden shadow-[0_0_50px_rgba(255,0,110,0.25)] rounded-sm"
+                        className="w-full max-w-md bg-[#050505] border border-fatale/30 relative overflow-hidden shadow-[0_0_50px_rgba(var(--theme-primary-rgb),0.25)] rounded-sm"
                     >
                         {/* Header */}
                         <div className="flex justify-between items-center p-5 border-b border-white/5 bg-black">
@@ -258,7 +258,7 @@ const EarningsDashboard = ({ user, onBack }) => {
                                 <button
                                     type="submit"
                                     disabled={isWithdrawing || withdrawAmountInt < 500}
-                                    className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest bg-fatale text-black hover:bg-white transition-all shadow-[0_0_15px_rgba(255,0,110,0.3)] disabled:opacity-50"
+                                    className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest bg-fatale text-black hover:bg-white transition-all shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)] disabled:opacity-50"
                                 >
                                     {isWithdrawing ? 'PROCESSING...' : 'DISPATCH PAYOUT'}
                                 </button>

@@ -30,7 +30,7 @@ const SectorHubPanel = ({
                 width: '100%',
                 maxWidth: 400,
                 background: 'rgba(2, 2, 2, 0.7)',
-                backgroundImage: `radial-gradient(rgba(255, 0, 110, 0.02) 1px, transparent 0)`,
+                backgroundImage: `radial-gradient(rgba(var(--theme-primary-rgb), 0.02) 1px, transparent 0)`,
                 backgroundSize: '24px 24px',
                 backdropFilter: 'blur(12px)',
                 borderLeft: `1px solid ${color}40`,

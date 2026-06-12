@@ -92,7 +92,7 @@ const CreditPurchase = ({ user, refreshProfile }) => {
                 <motion.img
                     src={creditCoin}
                     alt="Credits"
-                    className="w-8 h-8 object-contain rounded-full mix-blend-screen shadow-[0_0_12px_rgba(255,0,110,0.6)]"
+                    className="w-8 h-8 object-contain rounded-full mix-blend-screen shadow-[0_0_12px_rgba(var(--theme-primary-rgb),0.6)]"
                     animate={{ rotateY: 360 }}
                     transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                 />
@@ -162,7 +162,7 @@ const CreditPurchase = ({ user, refreshProfile }) => {
                             <button
                                 onClick={() => setSelectedBundle(bundle)}
                                 className={`w-full py-2.5 font-black text-xs uppercase tracking-widest transition-all mt-4 relative overflow-hidden group active:scale-95 ${bundle.bestValue
-                                    ? 'bg-fatale/20 border border-fatale/50 text-white hover:bg-fatale/40 hover:border-fatale shadow-[0_0_20px_rgba(255,0,110,0.2)]'
+                                    ? 'bg-fatale/20 border border-fatale/50 text-white hover:bg-fatale/40 hover:border-fatale shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.2)]'
                                     : 'bg-white/5 border border-white/10 text-white/60 hover:border-fatale/40 hover:text-white'
                                     }`}
                             >
@@ -185,7 +185,7 @@ const CreditPurchase = ({ user, refreshProfile }) => {
                             initial={{ opacity: 0, scale: 0.98, y: 15 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.98, y: 15 }}
-                            className="w-full max-w-md bg-[#050505] border border-fatale/30 relative overflow-hidden shadow-[0_0_50px_rgba(255,0,110,0.25)] rounded-sm"
+                            className="w-full max-w-md bg-[#050505] border border-fatale/30 relative overflow-hidden shadow-[0_0_50px_rgba(var(--theme-primary-rgb),0.25)] rounded-sm"
                         >
                             {/* Header */}
                             <div className="flex justify-between items-center p-5 border-b border-white/5 bg-black">
@@ -298,7 +298,7 @@ const CreditPurchase = ({ user, refreshProfile }) => {
                                     <button
                                         type="submit"
                                         disabled={processing}
-                                        className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest bg-fatale text-black hover:bg-white transition-all shadow-[0_0_15px_rgba(255,0,110,0.3)] disabled:opacity-50"
+                                        className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest bg-fatale text-black hover:bg-white transition-all shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)] disabled:opacity-50"
                                     >
                                         {processing ? 'VERIFYING...' : `PAY $${calculateStripeFee(selectedBundle.price).total}`}
                                     </button>

@@ -30,9 +30,9 @@ const HUDWidget = ({ title, children, icon, searchQuery, activeColor }) => {
                     </div>
                 </div>
                 <div className="flex gap-1">
-                    <div className="w-1 h-1 transition-colors" style={{ backgroundColor: activeColor ? `${activeColor}66` : 'rgba(255,0,110,0.2)' }} />
-                    <div className="w-1 h-1 transition-colors" style={{ backgroundColor: activeColor ? `${activeColor}AA` : 'rgba(255,0,110,0.4)' }} />
-                    <div className="w-1 h-1 transition-colors" style={{ backgroundColor: activeColor ? activeColor : 'rgba(255,0,110,0.6)' }} />
+                    <div className="w-1 h-1 transition-colors" style={{ backgroundColor: activeColor ? `${activeColor}66` : 'rgba(var(--theme-primary-rgb), 0.2)' }} />
+                    <div className="w-1 h-1 transition-colors" style={{ backgroundColor: activeColor ? `${activeColor}AA` : 'rgba(var(--theme-primary-rgb), 0.4)' }} />
+                    <div className="w-1 h-1 transition-colors" style={{ backgroundColor: activeColor ? activeColor : 'rgba(var(--theme-primary-rgb), 0.6)' }} />
                 </div>
             </div>
 
@@ -44,8 +44,8 @@ const HUDWidget = ({ title, children, icon, searchQuery, activeColor }) => {
                     boxShadow: `0 0 20px ${activeColor}59, 0 0 8px ${activeColor}80, inset 0 0 10px ${activeColor}33`,
                     outline: `1px solid ${activeColor}4D`
                 } : { 
-                    borderColor: 'rgba(255,0,110,0.5)',
-                    boxShadow: '0 0 20px rgba(255,0,110,0.35), 0 0 8px rgba(255,0,110,0.5), inset 0 0 10px rgba(255,0,110,0.2)'
+                    borderColor: 'rgba(var(--theme-primary-rgb), 0.5)',
+                    boxShadow: '0 0 20px rgba(var(--theme-primary-rgb), 0.35), 0 0 8px rgba(var(--theme-primary-rgb), 0.5), inset 0 0 10px rgba(var(--theme-primary-rgb), 0.2)'
                 }}
             >
                 

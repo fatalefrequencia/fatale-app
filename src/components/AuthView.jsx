@@ -198,22 +198,22 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
 
     const customStyles = `
       @keyframes cyberPulse {
-        0%, 100% { box-shadow: 0 0 15px rgba(214, 0, 54, 0.15), inset 0 0 15px rgba(214, 0, 54, 0.05); }
-        50% { box-shadow: 0 0 35px rgba(214, 0, 54, 0.32), inset 0 0 25px rgba(214, 0, 54, 0.12); }
+        0%, 100% { box-shadow: 0 0 15px rgba(var(--theme-primary-rgb), 0.15), inset 0 0 15px rgba(var(--theme-primary-rgb), 0.05); }
+        50% { box-shadow: 0 0 35px rgba(var(--theme-primary-rgb), 0.32), inset 0 0 25px rgba(var(--theme-primary-rgb), 0.12); }
       }
       .crt-text-glow {
-        color: #d60036;
+        color: rgb(var(--theme-primary-rgb));
         text-shadow: 
-          0 0 2px rgba(214, 0, 54, 0.95), 
-          0 0 8px rgba(214, 0, 54, 0.75), 
-          0 0 15px rgba(214, 0, 54, 0.5);
+          0 0 2px rgba(var(--theme-primary-rgb), 0.95), 
+          0 0 8px rgba(var(--theme-primary-rgb), 0.75), 
+          0 0 15px rgba(var(--theme-primary-rgb), 0.5);
       }
       .crt-cursor-glow {
-        color: #d60036;
+        color: rgb(var(--theme-primary-rgb));
         text-shadow: 
-          0 0 2px rgba(214, 0, 54, 0.95), 
-          0 0 10px rgba(214, 0, 54, 0.8), 
-          0 0 18px rgba(214, 0, 54, 0.55);
+          0 0 2px rgba(var(--theme-primary-rgb), 0.95), 
+          0 0 10px rgba(var(--theme-primary-rgb), 0.8), 
+          0 0 18px rgba(var(--theme-primary-rgb), 0.55);
       }
       .corner-bracket::before {
         content: '';
@@ -222,11 +222,11 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
         left: -1px;
         width: 20px;
         height: 20px;
-        border-top: 3px solid #d60036;
-        border-left: 3px solid #d60036;
+        border-top: 3px solid rgb(var(--theme-primary-rgb));
+        border-left: 3px solid rgb(var(--theme-primary-rgb));
         z-index: 10;
         pointer-events: none;
-        filter: drop-shadow(0 0 3px rgba(214, 0, 54, 0.6));
+        filter: drop-shadow(0 0 3px rgba(var(--theme-primary-rgb), 0.6));
       }
       .corner-bracket::after {
         content: '';
@@ -235,11 +235,11 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
         right: -1px;
         width: 20px;
         height: 20px;
-        border-top: 3px solid #d60036;
-        border-right: 3px solid #d60036;
+        border-top: 3px solid rgb(var(--theme-primary-rgb));
+        border-right: 3px solid rgb(var(--theme-primary-rgb));
         z-index: 10;
         pointer-events: none;
-        filter: drop-shadow(0 0 3px rgba(214, 0, 54, 0.6));
+        filter: drop-shadow(0 0 3px rgba(var(--theme-primary-rgb), 0.6));
       }
       .corner-bracket-bottom::before {
         content: '';
@@ -248,11 +248,11 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
         left: -1px;
         width: 20px;
         height: 20px;
-        border-bottom: 3px solid #d60036;
-        border-left: 3px solid #d60036;
+        border-bottom: 3px solid rgb(var(--theme-primary-rgb));
+        border-left: 3px solid rgb(var(--theme-primary-rgb));
         z-index: 10;
         pointer-events: none;
-        filter: drop-shadow(0 0 3px rgba(214, 0, 54, 0.6));
+        filter: drop-shadow(0 0 3px rgba(var(--theme-primary-rgb), 0.6));
       }
       .corner-bracket-bottom::after {
         content: '';
@@ -261,25 +261,25 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
         right: -1px;
         width: 20px;
         height: 20px;
-        border-bottom: 3px solid #d60036;
-        border-right: 3px solid #d60036;
+        border-bottom: 3px solid rgb(var(--theme-primary-rgb));
+        border-right: 3px solid rgb(var(--theme-primary-rgb));
         z-index: 10;
         pointer-events: none;
-        filter: drop-shadow(0 0 3px rgba(214, 0, 54, 0.6));
+        filter: drop-shadow(0 0 3px rgba(var(--theme-primary-rgb), 0.6));
       }
     `;
 
     return (
-        <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 relative bg-[#020202] overflow-hidden font-mono text-[#d60036]">
+        <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 relative bg-[#020202] overflow-hidden font-mono text-fatale">
             <style>{customStyles}</style>
 
             <div
                 className="absolute inset-0 bg-cover bg-center pointer-events-none transition-all duration-1000 z-0"
                 style={{ backgroundImage: `url(${loginBg})` }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-[#d60036]/06 to-[#020202] pointer-events-none z-0" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-fatale/06 to-[#020202] pointer-events-none z-0" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_30%,_rgba(10,0,0,0.85)_100%)] pointer-events-none z-0 mix-blend-multiply" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(214,0,54,0.15)_0%,_transparent_75%)] animate-pulse pointer-events-none z-0" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(var(--theme-primary-rgb),0.15)_0%,_transparent_75%)] animate-pulse pointer-events-none z-0" />
 
             <motion.div
                 initial={{ opacity: 0, y: 15 }}
@@ -296,7 +296,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                 </div>
 
                 <div
-                    className="bg-black/85 border border-[#d60036]/35 rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(214,0,54,0.22)] relative backdrop-blur-xl corner-bracket corner-bracket-bottom"
+                    className="bg-black/85 border border-fatale/35 rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(var(--theme-primary-rgb),0.22)] relative backdrop-blur-xl corner-bracket corner-bracket-bottom"
                     style={{ animation: 'cyberPulse 6s infinite' }}
                 >
                     <AnimatePresence mode="wait">
@@ -310,20 +310,20 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                <div className="flex items-center gap-3 px-5 py-4 border-b border-[#d60036]/25 bg-black/40">
+                                <div className="flex items-center gap-3 px-5 py-4 border-b border-fatale/25 bg-black/40">
                                     <button
                                         onClick={() => { setActiveTab('login'); setError(''); setSuccess(''); }}
-                                        className="text-[#d60036]/50 hover:text-[#d60036] transition-colors"
+                                        className="text-fatale/50 hover:text-fatale transition-colors"
                                     >
                                         <ArrowLeft size={16} />
                                     </button>
-                                    <span className="text-xs font-black uppercase tracking-[0.2em] text-[#d60036]/80">
+                                    <span className="text-xs font-black uppercase tracking-[0.2em] text-fatale/80">
                                         RESET_PASSWORD
                                     </span>
                                 </div>
 
                                 <div className="p-6 space-y-4">
-                                    <p className="text-[10px] text-[#d60036]/60 uppercase tracking-widest leading-relaxed">
+                                    <p className="text-[10px] text-fatale/60 uppercase tracking-widest leading-relaxed">
                                         Enter your email address and we'll transmit a reset link to your frequency.
                                     </p>
 
@@ -354,24 +354,24 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
 
                                     <form onSubmit={handleForgotPassword} className="space-y-4">
                                         <div className="space-y-1.5">
-                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#d60036]/75 pl-1">EMAIL ADDRESS</label>
+                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-fatale/75 pl-1">EMAIL ADDRESS</label>
                                             <div className="relative group">
-                                                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#d60036]/40 group-focus-within:text-[#d60036] transition-colors" />
+                                                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-fatale/40 group-focus-within:text-fatale transition-colors" />
                                                 <input
                                                     type="email"
                                                     placeholder="Enter your email"
                                                     value={forgotEmail}
                                                     onChange={(e) => { setForgotEmail(e.target.value); setError(''); }}
                                                     required
-                                                    className="w-full bg-black/60 border border-[#d60036]/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-[#d60036] focus:shadow-[0_0_15px_rgba(214,0,54,0.3)] transition-all placeholder:text-[#d60036]/25"
+                                                    className="w-full bg-black/60 border border-fatale/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-fatale focus:shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)] transition-all placeholder:text-fatale/25"
                                                 />
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#d60036]/10 group-focus-within:bg-[#d60036] rounded-full transition-all" />
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-fatale/10 group-focus-within:bg-fatale rounded-full transition-all" />
                                             </div>
                                         </div>
                                         <button
                                             type="submit"
                                             disabled={loading}
-                                            className="w-full bg-[#d60036] hover:bg-white text-black font-black py-3.5 rounded-xl transition-all flex items-center justify-center gap-2.5 uppercase tracking-[0.12em] text-xs shadow-[0_0_20px_rgba(214,0,54,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="w-full bg-fatale hover:bg-white text-black font-black py-3.5 rounded-xl transition-all flex items-center justify-center gap-2.5 uppercase tracking-[0.12em] text-xs shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {loading ? <Loader2 size={16} className="animate-spin" /> : '[ TRANSMIT_RESET_LINK ]'}
                                         </button>
@@ -389,14 +389,14 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                <div className="flex items-center gap-3 px-5 py-4 border-b border-[#d60036]/25 bg-black/40">
-                                    <span className="text-xs font-black uppercase tracking-[0.2em] text-[#d60036]/80">
+                                <div className="flex items-center gap-3 px-5 py-4 border-b border-fatale/25 bg-black/40">
+                                    <span className="text-xs font-black uppercase tracking-[0.2em] text-fatale/80">
                                         NEW_PASSWORD
                                     </span>
                                 </div>
 
                                 <div className="p-6 space-y-4">
-                                    <p className="text-[10px] text-[#d60036]/60 uppercase tracking-widest leading-relaxed">
+                                    <p className="text-[10px] text-fatale/60 uppercase tracking-widest leading-relaxed">
                                         Enter your new password below.
                                     </p>
 
@@ -427,39 +427,39 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
 
                                     <form onSubmit={handleResetPassword} className="space-y-4">
                                         <div className="space-y-1.5">
-                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#d60036]/75 pl-1">NEW PASSWORD</label>
+                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-fatale/75 pl-1">NEW PASSWORD</label>
                                             <div className="relative group">
-                                                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#d60036]/40 group-focus-within:text-[#d60036] transition-colors" />
+                                                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-fatale/40 group-focus-within:text-fatale transition-colors" />
                                                 <input
                                                     type="password"
                                                     placeholder="Min. 6 characters"
                                                     value={newPassword}
                                                     onChange={(e) => { setNewPassword(e.target.value); setError(''); }}
                                                     required
-                                                    className="w-full bg-black/60 border border-[#d60036]/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-[#d60036] focus:shadow-[0_0_15px_rgba(214,0,54,0.3)] transition-all placeholder:text-[#d60036]/25"
+                                                    className="w-full bg-black/60 border border-fatale/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-fatale focus:shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)] transition-all placeholder:text-fatale/25"
                                                 />
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#d60036]/10 group-focus-within:bg-[#d60036] rounded-full transition-all" />
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-fatale/10 group-focus-within:bg-fatale rounded-full transition-all" />
                                             </div>
                                         </div>
                                         <div className="space-y-1.5">
-                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#d60036]/75 pl-1">CONFIRM PASSWORD</label>
+                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-fatale/75 pl-1">CONFIRM PASSWORD</label>
                                             <div className="relative group">
-                                                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#d60036]/40 group-focus-within:text-[#d60036] transition-colors" />
+                                                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-fatale/40 group-focus-within:text-fatale transition-colors" />
                                                 <input
                                                     type="password"
                                                     placeholder="Repeat new password"
                                                     value={confirmPassword}
                                                     onChange={(e) => { setConfirmPassword(e.target.value); setError(''); }}
                                                     required
-                                                    className="w-full bg-black/60 border border-[#d60036]/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-[#d60036] focus:shadow-[0_0_15px_rgba(214,0,54,0.3)] transition-all placeholder:text-[#d60036]/25"
+                                                    className="w-full bg-black/60 border border-fatale/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-fatale focus:shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)] transition-all placeholder:text-fatale/25"
                                                 />
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#d60036]/10 group-focus-within:bg-[#d60036] rounded-full transition-all" />
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-fatale/10 group-focus-within:bg-fatale rounded-full transition-all" />
                                             </div>
                                         </div>
                                         <button
                                             type="submit"
                                             disabled={loading}
-                                            className="w-full bg-[#d60036] hover:bg-white text-black font-black py-3.5 rounded-xl transition-all flex items-center justify-center gap-2.5 uppercase tracking-[0.12em] text-xs shadow-[0_0_20px_rgba(214,0,54,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="w-full bg-fatale hover:bg-white text-black font-black py-3.5 rounded-xl transition-all flex items-center justify-center gap-2.5 uppercase tracking-[0.12em] text-xs shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {loading ? <Loader2 size={16} className="animate-spin" /> : '[ UPDATE_PASSWORD ]'}
                                         </button>
@@ -477,21 +477,21 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                 exit={{ opacity: 0, x: 20 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                <div className="flex border-b border-[#d60036]/25 bg-black/40">
+                                <div className="flex border-b border-fatale/25 bg-black/40">
                                     <button
                                         onClick={() => { setActiveTab('login'); setError(''); }}
                                         type="button"
-                                        className={`flex-1 py-3.5 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'login' ? 'text-black bg-[#d60036]' : 'text-[#d60036]/60 hover:text-[#d60036] hover:bg-[#d60036]/5'}`}
+                                        className={`flex-1 py-3.5 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'login' ? 'text-black bg-fatale' : 'text-fatale/60 hover:text-fatale hover:bg-fatale/5'}`}
                                     >
-                                        {activeTab === 'login' && <div className="absolute inset-0 bg-[#d60036]/20 blur-sm" />}
+                                        {activeTab === 'login' && <div className="absolute inset-0 bg-fatale/20 blur-sm" />}
                                         <span className="relative z-10">LOGIN</span>
                                     </button>
                                     <button
                                         onClick={() => { setActiveTab('register'); setError(''); }}
                                         type="button"
-                                        className={`flex-1 py-3.5 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'register' ? 'text-black bg-[#d60036]' : 'text-[#d60036]/60 hover:text-[#d60036] hover:bg-[#d60036]/5'}`}
+                                        className={`flex-1 py-3.5 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'register' ? 'text-black bg-fatale' : 'text-fatale/60 hover:text-fatale hover:bg-fatale/5'}`}
                                     >
-                                        {activeTab === 'register' && <div className="absolute inset-0 bg-[#d60036]/20 blur-sm" />}
+                                        {activeTab === 'register' && <div className="absolute inset-0 bg-fatale/20 blur-sm" />}
                                         <span className="relative z-10">CREATE ACCOUNT</span>
                                     </button>
                                 </div>
@@ -517,9 +517,9 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                         </AnimatePresence>
 
                                         <div className="space-y-1.5">
-                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#d60036]/75 pl-1">USERNAME</label>
+                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-fatale/75 pl-1">USERNAME</label>
                                             <div className="relative group">
-                                                <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#d60036]/40 group-focus-within:text-[#d60036] transition-colors" />
+                                                <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-fatale/40 group-focus-within:text-fatale transition-colors" />
                                                 <input
                                                     type="text"
                                                     name="username"
@@ -527,9 +527,9 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                                     value={formData.username}
                                                     onChange={handleChange}
                                                     required
-                                                    className="w-full bg-black/60 border border-[#d60036]/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-[#d60036] focus:shadow-[0_0_15px_rgba(214,0,54,0.3)] transition-all placeholder:text-[#d60036]/25"
+                                                    className="w-full bg-black/60 border border-fatale/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-fatale focus:shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)] transition-all placeholder:text-fatale/25"
                                                 />
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#d60036]/10 group-focus-within:bg-[#d60036] rounded-full transition-all" />
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-fatale/10 group-focus-within:bg-fatale rounded-full transition-all" />
                                             </div>
                                         </div>
 
@@ -543,9 +543,9 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                                     className="overflow-hidden"
                                                 >
                                                     <div className="space-y-1.5">
-                                                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#d60036]/75 pl-1">EMAIL ADDRESS</label>
+                                                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-fatale/75 pl-1">EMAIL ADDRESS</label>
                                                         <div className="relative group">
-                                                            <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#d60036]/40 group-focus-within:text-[#d60036] transition-colors" />
+                                                            <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-fatale/40 group-focus-within:text-fatale transition-colors" />
                                                             <input
                                                                 type="email"
                                                                 name="email"
@@ -553,9 +553,9 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                                                 value={formData.email}
                                                                 onChange={handleChange}
                                                                 required
-                                                                className="w-full bg-black/60 border border-[#d60036]/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-[#d60036] focus:shadow-[0_0_15px_rgba(214,0,54,0.3)] transition-all placeholder:text-[#d60036]/25"
+                                                                className="w-full bg-black/60 border border-fatale/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-fatale focus:shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)] transition-all placeholder:text-fatale/25"
                                                             />
-                                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#d60036]/10 group-focus-within:bg-[#d60036] rounded-full transition-all" />
+                                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-fatale/10 group-focus-within:bg-fatale rounded-full transition-all" />
                                                         </div>
                                                     </div>
                                                 </motion.div>
@@ -563,9 +563,9 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                         </AnimatePresence>
 
                                         <div className="space-y-1.5">
-                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#d60036]/75 pl-1">PASSWORD</label>
+                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-fatale/75 pl-1">PASSWORD</label>
                                             <div className="relative group">
-                                                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#d60036]/40 group-focus-within:text-[#d60036] transition-colors" />
+                                                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-fatale/40 group-focus-within:text-fatale transition-colors" />
                                                 <input
                                                     type="password"
                                                     name="password"
@@ -573,9 +573,9 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                                     value={formData.password}
                                                     onChange={handleChange}
                                                     required
-                                                    className="w-full bg-black/60 border border-[#d60036]/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-[#d60036] focus:shadow-[0_0_15px_rgba(214,0,54,0.3)] transition-all placeholder:text-[#d60036]/25"
+                                                    className="w-full bg-black/60 border border-fatale/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-fatale focus:shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)] transition-all placeholder:text-fatale/25"
                                                 />
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#d60036]/10 group-focus-within:bg-[#d60036] rounded-full transition-all" />
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-fatale/10 group-focus-within:bg-fatale rounded-full transition-all" />
                                             </div>
                                         </div>
 
@@ -583,7 +583,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                             <button
                                                 type="submit"
                                                 disabled={loading}
-                                                className="w-full bg-[#d60036] hover:bg-white text-black font-black py-3.5 rounded-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2.5 uppercase tracking-[0.12em] text-xs shadow-[0_0_20px_rgba(214,0,54,0.4)] hover:shadow-[0_0_25px_rgba(255,255,255,0.45)] disabled:opacity-50 disabled:cursor-not-allowed group border border-transparent hover:border-[#d60036]/40"
+                                                className="w-full bg-fatale hover:bg-white text-black font-black py-3.5 rounded-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2.5 uppercase tracking-[0.12em] text-xs shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.4)] hover:shadow-[0_0_25px_rgba(255,255,255,0.45)] disabled:opacity-50 disabled:cursor-not-allowed group border border-transparent hover:border-fatale/40"
                                             >
                                                 {loading ? (
                                                     <Loader2 size={16} className="animate-spin text-black" />
@@ -601,7 +601,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                                 <button
                                                     type="button"
                                                     onClick={() => { setActiveTab('forgot'); setError(''); setSuccess(''); }}
-                                                    className="text-[9px] uppercase font-bold text-[#d60036]/50 hover:text-[#d60036] tracking-[0.2em] transition-colors"
+                                                    className="text-[9px] uppercase font-bold text-fatale/50 hover:text-fatale tracking-[0.2em] transition-colors"
                                                 >
                                                     Forgot Password?
                                                 </button>
@@ -613,24 +613,24 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                         )}
                     </AnimatePresence>
 
-                    <div className="bg-[#d60036]/5 p-3 text-center border-t border-[#d60036]/20 flex items-center justify-center gap-2">
-                        <ShieldCheck size={12} className="text-[#d60036]/45 animate-pulse" />
-                        <p className="text-[8px] text-[#d60036]/50 uppercase tracking-[0.22em] font-black">
+                    <div className="bg-fatale/5 p-3 text-center border-t border-fatale/20 flex items-center justify-center gap-2">
+                        <ShieldCheck size={12} className="text-fatale/45 animate-pulse" />
+                        <p className="text-[8px] text-fatale/50 uppercase tracking-[0.22em] font-black">
                             PROTECTED BY CYBERSEC v9.0
                         </p>
                     </div>
                 </div>
 
                 {deferredPrompt && (
-                    <div className="w-full mt-4 bg-black/85 border border-[#d60036]/35 rounded-2xl p-4 text-center shadow-[0_0_20px_rgba(214,0,54,0.15)] backdrop-blur-xl relative corner-bracket corner-bracket-bottom flex flex-col items-center">
+                    <div className="w-full mt-4 bg-black/85 border border-fatale/35 rounded-2xl p-4 text-center shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.15)] backdrop-blur-xl relative corner-bracket corner-bracket-bottom flex flex-col items-center">
                         <div className="text-[10px] font-black uppercase tracking-[0.25em] mb-1.5 text-white">[ INSTALL_SYSTEM_SHELL ]</div>
-                        <p className="text-[9px] text-[#d60036]/70 leading-relaxed mb-3.5 uppercase tracking-wider max-w-[340px]">
+                        <p className="text-[9px] text-fatale/70 leading-relaxed mb-3.5 uppercase tracking-wider max-w-[340px]">
                             Download Fatale directly to your device for standalone immersive HUD execution and faster loading times.
                         </p>
                         <button
                             onClick={onInstall}
                             type="button"
-                            className="w-full bg-[#d60036] hover:bg-white text-black font-black py-3 rounded-xl transition-all uppercase tracking-[0.15em] text-[10px] shadow-[0_0_15px_rgba(214,0,54,0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.4)]"
+                            className="w-full bg-fatale hover:bg-white text-black font-black py-3 rounded-xl transition-all uppercase tracking-[0.15em] text-[10px] shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.4)]"
                         >
                             INSTALL APP
                         </button>
@@ -638,7 +638,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                 )}
 
                 {isIOS && !isStandalone && (
-                    <div className="w-full mt-4 bg-black/85 border border-[#d60036]/35 rounded-2xl p-4 text-center shadow-[0_0_20px_rgba(214,0,54,0.15)] backdrop-blur-xl relative corner-bracket corner-bracket-bottom flex flex-col items-center">
+                    <div className="w-full mt-4 bg-black/85 border border-fatale/35 rounded-2xl p-4 text-center shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.15)] backdrop-blur-xl relative corner-bracket corner-bracket-bottom flex flex-col items-center">
                         <div className="text-[10px] font-black uppercase tracking-[0.25em] mb-1.5 text-white">[ INSTALL_SYSTEM_SHELL ]</div>
                         <p className="text-[9px] text-[#d60035]/75 leading-relaxed uppercase tracking-wider max-w-[340px]">
                             To install on iOS: Tap <span className="text-white font-black">Share</span> at the bottom of Safari, then select <span className="text-white font-black">"Add to Home Screen"</span>.

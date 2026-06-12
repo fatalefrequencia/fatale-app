@@ -577,7 +577,7 @@ const SettingsView = ({ user, setUser }) => {
                                         <button
                                             type="submit"
                                             disabled={isSaving}
-                                            className="px-6 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all bg-fatale text-black shadow-[0_0_25px_rgba(255,0,110,0.4)] hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] active:scale-95 disabled:opacity-40 disabled:cursor-wait"
+                                            className="px-6 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all bg-fatale text-black shadow-[0_0_25px_rgba(var(--theme-primary-rgb),0.4)] hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] active:scale-95 disabled:opacity-40 disabled:cursor-wait"
                                         >
                                             {isSaving ? "SYNCING..." : "[ COMMIT_CHANGES ]"}
                                         </button>
@@ -686,7 +686,7 @@ const SettingsView = ({ user, setUser }) => {
                                         <button
                                             type="submit"
                                             disabled={isSaving}
-                                            className="px-6 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all bg-fatale text-black shadow-[0_0_25px_rgba(255,0,110,0.4)] hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] active:scale-95 disabled:opacity-40 disabled:cursor-wait"
+                                            className="px-6 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all bg-fatale text-black shadow-[0_0_25px_rgba(var(--theme-primary-rgb),0.4)] hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] active:scale-95 disabled:opacity-40 disabled:cursor-wait"
                                         >
                                             {isSaving ? "UPDATING KEY..." : "[ RECALIBRATE_KEY ]"}
                                         </button>
@@ -837,8 +837,8 @@ const SettingsView = ({ user, setUser }) => {
                     {/* Dedicated Programmatic Force Update Card */}
                     <div className={`border p-6 space-y-4 relative overflow-hidden transition-all duration-700 ${
                         updateAvailable 
-                        ? 'border-fatale bg-fatale/5 shadow-[0_0_35px_rgba(255,0,110,0.12),inset_0_0_15px_rgba(255,0,110,0.05)]' 
-                        : 'border-white/5 bg-black/40 shadow-[0_0_15px_rgba(255,0,110,0.01)]'
+                        ? 'border-fatale bg-fatale/5 shadow-[0_0_35px_rgba(var(--theme-primary-rgb),0.12),inset_0_0_15px_rgba(var(--theme-primary-rgb),0.05)]' 
+                        : 'border-white/5 bg-black/40 shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.01)]'
                     }`}>
                         <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-fatale/5 to-transparent pointer-events-none" />
                         <div className="space-y-1">
@@ -883,8 +883,8 @@ const SettingsView = ({ user, setUser }) => {
                                      isSaving 
                                      ? 'bg-fatale/20 text-white/40 cursor-wait' 
                                      : updateAvailable 
-                                       ? 'bg-fatale text-black shadow-[0_0_25px_rgba(255,0,110,0.4)] hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]'
-                                       : 'bg-transparent border border-white/10 text-white/40 hover:text-white hover:border-fatale hover:bg-fatale/5 hover:shadow-[0_0_15px_rgba(255,0,110,0.1)]'
+                                       ? 'bg-fatale text-black shadow-[0_0_25px_rgba(var(--theme-primary-rgb),0.4)] hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]'
+                                       : 'bg-transparent border border-white/10 text-white/40 hover:text-white hover:border-fatale hover:bg-fatale/5 hover:shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.1)]'
                                  }`}
                              >
                                  {isSaving 

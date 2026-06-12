@@ -834,12 +834,12 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                     background: rgba(0, 0, 0, 0.4);
                 }
                 ::-webkit-scrollbar-thumb {
-                    background: rgba(255, 0, 110, 0.35);
+                    background: rgba(var(--theme-primary-rgb), 0.35);
                     border-radius: 2px;
                 }
                 ::-webkit-scrollbar-thumb:hover {
-                    background: rgba(255, 0, 110, 0.7);
-                    box-shadow: 0 0 10px rgba(255, 0, 110, 0.5);
+                    background: rgba(var(--theme-primary-rgb), 0.7);
+                    box-shadow: 0 0 10px rgba(var(--theme-primary-rgb), 0.5);
                 }
                 @keyframes led-scroll {
                     0%   { left: 100%; }
@@ -983,7 +983,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             <button
                                                 key={node.id}
                                                 onClick={() => { setView(node.id); setShowSkullMenu(false); }}
-                                                className={`group text-left p-2 md:p-4 bg-white/[0.012] border border-white/5 hover:border-fatale hover:shadow-[0_0_15px_rgba(255,0,110,0.4)] hover:bg-fatale/5 transition-all flex items-center gap-2 md:gap-4 relative overflow-hidden active:scale-[0.98] rounded-sm min-w-0 ${node.id === 'settings' ? 'col-span-2 justify-self-center w-full md:w-[calc(50%-0.5rem)]' : ''}`}
+                                                className={`group text-left p-2 md:p-4 bg-white/[0.012] border border-white/5 hover:border-fatale hover:shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.4)] hover:bg-fatale/5 transition-all flex items-center gap-2 md:gap-4 relative overflow-hidden active:scale-[0.98] rounded-sm min-w-0 ${node.id === 'settings' ? 'col-span-2 justify-self-center w-full md:w-[calc(50%-0.5rem)]' : ''}`}
                                             >
                                                 <div className="p-1.5 md:p-3 bg-black border border-white/10 text-white/40 group-hover:text-fatale group-hover:border-fatale/30 transition-all shrink-0">
                                                     {node.icon}
@@ -1049,10 +1049,10 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     onTouchEnd={(e) => e.stopPropagation()}
                                     className="w-full bg-black/60 border rounded px-10 py-2.5 text-xs tracking-[0.2em] focus:outline-none focus:ring-1 transition-all placeholder:text-fatale/20"
                                     style={{
-                                        borderColor: activeSectorColor ? `${activeSectorColor}99` : 'rgba(255,0,110,0.3)',
+                                        borderColor: activeSectorColor ? `${activeSectorColor}99` : 'rgba(var(--theme-primary-rgb),0.3)',
                                         focusBorderColor: activeSectorColor || 'rgb(var(--theme-primary))',
                                         color: activeSectorColor || 'white',
-                                        '--tw-ring-color': activeSectorColor ? `${activeSectorColor}33` : 'rgba(255,0,110,0.2)'
+                                        '--tw-ring-color': activeSectorColor ? `${activeSectorColor}33` : 'rgba(var(--theme-primary-rgb),0.2)'
                                     }}
                                 />
                                 {searchQuery && (
@@ -1083,7 +1083,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 animate={{ height: [2, 8, 2, 4, 2] }}
                                 transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.05 }}
                                 className="w-[2px] transition-colors duration-500"
-                                style={{ backgroundColor: activeSectorColor ? `${activeSectorColor}66` : 'rgba(255, 0, 110, 0.3)' }}
+                                style={{ backgroundColor: activeSectorColor ? `${activeSectorColor}66` : 'rgba(var(--theme-primary-rgb), 0.3)' }}
                             />
                         ))}
                     </div>
@@ -1112,14 +1112,14 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                     <button
                         onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('globe'); }}
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('globe'); }}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'globe' ? 'border border-fatale text-fatale shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-fatale/40 border border-transparent hover:bg-fatale/10'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'globe' ? 'border border-fatale text-fatale shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)]' : 'text-fatale/40 border border-transparent hover:bg-fatale/10'}`}
                     >
                         <Globe size={12} /> {t('GLOBE_SENSE')}
                     </button>
                     <button
                         onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('data'); }}
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileViewMode('data'); }}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'data' ? 'border border-fatale text-fatale shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'text-fatale/40 border border-transparent hover:bg-fatale/10'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black tracking-widest transition-all ${mobileViewMode === 'data' ? 'border border-fatale text-fatale shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)]' : 'text-fatale/40 border border-transparent hover:bg-fatale/10'}`}
                     >
                         <Activity size={12} /> {t('DATA_STREAM')}
                     </button>
@@ -1142,7 +1142,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             borderColor: `${activeSectorColor}99`,
                             boxShadow: `0 0 20px ${activeSectorColor}26`,
                             outline: `1px solid ${activeSectorColor}4D`
-                        } : (!isMobile ? { borderColor: 'rgba(255,0,110,0.30)' } : {})}
+                        } : (!isMobile ? { borderColor: 'rgba(var(--theme-primary-rgb),0.30)' } : {})}
                     >
                         {/* Corner Brackets (Desktop only) */}
                         {!isMobile && (

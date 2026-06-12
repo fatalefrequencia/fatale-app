@@ -28,8 +28,8 @@ const NeuroGraph = ({ userId }) => {
 
     if (loading && nodes.length === 0) {
         return (
-            <div className="w-full h-48 flex items-center justify-center bg-black/20 rounded-xl border border-[#f00060]/10">
-                <RefreshCw size={24} className="text-[#f00060] animate-spin opacity-50" />
+            <div className="w-full h-48 flex items-center justify-center bg-black/20 rounded-xl border border-fatale/10">
+                <RefreshCw size={24} className="text-fatale animate-spin opacity-50" />
             </div>
         );
     }

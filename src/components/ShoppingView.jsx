@@ -735,7 +735,7 @@ const ShoppingView = () => {
                                                 fontFamily: T.mono, fontSize: 9, letterSpacing: '0.12em',
                                                 padding: '5px 10px', borderRadius: 0,
                                                 border: active ? `1px solid ${T.pink}` : `1px solid ${T.borderDim}`,
-                                                background: active ? 'rgba(255,0,110,0.1)' : 'transparent',
+                                                background: active ? 'rgba(var(--theme-primary-rgb),0.1)' : 'transparent',
                                                 color: active ? T.pink : T.purpleDim,
                                                 cursor: 'pointer',
                                             }}
@@ -912,7 +912,7 @@ const ShoppingView = () => {
                                                     fontFamily: T.mono, fontSize: 10, letterSpacing: '0.16em',
                                                     padding: '8px 14px',
                                                     border: activeFilter === 'MY_NODES' ? `1px solid ${T.pink}` : `1px solid ${T.borderDim}`,
-                                                    background: activeFilter === 'MY_NODES' ? 'rgba(255,0,110,0.1)' : 'transparent',
+                                                    background: activeFilter === 'MY_NODES' ? 'rgba(var(--theme-primary-rgb),0.1)' : 'transparent',
                                                     color: activeFilter === 'MY_NODES' ? T.pink : T.purpleDim,
                                                     borderRadius: 0, cursor: 'pointer',
                                                     transition: 'all 0.15s', textTransform: 'uppercase', fontWeight: 900, whiteSpace: 'nowrap',
@@ -964,7 +964,7 @@ const ShoppingView = () => {
                                                     whileHover={{ y: -4 }} whileTap={{ scale: 0.97 }}
                                                     onClick={() => setSelectedShop(shop)}
                                                     className="group cursor-pointer relative flex flex-col rounded-none overflow-visible border border-[#1a0404] hover:border-fatale bg-[#060606] transition-all duration-300 aspect-[3/4]"
-                                                    onMouseEnter={e => e.currentTarget.style.boxShadow = '0 0 14px rgba(255,0,110,0.18), inset 0 0 20px rgba(255,0,110,0.03)'}
+                                                    onMouseEnter={e => e.currentTarget.style.boxShadow = '0 0 14px rgba(var(--theme-primary-rgb),0.18), inset 0 0 20px rgba(var(--theme-primary-rgb),0.03)'}
                                                     onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
                                                 >
                                                     <div className="absolute -top-px -left-px w-2.5 h-2.5 border-t-2 border-l-2 border-fatale opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 pointer-events-none" />
@@ -1040,7 +1040,7 @@ const ShoppingView = () => {
                                 width: '100%', maxWidth: 900, maxHeight: '88vh',
                                 background: T.bg, border: `1px solid ${T.border}`,
                                 borderRadius: 0, overflow: 'hidden',
-                                boxShadow: `0 0 80px rgba(255,0,110,0.12), 0 32px 64px rgba(0,0,0,0.8)`,
+                                boxShadow: `0 0 80px rgba(var(--theme-primary-rgb),0.12), 0 32px 64px rgba(0,0,0,0.8)`,
                                 fontFamily: T.mono,
                             }}
                         >
@@ -1224,7 +1224,7 @@ const ShoppingView = () => {
                                             {CATEGORIES.filter(c => c.id !== 'ALL').map(cat => {
                                                 const active = category === cat.id;
                                                 return (
-                                                    <button type="button" key={cat.id} onClick={() => setCategory(cat.id)} style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.14em', padding: '4px 9px', borderRadius: 0, border: active ? `1px solid ${T.pink}` : `1px solid ${T.borderDim}`, background: active ? 'rgba(255,0,110,0.1)' : 'transparent', color: active ? T.pink : T.purpleDim, cursor: 'pointer', transition: 'all 0.12s' }}>
+                                                    <button type="button" key={cat.id} onClick={() => setCategory(cat.id)} style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.14em', padding: '4px 9px', borderRadius: 0, border: active ? `1px solid ${T.pink}` : `1px solid ${T.borderDim}`, background: active ? 'rgba(var(--theme-primary-rgb),0.1)' : 'transparent', color: active ? T.pink : T.purpleDim, cursor: 'pointer', transition: 'all 0.12s' }}>
                                                         {active ? '[x]' : '[ ]'} {cat.label}
                                                     </button>
                                                 );

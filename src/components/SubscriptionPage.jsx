@@ -18,10 +18,10 @@ const SubscriptionPage = ({ user, onRefreshProfile }) => {
                 <div className="text-center space-y-8 pt-12 pb-8">
                     <div className="relative inline-block">
                         <h1 className="text-4xl md:text-6xl font-black uppercase italic leading-none overflow-visible tracking-[0.2em] px-12 flex justify-center items-center gap-4 [transform:skewX(-12deg)]">
-                            <span className="text-white drop-shadow-[0_0_10px_rgba(16,185,129,0.4)] [text-shadow:0_0_20px_rgba(255,0,110,0.3)] py-2 pr-2">
+                            <span className="text-white drop-shadow-[0_0_10px_rgba(16,185,129,0.4)] [text-shadow:0_0_20px_rgba(var(--theme-primary-rgb),0.3)] py-2 pr-2">
                                 PREMIUM
                             </span>
-                            <span className="text-white drop-shadow-[0_0_10px_rgba(255,0,110,0.4)] [text-shadow:0_0_20px_rgba(147,51,234,0.3)] py-2 pr-4">
+                            <span className="text-white drop-shadow-[0_0_10px_rgba(var(--theme-primary-rgb),0.4)] [text-shadow:0_0_20px_rgba(147,51,234,0.3)] py-2 pr-4">
                                 ACCESS
                             </span>
                         </h1>

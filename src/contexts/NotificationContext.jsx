@@ -124,7 +124,7 @@ export const NotificationProvider = ({ children }) => {
                                 {/* CRT Effect Overlay */}
                                 <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%] pointer-events-none z-10 opacity-40" />
 
-                                <div className="bg-black/90 border border-fatale/30 backdrop-blur-2xl p-3.5 px-4 shadow-[0_12px_40px_rgba(0,0,0,0.8),_0_0_20px_rgba(255,0,110,0.15)] relative overflow-hidden rounded-xl">
+                                <div className="bg-black/90 border border-fatale/30 backdrop-blur-2xl p-3.5 px-4 shadow-[0_12px_40px_rgba(0,0,0,0.8),_0_0_20px_rgba(var(--theme-primary-rgb),0.15)] relative overflow-hidden rounded-xl">
                                     {/* Glitch lines */}
                                     <div className="absolute top-0 left-0 w-full h-[1px] bg-fatale/20 animate-scanline" />
 

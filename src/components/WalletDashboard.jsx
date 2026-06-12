@@ -44,7 +44,7 @@ const WalletDashboard = ({ user, onRefreshProfile, setActiveTab }) => {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-fatale/5 blur-3xl pointer-events-none" />
                     <div className="text-[11px] font-black text-fatale/60 uppercase tracking-[0.3em] mb-2">// AVAILABLE_BALANCE</div>
                     <div className="flex items-baseline gap-2 mb-6">
-                        <span className="text-5xl md:text-7xl font-black text-white tracking-tighter drop-shadow-[0_0_20px_rgba(255,0,110,0.4)]">
+                        <span className="text-5xl md:text-7xl font-black text-white tracking-tighter drop-shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.4)]">
                             {user?.credits || 0}
                         </span>
                         <span className="text-xs font-black text-white/20 uppercase tracking-widest">CRD</span>
@@ -52,7 +52,7 @@ const WalletDashboard = ({ user, onRefreshProfile, setActiveTab }) => {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setActiveTab('Depot')}
-                            className="relative overflow-hidden group bg-fatale/10 border border-fatale/30 text-fatale px-4 py-2.5 md:px-6 md:py-3 font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-fatale/20 hover:border-fatale/60 hover:text-white transition-all shadow-[0_0_15px_rgba(255,0,110,0.1)] active:scale-95"
+                            className="relative overflow-hidden group bg-fatale/10 border border-fatale/30 text-fatale px-4 py-2.5 md:px-6 md:py-3 font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-fatale/20 hover:border-fatale/60 hover:text-white transition-all shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.1)] active:scale-95"
                         >
                             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-400" />

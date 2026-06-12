@@ -153,12 +153,12 @@ const ElectronTitleBar = () => {
 
   return (
     <div 
-      className="h-[28px] bg-[#020202] border-b border-[#d60036]/15 flex items-center justify-between px-3 select-none pointer-events-auto relative z-[999999] shrink-0" 
+      className="h-[28px] bg-[#020202] border-b border-fatale/15 flex items-center justify-between px-3 select-none pointer-events-auto relative z-[999999] shrink-0" 
       style={{ WebkitAppRegion: 'drag' }}
     >
       <div className="flex items-center gap-2">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#d60036] animate-pulse" />
-        <span className="text-[8px] font-black uppercase tracking-[0.3em] text-[#d60036]/80 select-none">
+        <span className="w-1.5 h-1.5 rounded-full bg-fatale animate-pulse" />
+        <span className="text-[8px] font-black uppercase tracking-[0.3em] text-fatale/80 select-none">
           [ FATALE DESKTOP SHELL v1.0.0 ]
         </span>
       </div>
@@ -188,7 +188,7 @@ const ElectronTitleBar = () => {
         <button 
           onClick={handleClose}
           title="Exit Application"
-          className="w-8 h-5 flex items-center justify-center text-white/40 hover:text-[#d60036] hover:bg-[#d60036]/10 transition-all rounded cursor-pointer"
+          className="w-8 h-5 flex items-center justify-center text-white/40 hover:text-fatale hover:bg-fatale/10 transition-all rounded cursor-pointer"
         >
           <X size={10} />
         </button>
@@ -267,34 +267,39 @@ function App() {
   }, [user?.preferredLanguage, user?.PreferredLanguage, setLanguage]);
 
   useEffect(() => {
-    const hexToRgb = (hex) => {
+    const hexToRgbVals = (hex) => {
       if (!hex || !hex.startsWith('#')) return null;
       try {
         let r = parseInt(hex.slice(1, 3), 16);
         let g = parseInt(hex.slice(3, 5), 16);
         let b = parseInt(hex.slice(5, 7), 16);
         if (isNaN(r) || isNaN(g) || isNaN(b)) return null;
-        return `${r} ${g} ${b}`;
+        return { space: `${r} ${g} ${b}`, comma: `${r}, ${g}, ${b}` };
       } catch (e) {
         return null;
       }
     };
 
-    const applyThemeColor = (cssVar, hexValue, defaultRgb) => {
-      const rgb = hexToRgb(hexValue) || defaultRgb;
-      document.documentElement.style.setProperty(cssVar, rgb);
+    const applyThemeColor = (cssVar, hexValue, defaultSpace, defaultComma) => {
+      const vals = hexToRgbVals(hexValue) || { space: defaultSpace, comma: defaultComma };
+      document.documentElement.style.setProperty(cssVar, vals.space);
+      document.documentElement.style.setProperty(cssVar + '-rgb', vals.comma);
     };
 
     if (user) {
-      applyThemeColor('--theme-primary', user.themeColor || user.ThemeColor, '255 255 255'); 
-      applyThemeColor('--theme-secondary', user.themeColor || user.ThemeColor, '255 255 255'); 
-      applyThemeColor('--theme-bg', user.backgroundColor || user.BackgroundColor, '0 0 0'); 
-      applyThemeColor('--theme-text', user.themeColor || user.ThemeColor, '255 255 255'); 
+      applyThemeColor('--theme-primary', user.themeColor || user.ThemeColor, '255 255 255', '255, 255, 255'); 
+      applyThemeColor('--theme-secondary', user.themeColor || user.ThemeColor, '255 255 255', '255, 255, 255'); 
+      applyThemeColor('--theme-bg', user.backgroundColor || user.BackgroundColor, '0 0 0', '0, 0, 0'); 
+      applyThemeColor('--theme-text', user.themeColor || user.ThemeColor, '255 255 255', '255, 255, 255'); 
     } else {
       document.documentElement.style.setProperty('--theme-primary', '255 255 255');
+      document.documentElement.style.setProperty('--theme-primary-rgb', '255, 255, 255');
       document.documentElement.style.setProperty('--theme-secondary', '255 255 255');
+      document.documentElement.style.setProperty('--theme-secondary-rgb', '255, 255, 255');
       document.documentElement.style.setProperty('--theme-bg', '0 0 0');
+      document.documentElement.style.setProperty('--theme-bg-rgb', '0, 0, 0');
       document.documentElement.style.setProperty('--theme-text', '255 255 255');
+      document.documentElement.style.setProperty('--theme-text-rgb', '255, 255, 255');
     }
   }, [user?.themeColor, user?.ThemeColor, user?.backgroundColor, user?.BackgroundColor]);
 
@@ -3234,7 +3239,7 @@ function App() {
                     <button
                       onClick={() => handleGlobalGoLive()}
                       disabled={!goLiveFormData.sessionTitle.trim()}
-                      className="w-full py-4 border border-fatale bg-fatale/10 text-fatale text-[10px] font-black uppercase tracking-widest transition-all hover:bg-fatale hover:text-black hover:shadow-[0_0_40px_rgba(255,0,110,0.4)] disabled:opacity-50 disabled:shadow-none"
+                      className="w-full py-4 border border-fatale bg-fatale/10 text-fatale text-[10px] font-black uppercase tracking-widest transition-all hover:bg-fatale hover:text-black hover:shadow-[0_0_40px_rgba(var(--theme-primary-rgb),0.4)] disabled:opacity-50 disabled:shadow-none"
                     >
                       Init_Broadcast
                     </button>
@@ -3516,10 +3521,10 @@ const Dashboard = React.memo(({
     if (activeView === 'profile') {
       // Profile handles its own theme via onThemeChange
     } else {
-      root.style.setProperty('--theme-color', 'rgb(var(--theme-primary))');
-      root.style.setProperty('--theme-color-rgb', '255, 0, 110');
-      root.style.setProperty('--text-color', 'rgb(var(--theme-primary))');
-      root.style.setProperty('--text-color-rgb', '255, 0, 110');
+      root.style.setProperty('--theme-color', 'rgb(var(--theme-primary-rgb))');
+      root.style.setProperty('--theme-color-rgb', 'var(--theme-primary-rgb)');
+      root.style.setProperty('--text-color', 'rgb(var(--theme-primary-rgb))');
+      root.style.setProperty('--text-color-rgb', 'var(--theme-primary-rgb)');
     }
   }, [activeView]);
 
@@ -3972,7 +3977,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
       transition={{ type: "spring", stiffness: 300, damping: 28 }}
       className={`fixed bottom-0 lg:bottom-4 transition-[left] duration-500 left-0 right-0 ${isSidebarCollapsed ? 'lg:left-[6rem]' : 'lg:left-[17rem]'} lg:right-4 backdrop-blur-3xl z-[100] ${isMessages
         ? 'bg-black/95 border-t border-white/5 lg:border lg:rounded-sm lg:shadow-none'
-        : 'bg-[#020202]/95 border-t border-white/5 lg:border-white/5 lg:rounded-md shadow-[0_-15px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_10px_60px_-15px_rgba(255,0,110,0.15)]'
+        : 'bg-[#020202]/95 border-t border-white/5 lg:border-white/5 lg:rounded-md shadow-[0_-15px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_10px_60px_-15px_rgba(var(--theme-primary-rgb),0.15)]'
         } group/player overflow-hidden flex ${isMobile ? 'flex-col gap-2.5 p-3' : 'flex-row items-center gap-3 p-1.5 lg:p-3 pb-3 lg:pb-3'}`}
       style={{
         paddingBottom: isMobile ? 'calc(10px + env(safe-area-inset-bottom, 12px))' : undefined
@@ -3998,7 +4003,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
 
       {/* Track Info (Click to expand) */}
       <div className={`flex items-center gap-3 lg:gap-4 flex-1 cursor-pointer group/info min-w-0 z-10 relative ${isMobile ? 'w-full pr-6' : ''}`} onClick={onExpand}>
-        <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-sm border flex items-center justify-center relative overflow-hidden shrink-0 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.5)] ${isMessages ? 'bg-black border-white/5' : 'bg-[#0a0a0a] border-white/10 group-hover/info:border-fatale/50 group-hover/info:shadow-[0_0_20px_rgba(255,0,110,0.2)]'}`}>
+        <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-sm border flex items-center justify-center relative overflow-hidden shrink-0 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.5)] ${isMessages ? 'bg-black border-white/5' : 'bg-[#0a0a0a] border-white/10 group-hover/info:border-fatale/50 group-hover/info:shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.2)]'}`}>
           {activeStation ? (
             <Radio size={18} className={`transition-all duration-500 z-10 relative text-fatale`} />
           ) : track?.cover || track?.thumbnail ? (
@@ -4098,7 +4103,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
 
             <Heart
               size={16}
-              className={`cursor-pointer transition-all duration-300 ${track?.isLiked ? 'text-fatale fill-fatale drop-shadow-[0_0_8px_rgba(255,0,110,0.8)]' : 'text-white/20 hover:text-fatale hover:drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]'}`}
+              className={`cursor-pointer transition-all duration-300 ${track?.isLiked ? 'text-fatale fill-fatale drop-shadow-[0_0_8px_rgba(var(--theme-primary-rgb),0.8)]' : 'text-white/20 hover:text-fatale hover:drop-shadow-[0_0_8px_rgba(var(--theme-primary-rgb),0.5)]'}`}
               onClick={(e) => { e.stopPropagation(); onLike && onLike(track); }}
             />
 
@@ -4112,15 +4117,15 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
                 }}
               >
                 <div className="absolute inset-0 bg-fatale/10 opacity-0 group-hover/add:opacity-100 transition-opacity" />
-                <Plus size={15} className="text-white/40 group-hover/add:text-fatale group-hover/add:drop-shadow-[0_0_8px_rgba(255,0,110,0.8)] transition-all relative z-10" />
+                <Plus size={15} className="text-white/40 group-hover/add:text-fatale group-hover/add:drop-shadow-[0_0_8px_rgba(var(--theme-primary-rgb),0.8)] transition-all relative z-10" />
               </button>
             )}
 
             <div onClick={(e) => { e.stopPropagation(); onToggleMute && onToggleMute(); }} className="cursor-pointer py-1">
               {isMuted || volume === 0 ? (
-                <VolumeX size={17} className="text-fatale drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]" />
+                <VolumeX size={17} className="text-fatale drop-shadow-[0_0_8px_rgba(var(--theme-primary-rgb),0.5)]" />
               ) : (
-                <Volume2 size={17} className="text-white/30 hover:text-fatale hover:drop-shadow-[0_0_8px_rgba(255,0,110,0.6)] transition-all duration-300" />
+                <Volume2 size={17} className="text-white/30 hover:text-fatale hover:drop-shadow-[0_0_8px_rgba(var(--theme-primary-rgb),0.6)] transition-all duration-300" />
               )}
             </div>
           </div>
@@ -4136,7 +4141,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
               onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
               className={`w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-sm border transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(0,0,0,0.4)] ${isMessages 
                 ? 'bg-transparent border-white/20 text-white hover:border-white/60' 
-                : 'bg-black/60 border-white/10 text-fatale hover:bg-fatale/10 hover:border-fatale/50 hover:shadow-[0_0_20px_rgba(255,0,110,0.2)]'}`}
+                : 'bg-black/60 border-white/10 text-fatale hover:bg-fatale/10 hover:border-fatale/50 hover:shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.2)]'}`}
             >
               {isPlaying ? (
                 <Pause size={18} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
@@ -4151,7 +4156,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
             {isBroadcasting && (
               <button 
                 onClick={(e) => { e.stopPropagation(); onOpenMixer(); }}
-                className="ml-2 p-2 bg-fatale/10 border border-fatale/30 text-fatale rounded-sm hover:bg-fatale hover:text-black transition-all shadow-[0_0_15px_rgba(255,0,110,0.2)]"
+                className="ml-2 p-2 bg-fatale/10 border border-fatale/30 text-fatale rounded-sm hover:bg-fatale hover:text-black transition-all shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.2)]"
                 title="OPEN_MIXER_CONSOLE"
               >
                 <Radio size={16} className="animate-pulse" />
@@ -4187,7 +4192,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
 
             <Heart
               size={18}
-              className={`cursor-pointer transition-all duration-300 ${track?.isLiked ? 'text-fatale fill-fatale drop-shadow-[0_0_8px_rgba(255,0,110,0.8)]' : 'text-white/20 hover:text-fatale hover:drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]'}`}
+              className={`cursor-pointer transition-all duration-300 ${track?.isLiked ? 'text-fatale fill-fatale drop-shadow-[0_0_8px_rgba(var(--theme-primary-rgb),0.8)]' : 'text-white/20 hover:text-fatale hover:drop-shadow-[0_0_8px_rgba(var(--theme-primary-rgb),0.5)]'}`}
               onClick={(e) => { e.stopPropagation(); onLike && onLike(track); }}
             />
 
@@ -4201,16 +4206,16 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
                 }}
               >
                 <div className="absolute inset-0 bg-fatale/10 opacity-0 group-hover/add:opacity-100 transition-opacity" />
-                <Plus size={16} className="text-white/40 group-hover/add:text-fatale group-hover/add:drop-shadow-[0_0_8px_rgba(255,0,110,0.8)] transition-all relative z-10" />
+                <Plus size={16} className="text-white/40 group-hover/add:text-fatale group-hover/add:drop-shadow-[0_0_8px_rgba(var(--theme-primary-rgb),0.8)] transition-all relative z-10" />
               </button>
             )}
 
             <div className="flex items-center gap-3 group/vol pr-2 relative">
               <div onClick={(e) => { e.stopPropagation(); onToggleMute && onToggleMute(); }} className="cursor-pointer py-2">
                 {isMuted || volume === 0 ? (
-                  <VolumeX size={18} className="text-fatale drop-shadow-[0_0_8px_rgba(255,0,110,0.5)]" />
+                  <VolumeX size={18} className="text-fatale drop-shadow-[0_0_8px_rgba(var(--theme-primary-rgb),0.5)]" />
                 ) : (
-                  <Volume2 size={18} className="text-white/30 group-hover/vol:text-fatale group-hover/vol:drop-shadow-[0_0_8px_rgba(255,0,110,0.6)] transition-all duration-300" />
+                  <Volume2 size={18} className="text-white/30 group-hover/vol:text-fatale group-hover/vol:drop-shadow-[0_0_8px_rgba(var(--theme-primary-rgb),0.6)] transition-all duration-300" />
                 )}
               </div>
               <div className="w-0 overflow-hidden group-hover/vol:w-20 transition-all duration-500 ease-in-out opacity-0 group-hover/vol:opacity-100 flex items-center">
@@ -5050,7 +5055,7 @@ const FeedContent = React.memo(({
                     const getPostAccent = () => {
                       if (isMarketplace) return { color: '#ffaa00', glow: 'rgba(255, 170, 0, 0.18)' };
                       if (type === 'track' || type === 'album') return { color: '#00f0ff', glow: 'rgba(0, 240, 255, 0.18)' };
-                      if (type === 'studio') return { color: 'rgb(var(--theme-primary))', glow: 'rgba(255, 0, 110, 0.18)' };
+                      if (type === 'studio') return { color: 'rgb(var(--theme-primary))', glow: 'rgba(var(--theme-primary-rgb), 0.18)' };
                       if (type === 'journal') return { color: '#9d00ff', glow: 'rgba(157, 0, 255, 0.18)' };
                       return { color: '#ffffff', glow: 'rgba(255, 255, 255, 0.08)' };
                     };
@@ -5423,7 +5428,7 @@ const FeedContent = React.memo(({
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="w-full max-w-2xl hud-panel border border-fatale/30 rounded-sm overflow-hidden shadow-[0_0_100px_rgba(255,0,110,0.1)] relative"
+                className="w-full max-w-2xl hud-panel border border-fatale/30 rounded-sm overflow-hidden shadow-[0_0_100px_rgba(var(--theme-primary-rgb),0.1)] relative"
               >
                 {/* Animated Scanline Overlay */}
                 <style>{`
@@ -5546,7 +5551,7 @@ const FeedContent = React.memo(({
                       <button
                         onClick={submitComment}
                         disabled={isSubmittingComment || !commentText.trim()}
-                        className="w-full sm:w-auto px-8 py-2.5 bg-fatale/10 border border-fatale/40 text-fatale text-[10px] font-black uppercase tracking-[0.3em] hover:bg-fatale hover:text-black hover:shadow-[0_0_30px_rgba(255,0,110,0.3)] transition-all disabled:opacity-20 text-center"
+                        className="w-full sm:w-auto px-8 py-2.5 bg-fatale/10 border border-fatale/40 text-fatale text-[10px] font-black uppercase tracking-[0.3em] hover:bg-fatale hover:text-black hover:shadow-[0_0_30px_rgba(var(--theme-primary-rgb),0.3)] transition-all disabled:opacity-20 text-center"
                       >
                         {isSubmittingComment ? 'TRANSMITTING...' : '[ BROADCAST_PAYLOAD ]'}
                       </button>
@@ -5563,7 +5568,7 @@ const FeedContent = React.memo(({
 
         {/* Scanline Overlay */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.03]">
-          <div className="absolute inset-0 bg-[repeating-linear-gradient(rgba(255,0,110,0.1)_0px,transparent_1px,rgba(255,0,110,0.1)_2px)] bg-[length:100%_3px]" />
+          <div className="absolute inset-0 bg-[repeating-linear-gradient(rgba(var(--theme-primary-rgb),0.1)_0px,transparent_1px,rgba(var(--theme-primary-rgb),0.1)_2px)] bg-[length:100%_3px]" />
         </div>
       </div>
 
