@@ -969,8 +969,25 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         </button>
                                     </div>
 
-                                    {/* Navigation Grid */}
-                                    <div className="grid grid-cols-2 gap-2 md:gap-4 flex-1">
+                                    {/* Navigation Grid with glowing connection lines */}
+                                    <div className="relative flex-1">
+                                        {/* Glowing Connection Lines Background */}
+                                        <div className="absolute inset-0 pointer-events-none opacity-40 z-0">
+                                            {/* Vertical center line */}
+                                            <div className="absolute inset-y-0 left-1/2 w-px bg-gradient-to-b from-transparent via-[#ff006e] to-transparent shadow-[0_0_10px_#ff006e]" />
+                                            
+                                            {/* Horizontal connector lines */}
+                                            <div className="absolute inset-x-0 top-[15%] h-px bg-gradient-to-r from-transparent via-white to-transparent shadow-[0_0_8px_#ffffff] opacity-50" />
+                                            <div className="absolute inset-x-0 top-[50%] h-px bg-gradient-to-r from-transparent via-[#ff006e] to-transparent shadow-[0_0_10px_#ff006e]" />
+                                            <div className="absolute inset-x-0 top-[85%] h-px bg-gradient-to-r from-transparent via-white to-transparent shadow-[0_0_8px_#ffffff] opacity-50" />
+                                            
+                                            {/* Glowing junction points */}
+                                            <div className="absolute left-1/2 top-[15%] -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_12px_#ffffff]" />
+                                            <div className="absolute left-1/2 top-[50%] -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#ff006e] shadow-[0_0_15px_#ff006e]" />
+                                            <div className="absolute left-1/2 top-[85%] -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_12px_#ffffff]" />
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2 md:gap-4 relative z-10 h-full">
                                         {[
                                             { id: 'feed', icon: <Hash size={15} />, label: t('FEED_LNK') || 'Feed', desc: 'FEED' },
                                             { id: 'profile', icon: <User size={15} />, label: t('USR_LINK') || 'Profile', desc: 'IDENTITY' },
@@ -998,6 +1015,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                 </div>
                                             </button>
                                         ))}
+                                        </div>
                                     </div>
 
                                     {/* Footer Disconnect */}
