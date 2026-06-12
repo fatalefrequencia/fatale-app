@@ -111,6 +111,30 @@ const MobileLEDBanner = () => {
         </div>
     );
 };
+
+const ScrambleText = ({ text }) => {
+    const [display, setDisplay] = useState(text);
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
+    
+    useEffect(() => {
+        if (!text) return;
+        let iterations = 0;
+        const interval = setInterval(() => {
+            setDisplay(text.split('').map((char, index) => {
+                if (char === ' ') return ' ';
+                if (index < iterations) return char;
+                return chars[Math.floor(Math.random() * chars.length)];
+            }).join(''));
+            
+            if (iterations >= text.length) clearInterval(interval);
+            iterations += 1/3;
+        }, 30);
+        return () => clearInterval(interval);
+    }, [text]);
+
+    return <span>{display}</span>;
+};
+
 const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, onPlayPlaylist, isPlayerActive, onExpandContent, onPlayStation, isLandscape, setShowGlobalIngest, setIngestMode, onMessageCommunity, onDownload, onTipArtist, onLogout, hasNewMessages }) => {
     const { t } = useLanguage();
     const { showNotification } = useNotification();
@@ -969,25 +993,8 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         </button>
                                     </div>
 
-                                    {/* Navigation Grid with glowing connection lines */}
-                                    <div className="relative flex-1">
-                                        {/* Glowing Connection Lines Background */}
-                                        <div className="absolute inset-0 pointer-events-none opacity-40 z-0">
-                                            {/* Vertical center line */}
-                                            <div className="absolute inset-y-0 left-1/2 w-px bg-gradient-to-b from-transparent via-[#ff006e] to-transparent shadow-[0_0_10px_#ff006e]" />
-                                            
-                                            {/* Horizontal connector lines */}
-                                            <div className="absolute inset-x-0 top-[15%] h-px bg-gradient-to-r from-transparent via-white to-transparent shadow-[0_0_8px_#ffffff] opacity-50" />
-                                            <div className="absolute inset-x-0 top-[50%] h-px bg-gradient-to-r from-transparent via-[#ff006e] to-transparent shadow-[0_0_10px_#ff006e]" />
-                                            <div className="absolute inset-x-0 top-[85%] h-px bg-gradient-to-r from-transparent via-white to-transparent shadow-[0_0_8px_#ffffff] opacity-50" />
-                                            
-                                            {/* Glowing junction points */}
-                                            <div className="absolute left-1/2 top-[15%] -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_12px_#ffffff]" />
-                                            <div className="absolute left-1/2 top-[50%] -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#ff006e] shadow-[0_0_15px_#ff006e]" />
-                                            <div className="absolute left-1/2 top-[85%] -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_12px_#ffffff]" />
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-2 md:gap-4 relative z-10 h-full">
+                                    {/* Navigation Grid */}
+                                    <div className="grid grid-cols-2 gap-2 md:gap-4 flex-1">
                                         {[
                                             { id: 'feed', icon: <Hash size={15} />, label: t('FEED_LNK') || 'Feed', desc: 'FEED' },
                                             { id: 'profile', icon: <User size={15} />, label: t('USR_LINK') || 'Profile', desc: 'IDENTITY' },
@@ -1000,7 +1007,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             <button
                                                 key={node.id}
                                                 onClick={() => { setView(node.id); setShowSkullMenu(false); }}
-                                                className={`group text-left p-2 md:p-4 bg-white/[0.012] border border-white/5 hover:border-[#ff006e]/50 hover:bg-[#ff006e]/5 transition-all flex items-center gap-2 md:gap-4 relative overflow-hidden active:scale-[0.98] rounded-sm min-w-0 ${node.id === 'player' ? 'col-span-2 justify-self-center w-full md:w-[calc(50%-0.5rem)]' : ''}`}
+                                                className={`group text-left p-2 md:p-4 bg-white/[0.012] border border-white/5 hover:border-[#ff006e]/50 hover:bg-[#ff006e]/5 transition-all flex items-center gap-2 md:gap-4 relative overflow-hidden active:scale-[0.98] rounded-sm min-w-0 ${node.id === 'settings' ? 'col-span-2 justify-self-center w-full md:w-[calc(50%-0.5rem)]' : ''}`}
                                             >
                                                 <div className="absolute inset-y-0 left-0 w-[2px] bg-transparent group-hover:bg-[#ff006e] transition-all" />
                                                 <div className="p-1.5 md:p-3 bg-black border border-white/10 text-white/40 group-hover:text-[#ff006e] group-hover:border-[#ff006e]/30 transition-all shrink-0">
@@ -1008,14 +1015,15 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <div className="text-[9px] md:text-[11px] font-black uppercase tracking-widest text-white/80 group-hover:text-white transition-colors flex items-center gap-1.5 truncate">
-                                                        {node.label}
+                                                        <ScrambleText text={node.label} />
                                                         {node.badge && <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_8px_#ff006e] shrink-0" />}
                                                     </div>
-                                                    <div className="text-[6.5px] md:text-[7.5px] font-mono text-white/20 group-hover:text-[#ff006e]/40 transition-colors uppercase tracking-wider mt-0.5 truncate">{node.desc}</div>
+                                                    <div className="text-[6.5px] md:text-[7.5px] font-mono text-white/20 group-hover:text-[#ff006e]/40 transition-colors uppercase tracking-wider mt-0.5 truncate">
+                                                        <ScrambleText text={node.desc} />
+                                                    </div>
                                                 </div>
                                             </button>
                                         ))}
-                                        </div>
                                     </div>
 
                                     {/* Footer Disconnect */}
