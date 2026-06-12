@@ -21,7 +21,7 @@ const SettingsView = ({ user, setUser }) => {
     const [username, setUsername] = React.useState(user?.username || user?.Username || '');
     const [biography, setBiography] = React.useState(user?.biography || user?.Biography || '');
     const [residentSectorId, setResidentSectorId] = React.useState(user?.residentSectorId || user?.ResidentSectorId || 0);
-    const [themeColor, setThemeColor] = React.useState(user?.themeColor || user?.ThemeColor || '#ff006e');
+    const [themeColor, setThemeColor] = React.useState(user?.themeColor || user?.ThemeColor || '#ffffff');
     const [textColor, setTextColor] = React.useState(user?.textColor || user?.TextColor || '#ffffff');
     const [backgroundColor, setBackgroundColor] = React.useState(user?.backgroundColor || user?.BackgroundColor || '#000000');
     const [secondaryColor, setSecondaryColor] = React.useState(user?.secondaryColor || user?.SecondaryColor || '#00ffff');
@@ -55,10 +55,8 @@ const SettingsView = ({ user, setUser }) => {
             setUsername(user.username || user.Username || '');
             setBiography(user.biography || user.Biography || '');
             setResidentSectorId(user.residentSectorId || user.ResidentSectorId || 0);
-            setThemeColor(user.themeColor || user.ThemeColor || '#ff006e');
-            setTextColor(user.textColor || user.TextColor || '#ffffff');
+            setThemeColor(user.themeColor || user.ThemeColor || '#ffffff');
             setBackgroundColor(user.backgroundColor || user.BackgroundColor || '#000000');
-            setSecondaryColor(user.secondaryColor || user.SecondaryColor || '#00ffff');
             setIsGlass(user.isGlass || user.IsGlass || false);
             setStatusMessage(user.statusMessage || user.StatusMessage || '');
             setEmail(user.email || user.Email || '');
@@ -511,18 +509,6 @@ const SettingsView = ({ user, setUser }) => {
                                                 </div>
                                             </div>
                                             <div className="space-y-1.5">
-                                                <label className="text-[7px] font-black uppercase tracking-widest text-white/40">Secondary Color</label>
-                                                <div className="flex items-center gap-2">
-                                                    <input 
-                                                        type="color" 
-                                                        value={secondaryColor}
-                                                        onChange={(e) => setSecondaryColor(e.target.value)}
-                                                        className="w-8 h-8 bg-transparent border-0 cursor-pointer"
-                                                    />
-                                                    <span className="text-[8px] font-mono text-white/60 uppercase">{secondaryColor}</span>
-                                                </div>
-                                            </div>
-                                            <div className="space-y-1.5">
                                                 <label className="text-[7px] font-black uppercase tracking-widest text-white/40">Background Color</label>
                                                 <div className="flex items-center gap-2">
                                                     <input 
@@ -532,18 +518,6 @@ const SettingsView = ({ user, setUser }) => {
                                                         className="w-8 h-8 bg-transparent border-0 cursor-pointer"
                                                     />
                                                     <span className="text-[8px] font-mono text-white/60 uppercase">{backgroundColor}</span>
-                                                </div>
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <label className="text-[7px] font-black uppercase tracking-widest text-white/40">Text Color</label>
-                                                <div className="flex items-center gap-2">
-                                                    <input 
-                                                        type="color" 
-                                                        value={textColor}
-                                                        onChange={(e) => setTextColor(e.target.value)}
-                                                        className="w-8 h-8 bg-transparent border-0 cursor-pointer"
-                                                    />
-                                                    <span className="text-[8px] font-mono text-white/60 uppercase">{textColor}</span>
                                                 </div>
                                             </div>
                                         </div>

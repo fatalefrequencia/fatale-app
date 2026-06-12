@@ -286,17 +286,17 @@ function App() {
     };
 
     if (user) {
-      applyThemeColor('--theme-primary', user.themeColor || user.ThemeColor, '255 0 110'); // rgb(var(--theme-primary))
-      applyThemeColor('--theme-secondary', user.secondaryColor || user.SecondaryColor, '0 255 255'); // rgb(var(--theme-secondary))
-      applyThemeColor('--theme-bg', user.backgroundColor || user.BackgroundColor, '0 0 0'); // #000000
-      applyThemeColor('--theme-text', user.textColor || user.TextColor, '255 255 255'); // #ffffff
+      applyThemeColor('--theme-primary', user.themeColor || user.ThemeColor, '255 255 255'); 
+      applyThemeColor('--theme-secondary', user.themeColor || user.ThemeColor, '255 255 255'); 
+      applyThemeColor('--theme-bg', user.backgroundColor || user.BackgroundColor, '0 0 0'); 
+      applyThemeColor('--theme-text', user.themeColor || user.ThemeColor, '255 255 255'); 
     } else {
-      document.documentElement.style.setProperty('--theme-primary', '255 0 110');
-      document.documentElement.style.setProperty('--theme-secondary', '0 255 255');
+      document.documentElement.style.setProperty('--theme-primary', '255 255 255');
+      document.documentElement.style.setProperty('--theme-secondary', '255 255 255');
       document.documentElement.style.setProperty('--theme-bg', '0 0 0');
       document.documentElement.style.setProperty('--theme-text', '255 255 255');
     }
-  }, [user?.themeColor, user?.ThemeColor, user?.secondaryColor, user?.SecondaryColor, user?.backgroundColor, user?.BackgroundColor, user?.textColor, user?.TextColor]);
+  }, [user?.themeColor, user?.ThemeColor, user?.backgroundColor, user?.BackgroundColor]);
 
 
   // Global Escape Listener for App-level Modals and Navigation

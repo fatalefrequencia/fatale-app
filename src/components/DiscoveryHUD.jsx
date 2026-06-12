@@ -897,17 +897,17 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         }}
                         className="relative w-10 h-10 md:w-12 md:h-12 p-1.5 flex items-center justify-center transition-all rounded-sm active:scale-95 group"
                         style={{
-                            boxShadow: `0 0 15px rgba(255, 0, 110, 0.35)`,
-                            border: `1px solid rgba(255, 0, 110, 0.45)`,
+                            boxShadow: `0 0 15px rgba(var(--theme-primary-rgb), 0.35)`,
+                            border: `1px solid rgba(var(--theme-primary-rgb), 0.45)`,
                             backgroundColor: '#000000'
                         }}
                         onMouseEnter={e => {
-                            e.currentTarget.style.boxShadow = '0 0 22px rgba(255, 0, 110, 0.6)';
-                            e.currentTarget.style.borderColor = 'rgba(255, 0, 110, 0.85)';
+                            e.currentTarget.style.boxShadow = '0 0 22px rgba(var(--theme-primary-rgb), 0.6)';
+                            e.currentTarget.style.borderColor = 'rgba(var(--theme-primary-rgb), 0.85)';
                         }}
                         onMouseLeave={e => {
-                            e.currentTarget.style.boxShadow = '0 0 15px rgba(255, 0, 110, 0.35)';
-                            e.currentTarget.style.borderColor = 'rgba(255, 0, 110, 0.45)';
+                            e.currentTarget.style.boxShadow = '0 0 15px rgba(var(--theme-primary-rgb), 0.35)';
+                            e.currentTarget.style.borderColor = 'rgba(var(--theme-primary-rgb), 0.45)';
                         }}
                         title="System Navigation"
                     >
