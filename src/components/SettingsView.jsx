@@ -9,7 +9,7 @@ import { useNotification } from '../contexts/NotificationContext';
 import API from '../services/api';
 import { SECTORS } from '../constants';
 
-const SettingsView = ({ user, setUser }) => {
+export default function SettingsView({ user, setUser, appThemeColor, setAppThemeColor, appBackgroundColor, setAppBackgroundColor }) {
     const { language, setLanguage, t } = useLanguage();
     const { showNotification } = useNotification();
     const [activeSection, setActiveSection] = React.useState('language');
@@ -21,9 +21,8 @@ const SettingsView = ({ user, setUser }) => {
     const [username, setUsername] = React.useState(user?.username || user?.Username || '');
     const [biography, setBiography] = React.useState(user?.biography || user?.Biography || '');
     const [residentSectorId, setResidentSectorId] = React.useState(user?.residentSectorId || user?.ResidentSectorId || 0);
-    const [themeColor, setThemeColor] = React.useState(user?.themeColor || user?.ThemeColor || '#ffffff');
-    const [textColor, setTextColor] = React.useState(user?.textColor || user?.TextColor || '#ffffff');
-    const [backgroundColor, setBackgroundColor] = React.useState(user?.backgroundColor || user?.BackgroundColor || '#000000');
+    const [themeColor, setThemeColor] = React.useState(appThemeColor || '#ffffff');
+    const [backgroundColor, setBackgroundColor] = React.useState(appBackgroundColor || '#000000');
     const [secondaryColor, setSecondaryColor] = React.useState(user?.secondaryColor || user?.SecondaryColor || '#00ffff');
     const [isGlass, setIsGlass] = React.useState(user?.isGlass || user?.IsGlass || false);
     const [statusMessage, setStatusMessage] = React.useState(user?.statusMessage || user?.StatusMessage || '');
@@ -182,10 +181,6 @@ const SettingsView = ({ user, setUser }) => {
             formData.append('Username', username);
             formData.append('Biography', biography);
             formData.append('ResidentSectorId', String(residentSectorId));
-            formData.append('ThemeColor', themeColor);
-            formData.append('TextColor', textColor);
-            formData.append('BackgroundColor', backgroundColor);
-            formData.append('SecondaryColor', secondaryColor);
             formData.append('IsGlass', String(isGlass));
             formData.append('StatusMessage', statusMessage);
 
@@ -199,7 +194,14 @@ const SettingsView = ({ user, setUser }) => {
             if (response.data?.user) {
                 setUser(response.data.user);
                 localStorage.setItem('user', JSON.stringify(response.data.user));
-                showNotification("IDENTITY_UPDATED", "Identity profile successfully synchronized with database.", "success");
+                
+                // Update Local App Theme
+                setAppThemeColor(themeColor);
+                localStorage.setItem('appThemeColor', themeColor);
+                setAppBackgroundColor(backgroundColor);
+                localStorage.setItem('appBackgroundColor', backgroundColor);
+                
+                showNotification("IDENTITY_UPDATED", "Identity profile and interface theme successfully synchronized.", "success");
             }
         } catch (error) {
             console.error("Failed to update profile:", error);
@@ -909,4 +911,4 @@ const SettingsView = ({ user, setUser }) => {
     );
 };
 
-export default SettingsView;
+

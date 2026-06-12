@@ -1264,11 +1264,13 @@ useEffect(() => {
 
             {showCreateModal && createPortal(
                 <div 
-                    className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+                    className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm"
+                    style={{ backgroundColor: 'rgba(var(--theme-bg-rgb), 0.8)' }}
                     onClick={() => setShowCreateModal(false)}
                 >
                     <div 
-                        className="w-full max-w-sm bg-[#0a0a0a] border border-fatale/30 rounded-2xl p-6 space-y-5 shadow-[0_0_40px_rgba(var(--theme-primary-rgb),0.2)]"
+                        className="w-full max-w-sm border border-fatale/30 rounded-2xl p-6 space-y-5 shadow-[0_0_40px_rgba(var(--theme-primary-rgb),0.2)]"
+                        style={{ backgroundColor: 'rgb(var(--theme-bg-rgb))' }}
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="flex justify-between items-center">
@@ -1369,7 +1371,7 @@ useEffect(() => {
                                     <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
                                 </div>
                             ) : (
-                                <div className="absolute inset-0 z-0 pointer-events-none bg-black/90 backdrop-blur-md" style={{ background: 'radial-gradient(circle at 10% 20%, rgba(var(--theme-primary-rgb), 0.08) 0%, rgba(0, 0, 0, 0.95) 90%)' }} />
+                                <div className="absolute inset-0 z-0 pointer-events-none backdrop-blur-md" style={{ backgroundColor: 'rgba(var(--theme-bg-rgb), 0.95)', background: 'radial-gradient(circle at 10% 20%, rgba(var(--theme-primary-rgb), 0.08) 0%, rgba(var(--theme-bg-rgb), 0.95) 90%)' }} />
                             )}
 
                             {/* Wireframe Grid Overlay */}

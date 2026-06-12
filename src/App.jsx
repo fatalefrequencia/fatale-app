@@ -257,6 +257,13 @@ function App() {
     } catch (e) { return null; }
   });
 
+  const [appThemeColor, setAppThemeColor] = useState(() => {
+    return localStorage.getItem('appThemeColor') || (user?.themeColor || user?.ThemeColor) || '#ffffff';
+  });
+  const [appBackgroundColor, setAppBackgroundColor] = useState(() => {
+    return localStorage.getItem('appBackgroundColor') || (user?.backgroundColor || user?.BackgroundColor) || '#000000';
+  });
+
   const { language, setLanguage, t } = useLanguage();
 
   useEffect(() => {
@@ -287,10 +294,10 @@ function App() {
     };
 
     if (user) {
-      applyThemeColor('--theme-primary', user.themeColor || user.ThemeColor, '255 255 255', '255, 255, 255'); 
-      applyThemeColor('--theme-secondary', user.themeColor || user.ThemeColor, '255 255 255', '255, 255, 255'); 
-      applyThemeColor('--theme-bg', user.backgroundColor || user.BackgroundColor, '0 0 0', '0, 0, 0'); 
-      applyThemeColor('--theme-text', user.themeColor || user.ThemeColor, '255 255 255', '255, 255, 255'); 
+      applyThemeColor('--theme-primary', appThemeColor, '255 255 255', '255, 255, 255'); 
+      applyThemeColor('--theme-secondary', appThemeColor, '255 255 255', '255, 255, 255'); 
+      applyThemeColor('--theme-bg', appBackgroundColor, '0 0 0', '0, 0, 0'); 
+      applyThemeColor('--theme-text', appThemeColor, '255 255 255', '255, 255, 255'); 
     } else {
       document.documentElement.style.setProperty('--theme-primary', '255 255 255');
       document.documentElement.style.setProperty('--theme-primary-rgb', '255, 255, 255');
@@ -301,7 +308,7 @@ function App() {
       document.documentElement.style.setProperty('--theme-text', '255 255 255');
       document.documentElement.style.setProperty('--theme-text-rgb', '255, 255, 255');
     }
-  }, [user?.themeColor, user?.ThemeColor, user?.backgroundColor, user?.BackgroundColor]);
+  }, [user, appThemeColor, appBackgroundColor]);
 
 
   // Global Escape Listener for App-level Modals and Navigation
@@ -3545,7 +3552,10 @@ const Dashboard = React.memo(({
   };
 
   return (
-    <div className="flex h-screen h-full w-full overflow-hidden relative bg-black bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-[#1a1a1a] via-[#050505] to-systemBg">
+    <div 
+      className="flex h-screen h-full w-full overflow-hidden relative"
+      style={{ backgroundColor: 'rgb(var(--theme-bg-rgb))' }}
+    >
       {/* Global Noise Texture */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-0" />
 
@@ -3733,7 +3743,14 @@ const Dashboard = React.memo(({
                 transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
                 className="w-full h-full"
               >
-                <SettingsView user={user} setUser={setUser} />
+                <SettingsView 
+                  user={user} 
+                  setUser={setUser} 
+                  appThemeColor={appThemeColor} 
+                  setAppThemeColor={setAppThemeColor} 
+                  appBackgroundColor={appBackgroundColor} 
+                  setAppBackgroundColor={setAppBackgroundColor} 
+                />
               </motion.div>
             )}
             {activeView === 'feed' && (
@@ -3962,7 +3979,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
         <div className="absolute bottom-2 right-2 lg:bottom-1 lg:right-1 w-4 h-4 border-b border-r border-fatale/20 group-hover/min:border-fatale/60 transition-colors pointer-events-none" />
         
         {/* The minimal plus crosshair */}
-        <Plus size={16} strokeWidth={2.5} className="relative z-10 text-fatale/40 group-hover/min:text-fatale group-hover/min:drop-shadow-[0_0_8px_rgb(var(--theme-primary))] transition-all group-active/min:scale-90" />
+        <Plus size={16} strokeWidth={2.5} className="relative z-10 text-fatale group-hover/min:drop-shadow-[0_0_8px_rgb(var(--theme-primary))] transition-all group-active/min:scale-90" />
       </motion.div>
     );
   }
@@ -3976,10 +3993,11 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
       exit={{ y: 100, opacity: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 28 }}
       className={`fixed bottom-0 lg:bottom-4 transition-[left] duration-500 left-0 right-0 ${isSidebarCollapsed ? 'lg:left-[6rem]' : 'lg:left-[17rem]'} lg:right-4 backdrop-blur-3xl z-[100] ${isMessages
-        ? 'bg-black/95 border-t border-white/5 lg:border lg:rounded-sm lg:shadow-none'
-        : 'bg-[#020202]/95 border-t border-white/5 lg:border-white/5 lg:rounded-md shadow-[0_-15px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_10px_60px_-15px_rgba(var(--theme-primary-rgb),0.15)]'
+        ? 'border-t border-white/5 lg:border lg:rounded-sm lg:shadow-none'
+        : 'border-t border-white/5 lg:border-white/5 lg:rounded-md shadow-[0_-15px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_10px_60px_-15px_rgba(var(--theme-primary-rgb),0.15)]'
         } group/player overflow-hidden flex ${isMobile ? 'flex-col gap-2.5 p-3' : 'flex-row items-center gap-3 p-1.5 lg:p-3 pb-3 lg:pb-3'}`}
       style={{
+        backgroundColor: 'rgba(var(--theme-bg-rgb), 0.95)',
         paddingBottom: isMobile ? 'calc(10px + env(safe-area-inset-bottom, 12px))' : undefined
       }}
     >
@@ -3995,7 +4013,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
       {/* --- MINIMIZE TOGGLE (Top Right) --- */}
       <button 
         onClick={(e) => { e.stopPropagation(); onToggleMinimize(); }}
-        className="absolute top-1 right-2 z-50 p-1 text-white/20 hover:text-fatale transition-all group/minitoggle scale-75 lg:scale-100"
+        className="absolute top-1 right-2 z-50 p-1 text-white/80 hover:text-fatale transition-all group/minitoggle scale-75 lg:scale-100"
         title="MINIMIZE_PLAYER"
       >
         <Minus size={14} className="group-hover/minitoggle:translate-y-0.5 transition-transform" />
@@ -4047,14 +4065,14 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
         <div className="flex items-center justify-between w-full z-10 relative px-1 border-t border-white/5 pt-2">
           {/* Controls */}
           <div className="flex items-center gap-5 shrink-0">
-            <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="text-white/30 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
+            <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="text-white/70 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
               <SkipBack size={16} fill="currentColor" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
               className={`w-9 h-9 flex items-center justify-center rounded-sm border transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(0,0,0,0.4)] ${isMessages 
-                ? 'bg-transparent border-white/20 text-white hover:border-white/60' 
-                : 'bg-black/60 border-white/10 text-fatale hover:bg-fatale/10 hover:border-fatale/50'}`}
+                ? 'bg-transparent border-white/40 text-white hover:border-white/80' 
+                : 'bg-white/10 border-white/30 text-white hover:bg-fatale/20 hover:border-fatale/70'}`}
             >
               {isPlaying ? (
                 <Pause size={15} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
@@ -4062,7 +4080,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
                 <Play size={15} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
               )}
             </button>
-            <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="text-white/30 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
+            <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="text-white/70 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
               <SkipForward size={16} fill="currentColor" />
             </button>
 
@@ -4134,14 +4152,14 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
         <>
           {/* Controls - Desktop */}
           <div className="flex items-center gap-4 lg:gap-8 px-2 lg:px-6 shrink-0 z-10 relative">
-            <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="text-white/30 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
+            <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="text-white/70 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
               <SkipBack size={18} fill="currentColor" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
               className={`w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-sm border transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(0,0,0,0.4)] ${isMessages 
-                ? 'bg-transparent border-white/20 text-white hover:border-white/60' 
-                : 'bg-black/60 border-white/10 text-fatale hover:bg-fatale/10 hover:border-fatale/50 hover:shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.2)]'}`}
+                ? 'bg-transparent border-white/40 text-white hover:border-white/80' 
+                : 'bg-white/10 border-white/30 text-white hover:bg-fatale/20 hover:border-fatale/70 hover:shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.3)]'}`}
             >
               {isPlaying ? (
                 <Pause size={18} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
@@ -4149,7 +4167,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
                 <Play size={18} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
               )}
             </button>
-            <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="text-white/30 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
+            <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="text-white/70 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
               <SkipForward size={18} fill="currentColor" />
             </button>
 
