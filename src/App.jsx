@@ -327,21 +327,7 @@ function App() {
   }, [user, appThemeColor, appBackgroundColor, activeView]);
 
 
-  // Global Escape Listener for App-level Modals and Navigation
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        if (tippingArtist) { setTippingArtist(null); return; }
-        if (economyTrack) { setEconomyTrack(null); return; }
-        if (playlistTrackToAdd) { setPlaylistTrackToAdd(null); return; }
-        if (activeView !== 'login' && activeView !== 'discovery') {
-          setView('discovery');
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [tippingArtist, economyTrack, playlistTrackToAdd, activeView]);
+  // Escape listener was moved below handleLogout definition to prevent reference errors.
 
   const currentUserId = getUserId(user);
   const [tracks, setTracks] = useState(() => {
@@ -2622,6 +2608,61 @@ function App() {
     setYoutubePlayer(null);
   };
 
+  // Global Key Listener for App-level Modals, Navigation, and Hotkeys
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Escape close
+      if (e.key === 'Escape') {
+        if (tippingArtist) { setTippingArtist(null); return; }
+        if (economyTrack) { setEconomyTrack(null); return; }
+        if (playlistTrackToAdd) { setPlaylistTrackToAdd(null); return; }
+        if (activeView !== 'login' && activeView !== 'discovery') {
+          setView('discovery');
+        }
+        return;
+      }
+
+      // Check if user is typing in a text field
+      const isTyping = document.activeElement && (
+        document.activeElement.tagName === 'INPUT' || 
+        document.activeElement.tagName === 'TEXTAREA' || 
+        document.activeElement.isContentEditable
+      );
+
+      if (isTyping) return;
+
+      // Function keys F1-F8 and Number keys 1-8 for routing (exclude F5 for browser reload)
+      const routingMap = {
+        '1': 'discovery', 'F1': 'discovery',
+        '2': 'feed', 'F2': 'feed',
+        '3': 'player', 'F3': 'player',
+        '4': 'messages', 'F4': 'messages',
+        '5': 'shopping', // Do not hijack F5 to allow page reload
+        '6': 'wallet', 'F6': 'wallet',
+        '7': 'settings', 'F7': 'settings',
+        '8': 'profile', 'F8': 'profile',
+      };
+
+      const matchedView = routingMap[e.key];
+      if (matchedView && activeView !== 'login') {
+        e.preventDefault();
+        if (matchedView === 'profile') {
+          navigateToProfile(null);
+        } else {
+          setView(matchedView);
+        }
+      } else if ((e.key === '9' || e.key === 'F9') && activeView !== 'login') {
+        e.preventDefault();
+        const confirmExit = window.confirm("Disconnect terminal session?");
+        if (confirmExit) {
+          handleLogout();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [tippingArtist, economyTrack, playlistTrackToAdd, activeView, handleLogout, navigateToProfile, setView]);
+
   const navigateToProfile = (id, initialModal = null) => {
     console.log(`[NAV_PROTOCOL] Navigating to: ${id || 'SELF'} | Trigger: ${initialModal}`);
     console.trace('[NAV_TRACE]');
@@ -3531,6 +3572,65 @@ const Dashboard = React.memo(({
   const currentTrack = currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
+  // --- TUI Stats & Clock State ---
+  const [cpuLoad, setCpuLoad] = useState(6);
+  const [memLoad, setMemLoad] = useState(34.1);
+  const [bwDownload, setBwDownload] = useState(0.04);
+  const [bwUpload, setBwUpload] = useState(0.02);
+  const [timeString, setTimeString] = useState('');
+
+  // Clock effect
+  useEffect(() => {
+    const updateTime = () => {
+      const d = new Date();
+      setTimeString(d.toLocaleTimeString());
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Simulated metrics reacting to play state
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCpuLoad(prev => {
+        const targetMin = isPlaying ? 15 : 4;
+        const targetMax = isPlaying ? 32 : 10;
+        return Math.floor(Math.random() * (targetMax - targetMin + 1)) + targetMin;
+      });
+
+      setMemLoad(prev => {
+        const offset = (Math.random() * 0.4) - 0.2;
+        return parseFloat((Math.max(33.5, Math.min(35.5, prev + offset))).toFixed(1));
+      });
+
+      setBwDownload(prev => {
+        if (isPlaying) {
+          return parseFloat((110 + Math.random() * 110).toFixed(1));
+        } else {
+          return parseFloat((0.02 + Math.random() * 0.08).toFixed(2));
+        }
+      });
+
+      setBwUpload(prev => {
+        if (isPlaying) {
+          return parseFloat((1.5 + Math.random() * 1.8).toFixed(1));
+        } else {
+          return parseFloat((0.01 + Math.random() * 0.03).toFixed(2));
+        }
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isPlaying]);
+
+  const buildMeter = (pct, slots = 10) => {
+    const filled = Math.round((pct / 100) * slots);
+    const empty = slots - filled;
+    return `[${'|'.repeat(filled)}${'.'.repeat(empty)}]`;
+  };
+
+
   // Auto-collapse sidebar when leaving Discovery view
   useEffect(() => {
     if (activeView !== 'discovery') {
@@ -3577,11 +3677,59 @@ const Dashboard = React.memo(({
 
   return (
     <div 
-      className="flex h-screen h-full w-full overflow-hidden relative"
+      className="flex flex-col h-screen h-full w-full overflow-hidden relative tui-crt"
       style={{ backgroundColor: 'rgb(var(--theme-bg-rgb))' }}
     >
-      {/* Global Noise Texture */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-0" />
+      {/* Global Background Video (Dynamic Wallpaper) */}
+      {user && (user.wallpaperVideoUrl || user.WallpaperVideoUrl) && (
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          key={user.wallpaperVideoUrl || user.WallpaperVideoUrl}
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-20 z-0"
+          src={getMediaUrl(user.wallpaperVideoUrl || user.WallpaperVideoUrl)}
+        />
+      )}
+
+      {/* Noise Texture & Scanlines */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-0 mix-blend-screen" />
+      <div className="tui-scanlines z-[1]" />
+
+      {/* TUI Status Bar Header */}
+      <div className="bg-black/95 border-b border-[rgba(var(--theme-primary-rgb),0.25)] text-[10px] font-mono p-2 px-4 flex items-center justify-between text-[var(--theme-color)]/80 shrink-0 z-45 select-none">
+        <div className="flex items-center gap-4">
+          <span className="font-black uppercase text-white tracking-widest animate-pulse">■ FATALE_SYS_v2.1</span>
+          <span className="opacity-50 font-bold hidden sm:inline">|</span>
+          <span className="font-bold text-[var(--theme-color)]/95 hidden sm:inline">{user?.username || 'GUEST'}@fatale.fm</span>
+        </div>
+        
+        {/* Health Stats */}
+        <div className="flex items-center gap-6 font-bold flex-wrap justify-end sm:justify-start">
+          <div className="flex items-center gap-1.5">
+            <span className="text-white/40 uppercase text-[8px] sm:text-[10px]">CPU</span>
+            <span className="text-[var(--theme-color)] tracking-tight hidden xs:inline">{buildMeter(cpuLoad, 8)}</span>
+            <span className="text-white/95 w-8 text-right text-[9px] sm:text-[10px]">{cpuLoad}%</span>
+          </div>
+          <div className="flex items-center gap-1.5 hidden xs:flex">
+            <span className="text-white/40 uppercase text-[8px] sm:text-[10px]">MEM</span>
+            <span className="text-[var(--theme-color)] tracking-tight">{buildMeter(memLoad, 8)}</span>
+            <span className="text-white/95 w-8 text-right">{memLoad}%</span>
+          </div>
+          <div className="flex items-center gap-3 hidden sm:flex text-white/50 text-[9px]">
+            <span>▲ {bwUpload} K/s</span>
+            <span>▼ {bwDownload} K/s</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <span className="text-white/80 font-black tracking-widest text-[9px] sm:text-[10px]">{timeString}</span>
+        </div>
+      </div>
+
+      {/* Multiplexer Grid: Sidebar + Main view in TuiWindow */}
+      <div className="flex-1 flex overflow-hidden relative z-10 w-full">
 
       {/* SIDEBAR (Escritorio) */}
       <motion.aside 
@@ -3707,7 +3855,39 @@ const Dashboard = React.memo(({
           )}
         </header>
 
-        <div className={`flex-1 relative ${activeView === 'discovery' || activeView === 'feed' ? 'overflow-hidden' : activeView === 'messages' ? (currentTrackIndex >= 0 && !isMiniPlayerMinimized ? 'overflow-hidden lg:pb-24 pb-[60px]' : 'overflow-hidden pb-0') : activeView === 'shopping' ? 'overflow-hidden' : 'overflow-y-auto no-scrollbar pb-24'}`}>
+        {/* TUI Window Frame Wrapper */}
+        <div className="flex-1 flex flex-col p-2 lg:p-3 overflow-hidden relative">
+          <div className="flex-1 flex flex-col tui-panel relative overflow-hidden">
+            {/* ASCII Corner Brackets */}
+            <div className="absolute top-0 left-0 text-[var(--theme-color)]/60 font-mono text-[10px] select-none pointer-events-none z-50 leading-none">┌</div>
+            <div className="absolute top-0 right-0 text-[var(--theme-color)]/60 font-mono text-[10px] select-none pointer-events-none z-50 leading-none">┐</div>
+            <div className="absolute bottom-0 left-0 text-[var(--theme-color)]/60 font-mono text-[10px] select-none pointer-events-none z-50 leading-none">└</div>
+            <div className="absolute bottom-0 right-0 text-[var(--theme-color)]/60 font-mono text-[10px] select-none pointer-events-none z-50 leading-none">┘</div>
+
+            {/* TUI Window Header */}
+            <div className="w-full border-b border-[rgba(var(--theme-primary-rgb),0.25)] bg-black/60 px-3 py-1 flex items-center justify-between text-[9px] font-mono text-[var(--theme-color)]/70 select-none shrink-0">
+              <div className="flex items-center gap-1">
+                <span>[</span>
+                <span className="font-bold text-[var(--theme-color)] uppercase tracking-wider">
+                  {activeView === 'discovery' ? 'DISCOVERY_HUD_v2.1' :
+                   activeView === 'feed' ? 'FATALE_JOURNAL_FEED' :
+                   activeView === 'player' ? 'LIVE_FREQUENCIES_MIXER' :
+                   activeView === 'messages' ? 'ENCRYPTED_MESSAGE_SYNC' :
+                   activeView === 'shopping' ? 'SUPPLY_DEPOT_MARKET' :
+                   activeView === 'wallet' ? 'CREDIT_WALLET_LEDGER' :
+                   activeView === 'settings' ? 'SYSTEM_CONFIGURATION' :
+                   activeView === 'profile' ? 'USER_PROFILE_NODE' : 'FATALE_NODE'}
+                </span>
+                <span>]</span>
+              </div>
+              <div className="flex items-center gap-2 text-white/40">
+                <span>SEC: {user?.sectorId || 'A'}</span>
+                <span>SYS_TEMP: 42°C</span>
+              </div>
+            </div>
+
+            {/* Main content viewport */}
+            <div className={`flex-1 relative ${activeView === 'discovery' || activeView === 'feed' ? 'overflow-hidden' : activeView === 'messages' ? (currentTrackIndex >= 0 && !isMiniPlayerMinimized ? 'overflow-hidden lg:pb-24 pb-[60px]' : 'overflow-hidden pb-0') : activeView === 'shopping' ? 'overflow-hidden' : 'overflow-y-auto no-scrollbar pb-24'}`}>
           <AnimatePresence mode="wait" initial={false}>
             {activeView === 'discovery' && (
               <motion.div
@@ -3925,8 +4105,11 @@ const Dashboard = React.memo(({
             )}
 
           </AnimatePresence>
+            </div>
+          </div>
         </div>
       </motion.main>
+      </div>
 
 
 
@@ -3980,6 +4163,32 @@ const Dashboard = React.memo(({
           )
         )}
       </AnimatePresence>
+
+      {/* TUI Footer Legend */}
+      <div className="bg-black/95 border-t border-[rgba(var(--theme-primary-rgb),0.25)] text-[9px] font-mono p-1 px-4 flex items-center justify-between text-[var(--theme-color)]/60 select-none shrink-0 z-45 h-6">
+        <div className="flex items-center gap-1 sm:gap-3 overflow-x-auto no-scrollbar">
+          <span className="cursor-pointer hover:text-white" onClick={() => handleNav('discovery')}><span className="text-[var(--theme-color)] font-bold">F1</span>:SCAN</span>
+          <span className="text-white/20">|</span>
+          <span className="cursor-pointer hover:text-white" onClick={() => handleNav('feed')}><span className="text-[var(--theme-color)] font-bold">F2</span>:FEED</span>
+          <span className="text-white/20">|</span>
+          <span className="cursor-pointer hover:text-white" onClick={() => handleNav('player')}><span className="text-[var(--theme-color)] font-bold">F3</span>:PLAYER</span>
+          <span className="text-white/20">|</span>
+          <span className="cursor-pointer hover:text-white" onClick={() => handleNav('messages')}><span className="text-[var(--theme-color)] font-bold">F4</span>:MESSAGES</span>
+          <span className="text-white/20">|</span>
+          <span className="cursor-pointer hover:text-white" onClick={() => handleNav('shopping')}><span className="text-[var(--theme-color)] font-bold">F5</span>:DEPOT</span>
+          <span className="text-white/20">|</span>
+          <span className="cursor-pointer hover:text-white" onClick={() => handleNav('wallet')}><span className="text-[var(--theme-color)] font-bold">F6</span>:WALLET</span>
+          <span className="text-white/20">|</span>
+          <span className="cursor-pointer hover:text-white" onClick={() => handleNav('settings')}><span className="text-[var(--theme-color)] font-bold">F7</span>:CONFIG</span>
+          <span className="text-white/20">|</span>
+          <span className="cursor-pointer hover:text-white" onClick={() => handleNav('profile', true)}><span className="text-[var(--theme-color)] font-bold">F8</span>:USER</span>
+          <span className="text-white/20">|</span>
+          <span className="cursor-pointer hover:text-white" onClick={onLogout}><span className="text-[var(--theme-color)] font-bold">F9</span>:EXIT</span>
+        </div>
+        <div className="hidden md:block text-[8px] text-white/30 tracking-widest font-black uppercase">
+          FATALE CORE NODE v2.1
+        </div>
+      </div>
     </div>
   );
 });
@@ -3995,7 +4204,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 20, opacity: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 28 }}
-        className={`fixed bottom-0 lg:bottom-4 right-0 lg:right-4 p-4 lg:p-2 cursor-pointer group/min z-[100] transition-all`}
+        className={`fixed bottom-[24px] lg:bottom-8 right-0 lg:right-4 p-4 lg:p-2 cursor-pointer group/min z-[100] transition-all`}
         onClick={onToggleMinimize}
         title="EXPAND_PLAYER"
       >
@@ -4016,7 +4225,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 100, opacity: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 28 }}
-      className={`fixed bottom-0 lg:bottom-4 transition-[left] duration-500 left-0 right-0 ${isSidebarCollapsed ? 'lg:left-[6rem]' : 'lg:left-[17rem]'} lg:right-4 backdrop-blur-3xl z-[100] ${isMessages
+      className={`fixed bottom-[24px] lg:bottom-8 transition-[left] duration-500 left-0 right-0 ${isSidebarCollapsed ? 'lg:left-[6rem]' : 'lg:left-[17rem]'} lg:right-4 backdrop-blur-3xl z-[100] ${isMessages
         ? 'border-t border-white/5 lg:border lg:rounded-sm lg:shadow-none'
         : 'border-t border-white/5 lg:border-white/5 lg:rounded-md shadow-[0_-15px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_10px_60px_-15px_rgba(var(--theme-primary-rgb),0.15)]'
         } group/player overflow-hidden flex ${isMobile ? 'flex-col gap-2.5 p-3' : 'flex-row items-center gap-3 p-1.5 lg:p-3 pb-3 lg:pb-3'}`}

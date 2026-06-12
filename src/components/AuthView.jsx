@@ -56,7 +56,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
     const [isDeleting, setIsDeleting] = useState(false);
     const [blinkCount, setBlinkCount] = useState(0);
     const [showCursor, setShowCursor] = useState(true);
-    const fullText = "fatale.fm";
+    const fullText = "system.uplink: fatale.fm";
 
     useEffect(() => {
         let timer;
@@ -197,106 +197,126 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
     };
 
     const customStyles = `
+      .login-red-theme {
+        --theme-primary: 255 0 60 !important;
+        --theme-primary-rgb: 255, 0, 60 !important;
+        --text-color: rgb(255, 0, 60) !important;
+        --theme-color: rgb(255, 0, 60) !important;
+      }
       @keyframes cyberPulse {
-        0%, 100% { box-shadow: 0 0 15px rgba(var(--theme-primary-rgb), 0.15), inset 0 0 15px rgba(var(--theme-primary-rgb), 0.05); }
-        50% { box-shadow: 0 0 35px rgba(var(--theme-primary-rgb), 0.32), inset 0 0 25px rgba(var(--theme-primary-rgb), 0.12); }
+        0%, 100% { box-shadow: 0 0 15px rgba(255, 0, 60, 0.15), inset 0 0 15px rgba(255, 0, 60, 0.05); }
+        50% { box-shadow: 0 0 30px rgba(255, 0, 60, 0.35), inset 0 0 20px rgba(255, 0, 60, 0.12); }
       }
       .crt-text-glow {
-        color: rgb(var(--theme-primary-rgb));
+        color: #ff003c;
         text-shadow: 
-          0 0 2px rgba(var(--theme-primary-rgb), 0.95), 
-          0 0 8px rgba(var(--theme-primary-rgb), 0.75), 
-          0 0 15px rgba(var(--theme-primary-rgb), 0.5);
+          0 0 2px rgba(255, 0, 60, 0.95), 
+          0 0 8px rgba(255, 0, 60, 0.75), 
+          0 0 15px rgba(255, 0, 60, 0.4);
       }
       .crt-cursor-glow {
-        color: rgb(var(--theme-primary-rgb));
+        color: #ff003c;
         text-shadow: 
-          0 0 2px rgba(var(--theme-primary-rgb), 0.95), 
-          0 0 10px rgba(var(--theme-primary-rgb), 0.8), 
-          0 0 18px rgba(var(--theme-primary-rgb), 0.55);
+          0 0 2px rgba(255, 0, 60, 0.95), 
+          0 0 10px rgba(255, 0, 60, 0.8), 
+          0 0 18px rgba(255, 0, 60, 0.55);
       }
       .corner-bracket::before {
         content: '';
         position: absolute;
         top: -1px;
         left: -1px;
-        width: 20px;
-        height: 20px;
-        border-top: 3px solid rgb(var(--theme-primary-rgb));
-        border-left: 3px solid rgb(var(--theme-primary-rgb));
+        width: 16px;
+        height: 16px;
+        border-top: 2px solid #ff003c;
+        border-left: 2px solid #ff003c;
         z-index: 10;
         pointer-events: none;
-        filter: drop-shadow(0 0 3px rgba(var(--theme-primary-rgb), 0.6));
+        filter: drop-shadow(0 0 3px rgba(255, 0, 60, 0.6));
       }
       .corner-bracket::after {
         content: '';
         position: absolute;
         top: -1px;
         right: -1px;
-        width: 20px;
-        height: 20px;
-        border-top: 3px solid rgb(var(--theme-primary-rgb));
-        border-right: 3px solid rgb(var(--theme-primary-rgb));
+        width: 16px;
+        height: 16px;
+        border-top: 2px solid #ff003c;
+        border-right: 2px solid #ff003c;
         z-index: 10;
         pointer-events: none;
-        filter: drop-shadow(0 0 3px rgba(var(--theme-primary-rgb), 0.6));
+        filter: drop-shadow(0 0 3px rgba(255, 0, 60, 0.6));
       }
       .corner-bracket-bottom::before {
         content: '';
         position: absolute;
         bottom: -1px;
         left: -1px;
-        width: 20px;
-        height: 20px;
-        border-bottom: 3px solid rgb(var(--theme-primary-rgb));
-        border-left: 3px solid rgb(var(--theme-primary-rgb));
+        width: 16px;
+        height: 16px;
+        border-bottom: 2px solid #ff003c;
+        border-left: 2px solid #ff003c;
         z-index: 10;
         pointer-events: none;
-        filter: drop-shadow(0 0 3px rgba(var(--theme-primary-rgb), 0.6));
+        filter: drop-shadow(0 0 3px rgba(255, 0, 60, 0.6));
       }
       .corner-bracket-bottom::after {
         content: '';
         position: absolute;
         bottom: -1px;
         right: -1px;
-        width: 20px;
-        height: 20px;
-        border-bottom: 3px solid rgb(var(--theme-primary-rgb));
-        border-right: 3px solid rgb(var(--theme-primary-rgb));
+        width: 16px;
+        height: 16px;
+        border-bottom: 2px solid #ff003c;
+        border-right: 2px solid #ff003c;
         z-index: 10;
         pointer-events: none;
-        filter: drop-shadow(0 0 3px rgba(var(--theme-primary-rgb), 0.6));
+        filter: drop-shadow(0 0 3px rgba(255, 0, 60, 0.6));
       }
     `;
 
     return (
-        <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 relative bg-[#020202] overflow-hidden font-mono text-fatale">
+        <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 relative bg-[#020202] overflow-hidden font-mono text-fatale login-red-theme tui-crt tui-flicker">
             <style>{customStyles}</style>
 
             <div
-                className="absolute inset-0 bg-cover bg-center pointer-events-none transition-all duration-1000 z-0"
+                className="absolute inset-0 bg-cover bg-center pointer-events-none transition-all duration-1000 z-0 opacity-40 filter grayscale contrast-125"
                 style={{ backgroundImage: `url(${loginBg})` }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-fatale/06 to-[#020202] pointer-events-none z-0" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_30%,_rgba(10,0,0,0.85)_100%)] pointer-events-none z-0 mix-blend-multiply" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(var(--theme-primary-rgb),0.15)_0%,_transparent_75%)] animate-pulse pointer-events-none z-0" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-[#020202]/90 to-[#020202] pointer-events-none z-0" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_30%,_rgba(10,0,0,0.95)_100%)] pointer-events-none z-0 mix-blend-multiply" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,0,60,0.1)_0%,_transparent_75%)] animate-pulse pointer-events-none z-0" />
+            
+            {/* Retro scanline & glass filter */}
+            <div className="tui-scanlines" />
+            <div className="tui-red-crt-overlay" />
 
             <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: 'easeOut' }}
-                className="z-10 w-full max-w-[420px]"
+                className="z-10 w-full max-w-[420px] relative"
             >
-                {/* Title */}
-                <div className="text-center mb-6 h-12 flex items-center justify-center">
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-widest font-mono lowercase crt-text-glow">
+                {/* Glowing red ASCII Logo */}
+                <pre className="text-[6px] md:text-[7px] leading-tight font-mono text-center text-fatale crt-text-glow mb-4 select-none">
+{`  ______   ______  _______  ______  _       ______
+ |  ____| |  __  | |__   __| |  __  | |     |  ____|
+ |  |__   |  |__| |    | |   |  |__| | |     |  |__
+ |   __|  |   __  |    | |   |   __  | |     |   __|
+ |  |     |  |  | |    | |   |  |  | | |____ |  |____
+ |_ |     |_ |  |_|    |_|   |_ |  |_|______||______|`}
+                </pre>
+
+                {/* Uplink connection state (typewriter) */}
+                <div className="text-center mb-6 h-6 flex items-center justify-center">
+                    <p className="text-[9px] font-bold uppercase tracking-widest font-mono text-fatale/75">
                         {displayText}
-                        <span className={`crt-cursor-glow ${showCursor ? 'opacity-100' : 'opacity-0'} transition-opacity duration-75 font-normal ml-0.5`}>|</span>
-                    </h1>
+                        <span className={`crt-cursor-glow ${showCursor ? 'opacity-100' : 'opacity-0'} transition-opacity duration-75 font-normal ml-0.5`}>_</span>
+                    </p>
                 </div>
 
                 <div
-                    className="bg-black/85 border border-fatale/35 rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(var(--theme-primary-rgb),0.22)] relative backdrop-blur-xl corner-bracket corner-bracket-bottom"
+                    className="bg-black/90 border border-fatale/35 rounded-sm overflow-hidden shadow-[0_0_25px_rgba(255,0,60,0.15)] relative backdrop-blur-xl corner-bracket corner-bracket-bottom"
                     style={{ animation: 'cyberPulse 6s infinite' }}
                 >
                     <AnimatePresence mode="wait">
@@ -333,7 +353,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                                 initial={{ opacity: 0, scale: 0.95 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 exit={{ opacity: 0, scale: 0.95 }}
-                                                className="p-3 bg-red-950/40 border border-red-500/50 rounded-lg flex items-start gap-3 text-red-400 text-xs"
+                                                className="p-3 bg-red-950/40 border border-red-500/50 rounded-sm flex items-start gap-3 text-red-400 text-xs"
                                             >
                                                 <AlertCircle size={16} className="mt-0.5 shrink-0 animate-bounce" />
                                                 <p>{error}</p>
@@ -344,7 +364,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                                 initial={{ opacity: 0, scale: 0.95 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 exit={{ opacity: 0, scale: 0.95 }}
-                                                className="p-3 bg-green-950/40 border border-green-500/50 rounded-lg text-green-400 text-xs"
+                                                className="p-3 bg-green-950/40 border border-green-500/50 rounded-sm text-green-400 text-xs"
                                             >
                                                 <p className="font-black uppercase tracking-widest text-[9px] text-green-500 mb-1">SIGNAL_TRANSMITTED</p>
                                                 <p>{success}</p>
@@ -363,7 +383,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                                     value={forgotEmail}
                                                     onChange={(e) => { setForgotEmail(e.target.value); setError(''); }}
                                                     required
-                                                    className="w-full bg-black/60 border border-fatale/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-fatale focus:shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)] transition-all placeholder:text-fatale/25"
+                                                    className="w-full bg-black/60 border border-fatale/25 rounded-sm py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-fatale focus:shadow-[0_0_15px_rgba(255,0,60,0.3)] transition-all placeholder:text-fatale/25"
                                                 />
                                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-fatale/10 group-focus-within:bg-fatale rounded-full transition-all" />
                                             </div>
@@ -371,7 +391,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                         <button
                                             type="submit"
                                             disabled={loading}
-                                            className="w-full bg-fatale hover:bg-white text-black font-black py-3.5 rounded-xl transition-all flex items-center justify-center gap-2.5 uppercase tracking-[0.12em] text-xs shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="w-full bg-fatale hover:bg-white text-black font-black py-3.5 rounded-sm transition-all flex items-center justify-center gap-2.5 uppercase tracking-[0.12em] text-xs shadow-[0_0_20px_rgba(255,0,60,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {loading ? <Loader2 size={16} className="animate-spin" /> : '[ TRANSMIT_RESET_LINK ]'}
                                         </button>
@@ -406,7 +426,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                                 initial={{ opacity: 0, scale: 0.95 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 exit={{ opacity: 0, scale: 0.95 }}
-                                                className="p-3 bg-red-950/40 border border-red-500/50 rounded-lg flex items-start gap-3 text-red-400 text-xs"
+                                                className="p-3 bg-red-950/40 border border-red-500/50 rounded-sm flex items-start gap-3 text-red-400 text-xs"
                                             >
                                                 <AlertCircle size={16} className="mt-0.5 shrink-0 animate-bounce" />
                                                 <p>{error}</p>
@@ -417,7 +437,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                                 initial={{ opacity: 0, scale: 0.95 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 exit={{ opacity: 0, scale: 0.95 }}
-                                                className="p-3 bg-green-950/40 border border-green-500/50 rounded-lg text-green-400 text-xs"
+                                                className="p-3 bg-green-950/40 border border-green-500/50 rounded-sm text-green-400 text-xs"
                                             >
                                                 <p className="font-black uppercase tracking-widest text-[9px] text-green-500 mb-1">PASSWORD_UPDATED</p>
                                                 <p>{success}</p>
@@ -436,7 +456,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                                     value={newPassword}
                                                     onChange={(e) => { setNewPassword(e.target.value); setError(''); }}
                                                     required
-                                                    className="w-full bg-black/60 border border-fatale/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-fatale focus:shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)] transition-all placeholder:text-fatale/25"
+                                                    className="w-full bg-black/60 border border-fatale/25 rounded-sm py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-fatale focus:shadow-[0_0_15px_rgba(255,0,60,0.3)] transition-all placeholder:text-fatale/25"
                                                 />
                                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-fatale/10 group-focus-within:bg-fatale rounded-full transition-all" />
                                             </div>
@@ -451,7 +471,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                                     value={confirmPassword}
                                                     onChange={(e) => { setConfirmPassword(e.target.value); setError(''); }}
                                                     required
-                                                    className="w-full bg-black/60 border border-fatale/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-fatale focus:shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)] transition-all placeholder:text-fatale/25"
+                                                    className="w-full bg-black/60 border border-fatale/25 rounded-sm py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-fatale focus:shadow-[0_0_15px_rgba(255,0,60,0.3)] transition-all placeholder:text-fatale/25"
                                                 />
                                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-fatale/10 group-focus-within:bg-fatale rounded-full transition-all" />
                                             </div>
@@ -459,7 +479,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                         <button
                                             type="submit"
                                             disabled={loading}
-                                            className="w-full bg-fatale hover:bg-white text-black font-black py-3.5 rounded-xl transition-all flex items-center justify-center gap-2.5 uppercase tracking-[0.12em] text-xs shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="w-full bg-fatale hover:bg-white text-black font-black py-3.5 rounded-sm transition-all flex items-center justify-center gap-2.5 uppercase tracking-[0.12em] text-xs shadow-[0_0_20px_rgba(255,0,60,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {loading ? <Loader2 size={16} className="animate-spin" /> : '[ UPDATE_PASSWORD ]'}
                                         </button>
@@ -481,18 +501,18 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                     <button
                                         onClick={() => { setActiveTab('login'); setError(''); }}
                                         type="button"
-                                        className={`flex-1 py-3.5 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'login' ? 'text-black bg-fatale' : 'text-fatale/60 hover:text-fatale hover:bg-fatale/5'}`}
+                                        className={`flex-1 py-3.5 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'login' ? 'text-black bg-fatale font-black' : 'text-fatale/60 hover:text-fatale hover:bg-fatale/5'}`}
                                     >
                                         {activeTab === 'login' && <div className="absolute inset-0 bg-fatale/20 blur-sm" />}
-                                        <span className="relative z-10">LOGIN</span>
+                                        <span className="relative z-10">[ LOGIN ]</span>
                                     </button>
                                     <button
                                         onClick={() => { setActiveTab('register'); setError(''); }}
                                         type="button"
-                                        className={`flex-1 py-3.5 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'register' ? 'text-black bg-fatale' : 'text-fatale/60 hover:text-fatale hover:bg-fatale/5'}`}
+                                        className={`flex-1 py-3.5 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'register' ? 'text-black bg-fatale font-black' : 'text-fatale/60 hover:text-fatale hover:bg-fatale/5'}`}
                                     >
                                         {activeTab === 'register' && <div className="absolute inset-0 bg-fatale/20 blur-sm" />}
-                                        <span className="relative z-10">CREATE ACCOUNT</span>
+                                        <span className="relative z-10">[ CREATE ACCOUNT ]</span>
                                     </button>
                                 </div>
 
@@ -505,7 +525,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                                     initial={{ opacity: 0, scale: 0.95 }}
                                                     animate={{ opacity: 1, scale: 1 }}
                                                     exit={{ opacity: 0, scale: 0.95 }}
-                                                    className="p-3 bg-red-950/40 border border-red-500/50 rounded-lg flex items-start gap-3 text-red-400 text-xs font-mono"
+                                                    className="p-3 bg-red-950/40 border border-red-500/50 rounded-sm flex items-start gap-3 text-red-400 text-xs font-mono"
                                                 >
                                                     <AlertCircle size={16} className="mt-0.5 shrink-0 text-red-500 animate-bounce" />
                                                     <div className="space-y-1">
@@ -527,7 +547,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                                     value={formData.username}
                                                     onChange={handleChange}
                                                     required
-                                                    className="w-full bg-black/60 border border-fatale/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-fatale focus:shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)] transition-all placeholder:text-fatale/25"
+                                                    className="w-full bg-black/60 border border-fatale/25 rounded-sm py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-fatale focus:shadow-[0_0_15px_rgba(255,0,60,0.3)] transition-all placeholder:text-fatale/25"
                                                 />
                                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-fatale/10 group-focus-within:bg-fatale rounded-full transition-all" />
                                             </div>
@@ -553,7 +573,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                                                 value={formData.email}
                                                                 onChange={handleChange}
                                                                 required
-                                                                className="w-full bg-black/60 border border-fatale/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-fatale focus:shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)] transition-all placeholder:text-fatale/25"
+                                                                className="w-full bg-black/60 border border-fatale/25 rounded-sm py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-fatale focus:shadow-[0_0_15px_rgba(255,0,60,0.3)] transition-all placeholder:text-fatale/25"
                                                             />
                                                             <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-fatale/10 group-focus-within:bg-fatale rounded-full transition-all" />
                                                         </div>
@@ -573,7 +593,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                                     value={formData.password}
                                                     onChange={handleChange}
                                                     required
-                                                    className="w-full bg-black/60 border border-fatale/25 rounded-xl py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-fatale focus:shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)] transition-all placeholder:text-fatale/25"
+                                                    className="w-full bg-black/60 border border-fatale/25 rounded-sm py-3 pl-12 pr-4 text-white text-xs font-bold focus:outline-none focus:border-fatale focus:shadow-[0_0_15px_rgba(255,0,60,0.3)] transition-all placeholder:text-fatale/25"
                                                 />
                                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-fatale/10 group-focus-within:bg-fatale rounded-full transition-all" />
                                             </div>
@@ -583,13 +603,13 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                             <button
                                                 type="submit"
                                                 disabled={loading}
-                                                className="w-full bg-fatale hover:bg-white text-black font-black py-3.5 rounded-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2.5 uppercase tracking-[0.12em] text-xs shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.4)] hover:shadow-[0_0_25px_rgba(255,255,255,0.45)] disabled:opacity-50 disabled:cursor-not-allowed group border border-transparent hover:border-fatale/40"
+                                                className="w-full bg-fatale hover:bg-white text-black font-black py-3.5 rounded-sm hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2.5 uppercase tracking-[0.12em] text-xs shadow-[0_0_20px_rgba(255,0,60,0.4)] hover:shadow-[0_0_25px_rgba(255,255,255,0.45)] disabled:opacity-50 disabled:cursor-not-allowed group border border-transparent hover:border-fatale/40"
                                             >
                                                 {loading ? (
                                                     <Loader2 size={16} className="animate-spin text-black" />
                                                 ) : (
                                                     <>
-                                                        <span>{activeTab === 'login' ? 'LOGIN' : 'CREATE ACCOUNT'}</span>
+                                                        <span>{activeTab === 'login' ? '[ LOGIN ]' : '[ CREATE ACCOUNT ]'}</span>
                                                         <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform text-black" />
                                                     </>
                                                 )}
@@ -622,15 +642,15 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                 </div>
 
                 {deferredPrompt && (
-                    <div className="w-full mt-4 bg-black/85 border border-fatale/35 rounded-2xl p-4 text-center shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.15)] backdrop-blur-xl relative corner-bracket corner-bracket-bottom flex flex-col items-center">
+                    <div className="w-full mt-4 bg-black/90 border border-fatale/35 rounded-sm p-4 text-center shadow-[0_0_20px_rgba(255,0,60,0.15)] backdrop-blur-xl relative corner-bracket corner-bracket-bottom flex flex-col items-center">
                         <div className="text-[10px] font-black uppercase tracking-[0.25em] mb-1.5 text-white">[ INSTALL_SYSTEM_SHELL ]</div>
                         <p className="text-[9px] text-fatale/70 leading-relaxed mb-3.5 uppercase tracking-wider max-w-[340px]">
                             Download Fatale directly to your device for standalone immersive HUD execution and faster loading times.
                         </p>
                         <button
-                            onClick={onInstall}
+                            onClick={handleInstallApp}
                             type="button"
-                            className="w-full bg-fatale hover:bg-white text-black font-black py-3 rounded-xl transition-all uppercase tracking-[0.15em] text-[10px] shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.4)]"
+                            className="w-full bg-fatale hover:bg-white text-black font-black py-3 rounded-sm transition-all uppercase tracking-[0.15em] text-[10px] shadow-[0_0_15px_rgba(255,0,60,0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.4)]"
                         >
                             INSTALL APP
                         </button>
@@ -638,9 +658,9 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                 )}
 
                 {isIOS && !isStandalone && (
-                    <div className="w-full mt-4 bg-black/85 border border-fatale/35 rounded-2xl p-4 text-center shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.15)] backdrop-blur-xl relative corner-bracket corner-bracket-bottom flex flex-col items-center">
+                    <div className="w-full mt-4 bg-black/90 border border-fatale/35 rounded-sm p-4 text-center shadow-[0_0_20px_rgba(255,0,60,0.15)] backdrop-blur-xl relative corner-bracket corner-bracket-bottom flex flex-col items-center">
                         <div className="text-[10px] font-black uppercase tracking-[0.25em] mb-1.5 text-white">[ INSTALL_SYSTEM_SHELL ]</div>
-                        <p className="text-[9px] text-[#d60035]/75 leading-relaxed uppercase tracking-wider max-w-[340px]">
+                        <p className="text-[9px] text-[#ff003c]/75 leading-relaxed uppercase tracking-wider max-w-[340px]">
                             To install on iOS: Tap <span className="text-white font-black">Share</span> at the bottom of Safari, then select <span className="text-white font-black">"Add to Home Screen"</span>.
                         </p>
                     </div>
