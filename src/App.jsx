@@ -308,7 +308,7 @@ function App() {
       document.documentElement.style.setProperty('--theme-text', '255 255 255');
       document.documentElement.style.setProperty('--theme-text-rgb', '255, 255, 255');
     }
-  }, [user, appThemeColor, appBackgroundColor]);
+  }, [user, appThemeColor, appBackgroundColor, activeView]);
 
 
   // Global Escape Listener for App-level Modals and Navigation
@@ -3028,6 +3028,10 @@ function App() {
                  setFollowedCommunities(updated);
                }}
                setShowGlobalGoLive={setShowGlobalGoLive}
+               appThemeColor={appThemeColor}
+               setAppThemeColor={setAppThemeColor}
+               appBackgroundColor={appBackgroundColor}
+               setAppBackgroundColor={setAppBackgroundColor}
                setShowGlobalUpload={setShowGlobalUpload}
                setShowGlobalIngest={setShowGlobalIngest}
                setIngestMode={setIngestMode}
@@ -3483,6 +3487,10 @@ const Dashboard = React.memo(({
   setShowGlobalIngest,
   setIngestMode,
   onExpandContent,
+  appThemeColor,
+  setAppThemeColor,
+  appBackgroundColor,
+  setAppBackgroundColor,
   volume,
   setVolume,
   isMiniPlayerMinimized,
