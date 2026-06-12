@@ -112,29 +112,6 @@ const MobileLEDBanner = () => {
     );
 };
 
-const ScrambleText = ({ text }) => {
-    const [display, setDisplay] = useState(text);
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
-    
-    useEffect(() => {
-        if (!text) return;
-        let iterations = 0;
-        const interval = setInterval(() => {
-            setDisplay(text.split('').map((char, index) => {
-                if (char === ' ') return ' ';
-                if (index < iterations) return char;
-                return chars[Math.floor(Math.random() * chars.length)];
-            }).join(''));
-            
-            if (iterations >= text.length) clearInterval(interval);
-            iterations += 1/3;
-        }, 30);
-        return () => clearInterval(interval);
-    }, [text]);
-
-    return <span>{display}</span>;
-};
-
 const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, onPlayPlaylist, isPlayerActive, onExpandContent, onPlayStation, isLandscape, setShowGlobalIngest, setIngestMode, onMessageCommunity, onDownload, onTipArtist, onLogout, hasNewMessages }) => {
     const { t } = useLanguage();
     const { showNotification } = useNotification();
@@ -1007,19 +984,18 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             <button
                                                 key={node.id}
                                                 onClick={() => { setView(node.id); setShowSkullMenu(false); }}
-                                                className={`group text-left p-2 md:p-4 bg-white/[0.012] border border-white/5 hover:border-[#ff006e]/50 hover:bg-[#ff006e]/5 transition-all flex items-center gap-2 md:gap-4 relative overflow-hidden active:scale-[0.98] rounded-sm min-w-0 ${node.id === 'settings' ? 'col-span-2 justify-self-center w-full md:w-[calc(50%-0.5rem)]' : ''}`}
+                                                className={`group text-left p-2 md:p-4 bg-white/[0.012] border border-white/5 hover:border-[#ff006e] hover:shadow-[0_0_15px_rgba(255,0,110,0.4)] hover:bg-[#ff006e]/5 transition-all flex items-center gap-2 md:gap-4 relative overflow-hidden active:scale-[0.98] rounded-sm min-w-0 ${node.id === 'settings' ? 'col-span-2 justify-self-center w-full md:w-[calc(50%-0.5rem)]' : ''}`}
                                             >
-                                                <div className="absolute inset-y-0 left-0 w-[2px] bg-transparent group-hover:bg-[#ff006e] transition-all" />
                                                 <div className="p-1.5 md:p-3 bg-black border border-white/10 text-white/40 group-hover:text-[#ff006e] group-hover:border-[#ff006e]/30 transition-all shrink-0">
                                                     {node.icon}
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <div className="text-[9px] md:text-[11px] font-black uppercase tracking-widest text-white/80 group-hover:text-white transition-colors flex items-center gap-1.5 truncate">
-                                                        <ScrambleText text={node.label} />
+                                                        {node.label}
                                                         {node.badge && <span className="w-1.5 h-1.5 rounded-full bg-[#ff006e] animate-pulse shadow-[0_0_8px_#ff006e] shrink-0" />}
                                                     </div>
                                                     <div className="text-[6.5px] md:text-[7.5px] font-mono text-white/20 group-hover:text-[#ff006e]/40 transition-colors uppercase tracking-wider mt-0.5 truncate">
-                                                        <ScrambleText text={node.desc} />
+                                                        {node.desc}
                                                     </div>
                                                 </div>
                                             </button>
