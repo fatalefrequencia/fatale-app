@@ -1356,23 +1356,8 @@ useEffect(() => {
                             exit={{ opacity: 0, scale: 0.98 }}
                             className="fixed inset-0 z-[25] flex flex-col font-mono text-white p-4 sm:p-8 pt-20 lg:pt-8 lg:left-20 select-none overflow-hidden"
                         >
-                            {/* Profile Wallpaper Background Video */}
-                            {(user?.wallpaperVideoUrl || user?.WallpaperVideoUrl) ? (
-                                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                                    <video 
-                                        key={user.wallpaperVideoUrl || user.WallpaperVideoUrl}
-                                        src={getMediaUrl(user.wallpaperVideoUrl || user.WallpaperVideoUrl)} 
-                                        autoPlay 
-                                        muted 
-                                        loop 
-                                        playsInline
-                                        className="w-full h-full object-cover opacity-30"
-                                    />
-                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
-                                </div>
-                            ) : (
-                                <div className="absolute inset-0 z-0 pointer-events-none backdrop-blur-md" style={{ backgroundColor: 'rgba(var(--theme-bg-rgb), 0.95)', background: 'radial-gradient(circle at 10% 20%, rgba(var(--theme-primary-rgb), 0.08) 0%, rgba(var(--theme-bg-rgb), 0.95) 90%)' }} />
-                            )}
+                            {/* Flat dark gradients and backdrop blur styling */}
+                            <div className="absolute inset-0 z-0 pointer-events-none backdrop-blur-md" style={{ backgroundColor: 'rgba(var(--theme-bg-rgb), 0.95)', background: 'radial-gradient(circle at 10% 20%, rgba(var(--theme-primary-rgb), 0.08) 0%, rgba(var(--theme-bg-rgb), 0.95) 90%)' }} />
 
                             {/* Wireframe Grid Overlay */}
                             <div className="absolute inset-0 opacity-[0.015] pointer-events-none bg-[linear-gradient(rgba(var(--theme-primary-rgb),0.1)_1px,_transparent_1px),_linear-gradient(90deg,_rgba(var(--theme-primary-rgb),0.1)_1px,_transparent_1px)] bg-[size:32px_32px]" />

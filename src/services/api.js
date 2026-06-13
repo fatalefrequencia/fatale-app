@@ -136,9 +136,45 @@ const API = {
         },
         followUser: (id) => api.post(`Artists/like/${id}`), // Re-routed to Artists for social linking
         unfollowUser: (id) => api.post(`Artists/like/${id}`), // It's a toggle in backend
-        getFollowers: (id) => api.get(`Users/${id}/followers`),
-        getFollowing: (id) => api.get(`Users/${id}/following`),
-        searchUsers: (query) => api.get(`Users/search?query=${query}`),
+        getFollowers: async (id) => {
+            try {
+                const res = await api.get(`Users/${id}/followers`);
+                if (res && res.data && !Array.isArray(res.data)) {
+                    console.warn('[API] Users.getFollowers returned non-array:', res.data);
+                    res.data = [];
+                }
+                return res;
+            } catch (err) {
+                console.error('[API] Users.getFollowers error:', err);
+                return { data: [] };
+            }
+        },
+        getFollowing: async (id) => {
+            try {
+                const res = await api.get(`Users/${id}/following`);
+                if (res && res.data && !Array.isArray(res.data)) {
+                    console.warn('[API] Users.getFollowing returned non-array:', res.data);
+                    res.data = [];
+                }
+                return res;
+            } catch (err) {
+                console.error('[API] Users.getFollowing error:', err);
+                return { data: [] };
+            }
+        },
+        searchUsers: async (query) => {
+            try {
+                const res = await api.get(`Users/search?query=${query}`);
+                if (res && res.data && !Array.isArray(res.data)) {
+                    console.warn('[API] Users.searchUsers returned non-array:', res.data);
+                    res.data = [];
+                }
+                return res;
+            } catch (err) {
+                console.error('[API] Users.searchUsers error:', err);
+                return { data: [] };
+            }
+        },
         getUserById: (id) => api.get(`Users/${id}`),
     },
     Economy: {
@@ -199,8 +235,32 @@ const API = {
         getDiscoveryNodes: (query, userId, fallbackQuery) => api.get(`Youtube/discovery-nodes?query=${encodeURIComponent(query || '')}${userId ? `&userId=${userId}` : ''}${fallbackQuery ? `&fallbackQuery=${encodeURIComponent(fallbackQuery)}` : ''}`),
     },
     Messages: {
-        getConversations: () => api.get('Messages/conversations'),
-        getConversation: (userId) => api.get(`Messages/conversation/${userId}`),
+        getConversations: async () => {
+            try {
+                const res = await api.get('Messages/conversations');
+                if (res && res.data && !Array.isArray(res.data)) {
+                    console.warn('[API] Messages.getConversations returned non-array:', res.data);
+                    res.data = [];
+                }
+                return res;
+            } catch (err) {
+                console.error('[API] Messages.getConversations error:', err);
+                return { data: [] };
+            }
+        },
+        getConversation: async (userId) => {
+            try {
+                const res = await api.get(`Messages/conversation/${userId}`);
+                if (res && res.data && !Array.isArray(res.data)) {
+                    console.warn('[API] Messages.getConversation returned non-array:', res.data);
+                    res.data = [];
+                }
+                return res;
+            } catch (err) {
+                console.error('[API] Messages.getConversation error:', err);
+                return { data: [] };
+            }
+        },
         sendMessage: (data) => api.post('Messages/send', data),
     },
     Subscriptions: {
@@ -219,8 +279,32 @@ const API = {
         getByYoutubeId: (youtubeId) => api.get(`YoutubeTracks/by-youtube-id/${youtubeId}`),
     },
     Playlists: {
-        getAll: () => api.get('Playlists'),
-        getUserPlaylists: (userId) => api.get(`Playlists/user/${userId}`),
+        getAll: async () => {
+            try {
+                const res = await api.get('Playlists');
+                if (res && res.data && !Array.isArray(res.data)) {
+                    console.warn('[API] Playlists.getAll returned non-array:', res.data);
+                    res.data = [];
+                }
+                return res;
+            } catch (err) {
+                console.error('[API] Playlists.getAll error:', err);
+                return { data: [] };
+            }
+        },
+        getUserPlaylists: async (userId) => {
+            try {
+                const res = await api.get(`Playlists/user/${userId}`);
+                if (res && res.data && !Array.isArray(res.data)) {
+                    console.warn('[API] Playlists.getUserPlaylists returned non-array:', res.data);
+                    res.data = [];
+                }
+                return res;
+            } catch (err) {
+                console.error('[API] Playlists.getUserPlaylists error:', err);
+                return { data: [] };
+            }
+        },
         getById: (id) => api.get(`Playlists/${id}`),
         create: (data) => api.post('Playlists', data),
         addTrack: (id, trackId) => api.post(`Playlists/${id}/tracks`, { trackId, TrackId: trackId }),
@@ -294,7 +378,19 @@ const API = {
         endLive: () => api.post('Stations/end-live'),
     },
     Communities: {
-        getAll: () => api.get(`Communities?_t=${new Date().getTime()}`),
+        getAll: async () => {
+            try {
+                const res = await api.get(`Communities?_t=${new Date().getTime()}`);
+                if (res && res.data && !Array.isArray(res.data)) {
+                    console.warn('[API] Communities.getAll returned non-array:', res.data);
+                    res.data = [];
+                }
+                return res;
+            } catch (err) {
+                console.error('[API] Communities.getAll error:', err);
+                return { data: [] };
+            }
+        },
         create: (data) => api.post('Communities', data),
         join: (id) => api.post(`Communities/${id}/join`),
         leave: () => api.post('Communities/leave'),

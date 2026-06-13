@@ -11,6 +11,7 @@
     justify-content: center;
     padding: 20px;
     user-select: none;
+    overflow-y: auto; /* Allow vertical scroll if elements exceed viewport */
 }
 
 .dj-mixer-overlay.is-mobile-landscape {
@@ -51,6 +52,18 @@
     padding: 20px;
     position: relative;
     z-index: 10;
+}
+
+/* Prevent layout clipping and allow full scrolling on smaller laptop screen heights */
+@media (max-height: 850px) {
+    .dj-mixer-overlay {
+        justify-content: flex-start !important;
+    }
+    .mixer-hud-wrapper {
+        max-height: none !important;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
 }
 
 .glass-pane {
@@ -186,7 +199,7 @@
     min-height: 320px;
 }
 
-@media (max-height: 700px), screen and (orientation: landscape) and (max-width: 932px) {
+@media (max-height: 850px), screen and (orientation: landscape) and (max-width: 932px) {
     .mixer-decks-grid-compact {
         height: auto;
         min-height: 280px;
@@ -585,7 +598,7 @@
     flex-direction: column;
 }
 
-@media (max-height: 700px), screen and (orientation: landscape) and (max-width: 932px) {
+@media (max-height: 850px), screen and (orientation: landscape) and (max-width: 932px) {
     .utility-interlink-pane {
         height: auto;
         min-height: 280px;
@@ -1005,7 +1018,7 @@
     justify-content: center;
 }
 
-@media (max-height: 700px) {
+@media (max-height: 850px) {
     .slider-track-vertical {
         height: 60px !important;
     }
@@ -1029,7 +1042,7 @@
     align-items: flex-end;
 }
 
-@media (max-height: 700px) {
+@media (max-height: 850px) {
     .master-gain-faders-row {
         height: 60px !important;
         margin-bottom: 10px !important;
@@ -1201,7 +1214,7 @@
     margin: 4px 0;
 }
 
-@media (max-height: 700px) {
+@media (max-height: 850px) {
     .neural-spectrum-master-hub {
         padding: 4px 0 !important;
         margin: 2px 0 !important;
@@ -1840,8 +1853,8 @@
     }
 
     .mixer-console-pane {
-        flex: 0 0 62% !important;
-        min-width: 800px !important;
+        flex: 0 0 55% !important;
+        min-width: 700px !important;
         display: flex !important;
         flex-direction: column !important;
         justify-content: space-between !important;
@@ -1849,14 +1862,26 @@
     }
 
     .listener-now-playing-pane {
-        flex: 0 0 40% !important;
-        min-width: 400px !important;
+        flex: 0 0 35% !important;
+        min-width: 350px !important;
         height: auto !important;
     }
 
     .utility-interlink-pane {
-        flex: 1 !important;
+        flex: 1 1 45% !important;
         height: auto !important;
         min-height: unset !important;
+    }
+
+    .signal-table-nano {
+        font-size: 12px !important;
+    }
+
+    .signal-table-nano th {
+        font-size: 9px !important;
+    }
+    
+    .load-chip {
+        font-size: 9px !important;
     }
 }

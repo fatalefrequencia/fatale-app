@@ -112,7 +112,7 @@ const MobileLEDBanner = () => {
     );
 };
 
-const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, onPlayPlaylist, isPlayerActive, onExpandContent, onPlayStation, isLandscape, setShowGlobalIngest, setIngestMode, onMessageCommunity, onDownload, onTipArtist, onLogout, hasNewMessages }) => {
+const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, onPlayPlaylist, isPlayerActive, onExpandContent, onPlayStation, isLandscape, setShowGlobalIngest, setIngestMode, onMessageCommunity, onDownload, onTipArtist, onLogout, hasNewMessages, lowSpecMode }) => {
     const { t } = useLanguage();
     const { showNotification } = useNotification();
     const [searchQuery, setSearchQuery] = useState('');
@@ -240,7 +240,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
     const [selectedGlobeItem, setSelectedGlobeItem] = useState(null);
     const [activeGlobeView, setActiveGlobeView] = useState(null);
     const [isGlobeSpinning, setIsGlobeSpinning] = useState(true);
-    const [isPinterestView, setIsPinterestView] = useState(false);
+    const [isPinterestView, setIsPinterestView] = useState(() => localStorage.getItem('fatale_low_spec') === 'true');
     const [selectedSearchCategory, setSelectedSearchCategory] = useState('ALL');
 
     // ── Centralized native-track detection (catches ALL casing variants from API) ──
@@ -1211,76 +1211,78 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                         {/* Globe View */}
                         <div className={`w-full h-full ${activeTerminalCommunity ? 'hidden' : 'flex'} items-center justify-center p-4 transition-all duration-500 ${isPinterestView ? 'opacity-0 invisible pointer-events-none -z-10' : 'opacity-100 visible z-10 pointer-events-auto'}`}>
-                            <InteractiveGlobe
-                                searchQuery={searchQuery}
-                                communities={communities}
-                                artists={artistsForGlobe}
-                                tracks={tracksWithColor}
-                                playlists={playlistsWithArtist}
-                                albums={albums}
-                                activeSector={activeSector}
-                                selectedId={selectedGlobeItem ? (selectedGlobeItem.isSystem ? 'system-fatale_core' : `${selectedGlobeItem.type}-${selectedGlobeItem.id || selectedGlobeItem.Id}`) : (activeTerminalCommunity?.isSystem ? 'system-fatale_core' : null)}
-                                activeView={activeGlobeView}
-                                isGlobeSpinning={isGlobeSpinning}
-                                onSectorClick={(secId) => {
-                                    setActiveSector(activeSector === secId ? null : secId);
-                                }}
-                                onArtistClick={(artist) => {
-                                    const prevId = selectedGlobeItem?.id || selectedGlobeItem?.Id;
-                                    const currId = artist.id || artist.Id;
-                                    if (prevId === currId) {
-                                        setSelectedGlobeItem(null);
-                                    } else {
-                                        setSelectedGlobeItem({ ...artist, type: 'artist' });
-                                    }
-                                }}
-                                onCommunityClick={(comm) => {
-                                    // System nodes open the terminal directly
-                                    if (comm.isSystem) {
-                                        setActiveTerminalCommunity({ ...comm, type: 'community' });
-                                        return;
-                                    }
-                                    const prevId = selectedGlobeItem?.id || selectedGlobeItem?.Id;
-                                    const currId = comm.id || comm.Id;
-                                    if (prevId === currId) {
-                                        setSelectedGlobeItem(null);
-                                    } else {
-                                        setSelectedGlobeItem({ ...comm, type: 'community' });
-                                    }
-                                }}
-                                onTrackClick={(track) => {
-                                    const prevId = selectedGlobeItem?.id || selectedGlobeItem?.Id;
-                                    const currId = track.id || track.Id;
-                                    if (prevId === currId) {
-                                        setSelectedGlobeItem(null);
-                                    } else {
-                                        setSelectedGlobeItem({ ...track, type: 'track' });
-                                    }
-                                }}
-                                onPlaylistClick={async (playlist) => {
-                                    const prevId = selectedGlobeItem?.id || selectedGlobeItem?.Id;
-                                    const currId = playlist.id || playlist.Id;
-                                    if (prevId === currId && selectedGlobeItem?.type === 'playlist') {
-                                        setSelectedGlobeItem(null);
-                                        setSelectedPlaylist(null);
-                                    } else {
-                                        setSelectedGlobeItem({ ...playlist, type: 'playlist' });
-                                        setSelectedPlaylist(playlist);
-                                        setLoadingPlaylist(true);
-                                        try {
-                                            const res = await API.Playlists.getById(playlist.id || playlist.Id);
-                                            setPlaylistTracks(res.data?.tracks || []);
-                                        } catch (err) {
-                                            console.error("Failed to fetch playlist tracks from globe:", err);
-                                        } finally {
-                                            setLoadingPlaylist(false);
+                            {!isPinterestView && (
+                                <InteractiveGlobe
+                                    searchQuery={searchQuery}
+                                    communities={communities}
+                                    artists={artistsForGlobe}
+                                    tracks={tracksWithColor}
+                                    playlists={playlistsWithArtist}
+                                    albums={albums}
+                                    activeSector={activeSector}
+                                    selectedId={selectedGlobeItem ? (selectedGlobeItem.isSystem ? 'system-fatale_core' : `${selectedGlobeItem.type}-${selectedGlobeItem.id || selectedGlobeItem.Id}`) : (activeTerminalCommunity?.isSystem ? 'system-fatale_core' : null)}
+                                    activeView={activeGlobeView}
+                                    isGlobeSpinning={isGlobeSpinning}
+                                    onSectorClick={(secId) => {
+                                        setActiveSector(activeSector === secId ? null : secId);
+                                    }}
+                                    onArtistClick={(artist) => {
+                                        const prevId = selectedGlobeItem?.id || selectedGlobeItem?.Id;
+                                        const currId = artist.id || artist.Id;
+                                        if (prevId === currId) {
+                                            setSelectedGlobeItem(null);
+                                        } else {
+                                            setSelectedGlobeItem({ ...artist, type: 'artist' });
                                         }
-                                    }
-                                }}
-                                onSelectItem={(id) => {
-                                    if (id === null) setSelectedGlobeItem(null);
-                                }}
-                            />
+                                    }}
+                                    onCommunityClick={(comm) => {
+                                        // System nodes open the terminal directly
+                                        if (comm.isSystem) {
+                                            setActiveTerminalCommunity({ ...comm, type: 'community' });
+                                            return;
+                                        }
+                                        const prevId = selectedGlobeItem?.id || selectedGlobeItem?.Id;
+                                        const currId = comm.id || comm.Id;
+                                        if (prevId === currId) {
+                                            setSelectedGlobeItem(null);
+                                        } else {
+                                            setSelectedGlobeItem({ ...comm, type: 'community' });
+                                        }
+                                    }}
+                                    onTrackClick={(track) => {
+                                        const prevId = selectedGlobeItem?.id || selectedGlobeItem?.Id;
+                                        const currId = track.id || track.Id;
+                                        if (prevId === currId) {
+                                            setSelectedGlobeItem(null);
+                                        } else {
+                                            setSelectedGlobeItem({ ...track, type: 'track' });
+                                        }
+                                    }}
+                                    onPlaylistClick={async (playlist) => {
+                                        const prevId = selectedGlobeItem?.id || selectedGlobeItem?.Id;
+                                        const currId = playlist.id || playlist.Id;
+                                        if (prevId === currId && selectedGlobeItem?.type === 'playlist') {
+                                            setSelectedGlobeItem(null);
+                                            setSelectedPlaylist(null);
+                                        } else {
+                                            setSelectedGlobeItem({ ...playlist, type: 'playlist' });
+                                            setSelectedPlaylist(playlist);
+                                            setLoadingPlaylist(true);
+                                            try {
+                                                const res = await API.Playlists.getById(playlist.id || playlist.Id);
+                                                setPlaylistTracks(res.data?.tracks || []);
+                                            } catch (err) {
+                                                console.error("Failed to fetch playlist tracks from globe:", err);
+                                            } finally {
+                                                setLoadingPlaylist(false);
+                                            }
+                                        }
+                                    }}
+                                    onSelectItem={(id) => {
+                                        if (id === null) setSelectedGlobeItem(null);
+                                    }}
+                                />
+                            )}
                         </div>
 
                         <AnimatePresence mode="wait">
@@ -1419,13 +1421,15 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             {isGlobeSpinning ? <Pause size={14} /> : <Play size={14} />}
                                         </button>
                                     )}
-                                    <button
-                                        onClick={() => setIsPinterestView(!isPinterestView)}
-                                        className={`flex items-center justify-center w-10 h-10 rounded-sm border transition-all duration-300 ${isPinterestView ? 'bg-fatale/10 border-fatale text-fatale' : 'bg-black/40 border-colorBorder/30 text-colorLabel'}`}
-                                        title={isPinterestView ? "View 3D Map" : "View Grid"}
-                                    >
-                                        {isPinterestView ? <Globe size={14} /> : <Grid size={14} />}
-                                    </button>
+                                    {!lowSpecMode && (
+                                        <button
+                                            onClick={() => setIsPinterestView(!isPinterestView)}
+                                            className={`flex items-center justify-center w-10 h-10 rounded-sm border transition-all duration-300 ${isPinterestView ? 'bg-fatale/10 border-fatale text-fatale' : 'bg-black/40 border-colorBorder/30 text-colorLabel'}`}
+                                            title={isPinterestView ? "View 3D Map" : "View Grid"}
+                                        >
+                                            {isPinterestView ? <Globe size={14} /> : <Grid size={14} />}
+                                        </button>
+                                    )}
                                 </div>
 
                                 {/* Guide Button - Bottom Left Corner of Globe Terminal */}

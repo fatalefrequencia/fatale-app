@@ -104,6 +104,8 @@ const DJMixerPlayer = ({
     onMixerStateChange = null,
     audioCtx = null,
     broadcastDest = null,
+    zoomState: propZoomState,
+    setZoomState: propSetZoomState,
 }) => {
     const { t, language } = useLanguage();
     const { showNotification } = useNotification();
@@ -177,7 +179,13 @@ const DJMixerPlayer = ({
     const [keyLockB, setKeyLockB] = useState(false);
     const [viewingArtist, setViewingArtist] = useState(null);
     const [chatInput, setChatInput] = useState('');
-    const [viewMode, setViewMode] = useState(!isBroadcaster ? 'LISTENER' : 'MIXER');
+    const [viewMode, setViewMode] = useState(() => {
+        if (station && !isBroadcaster) return 'LISTENER';
+        return 'MIXER';
+    });
+    const [localZoomState, setLocalZoomState] = useState(100);
+    const zoomState = propZoomState !== undefined ? propZoomState : localZoomState;
+    const setZoomState = propSetZoomState !== undefined ? propSetZoomState : setLocalZoomState;
     const [fataleFavsExpanded, setFataleFavsExpanded] = useState(true);
     const [youtubeFavsExpanded, setYoutubeFavsExpanded] = useState(true);
 
@@ -1079,7 +1087,14 @@ const DJMixerPlayer = ({
 
             <audio ref={audioB} crossOrigin="anonymous" className="hidden" />
             
-            <div className="mixer-hud-wrapper custom-scrollbar">
+            <div 
+                className="mixer-hud-wrapper custom-scrollbar"
+                style={{ 
+                    transform: `scale(${zoomState / 100})`, 
+                    transformOrigin: 'top center',
+                    transition: 'transform 0.15s ease-out'
+                }}
+            >
                 {viewMode === 'MIXER' ? (
                     <>
                         {/* PRIMARY CONSOLE PANE */}
@@ -1093,6 +1108,14 @@ const DJMixerPlayer = ({
                             <div className="station-node-compact">
                                 <Radio size={12} className="pulse-icon text-[var(--accent)]" />
                                 <span className="mono tracking-[0.2em] uppercase text-[var(--accent)] glow-text">FREQ_{station?.frequency || '100.1'}</span>
+                            </div>
+                            <div className="divider-nano">|</div>
+                            {/* Tactical Zoom Controller */}
+                            <div className="flex items-center gap-1.5 border border-white/10 px-2 py-0.5 rounded bg-black/40 text-[8px] mono">
+                                <span className="text-white/40 uppercase tracking-widest mr-1">ZOOM:</span>
+                                <button type="button" onClick={() => setZoomState(z => Math.max(50, z - 10))} className="text-white/60 hover:text-white px-1 font-bold">-</button>
+                                <span className="text-white font-black">{zoomState}%</span>
+                                <button type="button" onClick={() => setZoomState(z => Math.min(120, z + 10))} className="text-white/60 hover:text-white px-1 font-bold">+</button>
                             </div>
                             <div className="divider-nano">|</div>
                             <div className="session-info-inline">
@@ -1548,6 +1571,16 @@ const DJMixerPlayer = ({
                     <>
                         {/* LISTENER NOW PLAYING PANE */}
                         <div className="listener-now-playing-pane glass-pane">
+                            {/* Live Frequencies Header Zoom Controller */}
+                            <div className="w-full border-b border-white/5 bg-black/40 px-3 py-2 flex items-center justify-between text-[8px] font-mono text-[var(--accent)] select-none shrink-0 relative z-20">
+                                <span className="uppercase tracking-widest font-black">FREQ_{station?.frequency || '100.1'} BROADCAST</span>
+                                <div className="flex items-center gap-1.5 border border-white/10 px-2 py-0.5 rounded bg-black/40 text-[8px] mono">
+                                    <span className="text-white/40 uppercase tracking-widest mr-1">ZOOM:</span>
+                                    <button type="button" onClick={() => setZoomState(z => Math.max(50, z - 10))} className="text-white/60 hover:text-white px-1 font-bold">-</button>
+                                    <span className="text-white font-black">{zoomState}%</span>
+                                    <button type="button" onClick={() => setZoomState(z => Math.min(120, z + 10))} className="text-white/60 hover:text-white px-1 font-bold">+</button>
+                                </div>
+                            </div>
                         <div className="listener-artwork-wrapper">
                             <div className="listener-artwork-glow"></div>
                             <img 
@@ -1613,11 +1646,13 @@ const DJMixerPlayer = ({
                             )}
                         </div>
 
-                        <div className="listener-mode-toggle">
-                            <button onClick={() => setViewMode('MIXER')} className="toggle-view-btn-main">
-                                <Settings size={14} className="mr-2 inline" /> {t('SYS_CONF')}
-                            </button>
-                        </div>
+                        {!station && (
+                            <div className="listener-mode-toggle">
+                                <button onClick={() => setViewMode('MIXER')} className="toggle-view-btn-main">
+                                    <Settings size={14} className="mr-2 inline" /> {t('SYS_CONF')}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </>
             )}

@@ -215,6 +215,7 @@ function App() {
   const [playlistTrackToAdd, setPlaylistTrackToAdd] = useState(null);
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const { showNotification } = useNotification();
+  const [zoomState, setZoomState] = useState(100);
 
   const [deferredPrompt, setDeferredPrompt] = useState(null);
 
@@ -263,6 +264,19 @@ function App() {
   const [appBackgroundColor, setAppBackgroundColor] = useState(() => {
     return localStorage.getItem('appBackgroundColor') || (user?.backgroundColor || user?.BackgroundColor) || '#000000';
   });
+
+  const [lowSpecMode, setLowSpecMode] = useState(() => {
+    return localStorage.getItem('fatale_low_spec') === 'true';
+  });
+
+  useEffect(() => {
+    if (lowSpecMode) {
+      document.documentElement.classList.add('low-spec');
+    } else {
+      document.documentElement.classList.remove('low-spec');
+    }
+    localStorage.setItem('fatale_low_spec', String(lowSpecMode));
+  }, [lowSpecMode]);
 
   const { language, setLanguage, t } = useLanguage();
 
@@ -2608,6 +2622,17 @@ function App() {
     setYoutubePlayer(null);
   };
 
+  const navigateToProfile = (id, initialModal = null) => {
+    console.log(`[NAV_PROTOCOL] Navigating to: ${id || 'SELF'} | Trigger: ${initialModal}`);
+    console.trace('[NAV_TRACE]');
+    setViewingUserId(id);
+    setProfileInitialModal(initialModal);
+    if (activeView !== 'profile' && activeView !== 'login') {
+      setPreviousView(activeView);
+    }
+    setViewOriginal('profile');
+  };
+
   // Global Key Listener for App-level Modals, Navigation, and Hotkeys
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -2662,17 +2687,6 @@ function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [tippingArtist, economyTrack, playlistTrackToAdd, activeView, handleLogout, navigateToProfile, setView]);
-
-  const navigateToProfile = (id, initialModal = null) => {
-    console.log(`[NAV_PROTOCOL] Navigating to: ${id || 'SELF'} | Trigger: ${initialModal}`);
-    console.trace('[NAV_TRACE]');
-    setViewingUserId(id);
-    setProfileInitialModal(initialModal);
-    if (activeView !== 'profile' && activeView !== 'login') {
-      setPreviousView(activeView);
-    }
-    setViewOriginal('profile');
-  };
 
   const handleSendMessage = (message) => {
     if (!message || !message.trim()) return;
@@ -3121,6 +3135,8 @@ function App() {
                onMixerStateChange={handleMixerStateChange}
                audioCtx={audioCtx.current}
                broadcastDest={broadcastDestRef.current}
+               lowSpecMode={lowSpecMode}
+               setLowSpecMode={setLowSpecMode}
            />
           </>
         )}
@@ -3441,6 +3457,8 @@ function App() {
               onMixerStateChange={handleMixerStateChange}
               audioCtx={audioCtx.current}
               broadcastDest={broadcastDestRef.current}
+              zoomState={zoomState}
+              setZoomState={setZoomState}
             />
             
             {/* Close Mixer Toggle */}
@@ -3565,7 +3583,9 @@ const Dashboard = React.memo(({
   onEndBroadcast,
   onMixerStateChange,
   audioCtx,
-  broadcastDest
+  broadcastDest,
+  lowSpecMode,
+  setLowSpecMode
 }) => {
   const { t } = useLanguage();
   const { showNotification } = useNotification();
@@ -3680,18 +3700,7 @@ const Dashboard = React.memo(({
       className="flex flex-col h-screen h-full w-full overflow-hidden relative tui-crt"
       style={{ backgroundColor: 'rgb(var(--theme-bg-rgb))' }}
     >
-      {/* Global Background Video (Dynamic Wallpaper) */}
-      {user && (user.wallpaperVideoUrl || user.WallpaperVideoUrl) && (
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          key={user.wallpaperVideoUrl || user.WallpaperVideoUrl}
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-20 z-0"
-          src={getMediaUrl(user.wallpaperVideoUrl || user.WallpaperVideoUrl)}
-        />
-      )}
+
 
       {/* Noise Texture & Scanlines */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-0 mix-blend-screen" />
@@ -3880,10 +3889,26 @@ const Dashboard = React.memo(({
                 </span>
                 <span>]</span>
               </div>
-              <div className="flex items-center gap-2 text-white/40">
-                <span>SEC: {user?.sectorId || 'A'}</span>
-                <span>SYS_TEMP: 42°C</span>
-              </div>
+              {activeView === 'player' && (
+                <div className="flex items-center gap-1.5 border border-[rgba(var(--theme-primary-rgb),0.3)] px-2 py-0.5 rounded bg-black/40 text-[9px] font-mono text-[var(--theme-color)] pointer-events-auto shadow-[0_0_8px_rgba(var(--theme-primary-rgb),0.1)]">
+                  <span className="opacity-40 uppercase tracking-widest text-[8px] mr-1">ZOOM:</span>
+                  <button 
+                    type="button" 
+                    onClick={() => setZoomState(z => Math.max(50, z - 10))} 
+                    className="text-[var(--theme-color)]/60 hover:text-[var(--theme-color)] px-1 font-bold transition-all cursor-pointer"
+                  >
+                    -
+                  </button>
+                  <span className="text-[var(--theme-color)] font-black">{zoomState}%</span>
+                  <button 
+                    type="button" 
+                    onClick={() => setZoomState(z => Math.min(120, z + 10))} 
+                    className="text-[var(--theme-color)]/60 hover:text-[var(--theme-color)] px-1 font-bold transition-all cursor-pointer"
+                  >
+                    +
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Main content viewport */}
@@ -3920,6 +3945,7 @@ const Dashboard = React.memo(({
                   setIngestMode={setIngestMode}
                   onLogout={onLogout}
                   hasNewMessages={hasNewMessages}
+                  lowSpecMode={lowSpecMode}
                 />
               </motion.div>
             )}
@@ -3930,7 +3956,7 @@ const Dashboard = React.memo(({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3, ease: 'easeInOut' }}
-                className={`w-full h-full ${currentTrackIndex >= 0 && !isMiniPlayerMinimized ? 'pb-[100px] lg:pb-0' : 'pb-0'}`}
+                className={`w-full h-full ${currentTrackIndex >= 0 && !isMiniPlayerMinimized ? 'pb-[100px] lg:pb-24' : 'pb-0'}`}
               >
                 <React.Suspense fallback={<div className="w-full h-full bg-black animate-pulse" />}>
                   <ShoppingView />
@@ -3954,6 +3980,8 @@ const Dashboard = React.memo(({
                   setAppThemeColor={setAppThemeColor} 
                   appBackgroundColor={appBackgroundColor} 
                   setAppBackgroundColor={setAppBackgroundColor} 
+                  lowSpecMode={lowSpecMode}
+                  setLowSpecMode={setLowSpecMode}
                 />
               </motion.div>
             )}
@@ -4090,6 +4118,8 @@ const Dashboard = React.memo(({
                   onMixerStateChange={onMixerStateChange}
                   audioCtx={audioCtx}
                   broadcastDest={broadcastDest}
+                  zoomState={zoomState}
+                  setZoomState={setZoomState}
                 />
               </motion.div>
             )}
@@ -4218,6 +4248,9 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
   }
 
   const isMobile = window.innerWidth < 1024;
+  const sidebarWidthClass = activeView === 'discovery'
+    ? 'lg:left-4'
+    : (isSidebarCollapsed ? 'lg:left-[6.5rem]' : 'lg:left-[17.5rem]');
 
   return (
     <motion.div
@@ -4225,10 +4258,10 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 100, opacity: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 28 }}
-      className={`fixed bottom-[24px] lg:bottom-8 transition-[left] duration-500 left-0 right-0 ${isSidebarCollapsed ? 'lg:left-[6rem]' : 'lg:left-[17rem]'} lg:right-4 backdrop-blur-3xl z-[100] ${isMessages
-        ? 'border-t border-white/5 lg:border lg:rounded-sm lg:shadow-none'
-        : 'border-t border-white/5 lg:border-white/5 lg:rounded-md shadow-[0_-15px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_10px_60px_-15px_rgba(var(--theme-primary-rgb),0.15)]'
-        } group/player overflow-hidden flex ${isMobile ? 'flex-col gap-2.5 p-3' : 'flex-row items-center gap-3 p-1.5 lg:p-3 pb-3 lg:pb-3'}`}
+      className={`fixed bottom-[24px] lg:bottom-8 transition-[left] duration-500 left-0 right-0 ${sidebarWidthClass} lg:right-4 backdrop-blur-3xl z-[100] ${isMessages
+        ? 'border-t border-white/5 lg:border lg:border-white/10 lg:rounded-sm lg:shadow-none'
+        : 'border-t border-white/5 lg:border lg:border-white/10 lg:rounded-md shadow-[0_-15px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_10px_60px_-15px_rgba(var(--theme-primary-rgb),0.15)]'
+        } group/player overflow-hidden flex ${isMobile ? 'flex-col gap-2.5 p-3' : 'flex-row items-center gap-3 p-1.5 lg:py-1.5 lg:px-3'}`}
       style={{
         backgroundColor: 'rgba(var(--theme-bg-rgb), 0.95)',
         paddingBottom: isMobile ? 'calc(10px + env(safe-area-inset-bottom, 12px))' : undefined
@@ -4253,21 +4286,21 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
       </button>
 
       {/* Track Info (Click to expand) */}
-      <div className={`flex items-center gap-3 lg:gap-4 flex-1 cursor-pointer group/info min-w-0 z-10 relative ${isMobile ? 'w-full pr-6' : ''}`} onClick={onExpand}>
-        <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-sm border flex items-center justify-center relative overflow-hidden shrink-0 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.5)] ${isMessages ? 'bg-black border-white/5' : 'bg-[#0a0a0a] border-white/10 group-hover/info:border-fatale/50 group-hover/info:shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.2)]'}`}>
+      <div className={`flex items-center gap-3 lg:gap-3 flex-1 cursor-pointer group/info min-w-0 z-10 relative ${isMobile ? 'w-full pr-6' : ''}`} onClick={onExpand}>
+        <div className={`w-10 h-10 lg:w-8 lg:h-8 rounded-sm border flex items-center justify-center relative overflow-hidden shrink-0 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.5)] ${isMessages ? 'bg-black border-white/5' : 'bg-[#0a0a0a] border-white/10 group-hover/info:border-fatale/50 group-hover/info:shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.2)]'}`}>
           {activeStation ? (
-            <Radio size={18} className={`transition-all duration-500 z-10 relative text-fatale`} />
+            <Radio size={14} className={`transition-all duration-500 z-10 relative text-fatale`} />
           ) : track?.cover || track?.thumbnail ? (
             <img src={track.cover || track.thumbnail} alt="Cover" className="w-full h-full object-cover filter brightness-[0.7] contrast-[1.2] saturate-[0.8] group-hover/info:filter-none transition-all duration-500 z-10 relative" />
           ) : (
-            <Music size={18} className={`transition-all duration-500 z-10 relative ${isMessages ? 'text-white/50' : 'text-fatale/40 group-hover/info:text-fatale group-hover/info:drop-shadow-[0_0_8px_rgb(var(--theme-primary))]'}`} />
+            <Music size={14} className={`transition-all duration-500 z-10 relative ${isMessages ? 'text-white/50' : 'text-fatale/40 group-hover/info:text-fatale group-hover/info:drop-shadow-[0_0_8px_rgb(var(--theme-primary))]'}`} />
           )}
         </div>
         <div className="flex-1 min-w-0 overflow-hidden flex flex-col justify-center gap-0.5">
-          <h4 className={`text-[11px] lg:text-[13px] font-black uppercase truncate transition-colors leading-none tracking-wide ${isMessages ? 'text-white' : 'text-white group-hover/info:text-transparent group-hover/info:bg-clip-text group-hover/info:bg-gradient-to-r group-hover/info:from-white group-hover/info:to-fatale'}`}>
+          <h4 className={`text-[11px] lg:text-[11px] font-black uppercase truncate transition-colors leading-none tracking-wide ${isMessages ? 'text-white' : 'text-white group-hover/info:text-transparent group-hover/info:bg-clip-text group-hover/info:bg-gradient-to-r group-hover/info:from-white group-hover/info:to-fatale'}`}>
             {activeStation ? activeStation.stationName || `Station ${activeStation.stationId}` : track?.title || 'No Track'}
           </h4>
-          <p className={`text-[9px] lg:text-[10px] font-bold uppercase truncate tracking-widest leading-none flex items-center gap-2 ${isMessages ? 'text-white/40' : 'text-fatale/50 group-hover/info:text-fatale/90'}`}>
+          <p className={`text-[9px] lg:text-[9px] font-bold uppercase truncate tracking-widest leading-none flex items-center gap-2 ${isMessages ? 'text-white/40' : 'text-fatale/50 group-hover/info:text-fatale/90'}`}>
             {activeStation ? (
               <>
                 {isReceivingLiveAudio ? (
@@ -4384,33 +4417,33 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
       ) : (
         <>
           {/* Controls - Desktop */}
-          <div className="flex items-center gap-4 lg:gap-8 px-2 lg:px-6 shrink-0 z-10 relative">
+          <div className="flex items-center gap-3 lg:gap-4 px-2 lg:px-4 shrink-0 z-10 relative">
             <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="text-white/70 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
-              <SkipBack size={18} fill="currentColor" />
+              <SkipBack size={14} fill="currentColor" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
-              className={`w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-sm border transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(0,0,0,0.4)] ${isMessages 
+              className={`w-8 h-8 lg:w-8 lg:h-8 flex items-center justify-center rounded-sm border transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(0,0,0,0.4)] ${isMessages 
                 ? 'bg-transparent border-white/40 text-white hover:border-white/80' 
                 : 'bg-white/10 border-white/30 text-white hover:bg-fatale/20 hover:border-fatale/70 hover:shadow-[0_0_20px_rgba(var(--theme-primary-rgb),0.3)]'}`}
             >
               {isPlaying ? (
-                <Pause size={18} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
+                <Pause size={14} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
               ) : (
-                <Play size={18} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
+                <Play size={14} fill="currentColor" className="drop-shadow-[0_0_8px_currentColor]" />
               )}
             </button>
             <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="text-white/70 hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all">
-              <SkipForward size={18} fill="currentColor" />
+              <SkipForward size={14} fill="currentColor" />
             </button>
 
             {isBroadcasting && (
               <button 
                 onClick={(e) => { e.stopPropagation(); onOpenMixer(); }}
-                className="ml-2 p-2 bg-fatale/10 border border-fatale/30 text-fatale rounded-sm hover:bg-fatale hover:text-black transition-all shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.2)]"
+                className="ml-2 p-1.5 bg-fatale/10 border border-fatale/30 text-fatale rounded-sm hover:bg-fatale hover:text-black transition-all shadow-[0_0_15px_rgba(var(--theme-primary-rgb),0.2)]"
                 title="OPEN_MIXER_CONSOLE"
               >
-                <Radio size={16} className="animate-pulse" />
+                <Radio size={14} className="animate-pulse" />
               </button>
             )}
           </div>
@@ -6293,7 +6326,9 @@ const PlayerContent = ({
   onPlayTrackAtIndex,
   onMixerStateChange,
   audioCtx,
-  broadcastDest
+  broadcastDest,
+  zoomState,
+  setZoomState
 }) => {
   const isDesktop = window.innerWidth >= 1024;
   const isMobile = !isDesktop;
@@ -6340,6 +6375,8 @@ const PlayerContent = ({
           onMixerStateChange={onMixerStateChange}
           audioCtx={audioCtx}
           broadcastDest={broadcastDest}
+          zoomState={zoomState}
+          setZoomState={setZoomState}
         />
       ) : (
         <IPodPlayer

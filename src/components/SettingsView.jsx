@@ -9,7 +9,7 @@ import { useNotification } from '../contexts/NotificationContext';
 import API from '../services/api';
 import { SECTORS } from '../constants';
 
-export default function SettingsView({ user, setUser, appThemeColor, setAppThemeColor, appBackgroundColor, setAppBackgroundColor }) {
+export default function SettingsView({ user, setUser, appThemeColor, setAppThemeColor, appBackgroundColor, setAppBackgroundColor, lowSpecMode, setLowSpecMode }) {
     const { language, setLanguage, t } = useLanguage();
     const { showNotification } = useNotification();
     const [activeSection, setActiveSection] = React.useState('language');
@@ -512,6 +512,35 @@ export default function SettingsView({ user, setUser, appThemeColor, setAppTheme
                                                     )}
                                                 </button>
                                             ))}
+                                        </div>
+                                    </div>
+
+                                    {/* System Performance (Low Spec Mode) */}
+                                    <div className="pt-4 border-t border-white/5 space-y-4">
+                                        <h3 className="text-[9px] font-black text-fatale uppercase tracking-widest">System Performance</h3>
+                                        <div className="flex items-center justify-between p-4 border border-white/5 bg-white/[0.01]">
+                                            <div className="space-y-1 flex items-start gap-3">
+                                                <Zap size={16} className="text-fatale mt-0.5" />
+                                                <div>
+                                                    <span className="text-[9px] font-black uppercase tracking-wider text-white">Performance Mode (Low Spec)</span>
+                                                    <p className="text-[7px] font-mono text-white/30 uppercase tracking-widest">Disables intensive 3D globe, animations, blur effects, and glows for older CPUs/GPUs</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const nextVal = !lowSpecMode;
+                                                    setLowSpecMode(nextVal);
+                                                    showNotification("PERF_MODE_UPDATED", `Performance Mode (Low Spec) ${nextVal ? "ENABLED" : "DISABLED"}`, "info");
+                                                }}
+                                                className={`w-10 h-5 border transition-all flex items-center p-0.5 ${
+                                                    lowSpecMode ? 'border-fatale bg-fatale/20' : 'border-white/10 bg-transparent'
+                                                }`}
+                                            >
+                                                <div className={`w-3.5 h-3.5 transition-all ${
+                                                    lowSpecMode ? 'translate-x-5 bg-fatale' : 'translate-x-0 bg-white/40'
+                                                }`} />
+                                            </button>
                                         </div>
                                     </div>
 

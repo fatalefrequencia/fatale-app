@@ -56,7 +56,7 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
     const [isDeleting, setIsDeleting] = useState(false);
     const [blinkCount, setBlinkCount] = useState(0);
     const [showCursor, setShowCursor] = useState(true);
-    const fullText = "system.uplink: fatale.fm";
+    const fullText = "fatale.fm";
 
     useEffect(() => {
         let timer;
@@ -297,22 +297,12 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                 transition={{ duration: 0.8, ease: 'easeOut' }}
                 className="z-10 w-full max-w-[420px] relative"
             >
-                {/* Glowing red ASCII Logo */}
-                <pre className="text-[6px] md:text-[7px] leading-tight font-mono text-center text-fatale crt-text-glow mb-4 select-none">
-{`  ______   ______  _______  ______  _       ______
- |  ____| |  __  | |__   __| |  __  | |     |  ____|
- |  |__   |  |__| |    | |   |  |__| | |     |  |__
- |   __|  |   __  |    | |   |   __  | |     |   __|
- |  |     |  |  | |    | |   |  |  | | |____ |  |____
- |_ |     |_ |  |_|    |_|   |_ |  |_|______||______|`}
-                </pre>
-
-                {/* Uplink connection state (typewriter) */}
-                <div className="text-center mb-6 h-6 flex items-center justify-center">
-                    <p className="text-[9px] font-bold uppercase tracking-widest font-mono text-fatale/75">
+                {/* Header with Typewriter "fatale.fm" */}
+                <div className="text-center mb-6 h-12 flex items-center justify-center">
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-widest text-[#ff003c] drop-shadow-[0_0_10px_#ff003c] font-mono lowercase crt-text-glow">
                         {displayText}
                         <span className={`crt-cursor-glow ${showCursor ? 'opacity-100' : 'opacity-0'} transition-opacity duration-75 font-normal ml-0.5`}>_</span>
-                    </p>
+                    </h1>
                 </div>
 
                 <div

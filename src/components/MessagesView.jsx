@@ -416,9 +416,6 @@ export const MessagesView = ({ user, navigateToProfile, initialChatUser, isMiniP
                         <div className="absolute top-0 right-0 w-64 h-64 bg-fatale/5 blur-[120px] rounded-full pointer-events-none" />
                         <div className="absolute bottom-0 left-0 w-64 h-64 bg-fatale/5 blur-[120px] rounded-full pointer-events-none" />
 
-                        {/* Scanline Effect Overlay */}
-                        <div className="absolute inset-0 pointer-events-none opacity-[0.02] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
-
                         <div className="flex justify-between items-center mb-8 relative">
                             <div>
                                 <div className="text-[10px] font-black text-fatale/50 uppercase tracking-[0.3em] font-mono mb-1">// {t('SUBSPACE_SYNC')}</div>
