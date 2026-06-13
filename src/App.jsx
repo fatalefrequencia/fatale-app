@@ -3137,6 +3137,8 @@ function App() {
                broadcastDest={broadcastDestRef.current}
                lowSpecMode={lowSpecMode}
                setLowSpecMode={setLowSpecMode}
+               zoomState={zoomState}
+               setZoomState={setZoomState}
            />
           </>
         )}
@@ -3585,7 +3587,9 @@ const Dashboard = React.memo(({
   audioCtx,
   broadcastDest,
   lowSpecMode,
-  setLowSpecMode
+  setLowSpecMode,
+  zoomState,
+  setZoomState
 }) => {
   const { t } = useLanguage();
   const { showNotification } = useNotification();
