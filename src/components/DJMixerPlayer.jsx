@@ -1090,9 +1090,8 @@ const DJMixerPlayer = ({
             <div 
                 className="mixer-hud-wrapper custom-scrollbar"
                 style={{ 
-                    transform: `scale(${zoomState / 100})`, 
-                    transformOrigin: 'top center',
-                    transition: 'transform 0.15s ease-out'
+                    zoom: zoomState / 100,
+                    transition: 'zoom 0.15s ease-out'
                 }}
             >
                 {viewMode === 'MIXER' ? (

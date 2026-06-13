@@ -8,10 +8,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     padding: 20px;
     user-select: none;
-    overflow-y: auto; /* Allow vertical scroll if elements exceed viewport */
+    overflow-y: auto;
+    overflow-x: auto;
 }
 
 .dj-mixer-overlay.is-mobile-landscape {
@@ -45,13 +46,15 @@
     width: 98%;
     max-width: 1600px;
     height: auto;
-    max-height: 95vh;
+    max-height: none;
     display: flex;
     flex-direction: column;
     gap: 15px;
     padding: 20px;
     position: relative;
     z-index: 10;
+    margin-top: auto;
+    margin-bottom: auto;
 }
 
 /* Prevent layout clipping and allow full scrolling on smaller laptop screen heights */
