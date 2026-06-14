@@ -1732,10 +1732,10 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         </div>
                                     )
                                 ) : (
-                                    <div className="space-y-4 animate-in fade-in duration-500">
+                                    <>
                                         {/* User Playlists */}
                                         <div>
-                                            <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2 text-colorLabel">TUS_PLAYLISTS</div>
+                                            <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2 text-colorLabel">{t('YOUR_PLAYLISTS')}</div>
                                             {filteredUserPlaylists.length > 0 ? filteredUserPlaylists.map(p => (
                                                 <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-colorDataPrimary/10 border border-transparent hover:border-colorBorder group cursor-pointer transition-all" onClick={async () => {
                                                     setSelectedPlaylist(p);
@@ -1759,13 +1759,13 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                     <Play size={10} className="text-fatale opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 </div>
                                             )) : (
-                                                <div className="text-[8px] opacity-30 px-2 py-1">NO_PLAYLISTS_CREATED</div>
+                                                <div className="text-[8px] opacity-30 px-2 py-1">{t('NO_PLAYLISTS_CREATED')}</div>
                                             )}
                                         </div>
 
                                         {/* Recommended Playlists */}
                                         <div>
-                                            <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2 text-colorLabel">RECOMENDADAS</div>
+                                            <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2 text-colorLabel">{t('RECOMMENDED')}</div>
                                             {filteredTrendingPlaylists.length > 0 ? filteredTrendingPlaylists.map(p => (
                                                 <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-colorDataPrimary/10 border border-transparent hover:border-colorBorder group cursor-pointer transition-all" onClick={async () => {
                                                     setSelectedPlaylist(p);
@@ -1789,10 +1789,10 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                     <Play size={10} className="text-fatale opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 </div>
                                             )) : (
-                                                <div className="text-[8px] opacity-30 px-2 py-1">NO_RECOMMENDATIONS_AVAILABLE</div>
+                                                <div className="text-[8px] opacity-30 px-2 py-1">{t('NO_RECOMMENDATIONS_AVAILABLE')}</div>
                                             )}
                                         </div>
-                                    </div>
+                                    </>
                                 )}
                             </HUDWidget>
                         </div>
@@ -2338,7 +2338,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                         </div>
                                                     </div>
                                                 )) : (
-                                                    <div className="text-[8px] opacity-40 text-center py-4">NO_SIGNALS_FOUND</div>
+                                                    <div className="text-[8px] opacity-40 text-center py-4">{t('NO_SIGNALS_FOUND')}</div>
                                                 )}
                                             </div>
                                         )
@@ -2346,7 +2346,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         <div className="space-y-4 animate-in fade-in duration-500">
                                             {/* User Playlists */}
                                             <div>
-                                                <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">TUS_PLAYLISTS</div>
+                                                <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">{t('YOUR_PLAYLISTS')}</div>
                                                 {filteredUserPlaylists.slice(0, 15).length > 0 ? filteredUserPlaylists.slice(0, 15).map(p => (
                                                     <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-fatale/10 border border-transparent hover:border-fatale/20 group cursor-pointer transition-all" onClick={async () => {
                                                         setSelectedPlaylist(p);
@@ -2370,13 +2370,13 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                         <Play size={10} className="text-fatale opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     </div>
                                                 )) : (
-                                                    <div className="text-[8px] opacity-30 px-2 py-1">NO_PLAYLISTS_CREATED</div>
+                                                    <div className="text-[8px] opacity-30 px-2 py-1">{t('NO_PLAYLISTS_CREATED')}</div>
                                                 )}
                                             </div>
 
                                             {/* Recommended Playlists */}
                                             <div>
-                                                <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">RECOMENDADAS</div>
+                                                <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">{t('RECOMMENDED')}</div>
                                                 {filteredTrendingPlaylists.slice(0, 15).length > 0 ? filteredTrendingPlaylists.slice(0, 15).map(p => (
                                                     <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-fatale/10 border border-transparent hover:border-fatale/20 group cursor-pointer transition-all" onClick={async () => {
                                                         setSelectedPlaylist(p);
@@ -2400,7 +2400,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                                         <Play size={10} className="text-fatale opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     </div>
                                                 )) : (
-                                                    <div className="text-[8px] opacity-30 px-2 py-1">NO_RECOMMENDATIONS_AVAILABLE</div>
+                                                    <div className="text-[8px] opacity-30 px-2 py-1">{t('NO_RECOMMENDATIONS_AVAILABLE')}</div>
                                                 )}
                                             </div>
                                         </div>

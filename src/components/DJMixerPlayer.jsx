@@ -1984,14 +1984,14 @@ const DJMixerPlayer = ({
                                                 /* CREATE PLAYLIST VIEW */
                                                 <div className="create-playlist-view space-y-4 max-h-[500px] overflow-y-auto custom-scrollbar p-1">
                                                     <div className="flex justify-between items-center mb-2">
-                                                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)]">// CREAR PLAYLIST</div>
+                                                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)]">// {t('CREATE_PLAYLIST')}</div>
                                                         <div className="flex gap-2">
                                                             <button 
                                                                 onClick={handleSavePlaylist}
                                                                 disabled={!newPlaylistName || isSavingPlaylist}
                                                                 className={`px-2 py-0.5 border ${(!newPlaylistName || isSavingPlaylist) ? 'border-white/10 text-white/30 cursor-not-allowed' : 'border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)] hover:text-black'} transition-all font-mono text-[9px] font-black uppercase flex items-center gap-1`}
                                                             >
-                                                                {isSavingPlaylist ? '...' : <Check size={8} />} {isSavingPlaylist ? 'Guardando' : 'Guardar'}
+                                                                {isSavingPlaylist ? '...' : <Check size={8} />} {isSavingPlaylist ? t('SAVING') : t('SAVE')}
                                                             </button>
                                                             <button 
                                                                 onClick={() => setIsCreatingPlaylist(false)} 
@@ -2005,7 +2005,7 @@ const DJMixerPlayer = ({
                                                     <div className="space-y-2">
                                                         <input 
                                                             type="text" 
-                                                            placeholder="Nombre de la playlist..." 
+                                                            placeholder={t('PLAYLIST_NAME_PLACEHOLDER')} 
                                                             value={newPlaylistName}
                                                             onChange={(e) => setNewPlaylistName(e.target.value)}
                                                             className="w-full bg-black border border-white/10 px-3 py-2 text-white text-xs font-mono focus:border-[var(--accent)] outline-none"
@@ -2013,7 +2013,7 @@ const DJMixerPlayer = ({
                                                     </div>
 
                                                     <div className="space-y-2">
-                                                        <div className="text-[9px] font-black uppercase tracking-widest text-white/50">// IMAGEN DE PORTADA</div>
+                                                        <div className="text-[9px] font-black uppercase tracking-widest text-white/50">// {t('COVER_IMAGE')}</div>
                                                         <div className="flex gap-4 items-center">
                                                             <div className="w-20 h-20 bg-black border border-white/10 flex-shrink-0 flex items-center justify-center overflow-hidden">
                                                                 {playlistImage ? (
@@ -2024,7 +2024,7 @@ const DJMixerPlayer = ({
                                                             </div>
                                                             <div className="flex-1">
                                                                 <label className="px-3 py-1.5 border border-white/20 text-white hover:bg-white/5 cursor-pointer transition-all font-mono text-[10px] font-black uppercase">
-                                                                    Subir Imagen
+                                                                    {t('UPLOAD_IMAGE_BTN')}
                                                                     <input 
                                                                         type="file" 
                                                                         accept="image/*" 
@@ -2041,14 +2041,14 @@ const DJMixerPlayer = ({
                                                                         }}
                                                                     />
                                                                 </label>
-                                                                <div className="text-[8px] text-white/30 mt-1 font-mono">Se ajustará automáticamente a un cuadrado.</div>
+                                                                <div className="text-[8px] text-white/30 mt-1 font-mono">{t('SQUARE_ADJUST_HELP')}</div>
                                                             </div>
                                                         </div>
                                                     </div>
 
                                                     {/* Liked Songs Section */}
                                                     <div className="space-y-2">
-                                                        <div className="text-[9px] font-black uppercase tracking-widest text-white/50">// AGREGAR TUS LIKES</div>
+                                                        <div className="text-[9px] font-black uppercase tracking-widest text-white/50">// {t('ADD_YOUR_LIKES')}</div>
                                                         <div className="max-h-40 overflow-y-auto border border-white/5 bg-black/20 p-2 space-y-1">
                                                             {libraryTracks.filter(t => t.isLiked).map((track, i) => (
                                                                 <div key={`liked-${i}`} className="flex items-center justify-between text-xs p-1 hover:bg-white/[0.02]">
@@ -2155,7 +2155,7 @@ const DJMixerPlayer = ({
                                                                         }}
                                                                         className={`px-1.5 py-0.5 border ${selectedTracksForNewPlaylist.includes(track.id || track.Id) ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-white/10 text-white/30'} text-[8px] font-black uppercase`}
                                                                     >
-                                                                        {selectedTracksForNewPlaylist.includes(track.id || track.Id) ? 'QUITAR' : 'SUMAR'}
+                                                                        {selectedTracksForNewPlaylist.includes(track.id || track.Id) ? t('REMOVE') : t('ADD')}
                                                                     </button>
                                                                 </div>
                                                             ))}
@@ -2167,7 +2167,7 @@ const DJMixerPlayer = ({
                                                         disabled={!newPlaylistName || isSavingPlaylist}
                                                         className={`w-full py-2 ${(!newPlaylistName || isSavingPlaylist) ? 'bg-white/10 text-white/30 cursor-not-allowed' : 'bg-[var(--accent)] text-black hover:bg-[var(--accent)]/90'} font-black uppercase text-xs transition-all`}
                                                     >
-                                                        {isSavingPlaylist ? '...' : 'Guardar Playlist'}
+                                                        {isSavingPlaylist ? '...' : t('SAVE')}
                                                     </button>
                                                     {!newPlaylistName && (
                                                         <div className="text-[8px] text-[var(--accent)]/60 uppercase text-center mt-2 font-mono">
@@ -2179,12 +2179,12 @@ const DJMixerPlayer = ({
                                                 /* LIST VIEW */
                                                 <>
                                                     <div className="flex justify-between items-center mb-2">
-                                                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)]">// MIS LISTAS</div>
+                                                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)]">// {t('YOUR_PLAYLISTS')}</div>
                                                         <div className="flex gap-2">
                                                             {selectedPlaylistsForDeletion.length > 0 && (
                                                                 <button 
                                                                     onClick={async () => {
-                                                                        if (confirm(`¿Borrar ${selectedPlaylistsForDeletion.length} playlists seleccionadas?`)) {
+                                                                        if (confirm(`${t('DELETE_PLAYLIST')} (${selectedPlaylistsForDeletion.length})?`)) {
                                                                             const idsToDelete = [...selectedPlaylistsForDeletion];
                                                                             setSelectedPlaylistsForDeletion([]);
                                                                             
