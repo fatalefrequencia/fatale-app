@@ -1880,8 +1880,8 @@
     }
 
     .listener-now-playing-pane {
-        flex: 0 0 35% !important;
-        min-width: 350px !important;
+        flex: 0 0 60% !important;
+        max-width: 60% !important;
         height: auto !important;
     }
 
