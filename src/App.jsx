@@ -3886,7 +3886,7 @@ const Dashboard = React.memo(({
                 </span>
                 <span>]</span>
               </div>
-              {activeView === 'player' && (
+              {(activeView === 'player' || activeView === 'feed') && (
                 <div className="flex items-center gap-1.5 border border-[rgba(var(--theme-primary-rgb),0.3)] px-2 py-0.5 rounded bg-black/40 text-[9px] font-mono text-[var(--theme-color)] pointer-events-auto shadow-[0_0_8px_rgba(var(--theme-primary-rgb),0.1)]">
                   <span className="opacity-40 uppercase tracking-widest text-[8px] mr-1">ZOOM:</span>
                   <button 
@@ -4012,6 +4012,7 @@ const Dashboard = React.memo(({
                   onExpandContent={onExpandContent}
                   libraryTracks={libraryTracks}
                   onEndBroadcast={onEndBroadcast}
+                  zoomState={zoomState}
                 />
               </motion.div>
              )}
@@ -4650,7 +4651,8 @@ const FeedContent = React.memo(({
   onExpandContent,
   libraryTracks,
   onEndBroadcast,
-  onSendMessage
+  onSendMessage,
+  zoomState = 100
 }) => {
   const { language } = useLanguage();
   const [feed, setFeed] = useState([]);
@@ -5054,7 +5056,15 @@ const FeedContent = React.memo(({
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col lg:flex-row h-full font-mono relative">
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      className="flex flex-col lg:flex-row h-full font-mono relative"
+      style={{
+        zoom: zoomState ? zoomState / 100 : 1,
+        transition: 'zoom 0.15s ease-out'
+      }}
+    >
 
       {/* Izquierda: Acciones */}
       <div className="hidden lg:block w-72 p-6 space-y-6 border-r border-fatale/5 relative z-20">
@@ -5844,7 +5854,7 @@ const FeedContent = React.memo(({
                         disabled={isSubmittingComment || !commentText.trim()}
                         className="w-full sm:w-auto px-8 py-2.5 bg-fatale/10 border border-fatale/40 text-fatale text-[10px] font-black uppercase tracking-[0.3em] hover:bg-fatale hover:text-black hover:shadow-[0_0_30px_rgba(var(--theme-primary-rgb),0.3)] transition-all disabled:opacity-20 text-center"
                       >
-                        {isSubmittingComment ? 'TRANSMITTING...' : '[ BROADCAST_PAYLOAD ]'}
+                        {isSubmittingComment ? 'TRANSMITTING...' : '[ POST_COMMENT ]'}
                       </button>
                     </div>
                   </div>

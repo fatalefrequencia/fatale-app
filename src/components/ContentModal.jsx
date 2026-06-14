@@ -150,16 +150,20 @@ const ContentModal = ({
             >
                 {/* Header */}
                 <div className="flex justify-between items-center p-4 sm:p-6 border-b border-white/5 bg-black/40 relative z-10">
-                    <div className="flex items-center gap-3" style={{ color: activeTheme }}>
-                        {isVideo && <Video size={18} />}
-                        {!isVideo && <Camera size={18} />}
-                        <div className="flex flex-col">
-                            <span className="mono text-[10px] font-black tracking-[0.3em] uppercase">
-                                {title === t('MODIFY_IDENTITY') ? t('CORE_IDENTITY_MGMT') : ['JOURNAL', 'TEXT'].includes(normalizedType) ? t('ARCHIVED_LOG_ENTRY') : ['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) ? t('VISUAL_DATA_FRAGMENT') : t('SIGNAL_FEED_RECORDING')}
-                            </span>
-                            <span className="mono text-[6px] tracking-widest opacity-40 uppercase">{t('DATA_SIGNAL_DECODE_SUCCESS')}</span>
+                    {!isSplitLayout ? (
+                        <div className="flex items-center gap-3" style={{ color: activeTheme }}>
+                            {isVideo && <Video size={18} />}
+                            {!isVideo && <Camera size={18} />}
+                            <div className="flex flex-col">
+                                <span className="mono text-[10px] font-black tracking-[0.3em] uppercase">
+                                    {title === t('MODIFY_IDENTITY') ? t('CORE_IDENTITY_MGMT') : ['JOURNAL', 'TEXT'].includes(normalizedType) ? t('ARCHIVED_LOG_ENTRY') : ['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) ? t('VISUAL_DATA_FRAGMENT') : t('SIGNAL_FEED_RECORDING')}
+                                </span>
+                                <span className="mono text-[6px] tracking-widest opacity-40 uppercase">{t('DATA_SIGNAL_DECODE_SUCCESS')}</span>
+                            </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div />
+                    )}
                     <button onClick={onClose} className="text-white/50 hover:text-white transition-all p-2 hover:bg-white/10">
                         <X size={20} />
                     </button>
@@ -245,12 +249,12 @@ const ContentModal = ({
                                                 <div className="text-[9px] text-white/30 mono animate-pulse">DECODING_RESPONSES...</div>
                                             ) : comments.length > 0 ? (
                                                 comments.map(comment => (
-                                                    <div key={comment.Id} className="text-[10px] text-white/70 leading-relaxed mono bg-white/5 p-2 rounded-sm border border-white/5">
+                                                    <div key={comment.Id || comment.id} className="text-[10px] text-white/70 leading-relaxed mono bg-white/5 p-2 rounded-sm border border-white/5">
                                                         <div className="flex justify-between items-center mb-1">
-                                                            <span className="text-secondary font-black">@{comment.Username || 'anon'}</span>
-                                                            <span className="text-[7px] text-white/30">{new Date(comment.CreatedAt).toLocaleString()}</span>
+                                                            <span className="text-secondary font-black">@{comment.username || comment.Username || comment.authorName || comment.AuthorName || 'anon'}</span>
+                                                            <span className="text-[7px] text-white/30">{new Date(comment.CreatedAt || comment.createdAt).toLocaleString()}</span>
                                                         </div>
-                                                        <p className="text-white/90 break-words">{comment.Content}</p>
+                                                        <p className="text-white/90 break-words">{comment.content || comment.Content}</p>
                                                     </div>
                                                 ))
                                             ) : (
@@ -258,7 +262,7 @@ const ContentModal = ({
                                             )}
                                         </div>
                                     </div>
-
+ 
                                     {/* Input */}
                                     <div className="p-4 border-t border-white/5 bg-black/60">
                                         <div className="flex gap-2">
@@ -284,31 +288,54 @@ const ContentModal = ({
                         ) : (
                             <div className="p-4 sm:p-8 md:p-12 relative">
                                 {['JOURNAL', 'TEXT'].includes(normalizedType) && (
-                                    <div className="p-1 sm:p-2 md:p-4">
-                                        <div className="border-2 border-[#9d00ff]/30 bg-black/40 p-4 sm:p-6 md:p-8 rounded-sm shadow-[0_0_20px_rgba(157,0,255,0.15)] font-mono">
-                                            <div className="mb-6 flex flex-col md:flex-row md:items-center gap-2 border-b border-[#9d00ff]/20 pb-4">
-                                                <div className="flex items-center text-[#9d00ff] text-xs md:text-sm tracking-widest" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>
-                                                    <span className="mr-2">root@fatale.fm:~#</span>
-                                                    <span>cat log_{content.Id || content.id || 'sys'}.txt</span>
+                                    <div className="p-1 sm:p-2 md:p-4 font-mono">
+                                        <div className="mb-6 flex flex-col md:flex-row md:items-center gap-2 border-b border-[#9d00ff]/20 pb-4">
+                                            <div className="flex items-center text-[#9d00ff] text-xs md:text-sm tracking-widest" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>
+                                                <span className="mr-2">root@fatale.fm:~#</span>
+                                                <span>cat log_{content.Id || content.id || 'sys'}.txt</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <h2 className="text-xl md:text-2xl text-white font-bold mb-4 break-words whitespace-normal" style={{ textShadow: '0 0 10px rgba(255,255,255,0.5)' }}>
+                                            {content.Title || content.title || t('UNTITLED_LOG')}
+                                        </h2>
+                                        
+                                        <div className="text-[#9d00ff]/70 text-xs mb-8 tracking-widest" style={{ textShadow: '0 0 5px rgba(157,0,255,0.3)' }}>
+                                            [TIMESTAMP: {content.CreatedAt ? new Date(content.CreatedAt).toLocaleString() : 'UNKNOWN'}]
+                                        </div>
+                                        
+                                        <div className="text-white/90 whitespace-pre-wrap text-sm md:text-base leading-relaxed tracking-wide break-words mb-8" style={{ textShadow: '0 0 8px rgba(255,255,255,0.4)' }}>
+                                            {content.Content || content.content || content.Text || content.text}
+                                        </div>
+
+                                        {/* Inline Footer Actions inside note */}
+                                        <div className="mt-8 pt-6 border-t border-[#9d00ff]/20 flex flex-col gap-4">
+                                            <div className="flex flex-wrap items-center gap-6 text-[9px] uppercase tracking-widest text-white/30">
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="text-[#9d00ff]/40">PACKAGE_ID</span>
+                                                    <span className="text-white/60 font-bold">{content?.Id || content?.id || 'GLOBAL_CORE'}</span>
+                                                </div>
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="text-[#9d00ff]/40">TIMESTAMP</span>
+                                                    <span className="text-white/60 font-bold">{content?.CreatedAt ? new Date(content.CreatedAt).toLocaleString() : 'SYNCHRONIZED'}</span>
                                                 </div>
                                             </div>
-                                            
-                                            <h2 className="text-xl md:text-2xl text-white font-bold mb-4 break-words whitespace-normal" style={{ textShadow: '0 0 10px rgba(255,255,255,0.5)' }}>
-                                                {content.Title || content.title || t('UNTITLED_LOG')}
-                                            </h2>
-                                            
-                                            <div className="text-[#9d00ff]/70 text-xs mb-8 tracking-widest" style={{ textShadow: '0 0 5px rgba(157,0,255,0.3)' }}>
-                                                [TIMESTAMP: {content.CreatedAt ? new Date(content.CreatedAt).toLocaleString() : 'UNKNOWN'}]
+                                            <div className="flex flex-wrap gap-2 justify-start items-center">
+                                                <button onClick={() => setShowTipModal(true)} className="px-3 py-1.5 sm:px-4 sm:py-2 bg-fatale/10 border border-fatale/30 hover:bg-fatale hover:text-black transition-all text-fatale font-black flex items-center gap-2 group text-[8px] sm:text-[9px]">
+                                                    <Coins size={12} className="group-hover:animate-bounce" /> {t('TIP_ARTIST')}
+                                                </button>
+                                                <button onClick={handleShare} className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/5 border border-white/10 hover:border-[#9d00ff]/50 hover:text-white transition-all text-white/60 flex items-center gap-2 text-[8px] sm:text-[9px]">
+                                                    <Share2 size={12} /> {t('SHARE_SIGNAL')}
+                                                </button>
+                                                <button onClick={onClose} className="text-white font-black px-5 py-1.5 sm:px-8 sm:py-2 uppercase transition-all border border-white/40 hover:border-white hover:bg-white hover:text-black text-[8px] sm:text-[10px] tracking-[0.2em]">
+                                                    {t('CLOSE')}
+                                                </button>
                                             </div>
-                                            
-                                            <div className="text-white/90 whitespace-pre-wrap text-sm md:text-base leading-relaxed tracking-wide break-words" style={{ textShadow: '0 0 8px rgba(255,255,255,0.4)' }}>
-                                                {content.Content || content.content || content.Text || content.text}
-                                            </div>
+                                        </div>
 
-                                            <div className="mt-8 flex items-center pt-6 border-t border-[#9d00ff]/20">
-                                                <span className="text-[#9d00ff] mr-2 text-xs md:text-sm tracking-widest" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>root@fatale.fm:~#</span>
-                                                <span className="inline-block w-2.5 h-4 bg-[#9d00ff] animate-pulse align-middle" style={{ boxShadow: '0 0 10px rgba(157,0,255,0.8)' }}></span>
-                                            </div>
+                                        <div className="mt-6 flex items-center">
+                                            <span className="text-[#9d00ff] mr-2 text-xs md:text-sm tracking-widest" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>root@fatale.fm:~#</span>
+                                            <span className="inline-block w-2.5 h-4 bg-[#9d00ff] animate-pulse align-middle" style={{ boxShadow: '0 0 10px rgba(157,0,255,0.8)' }}></span>
                                         </div>
                                     </div>
                                 )}
@@ -318,7 +345,7 @@ const ContentModal = ({
                 </div>
 
                 {/* Footer */}
-                {!hideActions && (
+                {!hideActions && !['JOURNAL', 'TEXT'].includes(normalizedType) && (
                     <div className="p-4 sm:p-6 border-t border-white/5 bg-black/40 flex flex-wrap justify-between items-center gap-4 text-[9px] mono uppercase tracking-widest text-white/30 relative z-10">
                         <div className="flex items-center gap-4 sm:gap-8">
                             <div className="flex flex-col gap-1">
