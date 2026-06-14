@@ -186,8 +186,8 @@ const DJMixerPlayer = ({
     const [localZoomState, setLocalZoomState] = useState(100);
     const zoomState = propZoomState !== undefined ? propZoomState : localZoomState;
     const setZoomState = propSetZoomState !== undefined ? propSetZoomState : setLocalZoomState;
-    const [fataleFavsExpanded, setFataleFavsExpanded] = useState(true);
-    const [youtubeFavsExpanded, setYoutubeFavsExpanded] = useState(true);
+    const [fataleFavsExpanded, setFataleFavsExpanded] = useState(false);
+    const [youtubeFavsExpanded, setYoutubeFavsExpanded] = useState(false);
 
     const [audioDevices, setAudioDevices] = useState([]);
     const [selectedDeviceId, setSelectedDeviceId] = useState('');
@@ -1679,7 +1679,7 @@ const DJMixerPlayer = ({
                                 </div>
                                 <div className="crate-filter-chips">
                                     {viewingPlaylist || viewingArtist ? (
-                                        <div className="flex items-center gap-2">
+                                        <>
                                             <button 
                                                 onClick={() => {
                                                     setViewingPlaylist(null);
@@ -1696,9 +1696,9 @@ const DJMixerPlayer = ({
                                             >
                                                 <Shuffle size={10} /> {t('SHUFFLE')}
                                             </button>
-                                        </div>
+                                        </>
                                     ) : (
-                                        <div className="flex items-center gap-2">
+                                        <>
                                             <button 
                                                 onClick={handleShuffle}
                                                 className="filter-chip shuffle-btn flex items-center gap-2 bg-fatale/10 border-fatale/20 text-fatale"
@@ -1706,7 +1706,7 @@ const DJMixerPlayer = ({
                                             >
                                                 <Shuffle size={10} /> {t('SHUFFLE')}
                                             </button>
-                                            <div className="w-px h-4 bg-white/10 mx-1" />
+                                            <div className="w-px h-4 bg-white/10 mx-1 flex-shrink-0" />
                                             {['ALL', 'PURCHASED', 'FAVORITES', 'ARTISTS'].map(cat => (
                                                 <button 
                                                     key={cat}
@@ -1720,7 +1720,7 @@ const DJMixerPlayer = ({
                                                     {t(cat)}
                                                 </button>
                                             ))}
-                                        </div>
+                                        </>
                                     )}
                                 </div>
                             </div>

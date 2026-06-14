@@ -704,9 +704,19 @@
 
 .utility-content-nano { flex: 1; overflow: hidden; }
 
-.library-nano { height: 100%; overflow-y: auto; }
+.library-nano { 
+    height: 100%; 
+    overflow-y: auto; 
+    overflow-x: auto; 
+    width: 100%;
+}
 
-.signal-table-nano { width: 100%; border-collapse: collapse; font-size: 10px; }
+.signal-table-nano { 
+    width: 100%; 
+    min-width: 550px; 
+    border-collapse: collapse; 
+    font-size: 10px; 
+}
 .signal-table-nano th { text-align: left; padding: 10px; opacity: 0.3; font-size: 7px; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
 .section-header-row td {
@@ -845,11 +855,16 @@
     white-space: nowrap;
     padding-bottom: 5px;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    scrollbar-width: thin;
 }
 
 .crate-filter-chips::-webkit-scrollbar {
-    display: none;
+    height: 3px;
+}
+
+.crate-filter-chips::-webkit-scrollbar-thumb {
+    background: rgba(var(--theme-primary-rgb), 0.2);
+    border-radius: 2px;
 }
 
 .filter-chip {
@@ -1856,8 +1871,8 @@
     }
 
     .mixer-console-pane {
-        flex: 0 0 55% !important;
-        min-width: 700px !important;
+        flex: 0 0 60% !important;
+        max-width: 60% !important;
         display: flex !important;
         flex-direction: column !important;
         justify-content: space-between !important;
@@ -1871,7 +1886,8 @@
     }
 
     .utility-interlink-pane {
-        flex: 1 1 45% !important;
+        flex: 0 0 38% !important;
+        max-width: 38% !important;
         height: auto !important;
         min-height: unset !important;
     }

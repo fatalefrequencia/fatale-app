@@ -3462,14 +3462,7 @@ function App() {
               zoomState={zoomState}
               setZoomState={setZoomState}
             />
-            
-            {/* Close Mixer Toggle */}
-            <button 
-              onClick={() => setShowMixer(false)}
-              className="fixed top-6 right-6 z-[2001] w-10 h-10 bg-black/40 border border-white/10 text-white/40 hover:text-white transition-all flex items-center justify-center rounded-full backdrop-blur-md"
-            >
-              <X size={18} />
-            </button>
+
           </motion.div>
         )}
       </AnimatePresence>
@@ -4262,9 +4255,13 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 100, opacity: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 28 }}
-      className={`fixed bottom-[24px] lg:bottom-8 transition-[left] duration-500 left-0 right-0 ${sidebarWidthClass} lg:right-4 backdrop-blur-3xl z-[100] ${isMessages
+      className={`fixed bottom-[24px] lg:bottom-8 transition-all duration-500 backdrop-blur-3xl z-[100] ${isMessages
         ? 'border-t border-white/5 lg:border lg:border-white/10 lg:rounded-sm lg:shadow-none'
-        : 'border-t border-white/5 lg:border lg:border-white/10 lg:rounded-md shadow-[0_-15px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_10px_60px_-15px_rgba(var(--theme-primary-rgb),0.15)]'
+        : `border-t border-white/5 lg:border lg:border-white/10 shadow-[0_-15px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_10px_60px_-15px_rgba(var(--theme-primary-rgb),0.15)] ${
+            activeView === 'discovery' 
+              ? 'lg:left-1/2 lg:-translate-x-1/2 lg:right-auto lg:w-full lg:max-w-[700px] lg:rounded-full lg:px-6' 
+              : `left-0 right-0 ${sidebarWidthClass} lg:right-4 lg:rounded-md`
+          }`
         } group/player overflow-hidden flex ${isMobile ? 'flex-col gap-2.5 p-3' : 'flex-row items-center gap-3 p-1.5 lg:py-1.5 lg:px-3'}`}
       style={{
         backgroundColor: 'rgba(var(--theme-bg-rgb), 0.95)',
@@ -4275,15 +4272,21 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
       <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-fixed mix-blend-screen" />
 
       {/* Cyberpunk HUD Corner Brackets (Desktop) */}
-      <div className="hidden lg:block absolute top-0 left-0 w-3 h-3 border-t border-l border-fatale/40 pointer-events-none" />
-      <div className="hidden lg:block absolute top-0 right-0 w-3 h-3 border-t border-r border-fatale/40 pointer-events-none" />
-      <div className="hidden lg:block absolute bottom-0 left-0 w-3 h-3 border-b border-l border-fatale/40 pointer-events-none" />
-      <div className="hidden lg:block absolute bottom-0 right-0 w-3 h-3 border-b border-r border-fatale/40 pointer-events-none" />
+      {activeView !== 'discovery' && (
+        <>
+          <div className="hidden lg:block absolute top-0 left-0 w-3 h-3 border-t border-l border-fatale/40 pointer-events-none" />
+          <div className="hidden lg:block absolute top-0 right-0 w-3 h-3 border-t border-r border-fatale/40 pointer-events-none" />
+          <div className="hidden lg:block absolute bottom-0 left-0 w-3 h-3 border-b border-l border-fatale/40 pointer-events-none" />
+          <div className="hidden lg:block absolute bottom-0 right-0 w-3 h-3 border-b border-r border-fatale/40 pointer-events-none" />
+        </>
+      )}
 
       {/* --- MINIMIZE TOGGLE (Top Right) --- */}
       <button 
         onClick={(e) => { e.stopPropagation(); onToggleMinimize(); }}
-        className="absolute top-1 right-2 z-50 p-1 text-white/80 hover:text-fatale transition-all group/minitoggle scale-75 lg:scale-100"
+        className={`absolute z-50 p-1 text-white/80 hover:text-fatale transition-all group/minitoggle scale-75 lg:scale-100 ${
+          activeView === 'discovery' ? 'top-1/2 -translate-y-1/2 right-4' : 'top-1 right-2'
+        }`}
         title="MINIMIZE_PLAYER"
       >
         <Minus size={14} className="group-hover/minitoggle:translate-y-0.5 transition-transform" />
