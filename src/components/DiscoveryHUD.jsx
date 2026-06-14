@@ -1130,7 +1130,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
             <motion.div
                 layout
                 transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-                className={`flex-1 relative flex flex-col lg:grid lg:grid-cols-12 lg:grid-rows-6 gap-6 lg:gap-4 pointer-events-none mt-4 ${isPlayerActive ? 'pb-24 lg:pb-28' : 'pb-20 lg:pb-0'} min-h-0`}
+                className={`flex-1 relative flex flex-col lg:grid lg:grid-cols-12 lg:grid-rows-6 gap-6 lg:gap-4 pointer-events-none mt-4 ${isPlayerActive ? 'pb-14 lg:pb-16' : 'pb-20 lg:pb-0'} min-h-0`}
                 style={{ gridTemplateRows: 'repeat(6, 1fr)' }}
             >
 
