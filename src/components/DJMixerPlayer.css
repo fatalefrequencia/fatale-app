@@ -1507,8 +1507,9 @@
 .listener-artwork-wrapper {
     position: relative;
     width: 60%;
+    max-width: 240px;
     aspect-ratio: 1;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     border-radius: 8px;
 }
 
@@ -1562,7 +1563,7 @@
 .listener-track-info {
     text-align: center;
     width: 100%;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .listener-track-title {
@@ -1583,7 +1584,7 @@
 
 .listener-progress-container {
     width: 100%;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .listener-progress-bar {
@@ -1614,7 +1615,7 @@
     align-items: center;
     justify-content: center;
     gap: 20px;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 .listener-controls .control-btn {
@@ -1880,8 +1881,8 @@
     }
 
     .listener-now-playing-pane {
-        flex: 0 0 60% !important;
-        max-width: 60% !important;
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
         height: auto !important;
     }
 
