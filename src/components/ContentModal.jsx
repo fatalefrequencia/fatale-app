@@ -149,25 +149,27 @@ const ContentModal = ({
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex justify-between items-center p-4 sm:p-6 border-b border-white/5 bg-black/40 relative z-10">
-                    {!isSplitLayout ? (
-                        <div className="flex items-center gap-3" style={{ color: activeTheme }}>
-                            {isVideo && <Video size={18} />}
-                            {!isVideo && <Camera size={18} />}
-                            <div className="flex flex-col">
-                                <span className="mono text-[10px] font-black tracking-[0.3em] uppercase">
-                                    {title === t('MODIFY_IDENTITY') ? t('CORE_IDENTITY_MGMT') : ['JOURNAL', 'TEXT'].includes(normalizedType) ? t('ARCHIVED_LOG_ENTRY') : ['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) ? t('VISUAL_DATA_FRAGMENT') : t('SIGNAL_FEED_RECORDING')}
-                                </span>
-                                <span className="mono text-[6px] tracking-widest opacity-40 uppercase">{t('DATA_SIGNAL_DECODE_SUCCESS')}</span>
+                {!['JOURNAL', 'TEXT'].includes(normalizedType) && (
+                    <div className="flex justify-between items-center p-4 sm:p-6 border-b border-white/5 bg-black/40 relative z-10">
+                        {!isSplitLayout ? (
+                            <div className="flex items-center gap-3" style={{ color: activeTheme }}>
+                                {isVideo && <Video size={18} />}
+                                {!isVideo && <Camera size={18} />}
+                                <div className="flex flex-col">
+                                    <span className="mono text-[10px] font-black tracking-[0.3em] uppercase">
+                                        {title === t('MODIFY_IDENTITY') ? t('CORE_IDENTITY_MGMT') : ['JOURNAL', 'TEXT'].includes(normalizedType) ? t('ARCHIVED_LOG_ENTRY') : ['PHOTO', 'IMAGE', 'PICTURE', 'GALLERY'].includes(normalizedType) ? t('VISUAL_DATA_FRAGMENT') : t('SIGNAL_FEED_RECORDING')}
+                                    </span>
+                                    <span className="mono text-[6px] tracking-widest opacity-40 uppercase">{t('DATA_SIGNAL_DECODE_SUCCESS')}</span>
+                                </div>
                             </div>
-                        </div>
-                    ) : (
-                        <div />
-                    )}
-                    <button onClick={onClose} className="text-white/50 hover:text-white transition-all p-2 hover:bg-white/10">
-                        <X size={20} />
-                    </button>
-                </div>
+                        ) : (
+                            <div />
+                        )}
+                        <button onClick={onClose} className="text-white/50 hover:text-white transition-all p-2 hover:bg-white/10">
+                            <X size={20} />
+                        </button>
+                    </div>
+                )}
 
                 {/* Content Body */}
                 <div className={`flex-1 overflow-y-auto custom-scrollbar relative z-10 ${isSplitLayout ? 'flex flex-col md:flex-row' : ''}`}>
@@ -288,11 +290,21 @@ const ContentModal = ({
                         ) : (
                             <div className="p-4 sm:p-8 md:p-12 relative">
                                 {['JOURNAL', 'TEXT'].includes(normalizedType) && (
-                                    <div className="p-1 sm:p-2 md:p-4 font-mono">
-                                        <div className="mb-6 flex flex-col md:flex-row md:items-center gap-2 border-b border-[#9d00ff]/20 pb-4">
+                                    <div className="font-mono text-white/90">
+                                        {/* Header inside the note */}
+                                        <div className="mb-6 flex items-center justify-between border-b border-[#9d00ff]/20 pb-4">
                                             <div className="flex items-center text-[#9d00ff] text-xs md:text-sm tracking-widest" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>
                                                 <span className="mr-2">root@fatale.fm:~#</span>
                                                 <span>cat log_{content.Id || content.id || 'sys'}.txt</span>
+                                            </div>
+                                            <div className="flex items-center gap-4 text-[9px] uppercase tracking-widest text-white/30">
+                                                <div>
+                                                    <span className="text-[#9d00ff]/40">PACKAGE_ID:</span>{' '}
+                                                    <span className="text-white/60 font-bold">{content?.Id || content?.id || 'GLOBAL_CORE'}</span>
+                                                </div>
+                                                <button onClick={onClose} className="text-white/50 hover:text-white transition-all p-1 hover:bg-white/10 rounded">
+                                                    <X size={16} />
+                                                </button>
                                             </div>
                                         </div>
                                         
@@ -309,33 +321,24 @@ const ContentModal = ({
                                         </div>
 
                                         {/* Inline Footer Actions inside note */}
-                                        <div className="mt-8 pt-6 border-t border-[#9d00ff]/20 flex flex-col gap-4">
-                                            <div className="flex flex-wrap items-center gap-6 text-[9px] uppercase tracking-widest text-white/30">
-                                                <div className="flex flex-col gap-0.5">
-                                                    <span className="text-[#9d00ff]/40">PACKAGE_ID</span>
-                                                    <span className="text-white/60 font-bold">{content?.Id || content?.id || 'GLOBAL_CORE'}</span>
-                                                </div>
-                                                <div className="flex flex-col gap-0.5">
-                                                    <span className="text-[#9d00ff]/40">TIMESTAMP</span>
-                                                    <span className="text-white/60 font-bold">{content?.CreatedAt ? new Date(content.CreatedAt).toLocaleString() : 'SYNCHRONIZED'}</span>
-                                                </div>
+                                        <div className="mt-8 pt-6 border-t border-[#9d00ff]/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                            <div className="flex flex-wrap items-center gap-3 text-xs md:text-sm font-mono text-white/90 font-bold">
+                                                <span className="text-[#9d00ff] tracking-widest font-normal" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>root@fatale.fm:~#</span>
+                                                <button onClick={() => setShowTipModal(true)} className="hover:text-fatale hover:underline transition-all uppercase tracking-wider text-[10px] md:text-xs">
+                                                    [{t('TIP_ARTIST')}]
+                                                </button>
+                                                <button onClick={handleShare} className="hover:text-fatale hover:underline transition-all uppercase tracking-wider text-[10px] md:text-xs">
+                                                    [{t('SHARE_SIGNAL')}]
+                                                </button>
+                                                <button onClick={onClose} className="hover:text-white hover:underline transition-all uppercase tracking-wider text-[10px] md:text-xs text-white/55">
+                                                    [{t('CLOSE')}]
+                                                </button>
+                                                <span className="inline-block w-2.5 h-4 bg-[#9d00ff] animate-pulse align-middle" style={{ boxShadow: '0 0 10px rgba(157,0,255,0.8)' }}></span>
                                             </div>
-                                            <div className="flex flex-wrap gap-2 justify-start items-center">
-                                                <button onClick={() => setShowTipModal(true)} className="px-3 py-1.5 sm:px-4 sm:py-2 bg-fatale/10 border border-fatale/30 hover:bg-fatale hover:text-black transition-all text-fatale font-black flex items-center gap-2 group text-[8px] sm:text-[9px]">
-                                                    <Coins size={12} className="group-hover:animate-bounce" /> {t('TIP_ARTIST')}
-                                                </button>
-                                                <button onClick={handleShare} className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/5 border border-white/10 hover:border-[#9d00ff]/50 hover:text-white transition-all text-white/60 flex items-center gap-2 text-[8px] sm:text-[9px]">
-                                                    <Share2 size={12} /> {t('SHARE_SIGNAL')}
-                                                </button>
-                                                <button onClick={onClose} className="text-white font-black px-5 py-1.5 sm:px-8 sm:py-2 uppercase transition-all border border-white/40 hover:border-white hover:bg-white hover:text-black text-[8px] sm:text-[10px] tracking-[0.2em]">
-                                                    {t('CLOSE')}
-                                                </button>
+                                            <div className="text-[8px] md:text-[9px] uppercase tracking-widest text-white/30 font-mono">
+                                                <span className="text-[#9d00ff]/40">TIMESTAMP:</span>{' '}
+                                                <span className="text-white/60 font-bold">{content?.CreatedAt ? new Date(content.CreatedAt).toLocaleString() : 'SYNCHRONIZED'}</span>
                                             </div>
-                                        </div>
-
-                                        <div className="mt-6 flex items-center">
-                                            <span className="text-[#9d00ff] mr-2 text-xs md:text-sm tracking-widest" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>root@fatale.fm:~#</span>
-                                            <span className="inline-block w-2.5 h-4 bg-[#9d00ff] animate-pulse align-middle" style={{ boxShadow: '0 0 10px rgba(157,0,255,0.8)' }}></span>
                                         </div>
                                     </div>
                                 )}

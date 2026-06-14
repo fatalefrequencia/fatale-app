@@ -174,7 +174,7 @@ export default {
     "SIGNAL_FEED_RECORDING": "ЗАПИСЬ_ПОТОКА_СИГНАЛА",
     "DATA_SIGNAL_DECODE_SUCCESS": "УСПЕШНАЯ_РАСШИФРОВКА",
     "UNTITLED_LOG": "// БЕЗ_НАЗВАНИЯ",
-    "SHARE_SIGNAL": "ПОДЕЛИТЬСЯ_СИГНАЛОМ",
+    "SHARE_SIGNAL": "ПОДЕЛИТЬСЯ",
     "CLOSE": "ЗАКРЫТЬ",
     "CREDITS": "КРЕДИТЫ",
     "CUSTOM_AMOUNT": "Другая сумма",

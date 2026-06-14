@@ -174,7 +174,7 @@ export default {
     "SIGNAL_FEED_RECORDING": "シグナルフィード録音",
     "DATA_SIGNAL_DECODE_SUCCESS": "シグナルデコード成功",
     "UNTITLED_LOG": "// タイトルなしのログ",
-    "SHARE_SIGNAL": "シグナルを共有",
+    "SHARE_SIGNAL": "共有",
     "CLOSE": "閉じる",
     "CREDITS": "クレジット",
     "CUSTOM_AMOUNT": "カスタム金額",
