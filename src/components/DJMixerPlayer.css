@@ -1876,7 +1876,7 @@
         display: flex !important;
         flex-direction: column !important;
         justify-content: space-between !important;
-        height: auto !important;
+        height: 650px !important;
     }
 
     .listener-now-playing-pane {
@@ -1888,8 +1888,10 @@
     .utility-interlink-pane {
         flex: 0 0 38% !important;
         max-width: 38% !important;
-        height: auto !important;
+        height: 650px !important;
         min-height: unset !important;
+        display: flex !important;
+        flex-direction: column !important;
     }
 
     .signal-table-nano {

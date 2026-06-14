@@ -4259,10 +4259,10 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
         ? 'border-t border-white/5 lg:border lg:border-white/10 lg:rounded-sm lg:shadow-none'
         : `border-t border-white/5 lg:border lg:border-white/10 shadow-[0_-15px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_10px_60px_-15px_rgba(var(--theme-primary-rgb),0.15)] ${
             activeView === 'discovery' 
-              ? 'lg:left-1/2 lg:-translate-x-1/2 lg:right-auto lg:w-full lg:max-w-[700px] lg:rounded-full lg:px-6' 
+              ? 'lg:left-1/2 lg:-translate-x-1/2 lg:right-auto lg:w-full lg:max-w-[700px] lg:rounded-full' 
               : `left-0 right-0 ${sidebarWidthClass} lg:right-4 lg:rounded-md`
           }`
-        } group/player overflow-hidden flex ${isMobile ? 'flex-col gap-2.5 p-3' : 'flex-row items-center gap-3 p-1.5 lg:py-1.5 lg:px-3'}`}
+        } group/player overflow-hidden flex ${isMobile ? 'flex-col gap-2.5 p-3' : `flex-row items-center gap-3 p-1.5 lg:py-1.5 ${activeView === 'discovery' ? 'lg:pl-8 lg:pr-14' : 'lg:px-3'}`}`}
       style={{
         backgroundColor: 'rgba(var(--theme-bg-rgb), 0.95)',
         paddingBottom: isMobile ? 'calc(10px + env(safe-area-inset-bottom, 12px))' : undefined
@@ -4285,7 +4285,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
       <button 
         onClick={(e) => { e.stopPropagation(); onToggleMinimize(); }}
         className={`absolute z-50 p-1 text-white/80 hover:text-fatale transition-all group/minitoggle scale-75 lg:scale-100 ${
-          activeView === 'discovery' ? 'top-1/2 -translate-y-1/2 right-4' : 'top-1 right-2'
+          activeView === 'discovery' ? 'top-1/2 -translate-y-1/2 right-6' : 'top-1 right-2'
         }`}
         title="MINIMIZE_PLAYER"
       >
