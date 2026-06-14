@@ -332,7 +332,6 @@ const ContentModal = ({
                                             <button onClick={onClose} className="text-white font-black px-5 py-1.5 uppercase transition-all border border-white/40 hover:border-white hover:bg-white hover:text-black text-[8px] sm:text-[10px] tracking-[0.2em]">
                                                 {t('CLOSE')}
                                             </button>
-                                            <span className="inline-block w-2.5 h-4 bg-[#9d00ff] animate-pulse align-middle" style={{ boxShadow: '0 0 10px rgba(157,0,255,0.8)' }}></span>
                                         </div>
                                     </div>
                                 )}
