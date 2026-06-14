@@ -2117,7 +2117,14 @@ const DJMixerPlayer = ({
                                                                     if (e.target.value.length > 2) {
                                                                         API.Youtube.search(e.target.value).then(res => {
                                                                             const tracks = Array.isArray(res.data) ? res.data : (res.data?.tracks || res.data?.Tracks || []);
-                                                                            setPlaylistSearchResults(tracks);
+                                                                            const filteredTracks = tracks.filter(t => {
+                                                                                const title = (t.title || t.Title || '').toLowerCase();
+                                                                                const url = (t.url || t.Url || t.source || t.Source || '').toLowerCase();
+                                                                                const duration = t.duration || t.Duration || t.durationSeconds || 0;
+                                                                                const isShort = (duration > 0 && duration <= 60) || title.includes('shorts') || title.includes('#shorts') || url.includes('shorts');
+                                                                                return !isShort;
+                                                                            });
+                                                                            setPlaylistSearchResults(filteredTracks);
                                                                         }).catch(err => {
                                                                             console.error(err);
                                                                             setPlaylistSearchResults([]);

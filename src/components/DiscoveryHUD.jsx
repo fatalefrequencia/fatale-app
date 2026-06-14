@@ -629,6 +629,22 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
         });
     }, [trendingPlaylists, trendingArtists]);
 
+    const filteredUserPlaylists = useMemo(() => {
+        let base = userPlaylists;
+        if (searchQuery) {
+            base = base.filter(p => (p.name || p.Name || '').toLowerCase().includes(searchQuery.toLowerCase()));
+        }
+        return base;
+    }, [userPlaylists, searchQuery]);
+
+    const filteredTrendingPlaylists = useMemo(() => {
+        let base = trendingPlaylists;
+        if (searchQuery) {
+            base = base.filter(p => (p.name || p.Name || '').toLowerCase().includes(searchQuery.toLowerCase()));
+        }
+        return base;
+    }, [trendingPlaylists, searchQuery]);
+
 
 
     const filteredVisuals = useMemo(() => {
@@ -1720,7 +1736,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         {/* User Playlists */}
                                         <div>
                                             <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2 text-colorLabel">TUS_PLAYLISTS</div>
-                                            {userPlaylists.length > 0 ? userPlaylists.map(p => (
+                                            {filteredUserPlaylists.length > 0 ? filteredUserPlaylists.map(p => (
                                                 <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-colorDataPrimary/10 border border-transparent hover:border-colorBorder group cursor-pointer transition-all" onClick={async () => {
                                                     setSelectedPlaylist(p);
                                                     setLoadingPlaylist(true);
@@ -1750,7 +1766,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         {/* Recommended Playlists */}
                                         <div>
                                             <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2 text-colorLabel">RECOMENDADAS</div>
-                                            {trendingPlaylists.length > 0 ? trendingPlaylists.map(p => (
+                                            {filteredTrendingPlaylists.length > 0 ? filteredTrendingPlaylists.map(p => (
                                                 <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-colorDataPrimary/10 border border-transparent hover:border-colorBorder group cursor-pointer transition-all" onClick={async () => {
                                                     setSelectedPlaylist(p);
                                                     setLoadingPlaylist(true);
@@ -2331,7 +2347,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             {/* User Playlists */}
                                             <div>
                                                 <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">TUS_PLAYLISTS</div>
-                                                {userPlaylists.slice(0, 15).length > 0 ? userPlaylists.slice(0, 15).map(p => (
+                                                {filteredUserPlaylists.slice(0, 15).length > 0 ? filteredUserPlaylists.slice(0, 15).map(p => (
                                                     <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-fatale/10 border border-transparent hover:border-fatale/20 group cursor-pointer transition-all" onClick={async () => {
                                                         setSelectedPlaylist(p);
                                                         setLoadingPlaylist(true);
@@ -2361,7 +2377,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             {/* Recommended Playlists */}
                                             <div>
                                                 <div className="text-[8px] mono font-bold uppercase tracking-[0.4em] opacity-40 mb-2 px-2">RECOMENDADAS</div>
-                                                {trendingPlaylists.slice(0, 15).length > 0 ? trendingPlaylists.slice(0, 15).map(p => (
+                                                {filteredTrendingPlaylists.slice(0, 15).length > 0 ? filteredTrendingPlaylists.slice(0, 15).map(p => (
                                                     <div key={p.id || p.Id} className="flex items-center gap-3 p-2.5 hover:bg-fatale/10 border border-transparent hover:border-fatale/20 group cursor-pointer transition-all" onClick={async () => {
                                                         setSelectedPlaylist(p);
                                                         setLoadingPlaylist(true);

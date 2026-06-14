@@ -324,14 +324,14 @@ const ContentModal = ({
                                         <div className="mt-8 pt-6 border-t border-[#9d00ff]/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
                                             <div className="flex flex-wrap items-center gap-3 text-xs md:text-sm font-mono text-white/90 font-bold">
                                                 <span className="text-[#9d00ff] tracking-widest font-normal" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>root@fatale.fm:~#</span>
-                                                <button onClick={() => setShowTipModal(true)} className="hover:text-fatale hover:underline transition-all uppercase tracking-wider text-[10px] md:text-xs">
-                                                    [{t('TIP_ARTIST')}]
+                                                <button onClick={() => setShowTipModal(true)} className="px-3 py-1.5 bg-fatale/10 border border-fatale/30 hover:bg-fatale hover:text-black transition-all text-fatale font-black flex items-center gap-2 group text-[8px] sm:text-[9px]">
+                                                    <Coins size={12} className="group-hover:animate-bounce" /> {t('TIP_ARTIST')}
                                                 </button>
-                                                <button onClick={handleShare} className="hover:text-fatale hover:underline transition-all uppercase tracking-wider text-[10px] md:text-xs">
-                                                    [{t('SHARE_SIGNAL')}]
+                                                <button onClick={handleShare} className="px-3 py-1.5 bg-white/5 border border-white/10 hover:border-[#9d00ff]/50 hover:text-white transition-all text-white/60 flex items-center gap-2 text-[8px] sm:text-[9px]">
+                                                    <Share2 size={12} /> {t('SHARE_SIGNAL')}
                                                 </button>
-                                                <button onClick={onClose} className="hover:text-white hover:underline transition-all uppercase tracking-wider text-[10px] md:text-xs text-white/55">
-                                                    [{t('CLOSE')}]
+                                                <button onClick={onClose} className="text-white font-black px-5 py-1.5 uppercase transition-all border border-white/40 hover:border-white hover:bg-white hover:text-black text-[8px] sm:text-[10px] tracking-[0.2em]">
+                                                    {t('CLOSE')}
                                                 </button>
                                                 <span className="inline-block w-2.5 h-4 bg-[#9d00ff] animate-pulse align-middle" style={{ boxShadow: '0 0 10px rgba(157,0,255,0.8)' }}></span>
                                             </div>

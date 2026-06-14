@@ -610,11 +610,18 @@ function App() {
           console.log(`[SPOTIFY_RESOLVER] Resolving: "${track.artist} - ${track.title}" to YouTube...`);
           const res = await API.Youtube.search(`${track.artist} - ${track.title} audio`);
           if (res.data && res.data.length > 0) {
-            const ytId = res.data[0].id || res.data[0].Id || res.data[0].videoId;
+            const nonShorts = res.data.filter(item => {
+              const title = (item.title || item.Title || '').toLowerCase();
+              const url = (item.url || item.Url || '').toLowerCase();
+              const duration = item.duration || item.Duration || item.durationSeconds || 0;
+              return !((duration > 0 && duration <= 60) || title.includes('shorts') || title.includes('#shorts') || url.includes('shorts'));
+            });
+            const bestResult = nonShorts.length > 0 ? nonShorts[0] : res.data[0];
+            const ytId = bestResult.id || bestResult.Id || bestResult.videoId;
             track.resolvedYoutubeId = ytId;
             // Force re-trigger play
             setTracks([...tracks]); 
-            console.log(`[SPOTIFY_RESOLVER] Resolved successfully to YouTube ID: ${ytId}`);
+            console.log(`[SPOTIFY_RESOLVER] Resolved successfully to YouTube ID: ${ytId} (Filtered Shorts: ${nonShorts.length}/${res.data.length} main video selected)`);
           }
         } catch (err) {
           console.error("[SPOTIFY_RESOLVER] Failed to resolve Spotify track:", err);

@@ -272,7 +272,11 @@ const DiscoveryCanvas = ({
                         const isGeneric = /mix|playlist|best of|compilation|top 10|various/i.test(title) || /mix|playlist|relax/i.test(channel);
                         const isMusic = /movie|audio|official|video|song|lyrics|feat|ft\.|album|track|remix/i.test(title);
 
-                        return !isJunk && !isGeneric && isMusic;
+                        const url = (item.Url || item.url || item.VideoUrl || item.videoUrl || '').toLowerCase();
+                        const duration = item.Duration || item.duration || item.durationSeconds || 0;
+                        const isShort = (duration > 0 && duration <= 60) || title.includes('shorts') || title.includes('#shorts') || url.includes('shorts');
+
+                        return !isJunk && !isGeneric && isMusic && !isShort;
                     })
                     .slice(0, 10); // Cap at 10 high-quality nodes
 
@@ -547,8 +551,11 @@ const DiscoveryCanvas = ({
                 const items = (Array.isArray(res?.data) ? res.data : [])
                     .filter(item => {
                         const title = (item.Title || item.title || '').toLowerCase();
+                        const url = (item.Url || item.url || item.VideoUrl || item.videoUrl || '').toLowerCase();
+                        const duration = item.Duration || item.duration || item.durationSeconds || 0;
                         const isJunk = /vlog|tutorial|review|how to|reaction|unboxing|podcast|news/i.test(title);
-                        return !isJunk;
+                        const isShort = (duration > 0 && duration <= 60) || title.includes('shorts') || title.includes('#shorts') || url.includes('shorts');
+                        return !isJunk && !isShort;
                     })
                     .slice(0, 15);
                 const searchResults = items.map((item, idx) => {
