@@ -164,6 +164,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
     const [mobileViewMode, setMobileViewMode] = useState('globe'); // 'globe', 'data', 'search'
     const [showSkullMenu, setShowSkullMenu] = useState(false);
     const [showSystemGuide, setShowSystemGuide] = useState(false);
+    const [guidePage, setGuidePage] = useState(0);
     const [collapsedSections, setCollapsedSections] = useState({
         playlists: true,
         feed: true,
@@ -2706,7 +2707,6 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
             <AnimatePresence>
                 {showSystemGuide && (() => {
-                    const [guidePage, setGuidePage] = React.useState(0);
                     const pages = [
                         {
                             id: 'WELCOME',
