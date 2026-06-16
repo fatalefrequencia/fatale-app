@@ -3835,7 +3835,7 @@ const Dashboard = React.memo(({
         <header 
           className={`lg:hidden ${activeView === 'discovery' ? 'hidden' : 'flex'} items-center justify-center px-1 border-b border-[var(--theme-color)]/10 bg-black/90 backdrop-blur-md z-40 relative`}
           style={{ 
-            paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)',
+            paddingTop: '12px',
             paddingBottom: '12px'
           }}
         >
@@ -4244,7 +4244,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 20, opacity: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 28 }}
-        className={`fixed bottom-[24px] lg:bottom-8 right-0 lg:right-4 p-4 lg:p-2 cursor-pointer group/min z-[100] transition-all`}
+        className={`fixed bottom-[calc(env(safe-area-inset-bottom,0px)+16px)] lg:bottom-8 right-4 lg:right-4 p-4 lg:p-2 cursor-pointer group/min z-[100] transition-all`}
         onClick={onToggleMinimize}
         title="EXPAND_PLAYER"
       >
@@ -4268,7 +4268,7 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 100, opacity: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 28 }}
-      className={`fixed bottom-[24px] lg:bottom-8 transition-all duration-500 backdrop-blur-3xl z-[100] ${isMessages
+      className={`fixed bottom-0 lg:bottom-8 transition-all duration-500 backdrop-blur-3xl z-[100] ${isMessages
         ? 'border-t border-white/5 lg:border lg:border-white/10 lg:rounded-sm lg:shadow-none'
         : `border-t border-white/5 lg:border lg:border-white/10 shadow-[0_-15px_50px_rgba(0,0,0,0.8)] lg:shadow-[0_10px_60px_-15px_rgba(var(--theme-primary-rgb),0.15)] ${
             activeView === 'discovery' 
@@ -4278,7 +4278,8 @@ const MiniPlayer = ({ track, activeStation, isHost, isPlaying, onTogglePlay, onN
         } group/player overflow-hidden flex ${isMobile ? 'flex-col gap-2.5 p-3' : `flex-row items-center gap-3 p-1.5 lg:py-1.5 ${activeView === 'discovery' ? 'lg:pl-8 lg:pr-14' : 'lg:px-3'}`}`}
       style={{
         backgroundColor: 'rgba(var(--theme-bg-rgb), 0.95)',
-        paddingBottom: isMobile ? 'calc(10px + env(safe-area-inset-bottom, 12px))' : undefined
+        paddingBottom: isMobile ? 'calc(10px + env(safe-area-inset-bottom, 12px))' : undefined,
+        bottom: isMobile ? '0px' : undefined
       }}
     >
       {/* Background Texture Overlay */}

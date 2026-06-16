@@ -903,7 +903,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
         
             {/* --- TOP HUD BAR --- */}
-            <div className="z-[80] flex flex-row items-center justify-between gap-4 mb-4 px-2 relative w-full">
+            <div className="z-[1000] flex flex-row items-center justify-between gap-4 mb-4 px-2 relative w-full">
 
                 {/* LEFT: FLOATING SYSTEM KERNEL (SKULL DROPDOWN) */}
                 <div className="relative pointer-events-auto shrink-0 z-[100]">
@@ -954,7 +954,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 transition={{ duration: 0.18 }}
-                                className="fixed inset-0 bg-black z-[9999] flex items-center justify-center p-3 md:p-8 pointer-events-auto"
+                                className="fixed inset-0 bg-black z-[9999] flex items-center justify-center pt-[calc(env(safe-area-inset-top,0px)+16px)] pb-[calc(env(safe-area-inset-bottom,0px)+16px)] px-3 md:p-8 pointer-events-auto"
                             >
                                 {/* Scanlines & Noise multiply overlay */}
                                 <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%] z-10" />
@@ -2987,7 +2987,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center p-4 md:p-8 pointer-events-auto"
+                            className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center pt-[calc(env(safe-area-inset-top,0px)+16px)] pb-[calc(env(safe-area-inset-bottom,0px)+16px)] px-4 md:p-8 pointer-events-auto"
                             onClick={() => setShowSystemGuide(false)}
                         >
                             <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%] z-10" />
