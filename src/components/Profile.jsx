@@ -6,6 +6,8 @@ import NeuroGraph from './NeuroGraph';
 import ContentModal from './ContentModal';
 import CreditTransferModal from './CreditTransferModal';
 import API from '../services/api';
+import JournalEditor from './JournalEditor';
+import SeriesManager from './SeriesManager';
 import './SpatialProfile.css';
 import {
     Terminal, Cpu, Database, Hash, Shield, Code, ChevronRight, Play, X, Music,
@@ -907,6 +909,9 @@ export const ProfileView = React.memo(({
     const [isLoadingTracks, setIsLoadingTracks] = useState(false);
     const [profileJournal, setProfileJournal] = useState([]);
     const [isLoadingJournal, setIsLoadingJournal] = useState(false);
+    const [profileSeries, setProfileSeries] = useState([]);
+    const [showSeriesManager, setShowSeriesManager] = useState(false);
+    const [editingJournalEntry, setEditingJournalEntry] = useState(null);
     const [profileGallery, setProfileGallery] = useState([]);
     const [isLoadingGallery, setIsLoadingGallery] = useState(false);
     const [myLikes, setMyLikes] = useState([]);
@@ -1747,15 +1752,17 @@ export const ProfileView = React.memo(({
                 try {
                     setIsLoadingJournal(true);
                     setIsLoadingGallery(true);
-                    const [jRes, gRes, sRes, fvRes, pRes] = await Promise.all([
+                    const [jRes, gRes, sRes, fvRes, pRes, serRes] = await Promise.all([
                         isMe ? API.Journal.getMyJournal().catch(() => ({ data: [] })) : API.Journal.getUserJournal(effectiveId).catch(() => ({ data: [] })),
                         isMe ? API.Studio.getMyGallery().catch(() => ({ data: [] })) : API.Studio.getUserGallery(effectiveId).catch(() => ({ data: [] })),
                         API.Stations.getByUserId(effectiveId).catch(() => ({ data: null })),
                         API.Stations.getFavorites().catch(() => ({ data: [] })),
-                        API.Playlists.getUserPlaylists(effectiveId).catch(() => ({ data: [] }))
+                        API.Playlists.getUserPlaylists(effectiveId).catch(() => ({ data: [] })),
+                        isMe ? API.JournalSeries.getMySeries().catch(() => ({ data: [] })) : API.JournalSeries.getUserSeries(effectiveId).catch(() => ({ data: [] }))
                     ]);
                     setProfileJournal(jRes.data || []);
                     setProfileGallery(gRes.data || []);
+                    setProfileSeries(serRes.data || []);
                     setProfilePlaylists((pRes.data || []).map(p => ({
                         ...p,
                         id: p.id || p.Id,
@@ -2251,59 +2258,25 @@ export const ProfileView = React.memo(({
                     <SubsystemBlock title={t('FREQ_JOURNAL') || 'BITÁCORA'} showBrackets={true} address="LOG_CAP_01" secondaryColor={profileSecondary}>
                         <div className="p-4 max-h-[450px] overflow-y-auto custom-scrollbar">
                             <div className="space-y-2 font-mono">
-                                {isMe && !showJournalForm && (
-                                    <button 
-                                        onClick={() => setShowJournalForm(true)}
-                                        className="w-full py-2 mb-2 border border-dashed border-[var(--subsystem-accent)]/20 text-[var(--subsystem-accent)]/40 hover:text-[var(--subsystem-accent)] hover:border-[var(--subsystem-accent)]/40 transition-all text-[8px] mono uppercase tracking-[.3em]"
-                                    >
-                                        + {t('APPEND_LOG_ENTRY') || 'AGREGAR NOTA'}
-                                    </button>
-                                )}
-                                
-                                {isMe && showJournalForm && (
-                                    <div className="p-3 bg-black/40 border border-white/5 space-y-2 mb-3">
-                                        <div className="text-[6px] mono text-white/20 uppercase">NOTE_TITLE</div>
-                                        <input 
-                                            id="journal-title"
-                                            type="text"
-                                            className="w-full bg-black border border-white/10 p-2 text-[10px] text-white outline-none focus:border-[var(--subsystem-accent)] uppercase"
-                                            placeholder="TITLE..."
-                                        />
-                                        <div className="text-[6px] mono text-white/20 uppercase">CONTENT</div>
-                                        <textarea 
-                                            id="journal-content"
-                                            className="w-full bg-black border border-white/10 p-2 text-[10px] text-white outline-none focus:border-[var(--subsystem-accent)] h-20 uppercase"
-                                            placeholder="WRITE_HERE..."
-                                        />
-                                        <div className="flex gap-2">
-                                            <button 
-                                                onClick={async () => {
-                                                    const title = document.getElementById('journal-title').value;
-                                                    const content = document.getElementById('journal-content').value;
-                                                    if (!title.trim() || !content.trim()) return;
-                                                    try {
-                                                        const API = await import('../services/api').then(mod => mod.default);
-                                                        await API.Journal.create({ title, content });
-                                                        setShowJournalForm(false);
-                                                        setRefreshTrigger(prev => prev + 1);
-                                                    } catch (err) {
-                                                        console.error(err);
-                                                    }
-                                                }}
-                                                className="flex-1 py-1.5 bg-[var(--subsystem-accent)]/80 text-black text-[8px] font-black uppercase hover:bg-[var(--subsystem-accent)] transition-all"
-                                            >
-                                                SAVE_NOTE
-                                            </button>
-                                            <button 
-                                                onClick={() => setShowJournalForm(false)}
-                                                className="px-3 py-1.5 border border-white/10 text-white/40 text-[8px] font-black uppercase hover:text-white transition-all"
-                                            >
-                                                CANCEL
-                                            </button>
-                                        </div>
+                                {isMe && (
+                                    <div className="flex gap-2 mb-2">
+                                        <button 
+                                            onClick={() => setEditingJournalEntry({})}
+                                            className="flex-1 py-2 border border-dashed border-[var(--subsystem-accent)]/20 text-[var(--subsystem-accent)]/40 hover:text-[var(--subsystem-accent)] hover:border-[var(--subsystem-accent)]/40 transition-all text-[8px] mono uppercase tracking-[.3em] rounded"
+                                        >
+                                            + {t('APPEND_LOG_ENTRY') || 'AGREGAR NOTA'}
+                                        </button>
+                                        <button
+                                            onClick={() => setShowSeriesManager(true)}
+                                            className="px-3 py-2 border border-dashed border-[var(--subsystem-accent)]/20 text-[var(--subsystem-accent)]/40 hover:text-[var(--subsystem-accent)] hover:border-[var(--subsystem-accent)]/40 transition-all text-[8px] mono uppercase tracking-[.3em] rounded flex items-center gap-1"
+                                            title="Manage Series"
+                                        >
+                                            <Book size={10} />
+                                            <span>SERIES</span>
+                                        </button>
                                     </div>
                                 )}
-
+                                
                                 {profileJournal.length > 0 ? profileJournal.map((entry, idx) => (
                                     <div key={idx} className="border-b border-white/5 py-2 hover:bg-white/5 px-2 transition-colors group/jentry relative">
                                         <div 
@@ -2311,28 +2284,46 @@ export const ProfileView = React.memo(({
                                             onClick={() => handleItemClick(entry, 'JOURNAL')}
                                         >
                                             <div className="flex justify-between items-center mb-1">
-                                                <div className="text-[10px] font-black uppercase text-white/80 truncate pr-6">{entry.title || entry.Title}</div>
-                                                <Book size={10} className="text-[var(--subsystem-accent)]/40 flex-shrink-0 ml-2" />
+                                                <div className="text-[10px] font-black uppercase text-white/80 truncate pr-12">
+                                                    {entry.title || entry.Title}
+                                                </div>
+                                                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                                    {(entry.seriesTitle || entry.SeriesTitle) && (
+                                                        <span className="text-[6px] bg-[var(--subsystem-accent)]/10 border border-[var(--subsystem-accent)]/20 px-1 rounded text-[var(--subsystem-accent)] truncate max-w-[80px]">
+                                                            {entry.seriesTitle?.toUpperCase() || entry.SeriesTitle?.toUpperCase()}
+                                                            {(entry.chapterNumber !== null && entry.chapterNumber !== undefined) ? ` CH.${entry.chapterNumber}` : (entry.ChapterNumber !== null && entry.ChapterNumber !== undefined) ? ` CH.${entry.ChapterNumber}` : ''}
+                                                        </span>
+                                                    )}
+                                                    <Book size={10} className="text-[var(--subsystem-accent)]/40" />
+                                                </div>
                                             </div>
-                                            <div className="text-[8px] text-white/50 font-mono whitespace-pre-wrap mb-1 leading-relaxed break-words w-full">{entry.content || entry.Content}</div>
+                                            <div className="text-[8px] text-white/50 font-mono line-clamp-3 mb-1 leading-relaxed break-words w-full">
+                                                {entry.contentFormat === 'html' || entry.ContentFormat === 'html' 
+                                                    ? (entry.content || entry.Content || '').replace(/<[^>]*>/g, ' ') 
+                                                    : (entry.content || entry.Content)}
+                                            </div>
                                             <div className="text-[6px] text-white/20 uppercase tracking-widest">
                                                 {new Date(entry.createdAt || entry.CreatedAt).toLocaleDateString()}
                                             </div>
                                         </div>
                                         {isMe && (
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleDeleteJournal(entry.id || entry.Id); }}
-                                            className="absolute bottom-2 right-2 p-1.5 
-                                                text-red-500/20 hover:text-red-500 
-                                                border border-transparent hover:border-red-500/30 
-                                                hover:bg-red-500/10 transition-all
-                                                md:opacity-0 md:group-hover/jentry:opacity-100
-                                                opacity-100"
-                                            title="Delete entry"
-                                        >
-                                            <X size={9} />
-                                        </button>
-                                    )}
+                                            <div className="absolute bottom-2 right-2 flex gap-1">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setEditingJournalEntry(entry); }}
+                                                    className="p-1.5 text-white/20 hover:text-[var(--subsystem-accent)] border border-transparent hover:border-[var(--subsystem-accent)]/30 hover:bg-[var(--subsystem-accent)]/10 transition-all md:opacity-0 md:group-hover/jentry:opacity-100 opacity-100 rounded"
+                                                    title="Edit entry"
+                                                >
+                                                    <Edit3 size={9} />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleDeleteJournal(entry.id || entry.Id); }}
+                                                    className="p-1.5 text-red-500/20 hover:text-red-500 border border-transparent hover:border-red-500/30 hover:bg-red-500/10 transition-all md:opacity-0 md:group-hover/jentry:opacity-100 opacity-100 rounded"
+                                                    title="Delete entry"
+                                                >
+                                                    <X size={9} />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 )) : (
                                     <div className="text-[8px] text-white/20 uppercase py-4 text-center">
@@ -2659,6 +2650,39 @@ export const ProfileView = React.memo(({
                         initialTargetName={displayUser?.username || displayUser?.Username}
                         onClose={() => setShowTipModal(false)}
                         onRefresh={() => showNotification("TIP_SENT", "Signal of appreciation transmitted.", "success")}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Creative Writing & Journal Overlay Modals */}
+            <AnimatePresence>
+                {editingJournalEntry !== null && (
+                    <JournalEditor
+                        entry={editingJournalEntry.id ? editingJournalEntry : null}
+                        seriesList={profileSeries}
+                        onSave={async (saved) => {
+                            const jRes = isMe 
+                                ? await API.Journal.getMyJournal().catch(() => ({ data: [] })) 
+                                : await API.Journal.getUserJournal(effectiveId).catch(() => ({ data: [] }));
+                            setProfileJournal(jRes.data || []);
+                            setEditingJournalEntry(null);
+                            showNotification("LOG_COMMITTED", "Creative log entry committed successfully.", "success");
+                        }}
+                        onClose={() => setEditingJournalEntry(null)}
+                    />
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showSeriesManager && (
+                    <SeriesManager
+                        onClose={() => setShowSeriesManager(false)}
+                        onUpdate={async () => {
+                            const sRes = isMe
+                                ? await API.JournalSeries.getMySeries().catch(() => ({ data: [] }))
+                                : await API.JournalSeries.getUserSeries(effectiveId).catch(() => ({ data: [] }));
+                            setProfileSeries(sRes.data || []);
+                        }}
                     />
                 )}
             </AnimatePresence>

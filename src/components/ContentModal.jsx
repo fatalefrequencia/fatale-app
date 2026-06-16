@@ -7,6 +7,7 @@ import { useNotification } from '../contexts/NotificationContext';
 import CreditTransferModal from './CreditTransferModal';
 import { Coins } from 'lucide-react';
 import API from '../services/api';
+import ChapterReader from './ChapterReader';
 
 const ContentModal = ({ 
     content, 
@@ -26,6 +27,12 @@ const ContentModal = ({
 }) => {
     const { t } = useLanguage();
     const { showNotification } = useNotification();
+    const [activeEntry, setActiveEntry] = React.useState(content);
+
+    React.useEffect(() => {
+        setActiveEntry(content);
+    }, [content]);
+
     const [showTipModal, setShowTipModal] = React.useState(false);
     const [comments, setComments] = React.useState([]);
     const [loadingComments, setLoadingComments] = React.useState(false);
@@ -334,35 +341,62 @@ const ContentModal = ({
                         ) : (
                             <div className="p-4 sm:p-8 md:p-12 relative">
                                 {['JOURNAL', 'TEXT'].includes(normalizedType) && (
-                                    <div className="font-mono text-white/90">
+                                    <div className="font-mono text-white/90 space-y-6">
                                         {/* Header inside the note */}
                                         <div className="mb-6 flex items-center justify-between border-b border-[#9d00ff]/20 pb-4">
                                             <div className="flex items-center text-[#9d00ff] text-xs md:text-sm tracking-widest" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>
                                                 <span className="mr-2">root@fatale.fm:~#</span>
-                                                <span>cat log_{content.Id || content.id || 'sys'}.txt</span>
+                                                <span>cat log_{activeEntry.Id || activeEntry.id || 'sys'}.txt</span>
                                             </div>
                                             <div className="flex items-center gap-4 text-[9px] uppercase tracking-widest text-white/30">
                                                 <div>
                                                     <span className="text-[#9d00ff]/40">PACKAGE_ID:</span>{' '}
-                                                    <span className="text-white/60 font-bold">{content?.Id || content?.id || 'GLOBAL_CORE'}</span>
+                                                    <span className="text-white/60 font-bold">{activeEntry?.Id || activeEntry?.id || 'GLOBAL_CORE'}</span>
                                                 </div>
                                                 <button onClick={onClose} className="text-white/50 hover:text-white transition-all p-1 hover:bg-white/10 rounded">
                                                     <X size={16} />
                                                 </button>
                                             </div>
                                         </div>
+
+                                        {/* Immersive Chapter Navigation Header */}
+                                        {(activeEntry.seriesId || activeEntry.SeriesId) && (
+                                            <ChapterReader 
+                                                entry={activeEntry} 
+                                                onNavigateToEntry={(newEntry) => setActiveEntry(newEntry)} 
+                                            />
+                                        )}
                                         
-                                        <h2 className="text-xl md:text-2xl text-white font-bold mb-4 break-words whitespace-normal" style={{ textShadow: '0 0 10px rgba(255,255,255,0.5)' }}>
-                                            {content.Title || content.title || t('UNTITLED_LOG')}
+                                        <h2 className="text-xl md:text-2xl text-white font-bold mb-2 break-words whitespace-normal" style={{ textShadow: '0 0 10px rgba(255,255,255,0.5)' }}>
+                                            {activeEntry.Title || activeEntry.title || t('UNTITLED_LOG')}
                                         </h2>
                                         
-                                        <div className="text-[#9d00ff]/70 text-xs mb-8 tracking-widest" style={{ textShadow: '0 0 5px rgba(157,0,255,0.3)' }}>
-                                            [TIMESTAMP: {content.CreatedAt ? new Date(content.CreatedAt).toLocaleString() : 'UNKNOWN'}]
+                                        <div className="text-[#9d00ff]/70 text-xs mb-6 tracking-widest" style={{ textShadow: '0 0 5px rgba(157,0,255,0.3)' }}>
+                                            [TIMESTAMP: {activeEntry.CreatedAt ? new Date(activeEntry.CreatedAt).toLocaleString() : 'UNKNOWN'}]
                                         </div>
                                         
-                                        <div className="text-white/90 whitespace-pre-wrap text-sm md:text-base leading-relaxed tracking-wide break-words mb-8" style={{ textShadow: '0 0 8px rgba(255,255,255,0.4)' }}>
-                                            {content.Content || content.content || content.Text || content.text}
-                                        </div>
+                                        {/* Content body (HTML or plain text) */}
+                                        {(activeEntry.contentFormat === 'html' || activeEntry.ContentFormat === 'html') ? (
+                                            <div 
+                                                className="text-white/95 text-sm md:text-base leading-relaxed tracking-wide break-words mb-8 html-content space-y-4 select-text"
+                                                style={{ textShadow: '0 0 4px rgba(255,255,255,0.2)' }}
+                                                dangerouslySetInnerHTML={{ __html: activeEntry.Content || activeEntry.content || '' }}
+                                            />
+                                        ) : (
+                                            <div className="text-white/90 whitespace-pre-wrap text-sm md:text-base leading-relaxed tracking-wide break-words mb-8 select-text" style={{ textShadow: '0 0 8px rgba(255,255,255,0.4)' }}>
+                                                {activeEntry.Content || activeEntry.content || activeEntry.Text || activeEntry.text}
+                                            </div>
+                                        )}
+
+                                        {/* Immersive Chapter Navigation Footer */}
+                                        {(activeEntry.seriesId || activeEntry.SeriesId) && (
+                                            <div className="mt-8">
+                                                <ChapterReader 
+                                                    entry={activeEntry} 
+                                                    onNavigateToEntry={(newEntry) => setActiveEntry(newEntry)} 
+                                                />
+                                            </div>
+                                        )}
 
                                         {/* Inline Footer Actions inside note */}
                                         <div className="mt-8 pt-6 border-t border-[#9d00ff]/20 flex flex-wrap items-center justify-end gap-3">

@@ -350,6 +350,14 @@ const API = {
         togglePin: (id) => api.post(`Journal/toggle-pin/${id}`),
         delete: (id) => api.delete(`Journal/${id}`)
     },
+    JournalSeries: {
+        getMySeries: () => api.get('JournalSeries'),
+        getUserSeries: (userId) => api.get(`JournalSeries/user/${userId}`),
+        getDetails: (id) => api.get(`JournalSeries/${id}`),
+        create: (data) => api.post('JournalSeries', data),
+        update: (id, data) => api.put(`JournalSeries/${id}`, data),
+        delete: (id) => api.delete(`JournalSeries/${id}`)
+    },
     Studio: {
         getMyGallery: () => api.get('Studio'),
         getUserGallery: (userId) => api.get(`Studio/user/${userId}`),
