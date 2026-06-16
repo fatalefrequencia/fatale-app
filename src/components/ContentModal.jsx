@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Book, Camera, Video, Share2, Download, ExternalLink, Play, MessageSquare, Send } from 'lucide-react';
+import { X, Book, Camera, Video, Share2, Download, ExternalLink, Play, MessageSquare, Send, ChevronLeft, ChevronRight } from 'lucide-react';
 import { API_BASE_URL, getMediaUrl } from '../constants';
 import { useNotification } from '../contexts/NotificationContext';
 import CreditTransferModal from './CreditTransferModal';
@@ -54,6 +54,27 @@ const ContentModal = ({
     );
 
     const isSplitLayout = (isVideo || isPhoto || normalizedType === 'STUDIO') && !children;
+
+    const descriptionTextRaw = content?.caption || content?.Caption || content?.description || content?.Description || content?.Content || content?.content || '';
+    let descriptionText = descriptionTextRaw;
+    let slides = [];
+    try {
+        if (descriptionTextRaw.trim().startsWith('{')) {
+            const parsed = JSON.parse(descriptionTextRaw);
+            descriptionText = parsed.text || '';
+            slides = parsed.slides || [];
+        }
+    } catch (e) {
+        // Ignore
+    }
+
+    const allSlides = React.useMemo(() => {
+        if (isVideo) return [];
+        const mainUrl = content?.Url || content?.url || content?.imageUrl || content?.ImageUrl || content?.thumbnailUrl || content?.ThumbnailUrl;
+        return [mainUrl, ...slides].filter(Boolean);
+    }, [content, slides, isVideo]);
+
+    const [currentSlideIdx, setCurrentSlideIdx] = React.useState(0);
 
     React.useEffect(() => {
         const fetchComments = async () => {
@@ -179,12 +200,36 @@ const ContentModal = ({
                                 {/* Left Column: Media */}
                                 <div className="flex-1 bg-black/60 flex items-center justify-center p-4 min-h-[300px]">
                                     {!isVideo && (
-                                        <div className="relative group">
+                                        <div className="relative group flex items-center justify-center w-full h-full min-h-[300px]">
+                                            {allSlides.length > 1 && (
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); setCurrentSlideIdx(prev => (prev === 0 ? allSlides.length - 1 : prev - 1)); }}
+                                                    className="absolute left-2 z-20 p-2 bg-black/60 border border-white/10 hover:border-fatale/60 text-white/70 hover:text-white transition-all flex items-center justify-center rounded-sm cursor-pointer"
+                                                >
+                                                    <ChevronLeft size={16} />
+                                                </button>
+                                            )}
+                                            
                                             <img
-                                                src={getMediaUrl(content.Url || content.url || content.imageUrl || content.ImageUrl || content.thumbnailUrl || content.ThumbnailUrl)}
-                                                alt="Visual"
+                                                src={getMediaUrl(allSlides[currentSlideIdx])}
+                                                alt={`Visual Slide ${currentSlideIdx + 1}`}
                                                 className="max-w-full max-h-[70vh] object-contain border border-white/10"
                                             />
+
+                                            {allSlides.length > 1 && (
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); setCurrentSlideIdx(prev => (prev === allSlides.length - 1 ? 0 : prev + 1)); }}
+                                                    className="absolute right-2 z-20 p-2 bg-black/60 border border-white/10 hover:border-fatale/60 text-white/70 hover:text-white transition-all flex items-center justify-center rounded-sm cursor-pointer"
+                                                >
+                                                    <ChevronRight size={16} />
+                                                </button>
+                                            )}
+
+                                            {allSlides.length > 1 && (
+                                                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/85 border border-white/15 px-2 py-0.5 text-[8px] mono text-white/70 z-20 select-none">
+                                                    [ SLIDE {currentSlideIdx + 1} / {allSlides.length} ]
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
@@ -233,13 +278,12 @@ const ContentModal = ({
 
                                     {/* Caption & Comments List */}
                                     <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-                                        {/* Caption */}
-                                        {(content.caption || content.Caption || content.description || content.Description || content.Content || content.content) && (
+                                        {descriptionText && (
                                             <div className="text-[10px] text-white/80 leading-relaxed mono border-b border-white/5 pb-4 break-words break-all">
                                                 <span className="text-fatale font-black mr-2">
                                                     @{content.artist || content.Artist || content.artistName || 'user'}:
                                                 </span>
-                                                {content.caption || content.Caption || content.description || content.Description || content.Content || content.content}
+                                                {descriptionText}
                                             </div>
                                         )}
 

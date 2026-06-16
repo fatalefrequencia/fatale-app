@@ -349,7 +349,7 @@ function App() {
   });
   const [libraryTracks, setLibraryTracks] = useState([]);
   const [postText, setPostText] = useState('');
-  const [postFile, setPostFile] = useState(null);
+  const [postFiles, setPostFiles] = useState([]);
   const [isSubmittingPost, setIsSubmittingPost] = useState(false);
 
   // Real-time Audio State
@@ -2689,11 +2689,15 @@ function App() {
         if (confirmExit) {
           handleLogout();
         }
+      } else if (e.key === 'F10' && activeView !== 'login') {
+        e.preventDefault();
+        setIngestMode('ALL');
+        setShowGlobalIngest(true);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [tippingArtist, economyTrack, playlistTrackToAdd, activeView, handleLogout, navigateToProfile, setView]);
+  }, [tippingArtist, economyTrack, playlistTrackToAdd, activeView, handleLogout, navigateToProfile, setView, setIngestMode, setShowGlobalIngest]);
 
   const handleSendMessage = (message) => {
     if (!message || !message.trim()) return;
@@ -2768,16 +2772,36 @@ function App() {
     if (!postText.trim()) return;
     setIsSubmittingPost(true);
     try {
-      if (postFile) {
+      if (postFiles && postFiles.length > 0) {
+        const firstFile = postFiles[0];
+        
+        // Upload additional slides if any (indices 1 to 11)
+        const additionalUrls = [];
+        if (postFiles.length > 1) {
+          for (let i = 1; i < postFiles.length; i++) {
+            const fileData = new FormData();
+            fileData.append('file', postFiles[i]);
+            const uploadRes = await API.Files.upload(fileData);
+            if (uploadRes && uploadRes.data && uploadRes.data.path) {
+              additionalUrls.push(uploadRes.data.path);
+            }
+          }
+        }
+        
+        // Package the description. If multiple slides, use JSON structure
+        const finalDescriptionText = postFiles.length > 1 
+          ? JSON.stringify({ text: postText, slides: additionalUrls })
+          : postText;
+
         const formData = new FormData();
-        formData.append('File', postFile);
-        formData.append('Type', postFile.type.startsWith('video') ? 'VIDEO' : 'PHOTO');
+        formData.append('File', firstFile);
+        formData.append('Type', firstFile.type.startsWith('video') ? 'VIDEO' : 'PHOTO');
         formData.append('Title', postText.slice(0, 20));
-        formData.append('Description', postText);
+        formData.append('Description', finalDescriptionText);
         formData.append('IsPosted', true);
         
         await API.Studio.upload(formData);
-        showNotification("INGEST_COMPLETE", "Visual post transmitted successfully.", "success");
+        showNotification("INGEST_COMPLETE", `Visual post with ${postFiles.length} slide(s) transmitted successfully.`, "success");
       } else {
         await API.Journal.create({
           Title: postText.slice(0, 20),
@@ -2789,7 +2813,7 @@ function App() {
       }
       setShowGlobalIngest(false);
       setPostText('');
-      setPostFile(null);
+      setPostFiles([]);
       window.location.reload();
     } catch (error) {
       console.error("Post failed:", error);
@@ -3390,10 +3414,29 @@ function App() {
                           <label className="text-[10px] text-fatale/60 uppercase tracking-widest">Attach Media (Optional)</label>
                           <input 
                               type="file"
+                              multiple
                               accept="image/*,video/*"
-                              onChange={(e) => setPostFile(e.target.files[0])}
-                              className="w-full bg-[#050505] border border-white/5 p-4 text-white text-xs outline-none focus:border-fatale/40 font-sans"
+                              onChange={(e) => {
+                                  const selectedFiles = Array.from(e.target.files);
+                                  const hasVideo = selectedFiles.some(f => f.type.startsWith('video/'));
+                                  if (hasVideo && selectedFiles.length > 1) {
+                                      showNotification("LIMIT_EXCEEDED", "Videos cannot be part of a slideshow. Select only images or a single video.", "error");
+                                      e.target.value = '';
+                                      setPostFiles([]);
+                                  } else if (selectedFiles.length > 12) {
+                                      showNotification("LIMIT_EXCEEDED", "Maximum of 12 slides allowed.", "error");
+                                      setPostFiles(selectedFiles.slice(0, 12));
+                                  } else {
+                                      setPostFiles(selectedFiles);
+                                  }
+                              }}
+                              className="w-full bg-[#050505] border border-white/5 p-4 text-white text-xs outline-none focus:border-fatale/40 font-sans cursor-pointer"
                           />
+                          {postFiles.length > 0 && (
+                              <div className="text-[9px] text-white/50 font-mono mt-1 break-all">
+                                  {postFiles.length} file(s) selected: {postFiles.map(f => f.name).join(', ')}
+                              </div>
+                          )}
                       </div>
                   )}
                   <button
@@ -4224,6 +4267,8 @@ const Dashboard = React.memo(({
           <span className="cursor-pointer hover:text-white" onClick={() => handleNav('profile', true)}><span className="text-[var(--theme-color)] font-bold">F8</span>:USER</span>
           <span className="text-white/20">|</span>
           <span className="cursor-pointer hover:text-white" onClick={onLogout}><span className="text-[var(--theme-color)] font-bold">F9</span>:EXIT</span>
+          <span className="text-white/20">|</span>
+          <span className="cursor-pointer hover:text-white" onClick={() => { setIngestMode('ALL'); setShowGlobalIngest(true); }}><span className="text-[var(--theme-color)] font-bold">F10</span>:POST</span>
         </div>
         <div className="hidden md:block text-[8px] text-white/30 tracking-widest font-black uppercase">
           FATALE CORE NODE v2.1
