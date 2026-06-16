@@ -3711,7 +3711,12 @@ const Dashboard = React.memo(({
       <div className="tui-scanlines z-[1]" />
 
       {/* TUI Status Bar Header */}
-      <div className="bg-black/95 border-b border-[rgba(var(--theme-primary-rgb),0.25)] text-[10px] font-mono p-2 px-4 flex items-center justify-between text-[var(--theme-color)]/80 shrink-0 z-45 select-none">
+      <div 
+        className="bg-black/95 border-b border-[rgba(var(--theme-primary-rgb),0.25)] text-[10px] font-mono pb-2 px-4 flex items-center justify-between text-[var(--theme-color)]/80 shrink-0 z-45 select-none"
+        style={{
+          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 8px)'
+        }}
+      >
         <div className="flex items-center gap-4">
           <span className="font-black uppercase text-white tracking-widest animate-pulse">■ FATALE_SYS_v2.1</span>
           <span className="opacity-50 font-bold hidden sm:inline">|</span>
