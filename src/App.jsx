@@ -796,6 +796,8 @@ function App() {
   const [showGlobalGoLive, setShowGlobalGoLive] = useState(false);
   const [showGlobalUpload, setShowGlobalUpload] = useState(false);
   const [showGlobalIngest, setShowGlobalIngest] = useState(false);
+  const [showF10Menu, setShowF10Menu] = useState(false);
+  const [mediaTypeSelection, setMediaTypeSelection] = useState('PHOTO');
   const [ingestMode, setIngestMode] = useState('ALL'); // 'ALL' or 'JOURNAL'
   // Force reload to fix cache issue with setIngestMode
 
@@ -2691,13 +2693,12 @@ function App() {
         }
       } else if (e.key === 'F10' && activeView !== 'login') {
         e.preventDefault();
-        setIngestMode('ALL');
-        setShowGlobalIngest(true);
+        setShowF10Menu(true);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [tippingArtist, economyTrack, playlistTrackToAdd, activeView, handleLogout, navigateToProfile, setView, setIngestMode, setShowGlobalIngest]);
+  }, [tippingArtist, economyTrack, playlistTrackToAdd, activeView, handleLogout, navigateToProfile, setView, setShowF10Menu]);
 
   const handleSendMessage = (message) => {
     if (!message || !message.trim()) return;
@@ -3136,6 +3137,7 @@ function App() {
                setAppBackgroundColor={setAppBackgroundColor}
                setShowGlobalUpload={setShowGlobalUpload}
                setShowGlobalIngest={setShowGlobalIngest}
+               setShowF10Menu={setShowF10Menu}
                setIngestMode={setIngestMode}
                setActiveStation={handleTuneInStation}
                sendMessage={handleSendMessage}
@@ -3410,33 +3412,106 @@ function App() {
                       />
                   </div>
                   {ingestMode !== 'JOURNAL' && (
-                      <div className="space-y-2">
-                          <label className="text-[10px] text-fatale/60 uppercase tracking-widest">Attach Media (Optional)</label>
-                          <input 
-                              type="file"
-                              multiple
-                              accept="image/*,video/*"
-                              onChange={(e) => {
-                                  const selectedFiles = Array.from(e.target.files);
-                                  const hasVideo = selectedFiles.some(f => f.type.startsWith('video/'));
-                                  if (hasVideo && selectedFiles.length > 1) {
-                                      showNotification("LIMIT_EXCEEDED", "Videos cannot be part of a slideshow. Select only images or a single video.", "error");
-                                      e.target.value = '';
-                                      setPostFiles([]);
-                                  } else if (selectedFiles.length > 12) {
-                                      showNotification("LIMIT_EXCEEDED", "Maximum of 12 slides allowed.", "error");
-                                      setPostFiles(selectedFiles.slice(0, 12));
-                                  } else {
-                                      setPostFiles(selectedFiles);
-                                  }
-                              }}
-                              className="w-full bg-[#050505] border border-white/5 p-4 text-white text-xs outline-none focus:border-fatale/40 font-sans cursor-pointer"
-                          />
-                          {postFiles.length > 0 && (
-                              <div className="text-[9px] text-white/50 font-mono mt-1 break-all">
-                                  {postFiles.length} file(s) selected: {postFiles.map(f => f.name).join(', ')}
+                      <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                              <label className="text-[10px] text-fatale/60 uppercase tracking-widest">Media Type</label>
+                              <div className="flex gap-2">
+                                  <button
+                                      type="button"
+                                      onClick={() => { setMediaTypeSelection('PHOTO'); setPostFiles([]); }}
+                                      className={`px-3 py-1 text-[8px] font-black tracking-widest border transition-all cursor-pointer ${mediaTypeSelection === 'PHOTO' ? 'border-fatale text-fatale' : 'border-white/10 text-white/40'}`}
+                                  >
+                                      PHOTO / SLIDESHOW
+                                  </button>
+                                  <button
+                                      type="button"
+                                      onClick={() => { setMediaTypeSelection('VIDEO'); setPostFiles([]); }}
+                                      className={`px-3 py-1 text-[8px] font-black tracking-widest border transition-all cursor-pointer ${mediaTypeSelection === 'VIDEO' ? 'border-fatale text-fatale' : 'border-white/10 text-white/40'}`}
+                                  >
+                                      VIDEO
+                                  </button>
                               </div>
-                          )}
+                          </div>
+                          
+                          <div className="space-y-2">
+                              <label className="text-[10px] text-fatale/60 uppercase tracking-widest">
+                                  {mediaTypeSelection === 'PHOTO' ? 'Attach Photo Slides (Max 12)' : 'Attach Video (Single)'}
+                              </label>
+                              <div 
+                                  onClick={() => document.getElementById('new-post-file-input').click()}
+                                  className="w-full bg-[#050505] border border-dashed border-white/10 hover:border-fatale/40 p-6 text-center text-white text-xs outline-none font-mono cursor-pointer transition-all hover:bg-fatale/5 flex flex-col items-center justify-center gap-2"
+                              >
+                                  <Camera size={20} className="text-white/40 group-hover:text-fatale" />
+                                  <span className="text-[10px] tracking-wider text-white/60">
+                                      {mediaTypeSelection === 'PHOTO' ? 'ADD PHOTO SLIDE (MAX 12)' : 'SELECT VIDEO FILE'}
+                                  </span>
+                                  <span className="text-[8px] text-white/30">
+                                      {postFiles.length > 0 ? `${postFiles.length} file(s) selected` : 'CLICK TO BROWSE FILES'}
+                                  </span>
+                              </div>
+                              <input 
+                                  id="new-post-file-input"
+                                  type="file"
+                                  multiple={mediaTypeSelection === 'PHOTO'}
+                                  accept={mediaTypeSelection === 'PHOTO' ? 'image/*' : 'video/*'}
+                                  onChange={(e) => {
+                                      const selectedFiles = Array.from(e.target.files);
+                                      if (mediaTypeSelection === 'VIDEO') {
+                                          setPostFiles(selectedFiles.slice(0, 1));
+                                      } else {
+                                          setPostFiles(prev => {
+                                              const combined = [...prev, ...selectedFiles];
+                                              if (combined.length > 12) {
+                                                  showNotification("LIMIT_EXCEEDED", "Maximum of 12 slides allowed.", "error");
+                                                  return combined.slice(0, 12);
+                                              }
+                                              return combined;
+                                          });
+                                      }
+                                      e.target.value = ''; // Reset so the same file can be selected again
+                                  }}
+                                  className="hidden"
+                              />
+                              
+                              {/* Display Thumbnails */}
+                              {postFiles.length > 0 && (
+                                  <div className="mt-3 space-y-2">
+                                      <div className="text-[9px] text-fatale/60 uppercase tracking-widest font-mono">
+                                          Selected Files ({postFiles.length})
+                                      </div>
+                                      <div className="grid grid-cols-4 gap-2">
+                                          {postFiles.map((file, idx) => {
+                                              const isImg = file.type.startsWith('image/');
+                                              return (
+                                                  <div key={idx} className="aspect-square bg-black/60 border border-white/10 relative overflow-hidden flex items-center justify-center">
+                                                      {isImg ? (
+                                                          <img 
+                                                              src={URL.createObjectURL(file)} 
+                                                              alt="" 
+                                                              className="w-full h-full object-cover" 
+                                                          />
+                                                      ) : (
+                                                          <div className="text-[8px] mono text-white/40 p-1 text-center">
+                                                              VIDEO
+                                                          </div>
+                                                      )}
+                                                      <button 
+                                                          type="button"
+                                                          onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              setPostFiles(prev => prev.filter((_, i) => i !== idx));
+                                                          }}
+                                                          className="absolute top-1 right-1 bg-black/80 text-white hover:text-fatale p-0.5 rounded-sm z-10 cursor-pointer flex items-center justify-center w-4 h-4"
+                                                      >
+                                                          <X size={10} />
+                                                      </button>
+                                                  </div>
+                                              );
+                                          })}
+                                      </div>
+                                  </div>
+                              )}
+                          </div>
                       </div>
                   )}
                   <button
@@ -3446,6 +3521,64 @@ function App() {
                   >
                       {isSubmittingPost ? 'TRANSMITTING...' : 'TRANSMIT_SIGNAL'}
                   </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* ─── F10 Shortcut Selector Modal ─── */}
+        {showF10Menu && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[600] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" onClick={() => setShowF10Menu(false)} />
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative w-full max-w-md bg-black border border-white/10 p-8 text-center space-y-6 rounded-sm shadow-[0_0_50px_rgba(var(--theme-primary-rgb),0.15)]">
+              {/* Corner accents */}
+              <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-fatale" />
+              <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-fatale" />
+              <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-fatale" />
+              <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-fatale" />
+
+              <button onClick={() => setShowF10Menu(false)} className="absolute top-4 right-4 p-2 text-white/40 hover:text-white transition-colors">
+                <X size={16} />
+              </button>
+
+              <div className="space-y-2">
+                <p className="text-[10px] text-fatale/60 mono uppercase tracking-[0.4em]">:: SYSTEM_NAVIGATION ::</p>
+                <h3 className="text-white font-black text-sm uppercase tracking-wider">SELECT ACTION SIGNAL</h3>
+              </div>
+
+              <div className="bg-[#0a0a0a]/50 backdrop-blur-xl border border-fatale/20 rounded-lg overflow-hidden text-left mt-4">
+                <div className="p-3 bg-fatale/5 border-b border-fatale/10 flex justify-between items-center text-[10px] font-black uppercase text-white">:: TERMINAL_CMDS ::</div>
+                <div className="p-4 space-y-2">
+                  <button
+                    onClick={() => {
+                      setShowF10Menu(false);
+                      setIngestMode('ALL');
+                      setShowGlobalIngest(true);
+                    }}
+                    className="w-full text-left p-3 text-[10px] text-fatale/80 hover:text-white hover:bg-fatale/10 border border-transparent hover:border-fatale/20 transition-all uppercase tracking-widest cursor-pointer"
+                  >
+                    {`> NEW_POST`}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowF10Menu(false);
+                      setShowGlobalUpload(true);
+                    }}
+                    className="w-full text-left p-3 text-[10px] text-fatale/80 hover:text-white hover:bg-fatale/10 border border-transparent hover:border-fatale/20 transition-all uppercase tracking-widest cursor-pointer"
+                  >
+                    {`> UPLOAD_TRACK`}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowF10Menu(false);
+                      setShowGlobalGoLive(true);
+                    }}
+                    className="w-full text-left p-3 text-[10px] text-fatale/80 hover:text-white hover:bg-fatale/10 border border-transparent hover:border-fatale/20 transition-all uppercase tracking-widest flex items-center gap-2 cursor-pointer"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-fatale animate-pulse shadow-[0_0_6px_rgb(var(--theme-primary))] shrink-0" />
+                    {`> GO_LIVE`}
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
@@ -3605,6 +3738,7 @@ const Dashboard = React.memo(({
   setShowGlobalGoLive,
   setShowGlobalUpload,
   setShowGlobalIngest,
+  setShowF10Menu,
   setIngestMode,
   onExpandContent,
   appThemeColor,
@@ -3994,6 +4128,7 @@ const Dashboard = React.memo(({
                   }}
                   isPlayerActive={currentTrackIndex >= 0 && !isMiniPlayerMinimized}
                   setShowGlobalIngest={setShowGlobalIngest}
+                  setShowF10Menu={setShowF10Menu}
                   setIngestMode={setIngestMode}
                   onLogout={onLogout}
                   hasNewMessages={hasNewMessages}
@@ -4064,6 +4199,7 @@ const Dashboard = React.memo(({
                   setShowGlobalGoLive={setShowGlobalGoLive}
                   setShowGlobalUpload={setShowGlobalUpload}
                   setShowGlobalIngest={setShowGlobalIngest}
+                  setShowF10Menu={setShowF10Menu}
                   onExpandContent={onExpandContent}
                   libraryTracks={libraryTracks}
                   onEndBroadcast={onEndBroadcast}
@@ -4706,6 +4842,7 @@ const FeedContent = React.memo(({
   setShowGlobalGoLive,
   setShowGlobalUpload,
   setShowGlobalIngest,
+  setShowF10Menu,
   onExpandContent,
   libraryTracks,
   onEndBroadcast,
@@ -4723,6 +4860,7 @@ const FeedContent = React.memo(({
   const [mobilePanelTab, setMobilePanelTab] = useState('filters'); // 'filters' | 'favorites' | 'stations'
   const [feedFilter, setFeedFilter] = useState('ALL');
   const [expandedAlbums, setExpandedAlbums] = useState({});
+  const [carouselIndices, setCarouselIndices] = useState({});
   const [sidebarSector, setSidebarSector] = useState(null);
   const [listenerChatInput, setListenerChatInput] = useState('');
 
@@ -5425,6 +5563,8 @@ const FeedContent = React.memo(({
                     let parsedPrice = null;
                     let parsedLink = '';
                     let parsedDesc = '';
+                    let itemSlides = [imageUrl].filter(Boolean);
+                    let studioText = content || title || '';
 
                     if (isMarketplace) {
                       const rawTitle = title || '';
@@ -5435,12 +5575,41 @@ const FeedContent = React.memo(({
                       }
                       
                       const desc = content || '';
+                      let rawDescText = desc;
                       if (desc.includes('|')) {
                         const parts = desc.split('|');
                         parsedLink = parts[0].trim();
-                        parsedDesc = parts.slice(1).join('|').trim();
+                        rawDescText = parts.slice(1).join('|').trim();
                       } else {
                         parsedLink = desc.trim();
+                        rawDescText = '';
+                      }
+                      
+                      try {
+                        if (rawDescText.trim().startsWith('{')) {
+                          const parsed = JSON.parse(rawDescText);
+                          parsedDesc = parsed.text || '';
+                          if (parsed.slides && Array.isArray(parsed.slides)) {
+                            itemSlides = [imageUrl, ...parsed.slides].filter(Boolean);
+                          }
+                        } else {
+                          parsedDesc = rawDescText;
+                        }
+                      } catch (e) {
+                        parsedDesc = rawDescText;
+                      }
+                    } else if (type === 'studio') {
+                      const descriptionTextRaw = content || '';
+                      try {
+                        if (descriptionTextRaw.trim().startsWith('{')) {
+                          const parsed = JSON.parse(descriptionTextRaw);
+                          studioText = parsed.text || '';
+                          if (parsed.slides && Array.isArray(parsed.slides)) {
+                            itemSlides = [imageUrl, ...parsed.slides].filter(Boolean);
+                          }
+                        }
+                      } catch (e) {
+                        // ignore
                       }
                     }
 
@@ -5581,7 +5750,7 @@ const FeedContent = React.memo(({
                               <div className="text-[11px] text-white/90 leading-relaxed mt-0.5">
                                 {type === 'track' && `Uploaded track "${title}"`}
                                 {type === 'album' && <>Released album <span className="text-[#00f0ff] font-black">{title}</span></>}
-                                {type === 'studio' && (content || title)}
+                                {type === 'studio' && (studioText || title)}
                                 {type === 'journal' && (title ? `Logged entry: "${title}"` : 'Logged a new entry')}
                               </div>
                           </div>
@@ -5692,11 +5861,10 @@ const FeedContent = React.memo(({
 
                           {type === 'studio' && (
                             <div
-                              onClick={() => handleMediaExpand(item)}
-                              className="w-full flex-1 bg-black border border-white/5 overflow-hidden group/studio cursor-zoom-in relative active:scale-[0.98] transition-transform flex items-center justify-center max-h-[50vh]"
+                              className="w-full flex-1 bg-black border border-white/5 overflow-hidden group/studio relative flex items-center justify-center max-h-[50vh]"
                             >
                               {mediaType === 'VIDEO' ? (
-                                <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
+                                <div onClick={() => handleMediaExpand(item)} className="relative aspect-video bg-black flex items-center justify-center overflow-hidden cursor-zoom-in active:scale-[0.98] transition-transform w-full h-full">
                                   {item.ThumbnailUrl ? (
                                     <div className="absolute inset-0 z-0">
                                       <img src={getMediaUrl(item.ThumbnailUrl)} className="w-full h-full object-cover opacity-60" alt="" />
@@ -5717,7 +5885,52 @@ const FeedContent = React.memo(({
                                   )}
                                 </div>
                               ) : (
-                                <img src={imageUrl} className="max-w-full max-h-full object-contain opacity-90 group-hover/studio:opacity-100 transition-opacity" alt="" />
+                                <div className="relative w-full h-full flex items-center justify-center">
+                                  {itemSlides.length > 1 && (
+                                    <button 
+                                      onClick={(e) => { 
+                                        e.stopPropagation(); 
+                                        const currentIdx = carouselIndices[item.Id] || 0;
+                                        setCarouselIndices(prev => ({
+                                          ...prev,
+                                          [item.Id]: (currentIdx === 0 ? itemSlides.length - 1 : currentIdx - 1)
+                                        }));
+                                      }}
+                                      className="absolute left-2 z-20 p-1 bg-black/60 border border-white/10 hover:border-fatale/60 text-white/70 hover:text-white transition-all flex items-center justify-center rounded-sm cursor-pointer"
+                                    >
+                                      <ChevronLeft size={12} />
+                                    </button>
+                                  )}
+
+                                  <img 
+                                    onClick={() => handleMediaExpand(item)}
+                                    src={getMediaUrl(itemSlides[carouselIndices[item.Id] || 0])} 
+                                    className="max-w-full max-h-[50vh] object-contain opacity-90 group-hover/studio:opacity-100 transition-opacity cursor-zoom-in active:scale-[0.98]" 
+                                    alt="" 
+                                  />
+
+                                  {itemSlides.length > 1 && (
+                                    <button 
+                                      onClick={(e) => { 
+                                        e.stopPropagation(); 
+                                        const currentIdx = carouselIndices[item.Id] || 0;
+                                        setCarouselIndices(prev => ({
+                                          ...prev,
+                                          [item.Id]: (currentIdx === itemSlides.length - 1 ? 0 : currentIdx + 1)
+                                        }));
+                                      }}
+                                      className="absolute right-2 z-20 p-1 bg-black/60 border border-white/10 hover:border-fatale/60 text-white/70 hover:text-white transition-all flex items-center justify-center rounded-sm cursor-pointer"
+                                    >
+                                      <ChevronRight size={12} />
+                                    </button>
+                                  )}
+
+                                  {itemSlides.length > 1 && (
+                                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/85 border border-white/15 px-2 py-0.5 text-[8px] mono text-white/70 z-20 select-none">
+                                      [ SLIDE {(carouselIndices[item.Id] || 0) + 1} / {itemSlides.length} ]
+                                    </div>
+                                  )}
+                                </div>
                               )}
                             </div>
                           )}
