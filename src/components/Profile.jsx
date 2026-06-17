@@ -912,6 +912,7 @@ export const ProfileView = React.memo(({
     const [profileSeries, setProfileSeries] = useState([]);
     const [showSeriesManager, setShowSeriesManager] = useState(false);
     const [editingJournalEntry, setEditingJournalEntry] = useState(null);
+    const [journalSubTab, setJournalSubTab] = useState('ENTRIES'); // 'ENTRIES' | 'SERIES'
     const [profileGallery, setProfileGallery] = useState([]);
     const [isLoadingGallery, setIsLoadingGallery] = useState(false);
     const [myLikes, setMyLikes] = useState([]);
@@ -2276,59 +2277,142 @@ export const ProfileView = React.memo(({
                                         </button>
                                     </div>
                                 )}
+
+                                {/* Subtabs for Entries vs Series */}
+                                <div className="flex gap-4 border-b border-white/5 pb-2 mb-3">
+                                    <button 
+                                        onClick={() => setJournalSubTab('ENTRIES')} 
+                                        className={`text-[8px] font-black uppercase tracking-widest transition-colors ${journalSubTab === 'ENTRIES' ? 'text-[var(--subsystem-accent)]' : 'text-white/40 hover:text-white'}`}
+                                    >
+                                        [ ENTRIES ]
+                                    </button>
+                                    <button 
+                                        onClick={() => setJournalSubTab('SERIES')} 
+                                        className={`text-[8px] font-black uppercase tracking-widest transition-colors ${journalSubTab === 'SERIES' ? 'text-[var(--subsystem-accent)]' : 'text-white/40 hover:text-white'}`}
+                                    >
+                                        [ SERIES / NOVELS ]
+                                    </button>
+                                </div>
                                 
-                                {profileJournal.length > 0 ? profileJournal.map((entry, idx) => (
-                                    <div key={idx} className="border-b border-white/5 py-2 hover:bg-white/5 px-2 transition-colors group/jentry relative">
-                                        <div 
-                                            className="cursor-pointer"
-                                            onClick={() => handleItemClick(entry, 'JOURNAL')}
-                                        >
-                                            <div className="flex justify-between items-center mb-1">
-                                                <div className="text-[10px] font-black uppercase text-white/80 truncate pr-12">
-                                                    {entry.title || entry.Title}
-                                                </div>
-                                                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                                                    {(entry.seriesTitle || entry.SeriesTitle) && (
-                                                        <span className="text-[6px] bg-[var(--subsystem-accent)]/10 border border-[var(--subsystem-accent)]/20 px-1 rounded text-[var(--subsystem-accent)] truncate max-w-[80px]">
-                                                            {entry.seriesTitle?.toUpperCase() || entry.SeriesTitle?.toUpperCase()}
-                                                            {(entry.chapterNumber !== null && entry.chapterNumber !== undefined) ? ` CH.${entry.chapterNumber}` : (entry.ChapterNumber !== null && entry.ChapterNumber !== undefined) ? ` CH.${entry.ChapterNumber}` : ''}
-                                                        </span>
+                                {journalSubTab === 'SERIES' ? (
+                                    <div className="space-y-3">
+                                        {profileSeries.length > 0 ? profileSeries.map((series, idx) => (
+                                            <div key={idx} className="border border-white/5 bg-black/40 p-3 rounded flex gap-4 hover:border-[var(--subsystem-accent)]/20 transition-all group">
+                                                <div className="w-14 h-20 bg-white/5 border border-white/10 shrink-0 relative overflow-hidden flex items-center justify-center rounded-sm">
+                                                    {series.coverImagePath || series.CoverImagePath ? (
+                                                        <img 
+                                                            src={getMediaUrl(series.coverImagePath || series.CoverImagePath)} 
+                                                            alt="" 
+                                                            className="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300" 
+                                                        />
+                                                    ) : (
+                                                        <BookOpen size={20} className="text-white/20" />
                                                     )}
-                                                    <Book size={10} className="text-[var(--subsystem-accent)]/40" />
+                                                </div>
+                                                <div className="flex flex-col justify-between flex-1 min-w-0">
+                                                    <div className="space-y-1">
+                                                        <span className="text-[6px] bg-[var(--subsystem-accent)]/10 border border-[var(--subsystem-accent)]/20 px-2 py-0.5 rounded text-[var(--subsystem-accent)] font-bold uppercase tracking-widest">
+                                                            {series.type || series.Type || 'NOVEL'}
+                                                        </span>
+                                                        <h4 className="text-[10px] font-bold text-white uppercase truncate mt-1">
+                                                            {series.title || series.Title}
+                                                        </h4>
+                                                        <p className="text-[8px] text-white/50 line-clamp-2 leading-relaxed">
+                                                            {series.description || series.Description || 'No description.'}
+                                                        </p>
+                                                    </div>
+                                                    <button
+                                                        onClick={async () => {
+                                                            try {
+                                                                const detailRes = await API.JournalSeries.getDetails(series.id || series.Id);
+                                                                if (detailRes.data && detailRes.data.entries && detailRes.data.entries.length > 0) {
+                                                                    handleItemClick(detailRes.data.entries[0], 'JOURNAL');
+                                                                } else {
+                                                                    showNotification("EMPTY_SERIES", "This series does not contain any chapters yet.", "warning");
+                                                                }
+                                                            } catch (err) {
+                                                                console.error("Failed to load series details", err);
+                                                            }
+                                                        }}
+                                                        className="w-full mt-2 py-1 bg-[var(--subsystem-accent)]/10 hover:bg-[var(--subsystem-accent)] hover:text-black border border-[var(--subsystem-accent)]/30 text-[var(--subsystem-accent)] text-[7px] font-black uppercase tracking-widest transition-all rounded-sm flex items-center justify-center gap-1"
+                                                    >
+                                                        <span>READ_SERIES</span>
+                                                    </button>
                                                 </div>
                                             </div>
-                                            <div className="text-[8px] text-white/50 font-mono line-clamp-3 mb-1 leading-relaxed break-words w-full">
-                                                {entry.contentFormat === 'html' || entry.ContentFormat === 'html' 
-                                                    ? (entry.content || entry.Content || '').replace(/<[^>]*>/g, ' ') 
-                                                    : (entry.content || entry.Content)}
-                                            </div>
-                                            <div className="text-[6px] text-white/20 uppercase tracking-widest">
-                                                {new Date(entry.createdAt || entry.CreatedAt).toLocaleDateString()}
-                                            </div>
-                                        </div>
-                                        {isMe && (
-                                            <div className="absolute bottom-2 right-2 flex gap-1">
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); setEditingJournalEntry(entry); }}
-                                                    className="p-1.5 text-white/20 hover:text-[var(--subsystem-accent)] border border-transparent hover:border-[var(--subsystem-accent)]/30 hover:bg-[var(--subsystem-accent)]/10 transition-all md:opacity-0 md:group-hover/jentry:opacity-100 opacity-100 rounded"
-                                                    title="Edit entry"
-                                                >
-                                                    <Edit3 size={9} />
-                                                </button>
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); handleDeleteJournal(entry.id || entry.Id); }}
-                                                    className="p-1.5 text-red-500/20 hover:text-red-500 border border-transparent hover:border-red-500/30 hover:bg-red-500/10 transition-all md:opacity-0 md:group-hover/jentry:opacity-100 opacity-100 rounded"
-                                                    title="Delete entry"
-                                                >
-                                                    <X size={9} />
-                                                </button>
+                                        )) : (
+                                            <div className="text-[8px] text-white/20 uppercase py-4 text-center">
+                                                // NO_SERIES_ARCHIVED
                                             </div>
                                         )}
                                     </div>
-                                )) : (
-                                    <div className="text-[8px] text-white/20 uppercase py-4 text-center">
-                                        // {t('NO_LOGS_FOUND_IN_SECTOR') || 'SIN NOTAS'}
-                                    </div>
+                                ) : (
+                                    <>
+                                        {profileJournal.length > 0 ? profileJournal.map((entry, idx) => (
+                                            <div key={idx} className="border-b border-white/5 py-2 hover:bg-white/5 px-2 transition-colors group/jentry relative">
+                                                <div 
+                                                    className="cursor-pointer flex gap-3 items-start"
+                                                    onClick={() => handleItemClick(entry, 'JOURNAL')}
+                                                >
+                                                    {(entry.seriesCoverImagePath || entry.SeriesCoverImagePath) && (
+                                                        <div className="w-9 h-12 bg-black border border-white/10 shrink-0 relative overflow-hidden rounded-sm flex items-center justify-center">
+                                                            <img 
+                                                                src={getMediaUrl(entry.seriesCoverImagePath || entry.SeriesCoverImagePath)} 
+                                                                className="w-full h-full object-cover" 
+                                                                alt="" 
+                                                            />
+                                                        </div>
+                                                    )}
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex justify-between items-center mb-1">
+                                                            <div className="text-[10px] font-black uppercase text-white/80 truncate pr-12">
+                                                                {entry.title || entry.Title}
+                                                            </div>
+                                                            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                                                {(entry.seriesTitle || entry.SeriesTitle) && (
+                                                                    <span className="text-[6px] bg-[var(--subsystem-accent)]/10 border border-[var(--subsystem-accent)]/20 px-1 rounded text-[var(--subsystem-accent)] truncate max-w-[80px]">
+                                                                        {entry.seriesTitle?.toUpperCase() || entry.SeriesTitle?.toUpperCase()}
+                                                                        {(entry.chapterNumber !== null && entry.chapterNumber !== undefined) ? ` CH.${entry.chapterNumber}` : (entry.ChapterNumber !== null && entry.ChapterNumber !== undefined) ? ` CH.${entry.ChapterNumber}` : ''}
+                                                                    </span>
+                                                                )}
+                                                                <Book size={10} className="text-[var(--subsystem-accent)]/40" />
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-[8px] text-white/50 font-mono line-clamp-3 mb-1 leading-relaxed break-words w-full">
+                                                            {entry.contentFormat === 'html' || entry.ContentFormat === 'html' 
+                                                                ? (entry.content || entry.Content || '').replace(/<[^>]*>/g, ' ') 
+                                                                : (entry.content || entry.Content)}
+                                                        </div>
+                                                        <div className="text-[6px] text-white/20 uppercase tracking-widest">
+                                                            {new Date(entry.createdAt || entry.CreatedAt).toLocaleDateString()}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {isMe && (
+                                                    <div className="absolute bottom-2 right-2 flex gap-1">
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); setEditingJournalEntry(entry); }}
+                                                            className="p-1.5 text-white/20 hover:text-[var(--subsystem-accent)] border border-transparent hover:border-[var(--subsystem-accent)]/30 hover:bg-[var(--subsystem-accent)]/10 transition-all md:opacity-0 md:group-hover/jentry:opacity-100 opacity-100 rounded"
+                                                            title="Edit entry"
+                                                        >
+                                                            <Edit3 size={9} />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleDeleteJournal(entry.id || entry.Id); }}
+                                                            className="p-1.5 text-red-500/20 hover:text-red-500 border border-transparent hover:border-red-500/30 hover:bg-red-500/10 transition-all md:opacity-0 md:group-hover/jentry:opacity-100 opacity-100 rounded"
+                                                            title="Delete entry"
+                                                        >
+                                                            <X size={9} />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )) : (
+                                            <div className="text-[8px] text-white/20 uppercase py-4 text-center">
+                                                // {t('NO_LOGS_FOUND_IN_SECTOR') || 'SIN NOTAS'}
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>

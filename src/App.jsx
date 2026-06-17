@@ -4939,6 +4939,11 @@ const FeedContent = React.memo(({
         ImageUrl: item.imageUrl || item.ImageUrl,
         MediaType: (item.mediaType || item.MediaType || "").toUpperCase(),
         ThumbnailUrl: item.thumbnailUrl || item.ThumbnailUrl,
+        SeriesId: item.seriesId ?? item.SeriesId,
+        ChapterNumber: item.chapterNumber ?? item.ChapterNumber,
+        SeriesTitle: item.seriesTitle || item.SeriesTitle,
+        SeriesCoverImagePath: item.seriesCoverImagePath || item.SeriesCoverImagePath,
+        ContentFormat: item.contentFormat || item.ContentFormat,
       }));
       setFeed(normalizedFeed);
     } catch (e) {
@@ -5799,7 +5804,13 @@ const FeedContent = React.memo(({
                                 {type === 'track' && `Uploaded track "${title}"`}
                                 {type === 'album' && <>Released album <span className="text-[#00f0ff] font-black">{title}</span></>}
                                 {type === 'studio' && (studioText || title)}
-                                {type === 'journal' && (title ? `Logged entry: "${title}"` : 'Logged a new entry')}
+                                {type === 'journal' && (
+                                  item.SeriesTitle ? (
+                                    <>Released Chapter {item.ChapterNumber || 1} of <span className="text-[#9b5de5] font-black">{item.SeriesTitle.toUpperCase()}</span></>
+                                  ) : (
+                                    title ? `Logged entry: "${title}"` : 'Logged a new entry'
+                                  )
+                                )}
                               </div>
                           </div>
                         </div>
@@ -5984,26 +5995,47 @@ const FeedContent = React.memo(({
                           )}
 
                           {type === 'journal' && (
-                            <div className="border-l-2 border-[#9b5de5]/50 pl-4 py-2.5 text-white/95 text-[11px] leading-relaxed max-w-xl bg-white/[0.02] hover:bg-white/[0.04] transition-all rounded-r">
-                              {title && (
-                                <div className="text-[9px] font-black uppercase tracking-[0.15em] text-[#9b5de5] font-mono mb-2 italic">
-                                  {`// LOG_ENTRY: ${title}`}
+                            <div className="border-l-2 border-[#9b5de5]/50 pl-4 py-2.5 text-white/95 text-[11px] leading-relaxed max-w-xl bg-white/[0.02] hover:bg-white/[0.04] transition-all rounded-r flex gap-4 items-start">
+                              {(item.SeriesCoverImagePath || item.seriesCoverImagePath) ? (
+                                <div className="w-14 h-20 bg-black border border-white/10 shrink-0 relative overflow-hidden rounded-sm flex items-center justify-center shadow-[0_0_15px_rgba(155,93,229,0.15)] group-hover:border-[#9b5de5]/40 transition-colors">
+                                  <img 
+                                    src={getMediaUrl(item.SeriesCoverImagePath || item.seriesCoverImagePath)} 
+                                    className="w-full h-full object-cover" 
+                                    alt="" 
+                                  />
                                 </div>
-                              )}
-                              <div className="text-white/90">
-                                {content && content.length > 280 ? (
-                                  <>
-                                    {content.substring(0, 280)}...
-                                    <button
-                                      onClick={() => handleMediaExpand({ ...item, type: 'JOURNAL' })}
-                                      className="ml-2 text-[#9b5de5] hover:text-white font-black uppercase text-[9px] tracking-widest transition-colors not-italic font-mono"
-                                    >
-                                      [ READ_SIGNAL ]
-                                    </button>
-                                  </>
-                                ) : (
-                                  content
+                              ) : item.SeriesTitle ? (
+                                <div className="w-14 h-20 bg-[#9b5de5]/5 border border-[#9b5de5]/20 shrink-0 relative overflow-hidden rounded-sm flex items-center justify-center shadow-[0_0_15px_rgba(155,93,229,0.05)] text-[#9b5de5]/40">
+                                  <BookOpen size={20} />
+                                </div>
+                              ) : null}
+                              
+                              <div className="flex-1 min-w-0">
+                                {title && (
+                                  <div className="text-[9px] font-black uppercase tracking-[0.15em] text-[#9b5de5] font-mono mb-2 italic flex items-center justify-between gap-2">
+                                    <span>{`// LOG_ENTRY: ${title}`}</span>
+                                    {item.ChapterNumber && (
+                                      <span className="not-italic text-[7px] bg-[#9b5de5]/10 border border-[#9b5de5]/30 px-1.5 py-0.5 rounded text-[#9b5de5]">
+                                        CH. {item.ChapterNumber}
+                                      </span>
+                                    )}
+                                  </div>
                                 )}
+                                <div className="text-white/90">
+                                  {content && content.length > 280 ? (
+                                    <>
+                                      {content.substring(0, 280)}...
+                                      <button
+                                        onClick={() => handleMediaExpand({ ...item, type: 'JOURNAL' })}
+                                        className="ml-2 text-[#9b5de5] hover:text-white font-black uppercase text-[9px] tracking-widest transition-colors not-italic font-mono"
+                                      >
+                                        [ READ_SIGNAL ]
+                                      </button>
+                                    </>
+                                  ) : (
+                                    content
+                                  )}
+                                </div>
                               </div>
                             </div>
                           )}
