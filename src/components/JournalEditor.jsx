@@ -38,11 +38,32 @@ export default function JournalEditor({ entry, seriesList, onSave, onClose }) {
     const [newSeriesTitle, setNewSeriesTitle] = useState('');
     const [newSeriesDesc, setNewSeriesDesc] = useState('');
     const [newSeriesType, setNewSeriesType] = useState('NOVEL');
+    const [newSeriesCover, setNewSeriesCover] = useState('');
+    const [uploadingNewSeriesCover, setUploadingNewSeriesCover] = useState(false);
     const [isCreatingSeries, setIsCreatingSeries] = useState(false);
 
     useEffect(() => {
         setLocalSeriesList(seriesList || []);
     }, [seriesList]);
+
+    const handleNewSeriesCoverUpload = async (file) => {
+        if (!file) return;
+        setUploadingNewSeriesCover(true);
+        setError(null);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await API.Files.upload(formData);
+            if (res?.data?.path) {
+                setNewSeriesCover(res.data.path);
+            }
+        } catch (err) {
+            console.error('Failed to upload series cover', err);
+            setError('COVER_UPLOAD_FAILED: Check file type/size');
+        } finally {
+            setUploadingNewSeriesCover(false);
+        }
+    };
 
     const handleCreateSeriesInline = async () => {
         if (!newSeriesTitle.trim()) return;
@@ -52,7 +73,8 @@ export default function JournalEditor({ entry, seriesList, onSave, onClose }) {
             const res = await API.JournalSeries.create({
                 title: newSeriesTitle.trim(),
                 description: newSeriesDesc.trim(),
-                type: newSeriesType
+                type: newSeriesType,
+                coverImagePath: newSeriesCover || null
             });
             if (res?.data) {
                 const newSeries = res.data;
@@ -62,6 +84,7 @@ export default function JournalEditor({ entry, seriesList, onSave, onClose }) {
                 setNewSeriesTitle('');
                 setNewSeriesDesc('');
                 setNewSeriesType('NOVEL');
+                setNewSeriesCover('');
             }
         } catch (err) {
             console.error("Failed to create inline series", err);
@@ -457,6 +480,48 @@ export default function JournalEditor({ entry, seriesList, onSave, onClose }) {
                             </div>
 
                             <div className="space-y-3">
+                                {/* Cover Image Upload Area */}
+                                <div className="flex flex-col items-center py-2 bg-black/40 border border-white/5 rounded">
+                                    <label className="mono text-[7px] text-white/40 uppercase mb-2 self-start pl-2">cover_image (optional)</label>
+                                    <div className="w-20 h-28 bg-white/5 border border-white/10 rounded overflow-hidden relative flex flex-col items-center justify-center group shrink-0">
+                                        {newSeriesCover ? (
+                                            <>
+                                                <img 
+                                                    src={getMediaUrl(newSeriesCover)} 
+                                                    alt="" 
+                                                    className="w-full h-full object-cover" 
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setNewSeriesCover('')}
+                                                    className="absolute top-1 right-1 p-0.5 bg-black/80 hover:bg-black border border-white/10 rounded text-white"
+                                                >
+                                                    <X size={8} />
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <div className="text-center p-2">
+                                                {uploadingNewSeriesCover ? (
+                                                    <div className="animate-spin w-4 h-4 text-[var(--text-color)] mx-auto border-2 border-t-transparent rounded-full" />
+                                                ) : (
+                                                    <Upload size={14} className="text-white/20 mx-auto" />
+                                                )}
+                                                <span className="mono text-[6px] text-white/30 uppercase block mt-1">
+                                                    {uploadingNewSeriesCover ? 'UPLOADING' : 'UPLOAD'}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {!newSeriesCover && !uploadingNewSeriesCover && (
+                                            <input 
+                                                type="file" 
+                                                accept="image/*"
+                                                onChange={(e) => handleNewSeriesCoverUpload(e.target.files[0])}
+                                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+
                                 <div className="space-y-1">
                                     <label className="mono text-[7px] text-white/40 uppercase">series_title</label>
                                     <input 

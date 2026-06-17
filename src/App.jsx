@@ -3457,6 +3457,13 @@ function App() {
                                   >
                                       VIDEO
                                   </button>
+                                  <button
+                                      type="button"
+                                      onClick={() => { setIngestMode('JOURNAL'); }}
+                                      className="px-3 py-1 text-[8px] font-black tracking-widest border border-white/10 text-white/40 hover:border-fatale hover:text-fatale transition-all cursor-pointer"
+                                  >
+                                      JOURNAL / LOG
+                                  </button>
                               </div>
                           </div>
                           
