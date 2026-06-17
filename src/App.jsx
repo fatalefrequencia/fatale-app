@@ -33,6 +33,8 @@ import TipArtistModal from './components/TipArtistModal';
 import TrackActionsDropdown from './components/TrackActionsDropdown';
 import TrackEconomyModal from './components/TrackEconomyModal';
 import PlaylistSelectModal from './components/PlaylistSelectModal';
+import JournalEditor from './components/JournalEditor';
+import SeriesManager from './components/SeriesManager';
 
 
 import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
@@ -799,7 +801,15 @@ function App() {
   const [showF10Menu, setShowF10Menu] = useState(false);
   const [mediaTypeSelection, setMediaTypeSelection] = useState('PHOTO');
   const [ingestMode, setIngestMode] = useState('ALL'); // 'ALL' or 'JOURNAL'
-  // Force reload to fix cache issue with setIngestMode
+  const [globalSeriesList, setGlobalSeriesList] = useState([]);
+
+  useEffect(() => {
+    if (showGlobalIngest && user && ingestMode === 'JOURNAL') {
+      API.JournalSeries.getMySeries()
+        .then(res => setGlobalSeriesList(res.data || []))
+        .catch(err => console.error("Failed to load series for global ingest", err));
+    }
+  }, [showGlobalIngest, user, ingestMode]);
 
   const [goLiveFormData, setGoLiveFormData] = useState({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true, sectorId: null, sourceType: 'app' });
   const [broadcastSourceType, setBroadcastSourceType] = useState('app');
@@ -3381,8 +3391,25 @@ function App() {
           />
         )}
 
+        {showGlobalIngest && ingestMode === 'JOURNAL' && (
+          <JournalEditor
+            entry={null}
+            seriesList={globalSeriesList}
+            onSave={async (saved) => {
+              setShowGlobalIngest(false);
+              setIngestMode('ALL');
+              showNotification("LOG_COMMITTED", "Creative log entry committed successfully.", "success");
+              window.location.reload();
+            }}
+            onClose={() => {
+              setShowGlobalIngest(false);
+              setIngestMode('ALL');
+            }}
+          />
+        )}
+
         {/* ─── Ingest Choice Modal (NEW_POST) ─── */}
-        {showGlobalIngest && (
+        {showGlobalIngest && ingestMode !== 'JOURNAL' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[500] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" onClick={() => { setShowGlobalIngest(false); setIngestMode('ALL'); }} />
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative w-full max-w-xl text-center space-y-8 bg-black p-8 border border-white/10">

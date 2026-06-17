@@ -32,6 +32,45 @@ export default function JournalEditor({ entry, seriesList, onSave, onClose }) {
     const [error, setError] = useState(null);
     const [isDragOver, setIsDragOver] = useState(false);
 
+    // Local copy of series list for immediate updates on inline creation
+    const [localSeriesList, setLocalSeriesList] = useState(seriesList || []);
+    const [showInlineSeriesCreator, setShowInlineSeriesCreator] = useState(false);
+    const [newSeriesTitle, setNewSeriesTitle] = useState('');
+    const [newSeriesDesc, setNewSeriesDesc] = useState('');
+    const [newSeriesType, setNewSeriesType] = useState('NOVEL');
+    const [isCreatingSeries, setIsCreatingSeries] = useState(false);
+
+    useEffect(() => {
+        setLocalSeriesList(seriesList || []);
+    }, [seriesList]);
+
+    const handleCreateSeriesInline = async () => {
+        if (!newSeriesTitle.trim()) return;
+        setIsCreatingSeries(true);
+        setError(null);
+        try {
+            const res = await API.JournalSeries.create({
+                title: newSeriesTitle.trim(),
+                description: newSeriesDesc.trim(),
+                type: newSeriesType
+            });
+            if (res?.data) {
+                const newSeries = res.data;
+                setLocalSeriesList(prev => [newSeries, ...prev]);
+                setSelectedSeriesId(newSeries.id);
+                setShowInlineSeriesCreator(false);
+                setNewSeriesTitle('');
+                setNewSeriesDesc('');
+                setNewSeriesType('NOVEL');
+            }
+        } catch (err) {
+            console.error("Failed to create inline series", err);
+            setError("INLINE_SERIES_CREATION_FAILED: Check connection");
+        } finally {
+            setIsCreatingSeries(false);
+        }
+    };
+
     const editor = useEditor({
         extensions: [
             StarterKit.configure({
@@ -247,14 +286,23 @@ export default function JournalEditor({ entry, seriesList, onSave, onClose }) {
 
                     {/* Series Choice */}
                     <div className="space-y-1">
-                        <label className="mono text-[8px] text-white/40 uppercase tracking-widest">link_to_series</label>
+                        <div className="flex justify-between items-center">
+                            <label className="mono text-[8px] text-white/40 uppercase tracking-widest">link_to_series</label>
+                            <button
+                                type="button"
+                                onClick={() => setShowInlineSeriesCreator(true)}
+                                className="mono text-[7px] text-[var(--text-color)]/60 hover:text-[var(--text-color)] hover:underline uppercase"
+                            >
+                                [ + CREATE_NEW ]
+                            </button>
+                        </div>
                         <select
                             value={selectedSeriesId}
                             onChange={(e) => setSelectedSeriesId(e.target.value)}
                             className="w-full bg-black/40 border border-white/5 p-3 text-[11px] text-white mono outline-none focus:border-[var(--text-color)]/40 transition-all"
                         >
                             <option value="">[ STANDALONE_ENTRY ]</option>
-                            {seriesList?.map(s => (
+                            {localSeriesList?.map(s => (
                                 <option key={s.id} value={s.id}>{s.title.toUpperCase()}</option>
                             ))}
                         </select>
@@ -390,6 +438,79 @@ export default function JournalEditor({ entry, seriesList, onSave, onClose }) {
                         </button>
                     </div>
                 </div>
+
+                {/* Inline Series Creator Dialog */}
+                {showInlineSeriesCreator && (
+                    <div className="absolute inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
+                        <div className="max-w-md w-full border border-[var(--text-color)]/30 bg-black p-6 space-y-4 rounded">
+                            <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                                <span className="mono text-[10px] text-[var(--text-color)] uppercase font-bold tracking-widest">
+                                    CREATE_NEW_SERIES
+                                </span>
+                                <button 
+                                    type="button" 
+                                    onClick={() => setShowInlineSeriesCreator(false)}
+                                    className="text-white/40 hover:text-white"
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
+
+                            <div className="space-y-3">
+                                <div className="space-y-1">
+                                    <label className="mono text-[7px] text-white/40 uppercase">series_title</label>
+                                    <input 
+                                        type="text"
+                                        value={newSeriesTitle}
+                                        onChange={(e) => setNewSeriesTitle(e.target.value)}
+                                        placeholder="E.G. CHRONICLES OF NEON..."
+                                        className="w-full bg-black border border-white/10 p-2 text-[10px] text-white mono outline-none focus:border-[var(--text-color)]/40"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="mono text-[7px] text-white/40 uppercase">format_type</label>
+                                    <select
+                                        value={newSeriesType}
+                                        onChange={(e) => setNewSeriesType(e.target.value)}
+                                        className="w-full bg-black border border-white/10 p-2 text-[10px] text-white mono outline-none focus:border-[var(--text-color)]/40"
+                                    >
+                                        <option value="NOVEL">NOVEL (BOOK)</option>
+                                        <option value="COMIC">COMIC (MANGA/GRAPHIC)</option>
+                                        <option value="ESSAY">ESSAY / ANTHOLOGY</option>
+                                        <option value="SERIES">GENERAL SERIES</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="mono text-[7px] text-white/40 uppercase">description</label>
+                                    <textarea
+                                        value={newSeriesDesc}
+                                        onChange={(e) => setNewSeriesDesc(e.target.value)}
+                                        placeholder="SERIES_SYNOPSIS..."
+                                        className="w-full bg-black border border-white/10 p-2 text-[9px] text-white mono outline-none h-16 resize-none focus:border-[var(--text-color)]/40"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowInlineSeriesCreator(false)}
+                                    className="px-4 py-1.5 border border-white/15 text-white/60 text-[8px] uppercase tracking-wider hover:bg-white/5 transition-all mono"
+                                >
+                                    CANCEL
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleCreateSeriesInline}
+                                    disabled={isCreatingSeries || !newSeriesTitle.trim()}
+                                    className="px-4 py-1.5 bg-[var(--text-color)]/10 border border-[var(--text-color)]/40 text-[var(--text-color)] text-[8px] uppercase tracking-wider hover:bg-[var(--text-color)] hover:text-black transition-all mono disabled:opacity-40"
+                                >
+                                    {isCreatingSeries ? 'CREATING...' : 'CREATE'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
