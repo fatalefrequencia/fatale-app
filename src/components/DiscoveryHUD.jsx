@@ -2710,23 +2710,23 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                     const pages = [
                         {
                             id: 'WELCOME',
-                            title: 'WELCOME TO FATALE',
-                            subtitle: '// SYSTEM_INTRODUCTION',
+                            title: 'hey, welcome to FATALE ♥',
+                            subtitle: '// glad you made it',
                             content: (
                                 <div className="space-y-5 text-white/80 text-[11px] leading-relaxed font-sans">
                                     <p className="text-white/60 font-mono text-[10px] tracking-widest border-l-2 border-[#b39ddb]/50 pl-3">
-                                        FATALE is a next-generation music network built for independent artists and their communities. It combines music discovery, social broadcasting, and artist economy tools in a single terminal-aesthetic interface.
+                                        FATALE is a space built for independent artists — a place where you can share music, write your story, broadcast live, and build a real community around your art. Think of it like a studio, a stage, and a social space all in one.
                                     </p>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                                         {[
-                                            { label: 'DISCOVERY HUD', desc: 'The main command center — scan trending signals, browse artists, explore journals and transmissions.' },
-                                            { label: 'LIVE BROADCAST', desc: 'Artists can stream live to their community. Listeners tune in, chat, and request tracks in real time.' },
-                                            { label: 'DJ MIXER', desc: 'A full dual-deck DJ mixer with your library, playlists, and live mixing controls.' },
-                                            { label: 'ARTIST PROFILES', desc: 'Each artist has a full profile with music releases, studio journal, gallery, and community hub.' },
-                                            { label: 'LOG / JOURNAL', desc: 'Artists keep a personal diary — write text, embed photos & videos, or publish illustrated picture stories for followers to read.' },
-                                            { label: 'PUBLICATIONS & SERIES', desc: 'Serialized multi-chapter works — novels, comics, picture journals — displayed as book cards in the feed with a [ READ ] button.' },
-                                            { label: 'SIGNAL FEED', desc: 'A social feed of posts, uploads, journal entries, series updates, and community content from artists you follow.' },
-                                            { label: 'WALLET & CREDITS', desc: 'A built-in credit system for tipping artists, purchasing tracks, and accessing premium content.' },
+                                            { label: 'DISCOVERY HUD', desc: 'Your main home screen — see what\'s trending, browse artists, check journals and visual posts all in one place.' },
+                                            { label: 'LIVE BROADCAST', desc: 'Go live to your community whenever you want. Fans can tune in, chat with you, and request songs in real time.' },
+                                            { label: 'DJ MIXER', desc: 'A full two-deck mixer — load tracks, blend them with a crossfader, and broadcast your mix live.' },
+                                            { label: 'ARTIST PROFILES', desc: 'Your own page on FATALE — music releases, your journal, your gallery, your community. All yours.' },
+                                            { label: 'LOG / JOURNAL', desc: 'A personal diary that your followers can read. Write anything — thoughts, updates, stories, or just drop some photos.' },
+                                            { label: 'PUBLICATIONS & SERIES', desc: 'Want to write something longer? Create a serialized novel, comic, or picture journal. Chapter by chapter, like a real book.' },
+                                            { label: 'SIGNAL FEED', desc: 'Everything from artists you follow in one scrollable stream — posts, photos, videos, journal updates, new chapters.' },
+                                            { label: 'WALLET & CREDITS', desc: 'Send tips to artists you love, buy tracks, and unlock exclusive content. Artists get paid in real time.' },
                                         ].map(item => (
                                             <div key={item.label} className="flex gap-3 p-3 border border-[#b39ddb]/10 hover:border-[#b39ddb]/30 transition-colors">
                                                 <span className="text-[#b39ddb] font-mono text-[8px] mt-0.5 shrink-0">▸</span>
@@ -2737,27 +2737,27 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             </div>
                                         ))}
                                     </div>
-                                    <p className="text-white/30 font-mono text-[9px] tracking-widest text-center pt-2">Use the arrows below to navigate this manual →</p>
+                                    <p className="text-white/30 font-mono text-[9px] tracking-widest text-center pt-2">tap the arrows below to flip through this guide →</p>
                                 </div>
                             )
                         },
                         {
                             id: 'DISCOVERY',
-                            title: 'DISCOVERY HUD',
-                            subtitle: '// MAIN_INTERFACE',
+                            title: 'the discovery hud',
+                            subtitle: '// your home base',
                             content: (
                                 <div className="space-y-4 text-[11px] leading-relaxed font-sans">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">The Discovery HUD is your command center — a live-updating grid of panels showing the pulse of the entire network.</p>
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">This is the first thing you see when you open FATALE — a live grid of everything happening on the platform. Artists, music, journals, visuals, communities — all updating in real time.</p>
                                     <div className="space-y-3">
                                         {[
-                                            { key: 'YT FREQ SCAN', desc: 'Search for any song by title or artist. Results stream in from the music catalog. Click any result to play instantly.' },
-                                            { key: 'NATIVE ARTISTS', desc: 'Artists who upload and release music directly on FATALE. Click any artist node to visit their profile.' },
-                                            { key: 'PLAYLISTS', desc: 'Browse your personal playlists and community-curated playlists. Click a playlist to preview its tracks.' },
-                                            { key: 'STUDIO TRANSMISSIONS', desc: 'Photos, videos, and visual content shared by artists. Click any tile to view full-size with comments.' },
-                                            { key: '[ JOURNAL ]', desc: 'Text logs and posts from artists. Click any entry to read the full note in a terminal-style viewer.' },
-                                            { key: 'MARKETPLACE', desc: 'Digital collectibles, merch, and curated links from artists. Click items to explore.' },
-                                            { key: 'LIVE!', desc: 'Active live streams shown in real time. Click to tune in and join the chat.' },
-                                            { key: 'COMMUNITIES', desc: 'Fan groups organized by location or genre. Join a community or create your own.' },
+                                            { key: 'YT FREQ SCAN', desc: 'The search bar at the top. Type any song or artist name and results stream in instantly. Click anything to start playing.' },
+                                            { key: 'NATIVE ARTISTS', desc: 'Artists who release their music directly on FATALE. Click any of them to visit their profile.' },
+                                            { key: 'PLAYLISTS', desc: 'Your playlists and community ones too. Click any playlist to preview the tracks inside.' },
+                                            { key: 'STUDIO TRANSMISSIONS', desc: 'Photos and videos posted by artists — shown as a visual grid. Click any tile to see it full-size with comments.' },
+                                            { key: '[ JOURNAL ]', desc: 'Text posts and log entries from artists you follow. Click any one to read the full thing.' },
+                                            { key: 'MARKETPLACE', desc: 'Merch, digital collectibles, and curated links from artists. Click to explore.' },
+                                            { key: 'LIVE!', desc: 'Who\'s streaming right now. Click any live session to tune in and join the chat.' },
+                                            { key: 'COMMUNITIES', desc: 'Fan groups by genre or location. You can join one or browse what\'s happening inside each.' },
                                         ].map(item => (
                                             <div key={item.key} className="flex gap-3 items-start">
                                                 <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
@@ -2766,26 +2766,26 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         ))}
                                     </div>
                                     <div className="mt-4 p-3 bg-[#b39ddb]/5 border border-[#b39ddb]/20 text-[10px] text-white/50 font-mono">
-                                        TIP: Type in the search bar at the top to filter all panels simultaneously in real time.
+                                        tip: typing in the search bar filters every single panel on the page at once — super useful when you're looking for something specific.
                                     </div>
                                 </div>
                             )
                         },
                         {
                             id: 'GLOBE',
-                            title: 'INTERACTIVE GLOBE',
-                            subtitle: '// GLOBE_SENSE',
+                            title: 'the globe',
+                            subtitle: '// the world, literally',
                             content: (
                                 <div className="space-y-4 text-[11px] leading-relaxed font-sans">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">The 3D globe maps real-time activity across the FATALE network. Nodes represent artists, tracks, and communities pinned to geographic locations.</p>
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">The 3D globe in the middle of the Discovery screen shows you where activity is happening across the FATALE network in real time. Every glowing dot is an artist, a track, or a community pinned to a place in the world.</p>
                                     <div className="space-y-3">
                                         {[
-                                            { key: 'DRAG TO SPIN', desc: 'Click and drag the globe to rotate it in any direction and explore different regions.' },
-                                            { key: 'CLICK NODES', desc: 'Click any glowing node on the globe to see what artist, track, or community it represents.' },
-                                            { key: 'VIEW FILTERS', desc: 'Use the filter buttons on the right side of the globe panel to toggle what types of nodes are displayed: Tracks, Artists, Communities, Live, etc.' },
-                                            { key: 'SECTOR COLORS', desc: 'Each sector has a color. Content from that sector will glow with the same color across all HUD panels.' },
-                                            { key: 'GLOBAL / LOCAL', desc: 'Switch between Global View (all nodes) and Local View (nodes near your detected region).' },
-                                            { key: 'PAUSE SPIN', desc: 'The globe auto-spins by default. Click PAUSE_SPIN to stop rotation and examine a specific region.' },
+                                            { key: 'DRAG TO SPIN', desc: 'Click and drag the globe to rotate it — explore any region of the world.' },
+                                            { key: 'CLICK A NODE', desc: 'Click any glowing dot to see what it is — an artist, a track, a live stream, or a community.' },
+                                            { key: 'VIEW FILTERS', desc: 'The buttons on the side let you filter what types of dots show up — Tracks, Artists, Communities, Live streams, etc.' },
+                                            { key: 'SECTOR COLORS', desc: 'Different areas of the globe glow in different colors. Posts and content from those areas use the same color across the whole HUD.' },
+                                            { key: 'GLOBAL / LOCAL', desc: 'Toggle between seeing the whole world or just content near your location.' },
+                                            { key: 'PAUSE SPIN', desc: 'The globe rotates on its own by default. Hit PAUSE_SPIN if you want to stop it and look at a specific region.' },
                                         ].map(item => (
                                             <div key={item.key} className="flex gap-3 items-start">
                                                 <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
@@ -2794,29 +2794,29 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         ))}
                                     </div>
                                     <div className="mt-4 p-3 bg-[#b39ddb]/5 border border-[#b39ddb]/20 text-[10px] text-white/50 font-mono">
-                                        TIP: On mobile, the globe switches to a Pinterest-style grid layout for easier browsing.
+                                        tip: on mobile the globe turns into a scrollable grid so it's way easier to tap through everything.
                                     </div>
                                 </div>
                             )
                         },
                         {
                             id: 'PLAYER',
-                            title: 'MUSIC PLAYER',
-                            subtitle: '// AUDIO_ENGINE',
+                            title: 'music player',
+                            subtitle: '// just hit play',
                             content: (
                                 <div className="space-y-4 text-[11px] leading-relaxed font-sans">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">FATALE features two audio modes: a sleek mini player for casual listening and a full DJ Mixer for advanced control.</p>
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">There are two ways to listen on FATALE — the mini player that lives at the bottom of the screen for casual listening, and the full DJ Mixer when you want serious control. Here's the mini player.</p>
                                     <div className="space-y-1 mb-4">
-                                        <div className="text-[#b39ddb] font-mono text-[9px] font-black uppercase tracking-widest pb-2 border-b border-[#b39ddb]/20">MINI PLAYER (Bottom Bar)</div>
+                                        <div className="text-[#b39ddb] font-mono text-[9px] font-black uppercase tracking-widest pb-2 border-b border-[#b39ddb]/20">the mini player (bottom bar)</div>
                                     </div>
                                     <div className="space-y-3">
                                         {[
-                                            { key: 'PLAY / PAUSE', desc: 'Toggle playback of the current track.' },
-                                            { key: 'SKIP', desc: 'Navigate forward and backward through your queue.' },
-                                            { key: 'LIKE ♥', desc: 'Save a track to your Favorites library.' },
-                                            { key: '+ (QUEUE)', desc: 'Add the current track to your queue.' },
-                                            { key: 'VOLUME', desc: 'Adjust playback volume with the slider.' },
-                                            { key: '$ (TIP)', desc: 'Send credits directly to the playing artist as a tip.' },
+                                            { key: 'PLAY / PAUSE', desc: 'Tap to start or pause the track that\'s currently loaded.' },
+                                            { key: 'SKIP', desc: 'Jump forward or backward through your queue.' },
+                                            { key: 'LIKE ♥', desc: 'Save the track to your Favorites so you can find it again later.' },
+                                            { key: '+ (QUEUE)', desc: 'Add the current track to the end of your queue.' },
+                                            { key: 'VOLUME', desc: 'Drag the slider to adjust how loud it plays.' },
+                                            { key: '$ (TIP)', desc: 'Send some credits straight to the artist while their track is playing.' },
                                         ].map(item => (
                                             <div key={item.key} className="flex gap-3 items-start">
                                                 <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
@@ -2825,7 +2825,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         ))}
                                     </div>
                                     <div className="space-y-1 mt-4 mb-2">
-                                        <div className="text-[#b39ddb] font-mono text-[9px] font-black uppercase tracking-widest pb-2 border-b border-[#b39ddb]/20">FUNCTION KEY SHORTCUTS (Desktop)</div>
+                                        <div className="text-[#b39ddb] font-mono text-[9px] font-black uppercase tracking-widest pb-2 border-b border-[#b39ddb]/20">keyboard shortcuts (desktop only)</div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2 text-[9px] font-mono">
                                         {['F1 FEED','F2 PLAYER','F3 PLAYER','F4 MESSAGES','F5 PROFILE','F6 WALLET','F7 COMMS','F8 LIVE','F9 EXIT'].map(k => (
@@ -2837,21 +2837,21 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         },
                         {
                             id: 'DJMIXER',
-                            title: 'DJ MIXER',
-                            subtitle: '// MIXER_CORE',
+                            title: 'dj mixer',
+                            subtitle: '// two decks, one vibe',
                             content: (
                                 <div className="space-y-4 text-[11px] leading-relaxed font-sans">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">The DJ Mixer is a professional-grade dual-deck mixing interface. Load tracks onto Deck A or B, blend them with the crossfader, and broadcast your mix live.</p>
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">The DJ Mixer is a full professional two-deck setup. Load a track on Deck A and another on Deck B, blend them together with the crossfader, and if you want — broadcast the whole mix live to your followers.</p>
                                     <div className="space-y-3">
                                         {[
-                                            { key: 'SIGNAL CRATE', desc: 'Your music library. Browse ALL tracks, FAVORITES, PURCHASED, by ARTIST, or by PLAYLIST. Use the search bar to find specific tracks.' },
-                                            { key: 'LOAD A / B', desc: 'Click the A or B chip next to any track in the crate to load it onto that deck.' },
-                                            { key: 'CROSSFADER', desc: 'The horizontal slider at the bottom blends audio between Deck A (left) and Deck B (right).' },
-                                            { key: 'BPM SYNC', desc: 'Use the BPM display and pitch controls on each deck to match tempos between tracks.' },
-                                            { key: 'EQ CONTROLS', desc: 'Each deck has High / Mid / Low EQ knobs to shape the sound of that deck independently.' },
-                                            { key: 'CREATE PLAYLIST', desc: 'Inside the Signal Crate Playlists tab, click the + button to create a new playlist from your liked songs or by searching tracks.' },
-                                            { key: 'LIVE BROADCAST', desc: 'When broadcasting live, the mixer feeds directly into your stream. Listeners hear your mix in real time.' },
-                                            { key: 'NEURAL CHAT', desc: 'Chat with listeners and receive track requests while you broadcast.' },
+                                            { key: 'SIGNAL CRATE', desc: 'Your music library lives here. Browse all your tracks, favorites, purchased music, by artist, or by playlist. Search to find anything fast.' },
+                                            { key: 'LOAD A / B', desc: 'Each track in the crate has an A and a B chip next to it. Click one to load that track onto that deck.' },
+                                            { key: 'CROSSFADER', desc: 'The horizontal slider at the bottom. Slide it left to hear Deck A, right to hear Deck B, or anywhere in between to blend them.' },
+                                            { key: 'BPM SYNC', desc: 'Each deck shows the tempo of the track. Use the pitch controls to match tempos before you blend.' },
+                                            { key: 'EQ CONTROLS', desc: 'High, Mid, and Low knobs on each deck so you can shape how each track sounds individually.' },
+                                            { key: 'CREATE PLAYLIST', desc: 'Go to the Playlists tab inside the Signal Crate and hit the + button to build a new playlist from your library.' },
+                                            { key: 'LIVE BROADCAST', desc: 'When you go live, everything coming out of the mixer is what your listeners hear. They\'re in the room with you.' },
+                                            { key: 'NEURAL CHAT', desc: 'While you\'re broadcasting, fans can chat with you and send track requests right in the stream.' },
                                         ].map(item => (
                                             <div key={item.key} className="flex gap-3 items-start">
                                                 <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
@@ -2864,22 +2864,22 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         },
                         {
                             id: 'PROFILE',
-                            title: 'ARTIST PROFILE',
-                            subtitle: '// IDENTITY_CORE',
+                            title: 'your profile',
+                            subtitle: '// your space, your rules',
                             content: (
                                 <div className="space-y-4 text-[11px] leading-relaxed font-sans">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Every user on FATALE has a profile. Artists use their profile as their home base — releasing music, posting journal entries, sharing visuals, and building their community.</p>
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Your profile is your home on FATALE — it's where everything you make lives. Music, journal entries, visual posts, your series, your community. Fans who follow you can see all of it here.</p>
                                     <div className="space-y-3">
                                         {[
-                                            { key: 'MUSIC RELEASES', desc: 'Upload albums, singles, and tracks. Set prices, manage your catalog, and track plays.' },
-                                            { key: 'STUDIO / JOURNAL', desc: 'Post text logs (called "Log entries"), share photos and videos, or write long-form illustrated entries. Your followers see these in the feed and Discovery HUD.' },
-                                            { key: 'PUBLICATIONS & SERIES', desc: 'Create multi-chapter serialized works — novels, picture journals, comics. Each series gets a cover image and a chapter list that readers can browse on your profile.' },
-                                            { key: 'GALLERY', desc: 'A visual grid of all your uploaded photos and videos.' },
-                                            { key: 'COMMUNITIES', desc: 'Create or join fan communities linked to your profile.' },
-                                            { key: 'BIO & IDENTITY', desc: 'Set your display name, bio, profile picture, banner, and theme color from Settings → Identity.' },
-                                            { key: 'HARDWARE RACK', desc: 'Register your gear and instruments. Fans can see what equipment you use.' },
-                                            { key: 'FOLLOWING / FOLLOWERS', desc: 'Follow artists to see their content in your feed. Click any username to visit their profile.' },
-                                            { key: 'MODIFY IDENTITY', desc: 'Edit your profile from the Modify Identity button on your own profile page.' },
+                                            { key: 'MUSIC RELEASES', desc: 'Upload your albums, singles, and tracks. You can set prices, organize your catalog, and watch your play counts grow.' },
+                                            { key: 'STUDIO / JOURNAL', desc: 'Your artist diary. Post quick log entries, drop photos and videos, or write long illustrated pieces. Followers see everything in their feed.' },
+                                            { key: 'PUBLICATIONS & SERIES', desc: 'For longer work — novels, comics, picture journals. Create a series, upload a cover, and publish chapter by chapter. Readers can browse and follow along from your profile.' },
+                                            { key: 'GALLERY', desc: 'A visual grid of every photo and video you\'ve posted — like your own portfolio page.' },
+                                            { key: 'COMMUNITIES', desc: 'Create your own fan community or join one that already exists. A great way to bring your followers together.' },
+                                            { key: 'BIO & IDENTITY', desc: 'Edit your name, bio, profile photo, banner image, and your theme color from Settings → Identity.' },
+                                            { key: 'HARDWARE RACK', desc: 'Show off what gear and instruments you use. Fans love seeing the setup behind the music.' },
+                                            { key: 'FOLLOWING / FOLLOWERS', desc: 'Follow other artists to see their content in your feed. Click anyone\'s username anywhere on the platform to visit their profile.' },
+                                            { key: 'MODIFY IDENTITY', desc: 'On your own profile, hit the Modify Identity button to edit anything about how you appear on FATALE.' },
                                         ].map(item => (
                                             <div key={item.key} className="flex gap-3 items-start">
                                                 <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
@@ -2892,21 +2892,21 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         },
                         {
                             id: 'FEED',
-                            title: 'SIGNAL FEED',
-                            subtitle: '// SOCIAL_STREAM',
+                            title: 'signal feed',
+                            subtitle: '// what\'s happening right now',
                             content: (
                                 <div className="space-y-4 text-[11px] leading-relaxed font-sans">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">The Signal Feed aggregates content from artists and communities you follow into a single scrollable stream. It is your personalized view of the network.</p>
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">The feed is your personal stream — everything posted by artists you follow shows up here in order. Scroll through it like a timeline. It's the easiest way to stay up with everyone you care about.</p>
                                     <div className="space-y-3">
                                         {[
-                                            { key: 'POST TYPES', desc: 'The feed shows journal log entries, photo uploads, video transmissions, music releases, live announcements, and serialized series cards.' },
-                                            { key: 'ZOOM VIEW', desc: 'Click any post card to open it in the full modal viewer with media, comments, and action buttons.' },
-                                            { key: 'POST COMMENT', desc: 'In the expanded view of a post, type a response and hit send to add your comment.' },
-                                            { key: 'SHARE', desc: 'Use the Share button inside any post to copy a direct link to that content.' },
-                                            { key: 'TIP ARTIST', desc: 'Send credits to the artist directly from any post they have authored.' },
-                                            { key: 'BROADCAST SIGNAL', desc: 'Create and publish your own post — text, image, video, journal log, or a new series chapter — from your profile or using the [ NEW TRANSMISSION ] button.' },
-                                            { key: 'SERIES CARDS', desc: 'When an artist publishes or updates a series, a book-style card appears in the feed with the cover art and a [ READ ] button. Click it to start reading from Chapter 1.' },
-                                            { key: 'FILTERING', desc: 'Use the search bar on Discovery to filter all visible signals simultaneously across panels.' },
+                                            { key: 'WHAT SHOWS UP', desc: 'Journal entries, photos, videos, music releases, live stream announcements, and series updates — all in one place.' },
+                                            { key: 'OPEN A POST', desc: 'Tap any card in the feed to open it fully — you\'ll see the full media, all the comments, and action buttons.' },
+                                            { key: 'LEAVE A COMMENT', desc: 'Inside any post you can type a comment and hit send. The artist and other fans will see it.' },
+                                            { key: 'SHARE A POST', desc: 'Hit the Share button inside any post to copy a link directly to that piece of content.' },
+                                            { key: 'TIP THE ARTIST', desc: 'See something you love? Send the artist some credits directly from the post — they get it instantly.' },
+                                            { key: 'POSTING YOURSELF', desc: 'Hit the [ NEW TRANSMISSION ] button to post your own content — a photo, a video, a journal entry, or a new chapter for your series.' },
+                                            { key: 'SERIES CARDS', desc: 'When an artist posts or updates a series, it shows up as a big book-style card with cover art and a [ READ ] button. Tap it to start reading from Chapter 1.' },
+                                            { key: 'FILTERING', desc: 'The search bar on the Discovery screen filters the feed too — useful for finding posts from a specific artist fast.' },
                                         ].map(item => (
                                             <div key={item.key} className="flex gap-3 items-start">
                                                 <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
@@ -2915,26 +2915,26 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         ))}
                                     </div>
                                     <div className="mt-4 p-3 bg-[#b39ddb]/5 border border-[#b39ddb]/20 text-[10px] text-white/50 font-mono">
-                                        TIP: Comments on posts show the author's username and full message content.
+                                        tip: comments show the commenter's username so everyone knows who said what.
                                     </div>
                                 </div>
                             )
                         },
                         {
                             id: 'WALLET',
-                            title: 'WALLET & CREDITS',
-                            subtitle: '// ECONOMY_NODE',
+                            title: 'wallet & credits',
+                            subtitle: '// support your artists',
                             content: (
                                 <div className="space-y-4 text-[11px] leading-relaxed font-sans">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">FATALE has a built-in credit economy. Credits are used to tip artists, purchase tracks, and unlock premium content.</p>
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">FATALE has its own credit system. Credits are how fans support artists directly — no middleman, no waiting. You can tip, buy tracks, and unlock premium stuff, all with credits.</p>
                                     <div className="space-y-3">
                                         {[
-                                            { key: 'CREDITS BALANCE', desc: 'Your credit balance is displayed in the Wallet section. Credits are purchased with real currency.' },
-                                            { key: 'TIP ARTIST', desc: 'Send any amount of credits to an artist directly from a post, a track, or their profile.' },
-                                            { key: 'PURCHASE TRACKS', desc: 'Artists can set prices on individual tracks. Purchase them to download or unlock exclusive versions.' },
-                                            { key: 'TRANSACTION HISTORY', desc: 'View a full log of all credits sent, received, and spent in the Wallet section.' },
-                                            { key: 'EARNINGS DASHBOARD', desc: 'Artists can view their total earnings, tips received, and track sales from their earnings panel.' },
-                                            { key: 'SUBSCRIPTION', desc: 'Subscribe to premium features for enhanced upload limits, advanced mixer controls, and more.' },
+                                            { key: 'YOUR BALANCE', desc: 'Your credit total shows in the Wallet section. You buy credits with real money and they live in your account ready to use.' },
+                                            { key: 'TIPPING AN ARTIST', desc: 'Send credits to any artist from a post, a track page, or their profile. As much or as little as you want.' },
+                                            { key: 'BUYING TRACKS', desc: 'Some artists sell their music. Purchase a track to download it or unlock an exclusive version.' },
+                                            { key: 'TRANSACTION HISTORY', desc: 'Every credit you send or receive is logged in the Wallet section so you always know where it went.' },
+                                            { key: 'EARNINGS (ARTISTS)', desc: 'If you\'re an artist, your earnings panel shows total tips received, track sales, and your running balance.' },
+                                            { key: 'SUBSCRIPTION', desc: 'Going premium unlocks higher upload limits, advanced mixer features, and more. Worth it if you\'re creating a lot.' },
                                         ].map(item => (
                                             <div key={item.key} className="flex gap-3 items-start">
                                                 <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
@@ -2943,27 +2943,27 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         ))}
                                     </div>
                                     <div className="mt-4 p-3 bg-[#b39ddb]/5 border border-[#b39ddb]/20 text-[10px] text-white/50 font-mono">
-                                        TIP: Artists receive credits in real time the moment a fan sends a tip — no delay.
+                                        tip: artists receive tips the moment you send them — no delay, no processing time. instant.
                                     </div>
                                 </div>
                             )
                         },
                         {
                             id: 'JOURNAL',
-                            title: 'LOG / JOURNAL',
-                            subtitle: '// STUDIO_LOG',
+                            title: 'log / journal',
+                            subtitle: '// your artist diary',
                             content: (
                                 <div className="space-y-4 text-[11px] leading-relaxed font-sans">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">The Log (also called the Studio Journal) is your artist diary. Think of it like a personal notebook that your followers can read — great for thoughts, updates, behind-the-scenes notes, or anything on your mind.</p>
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">The Log is basically your artist diary — a place to write whatever's on your mind and share it with your followers. Could be a thought, a behind-the-scenes update, a poem, an illustrated piece, anything. No rules.</p>
                                     <div className="space-y-3">
                                         {[
-                                            { key: 'WRITING AN ENTRY', desc: 'Go to your profile and open the Studio / Journal tab. Click "New Entry" to open the full-screen editor. You can write long-form text with formatting — bold, italic, headings, lists, and more.' },
-                                            { key: 'ADDING IMAGES OR VIDEOS', desc: 'Inside the journal editor, use the toolbar to embed photos or videos directly into your entry. Great for picture diaries, comic strips, or illustrated notes.' },
-                                            { key: 'STANDALONE ENTRY', desc: 'A standalone entry is a single one-off post. It stands on its own — not connected to any series or chapter sequence.' },
-                                            { key: 'LINKING TO A SERIES', desc: 'If you are writing a serialized story or ongoing journal, link your entry to a Series. Select the series name and set the chapter number so readers can follow in order.' },
-                                            { key: 'COVER IMAGE', desc: 'Each entry can have a cover image — a visual thumbnail that appears on your profile and in the feed.' },
-                                            { key: 'CAPTION (OPTIONAL)', desc: 'You can add a short caption to describe your entry, but it is not required. Visual-only entries are totally valid — let the art speak for itself.' },
-                                            { key: 'DRAFT vs PUBLISH', desc: 'Entries are only visible to followers once you publish. Save as a draft to continue later, or hit Transmit to post immediately.' },
+                                            { key: 'WRITING AN ENTRY', desc: 'Go to your profile, open the Studio / Journal tab, and hit New Entry. You\'ll get a full rich-text editor — bold, italic, headings, lists, the works. Write as much or as little as you want.' },
+                                            { key: 'ADDING IMAGES OR VIDEOS', desc: 'You can drop photos and videos right inside your entry using the toolbar. Great for illustrated journals, photo diaries, or anything visual.' },
+                                            { key: 'STANDALONE ENTRY', desc: 'A standalone entry is just a single post on its own — it doesn\'t belong to any series. Perfect for one-off thoughts or updates.' },
+                                            { key: 'LINKING TO A SERIES', desc: 'If you\'re working on something longer — a story, a novel, an ongoing journal — you can link each entry to a series and set the chapter number. Readers can then follow in order.' },
+                                            { key: 'COVER IMAGE', desc: 'You can add a cover image to any entry. It shows up as a thumbnail on your profile and in the feed — makes it way more eye-catching.' },
+                                            { key: 'CAPTION (OPTIONAL)', desc: 'You can write a caption but you definitely don\'t have to. If your art speaks for itself, let it. Totally fine to post with just images and no words.' },
+                                            { key: 'PUBLISHING', desc: 'Nothing goes live until you publish it. If you\'re not done, just leave it — it\'ll save as a draft. When you\'re ready, hit Transmit and it goes out to your followers.' },
                                         ].map(item => (
                                             <div key={item.key} className="flex gap-3 items-start">
                                                 <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
@@ -2972,30 +2972,30 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         ))}
                                     </div>
                                     <div className="mt-4 p-3 bg-[#b39ddb]/5 border border-[#b39ddb]/20 text-[10px] text-white/50 font-mono">
-                                        TIP: You can also post a quick log entry from anywhere on the platform using the [ NEW TRANSMISSION ] button — just pick "Journal / Log" as the media type.
+                                        tip: you can also post a quick journal entry from anywhere using the [ NEW TRANSMISSION ] button — just pick "Journal / Log" as the type. no need to go to your profile first.
                                     </div>
                                 </div>
                             )
                         },
                         {
                             id: 'SERIES',
-                            title: 'PUBLICATIONS & SERIES',
-                            subtitle: '// NOVEL_ENGINE',
+                            title: 'publications & series',
+                            subtitle: '// write your book',
                             content: (
                                 <div className="space-y-4 text-[11px] leading-relaxed font-sans">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Publications let you create serialized works — novels, comics, picture journals, zines, or any multi-part story. Think of it like publishing your own book, chapter by chapter, right on FATALE.</p>
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Series let you publish longer, multi-part work right here on FATALE. Think of it like self-publishing — a novel, a comic, a picture journal, a zine, anything you want to tell chapter by chapter. Your followers can read it like a real book.</p>
                                     <div className="space-y-1 mb-4">
-                                        <div className="text-[#b39ddb] font-mono text-[9px] font-black uppercase tracking-widest pb-2 border-b border-[#b39ddb]/20">CREATING A SERIES</div>
+                                        <div className="text-[#b39ddb] font-mono text-[9px] font-black uppercase tracking-widest pb-2 border-b border-[#b39ddb]/20">how to get started</div>
                                     </div>
                                     <div className="space-y-3">
                                         {[
-                                            { key: 'START A NEW SERIES', desc: 'From the Studio / Journal tab on your profile, click "New Series". Give it a title, a description, and upload a cover image — this is the book cover readers will see in the feed.' },
-                                            { key: 'COVER ART', desc: 'The cover image is the most important visual element. It appears as a large preview card in the feed and on your profile, just like a real book cover. Make it expressive!' },
-                                            { key: 'ADD CHAPTERS', desc: 'Once a series exists, create new journal entries and link them to that series. Set the chapter number (Ch. 1, Ch. 2, etc.) and they will stack in reading order automatically.' },
-                                            { key: 'SERIES ON THE FEED', desc: 'Series appear as book-style cards in the Signal Feed — showing the cover art prominently, the series title, a short description, and a [ READ ] button. Click to open and read from Chapter 1.' },
-                                            { key: 'PICTURE NOVELS', desc: 'You can embed images inside each chapter using the journal editor — great for illustrated stories, manga-style comics, or photo essays. No caption or text is required; images alone are enough.' },
-                                            { key: 'READING EXPERIENCE', desc: 'Readers open a series and see a chapter list. They can jump to any chapter or read in order. Each chapter opens in a full reader view with your formatted text and embedded media.' },
-                                            { key: 'SERIES ON YOUR PROFILE', desc: 'Your active series appear in the Studio / Journal tab with their cover art. Visitors to your profile can browse and start reading directly.' },
+                                            { key: 'CREATE A SERIES', desc: 'Head to the Studio / Journal tab on your profile and click "New Series". Give it a name, a short description, and upload a cover image. That cover is what readers will see in the feed.' },
+                                            { key: 'COVER ART', desc: 'This is the most important part — it\'s like the front of your book. It shows up as a big card in the feed and on your profile. Make it something that pulls people in.' },
+                                            { key: 'ADDING CHAPTERS', desc: 'After the series exists, write journal entries and link them to it. Set the chapter number and they\'ll automatically stack in order for readers.' },
+                                            { key: 'HOW IT LOOKS IN THE FEED', desc: 'Series show up as book-style cards — big cover art, the title, a little description, and a [ READ ] button. Readers just tap that to start from Chapter 1.' },
+                                            { key: 'PICTURE NOVELS & COMICS', desc: 'No text required at all — you can make entirely visual chapters by just embedding images in the editor. Perfect for comics, manga, photo essays, or drawn journals.' },
+                                            { key: 'THE READING EXPERIENCE', desc: 'When someone opens your series, they see a chapter list. They can jump to any chapter or read in order. Each chapter opens in a clean full-screen reader.' },
+                                            { key: 'ON YOUR PROFILE', desc: 'All your active series are displayed on your profile with their cover art. Visitors can browse and start reading directly from there.' },
                                         ].map(item => (
                                             <div key={item.key} className="flex gap-3 items-start">
                                                 <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
@@ -3004,26 +3004,26 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         ))}
                                     </div>
                                     <div className="mt-4 p-3 bg-[#b39ddb]/5 border border-[#b39ddb]/20 text-[10px] text-white/50 font-mono">
-                                        TIP: When posting from the New Transmission modal, selecting "Journal / Log" lets you link directly to an existing series and set the chapter number — no need to open the full editor.
+                                        tip: when you use [ NEW TRANSMISSION ] and pick "Journal / Log", you can link that post directly to an existing series and set the chapter — no need to go to your profile first.
                                     </div>
                                 </div>
                             )
                         },
                         {
                             id: 'SETTINGS',
-                            title: 'SETTINGS & SYSTEM',
-                            subtitle: '// SYSTEM_CONFIG',
+                            title: 'settings',
+                            subtitle: '// make it yours',
                             content: (
                                 <div className="space-y-4 text-[11px] leading-relaxed font-sans">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Access Settings from the Skull Menu (top left) or via the SYS_CONF link in the HUD.</p>
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Settings is where you control everything about your account and how you appear on the platform. You can get there by clicking the skull icon in the top left corner and hitting Settings.</p>
                                     <div className="space-y-3">
                                         {[
-                                            { key: 'IDENTITY', desc: 'Update your display name, bio, profile picture, banner image, and choose your profile theme color.' },
-                                            { key: 'SECURITY', desc: 'Change your password and manage account security settings.' },
-                                            { key: 'NOTIFICATIONS', desc: 'Configure which events trigger alerts — new followers, tips received, messages, etc.' },
-                                            { key: 'INTERFACE LANGUAGE', desc: 'Switch the entire UI between English, Spanish, Japanese, and Russian.' },
-                                            { key: 'FORCE UPDATE', desc: 'If visuals or the globe feel out of sync, use Force Update in Settings to re-calibrate the interface.' },
-                                            { key: 'LOGOUT', desc: 'Sign out of your session from the Settings panel or the Skull Menu.' },
+                                            { key: 'IDENTITY', desc: 'Change your display name, write your bio, swap your profile photo, update your banner image, and pick your theme color.' },
+                                            { key: 'SECURITY', desc: 'Update your password and manage account security from here.' },
+                                            { key: 'NOTIFICATIONS', desc: 'Choose which things send you alerts — new followers, tips, messages, and so on. Customize it to what matters to you.' },
+                                            { key: 'LANGUAGE', desc: 'Switch the whole interface between English, Spanish, Japanese, and Russian. Picks up instantly.' },
+                                            { key: 'FORCE UPDATE', desc: 'If something feels off — the globe is acting weird, visuals look wrong — hit Force Update to reset and re-sync the interface.' },
+                                            { key: 'LOGOUT', desc: 'Sign out of your account from here or from the skull menu.' },
                                         ].map(item => (
                                             <div key={item.key} className="flex gap-3 items-start">
                                                 <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
@@ -3032,7 +3032,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         ))}
                                     </div>
                                     <div className="mt-6 p-4 bg-[#b39ddb]/5 border border-[#b39ddb]/30">
-                                        <div className="text-[#b39ddb] font-mono text-[9px] font-black uppercase tracking-widest mb-2">SKULL MENU SHORTCUTS</div>
+                                        <div className="text-[#b39ddb] font-mono text-[9px] font-black uppercase tracking-widest mb-2">skull menu quick links</div>
                                         <div className="grid grid-cols-2 gap-1 text-[9px] font-mono text-white/40">
                                             {['PROFILE','WALLET','MESSAGES','MARKETPLACE','SETTINGS','LOGOUT'].map(k => (
                                                 <div key={k} className="border border-white/5 px-2 py-1">▸ {k}</div>
