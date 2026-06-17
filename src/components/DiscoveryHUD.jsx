@@ -2707,6 +2707,460 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
             <AnimatePresence>
                 {showSystemGuide && (() => {
+                    return (
+                        <motion.div
+                            key="guide-overlay"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center pt-[calc(env(safe-area-inset-top,0px)+16px)] pb-[calc(env(safe-area-inset-bottom,0px)+16px)] px-4 md:p-8 pointer-events-auto"
+                            onClick={() => setShowSystemGuide(false)}
+                        >
+                            <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%] z-10" />
+
+                            <motion.div
+                                initial={{ scale: 0.97, opacity: 0, y: 10 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.97, opacity: 0, y: 10 }}
+                                transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+                                className="w-full max-w-3xl max-h-[90vh] bg-[#020202] border border-[#b39ddb]/60 relative flex flex-col z-20 shadow-[0_0_60px_rgba(179,157,219,0.2)]"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                {/* Corner accents */}
+                                <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#b39ddb]" />
+                                <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#b39ddb]" />
+                                <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#b39ddb]" />
+                                <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#b39ddb]" />
+
+                                {/* Header */}
+                                <div className="flex justify-between items-center p-5 md:p-6 border-b border-[#b39ddb]/20 shrink-0">
+                                    <div>
+                                        <div className="text-[9px] font-black text-[#b39ddb] tracking-[0.35em] font-mono">// FATALE SYSTEM GUIDE</div>
+                                        <div className="text-white font-black text-base md:text-lg tracking-[0.15em] font-mono uppercase mt-0.5">user manual</div>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowSystemGuide(false)}
+                                        className="text-white/40 hover:text-[#b39ddb] transition-colors border border-white/10 hover:border-[#b39ddb]/50 px-3 py-1.5 text-[9px] font-mono uppercase tracking-widest"
+                                    >
+                                        [ CLOSE ]
+                                    </button>
+                                </div>
+
+                                {/* Single scrollable document */}
+                                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                    <div className="p-5 md:p-8 space-y-10 text-[11px] leading-relaxed font-sans">
+
+                                        {/* ── SECTION 1: WELCOME ── */}
+                                        <section>
+                                            <div className="text-[9px] font-black text-[#b39ddb]/40 tracking-[0.35em] font-mono mb-1">01 —</div>
+                                            <h2 className="text-white font-black text-sm tracking-[0.2em] font-mono uppercase mb-3">hey, welcome to FATALE ♥</h2>
+                                            <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3 mb-5">
+                                                FATALE is a space built for independent artists — a place where you can share music, write your story, broadcast live, and build a real community around your art. Think of it like a studio, a stage, and a social space all in one.
+                                            </p>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                {[
+                                                    { label: 'DISCOVERY HUD', desc: 'Your main home screen — see what\'s trending, browse artists, check journals and visual posts all in one place.' },
+                                                    { label: 'LIVE BROADCAST', desc: 'Go live to your community whenever you want. Fans can tune in, chat with you, and request songs in real time.' },
+                                                    { label: 'DJ MIXER', desc: 'A full two-deck mixer — load tracks, blend them with a crossfader, and broadcast your mix live.' },
+                                                    { label: 'ARTIST PROFILES', desc: 'Your own page on FATALE — music releases, your journal, your gallery, your community. All yours.' },
+                                                    { label: 'LOG / JOURNAL', desc: 'A personal diary that your followers can read. Write anything — thoughts, updates, stories, or just drop some photos.' },
+                                                    { label: 'PUBLICATIONS & SERIES', desc: 'Want to write something longer? Create a serialized novel, comic, or picture journal. Chapter by chapter, like a real book.' },
+                                                    { label: 'SIGNAL FEED', desc: 'Everything from artists you follow in one scrollable stream — posts, photos, videos, journal updates, new chapters.' },
+                                                    { label: 'WALLET & CREDITS', desc: 'Send tips to artists you love, buy tracks, and unlock exclusive content. Artists get paid in real time.' },
+                                                ].map(item => (
+                                                    <div key={item.label} className="flex gap-3 p-3 border border-[#b39ddb]/10 hover:border-[#b39ddb]/30 transition-colors">
+                                                        <span className="text-[#b39ddb] font-mono text-[8px] mt-0.5 shrink-0">▸</span>
+                                                        <div>
+                                                            <div className="text-[#b39ddb] font-mono text-[9px] font-black uppercase tracking-wider mb-1">{item.label}</div>
+                                                            <div className="text-white/50 text-[10px]">{item.desc}</div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </section>
+
+                                        <div className="border-t border-[#b39ddb]/10" />
+
+                                        {/* ── SECTION 2: KEYBOARD SHORTCUTS ── */}
+                                        <section>
+                                            <div className="text-[9px] font-black text-[#b39ddb]/40 tracking-[0.35em] font-mono mb-1">02 —</div>
+                                            <h2 className="text-white font-black text-sm tracking-[0.2em] font-mono uppercase mb-3">keyboard shortcuts</h2>
+                                            <p className="text-white/50 text-[10px] mb-4">On desktop, you can jump to any section of FATALE instantly using your function keys. No clicking around — just press and go.</p>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                {[
+                                                    { key: 'F1', label: 'Signal Feed', desc: 'Opens your personalized social feed.' },
+                                                    { key: 'F2', label: 'Music Player', desc: 'Opens the full audio player view.' },
+                                                    { key: 'F3', label: 'DJ Mixer', desc: 'Opens the dual-deck DJ mixing interface.' },
+                                                    { key: 'F4', label: 'Messages', desc: 'Opens direct messages and community chat.' },
+                                                    { key: 'F5', label: 'Profile', desc: 'Takes you to your artist profile.' },
+                                                    { key: 'F6', label: 'Wallet', desc: 'Opens your credits and transaction history.' },
+                                                    { key: 'F7', label: 'Communities', desc: 'Browse and manage your communities.' },
+                                                    { key: 'F8', label: 'Live', desc: 'Opens the live broadcast and streaming view.' },
+                                                    { key: 'F9', label: 'Exit / Close', desc: 'Closes any open modal or overlay.' },
+                                                ].map(item => (
+                                                    <div key={item.key} className="flex gap-3 items-center p-2.5 border border-white/5 hover:border-[#b39ddb]/20 transition-colors">
+                                                        <div className="shrink-0 w-8 h-8 border border-[#b39ddb]/40 flex items-center justify-center font-mono text-[9px] font-black text-[#b39ddb]">{item.key}</div>
+                                                        <div>
+                                                            <div className="text-white/80 font-mono text-[9px] font-black uppercase tracking-wide">{item.label}</div>
+                                                            <div className="text-white/35 text-[9px]">{item.desc}</div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </section>
+
+                                        <div className="border-t border-[#b39ddb]/10" />
+
+                                        {/* ── SECTION 3: DISCOVERY HUD ── */}
+                                        <section>
+                                            <div className="text-[9px] font-black text-[#b39ddb]/40 tracking-[0.35em] font-mono mb-1">03 —</div>
+                                            <h2 className="text-white font-black text-sm tracking-[0.2em] font-mono uppercase mb-3">the discovery hud</h2>
+                                            <p className="text-white/50 text-[10px] mb-5">This is the first screen you see when you open FATALE — a live grid of everything happening on the platform right now. Artists, music, journals, visuals, communities — all updating in real time. You can type in the search bar at the top to filter every panel simultaneously.</p>
+                                            <div className="space-y-5">
+                                                {[
+                                                    { panel: 'YT FREQ SCAN', desc: 'The search bar at the top of the HUD. Type any song title or artist name and results stream in instantly from the full music catalog. Click anything to start playing it right away.' },
+                                                    { panel: 'NATIVE ARTISTS', desc: 'A grid of artists who release their music directly on FATALE. These are the artists who call this platform home. Click any of them to visit their full profile.' },
+                                                    { panel: 'PLAYLISTS', desc: 'Your personal playlists and community-curated ones are shown here side by side. Click any playlist to preview the tracks inside it, or jump straight to the Player to queue it up.' },
+                                                    { panel: 'STUDIO TRANSMISSIONS', desc: 'Photos and videos posted by artists — displayed as a square visual grid. Click any tile to open it full-size with comments. This is where visual artists and photographers tend to live.' },
+                                                    { panel: '[ JOURNAL ]', desc: 'Text posts and log entries written by artists you follow. Think of these as short notes, diary entries, or longer essays. Click any one to read the full piece in a clean reader view.' },
+                                                    { panel: 'MARKETPLACE', desc: 'Merch, digital collectibles, samples, and curated links from artists. Think of it as a storefront window into what artists are selling. Click any item to explore and purchase.' },
+                                                    { panel: 'LIVE!', desc: 'A live feed of who\'s currently streaming. Each entry shows the artist name and session title. Click any live session to tune in and join the live chat.' },
+                                                    { panel: 'COMMUNITIES', desc: 'Fan groups organized by genre or location. You can browse what\'s happening inside each one, join a community, or create your own.' },
+                                                ].map(item => (
+                                                    <div key={item.panel} className="flex gap-4 items-start">
+                                                        <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
+                                                        <div>
+                                                            <div className="text-[#b39ddb] font-mono text-[9px] font-black uppercase tracking-wide underline underline-offset-2 decoration-[#b39ddb]/40 mb-1">{item.panel}</div>
+                                                            <p className="text-white/55 text-[10px]">{item.desc}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="mt-5 p-3 bg-[#b39ddb]/5 border border-[#b39ddb]/20 text-[10px] text-white/50 font-mono">
+                                                tip: typing in the search bar filters every single panel on the page at once — super useful when you're looking for something specific.
+                                            </div>
+                                        </section>
+
+                                        <div className="border-t border-[#b39ddb]/10" />
+
+                                        {/* ── SECTION 4: THE GLOBE ── */}
+                                        <section>
+                                            <div className="text-[9px] font-black text-[#b39ddb]/40 tracking-[0.35em] font-mono mb-1">04 —</div>
+                                            <h2 className="text-white font-black text-sm tracking-[0.2em] font-mono uppercase mb-3">the interactive globe</h2>
+                                            <p className="text-white/55 text-[10px] mb-3">
+                                                Sitting at the center of the Discovery screen is a rotating 3D globe that maps real-time activity across the entire FATALE network. Every glowing dot on the globe represents something happening right now — an artist who's active, a track being played, a community gathering, or a live stream in progress.
+                                            </p>
+                                            <p className="text-white/55 text-[10px] mb-5">
+                                                The globe is organized into color-coded sectors. Content from a given sector glows in that sector's color across all the HUD panels too, so everything stays visually connected. Think of it as a living map of the platform.
+                                            </p>
+                                            <div className="space-y-3 mb-5">
+                                                {[
+                                                    { key: 'Drag to Spin', desc: 'Click and drag on the globe to rotate it in any direction. Explore artists and communities from different regions of the world.' },
+                                                    { key: 'Click a Node', desc: 'Tap any glowing dot on the globe to see what it is — an artist, a track, a live stream, or a community. A popup will appear with details.' },
+                                                    { key: 'View Filters', desc: 'The filter buttons on the side of the globe let you control what types of dots are shown — Tracks, Artists, Communities, Live, and more. Toggle them on and off freely.' },
+                                                    { key: 'Global vs. Local', desc: 'Switch between Global View (all nodes on Earth) and Local View (content near your detected location). Great for discovering what\'s happening in your own area.' },
+                                                    { key: 'Pause Spin', desc: 'The globe auto-rotates by default. Hit PAUSE_SPIN if you want to freeze it and examine a specific region without it moving away.' },
+                                                ].map(item => (
+                                                    <div key={item.key} className="flex gap-3 items-start">
+                                                        <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">▸</span>
+                                                        <div><strong className="text-white/70 font-sans text-[10px]">{item.key} — </strong><span className="text-white/45 text-[10px]">{item.desc}</span></div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="p-3 bg-[#b39ddb]/5 border border-[#b39ddb]/20 text-[10px] text-white/50 font-mono">
+                                                tip: on mobile the globe switches to a scrollable grid layout so it's much easier to tap through everything on a small screen.
+                                            </div>
+                                        </section>
+
+                                        <div className="border-t border-[#b39ddb]/10" />
+
+                                        {/* ── SECTION 5: MUSIC PLAYER ── */}
+                                        <section>
+                                            <div className="text-[9px] font-black text-[#b39ddb]/40 tracking-[0.35em] font-mono mb-1">05 —</div>
+                                            <h2 className="text-white font-black text-sm tracking-[0.2em] font-mono uppercase mb-3">music player</h2>
+                                            <p className="text-white/55 text-[10px] mb-6">
+                                                FATALE has three different ways to experience music — the Mini Player for quick casual listening, the DJ Mixer for mixing and live broadcasting, and the iPod-style Player for a clean full-screen listening experience. They all share the same library and queue.
+                                            </p>
+
+                                            {/* Mini Player */}
+                                            <div className="mb-6">
+                                                <div className="text-[#b39ddb] font-mono text-[9px] font-black uppercase tracking-widest pb-2 border-b border-[#b39ddb]/20 mb-3 underline underline-offset-2 decoration-[#b39ddb]/40">mini player (bottom bar)</div>
+                                                <p className="text-white/50 text-[10px] mb-3">The mini player lives at the very bottom of your screen at all times. It's always accessible no matter where you are in the app — just glance down and your current track is right there.</p>
+                                                <div className="space-y-2">
+                                                    {[
+                                                        { key: 'PLAY / PAUSE', desc: 'Tap to start or pause the track that\'s currently loaded.' },
+                                                        { key: 'SKIP', desc: 'Jump forward or backward through your queue.' },
+                                                        { key: 'LIKE ♥', desc: 'Save the track to your Favorites so you can find it again later.' },
+                                                        { key: '+ (QUEUE)', desc: 'Add the current track to the end of your play queue.' },
+                                                        { key: 'VOLUME', desc: 'Drag the slider to adjust how loud it plays.' },
+                                                        { key: '$ (TIP)', desc: 'Send some credits straight to the artist while their track is playing — no need to go to their profile.' },
+                                                    ].map(item => (
+                                                        <div key={item.key} className="flex gap-3 items-start">
+                                                            <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
+                                                            <div><strong className="text-[#b39ddb] font-mono text-[9px] uppercase tracking-wide">{item.key} — </strong><span className="text-white/55 text-[10px]">{item.desc}</span></div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* DJ Mixer */}
+                                            <div className="mb-6">
+                                                <div className="text-[#b39ddb] font-mono text-[9px] font-black uppercase tracking-widest pb-2 border-b border-[#b39ddb]/20 mb-3 underline underline-offset-2 decoration-[#b39ddb]/40">dj mixer & live broadcast (F3)</div>
+                                                <p className="text-white/50 text-[10px] mb-3">The DJ Mixer is a full professional two-deck setup. Load a track on Deck A and another on Deck B, then blend them together with the crossfader. When you're ready to share your mix, you can go live and your followers hear everything in real time.</p>
+                                                <div className="space-y-2">
+                                                    {[
+                                                        { key: 'SIGNAL CRATE', desc: 'Your music library lives here. Browse all your tracks, favorites, purchased music, by artist, or by playlist. Search to find anything fast.' },
+                                                        { key: 'LOAD A / B', desc: 'Each track in the crate has an A and a B chip next to it. Click one to load that track onto that deck.' },
+                                                        { key: 'CROSSFADER', desc: 'The horizontal slider at the bottom. Slide left for Deck A, right for Deck B, or blend them anywhere in between.' },
+                                                        { key: 'BPM SYNC', desc: 'Each deck shows the track\'s tempo. Use the pitch controls to match BPMs before you blend so the transition sounds smooth.' },
+                                                        { key: 'EQ CONTROLS', desc: 'High, Mid, and Low knobs on each deck — shape how each track sounds independently before you mix them.' },
+                                                        { key: 'CREATE PLAYLIST', desc: 'Go to the Playlists tab inside the Signal Crate and hit the + button to build a new playlist from your library.' },
+                                                        { key: 'LIVE BROADCAST', desc: 'When you go live, everything coming out of the mixer is what your listeners hear. They\'re in the room with you.' },
+                                                        { key: 'NEURAL CHAT', desc: 'While you\'re broadcasting, fans can chat with you and send track requests right in the stream.' },
+                                                    ].map(item => (
+                                                        <div key={item.key} className="flex gap-3 items-start">
+                                                            <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
+                                                            <div><strong className="text-[#b39ddb] font-mono text-[9px] uppercase tracking-wide">{item.key} — </strong><span className="text-white/55 text-[10px]">{item.desc}</span></div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* iPod Player */}
+                                            <div>
+                                                <div className="text-[#b39ddb] font-mono text-[9px] font-black uppercase tracking-widest pb-2 border-b border-[#b39ddb]/20 mb-3 underline underline-offset-2 decoration-[#b39ddb]/40">full player view (F2)</div>
+                                                <p className="text-white/50 text-[10px] mb-3">Hit F2 or tap the player icon to open the full-screen listening view — a clean, immersive interface centered around the track that's playing. Think of it like the classic iPod screen but built for FATALE's aesthetic. Great for when you just want to sit back and listen.</p>
+                                                <div className="space-y-2">
+                                                    {[
+                                                        { key: 'ALBUM ART', desc: 'The cover art fills the screen. If the artist uploaded artwork for the track or album, it displays here large and beautiful.' },
+                                                        { key: 'TRACK INFO', desc: 'Title, artist name, and album shown clearly below the art.' },
+                                                        { key: 'PROGRESS BAR', desc: 'Drag it to scrub through the track to any point.' },
+                                                        { key: 'QUEUE VIEW', desc: 'Scroll down to see what\'s coming up next in your queue. Reorder or remove tracks from here.' },
+                                                        { key: 'LIKE & TIP', desc: 'Like the track to save it, or tip the artist — both available in this view.' },
+                                                    ].map(item => (
+                                                        <div key={item.key} className="flex gap-3 items-start">
+                                                            <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
+                                                            <div><strong className="text-[#b39ddb] font-mono text-[9px] uppercase tracking-wide">{item.key} — </strong><span className="text-white/55 text-[10px]">{item.desc}</span></div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </section>
+
+                                        <div className="border-t border-[#b39ddb]/10" />
+
+                                        {/* ── SECTION 6: MESSAGES ── */}
+                                        <section>
+                                            <div className="text-[9px] font-black text-[#b39ddb]/40 tracking-[0.35em] font-mono mb-1">06 — F4</div>
+                                            <h2 className="text-white font-black text-sm tracking-[0.2em] font-mono uppercase mb-3">messages</h2>
+                                            <p className="text-white/55 text-[10px] mb-4">
+                                                Messages (F4) is where your direct conversations and community chats live. You can message any artist or fan directly, or participate in community group chats tied to a specific community you've joined.
+                                            </p>
+                                            <div className="space-y-3">
+                                                {[
+                                                    { key: 'Direct Messages', desc: 'Start a private one-on-one conversation with any user on FATALE. Click the compose icon or visit someone\'s profile to open a DM.' },
+                                                    { key: 'Community Chat', desc: 'Each community has its own group chat. When you join a community, you get access to the chat automatically. Great for discussions, announcements, and hanging out.' },
+                                                    { key: 'Live Chat (during streams)', desc: 'When an artist is broadcasting live, a chat panel opens alongside the stream. This is separate from DMs and is visible to all viewers of that stream.' },
+                                                    { key: 'Notifications', desc: 'New messages show as a notification badge on the Messages icon. You\'ll also get alerts based on your notification settings.' },
+                                                ].map(item => (
+                                                    <div key={item.key} className="flex gap-3 items-start">
+                                                        <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">▸</span>
+                                                        <div><strong className="text-white/70 font-sans text-[10px]">{item.key} — </strong><span className="text-white/45 text-[10px]">{item.desc}</span></div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </section>
+
+                                        <div className="border-t border-[#b39ddb]/10" />
+
+                                        {/* ── SECTION 7: MARKETPLACE ── */}
+                                        <section>
+                                            <div className="text-[9px] font-black text-[#b39ddb]/40 tracking-[0.35em] font-mono mb-1">07 — F7</div>
+                                            <h2 className="text-white font-black text-sm tracking-[0.2em] font-mono uppercase mb-3">marketplace</h2>
+                                            <p className="text-white/55 text-[10px] mb-4">
+                                                The Marketplace is where artists sell things beyond just music. You'll find digital collectibles, physical merch, sample packs, exclusive content, and curated links from artists on FATALE. It's a direct connection between creator and buyer.
+                                            </p>
+                                            <div className="space-y-3">
+                                                {[
+                                                    { key: 'Browse Items', desc: 'Scroll through items listed by artists. Each listing shows the price, a description, and who it\'s from. Click any item to open the full detail view.' },
+                                                    { key: 'Purchase', desc: 'Buy items using your credit balance. Once purchased, digital items are added to your library and physical items are handled through the artist\'s listed process.' },
+                                                    { key: 'Artist Listings', desc: 'Artists can create listings directly from their profile. If you\'re an artist, head to your profile and look for the Marketplace or Shop section to add your own items.' },
+                                                    { key: 'Discovery HUD Panel', desc: 'The Marketplace panel on the HUD shows a quick preview of recent and trending listings from artists you follow and beyond.' },
+                                                ].map(item => (
+                                                    <div key={item.key} className="flex gap-3 items-start">
+                                                        <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">▸</span>
+                                                        <div><strong className="text-white/70 font-sans text-[10px]">{item.key} — </strong><span className="text-white/45 text-[10px]">{item.desc}</span></div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </section>
+
+                                        <div className="border-t border-[#b39ddb]/10" />
+
+                                        {/* ── SECTION 8: WALLET ── */}
+                                        <section>
+                                            <div className="text-[9px] font-black text-[#b39ddb]/40 tracking-[0.35em] font-mono mb-1">08 — F6</div>
+                                            <h2 className="text-white font-black text-sm tracking-[0.2em] font-mono uppercase mb-3">wallet & credits</h2>
+                                            <p className="text-white/55 text-[10px] mb-4">
+                                                FATALE has its own credit system. Credits are how fans support artists directly — no middleman, no waiting around. You can tip, buy tracks, purchase marketplace items, and unlock premium features, all using credits.
+                                            </p>
+                                            <div className="space-y-3 mb-4">
+                                                {[
+                                                    { key: 'YOUR BALANCE', desc: 'Your credit total is always shown in the Wallet section. Credits are purchased with real money and live in your account ready to use.' },
+                                                    { key: 'TIPPING AN ARTIST', desc: 'Send credits to any artist from a post, a track page, or directly from their profile. As much or as little as you want — they receive it instantly.' },
+                                                    { key: 'BUYING TRACKS', desc: 'Some artists sell their music. Purchase a track to download it or unlock an exclusive version that isn\'t available for free streaming.' },
+                                                    { key: 'TRANSACTION HISTORY', desc: 'Every credit you send or receive is logged in the Wallet section so you always know exactly where it went.' },
+                                                    { key: 'EARNINGS (ARTISTS)', desc: 'If you\'re an artist, your earnings panel shows total tips received, track sales, and your running balance. You can also see individual transaction details.' },
+                                                    { key: 'SUBSCRIPTION', desc: 'Going premium unlocks higher upload limits, advanced mixer features, and more. Head to Wallet to see current subscription options.' },
+                                                ].map(item => (
+                                                    <div key={item.key} className="flex gap-3 items-start">
+                                                        <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
+                                                        <div><strong className="text-[#b39ddb] font-mono text-[9px] uppercase tracking-wide">{item.key} — </strong><span className="text-white/55 text-[10px]">{item.desc}</span></div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="p-3 bg-[#b39ddb]/5 border border-[#b39ddb]/20 text-[10px] text-white/50 font-mono">
+                                                tip: artists receive tips the moment you send them — no delay, no processing time. instant.
+                                            </div>
+                                        </section>
+
+                                        <div className="border-t border-[#b39ddb]/10" />
+
+                                        {/* ── SECTION 9: SETTINGS ── */}
+                                        <section>
+                                            <div className="text-[9px] font-black text-[#b39ddb]/40 tracking-[0.35em] font-mono mb-1">09 —</div>
+                                            <h2 className="text-white font-black text-sm tracking-[0.2em] font-mono uppercase mb-3">settings</h2>
+                                            <p className="text-white/55 text-[10px] mb-4">
+                                                Settings is where you control everything about your account and how you appear on the platform. Get there by clicking the skull icon in the top left corner and selecting Settings, or pressing the SYS_CONF link in the HUD.
+                                            </p>
+                                            <div className="space-y-3 mb-4">
+                                                {[
+                                                    { key: 'IDENTITY', desc: 'Change your display name, write your bio, swap your profile photo, update your banner image, and pick your theme color. This is how you appear to everyone on the platform.' },
+                                                    { key: 'SECURITY', desc: 'Update your password and manage your account security from here.' },
+                                                    { key: 'NOTIFICATIONS', desc: 'Choose which things send you alerts — new followers, tips received, messages, comments, and more. Customize it down to what actually matters to you.' },
+                                                    { key: 'LANGUAGE', desc: 'Switch the whole interface between English, Spanish, Japanese, and Russian. Takes effect immediately.' },
+                                                    { key: 'FORCE UPDATE', desc: 'If something feels off — the globe is acting weird, visuals look out of sync — hit Force Update to reset and re-calibrate the interface.' },
+                                                    { key: 'LOGOUT', desc: 'Sign out of your account from here or from the skull menu in the top left.' },
+                                                ].map(item => (
+                                                    <div key={item.key} className="flex gap-3 items-start">
+                                                        <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
+                                                        <div><strong className="text-[#b39ddb] font-mono text-[9px] uppercase tracking-wide">{item.key} — </strong><span className="text-white/55 text-[10px]">{item.desc}</span></div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="p-4 bg-[#b39ddb]/5 border border-[#b39ddb]/30">
+                                                <div className="text-[#b39ddb] font-mono text-[9px] font-black uppercase tracking-widest mb-2">skull menu quick links</div>
+                                                <div className="grid grid-cols-3 gap-1 text-[9px] font-mono text-white/40">
+                                                    {['PROFILE','WALLET','MESSAGES','MARKETPLACE','SETTINGS','LOGOUT'].map(k => (
+                                                        <div key={k} className="border border-white/5 px-2 py-1">▸ {k}</div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </section>
+
+                                        <div className="border-t border-[#b39ddb]/10" />
+
+                                        {/* ── SECTION 10: PROFILE / JOURNAL / SERIES ── */}
+                                        <section>
+                                            <div className="text-[9px] font-black text-[#b39ddb]/40 tracking-[0.35em] font-mono mb-1">10 — F5</div>
+                                            <h2 className="text-white font-black text-sm tracking-[0.2em] font-mono uppercase mb-3">your profile, log & publications</h2>
+                                            <p className="text-white/55 text-[10px] mb-6">
+                                                Your profile is your home on FATALE — it's where everything you make lives. Music, journal entries, visual posts, your series, your community. Fans who follow you can see all of it here. Press F5 or tap the Profile icon to visit it anytime.
+                                            </p>
+
+                                            {/* Profile basics */}
+                                            <div className="mb-6">
+                                                <div className="text-[#b39ddb] font-mono text-[9px] font-black uppercase tracking-widest pb-2 border-b border-[#b39ddb]/20 mb-3 underline underline-offset-2 decoration-[#b39ddb]/40">profile basics</div>
+                                                <div className="space-y-2">
+                                                    {[
+                                                        { key: 'MUSIC RELEASES', desc: 'Upload your albums, singles, and tracks. Set prices, organize your catalog, and watch your play counts grow.' },
+                                                        { key: 'GALLERY', desc: 'A visual grid of every photo and video you\'ve posted — like your own portfolio page.' },
+                                                        { key: 'COMMUNITIES', desc: 'Create your own fan community or join one that already exists. A great way to bring your followers together in one place.' },
+                                                        { key: 'HARDWARE RACK', desc: 'Show off your gear and instruments. Fans love seeing the setup behind the music.' },
+                                                        { key: 'FOLLOWING / FOLLOWERS', desc: 'Follow other artists to see their content in your feed. Click anyone\'s name anywhere on the platform to visit their profile.' },
+                                                        { key: 'MODIFY IDENTITY', desc: 'On your own profile, hit the Modify Identity button to edit how you appear on FATALE.' },
+                                                    ].map(item => (
+                                                        <div key={item.key} className="flex gap-3 items-start">
+                                                            <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
+                                                            <div><strong className="text-[#b39ddb] font-mono text-[9px] uppercase tracking-wide">{item.key} — </strong><span className="text-white/55 text-[10px]">{item.desc}</span></div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Journal / Log */}
+                                            <div className="mb-6">
+                                                <div className="text-[#b39ddb] font-mono text-[9px] font-black uppercase tracking-widest pb-2 border-b border-[#b39ddb]/20 mb-3 underline underline-offset-2 decoration-[#b39ddb]/40">log / journal — your artist diary</div>
+                                                <p className="text-white/50 text-[10px] mb-3">
+                                                    The Log is basically your artist diary — a place to write whatever's on your mind and share it with your followers. Could be a thought, an update, a poem, an illustrated piece, anything. No rules. No caption required.
+                                                </p>
+                                                <div className="space-y-2">
+                                                    {[
+                                                        { key: 'WRITING AN ENTRY', desc: 'Go to your profile, open the Studio / Journal tab, and hit New Entry. You\'ll get a full rich-text editor — bold, italic, headings, lists. Write as much or as little as you want.' },
+                                                        { key: 'ADDING IMAGES OR VIDEOS', desc: 'Drop photos and videos right inside your entry using the toolbar. Great for illustrated journals, photo diaries, or purely visual posts.' },
+                                                        { key: 'STANDALONE ENTRY', desc: 'A standalone entry is a single post on its own — not connected to any series. Perfect for one-off thoughts or updates.' },
+                                                        { key: 'LINKING TO A SERIES', desc: 'If you\'re working on something longer, link the entry to a Series and set the chapter number so readers can follow in order.' },
+                                                        { key: 'COVER IMAGE', desc: 'You can add a cover image to any entry. It shows up as a thumbnail on your profile and in the feed — makes it way more eye-catching.' },
+                                                        { key: 'PUBLISHING', desc: 'Nothing goes live until you publish it. If you\'re not done, save as a draft and come back later. When you\'re ready, hit Transmit.' },
+                                                    ].map(item => (
+                                                        <div key={item.key} className="flex gap-3 items-start">
+                                                            <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
+                                                            <div><strong className="text-[#b39ddb] font-mono text-[9px] uppercase tracking-wide">{item.key} — </strong><span className="text-white/55 text-[10px]">{item.desc}</span></div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="mt-3 p-3 bg-[#b39ddb]/5 border border-[#b39ddb]/20 text-[10px] text-white/50 font-mono">
+                                                    tip: you can post a quick log entry from anywhere using the [ NEW TRANSMISSION ] button — just pick "Journal / Log" as the type.
+                                                </div>
+                                            </div>
+
+                                            {/* Publications & Series */}
+                                            <div>
+                                                <div className="text-[#b39ddb] font-mono text-[9px] font-black uppercase tracking-widest pb-2 border-b border-[#b39ddb]/20 mb-3 underline underline-offset-2 decoration-[#b39ddb]/40">publications & series — write your book</div>
+                                                <p className="text-white/50 text-[10px] mb-3">
+                                                    Series let you publish longer, multi-part work right on FATALE. A novel, a comic, a picture journal, a zine — anything you want to tell chapter by chapter. Your followers can read it like a real book. Cover art is key — it's what readers see first in the feed.
+                                                </p>
+                                                <div className="space-y-2">
+                                                    {[
+                                                        { key: 'CREATE A SERIES', desc: 'From the Studio / Journal tab, click "New Series". Give it a name, a short description, and upload a cover image — that cover is what everyone sees.' },
+                                                        { key: 'COVER ART', desc: 'This is the front of your book. It shows up as a large card in the feed and on your profile. Make it something that draws people in.' },
+                                                        { key: 'ADDING CHAPTERS', desc: 'Write journal entries and link them to the series. Set the chapter number and they stack in order automatically for readers.' },
+                                                        { key: 'HOW IT LOOKS IN THE FEED', desc: 'Series appear as book-style cards — big cover art, title, description, and a [ READ ] button. Readers tap that to start from Chapter 1.' },
+                                                        { key: 'PICTURE NOVELS & COMICS', desc: 'No text required at all. Make entirely visual chapters by embedding images in the editor. Perfect for comics, manga, photo essays.' },
+                                                        { key: 'THE READING EXPERIENCE', desc: 'Readers see a chapter list and can jump to any chapter or read in order. Each chapter opens in a clean full-screen reader.' },
+                                                    ].map(item => (
+                                                        <div key={item.key} className="flex gap-3 items-start">
+                                                            <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
+                                                            <div><strong className="text-[#b39ddb] font-mono text-[9px] uppercase tracking-wide">{item.key} — </strong><span className="text-white/55 text-[10px]">{item.desc}</span></div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </section>
+
+                                        {/* Footer stamp */}
+                                        <div className="border-t border-[#b39ddb]/10 pt-6 pb-2 text-center">
+                                            <div className="text-[#b39ddb]/20 font-mono text-[8px] tracking-[0.4em] uppercase">FATALE // END OF MANUAL</div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                {/* Footer — just close button */}
+                                <div className="shrink-0 border-t border-[#b39ddb]/20 p-4 flex items-center justify-between">
+                                    <div className="text-[8px] font-mono text-white/15 tracking-widest">scroll to read · all sections included</div>
+                                    <button
+                                        onClick={() => setShowSystemGuide(false)}
+                                        className="px-4 py-1.5 border border-[#b39ddb]/30 text-[#b39ddb] hover:bg-[#b39ddb]/10 transition-all text-[10px] font-mono font-black uppercase tracking-widest"
+                                    >
+                                        [ CLOSE GUIDE ]
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    );
+                })()}
                     const pages = [
                         {
                             id: 'WELCOME',
