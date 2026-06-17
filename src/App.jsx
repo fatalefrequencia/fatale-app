@@ -5995,7 +5995,7 @@ const FeedContent = React.memo(({
                           )}
 
                           {type === 'journal' && (
-                            <div className="border-l-2 border-[#9b5de5]/50 pl-4 py-2.5 text-white/95 text-[11px] leading-relaxed max-w-xl bg-white/[0.02] hover:bg-white/[0.04] transition-all rounded-r flex gap-4 items-start">
+                            <div className="border-l-2 border-[#9b5de5]/50 pl-4 pr-4 py-2.5 text-white/95 text-[11px] leading-relaxed max-w-xl bg-white/[0.02] hover:bg-white/[0.04] transition-all rounded-r flex gap-4 items-start">
                               {(item.SeriesCoverImagePath || item.seriesCoverImagePath) ? (
                                 <div className="w-14 h-20 bg-black border border-white/10 shrink-0 relative overflow-hidden rounded-sm flex items-center justify-center shadow-[0_0_15px_rgba(155,93,229,0.15)] group-hover:border-[#9b5de5]/40 transition-colors">
                                   <img 
@@ -6022,19 +6022,21 @@ const FeedContent = React.memo(({
                                   </div>
                                 )}
                                 <div className="text-white/90">
-                                  {content && content.length > 280 ? (
-                                    <>
-                                      {content.substring(0, 280)}...
-                                      <button
-                                        onClick={() => handleMediaExpand({ ...item, type: 'JOURNAL' })}
-                                        className="ml-2 text-[#9b5de5] hover:text-white font-black uppercase text-[9px] tracking-widest transition-colors not-italic font-mono"
-                                      >
-                                        [ READ_SIGNAL ]
-                                      </button>
-                                    </>
-                                  ) : (
-                                    content
-                                  )}
+                                  {(() => {
+                                    const plainText = (content || '').replace(/<[^>]*>/g, ' ').trim();
+                                    const previewText = plainText.length > 180 ? `${plainText.substring(0, 180)}...` : plainText;
+                                    return (
+                                      <>
+                                        <span>{previewText}</span>
+                                        <button
+                                          onClick={() => handleMediaExpand({ ...item, type: 'JOURNAL' })}
+                                          className="ml-2 text-[#9b5de5] hover:text-white font-black uppercase text-[9px] tracking-widest transition-colors not-italic font-mono inline-block cursor-pointer"
+                                        >
+                                          [ READ ]
+                                        </button>
+                                      </>
+                                    );
+                                  })()}
                                 </div>
                               </div>
                             </div>
