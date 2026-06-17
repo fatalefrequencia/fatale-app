@@ -2723,7 +2723,9 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                             { label: 'LIVE BROADCAST', desc: 'Artists can stream live to their community. Listeners tune in, chat, and request tracks in real time.' },
                                             { label: 'DJ MIXER', desc: 'A full dual-deck DJ mixer with your library, playlists, and live mixing controls.' },
                                             { label: 'ARTIST PROFILES', desc: 'Each artist has a full profile with music releases, studio journal, gallery, and community hub.' },
-                                            { label: 'SIGNAL FEED', desc: 'A social feed of posts, uploads, journal entries and community updates from artists you follow.' },
+                                            { label: 'LOG / JOURNAL', desc: 'Artists keep a personal diary — write text, embed photos & videos, or publish illustrated picture stories for followers to read.' },
+                                            { label: 'PUBLICATIONS & SERIES', desc: 'Serialized multi-chapter works — novels, comics, picture journals — displayed as book cards in the feed with a [ READ ] button.' },
+                                            { label: 'SIGNAL FEED', desc: 'A social feed of posts, uploads, journal entries, series updates, and community content from artists you follow.' },
                                             { label: 'WALLET & CREDITS', desc: 'A built-in credit system for tipping artists, purchasing tracks, and accessing premium content.' },
                                         ].map(item => (
                                             <div key={item.label} className="flex gap-3 p-3 border border-[#b39ddb]/10 hover:border-[#b39ddb]/30 transition-colors">
@@ -2870,7 +2872,8 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     <div className="space-y-3">
                                         {[
                                             { key: 'MUSIC RELEASES', desc: 'Upload albums, singles, and tracks. Set prices, manage your catalog, and track plays.' },
-                                            { key: 'STUDIO / JOURNAL', desc: 'Post text logs, share photos and videos. Your followers see these in the feed and Discovery HUD.' },
+                                            { key: 'STUDIO / JOURNAL', desc: 'Post text logs (called "Log entries"), share photos and videos, or write long-form illustrated entries. Your followers see these in the feed and Discovery HUD.' },
+                                            { key: 'PUBLICATIONS & SERIES', desc: 'Create multi-chapter serialized works — novels, picture journals, comics. Each series gets a cover image and a chapter list that readers can browse on your profile.' },
                                             { key: 'GALLERY', desc: 'A visual grid of all your uploaded photos and videos.' },
                                             { key: 'COMMUNITIES', desc: 'Create or join fan communities linked to your profile.' },
                                             { key: 'BIO & IDENTITY', desc: 'Set your display name, bio, profile picture, banner, and theme color from Settings → Identity.' },
@@ -2896,12 +2899,13 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">The Signal Feed aggregates content from artists and communities you follow into a single scrollable stream. It is your personalized view of the network.</p>
                                     <div className="space-y-3">
                                         {[
-                                            { key: 'POST TYPES', desc: 'The feed shows journal entries, photo uploads, video transmissions, music releases, and live announcements.' },
+                                            { key: 'POST TYPES', desc: 'The feed shows journal log entries, photo uploads, video transmissions, music releases, live announcements, and serialized series cards.' },
                                             { key: 'ZOOM VIEW', desc: 'Click any post card to open it in the full modal viewer with media, comments, and action buttons.' },
                                             { key: 'POST COMMENT', desc: 'In the expanded view of a post, type a response and hit send to add your comment.' },
                                             { key: 'SHARE', desc: 'Use the Share button inside any post to copy a direct link to that content.' },
                                             { key: 'TIP ARTIST', desc: 'Send credits to the artist directly from any post they have authored.' },
-                                            { key: 'BROADCAST SIGNAL', desc: 'Create and publish your own post — text, image, video, or journal entry — from your profile.' },
+                                            { key: 'BROADCAST SIGNAL', desc: 'Create and publish your own post — text, image, video, journal log, or a new series chapter — from your profile or using the [ NEW TRANSMISSION ] button.' },
+                                            { key: 'SERIES CARDS', desc: 'When an artist publishes or updates a series, a book-style card appears in the feed with the cover art and a [ READ ] button. Click it to start reading from Chapter 1.' },
                                             { key: 'FILTERING', desc: 'Use the search bar on Discovery to filter all visible signals simultaneously across panels.' },
                                         ].map(item => (
                                             <div key={item.key} className="flex gap-3 items-start">
@@ -2940,6 +2944,67 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     </div>
                                     <div className="mt-4 p-3 bg-[#b39ddb]/5 border border-[#b39ddb]/20 text-[10px] text-white/50 font-mono">
                                         TIP: Artists receive credits in real time the moment a fan sends a tip — no delay.
+                                    </div>
+                                </div>
+                            )
+                        },
+                        {
+                            id: 'JOURNAL',
+                            title: 'LOG / JOURNAL',
+                            subtitle: '// STUDIO_LOG',
+                            content: (
+                                <div className="space-y-4 text-[11px] leading-relaxed font-sans">
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">The Log (also called the Studio Journal) is your artist diary. Think of it like a personal notebook that your followers can read — great for thoughts, updates, behind-the-scenes notes, or anything on your mind.</p>
+                                    <div className="space-y-3">
+                                        {[
+                                            { key: 'WRITING AN ENTRY', desc: 'Go to your profile and open the Studio / Journal tab. Click "New Entry" to open the full-screen editor. You can write long-form text with formatting — bold, italic, headings, lists, and more.' },
+                                            { key: 'ADDING IMAGES OR VIDEOS', desc: 'Inside the journal editor, use the toolbar to embed photos or videos directly into your entry. Great for picture diaries, comic strips, or illustrated notes.' },
+                                            { key: 'STANDALONE ENTRY', desc: 'A standalone entry is a single one-off post. It stands on its own — not connected to any series or chapter sequence.' },
+                                            { key: 'LINKING TO A SERIES', desc: 'If you are writing a serialized story or ongoing journal, link your entry to a Series. Select the series name and set the chapter number so readers can follow in order.' },
+                                            { key: 'COVER IMAGE', desc: 'Each entry can have a cover image — a visual thumbnail that appears on your profile and in the feed.' },
+                                            { key: 'CAPTION (OPTIONAL)', desc: 'You can add a short caption to describe your entry, but it is not required. Visual-only entries are totally valid — let the art speak for itself.' },
+                                            { key: 'DRAFT vs PUBLISH', desc: 'Entries are only visible to followers once you publish. Save as a draft to continue later, or hit Transmit to post immediately.' },
+                                        ].map(item => (
+                                            <div key={item.key} className="flex gap-3 items-start">
+                                                <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
+                                                <div><strong className="text-[#b39ddb] font-mono text-[9px] uppercase tracking-wide">{item.key} — </strong><span className="text-white/60">{item.desc}</span></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="mt-4 p-3 bg-[#b39ddb]/5 border border-[#b39ddb]/20 text-[10px] text-white/50 font-mono">
+                                        TIP: You can also post a quick log entry from anywhere on the platform using the [ NEW TRANSMISSION ] button — just pick "Journal / Log" as the media type.
+                                    </div>
+                                </div>
+                            )
+                        },
+                        {
+                            id: 'SERIES',
+                            title: 'PUBLICATIONS & SERIES',
+                            subtitle: '// NOVEL_ENGINE',
+                            content: (
+                                <div className="space-y-4 text-[11px] leading-relaxed font-sans">
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Publications let you create serialized works — novels, comics, picture journals, zines, or any multi-part story. Think of it like publishing your own book, chapter by chapter, right on FATALE.</p>
+                                    <div className="space-y-1 mb-4">
+                                        <div className="text-[#b39ddb] font-mono text-[9px] font-black uppercase tracking-widest pb-2 border-b border-[#b39ddb]/20">CREATING A SERIES</div>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {[
+                                            { key: 'START A NEW SERIES', desc: 'From the Studio / Journal tab on your profile, click "New Series". Give it a title, a description, and upload a cover image — this is the book cover readers will see in the feed.' },
+                                            { key: 'COVER ART', desc: 'The cover image is the most important visual element. It appears as a large preview card in the feed and on your profile, just like a real book cover. Make it expressive!' },
+                                            { key: 'ADD CHAPTERS', desc: 'Once a series exists, create new journal entries and link them to that series. Set the chapter number (Ch. 1, Ch. 2, etc.) and they will stack in reading order automatically.' },
+                                            { key: 'SERIES ON THE FEED', desc: 'Series appear as book-style cards in the Signal Feed — showing the cover art prominently, the series title, a short description, and a [ READ ] button. Click to open and read from Chapter 1.' },
+                                            { key: 'PICTURE NOVELS', desc: 'You can embed images inside each chapter using the journal editor — great for illustrated stories, manga-style comics, or photo essays. No caption or text is required; images alone are enough.' },
+                                            { key: 'READING EXPERIENCE', desc: 'Readers open a series and see a chapter list. They can jump to any chapter or read in order. Each chapter opens in a full reader view with your formatted text and embedded media.' },
+                                            { key: 'SERIES ON YOUR PROFILE', desc: 'Your active series appear in the Studio / Journal tab with their cover art. Visitors to your profile can browse and start reading directly.' },
+                                        ].map(item => (
+                                            <div key={item.key} className="flex gap-3 items-start">
+                                                <span className="text-[#b39ddb] font-mono text-[8px] mt-1 shrink-0">■</span>
+                                                <div><strong className="text-[#b39ddb] font-mono text-[9px] uppercase tracking-wide">{item.key} — </strong><span className="text-white/60">{item.desc}</span></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="mt-4 p-3 bg-[#b39ddb]/5 border border-[#b39ddb]/20 text-[10px] text-white/50 font-mono">
+                                        TIP: When posting from the New Transmission modal, selecting "Journal / Log" lets you link directly to an existing series and set the chapter number — no need to open the full editor.
                                     </div>
                                 </div>
                             )
