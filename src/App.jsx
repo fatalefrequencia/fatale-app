@@ -2780,10 +2780,11 @@ function App() {
   };
 
   const handleNewPostSubmit = async () => {
-    if (!postText.trim()) return;
+    const hasFiles = postFiles && postFiles.length > 0;
+    if (!hasFiles && !postText.trim()) return;
     setIsSubmittingPost(true);
     try {
-      if (postFiles && postFiles.length > 0) {
+      if (hasFiles) {
         const firstFile = postFiles[0];
         
         // Upload additional slides if any (indices 1 to 11)
@@ -2804,10 +2805,12 @@ function App() {
           ? JSON.stringify({ text: postText, slides: additionalUrls })
           : postText;
 
+        const defaultTitle = postText.trim() ? postText.slice(0, 20) : `VISUAL_SIGNAL_${Math.floor(Math.random() * 9000 + 1000)}`;
+
         const formData = new FormData();
         formData.append('File', firstFile);
         formData.append('Type', firstFile.type.startsWith('video') ? 'VIDEO' : 'PHOTO');
-        formData.append('Title', postText.slice(0, 20));
+        formData.append('Title', defaultTitle);
         formData.append('Description', finalDescriptionText);
         formData.append('IsPosted', true);
         
@@ -3410,9 +3413,18 @@ function App() {
 
         {/* ─── Ingest Choice Modal (NEW_POST) ─── */}
         {showGlobalIngest && ingestMode !== 'JOURNAL' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[500] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" onClick={() => { setShowGlobalIngest(false); setIngestMode('ALL'); }} />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative w-full max-w-xl text-center space-y-8 bg-black p-8 border border-white/10">
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            className="fixed inset-0 z-[500] flex items-start sm:items-center justify-center p-4 overflow-y-auto bg-black/95 backdrop-blur-sm"
+          >
+            <div className="absolute inset-0" onClick={() => { setShowGlobalIngest(false); setIngestMode('ALL'); }} />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              className="relative w-full max-w-xl text-center space-y-6 bg-black p-6 sm:p-8 border border-white/10 my-8"
+            >
               <button onClick={() => { setShowGlobalIngest(false); setIngestMode('ALL'); }} className="absolute top-4 right-4 p-2 text-fatale/40 hover:text-fatale hover:rotate-90 transition-all duration-300">
                 <X size={20} />
               </button>
@@ -3429,15 +3441,6 @@ function App() {
               </div>
 
               <div className="space-y-6 text-left">
-                  <div className="space-y-2">
-                      <label className="text-[10px] text-fatale/60 uppercase tracking-widest">Post Content (Required)</label>
-                      <textarea 
-                          value={postText}
-                          onChange={(e) => setPostText(e.target.value)}
-                          className="w-full bg-[#050505] border border-white/5 p-4 text-white text-xs outline-none focus:border-fatale/40 min-h-[120px] resize-none font-sans"
-                          placeholder="What's on your mind?..."
-                      />
-                  </div>
                   {ingestMode !== 'JOURNAL' && (
                       <div className="space-y-4">
                           <div className="flex items-center justify-between">
@@ -3548,9 +3551,20 @@ function App() {
                           </div>
                       </div>
                   )}
+
+                  <div className="space-y-2">
+                      <label className="text-[10px] text-fatale/60 uppercase tracking-widest">Caption (Optional)</label>
+                      <textarea 
+                          value={postText}
+                          onChange={(e) => setPostText(e.target.value)}
+                          className="w-full bg-[#050505] border border-white/5 p-4 text-white text-xs outline-none focus:border-fatale/40 min-h-[120px] resize-none font-sans"
+                          placeholder="What's on your mind?..."
+                      />
+                  </div>
+
                   <button
                       onClick={handleNewPostSubmit}
-                      disabled={!postText.trim() || isSubmittingPost}
+                      disabled={isSubmittingPost || postFiles.length === 0}
                       className="w-full py-4 bg-fatale/10 border border-fatale text-fatale text-[10px] font-black uppercase tracking-widest hover:bg-fatale hover:text-black transition-all disabled:opacity-30 disabled:pointer-events-none"
                   >
                       {isSubmittingPost ? 'TRANSMITTING...' : 'TRANSMIT_SIGNAL'}
