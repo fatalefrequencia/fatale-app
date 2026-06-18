@@ -2721,7 +2721,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                         {[
                                             { title: 'Interactive Globe', desc: 'Central 3D map showing active nodes and real-time signals.' },
                                             { title: 'Discovery HUD', desc: 'Search and filter trending artists, playlists, journals, and streams.' },
-                                            { title: 'Keyboard Hotkeys', desc: 'F1–F9 shortcuts let desktop users navigate the entire system instantly.' },
+                                            { title: 'Keyboard Hotkeys', desc: 'F1–F10 shortcuts let desktop users navigate the entire system instantly.' },
                                             { title: 'Direct Economy', desc: 'Support creators directly with instant credit tipping and purchases.' }
                                         ].map(item => (
                                             <div key={item.title} className="p-3 border border-[#b39ddb]/15 bg-white/[0.01] hover:border-[#b39ddb]/45 transition-colors">
@@ -2743,15 +2743,16 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     <p className="text-white/50 text-[10px]">Navigate FATALE instantly from any screen using function keys:</p>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                         {[
-                                            { key: 'F1', label: 'Signal Feed', desc: 'Social stream' },
-                                            { key: 'F2', label: 'Music Player', desc: 'iPod view' },
-                                            { key: 'F3', label: 'DJ Mixer', desc: 'Two-deck deck' },
-                                            { key: 'F4', label: 'Messages', desc: 'DMs & Group chat' },
-                                            { key: 'F5', label: 'Profile', desc: 'Your studio' },
-                                            { key: 'F6', label: 'Wallet', desc: 'Credits & Tips' },
-                                            { key: 'F7', label: 'Comms', desc: 'Cliques & Guilds' },
-                                            { key: 'F8', label: 'Live', desc: 'Broadcast center' },
-                                            { key: 'F9', label: 'Exit', desc: 'Close menus/modals' }
+                                            { key: 'F1', label: 'Scan', desc: 'Discovery HUD & Globe' },
+                                            { key: 'F2', label: 'Feed', desc: 'Signal Stream timeline' },
+                                            { key: 'F3', label: 'Player', desc: 'Music Player & DJ Mixer' },
+                                            { key: 'F4', label: 'Messages', desc: 'DMs & Community chat' },
+                                            { key: 'F5', label: 'Depot', desc: 'Marketplace & Shop' },
+                                            { key: 'F6', label: 'Wallet', desc: 'Credits & Tip ledger' },
+                                            { key: 'F7', label: 'Config', desc: 'Identity & Settings' },
+                                            { key: 'F8', label: 'User', desc: 'Profile & Studio Crate' },
+                                            { key: 'F9', label: 'Exit', desc: 'Disconnect session' },
+                                            { key: 'F10', label: 'Post', desc: 'Quick transmission menu' }
                                         ].map(item => (
                                             <div key={item.key} className="flex gap-2 items-center p-2 border border-white/5 bg-white/[0.01] hover:border-[#b39ddb]/30 transition-colors">
                                                 <div className="shrink-0 w-8 h-8 border border-[#b39ddb]/40 flex items-center justify-center font-mono text-[9px] font-black text-[#b39ddb]">{item.key}</div>
@@ -2766,17 +2767,39 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             )
                         },
                         {
-                            id: 'FEED',
-                            title: 'F1 - signal feed',
-                            subtitle: '// personalized updates',
+                            id: 'SCAN',
+                            title: 'F1 - scan (discovery)',
+                            subtitle: '// hud & interactive globe',
                             content: (
                                 <div className="space-y-3 text-[11px] leading-relaxed font-sans text-white/80">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">The main scrollable stream showing new tracks, journal entries, photos, and series updates from followed artists.</p>
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">The Discovery HUD is your main scanning dashboard. It aggregates active signals, live streams, and trending publications.</p>
                                     <div className="space-y-2">
                                         {[
-                                            { key: 'Interact', desc: 'Tap any post to view comments, add your own, or copy the share link.' },
-                                            { key: 'Tip Credits', desc: 'Send credits directly to an artist from their post to support them instantly.' },
-                                            { key: 'Broadcast Status', desc: 'Find active streams announced directly within the feed timeline.' }
+                                            { key: 'YT Freq Scan', desc: 'Search bar at the top of the HUD. Query track names or artist handles to pull instant audio listings.' },
+                                            { key: 'Interactive Globe', desc: '3D central map of active nodes. Click and drag to spin, or tap glowing nodes to view detail cards.' },
+                                            { key: 'Simultaneous Filters', desc: 'Typing in the scanning input filters all HUD panels (Artists, Playlists, Transmissions, Journals) at once.' }
+                                        ].map(item => (
+                                            <div key={item.key} className="flex gap-2 items-start">
+                                                <span className="text-[#b39ddb] font-mono text-[8px] mt-1">■</span>
+                                                <div><strong className="text-white/70 font-sans text-[10px]">{item.key}: </strong><span className="text-white/45 text-[10px]">{item.desc}</span></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )
+                        },
+                        {
+                            id: 'FEED',
+                            title: 'F2 - signal feed',
+                            subtitle: '// community timeline',
+                            content: (
+                                <div className="space-y-3 text-[11px] leading-relaxed font-sans text-white/80">
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">A chronologically ordered timeline displaying new tracks, visual transmissions, diaries, and serialized novel chapters from artists you follow.</p>
+                                    <div className="space-y-2">
+                                        {[
+                                            { key: 'Interact', desc: 'Open posts to leave comments, view feedback, or copy unique share links.' },
+                                            { key: 'Direct Tip', desc: 'Send credits directly from any post without visiting the creator\'s profile.' },
+                                            { key: 'Series Cards', desc: 'Book-style cards with cover art representing serialized literature. Tap the Read button to open chapter views.' }
                                         ].map(item => (
                                             <div key={item.key} className="flex gap-2 items-start">
                                                 <span className="text-[#b39ddb] font-mono text-[8px] mt-1">■</span>
@@ -2789,38 +2812,16 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         },
                         {
                             id: 'PLAYER',
-                            title: 'F2 - music player',
-                            subtitle: '// clean audio experience',
+                            title: 'F3 - music player & dj mixer',
+                            subtitle: '// virtual audio deck',
                             content: (
                                 <div className="space-y-3 text-[11px] leading-relaxed font-sans text-white/80">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">FATALE features a persistent player to manage and listen to your queue anywhere.</p>
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Listen to tracks or mix them live for the network using standard DJ utility decks.</p>
                                     <div className="space-y-2">
                                         {[
-                                            { key: 'Mini Player', desc: 'Lives at the bottom of the screen. Quick play, skip, like (♥), volume, and instant tip ($).' },
-                                            { key: 'Full Player View', desc: 'Immersive interface showing high-resolution album artwork, scrub progress, and queue details.' },
-                                            { key: 'YouTube Sync', desc: 'Tracks from the wider library resolve and stream directly in the background.' }
-                                        ].map(item => (
-                                            <div key={item.key} className="flex gap-2 items-start">
-                                                <span className="text-[#b39ddb] font-mono text-[8px] mt-1">■</span>
-                                                <div><strong className="text-white/70 font-sans text-[10px]">{item.key}: </strong><span className="text-white/45 text-[10px]">{item.desc}</span></div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )
-                        },
-                        {
-                            id: 'MIXER',
-                            title: 'F3 - dj mixer',
-                            subtitle: '// dual-deck live mixing',
-                            content: (
-                                <div className="space-y-3 text-[11px] leading-relaxed font-sans text-white/80">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">A virtual studio setup allowing you to blend tracks and stream live mixes.</p>
-                                    <div className="space-y-2">
-                                        {[
-                                            { key: 'Signal Crate', desc: 'Load tracks into Deck A and Deck B using the respective A and B side chips.' },
-                                            { key: 'Mixer Controls', desc: 'Blend using the crossfader, pitch sliders (BPM), and 3-band EQs (Low, Mid, High).' },
-                                            { key: 'Go Live', desc: 'Broadcast your live mix. Followers tune in to the stream and chat in real time.' }
+                                            { key: 'Audio Player (iPod)', desc: 'Immersive view with covering artwork, track parameters, queue lists, and quick tip utilities.' },
+                                            { key: 'DJ Mixer', desc: 'Dual-deck control (A/B). Load tracks from your Crate. Features pitch faders, crossfaders, and 3-band EQs.' },
+                                            { key: 'Broadcasting', desc: 'Transmit your live mix straight to your station, complete with active community chat integrations.' }
                                         ].map(item => (
                                             <div key={item.key} className="flex gap-2 items-start">
                                                 <span className="text-[#b39ddb] font-mono text-[8px] mt-1">■</span>
@@ -2834,15 +2835,15 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         {
                             id: 'MESSAGES',
                             title: 'F4 - messages & chat',
-                            subtitle: '// communication hubs',
+                            subtitle: '// communication interface',
                             content: (
                                 <div className="space-y-3 text-[11px] leading-relaxed font-sans text-white/80">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Stay in touch with direct DMs and communal group chats.</p>
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Communicate privately or join public community group boards.</p>
                                     <div className="space-y-2">
                                         {[
-                                            { key: 'Direct Messages', desc: 'Private one-on-one threads. Visit any profile to start a conversation.' },
-                                            { key: 'Community Chat', desc: 'Public chatrooms automatically unlocked when joining a localized Community Clique.' },
-                                            { key: 'Live Chat', desc: 'Engage with the artist and other listeners in the chat sidebar during live broadcasts.' }
+                                            { key: 'Direct DMs', desc: 'Private direct messages with any user. Open threads by clicking the compose icon or visiting their profile.' },
+                                            { key: 'Clique Rooms', desc: 'Communal boards tied to specific communities. Automatically accessible upon joining a Clique.' },
+                                            { key: 'Notification Badges', desc: 'Unread counters appear over the messages icon when new transmissions arrive.' }
                                         ].map(item => (
                                             <div key={item.key} className="flex gap-2 items-start">
                                                 <span className="text-[#b39ddb] font-mono text-[8px] mt-1">■</span>
@@ -2854,17 +2855,17 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                             )
                         },
                         {
-                            id: 'PROFILE',
-                            title: 'F5 - artist profile & studio',
-                            subtitle: '// your identity, logs & series',
+                            id: 'DEPOT',
+                            title: 'F5 - depot (marketplace)',
+                            subtitle: '// artist commerce storefront',
                             content: (
                                 <div className="space-y-3 text-[11px] leading-relaxed font-sans text-white/80">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Your profile is your dashboard to manage, draft, and publish your work.</p>
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Browse and acquire items released by creators, including merch, digital collectibles, and exclusive samples.</p>
                                     <div className="space-y-2">
                                         {[
-                                            { key: 'Releases', desc: 'Upload, price, and catalog your singles and albums.' },
-                                            { key: 'Log / Journal', desc: 'Write diary logs, add rich formatting, and insert inline photos. Save drafts or publish immediately.' },
-                                            { key: 'Series & Publications', desc: 'Compile multi-chapter stories (novels, zines, comics). Add custom cover art to display in the feed.' }
+                                            { key: 'Acquire Items', desc: 'Purchase items directly using your credit balance. Digital items add instantly to your account assets.' },
+                                            { key: 'Artist Storefronts', desc: 'Creators can list physical items, external links, or downloadable sample crates directly on their profiles.' },
+                                            { key: 'HUD Quick Shop', desc: 'The HUD marketplace panel showcases trending acquisitions and recent entries across the network.' }
                                         ].map(item => (
                                             <div key={item.key} className="flex gap-2 items-start">
                                                 <span className="text-[#b39ddb] font-mono text-[8px] mt-1">■</span>
@@ -2878,59 +2879,15 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         {
                             id: 'WALLET',
                             title: 'F6 - wallet & credits',
-                            subtitle: '// instant support economy',
+                            subtitle: '// credit ledger',
                             content: (
                                 <div className="space-y-3 text-[11px] leading-relaxed font-sans text-white/80">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Credits enable instant transactions between fans and creators with zero middleman delay.</p>
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">FATALE runs on a direct credit system allowing users to support artists without middleman processing delays.</p>
                                     <div className="space-y-2">
                                         {[
-                                            { key: 'Tipping', desc: 'Send credits directly from tracks, visual posts, profiles, or the mini-player.' },
-                                            { key: 'Music Catalog', desc: 'Purchase premium tracks to permanently add them to your music crate.' },
-                                            { key: 'Earnings Ledger', desc: 'View complete transaction receipts, tips received, and current balances.' }
-                                        ].map(item => (
-                                            <div key={item.key} className="flex gap-2 items-start">
-                                                <span className="text-[#b39ddb] font-mono text-[8px] mt-1">■</span>
-                                                <div><strong className="text-white/70 font-sans text-[10px]">{item.key}: </strong><span className="text-white/45 text-[10px]">{item.desc}</span></div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )
-                        },
-                        {
-                            id: 'COMMUNITIES',
-                            title: 'F7 - communities',
-                            subtitle: '// regional cliques',
-                            content: (
-                                <div className="space-y-3 text-[11px] leading-relaxed font-sans text-white/80">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Communities are localized hubs organized by genre or region.</p>
-                                    <div className="space-y-2">
-                                        {[
-                                            { key: 'Founding Cliques', desc: 'Create a new clique from the HUD. Specify a unique name, description, and sector color.' },
-                                            { key: 'Membership', desc: 'Join a community to unlock its dedicated chatroom and pinning functions.' },
-                                            { key: 'Activity Streams', desc: 'Browse the latest news, updates, and events happening within specific cliques.' }
-                                        ].map(item => (
-                                            <div key={item.key} className="flex gap-2 items-start">
-                                                <span className="text-[#b39ddb] font-mono text-[8px] mt-1">■</span>
-                                                <div><strong className="text-white/70 font-sans text-[10px]">{item.key}: </strong><span className="text-white/45 text-[10px]">{item.desc}</span></div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )
-                        },
-                        {
-                            id: 'LIVE',
-                            title: 'F8 - live signals',
-                            subtitle: '// broadcasting & mapping',
-                            content: (
-                                <div className="space-y-3 text-[11px] leading-relaxed font-sans text-white/80">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Broadcast live audio and map network coordinates in real time.</p>
-                                    <div className="space-y-2">
-                                        {[
-                                            { key: 'Interactive Globe', desc: 'Sitting at the center of the HUD. Click and drag to spin, filter tags, or toggle Global vs Local view.' },
-                                            { key: 'Streaming Center', desc: 'Transmit a signal using your microphone, hardware input, or virtual DJ mixer.' },
-                                            { key: 'Live Feed', desc: 'Click any glowing globe node or matching HUD tile to tune in immediately.' }
+                                            { key: 'Balance & Refills', desc: 'Check your current credits. Purchase more credits using standard checkout interfaces.' },
+                                            { key: 'Creator Earnings', desc: 'Artists can view real-time tips received, sales breakdowns, and accumulated balances.' },
+                                            { key: 'Transaction Registry', desc: 'Every tip, purchase, and exchange is indexed in your wallet log for verification.' }
                                         ].map(item => (
                                             <div key={item.key} className="flex gap-2 items-start">
                                                 <span className="text-[#b39ddb] font-mono text-[8px] mt-1">■</span>
@@ -2943,17 +2900,60 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                         },
                         {
                             id: 'CONFIG',
-                            title: 'F9 - settings & skull menu',
-                            subtitle: '// configurations',
+                            title: 'F7 - config (settings)',
+                            subtitle: '// identity & configurations',
                             content: (
                                 <div className="space-y-3 text-[11px] leading-relaxed font-sans text-white/80">
-                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Configure account details and manage system settings.</p>
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Control your account data, aesthetic themes, and localization parameters.</p>
                                     <div className="space-y-2">
                                         {[
-                                            { key: 'Identity & Theme', desc: 'Change username, biography, profile photos, banners, and pick custom sector colors.' },
-                                            { key: 'Security & Locale', desc: 'Manage passwords, session parameters, and switch system language (EN/ES/RU/JP).' },
-                                            { key: 'Skull Quick Links', desc: 'Click the skull logo in the top-left for fast navigation to Profile, Wallet, Messages, or Logout.' },
-                                            { key: 'Force Update', desc: 'Click to reset and re-sync visual feeds if UI states fall out of alignment.' }
+                                            { key: 'Identity Card', desc: 'Set your handle, profile bio, avatar image, header banner, and custom network theme color.' },
+                                            { key: 'Language Configuration', desc: 'Toggle the system interface instantly between English, Spanish, Japanese, and Russian.' },
+                                            { key: 'System Realignment', desc: 'Use Force Update if visual assets, streams, or globe nodes become misaligned.' }
+                                        ].map(item => (
+                                            <div key={item.key} className="flex gap-2 items-start">
+                                                <span className="text-[#b39ddb] font-mono text-[8px] mt-1">■</span>
+                                                <div><strong className="text-white/70 font-sans text-[10px]">{item.key}: </strong><span className="text-white/45 text-[10px]">{item.desc}</span></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )
+                        },
+                        {
+                            id: 'USER',
+                            title: 'F8 - user profile & studio',
+                            subtitle: '// your page, journals & series',
+                            content: (
+                                <div className="space-y-3 text-[11px] leading-relaxed font-sans text-white/80">
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Your profile is your home studio. Manage your releases and write logs directly for the feed.</p>
+                                    <div className="space-y-2">
+                                        {[
+                                            { key: 'Studio Catalog', desc: 'Upload tracks, manage album titles, adjust pricing, and track play statistics.' },
+                                            { key: 'Journal Editor', desc: 'Create diary entries with rich formatting, headings, and embedded images. Save drafts or publish live.' },
+                                            { key: 'Serialized Books', desc: 'Group journal logs into custom-titled Series (novels, zines, comics) with custom cover cards.' }
+                                        ].map(item => (
+                                            <div key={item.key} className="flex gap-2 items-start">
+                                                <span className="text-[#b39ddb] font-mono text-[8px] mt-1">■</span>
+                                                <div><strong className="text-white/70 font-sans text-[10px]">{item.key}: </strong><span className="text-white/45 text-[10px]">{item.desc}</span></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )
+                        },
+                        {
+                            id: 'ACTIONS',
+                            title: 'F9 & F10 - exit & post',
+                            subtitle: '// quick actions',
+                            content: (
+                                <div className="space-y-3 text-[11px] leading-relaxed font-sans text-white/80">
+                                    <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Trigger fast terminal commands using quick keys.</p>
+                                    <div className="space-y-2">
+                                        {[
+                                            { key: 'F9 (Exit Session)', desc: 'Triggers a terminal prompt to safely log out and disconnect your current active node session.' },
+                                            { key: 'F10 (Post Transmit)', desc: 'Opens the global transmission panel from any screen. Instantly compose a post, log, or start a live stream.' },
+                                            { key: 'Skull Menu Options', desc: 'Click the skull image in the top-left corner for drop-down quick links (Profile, Wallet, Settings, Logout).' }
                                         ].map(item => (
                                             <div key={item.key} className="flex gap-2 items-start">
                                                 <span className="text-[#b39ddb] font-mono text-[8px] mt-1">■</span>
