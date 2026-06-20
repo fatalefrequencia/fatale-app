@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Globe, Shield, User, Bell, ChevronRight, Check, Activity, Zap, 
-    AlertTriangle, Lock, Eye, EyeOff, Save, Trash2, Volume2, Laptop 
+    AlertTriangle, Lock, Eye, EyeOff, Save, Trash2, Volume2, Laptop, FileText 
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNotification } from '../contexts/NotificationContext';
@@ -410,6 +410,24 @@ export default function SettingsView({ user, setUser, appThemeColor, setAppTheme
                             <span className="text-[10px] font-black uppercase tracking-widest">{t('NOTIFICATIONS')}</span>
                         </div>
                         <ChevronRight size={14} className={activeSection === 'notifications' ? "opacity-100 text-fatale" : "opacity-20"} />
+                    </button>
+                    <button 
+                        type="button"
+                        onClick={() => {
+                            console.log("[SettingsView] Changing active section to: privacy");
+                            setActiveSection('privacy');
+                        }}
+                        className={`w-full flex items-center justify-between p-4 transition-all group border ${
+                            activeSection === 'privacy' 
+                            ? 'bg-fatale/10 border-fatale/40 text-white' 
+                            : 'border-white/5 text-white/40 hover:bg-white/5 hover:text-white'
+                        }`}
+                    >
+                        <div className="flex items-center gap-3">
+                            <FileText size={16} className={activeSection === 'privacy' ? "text-fatale" : ""} />
+                            <span className="text-[10px] font-black uppercase tracking-widest">{t('PRIVACY_POLICY') || 'Privacy Policy'}</span>
+                        </div>
+                        <ChevronRight size={14} className={activeSection === 'privacy' ? "opacity-100 text-fatale" : "opacity-20"} />
                     </button>
                 </div>
 
@@ -958,6 +976,52 @@ export default function SettingsView({ user, setUser, appThemeColor, setAppTheme
                                         <div className="flex justify-between text-[6px] mono text-white/20 uppercase tracking-widest">
                                             <span>2 Seconds</span>
                                             <span>15 Seconds</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                        {activeSection === 'privacy' && (
+                            <motion.div 
+                                key="privacy"
+                                initial={{ opacity: 0, x: 10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                className="space-y-6"
+                            >
+                                <div className="bg-black/40 border border-white/5 p-6 space-y-6">
+                                    <div className="space-y-1 border-b border-white/5 pb-4">
+                                        <h2 className="text-xs font-black text-fatale uppercase tracking-widest">{t('PRIVACY_POLICY') || 'PRIVACY POLICY & UGC USER PROTECTION'}</h2>
+                                        <p className="text-[8px] text-white/30 uppercase tracking-[0.2em] font-mono">LEGAL_COMPLIANCE_PROTOCOL</p>
+                                    </div>
+
+                                    <div className="space-y-4 text-[11px] font-mono text-white/70 leading-relaxed uppercase tracking-wider">
+                                        <div className="border border-white/5 p-4 bg-white/[0.01] space-y-2">
+                                            <div className="text-[10px] font-black text-fatale">// 1. ZERO GEOLOCATION & IP BUFFERS</div>
+                                            <p className="text-[9px] text-white/50">
+                                                FATALE DOES NOT LOG, STORE, OR TRANSMIT ANY GEOLOCATED IP ADDRESS INFORMATION. WE HAVE COMPLETELY DECOUPLED ALL GEOLOCALIZATION MATRIX LAYERS TO PREVENT STALKING, PHYSICAL TRACKING, AND DOCKING THREATS. USER IP PRIVACY IS SAFEGUARDED BY MULTIPLE LAYERS OF ROUTING PROXIES.
+                                            </p>
+                                        </div>
+
+                                        <div className="border border-white/5 p-4 bg-white/[0.01] space-y-2">
+                                            <div className="text-[10px] font-black text-fatale">// 2. STAGE & AUDIO STREAM TRANSMISSION PROTECTION</div>
+                                            <p className="text-[9px] text-white/50">
+                                                ALL REAL-TIME BROADCASTS (RADIO STATIONS, AUDIO STREAMS) UTILIZE END-TO-END SYSTEM RELAY CHANNELS. WE STRICTLY DISABLE NATIVE PEER-TO-PEER IP LEAKS. THERE IS ABSOLUTELY NO METHOD FOR ARBITRARY CLIENT NODES TO DISCOVER YOUR PUBLIC IP ADDRESS THROUGH TURN/STUN BACKWORK HOOKS.
+                                            </p>
+                                        </div>
+
+                                        <div className="border border-white/5 p-4 bg-white/[0.01] space-y-2">
+                                            <div className="text-[10px] font-black text-fatale">// 3. DECENTRALIZED CURATION (BLOCK & MUTE MATRIX)</div>
+                                            <p className="text-[9px] text-white/50">
+                                                YOU HAVE THE INHERENT RIGHTS OF NODE CURATION. BLOCKING A TARGET USER REMOVES THEIR BROADCAST TRANSMISSIONS, FEED POSTS, REPOSTS, AND DIRECT SIGNALS FROM YOUR HUD SCREEN IMMEDIATELY. THEY ARE SILENTLY DISCONNECTED FROM YOUR FREQUENCY.
+                                            </p>
+                                        </div>
+
+                                        <div className="border border-white/5 p-4 bg-white/[0.01] space-y-2">
+                                            <div className="text-[10px] font-black text-fatale">// 4. FREE EXPRESSION & CONTENT FLAG NOTICES</div>
+                                            <p className="text-[9px] text-white/50">
+                                                CONTENT FLAGGING LOGS USER FEEDBACK CONCERNING TRANSMISSIONS BUT PERFORMS NO CENSORSHIP OR DELISTING FROM THE NETWORK CORE. INSTEAD, THE OWNER OF THE FLAGGED CONTENT IS DOCKED A SYSTEM MESSAGE (SENDER_ID: 0) DETAILING WHICH PIECE OF CONTENT WAS FLAGGED AND WHY. YOUR FREEDOM OF EXPRESSION IS GUARANTEED.
+                                            </p>
                                         </div>
                                     </div>
                                 </div>

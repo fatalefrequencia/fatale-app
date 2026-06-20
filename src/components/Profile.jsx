@@ -330,7 +330,8 @@ const ProfileIdentityHeader = ({
     onModifyId, onGoLive, onUpload, onLogout, onExitProfile,
     onMessageClick, communityName, communityColor, stationData,
     panelsVisible, onTogglePanels,
-    isProfileTrackMuted, onToggleProfileMusic, hasFeaturedTrack
+    isProfileTrackMuted, onToggleProfileMusic, hasFeaturedTrack,
+    isBlocked, handleBlock
 }) => {
     const { t } = useLanguage();
     const pfp = displayUser?.profilePictureUrl || displayUser?.ProfilePictureUrl || displayUser?.profileImageUrl || displayUser?.ProfileImageUrl;
@@ -434,6 +435,9 @@ const ProfileIdentityHeader = ({
                                         <MessageSquare size={10} /> [ {t('COMMS')} ]
                                     </button>
                                 )}
+                                <button onClick={handleBlock} className="subsystem-command-btn py-1 px-3 border-red-950 text-red-500/80 hover:text-red-500 hover:bg-red-950/20">
+                                    [ {isBlocked ? 'UNBLOCK NODE' : 'BLOCK NODE'} ]
+                                </button>
                             </>
                         )}
                     </div>
@@ -958,6 +962,7 @@ export const ProfileView = React.memo(({
     const [twitterUrl, setTwitterUrl] = useState('');
     const [youtubeUrl, setYoutubeUrl] = useState('');
     const [websiteUrl, setWebsiteUrl] = useState('');
+    const [isBlocked, setIsBlocked] = useState(false);
 
     // RESTORED GEAR/STUDIO STATES
     const [profileGear, setProfileGear] = useState([]);
@@ -1728,13 +1733,15 @@ export const ProfileView = React.memo(({
                 }
                 const artistId = artistRes.data?.id || artistRes.data?.Id;
                 // Tracks & Following logic
-                const [tracksRes, followingRes] = await Promise.all([
+                const [tracksRes, followingRes, blockRes] = await Promise.all([
                     API.Tracks.getAllTracks(),
-                    API.Users.getFollowing(currentUser?.id || currentUser?.Id).catch(() => ({ data: [] }))
+                    API.Users.getFollowing(currentUser?.id || currentUser?.Id).catch(() => ({ data: [] })),
+                    isMe ? Promise.resolve({ data: { isBlocked: false } }) : API.Social.checkBlock(targetUserId).catch(() => ({ data: { isBlocked: false } }))
                 ]);
 
                 const following = followingRes.data || [];
                 setIsFollowing(following.some(a => String(a.id || a.Id) === String(effectiveId)));
+                setIsBlocked(blockRes.data?.isBlocked || false);
 
                 const tracks = tracksRes.data || [];
                 const filtered = tracks.filter(t => {
@@ -1805,6 +1812,25 @@ export const ProfileView = React.memo(({
             if (onRefreshProfile) onRefreshProfile();
         } catch (err) {
             console.error("Follow action failed", err);
+        }
+    };
+
+    const handleBlock = async () => {
+        try {
+            const API = await import('../services/api').then(mod => mod.default);
+            const res = await API.Social.blockUser(targetUserId);
+            const blockedState = res.data?.blocked;
+            setIsBlocked(blockedState);
+            if (blockedState) {
+                showNotification("USER_BLOCKED", "User node blocked. Exiting profile channel...", "success");
+                setTimeout(() => {
+                    onExitProfile?.();
+                }, 1000);
+            } else {
+                showNotification("USER_UNBLOCKED", "User node unblocked.", "success");
+            }
+        } catch (err) {
+            console.error("Block action failed", err);
         }
     };
 
@@ -1987,12 +2013,20 @@ export const ProfileView = React.memo(({
                                         <div className="text-[8px] mono text-[var(--subsystem-accent)]/60 uppercase tracking-widest">{displayUser?.statusMessage || displayUser?.StatusMessage || 'empty_string'}</div>
                                     </div>
                                     {!isMe && (
-                                        <button 
-                                            onClick={() => setShowTipModal(true)}
-                                            className="px-3 py-1 bg-fatale/10 border border-fatale/30 hover:bg-fatale hover:text-black transition-all text-fatale font-black uppercase text-[8px] flex items-center gap-1.5 group"
-                                        >
-                                            <Coins size={10} className="group-hover:animate-bounce" /> TIP_ARTIST
-                                        </button>
+                                        <div className="flex gap-2">
+                                            <button 
+                                                onClick={() => setShowTipModal(true)}
+                                                className="px-3 py-1 bg-fatale/10 border border-fatale/30 hover:bg-fatale hover:text-black transition-all text-fatale font-black uppercase text-[8px] flex items-center gap-1.5 group"
+                                            >
+                                                <Coins size={10} className="group-hover:animate-bounce" /> TIP_ARTIST
+                                            </button>
+                                            <button 
+                                                onClick={handleBlock}
+                                                className="px-3 py-1 bg-red-950/20 border border-red-900/40 hover:bg-red-900 hover:text-white transition-all text-red-500 font-black uppercase text-[8px] flex items-center gap-1.5"
+                                            >
+                                                {isBlocked ? 'UNBLOCK' : 'BLOCK'}
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -2641,6 +2675,12 @@ export const ProfileView = React.memo(({
                                 className={`px-3 py-1 md:px-6 md:py-1.5 border text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] transition-all ${isFollowing ? 'border-white/10 text-white/40' : 'border-[var(--subsystem-accent)] text-[var(--subsystem-accent)] hover:bg-[var(--subsystem-accent)] hover:text-black'}`}
                             >
                                 {isFollowing ? t('FOLLOWING') : t('FOLLOW')}
+                            </button>
+                            <button 
+                                onClick={handleBlock} 
+                                className="px-3 py-1 md:px-6 md:py-1.5 border border-red-900/40 text-red-500/80 hover:text-red-500 hover:bg-red-950/20 text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] transition-all"
+                            >
+                                {isBlocked ? 'UNBLOCK NODE' : 'BLOCK NODE'}
                             </button>
                         </>
                     )}

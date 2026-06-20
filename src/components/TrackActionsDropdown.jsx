@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     MoreHorizontal, PlayCircle, Library, Heart,
     Zap, Trash2, ChevronLeft, ChevronRight,
-    Lock, Globe, Download, Coins
+    Lock, Globe, Download, Coins, Flag
 } from 'lucide-react';
 import ActionModal from './ActionModal';
 
@@ -333,6 +333,20 @@ const TrackActionsDropdown = ({
                                                 >
                                                     <Coins size={16} className="text-fatale/50 group-hover/item:text-fatale" />
                                                     Tip Artist
+                                                </button>
+                                            )}
+
+                                            {!isOwner && (
+                                                <button
+                                                    onClick={() => {
+                                                        document.dispatchEvent(new CustomEvent('flagcontent', {
+                                                            detail: { itemType: 'track', itemId: track.id || track.Id }
+                                                        }));
+                                                        setIsOpen(false);
+                                                    }}
+                                                    className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-red-500/80 hover:bg-red-500/10 hover:text-red-500 transition-all rounded-sm group/item border-t border-white/5"
+                                                >
+                                                    <Flag size={16} className="text-red-500/50 group-hover/item:text-red-500" /> Report Transmission
                                                 </button>
                                             )}
 
