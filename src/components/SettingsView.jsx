@@ -991,7 +991,7 @@ export default function SettingsView({ user, setUser, appThemeColor, setAppTheme
                             >
                                 <div className="bg-black/40 border border-white/5 p-6 space-y-6">
                                     <div className="space-y-1 border-b border-white/5 pb-4">
-                                        <h2 className="text-xs font-black text-fatale uppercase tracking-widest">{t('PRIVACY_POLICY') || 'PRIVACY POLICY & UGC USER PROTECTION'}</h2>
+                                        <h2 className="text-xs font-black text-fatale uppercase tracking-widest">{t('PRIVACY_POLICY') || 'PRIVACY POLICY & TERMS OF SERVICE (EULA)'}</h2>
                                         <p className="text-[8px] text-white/30 uppercase tracking-[0.2em] font-mono">LEGAL_COMPLIANCE_PROTOCOL</p>
                                     </div>
 
@@ -1017,7 +1017,28 @@ export default function SettingsView({ user, setUser, appThemeColor, setAppTheme
                                             </p>
                                         </div>
 
+                                        <div className="border-t border-white/5 pt-4 my-2 text-[10px] font-black text-fatale tracking-[0.2em]">// TERMS OF SERVICE & EULA DOCUMENTATION</div>
 
+                                        <div className="border border-white/5 p-4 bg-white/[0.01] space-y-2">
+                                            <div className="text-[10px] font-black text-fatale">// 4. MUSIC & CONTENT COPYRIGHT LICENSE</div>
+                                            <p className="text-[9px] text-white/50">
+                                                YOU RETAIN SOLE AND ABSOLUTE OWNERSHIP OF ALL MUSIC, AUDIO TRACKS, COVER ARTWORK, AND JOURNAL ENTRIES TRANSMITTED FROM YOUR NODE. BY UPLOADING CONTENT, YOU GRANT FATALE A WORLDWIDE, NON-EXCLUSIVE, ROYALTY-FREE LICENSE TO BROADCAST, CONVERT, AND STREAM YOUR FREQUENCY TO PEER NODES WITHIN THE APPLICABLE BOUNDS OF THE SYSTEM.
+                                            </p>
+                                        </div>
+
+                                        <div className="border border-white/5 p-4 bg-white/[0.01] space-y-2">
+                                            <div className="text-[10px] font-black text-fatale">// 5. SYSTEM CREDIT & ECONOMY CORE RULES</div>
+                                            <p className="text-[9px] text-white/50">
+                                                FATALE UTILIZES SYSTEM CREDITS FOR PEER-TO-PEER TIPPING, SUBSCRIPTIONS, AND TRANSMISSION BANDWIDTH ENHANCEMENT. ALL TRANSACTIONS RECORDED ON THE LEDGER ARE FINAL. CREDITS ARE NON-REFUNDABLE AND ARE BOUND EXCLUSIVELY TO YOUR UNIQUE CRYPTOGRAPHIC NODE ACCOUNT.
+                                            </p>
+                                        </div>
+
+                                        <div className="border border-white/5 p-4 bg-white/[0.01] space-y-2">
+                                            <div className="text-[10px] font-black text-fatale">// 6. RIGHT TO BE FORGOTTEN (NODE DELETION)</div>
+                                            <p className="text-[9px] text-white/50">
+                                                YOUR SOVEREIGN RIGHT TO BE FORGOTTEN IS CODIFIED IN THE SYSTEM FIRMWARE. USERS CAN INITIATE A COMPLETE NODE DELETION REQUEST DIRECTLY THROUGH THE SETTINGS INTERFACE. UPON EXECUTION, ALL ACCOUNT CREDENTIALS, PROFILE IMAGES, UPLOADED AUDIO FILES, AND SOCIAL DATA RECORDED IN THE COGNITIVE REPOSITORY WILL BE PERMANENTLY WIPED.
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </motion.div>
