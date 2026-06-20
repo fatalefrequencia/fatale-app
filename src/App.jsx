@@ -1381,10 +1381,41 @@ function App() {
       } else {
         const rawSource = enriched.source;
         const resolvedSrc = rawSource ? (rawSource.startsWith('http') ? rawSource : (typeof getMediaUrl === 'function' ? getMediaUrl(rawSource) : rawSource)) : "";
-        audioRef.current.src = resolvedSrc;
-        audioRef.current.loop = false;
-        audioRef.current.load();
-        audioRef.current.play().catch(e => console.warn("[MOBILE GESTURE] Play failed:", e));
+        
+        // If the track is cached locally, load from Cache API and play via Blob Object URL to guarantee offline access without service worker
+        if (enriched.isCached && 'caches' in window) {
+          caches.open('fatale-audio-cache')
+            .then(cache => cache.match(rawSource))
+            .then(response => {
+              if (response) {
+                return response.blob().then(blob => {
+                  const objectUrl = URL.createObjectURL(blob);
+                  if (audioRef.current) {
+                    audioRef.current.src = objectUrl;
+                    audioRef.current.loop = false;
+                    audioRef.current.load();
+                    audioRef.current.play().catch(e => console.warn("[OFFLINE PLAYBACK] Object URL play failed:", e));
+                  }
+                });
+              } else {
+                throw new Error("Not found in cache");
+              }
+            })
+            .catch(err => {
+              console.warn("[OFFLINE PLAYBACK] Cache match failed, falling back to network source:", err);
+              if (audioRef.current) {
+                audioRef.current.src = resolvedSrc;
+                audioRef.current.loop = false;
+                audioRef.current.load();
+                audioRef.current.play().catch(e => console.warn("[MOBILE GESTURE] Play failed:", e));
+              }
+            });
+        } else {
+          audioRef.current.src = resolvedSrc;
+          audioRef.current.loop = false;
+          audioRef.current.load();
+          audioRef.current.play().catch(e => console.warn("[MOBILE GESTURE] Play failed:", e));
+        }
       }
     }
 
@@ -1498,6 +1529,61 @@ function App() {
           if (!uniqueTracksMap.has(key)) {
             uniqueTracksMap.set(key, mappedTrack);
             if (metaKey) titleArtistMap.set(metaKey, key);
+          }
+        });
+      }
+
+      // Merge purchased tracks (including delisted/deleted ones) into uniqueTracksMap to guarantee lifetime access
+      if (purchases && Array.isArray(purchases)) {
+        purchases.forEach(p => {
+          const t = p.track || p.Track;
+          if (!t) return;
+          const trackId = String(t.trackId || t.TrackId || t.id || t.Id);
+
+          const artistUserId = t.artistUserId || t.ArtistUserId || t.album?.artist?.userId || t.Album?.Artist?.UserId;
+          const isMine = artistUserId && String(artistUserId) === String(uid);
+
+          const yId = getGlobalYoutubeId(t);
+          const isCached = yId && cachedIds.has(String(yId));
+          const isYT = !!yId && !isCached;
+          const rawSource = t.source || t.Source || t.filePath || t.FilePath || "";
+          const resolvedSource = isCached
+            ? `${API_BASE_URL}cache/${uid}_${yId}.mp3`
+            : (isYT ? `youtube:${yId}` : (rawSource ? (rawSource.startsWith('http') ? rawSource : getMediaUrl(rawSource)) : null));
+
+          if (!resolvedSource || resolvedSource === API_BASE_URL || resolvedSource === `${API_BASE_URL}/`) return;
+
+          const artistName = extractArtistName(t);
+          if (artistName === 'The Archive') return;
+
+          const isLiked = likedTrackIds.has(trackId);
+
+          const mappedTrack = {
+            ...t,
+            id: trackId,
+            title: t.title || t.Title || 'Unknown Title',
+            artist: artistName || 'Unknown Artist',
+            album: t.album?.title || t.Album?.Title || 'Unknown Album',
+            duration: t.duration || t.Duration || '3:00',
+            cover: (isYT || isCached) ? (t.thumbnailUrl || t.ThumbnailUrl || `https://img.youtube.com/vi/${yId}/hqdefault.jpg`) : getMediaUrl(t.coverImageUrl || t.CoverImageUrl),
+            source: resolvedSource,
+            isOwned: true,
+            isLiked: isLiked,
+            isCached: yId 
+              ? (isCached || cachedIds.has(Number(trackId)) || cachedIds.has(trackId)) 
+              : (cachedNativeIds.has(trackId) || cachedNativeIds.has(Number(trackId))),
+          };
+
+          const key = getUniqueKey(mappedTrack);
+          const metaKey = getMetaKey(mappedTrack);
+
+          if (!uniqueTracksMap.has(key)) {
+            uniqueTracksMap.set(key, mappedTrack);
+            if (metaKey) titleArtistMap.set(metaKey, key);
+          } else {
+            // Ensure isOwned is set to true for existing tracks in the map
+            const existing = uniqueTracksMap.get(key);
+            uniqueTracksMap.set(key, { ...existing, isOwned: true });
           }
         });
       }
