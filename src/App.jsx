@@ -3305,6 +3305,14 @@ function App() {
                setLowSpecMode={setLowSpecMode}
                zoomState={zoomState}
                setZoomState={setZoomState}
+               flaggingItem={flaggingItem}
+               setFlaggingItem={setFlaggingItem}
+               flagReason={flagReason}
+               setFlagReason={setFlagReason}
+               flagOtherReason={flagOtherReason}
+               setFlagOtherReason={setFlagOtherReason}
+               isSubmittingFlag={isSubmittingFlag}
+               handleExecuteFlag={handleExecuteFlag}
            />
           </>
         )}
@@ -3934,7 +3942,15 @@ const Dashboard = React.memo(({
   lowSpecMode,
   setLowSpecMode,
   zoomState,
-  setZoomState
+  setZoomState,
+  flaggingItem,
+  setFlaggingItem,
+  flagReason,
+  setFlagReason,
+  flagOtherReason,
+  setFlagOtherReason,
+  isSubmittingFlag,
+  handleExecuteFlag
 }) => {
   const { t } = useLanguage();
   const { showNotification } = useNotification();
