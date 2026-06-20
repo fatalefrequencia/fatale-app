@@ -6268,9 +6268,13 @@ const FeedContent = React.memo(({
                             {String(item.ArtistUserId || item.artistUserId) !== String(user?.id || user?.Id) && (
                               <button
                                 onClick={() => {
-                                  setFlaggingItem({ type: item.Type || item.type, id: item.ItemId || item.itemId || item.Id || item.id });
-                                  setFlagReason('Spam');
-                                  setFlagOtherReason('');
+                                  const flagEvent = new CustomEvent('flagcontent', {
+                                    detail: {
+                                      itemType: item.Type || item.type,
+                                      itemId: item.ItemId || item.itemId || item.Id || item.id
+                                    }
+                                  });
+                                  document.dispatchEvent(flagEvent);
                                 }}
                                 className="flex items-center gap-1.5 hover:text-red-500 transition-colors group/social ml-auto"
                               >
