@@ -202,7 +202,7 @@ const API = {
         getFeedComments: (itemType, itemId) => api.get(`SocialAction/comments/${itemType}/${itemId}`),
         deleteFeedComment: (commentId) => api.delete(`SocialAction/comment/${commentId}`),
         blockUser: (userId) => api.post(`SocialAction/block/${userId}`),
-        flagContent: (itemType, itemId, reason) => api.post('SocialAction/flag', { itemType, itemId, reason }),
+
         checkBlock: (userId) => api.get(`SocialAction/is-blocked/${userId}`),
     },
     User: {

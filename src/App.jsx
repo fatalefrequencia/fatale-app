@@ -219,37 +219,7 @@ function App() {
   const { showNotification } = useNotification();
   const [zoomState, setZoomState] = useState(100);
 
-  const [flaggingItem, setFlaggingItem] = useState(null); // { type: '', id: 0 }
-  const [flagReason, setFlagReason] = useState('Spam');
-  const [flagOtherReason, setFlagOtherReason] = useState('');
-  const [isSubmittingFlag, setIsSubmittingFlag] = useState(false);
 
-  useEffect(() => {
-    const handleFlagEvent = (e) => {
-      const { itemType, itemId } = e.detail;
-      setFlaggingItem({ type: itemType, id: itemId });
-      setFlagReason('Spam');
-      setFlagOtherReason('');
-    };
-    document.addEventListener('flagcontent', handleFlagEvent);
-    return () => document.removeEventListener('flagcontent', handleFlagEvent);
-  }, []);
-
-  const handleExecuteFlag = async () => {
-    if (!flaggingItem) return;
-    setIsSubmittingFlag(true);
-    try {
-      const reason = flagReason === 'Other' ? flagOtherReason : flagReason;
-      await API.Social.flagContent(flaggingItem.type, flaggingItem.id, reason);
-      showNotification("SIGNAL_FLAGGED", "System notice generated. The content has been flagged and an alert notice has been sent to the content owner.", "success");
-      setFlaggingItem(null);
-    } catch (err) {
-      console.error("Flag content failed", err);
-      showNotification("FLAG_FAILED", "Failed to submit content flag. Please check connection.", "error");
-    } finally {
-      setIsSubmittingFlag(false);
-    }
-  };
 
   const [deferredPrompt, setDeferredPrompt] = useState(null);
 
@@ -3305,14 +3275,7 @@ function App() {
                setLowSpecMode={setLowSpecMode}
                zoomState={zoomState}
                setZoomState={setZoomState}
-               flaggingItem={flaggingItem}
-               setFlaggingItem={setFlaggingItem}
-               flagReason={flagReason}
-               setFlagReason={setFlagReason}
-               flagOtherReason={flagOtherReason}
-               setFlagOtherReason={setFlagOtherReason}
-               isSubmittingFlag={isSubmittingFlag}
-               handleExecuteFlag={handleExecuteFlag}
+
            />
           </>
         )}
@@ -3942,15 +3905,7 @@ const Dashboard = React.memo(({
   lowSpecMode,
   setLowSpecMode,
   zoomState,
-  setZoomState,
-  flaggingItem,
-  setFlaggingItem,
-  flagReason,
-  setFlagReason,
-  flagOtherReason,
-  setFlagOtherReason,
-  isSubmittingFlag,
-  handleExecuteFlag
+  setZoomState
 }) => {
   const { t } = useLanguage();
   const { showNotification } = useNotification();
@@ -4567,86 +4522,7 @@ const Dashboard = React.memo(({
         )}
       </AnimatePresence>
 
-      {/* Flag Content Dialog */}
-      <AnimatePresence>
-        {flaggingItem && (
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md bg-black border border-red-500/30 p-6 md:p-8 space-y-6 relative font-mono shadow-[0_0_50px_rgba(239,68,68,0.15)]"
-            >
-              <div className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-red-500/40" />
-              <div className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-red-500/40" />
-              <div className="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-red-500/40" />
-              <div className="absolute bottom-2 right-2 w-3 h-3 border-b-2 border-r-2 border-red-500/40" />
 
-              <div className="flex justify-between items-center border-b border-red-500/20 pb-3">
-                <div className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-red-500 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-                  REPORT_TRANSMISSION_PROTOCOL
-                </div>
-                <button 
-                  onClick={() => setFlaggingItem(null)} 
-                  className="text-red-500/40 hover:text-red-500 transition-colors p-1"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-
-              <div className="text-white/60 text-[10px] uppercase tracking-wider leading-relaxed border-l border-red-500/20 pl-3">
-                You are initiating a report warning flag regarding this transmission node [{flaggingItem.type.toUpperCase()}:{flaggingItem.id}]. 
-                Please select the classification.
-              </div>
-
-              <div className="space-y-3 pt-2">
-                {['Spam', 'Harassment', 'Copyright infringement', 'Explicit / NSFW content', 'Other'].map(reason => (
-                  <label key={reason} className="flex items-center gap-3 cursor-pointer group text-[10px] text-white/70 hover:text-white uppercase tracking-wider">
-                    <input 
-                      type="radio" 
-                      name="flagReason" 
-                      value={reason} 
-                      checked={flagReason === reason} 
-                      onChange={() => setFlagReason(reason)}
-                      className="accent-red-500" 
-                    />
-                    <span>{reason}</span>
-                  </label>
-                ))}
-              </div>
-
-              {flagReason === 'Other' && (
-                <div className="space-y-2 animate-in fade-in duration-200">
-                  <div className="text-[8px] text-white/30 uppercase tracking-widest">Provide additional details:</div>
-                  <textarea 
-                    value={flagOtherReason}
-                    onChange={(e) => setFlagOtherReason(e.target.value)}
-                    placeholder="ENTER SPECIFIC DETAILS..."
-                    className="w-full bg-black/60 border border-red-500/20 p-3 text-[10px] text-white outline-none focus:border-red-500/60 min-h-[85px] uppercase tracking-wide leading-relaxed resize-none"
-                  />
-                </div>
-              )}
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  disabled={isSubmittingFlag || (flagReason === 'Other' && !flagOtherReason.trim())}
-                  onClick={handleExecuteFlag}
-                  className="w-full py-3 text-[10px] font-black uppercase tracking-widest bg-red-950/20 border border-red-500/40 text-red-500 hover:bg-red-500 hover:text-black transition-all shadow-[0_0_15px_rgba(239,68,68,0.1)] disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  {isSubmittingFlag ? 'TRANSMITTING_FLAG...' : 'SUBMIT REPORT'}
-                </button>
-                <button
-                  onClick={() => setFlaggingItem(null)}
-                  className="px-6 py-3 border border-white/10 text-white/40 hover:text-white text-[10px] font-bold uppercase transition-all"
-                >
-                  Cancel
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* TUI Footer Legend */}
       <div className="bg-black/95 border-t border-[rgba(var(--theme-primary-rgb),0.25)] text-[9px] font-mono p-1 px-4 flex items-center justify-between text-[var(--theme-color)]/60 select-none shrink-0 z-45 h-6">
@@ -6281,23 +6157,7 @@ const FeedContent = React.memo(({
                               <Repeat size={12} className={item.IsReposted ? 'animate-pulse' : 'group-hover/social:scale-110'} />
                               <span className="tracking-tighter">RE_SYNC_{item.RepostCount || 0}</span>
                             </button>
-                            {String(item.ArtistUserId || item.artistUserId) !== String(user?.id || user?.Id) && (
-                              <button
-                                onClick={() => {
-                                  const flagEvent = new CustomEvent('flagcontent', {
-                                    detail: {
-                                      itemType: item.Type || item.type,
-                                      itemId: item.ItemId || item.itemId || item.Id || item.id
-                                    }
-                                  });
-                                  document.dispatchEvent(flagEvent);
-                                }}
-                                className="flex items-center gap-1.5 hover:text-red-500 transition-colors group/social ml-auto"
-                              >
-                                <Flag size={12} className="group-hover/social:scale-110 text-red-500/50 group-hover:text-red-500" />
-                                <span className="tracking-tighter text-red-500/60 group-hover:text-red-500">FLAG</span>
-                              </button>
-                            )}
+
                           </div>
                         </div>
                       </div>

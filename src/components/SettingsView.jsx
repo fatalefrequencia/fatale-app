@@ -1017,12 +1017,7 @@ export default function SettingsView({ user, setUser, appThemeColor, setAppTheme
                                             </p>
                                         </div>
 
-                                        <div className="border border-white/5 p-4 bg-white/[0.01] space-y-2">
-                                            <div className="text-[10px] font-black text-fatale">// 4. FREE EXPRESSION & CONTENT FLAG NOTICES</div>
-                                            <p className="text-[9px] text-white/50">
-                                                CONTENT FLAGGING LOGS USER FEEDBACK CONCERNING TRANSMISSIONS BUT PERFORMS NO CENSORSHIP OR DELISTING FROM THE NETWORK CORE. INSTEAD, THE OWNER OF THE FLAGGED CONTENT IS DOCKED A SYSTEM MESSAGE (SENDER_ID: 0) DETAILING WHICH PIECE OF CONTENT WAS FLAGGED AND WHY. YOUR FREEDOM OF EXPRESSION IS GUARANTEED.
-                                            </p>
-                                        </div>
+
                                     </div>
                                 </div>
                             </motion.div>

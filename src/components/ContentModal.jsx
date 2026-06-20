@@ -310,19 +310,7 @@ const ContentModal = ({
                                                             <span className="text-secondary font-black">@{comment.username || comment.Username || comment.authorName || comment.AuthorName || 'anon'}</span>
                                                             <div className="flex items-center gap-2">
                                                                 <span className="text-[7px] text-white/30">{new Date(comment.CreatedAt || comment.createdAt).toLocaleString()}</span>
-                                                                {!isCommentMe && (
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            document.dispatchEvent(new CustomEvent('flagcontent', {
-                                                                                detail: { itemType: 'comment', itemId: comment.Id || comment.id }
-                                                                            }));
-                                                                        }}
-                                                                        className="text-red-500/50 hover:text-red-500 transition-colors p-1"
-                                                                        title="Report Comment"
-                                                                    >
-                                                                        <Flag size={10} />
-                                                                    </button>
-                                                                )}
+
                                                             </div>
                                                         </div>
                                                         <p className="text-white/90 break-words">{comment.content || comment.Content}</p>
@@ -420,18 +408,7 @@ const ContentModal = ({
                                         {/* Inline Footer Actions inside note */}
                                         <div className="mt-8 pt-6 border-t border-[#9d00ff]/20 flex flex-wrap items-center justify-end gap-3">
                                             <span className="text-[#9d00ff] tracking-widest font-normal text-xs font-mono mr-auto" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>root@fatale.fm:~#</span>
-                                            {activeEntry && String(activeEntry.userId || activeEntry.UserId) !== String(user?.id || user?.Id) && (
-                                                <button 
-                                                    onClick={() => {
-                                                        document.dispatchEvent(new CustomEvent('flagcontent', {
-                                                            detail: { itemType: activeEntry.Type || activeEntry.type || 'journal', itemId: activeEntry.Id || activeEntry.id }
-                                                        }));
-                                                    }}
-                                                    className="px-3 py-1.5 bg-red-950/20 border border-red-500/30 hover:bg-red-650 hover:text-white transition-all text-red-500 font-black flex items-center gap-2 text-[8px] sm:text-[9px]"
-                                                >
-                                                    <Flag size={12} /> REPORT
-                                                </button>
-                                            )}
+
                                             <button onClick={() => setShowTipModal(true)} className="px-3 py-1.5 bg-fatale/10 border border-fatale/30 hover:bg-fatale hover:text-black transition-all text-fatale font-black flex items-center gap-2 group text-[8px] sm:text-[9px]">
                                                 <Coins size={12} className="group-hover:animate-bounce" /> {t('TIP_ARTIST')}
                                             </button>
@@ -459,18 +436,6 @@ const ContentModal = ({
                             </div>
                         </div>
                         <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end sm:justify-start">
-                            {content && String(content.userId || content.UserId || content.artistUserId || content.ArtistUserId) !== String(user?.id || user?.Id) && (
-                                <button 
-                                    onClick={() => {
-                                        document.dispatchEvent(new CustomEvent('flagcontent', {
-                                            detail: { itemType: content.Type || content.type || mediaType, itemId: content.Id || content.id }
-                                        }));
-                                    }}
-                                    className="px-3 py-1.5 sm:px-4 sm:py-2 bg-red-950/20 border border-red-500/30 hover:bg-red-650 hover:text-white transition-all text-red-500 font-black flex items-center gap-2 text-[8px] sm:text-[9px]"
-                                >
-                                    <Flag size={12} /> REPORT
-                                </button>
-                            )}
                             <button onClick={() => setShowTipModal(true)} className="px-3 py-1.5 sm:px-4 sm:py-2 bg-fatale/10 border border-fatale/30 hover:bg-fatale hover:text-black transition-all text-fatale font-black flex items-center gap-2 group text-[8px] sm:text-[9px]">
                                 <Coins size={12} className="group-hover:animate-bounce" /> {t('TIP_ARTIST')}
                             </button>
