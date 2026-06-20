@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     MoreHorizontal, PlayCircle, Library, Heart,
     Zap, Trash2, ChevronLeft, ChevronRight,
-    Lock, Globe, Download, Coins, Flag
+    Lock, Globe, Download, Coins
 } from 'lucide-react';
 import ActionModal from './ActionModal';
 

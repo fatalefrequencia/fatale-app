@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Book, Camera, Video, Share2, Download, ExternalLink, Play, MessageSquare, Send, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
+import { X, Book, Camera, Video, Share2, Download, ExternalLink, Play, MessageSquare, Send, ChevronLeft, ChevronRight } from 'lucide-react';
 import { API_BASE_URL, getMediaUrl } from '../constants';
 import { useNotification } from '../contexts/NotificationContext';
 import CreditTransferModal from './CreditTransferModal';
