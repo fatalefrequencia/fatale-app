@@ -1038,6 +1038,9 @@ export default function SettingsView({ user, setUser, appThemeColor, setAppTheme
                                             <p className="text-[9px] text-white/50">
                                                 YOUR SOVEREIGN RIGHT TO BE FORGOTTEN IS CODIFIED IN THE SYSTEM FIRMWARE. USERS CAN INITIATE A COMPLETE NODE DELETION REQUEST DIRECTLY THROUGH THE SETTINGS INTERFACE. UPON EXECUTION, ALL ACCOUNT CREDENTIALS, PROFILE IMAGES, UPLOADED AUDIO FILES, AND SOCIAL DATA RECORDED IN THE COGNITIVE REPOSITORY WILL BE PERMANENTLY WIPED.
                                             </p>
+                                            <p className="text-[9px] text-white/50">
+                                                HOWEVER, ANY OTHER USER NODE WHO HAS PURCHASED A PERMANENT LICENSE OR OFF-LINE LISTENING RIGHTS TO YOUR TRANSMITTED MEDIA PRIOR TO DELETION RETAINS THE RIGHT TO KEEP, STREAM, AND LISTEN TO THAT DATA IN THEIR LOCAL VAULT. DELETION PREVENTS NEW DISCOVERIES AND REMOVES THE CONTENT FROM GENERAL FEEDS, BUT DOES NOT VOID PREVIOUSLY ACQUIRED PEER LICENSES.
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
