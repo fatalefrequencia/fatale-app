@@ -4,6 +4,8 @@ import { User, Mail, Lock, ChevronRight, AlertCircle, Loader2, ShieldCheck, Arro
 import API from '../services/api';
 import loginBg from '../assets/login_bg.png';
 import { API_BASE_URL } from '../constants';
+import TermsView from './TermsView';
+import PrivacyView from './PrivacyView';
 
 const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) => {
     const [activeTab, setActiveTab] = useState('login'); // 'login' | 'register' | 'forgot' | 'reset'
@@ -50,6 +52,9 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
     const [resetToken, setResetToken] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
+    const [showTermsModal, setShowTermsModal] = useState(false);
+    const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
     // Typewriter
     const [displayText, setDisplayText] = useState('');
@@ -589,10 +594,40 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                                             </div>
                                         </div>
 
+                                        {activeTab === 'register' && (
+                                            <div className="flex items-start gap-2.5 pt-1 pl-1">
+                                                <input
+                                                    type="checkbox"
+                                                    id="consent"
+                                                    checked={agreedToTerms}
+                                                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                                                    className="mt-0.5 rounded border-fatale/25 text-[#ff003c] bg-black/60 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                                                />
+                                                <label htmlFor="consent" className="text-[9px] text-white/60 tracking-wider leading-relaxed select-none uppercase">
+                                                    I agree to the{' '}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowTermsModal(true)}
+                                                        className="text-fatale underline hover:text-white transition-colors font-bold"
+                                                    >
+                                                        Terms of Service (EULA)
+                                                    </button>{' '}
+                                                    and{' '}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowPrivacyModal(true)}
+                                                        className="text-fatale underline hover:text-white transition-colors font-bold"
+                                                    >
+                                                        Privacy Policy
+                                                    </button>
+                                                </label>
+                                            </div>
+                                        )}
+
                                         <div className="pt-4">
                                             <button
                                                 type="submit"
-                                                disabled={loading}
+                                                disabled={loading || (activeTab === 'register' && !agreedToTerms)}
                                                 className="w-full bg-fatale hover:bg-white text-black font-black py-3.5 rounded-sm hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2.5 uppercase tracking-[0.12em] text-xs shadow-[0_0_20px_rgba(255,0,60,0.4)] hover:shadow-[0_0_25px_rgba(255,255,255,0.45)] disabled:opacity-50 disabled:cursor-not-allowed group border border-transparent hover:border-fatale/40"
                                             >
                                                 {loading ? (
@@ -656,6 +691,29 @@ const AuthView = ({ onLoginSuccess, onBackToOrbit, deferredPrompt, onInstall }) 
                     </div>
                 )}
             </motion.div>
+
+            <AnimatePresence>
+                {showTermsModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 overflow-y-auto bg-black"
+                    >
+                        <TermsView onBack={() => setShowTermsModal(false)} />
+                    </motion.div>
+                )}
+                {showPrivacyModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 overflow-y-auto bg-black"
+                    >
+                        <PrivacyView onBack={() => setShowPrivacyModal(false)} />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

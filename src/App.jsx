@@ -35,6 +35,8 @@ import TrackEconomyModal from './components/TrackEconomyModal';
 import PlaylistSelectModal from './components/PlaylistSelectModal';
 import JournalEditor from './components/JournalEditor';
 import SeriesManager from './components/SeriesManager';
+import TermsView from './components/TermsView';
+import PrivacyView from './components/PrivacyView';
 
 
 import { SECTORS, API_BASE_URL, getMediaUrl, getUserId } from './constants';
@@ -201,12 +203,14 @@ const ElectronTitleBar = () => {
 // --- COMPONENTE PRINCIPAL ---
 function App() {
   const [activeView, setViewOriginal] = useState(() => {
+    const hash = window.location.hash.replace('#', '');
+    if (hash === 'terms' || hash === 'privacy') return hash;
+
     // Session Guard: If no session, always start on login
     const hasSession = localStorage.getItem('token') && localStorage.getItem('user');
     if (!hasSession) return 'login';
 
-    const hash = window.location.hash.replace('#', '');
-    const validViews = ['discovery', 'feed', 'profile', 'player', 'messages', 'shopping', 'settings', 'wallet'];
+    const validViews = ['discovery', 'feed', 'profile', 'player', 'messages', 'shopping', 'settings', 'wallet', 'terms', 'privacy'];
     if (validViews.includes(hash)) return hash;
     return localStorage.getItem('activeView') || 'login';
   });
@@ -1114,14 +1118,17 @@ function App() {
 
   // --- PERSISTENCE & ROUTING LOOPS ---
   useEffect(() => {
-    if (activeView && activeView !== 'login') {
+    if (activeView && activeView !== 'login' && activeView !== 'terms' && activeView !== 'privacy') {
       localStorage.setItem('activeView', activeView);
+    }
+    
+    if (activeView && activeView !== 'login') {
       // Sync state to URL hash for browser history & back button support
       if (window.location.hash !== `#${activeView}`) {
         window.location.hash = activeView;
       }
     } else if (activeView === 'login') {
-      if (window.location.hash) {
+      if (window.location.hash && window.location.hash !== '#terms' && window.location.hash !== '#privacy') {
         window.location.hash = '';
       }
     }
@@ -1130,14 +1137,19 @@ function App() {
   // URL Hash Listener for browser back/forward buttons navigation
   useEffect(() => {
     const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash === 'terms' || hash === 'privacy') {
+        setViewOriginal(hash);
+        return;
+      }
+
       const hasSession = localStorage.getItem('token') && localStorage.getItem('user');
       if (!hasSession) {
         setViewOriginal('login');
         return;
       }
 
-      const hash = window.location.hash.replace('#', '');
-      const validViews = ['discovery', 'feed', 'profile', 'player', 'messages', 'shopping', 'settings', 'wallet'];
+      const validViews = ['discovery', 'feed', 'profile', 'player', 'messages', 'shopping', 'settings', 'wallet', 'terms', 'privacy'];
       if (validViews.includes(hash)) {
         setViewOriginal(hash);
       } else if (!hash && activeView !== 'login') {
@@ -3163,7 +3175,21 @@ function App() {
       </div>
 
       <AnimatePresence mode="wait">
-        {activeView === 'login' ? (
+        {activeView === 'terms' ? (
+          <TermsView
+            onBack={() => {
+              const hasSession = localStorage.getItem('token') && localStorage.getItem('user');
+              setViewOriginal(hasSession ? 'discovery' : 'login');
+            }}
+          />
+        ) : activeView === 'privacy' ? (
+          <PrivacyView
+            onBack={() => {
+              const hasSession = localStorage.getItem('token') && localStorage.getItem('user');
+              setViewOriginal(hasSession ? 'discovery' : 'login');
+            }}
+          />
+        ) : activeView === 'login' ? (
           <AuthView 
              onLoginSuccess={handleAuthSuccess} 
              onBackToOrbit={() => setView('discovery')} 
