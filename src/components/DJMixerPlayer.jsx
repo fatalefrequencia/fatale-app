@@ -454,6 +454,49 @@ const DJMixerPlayer = ({
         return () => clearInterval(interval);
     }, [isYoutubeModeB, youtubePlayerB, isPlayingB]);
 
+    // Deck B YouTube Video Load Sync
+    useEffect(() => {
+        if (!youtubePlayerB || !isYoutubeModeB) return;
+        const ytId = getYoutubeVideoId(deckB);
+        if (ytId) {
+            try {
+                console.log(`[Neural Core] NODE_B: Programmatic load/cue of video ID: ${ytId}`);
+                if (isPlayingB) {
+                    youtubePlayerB.loadVideoById({
+                        videoId: ytId,
+                        startSeconds: 0
+                    });
+                } else {
+                    youtubePlayerB.cueVideoById({
+                        videoId: ytId,
+                        startSeconds: 0
+                    });
+                }
+                const fadeB = crossfader < 0 ? (100 + crossfader) / 100 : 1;
+                youtubePlayerB.setVolume(faderB * fadeB * 100);
+            } catch (err) {
+                console.warn("[Neural Core] Deck B YT programmatic load failed:", err);
+            }
+        }
+    }, [deckB, isYoutubeModeB, youtubePlayerB]);
+
+    // Deck B YouTube Play/Pause State Sync
+    useEffect(() => {
+        if (!youtubePlayerB || !isYoutubeModeB) return;
+        try {
+            const state = youtubePlayerB.getPlayerState ? youtubePlayerB.getPlayerState() : null;
+            if (isPlayingB) {
+                if (state !== 1 && state !== 3) {
+                    youtubePlayerB.playVideo();
+                }
+            } else {
+                if (state !== 2) {
+                    youtubePlayerB.pauseVideo();
+                }
+            }
+        } catch (e) {}
+    }, [isPlayingB, youtubePlayerB, isYoutubeModeB]);
+
     // Quantized Loop Engine
     useEffect(() => {
         if (loopA.active && isPlayingA) {
