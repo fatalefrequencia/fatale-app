@@ -3381,8 +3381,10 @@ function App() {
                setLowSpecMode={setLowSpecMode}
                zoomState={zoomState}
                setZoomState={setZoomState}
-
-           />
+               broadcastSourceType={broadcastSourceType}
+               appAudioDevices={appAudioDevices}
+               selectedAppDeviceId={selectedAppDeviceId}
+            />
           </>
         )}
       </AnimatePresence>
@@ -4034,7 +4036,10 @@ const Dashboard = React.memo(({
   lowSpecMode,
   setLowSpecMode,
   zoomState,
-  setZoomState
+  setZoomState,
+  broadcastSourceType,
+  appAudioDevices,
+  selectedAppDeviceId
 }) => {
   const { t } = useLanguage();
   const { showNotification } = useNotification();
