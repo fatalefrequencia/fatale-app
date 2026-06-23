@@ -637,7 +637,9 @@ const DJMixerPlayer = ({
 
     const initAudioB = () => {
         if (!audioCtxB.current && audioB.current) {
-            const actualCtx = (audioCtx && audioCtx.current) ? audioCtx.current : audioCtx;
+            const actualCtx = (broadcastDest && broadcastDest.context)
+                ? broadcastDest.context
+                : ((audioCtx && audioCtx.current) ? audioCtx.current : audioCtx);
             audioCtxB.current = actualCtx || new (window.AudioContext || window.webkitAudioContext)();
             
             analyserB.current = audioCtxB.current.createAnalyser();

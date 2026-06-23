@@ -597,8 +597,9 @@ function App() {
   const lastSyncTimeRef = useRef(0);
 
   const currentYtId = useMemo(() => {
-    return getGlobalYoutubeId(currentTrack);
-  }, [currentTrack]);
+    const track = activeStation ? broadcastTrack : currentTrack;
+    return getGlobalYoutubeId(track);
+  }, [currentTrack, activeStation, broadcastTrack]);
 
   // Dynamic Spotify track resolver (resolves Spotify metadata to YouTube video ID under the hood)
   useEffect(() => {
@@ -820,6 +821,30 @@ function App() {
   const [goLiveFormData, setGoLiveFormData] = useState({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true, sectorId: null, sourceType: 'app' });
   const [broadcastSourceType, setBroadcastSourceType] = useState('app');
   const [micStream, setMicStream] = useState(null); // MediaStream from hardware input
+  const [appAudioDevices, setAppAudioDevices] = useState([]);
+  const [selectedAppDeviceId, setSelectedAppDeviceId] = useState('');
+
+  useEffect(() => {
+    if (showGlobalGoLive && goLiveFormData.sourceType === 'hardware') {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          stream.getTracks().forEach(track => track.stop());
+          return navigator.mediaDevices.enumerateDevices();
+        })
+        .catch(err => {
+          console.warn("Microphone permission denied or prompt ignored:", err);
+          return navigator.mediaDevices.enumerateDevices();
+        })
+        .then(devices => {
+          const audioInputs = devices.filter(d => d.kind === 'audioinput');
+          setAppAudioDevices(audioInputs);
+          if (audioInputs.length > 0 && !selectedAppDeviceId) {
+            setSelectedAppDeviceId(audioInputs[0].deviceId);
+          }
+        })
+        .catch(e => console.warn('Device enumeration failed', e));
+    }
+  }, [showGlobalGoLive, goLiveFormData.sourceType, selectedAppDeviceId]);
   
   // --- GLOBAL MODAL STATE ---
   const [globalExpandedContent, setGlobalExpandedContent] = useState(null);
@@ -833,6 +858,21 @@ function App() {
     if (!title) {
       showNotification("BROADCAST_ERROR", t('NAME_REQUIRED'), "error");
       return;
+    }
+
+    let hardwareStream = null;
+    if (goLiveFormData.sourceType === 'hardware') {
+      try {
+        const constraints = {
+          audio: selectedAppDeviceId ? { deviceId: { exact: selectedAppDeviceId } } : true
+        };
+        hardwareStream = await navigator.mediaDevices.getUserMedia(constraints);
+        setMicStream(hardwareStream);
+      } catch (err) {
+        console.error("Failed to acquire hardware mic stream:", err);
+        showNotification("HARDWARE_ERROR", "Could not capture selected audio hardware. Verify device permissions.", "error");
+        return;
+      }
     }
 
     try {
@@ -853,6 +893,10 @@ function App() {
       navigateToProfile(user?.id, 'broadcast');
     } catch (e) {
       console.error("Failed to go live global:", e);
+      if (hardwareStream) {
+        hardwareStream.getTracks().forEach(track => track.stop());
+        setMicStream(null);
+      }
       showNotification("BROADCAST_FAILURE", t('SYNC_FAILURE'), "error");
     }
   };
@@ -862,6 +906,10 @@ function App() {
       await API.Stations.endLive();
       setActiveStation(null);
       setBroadcastTrack(null);
+      if (micStream) {
+        micStream.getTracks().forEach(track => track.stop());
+        setMicStream(null);
+      }
       showNotification("BROADCAST_TERMINATED", "The transmission has been terminated.", "success");
       fetchLiveStations();
       setShowGlobalGoLive(false);
@@ -1314,6 +1362,23 @@ function App() {
     const unsubEnd = onStationEnded((payload) => {
       console.log("[App] Real-time: Station ended", payload);
       fetchLiveStations();
+      if (activeStationRef.current) {
+        const endedId = String(payload?.stationId || payload?.StationId || payload);
+        const currentId = String(activeStationRef.current.id || activeStationRef.current.Id);
+        if (endedId === currentId) {
+          console.log("[App] Active station ended by host. Tuning out.");
+          setActiveStation(null);
+          activeStationRef.current = null;
+          setBroadcastTrack(null);
+          setIsPlaying(false);
+          if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.src = '';
+            audioRef.current.srcObject = null;
+          }
+          showNotification('Station ended by the broadcaster.');
+        }
+      }
     });
     const unsubCount = onListenerCount((count) => {
       console.log("[App] Real-time: Listener count updated", count);
@@ -3106,7 +3171,7 @@ function App() {
         }}
       >
         {(() => {
-          const ytId = getGlobalYoutubeId(currentTrack);
+          const ytId = currentYtId;
           const activeYtId = ytId || "7wtfhZwyrcc";
 
           return (
@@ -3469,8 +3534,31 @@ function App() {
                       </div>
                     </div>
                     {goLiveFormData.sourceType === 'hardware' && (
-                      <div className="text-[7px] font-mono tracking-widest text-fatale ml-1 mt-1 animate-pulse">
-                        WARNING: EXTERNAL AUDIO SOURCE WILL CAPTURE SELECTED INPUT DEVICE
+                      <div className="space-y-1.5 mt-2">
+                        <div className="text-[7px] opacity-40 font-mono uppercase tracking-widest ml-1">AUDIO_INPUT_DEVICE // CAPTURE</div>
+                        <div className="relative">
+                          <select
+                            value={selectedAppDeviceId}
+                            onChange={e => setSelectedAppDeviceId(e.target.value)}
+                            className="w-full bg-black/60 border border-fatale/20 hover:border-fatale/50 focus:border-fatale/60 p-3 text-[9px] font-mono outline-none text-white uppercase tracking-widest appearance-none cursor-pointer transition-all"
+                          >
+                            {appAudioDevices.length === 0 ? (
+                              <option value="">NO_DEVICES_FOUND // REQUESTING_PERMISSION</option>
+                            ) : (
+                              appAudioDevices.map(d => (
+                                <option key={d.deviceId} value={d.deviceId}>
+                                  {d.label || `Device (${d.deviceId.slice(0, 5)}...)`}
+                                </option>
+                              ))
+                            )}
+                          </select>
+                          <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                            <ChevronDown size={12} className="text-fatale/40" />
+                          </div>
+                        </div>
+                        <div className="text-[7px] font-mono tracking-widest text-fatale ml-1 mt-1 animate-pulse">
+                          WARNING: EXTERNAL AUDIO SOURCE WILL CAPTURE SELECTED INPUT DEVICE
+                        </div>
                       </div>
                     )}
                   </div>

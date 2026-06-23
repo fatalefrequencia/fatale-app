@@ -232,7 +232,23 @@ export const syncTrack = async (stationId, track, currentTime, isPlaying) => {
   if (!stationId || !track) return;
 
   const source = track.source || track.Source || '';
-  const youtubeId = source.startsWith('youtube:') ? source.split(':')[1] : (track.youtubeId || track.YoutubeId || null);
+  let youtubeId = null;
+  if (source.startsWith('youtube:')) {
+    youtubeId = source.split(':')[1];
+  } else if (source.includes('youtube.com/watch?v=')) {
+    youtubeId = source.split('v=')[1]?.split('&')[0];
+  } else if (source.includes('youtu.be/')) {
+    youtubeId = source.split('youtu.be/')[1]?.split('?')[0];
+  } else {
+    const rawId = track.youtubeId || track.YoutubeId || track.videoId || track.VideoId || track.resolvedYoutubeId || track.ResolvedYoutubeId || track.id || track.Id;
+    if (typeof rawId === 'string' && rawId.length === 11) {
+      youtubeId = rawId;
+    } else if (typeof rawId === 'string' && rawId.startsWith('yt-')) {
+      youtubeId = rawId.replace('yt-', '');
+    } else if (typeof rawId === 'string' && rawId.startsWith('youtube:')) {
+      youtubeId = rawId.split(':')[1];
+    }
+  }
 
   const sourceType = track.sourceType ||
     (youtubeId
