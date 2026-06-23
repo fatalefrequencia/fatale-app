@@ -951,6 +951,7 @@ function App() {
     isHost,
     isBroadcasting: isHost && !!activeStation,
     isPlaying,
+    broadcastSourceType,
   });
 
   // ── WebRTC: Listener (receive live audio from host) ────────────────────────
