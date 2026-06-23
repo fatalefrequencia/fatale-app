@@ -69,10 +69,19 @@ const ICE_SERVERS = buildIceServers();
  * @param {boolean}        options.isHost           — only run if this user is the host
  * @param {boolean}        options.isBroadcasting   — true after Go Live is confirmed
  */
-export function useWebRTCBroadcast({ stationId, micStream, isHost, isBroadcasting }) {
+export function useWebRTCBroadcast({ stationId, micStream, isHost, isBroadcasting, isPlaying }) {
   // Map: listenerConnectionId → RTCPeerConnection
   const peers = useRef(new Map());
   const isRegistered = useRef(false);
+
+  // Enable/disable tracks based on isPlaying state to support muting/pausing hardware stream
+  useEffect(() => {
+    if (micStream) {
+      micStream.getAudioTracks().forEach(track => {
+        track.enabled = !!isPlaying;
+      });
+    }
+  }, [micStream, isPlaying]);
 
   // ── Create a new peer connection for a listener ──────────────────────────
   const createPeerForListener = useCallback(async (listenerConnectionId) => {

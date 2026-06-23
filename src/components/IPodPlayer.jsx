@@ -1900,7 +1900,7 @@ useEffect(() => {
                                                         <SkipBack size={24} />
                                                     </button>
                                                     <button 
-                                                        onClick={() => setIsPlaying(!isPlaying)} 
+                                                        onClick={() => togglePlay ? togglePlay() : setIsPlaying(!isPlaying)} 
                                                         className="w-14 h-14 bg-white/5 border border-white/10 hover:border-fatale/50 hover:bg-fatale/10 text-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg relative group/playbtn"
                                                     >
                                                         <div className="absolute inset-[-4px] border border-fatale/20 rounded-full animate-pulse group-hover/playbtn:border-fatale/45" />

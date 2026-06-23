@@ -886,6 +886,9 @@ function App() {
 
       showNotification("BROADCAST_ACTIVE", t('ESTABLISH_SIGNAL'), "success");
       setBroadcastSourceType(goLiveFormData.sourceType);
+      if (goLiveFormData.sourceType === 'hardware') {
+        setIsPlaying(true);
+      }
       setShowGlobalGoLive(false);
       setGoLiveFormData({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true, sectorId: null, sourceType: 'app' });
 
@@ -947,6 +950,7 @@ function App() {
     micStream: broadcastSourceType === 'hardware' ? micStream : (broadcastDestRef.current ? broadcastDestRef.current.stream : null),
     isHost,
     isBroadcasting: isHost && !!activeStation,
+    isPlaying,
   });
 
   // ── WebRTC: Listener (receive live audio from host) ────────────────────────
@@ -1233,6 +1237,19 @@ function App() {
 
   // Helper to determine the active broadcast state (Deck A vs Deck B)
   const getActiveBroadcastState = React.useCallback(() => {
+    if (broadcastSourceType === 'hardware') {
+      return {
+        trackToSync: {
+          title: '🎙 LIVE INPUT',
+          artist: user?.username || 'Hardware Source',
+          source: 'hardware',
+          sourceType: 'hardware'
+        },
+        timeToSync: 0,
+        playingToSync: isPlaying,
+        isDeckBActive: false
+      };
+    }
     let isDeckBActive = false;
     if (mixerDeckB) {
       if (mixerIsPlayingB && !isPlaying) {
@@ -1247,7 +1264,7 @@ function App() {
     const timeToSync = isDeckBActive ? mixerCurrentTimeB : currentTime;
     const playingToSync = isDeckBActive ? mixerIsPlayingB : isPlaying;
     return { trackToSync, timeToSync, playingToSync, isDeckBActive };
-  }, [mixerCrossfader, mixerDeckB, currentTrack, mixerCurrentTimeB, currentTime, mixerIsPlayingB, isPlaying]);
+  }, [mixerCrossfader, mixerDeckB, currentTrack, mixerCurrentTimeB, currentTime, mixerIsPlayingB, isPlaying, broadcastSourceType, user?.username]);
 
   // --- HOST BROADCASTING LOGIC ---
   useEffect(() => {
@@ -2157,7 +2174,7 @@ function App() {
         try {
           playYtVideo(youtubePlayer);
         } catch (e) { console.warn("Sync YT play failed:", e); }
-      } else if (audioRef.current && audioRef.current.paused) {
+      } else if (!isYoutubeMode && audioRef.current && audioRef.current.paused) {
         audioRef.current.play().catch(e => console.warn("Sync audio play failed:", e));
       }
     } else {
@@ -2165,7 +2182,7 @@ function App() {
         try {
           youtubePlayer.pauseVideo();
         } catch (e) { }
-      } else if (audioRef.current && !audioRef.current.paused) {
+      } else if (!isYoutubeMode && audioRef.current && !audioRef.current.paused) {
         audioRef.current.pause();
       }
     }
@@ -3159,15 +3176,13 @@ function App() {
       {/* We only render the player if we have a valid videoId to prevent internal iframe API crashes (this.g is null) */}
       <div
         style={{
-          position: 'absolute',
-          top: -100,
-          left: -100,
-          width: 1,
-          height: 1,
+          position: 'fixed',
+          left: -9999,
+          top: -9999,
+          width: 200,
+          height: 200,
           overflow: 'hidden',
-          opacity: 0,
-          pointerEvents: 'none',
-          visibility: isYoutubeMode ? 'visible' : 'hidden'
+          pointerEvents: 'none'
         }}
       >
         {(() => {
@@ -6652,6 +6667,54 @@ const FeedContent = React.memo(({
               <div className="w-2 h-2 rounded-full bg-fatale animate-pulse shadow-[0_0_10px_rgb(var(--theme-primary))]" />
               <h3 className="text-[10px] font-black uppercase text-fatale tracking-[0.3em]">BROADCASTING_PANEL</h3>
             </div>
+
+            {broadcastSourceType === 'hardware' && (
+              <div className="p-4 border border-fatale/20 bg-black/45 space-y-3 rounded-sm font-mono text-[9px] relative overflow-hidden">
+                <div className="absolute top-0 right-0 px-1.5 py-0.5 bg-fatale/10 text-fatale text-[7px] font-bold border-l border-b border-fatale/20 uppercase tracking-widest animate-pulse">
+                  MIC_LINK_ACTIVE
+                </div>
+                <div className="text-white/40 uppercase tracking-wider text-[8px]">HARDWARE_INPUT_STATUS</div>
+                <div className="flex items-center gap-3">
+                  <div className="relative flex items-center justify-center w-8 h-8 rounded-full border border-fatale/30 bg-fatale/5 animate-pulse text-fatale shrink-0">
+                    <span className="absolute inset-0 rounded-full border border-fatale/10 animate-ping" />
+                    🎙
+                  </div>
+                  <div className="space-y-0.5 min-w-0">
+                    <div className="text-white font-bold truncate">
+                      {appAudioDevices && selectedAppDeviceId 
+                        ? (appAudioDevices.find(d => d.deviceId === selectedAppDeviceId)?.label || 'Selected Input Device')
+                        : 'Default Input Interface'}
+                    </div>
+                    <div className="text-fatale/60 text-[7px] uppercase tracking-widest">
+                      STREAM STATUS: {isPlaying ? 'TRANSMITTING' : 'MUTED / PAUSED'}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Audio Level Visualizer */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[7px] text-white/30 uppercase tracking-widest">
+                    <span>SIGNAL LEVEL</span>
+                    <span>{isPlaying ? 'ACTIVE' : 'SILENT'}</span>
+                  </div>
+                  <div className="h-6 flex items-end gap-[2px] bg-black/80 p-1 border border-fatale/10 rounded-sm overflow-hidden">
+                    {/* Animated equalizer bars for the DJ */}
+                    {Array.from({ length: 24 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="flex-1 bg-fatale transition-all duration-75"
+                        style={{
+                          height: isPlaying ? `${Math.floor(Math.random() * 85) + 15}%` : '5%',
+                          opacity: isPlaying ? 0.8 : 0.2,
+                          animation: isPlaying ? `bounceVisualizer ${0.4 + (i % 5) * 0.15}s ease-in-out infinite alternate` : 'none',
+                          animationDelay: `${i * 0.03}s`
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Mini Chat */}
             <div className="space-y-3">
