@@ -888,6 +888,8 @@ function App() {
       setBroadcastSourceType(goLiveFormData.sourceType);
       if (goLiveFormData.sourceType === 'hardware') {
         setIsPlaying(true);
+      } else {
+        initAudioCtx();
       }
       setShowGlobalGoLive(false);
       setGoLiveFormData({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true, sectorId: null, sourceType: 'app' });
@@ -2150,8 +2152,7 @@ function App() {
     }
     
     if (currentTrackIndex < 0 && tracks.length > 0) {
-      setCurrentTrackIndex(0);
-      setIsPlaying(true);
+      handlePlayTrackAtIndex(0);
       return;
     }
     
