@@ -4477,6 +4477,10 @@ const Dashboard = React.memo(({
                   libraryTracks={libraryTracks}
                   onEndBroadcast={onEndBroadcast}
                   zoomState={zoomState}
+                  broadcastSourceType={broadcastSourceType}
+                  appAudioDevices={appAudioDevices}
+                  selectedAppDeviceId={selectedAppDeviceId}
+                  isPlaying={isPlaying}
                 />
               </motion.div>
              )}
@@ -5122,7 +5126,11 @@ const FeedContent = React.memo(({
   libraryTracks,
   onEndBroadcast,
   onSendMessage,
-  zoomState = 100
+  zoomState = 100,
+  broadcastSourceType,
+  appAudioDevices,
+  selectedAppDeviceId,
+  isPlaying
 }) => {
   const { language } = useLanguage();
   const [feed, setFeed] = useState([]);
