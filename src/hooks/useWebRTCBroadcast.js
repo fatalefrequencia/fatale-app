@@ -183,7 +183,7 @@ export function useWebRTCBroadcast({ stationId, micStream, isHost, isBroadcastin
         audioSender.replaceTrack(audioTrack).catch(e => console.warn('[WebRTC] replaceTrack failed:', e));
       }
     });
-  }, [micStream]);
+  }, [micStream, isPlaying]);
 
   // ── Cleanup: close all peers when station ends ────────────────────────────
   useEffect(() => {

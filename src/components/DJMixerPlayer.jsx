@@ -681,6 +681,17 @@ const DJMixerPlayer = ({
     }, [deckB, keyLockB]);
 
     useEffect(() => {
+        if (analyserB.current && broadcastDest) {
+            try {
+                analyserB.current.connect(broadcastDest);
+                console.log("[DJMixerPlayer] Connected Deck B analyser to broadcastDest");
+            } catch (e) {
+                console.warn("[DJMixerPlayer] Error connecting Deck B analyser to broadcastDest:", e);
+            }
+        }
+    }, [broadcastDest]);
+
+    useEffect(() => {
         const ctx = audioCtxB.current;
         if (!ctx) return;
         const now = ctx.currentTime;
