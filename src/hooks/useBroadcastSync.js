@@ -89,7 +89,8 @@ export function useBroadcastSync({
           const ytId = youtubeId || source?.split(':')[1];
           if (ytId) {
             const state = youtubePlayer.getPlayerState?.();
-            if (state !== 1 && state !== 3) {
+            const currentVideoId = youtubePlayer.getVideoData?.()?.video_id;
+            if (currentVideoId !== ytId || (state !== 1 && state !== 3)) {
               youtubePlayer.loadVideoById({ videoId: ytId, startSeconds: currentTime || 0 });
             } else {
               const diff = Math.abs((youtubePlayer.getCurrentTime?.() || 0) - (currentTime || 0));

@@ -1035,7 +1035,8 @@ const DJMixerPlayer = ({
     const getDisplayArtist = (t) => {
         if (!t) return "Unknown Artist";
         const source = t.source || t.Source || t.filePath || t.FilePath || "";
-        if (source.includes('youtube:') || source.includes('youtu.be') || source.includes('youtube.com')) {
+        const isYt = source.includes('youtube:') || source.includes('youtu.be') || source.includes('youtube.com') || t.youtubeId || t.videoId || t.category === 'YouTube' || t.Category === 'YouTube';
+        if (isYt) {
             return "YouTube Tracks";
         }
         

@@ -685,6 +685,7 @@ function App() {
   // Effect to load and play YouTube track when it changes
   useEffect(() => {
     if (!youtubePlayer) return;
+    if (activeStation && !isHost) return; // Skip local YouTube player control in broadcast mode for listeners!
 
     const ytId = currentYtId;
 
@@ -911,9 +912,9 @@ function App() {
       setShowGlobalGoLive(false);
       setGoLiveFormData({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true, sectorId: null, sourceType: 'app' });
 
-      // After starting, briefly navigate to profile only for hardware mode
+      // After starting, keep user on feed page for hardware mode
       if (goLiveFormData.sourceType === 'hardware') {
-        navigateToProfile(user?.id, 'broadcast');
+        setView('feed');
       }
     } catch (e) {
       console.error("Failed to go live global:", e);
@@ -1615,7 +1616,7 @@ function App() {
           if (!resolvedSource || resolvedSource === API_BASE_URL || resolvedSource === `${API_BASE_URL}/`) return;
 
           const artistName = extractArtistName(t);
-          if (artistName === 'The Archive') return;
+          if (!yId && artistName === 'The Archive') return;
 
           const isLiked = likedTrackIds.has(trackId);
 
@@ -1628,6 +1629,9 @@ function App() {
           const mappedTrack = {
             ...t,
             id: trackId,
+            youtubeId: yId || undefined,
+            videoId: yId || undefined,
+            category: yId ? 'YouTube' : (t.category || t.Category || t.genre || t.Genre),
             title: t.title || t.Title || 'Unknown Title',
             artist: artistName || 'Unknown Artist',
             album: t.album?.title || t.Album?.Title || 'Unknown Album',
@@ -1672,13 +1676,16 @@ function App() {
           if (!resolvedSource || resolvedSource === API_BASE_URL || resolvedSource === `${API_BASE_URL}/`) return;
 
           const artistName = extractArtistName(t);
-          if (artistName === 'The Archive') return;
+          if (!yId && artistName === 'The Archive') return;
 
           const isLiked = likedTrackIds.has(trackId);
 
           const mappedTrack = {
             ...t,
             id: trackId,
+            youtubeId: yId || undefined,
+            videoId: yId || undefined,
+            category: yId ? 'YouTube' : (t.category || t.Category || t.genre || t.Genre),
             title: t.title || t.Title || 'Unknown Title',
             artist: artistName || 'Unknown Artist',
             album: t.album?.title || t.Album?.Title || 'Unknown Album',
@@ -1721,6 +1728,8 @@ function App() {
             const mappedYt = {
               id: String(lik.id || lik.Id || `yt-${yId}`),
               videoId: yId,
+              youtubeId: yId,
+              category: 'YouTube',
               title: lik.title || lik.Title,
               artist: lik.channelTitle || lik.artistName || lik.ArtistName || lik.artist || "Unknown Artist",
               source: sourceKey,
@@ -3221,11 +3230,12 @@ function App() {
                   try {
                     e.target.setVolume(volume * 100);
                     e.target.setPlaybackRate(globalPlaybackRate);
+                    const startTime = (activeStation && !isHost) ? (currentTime || 0) : 0;
                     if (isPlaying) {
-                      e.target.loadVideoById({ videoId: ytId, startSeconds: 0 });
+                      e.target.loadVideoById({ videoId: ytId, startSeconds: startTime });
                       lastLoadedYtId.current = ytId;
                     } else {
-                      e.target.cueVideoById({ videoId: ytId, startSeconds: 0 });
+                      e.target.cueVideoById({ videoId: ytId, startSeconds: startTime });
                       lastLoadedYtId.current = ytId;
                     }
                   } catch (err) { console.warn("YT Play onReady failure:", err); }
