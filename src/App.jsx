@@ -885,6 +885,16 @@ function App() {
         SectorId: goLiveFormData.sectorId ?? null
       });
 
+      if (currentUserId) {
+        const stationRes = await API.Stations.getByUserId(currentUserId).catch(e => {
+          console.error("Failed to fetch host station:", e);
+          return null;
+        });
+        if (stationRes && stationRes.data) {
+          setActiveStation(stationRes.data);
+        }
+      }
+
       showNotification("BROADCAST_ACTIVE", t('ESTABLISH_SIGNAL'), "success");
       setBroadcastSourceType(goLiveFormData.sourceType);
       if (goLiveFormData.sourceType === 'hardware') {
