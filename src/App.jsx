@@ -890,12 +890,31 @@ function App() {
         setIsPlaying(true);
       } else {
         initAudioCtx();
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.src = '';
+          audioRef.current.removeAttribute('src');
+          audioRef.current.srcObject = null;
+        }
+        if (youtubePlayer) {
+          try { youtubePlayer.stopVideo(); } catch (e) {}
+        }
+        setTracks([]);
+        setCurrentTrackIndex(-1);
+        setIsPlaying(false);
+        setMixerDeckB(null);
+        setMixerIsPlayingB(false);
+        setMixerCurrentTimeB(0);
+        setMixerCrossfader(-100);
+        setView('player');
       }
       setShowGlobalGoLive(false);
       setGoLiveFormData({ sessionTitle: '', description: '', isChatEnabled: true, isQueueEnabled: true, sectorId: null, sourceType: 'app' });
 
-      // After starting, briefly navigate to profile to show the broadcast interface
-      navigateToProfile(user?.id, 'broadcast');
+      // After starting, briefly navigate to profile only for hardware mode
+      if (goLiveFormData.sourceType === 'hardware') {
+        navigateToProfile(user?.id, 'broadcast');
+      }
     } catch (e) {
       console.error("Failed to go live global:", e);
       if (hardwareStream) {
