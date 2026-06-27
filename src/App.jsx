@@ -597,9 +597,9 @@ function App() {
   const lastSyncTimeRef = useRef(0);
 
   const currentYtId = useMemo(() => {
-    const track = activeStation ? broadcastTrack : currentTrack;
+    const track = (activeStation && !isHost) ? broadcastTrack : currentTrack;
     return getGlobalYoutubeId(track);
-  }, [currentTrack, activeStation, broadcastTrack]);
+  }, [currentTrack, activeStation, isHost, broadcastTrack]);
 
   // Dynamic Spotify track resolver (resolves Spotify metadata to YouTube video ID under the hood)
   useEffect(() => {
@@ -3232,7 +3232,7 @@ function App() {
           return (
             <YouTube
               key="global-youtube-player"
-              videoId="7wtfhZwyrcc"
+              videoId={activeYtId}
               onReady={(e) => {
                 console.log("[YOUTUBE] Player Ready");
                 setYoutubePlayer(e.target);

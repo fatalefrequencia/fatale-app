@@ -96,8 +96,25 @@ export function useBroadcastSync({
               const diff = Math.abs((youtubePlayer.getCurrentTime?.() || 0) - (currentTime || 0));
               if (diff > 2) youtubePlayer.seekTo(currentTime, true);
             }
-            if (isPlaying) youtubePlayer.playVideo();
-            else youtubePlayer.pauseVideo();
+            if (isPlaying) {
+              try {
+                youtubePlayer.playVideo();
+                // Autoplay protection check: if playback gets blocked, fall back to muted play
+                const lastPlayCheck = Date.now();
+                setTimeout(() => {
+                  const state = youtubePlayer.getPlayerState ? youtubePlayer.getPlayerState() : -1;
+                  if (state !== 1 && state !== 3) {
+                    console.log("[YOUTUBE_AUTOPLAY] Broadcast sync play blocked, falling back to muted play");
+                    youtubePlayer.mute?.();
+                    youtubePlayer.playVideo?.();
+                  }
+                }, 350);
+              } catch (err) {
+                console.warn("[BROADCAST_SYNC] playVideo error:", err);
+              }
+            } else {
+              youtubePlayer.pauseVideo();
+            }
           }
 
           // Mobile session persistence: play silent carrier on audioRef
