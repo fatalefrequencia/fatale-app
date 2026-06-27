@@ -94,10 +94,10 @@ export function useBroadcastSync({
       const {
         title, artist, cover, source, youtubeId,
         currentTime, isPlaying, sourceType,
-        crossfader,        // crossfader value (-100 to 100), included when available
-        deckBTrack,        // deck B track info when available
-        deckBCurrentTime,  // deck B time
-        deckBPlaying,      // deck B playing state
+        crossfader,
+        broadcastVolume,  // host fader level (0-1)
+        broadcastPitch,   // host pitch offset (semitones)
+        broadcastBpm,     // host BPM for display
       } = payload;
 
       const track = { title, artist, cover, source, youtubeId, sourceType, isBroadcast: true };
@@ -175,6 +175,11 @@ export function useBroadcastSync({
                 } else {
                   ytPlayer.pauseVideo();
                 }
+                // Apply host volume level to YouTube player
+                if (typeof broadcastVolume === 'number') {
+                  ytPlayer.setVolume(broadcastVolume * 100);
+                }
+
               }
 
               // Keep audio session alive on mobile with silent carrier

@@ -604,10 +604,16 @@ const DJMixerPlayer = ({
                 deckB: enrichedDeckB,
                 isPlayingB,
                 currentTimeB,
-                crossfader
+                crossfader,
+                faderA,
+                faderB,
+                pitchA,
+                pitchB,
+                bpmA: deckA?.bpm || null,
+                bpmB: deckB?.bpm || null,
             });
         }
-    }, [deckB, isPlayingB, currentTimeB, crossfader, isYoutubeModeB, onMixerStateChange]);
+    }, [deckB, isPlayingB, currentTimeB, crossfader, faderA, faderB, pitchA, pitchB, isYoutubeModeB, onMixerStateChange]);
 
     // Animate Jog Wheels
     useEffect(() => {

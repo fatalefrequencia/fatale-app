@@ -383,6 +383,12 @@ function App() {
   const [mixerIsPlayingB, setMixerIsPlayingB] = useState(false);
   const [mixerCurrentTimeB, setMixerCurrentTimeB] = useState(0);
   const [mixerCrossfader, setMixerCrossfader] = useState(-100);
+  const [mixerFaderA, setMixerFaderA] = useState(1);
+  const [mixerFaderB, setMixerFaderB] = useState(1);
+  const [mixerPitchA, setMixerPitchA] = useState(0);
+  const [mixerPitchB, setMixerPitchB] = useState(0);
+  const [mixerBpmA, setMixerBpmA] = useState(null);
+  const [mixerBpmB, setMixerBpmB] = useState(null);
   const [broadcastTrack, setBroadcastTrack] = useState(null);
   const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
   const isMobile = window.innerWidth < 1024;
@@ -681,6 +687,31 @@ function App() {
       }
     }
   };
+
+  // ── YouTube player ready-recovery for broadcast LISTENERS ───────────────────
+  // When the YT player first becomes available (non-null), if we're a listener in
+  // YouTube broadcast mode with a track ready, trigger playback immediately.
+  // This rescues the case where the first BroadcastSync arrives before the player
+  // initializes (ytPlayer was null at the time, so it was skipped).
+  useEffect(() => {
+    if (!youtubePlayer) return;
+    if (!activeStation || isHost) return; // Only for listeners
+    if (!isYoutubeMode || !currentYtId) return;
+
+    const ytId = currentYtId;
+    console.log('[BROADCAST_LISTENER] YouTube player now ready — loading broadcast track:', ytId);
+    try {
+      youtubePlayer.loadVideoById({ videoId: ytId, startSeconds: currentTime || 0 });
+      youtubePlayer.setVolume(volume * 100);
+      if (!isPlaying) {
+        setTimeout(() => { try { youtubePlayer.pauseVideo(); } catch (e) {} }, 300);
+      }
+    } catch (e) {
+      console.warn('[BROADCAST_LISTENER] YouTube ready-recovery failed:', e);
+    }
+  // Only fire when player first becomes ready (youtubePlayer changing from null to instance)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [youtubePlayer]);
 
   // Effect to load and play YouTube track when it changes
   useEffect(() => {
@@ -1273,6 +1304,12 @@ function App() {
     setMixerIsPlayingB(state.isPlayingB);
     setMixerCurrentTimeB(state.currentTimeB);
     setMixerCrossfader(state.crossfader);
+    if (typeof state.faderA === 'number') setMixerFaderA(state.faderA);
+    if (typeof state.faderB === 'number') setMixerFaderB(state.faderB);
+    if (typeof state.pitchA === 'number') setMixerPitchA(state.pitchA);
+    if (typeof state.pitchB === 'number') setMixerPitchB(state.pitchB);
+    if (state.bpmA != null) setMixerBpmA(state.bpmA);
+    if (state.bpmB != null) setMixerBpmB(state.bpmB);
   }, []);
 
   // Helper to determine the active broadcast state (Deck A vs Deck B)
@@ -1292,20 +1329,32 @@ function App() {
     }
     let isDeckBActive = false;
     if (mixerDeckB) {
+      // Deck B is active if it's the only one playing, OR crossfader is right of center (>= 0)
       if (mixerIsPlayingB && !isPlaying) {
         isDeckBActive = true;
-      } else if (!mixerIsPlayingB && isPlaying) {
+      } else if (isPlaying && !mixerIsPlayingB) {
         isDeckBActive = false;
-      } else {
-        // Hard switch at center: left of 0 = deck A, right of 0 = deck B
-        isDeckBActive = mixerCrossfader > 0;
+      } else if (mixerIsPlayingB) {
+        // Both playing: crossfader >= 0 → deck B; < 0 → deck A
+        isDeckBActive = mixerCrossfader >= 0;
       }
     }
-    const trackToSync = isDeckBActive ? mixerDeckB : currentTrack;
-    const timeToSync = isDeckBActive ? mixerCurrentTimeB : currentTime;
-    const playingToSync = isDeckBActive ? mixerIsPlayingB : isPlaying;
-    return { trackToSync, timeToSync, playingToSync, isDeckBActive, crossfader: mixerCrossfader };
-  }, [mixerCrossfader, mixerDeckB, currentTrack, mixerCurrentTimeB, currentTime, mixerIsPlayingB, isPlaying, broadcastSourceType, user?.username]);
+    const trackToSync    = isDeckBActive ? mixerDeckB : currentTrack;
+    const timeToSync     = isDeckBActive ? mixerCurrentTimeB : currentTime;
+    const playingToSync  = isDeckBActive ? mixerIsPlayingB : isPlaying;
+    const volumeToSync   = isDeckBActive ? mixerFaderB : mixerFaderA;
+    const pitchToSync    = isDeckBActive ? mixerPitchB : mixerPitchA;
+    const bpmToSync      = isDeckBActive ? mixerBpmB : mixerBpmA;
+    return {
+      trackToSync, timeToSync, playingToSync, isDeckBActive,
+      crossfader: mixerCrossfader,
+      volume: volumeToSync,
+      pitch: pitchToSync,
+      bpm: bpmToSync,
+    };
+  }, [mixerCrossfader, mixerDeckB, currentTrack, mixerCurrentTimeB, currentTime,
+      mixerIsPlayingB, isPlaying, broadcastSourceType, user?.username,
+      mixerFaderA, mixerFaderB, mixerPitchA, mixerPitchB, mixerBpmA, mixerBpmB]);
 
   // --- HOST BROADCASTING LOGIC ---
   useEffect(() => {
@@ -1317,9 +1366,16 @@ function App() {
     // Guard: ensure signalR is ready before syncing
     const timer = setTimeout(() => {
       lastSyncTimeRef.current = Date.now();
-      const enrichedTrack = { ...trackToSync, sourceType: broadcastSourceType, crossfader };
+      const enrichedTrack = {
+        ...trackToSync,
+        sourceType: broadcastSourceType,
+        crossfader,
+        broadcastVolume: volume,
+        broadcastPitch:  pitch,
+        broadcastBpm:    bpm,
+      };
       if (broadcastSourceType === 'hardware') {
-        enrichedTrack.title = '🎙 LIVE INPUT';
+        enrichedTrack.title  = '🎙 LIVE INPUT';
         enrichedTrack.artist = user?.username || 'Hardware Source';
       }
       syncTrack(stationId, enrichedTrack, timeToSync, playingToSync);
@@ -1334,16 +1390,23 @@ function App() {
   // Periodic currentTime sync throttle (every 3 seconds)
   useEffect(() => {
     if (!isHost || !activeStation) return;
-    const { trackToSync, timeToSync, playingToSync, crossfader } = getActiveBroadcastState();
+    const { trackToSync, timeToSync, playingToSync, crossfader, volume, pitch, bpm } = getActiveBroadcastState();
     if (!trackToSync?.title) return;
     const stationId = activeStation.id || activeStation.Id;
   
     const now = Date.now();
     if (now - lastSyncTimeRef.current >= 3000) {
       lastSyncTimeRef.current = now;
-      const enrichedTrack = { ...trackToSync, sourceType: broadcastSourceType, crossfader };
+      const enrichedTrack = {
+        ...trackToSync,
+        sourceType: broadcastSourceType,
+        crossfader,
+        broadcastVolume: volume,
+        broadcastPitch:  pitch,
+        broadcastBpm:    bpm,
+      };
       if (broadcastSourceType === 'hardware') {
-        enrichedTrack.title = '🎙 LIVE INPUT';
+        enrichedTrack.title  = '🎙 LIVE INPUT';
         enrichedTrack.artist = user?.username || 'Hardware Source';
       }
       syncTrack(stationId, enrichedTrack, timeToSync, playingToSync);
@@ -1364,11 +1427,26 @@ function App() {
       console.log(`[HOST] Listener ${listenerConnectionId} joined, syncing track immediately`);
       lastSyncTimeRef.current = Date.now();
       // Re-read live state so the listener-join sync is always current
-      const { trackToSync: liveTrack, timeToSync: liveTime, playingToSync: livePlaying, crossfader: liveFader } = getActiveBroadcastState();
+      const {
+        trackToSync: liveTrack,
+        timeToSync: liveTime,
+        playingToSync: livePlaying,
+        crossfader: liveFader,
+        volume: liveVol,
+        pitch: livePitch,
+        bpm: liveBpm,
+      } = getActiveBroadcastState();
       if (!liveTrack?.title) return;
-      const enrichedTrack = { ...liveTrack, sourceType: broadcastSourceType, crossfader: liveFader };
+      const enrichedTrack = {
+        ...liveTrack,
+        sourceType: broadcastSourceType,
+        crossfader: liveFader,
+        broadcastVolume: liveVol,
+        broadcastPitch:  livePitch,
+        broadcastBpm:    liveBpm,
+      };
       if (broadcastSourceType === 'hardware') {
-        enrichedTrack.title = '🎙 LIVE INPUT';
+        enrichedTrack.title  = '🎙 LIVE INPUT';
         enrichedTrack.artist = user?.username || 'Hardware Source';
       }
       syncTrack(stationId, enrichedTrack, liveTime, livePlaying);

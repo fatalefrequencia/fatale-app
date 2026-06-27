@@ -260,19 +260,22 @@ export const syncTrack = async (stationId, track, currentTime, isPlaying) => {
           : 'local');
 
   const payload = {
-    stationId:   String(stationId),
-    trackId:     String(track.id || track.Id || ''),
-    title:       track.title || track.Title || '',
-    artist:      track.artist || track.artistName || track.ArtistName || '',
-    cover:       track.cover || track.coverImageUrl || track.CoverImageUrl || '',
+    stationId:       String(stationId),
+    trackId:         String(track.id || track.Id || ''),
+    title:           track.title || track.Title || '',
+    artist:          track.artist || track.artistName || track.ArtistName || '',
+    cover:           track.cover || track.coverImageUrl || track.CoverImageUrl || '',
     source,
-    youtubeId:   youtubeId || null,
-    streamUrl:   sourceType === 'stream' ? source : null,
-    isPlaying:   !!isPlaying,
-    currentTime: currentTime || 0,
-    timestamp:   Date.now(),
+    youtubeId:       youtubeId || null,
+    streamUrl:       sourceType === 'stream' ? source : null,
+    isPlaying:       !!isPlaying,
+    currentTime:     currentTime || 0,
+    timestamp:       Date.now(),
     sourceType,
-    crossfader:  typeof track.crossfader === 'number' ? track.crossfader : 0,
+    crossfader:      typeof track.crossfader      === 'number' ? track.crossfader      : 0,
+    broadcastVolume: typeof track.broadcastVolume === 'number' ? track.broadcastVolume : 1,
+    broadcastPitch:  typeof track.broadcastPitch  === 'number' ? track.broadcastPitch  : 0,
+    broadcastBpm:    track.broadcastBpm != null                ? track.broadcastBpm    : null,
   };
 
   try {
