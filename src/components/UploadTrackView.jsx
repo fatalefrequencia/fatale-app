@@ -425,15 +425,15 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
 
                                     {/* File pickers */}
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className={`relative border border-dashed p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all rounded-sm ${formData.audioFile ? 'bg-fatale/10 border-fatale/50' : 'border-white/5 bg-white/[0.02] hover:border-fatale/30'}`}>
+                                        <label htmlFor="audio-upload" className={`relative border border-dashed p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all rounded-sm ${formData.audioFile ? 'bg-fatale/10 border-fatale/50' : 'border-white/5 bg-white/[0.02] hover:border-fatale/30'}`}>
                                             <input 
                                                 type="file" 
                                                 accept="audio/*,.mp3,.wav,.flac,.aac,.ogg,.m4a" 
                                                 onChange={e => { const f = e.target.files[0]; if (f) setFormData(p => ({ ...p, audioFile: f })); }} 
                                                 className="hidden" 
                                                 id="audio-upload" 
-/>
-                                            <label htmlFor="audio-upload" className="flex flex-col items-center cursor-pointer text-center w-full">
+                                            />
+                                            <div className="flex flex-col items-center cursor-pointer text-center w-full">
                                                 <div className={`w-12 h-12 border flex items-center justify-center mb-2 transition-all ${formData.audioFile ? 'border-fatale bg-fatale/20' : 'border-white/10'}`}>
                                                     <Music size={20} className={formData.audioFile ? 'text-fatale' : 'text-white/20'} />
                                                 </div>
@@ -443,9 +443,9 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                                 <div className="text-[6px] mono text-white/10 mt-2 uppercase tracking-tight">MP3 / WAV / OGG</div>
                                             </label>
                                         </div>
-                                        <div className={`relative border border-dashed p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all rounded-sm ${formData.coverFile ? 'bg-fatale/10 border-fatale/50' : 'border-white/5 bg-white/[0.02] hover:border-fatale/30'}`}>
+                                        <label htmlFor="cover-upload" className={`relative border border-dashed p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all rounded-sm ${formData.coverFile ? 'bg-fatale/10 border-fatale/50' : 'border-white/5 bg-white/[0.02] hover:border-fatale/30'}`}>
                                             <input type="file" accept="image/*" onChange={e => { const f = e.target.files[0]; if (f) setFormData(p => ({ ...p, coverFile: f })); }} className="hidden" id="cover-upload" />
-                                            <label htmlFor="cover-upload" className="flex flex-col items-center cursor-pointer text-center w-full">
+                                            <div className="flex flex-col items-center cursor-pointer text-center w-full">
                                                 <div className={`w-12 h-12 border flex items-center justify-center mb-2 transition-all ${formData.coverFile ? 'border-fatale bg-fatale/20' : 'border-white/10'}`}>
                                                     <ImageIcon size={20} className={formData.coverFile ? 'text-fatale' : 'text-white/20'} />
                                                 </div>
@@ -453,8 +453,8 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                                     {formData.coverFile ? formData.coverFile.name : 'ATTACH_VISUAL'}
                                                 </span>
                                                 <div className="text-[6px] mono text-white/10 mt-2 uppercase tracking-tight">JPG / PNG / WEBP</div>
-                                            </label>
-                                        </div>
+                                            </div>
+                                        </label>
                                     </div>
 
                                     {status === 'error' && (
@@ -498,9 +498,9 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                     </div>
 
                                     {/* Album cover */}
-                                    <div className={`relative border border-dashed p-4 flex items-center gap-4 cursor-pointer transition-all ${albumData.coverFile ? 'border-fatale/50 bg-fatale/5' : 'border-white/10 hover:border-fatale/30'}`}>
+                                    <label htmlFor="album-cover-upload" className={`relative border border-dashed p-4 flex items-center gap-4 cursor-pointer transition-all ${albumData.coverFile ? 'border-fatale/50 bg-fatale/5' : 'border-white/10 hover:border-fatale/30'}`}>
                                         <input type="file" accept="image/*" onChange={e => { const f = e.target.files[0]; if (f) setAlbumData(p => ({ ...p, coverFile: f })); }} className="hidden" id="album-cover-upload" />
-                                        <label htmlFor="album-cover-upload" className="flex items-center gap-4 cursor-pointer w-full">
+                                        <div className="flex items-center gap-4 cursor-pointer w-full">
                                             <ImageIcon size={20} className={albumData.coverFile ? 'text-fatale' : 'text-white/20'} />
                                             <div>
                                                 <div className={`text-[9px] font-black uppercase tracking-widest ${albumData.coverFile ? 'text-fatale' : 'text-white/40'}`}>
@@ -508,8 +508,8 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                                 </div>
                                                 <div className="text-[7px] text-white/20">Shared across all tracks unless overridden per-track</div>
                                             </div>
-                                        </label>
-                                    </div>
+                                        </div>
+                                    </label>
 
                                     {/* Track list */}
                                     <div className="space-y-2">

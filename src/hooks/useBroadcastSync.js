@@ -138,7 +138,9 @@ export function useBroadcastSync({
               } else {
                 ytPlayer.pauseVideo();
               }
-              if (typeof volume === 'number') ytPlayer.setVolume(volume * 100);
+            }
+            if (typeof volume === 'number') {
+              try { ytPlayer.setVolume(volume * 100); } catch(e) {}
             }
 
             if (audioEl) {

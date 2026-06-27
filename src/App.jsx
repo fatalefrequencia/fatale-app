@@ -1383,7 +1383,7 @@ function App() {
     return () => clearTimeout(timer);
   }, [
     currentTrack?.id, currentTrack?.Id, currentTrack?.source, currentTrack?.title, isPlaying, isHost, activeStation?.id,
-    showMixer, mixerCrossfader, mixerDeckB?.id, mixerDeckB?.Id, mixerDeckB?.source, mixerDeckB?.title, mixerIsPlayingB
+    showMixer, mixerCrossfader, mixerFaderA, mixerFaderB, mixerDeckB?.id, mixerDeckB?.Id, mixerDeckB?.source, mixerDeckB?.title, mixerIsPlayingB
   ]);
   
   // Periodic currentTime sync throttle (every 3 seconds)
