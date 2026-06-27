@@ -1334,7 +1334,7 @@ function App() {
   // Periodic currentTime sync throttle (every 3 seconds)
   useEffect(() => {
     if (!isHost || !activeStation) return;
-    const { trackToSync, timeToSync, playingToSync } = getActiveBroadcastState();
+    const { trackToSync, timeToSync, playingToSync, crossfader } = getActiveBroadcastState();
     if (!trackToSync?.title) return;
     const stationId = activeStation.id || activeStation.Id;
   
