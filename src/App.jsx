@@ -1297,26 +1297,27 @@ function App() {
       } else if (!mixerIsPlayingB && isPlaying) {
         isDeckBActive = false;
       } else {
+        // Hard switch at center: left of 0 = deck A, right of 0 = deck B
         isDeckBActive = mixerCrossfader > 0;
       }
     }
     const trackToSync = isDeckBActive ? mixerDeckB : currentTrack;
     const timeToSync = isDeckBActive ? mixerCurrentTimeB : currentTime;
     const playingToSync = isDeckBActive ? mixerIsPlayingB : isPlaying;
-    return { trackToSync, timeToSync, playingToSync, isDeckBActive };
+    return { trackToSync, timeToSync, playingToSync, isDeckBActive, crossfader: mixerCrossfader };
   }, [mixerCrossfader, mixerDeckB, currentTrack, mixerCurrentTimeB, currentTime, mixerIsPlayingB, isPlaying, broadcastSourceType, user?.username]);
 
   // --- HOST BROADCASTING LOGIC ---
   useEffect(() => {
     if (!isHost || !activeStation) return;
-    const { trackToSync, timeToSync, playingToSync } = getActiveBroadcastState();
+    const { trackToSync, timeToSync, playingToSync, crossfader } = getActiveBroadcastState();
     if (!trackToSync?.title) return;
     const stationId = activeStation.id || activeStation.Id;
   
     // Guard: ensure signalR is ready before syncing
     const timer = setTimeout(() => {
       lastSyncTimeRef.current = Date.now();
-      const enrichedTrack = { ...trackToSync, sourceType: broadcastSourceType };
+      const enrichedTrack = { ...trackToSync, sourceType: broadcastSourceType, crossfader };
       if (broadcastSourceType === 'hardware') {
         enrichedTrack.title = '🎙 LIVE INPUT';
         enrichedTrack.artist = user?.username || 'Hardware Source';
@@ -1340,7 +1341,7 @@ function App() {
     const now = Date.now();
     if (now - lastSyncTimeRef.current >= 3000) {
       lastSyncTimeRef.current = now;
-      const enrichedTrack = { ...trackToSync, sourceType: broadcastSourceType };
+      const enrichedTrack = { ...trackToSync, sourceType: broadcastSourceType, crossfader };
       if (broadcastSourceType === 'hardware') {
         enrichedTrack.title = '🎙 LIVE INPUT';
         enrichedTrack.artist = user?.username || 'Hardware Source';
@@ -1362,12 +1363,15 @@ function App() {
     const unsub = onListenerJoined(({ listenerConnectionId }) => {
       console.log(`[HOST] Listener ${listenerConnectionId} joined, syncing track immediately`);
       lastSyncTimeRef.current = Date.now();
-      const enrichedTrack = { ...trackToSync, sourceType: broadcastSourceType };
+      // Re-read live state so the listener-join sync is always current
+      const { trackToSync: liveTrack, timeToSync: liveTime, playingToSync: livePlaying, crossfader: liveFader } = getActiveBroadcastState();
+      if (!liveTrack?.title) return;
+      const enrichedTrack = { ...liveTrack, sourceType: broadcastSourceType, crossfader: liveFader };
       if (broadcastSourceType === 'hardware') {
         enrichedTrack.title = '🎙 LIVE INPUT';
         enrichedTrack.artist = user?.username || 'Hardware Source';
       }
-      syncTrack(stationId, enrichedTrack, timeToSync, playingToSync);
+      syncTrack(stationId, enrichedTrack, liveTime, livePlaying);
     });
 
     return () => {
@@ -3251,7 +3255,9 @@ function App() {
               }}
               onStateChange={(e) => {
                 console.log("[YOUTUBE] State Change:", e.data);
-                if (e.data === 0) playNext();
+                // Listener in broadcast mode: useBroadcastSync owns YouTube control
+                const isBroadcastListener = !!(activeStation && !isHost);
+                if (e.data === 0 && !isBroadcastListener) playNext();
                 if (e.data === 1) {
                   hasStartedPlayingYt.current = true;
                   // Auto-unmute if we started muted to bypass autoplay policy
@@ -3264,7 +3270,9 @@ function App() {
                     }
                   }
                 }
-                if (isPlaying && (e.data === 5 || e.data === -1 || (e.data === 2 && !hasStartedPlayingYt.current))) {
+                // Only auto-play from state transitions in host/normal mode
+                // Listeners are driven entirely by useBroadcastSync to prevent stale-track loops
+                if (!isBroadcastListener && isPlaying && (e.data === 5 || e.data === -1 || (e.data === 2 && !hasStartedPlayingYt.current))) {
                   try {
                     playYtVideo(e.target);
                   } catch (err) { console.warn("Failed to autoplay on state change:", err); }
@@ -3272,8 +3280,9 @@ function App() {
               }}
               onError={(e) => {
                 console.error("[YOUTUBE] Error detected:", e.data);
-                // Handle private/deleted videos by skipping
-                if (isPlaying && ytId) playNext();
+                // Handle private/deleted videos by skipping — only in host/normal mode
+                const isBroadcastListener = !!(activeStation && !isHost);
+                if (!isBroadcastListener && isPlaying && ytId) playNext();
               }}
               opts={{
                 height: '1',

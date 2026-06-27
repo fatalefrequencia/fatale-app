@@ -272,6 +272,7 @@ export const syncTrack = async (stationId, track, currentTime, isPlaying) => {
     currentTime: currentTime || 0,
     timestamp:   Date.now(),
     sourceType,
+    crossfader:  typeof track.crossfader === 'number' ? track.crossfader : 0,
   };
 
   try {
