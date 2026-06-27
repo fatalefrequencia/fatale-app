@@ -594,6 +594,7 @@ function App() {
 
   // YouTube Player State
   const [youtubePlayer, setYoutubePlayer] = useState(null);
+  const [youtubePlayerB, setYoutubePlayerB] = useState(null);
   const [isYoutubeMode, setIsYoutubeMode] = useState(false);
   const [vibeFeatures, setVibeFeatures] = useState(null);
   const lastLoadedYtId = useRef(null);
@@ -1002,6 +1003,7 @@ function App() {
     activeStation,
     audioRef,
     youtubePlayer,
+    youtubePlayerB,
     isHost,
     setIsPlaying,
     setCurrentTime,
@@ -1327,36 +1329,26 @@ function App() {
         isDeckBActive: false
       };
     }
-    let isDeckBActive = false;
-    if (mixerDeckB) {
-      // Deck B is active if it's the only one playing.
-      // If both are playing, or both are paused, use crossfader to determine dominance.
-      if (mixerIsPlayingB && !isPlaying) {
-        isDeckBActive = true;
-      } else if (isPlaying && !mixerIsPlayingB) {
-        isDeckBActive = false;
-      } else {
-        // Both playing or both paused: crossfader >= 0 → deck B; < 0 → deck A
-        isDeckBActive = mixerCrossfader >= 0;
-      }
-    }
-    const trackToSync    = isDeckBActive ? mixerDeckB : currentTrack;
-    const timeToSync     = isDeckBActive ? mixerCurrentTimeB : currentTime;
-    const playingToSync  = isDeckBActive ? mixerIsPlayingB : isPlaying;
-    const volumeToSync   = isDeckBActive ? mixerFaderB : mixerFaderA;
-    const pitchToSync    = isDeckBActive ? mixerPitchB : mixerPitchA;
-    const bpmToSync      = isDeckBActive ? mixerBpmB : mixerBpmA;
     
     const fadeA = mixerCrossfader > 0 ? (100 - mixerCrossfader) / 100 : 1;
     const fadeB = mixerCrossfader < 0 ? (100 + mixerCrossfader) / 100 : 1;
-    const finalVolume = volumeToSync * (isDeckBActive ? fadeB : fadeA);
 
     return {
-      trackToSync, timeToSync, playingToSync, isDeckBActive,
+      trackToSync: currentTrack,
+      timeToSync: currentTime,
+      playingToSync: isPlaying,
+      volume: mixerFaderA * fadeA,
+      pitch: mixerPitchA,
+      bpm: currentTrack?.bpm,
       crossfader: mixerCrossfader,
-      volume: finalVolume,
-      pitch: pitchToSync,
-      bpm: bpmToSync,
+      deckB: mixerDeckB ? {
+        track: mixerDeckB,
+        currentTime: mixerCurrentTimeB,
+        isPlaying: mixerIsPlayingB,
+        volume: mixerFaderB * fadeB,
+        pitch: mixerPitchB,
+        bpm: mixerBpmB
+      } : null
     };
   }, [mixerCrossfader, mixerDeckB, currentTrack, mixerCurrentTimeB, currentTime,
       mixerIsPlayingB, isPlaying, broadcastSourceType, user?.username,
@@ -1365,8 +1357,8 @@ function App() {
   // --- HOST BROADCASTING LOGIC ---
   useEffect(() => {
     if (!isHost || !activeStation) return;
-    const { trackToSync, timeToSync, playingToSync, crossfader } = getActiveBroadcastState();
-    if (!trackToSync?.title) return;
+    const { trackToSync, timeToSync, playingToSync, crossfader, volume, pitch, bpm, deckB } = getActiveBroadcastState();
+    if (!trackToSync?.title && !deckB) return;
     const stationId = activeStation.id || activeStation.Id;
   
     // Guard: ensure signalR is ready before syncing
@@ -1379,6 +1371,7 @@ function App() {
         broadcastVolume: volume,
         broadcastPitch:  pitch,
         broadcastBpm:    bpm,
+        deckB
       };
       if (broadcastSourceType === 'hardware') {
         enrichedTrack.title  = '🎙 LIVE INPUT';
@@ -1396,8 +1389,8 @@ function App() {
   // Periodic currentTime sync throttle (every 3 seconds)
   useEffect(() => {
     if (!isHost || !activeStation) return;
-    const { trackToSync, timeToSync, playingToSync, crossfader, volume, pitch, bpm } = getActiveBroadcastState();
-    if (!trackToSync?.title) return;
+    const { trackToSync, timeToSync, playingToSync, crossfader, volume, pitch, bpm, deckB } = getActiveBroadcastState();
+    if (!trackToSync?.title && !deckB) return;
     const stationId = activeStation.id || activeStation.Id;
   
     const now = Date.now();
@@ -1410,6 +1403,7 @@ function App() {
         broadcastVolume: volume,
         broadcastPitch:  pitch,
         broadcastBpm:    bpm,
+        deckB
       };
       if (broadcastSourceType === 'hardware') {
         enrichedTrack.title  = '🎙 LIVE INPUT';
@@ -3384,6 +3378,35 @@ function App() {
             />
           );
         })()}
+      </div>
+
+      {/* SECONDARY YOUTUBE PLAYER FOR LISTENER DUAL-DECK (DECK B) */}
+      <div
+        style={{
+          position: 'fixed',
+          left: -9999,
+          top: -9999,
+          width: 200,
+          height: 200,
+          overflow: 'hidden',
+          pointerEvents: 'none'
+        }}
+      >
+        <YouTube
+          key="global-youtube-player-b"
+          videoId="7wtfhZwyrcc"
+          onReady={(e) => {
+            console.log("[YOUTUBE B] Player Ready");
+            setYoutubePlayerB(e.target);
+          }}
+          onStateChange={(e) => {
+            console.log("[YOUTUBE B] State Change:", e.data);
+          }}
+          onError={(e) => console.error("[YOUTUBE B] Error detected:", e.data)}
+          opts={{
+            playerVars: { autoplay: 0, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, rel: 0, showinfo: 0, modestbranding: 1 }
+          }}
+        />
       </div>
 
       <AnimatePresence mode="wait">

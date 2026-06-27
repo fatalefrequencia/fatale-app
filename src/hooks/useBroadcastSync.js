@@ -6,6 +6,7 @@ export function useBroadcastSync({
   activeStation,
   audioRef,
   youtubePlayer,
+  youtubePlayerB,
   isHost,
   setIsPlaying,
   setCurrentTime,
@@ -21,6 +22,7 @@ export function useBroadcastSync({
 
   // ── Mutable refs so the SignalR callback always reads current props ─────────
   const youtubePlayerRef = useRef(youtubePlayer);
+  const youtubePlayerBRef = useRef(youtubePlayerB);
   const audioRefRef      = useRef(audioRef);
   const setIsPlayingRef          = useRef(setIsPlaying);
   const setCurrentTimeRef        = useRef(setCurrentTime);
@@ -30,6 +32,7 @@ export function useBroadcastSync({
 
   useEffect(() => {
     youtubePlayerRef.current         = youtubePlayer;
+    youtubePlayerBRef.current        = youtubePlayerB;
     audioRefRef.current              = audioRef;
     setIsPlayingRef.current          = setIsPlaying;
     setCurrentTimeRef.current        = setCurrentTime;
@@ -41,23 +44,28 @@ export function useBroadcastSync({
   // Track last-loaded native src and YouTube ID so we don't re-load the same content
   const lastLoadedSrcRef   = useRef(null);
   const lastLoadedYtIdRef  = useRef(null);
-  // Track the current broadcast mode so we can clean up when switching
   const lastModeRef = useRef(null); // 'youtube' | 'native' | 'hardware' | null
 
+  // Secondary audio element for Deck B
+  const deckBAudioRef = useRef(new Audio());
+  const lastLoadedSrcBRef = useRef(null);
+  const lastLoadedYtIdBRef = useRef(null);
+  const lastModeBRef = useRef(null);
+
   // ── Helper: stop native audio and clear its source ────────────────────────
-  const stopNativeAudio = () => {
-    const audio = audioRefRef.current?.current;
+  const stopNativeAudio = (audioElement, lastLoadedRef) => {
+    const audio = audioElement;
     if (!audio) return;
     audio.pause();
     audio.removeAttribute('src');
     audio.srcObject = null;
     audio.setAttribute('data-playing-src', '');
-    lastLoadedSrcRef.current = null;
+    lastLoadedRef.current = null;
   };
 
   // ── Helper: stop the YouTube player ───────────────────────────────────────
-  const stopYouTube = () => {
-    const ytPlayer = youtubePlayerRef.current;
+  const stopYouTube = (ytPlayerRef) => {
+    const ytPlayer = ytPlayerRef.current;
     if (!ytPlayer) return;
     try {
       ytPlayer.pauseVideo();
@@ -65,8 +73,8 @@ export function useBroadcastSync({
   };
 
   // ── Helper: set a silent carrier on the native audio element ──────────────
-  const setSilentCarrier = () => {
-    const audio = audioRefRef.current?.current;
+  const setSilentCarrier = (audioElement) => {
+    const audio = audioElement;
     if (!audio) return;
     const silentSrc = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==';
     if (audio.getAttribute('data-playing-src') === 'silent') return;
@@ -75,6 +83,123 @@ export function useBroadcastSync({
     audio.loop = true;
     audio.setAttribute('data-playing-src', 'silent');
     audio.load();
+  };
+
+  const processDeck = (deckPayload, audioEl, ytPlayerRef, modeRef, loadedSrcRef, loadedYtIdRef) => {
+    if (!deckPayload) {
+      stopNativeAudio(audioEl, loadedSrcRef);
+      stopYouTube(ytPlayerRef);
+      modeRef.current = null;
+      return;
+    }
+
+    const { track, currentTime, isPlaying, volume } = deckPayload;
+    if (!track) return;
+
+    const source = track.source || track.Source;
+    const youtubeId = track.youtubeId || track.YoutubeId;
+    const isYT = !!(youtubeId || (source && source.startsWith('youtube:')));
+
+    if (isYT) {
+      if (modeRef.current !== 'youtube') {
+        stopNativeAudio(audioEl, loadedSrcRef);
+        setSilentCarrier(audioEl);
+      }
+      modeRef.current = 'youtube';
+
+      const ytPlayer = ytPlayerRef.current;
+      if (ytPlayer) {
+        try {
+          const ytId = youtubeId || source?.split(':')[1];
+          if (ytId) {
+            const currentVideoId = ytPlayer.getVideoData?.()?.video_id;
+
+            if (currentVideoId !== ytId || loadedYtIdRef.current !== ytId) {
+              loadedYtIdRef.current = ytId;
+              ytPlayer.loadVideoById({ videoId: ytId, startSeconds: currentTime || 0 });
+              if (!isPlaying) {
+                setTimeout(() => { try { ytPlayer.pauseVideo(); } catch (e) {} }, 300);
+              }
+            } else {
+              const diff = Math.abs((ytPlayer.getCurrentTime?.() || 0) - (currentTime || 0));
+              if (diff > 2) ytPlayer.seekTo(currentTime, true);
+
+              if (isPlaying) {
+                try {
+                  ytPlayer.playVideo();
+                  setTimeout(() => {
+                    const s = ytPlayer.getPlayerState ? ytPlayer.getPlayerState() : -1;
+                    if (s !== 1 && s !== 3) {
+                      ytPlayer.mute?.();
+                      ytPlayer.playVideo?.();
+                    }
+                  }, 350);
+                } catch (err) {}
+              } else {
+                ytPlayer.pauseVideo();
+              }
+              if (typeof volume === 'number') ytPlayer.setVolume(volume * 100);
+            }
+
+            if (audioEl) {
+              const silentSrc = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==';
+              if (audioEl.getAttribute('data-playing-src') !== 'silent') {
+                audioEl.src = silentSrc;
+                audioEl.loop = true;
+                audioEl.setAttribute('data-playing-src', 'silent');
+                audioEl.load();
+              }
+              if (isPlaying) audioEl.play().catch(() => {});
+              else audioEl.pause();
+            }
+          }
+        } catch (e) { console.warn('[BROADCAST_SYNC] YT sync error:', e); }
+      }
+    } else if (source && audioEl) {
+      if (modeRef.current === 'youtube') {
+        stopYouTube(ytPlayerRef);
+        loadedYtIdRef.current = null;
+      }
+      modeRef.current = 'native';
+
+      const resolvedSrc = getMediaUrl(source);
+      if (!resolvedSrc) return;
+
+      if (typeof volume === 'number') {
+        audioEl.volume = Math.max(0, Math.min(1, volume));
+      }
+
+      if (loadedSrcRef.current !== resolvedSrc) {
+        loadedSrcRef.current = resolvedSrc;
+        audioEl.pause();
+        audioEl.src = resolvedSrc;
+        audioEl.loop = false;
+        audioEl.setAttribute('data-playing-src', resolvedSrc);
+
+        const onCanPlay = () => {
+          const diff = Math.abs((audioEl.currentTime || 0) - (currentTime || 0));
+          if (diff > 0.5) audioEl.currentTime = currentTime || 0;
+          if (isPlaying) {
+            audioEl.play().catch(e => console.error('[BROADCAST_SYNC] Playback failed:', resolvedSrc, e));
+          }
+        };
+
+        const onError = (e) => console.error('[BROADCAST_SYNC] Audio load error:', resolvedSrc, e);
+
+        audioEl.addEventListener('canplay', onCanPlay, { once: true });
+        audioEl.addEventListener('error', onError, { once: true });
+        audioEl.load();
+      } else {
+        const diff = Math.abs((audioEl.currentTime || 0) - (currentTime || 0));
+        if (diff > 2) audioEl.currentTime = currentTime || 0;
+
+        if (isPlaying) {
+          if (audioEl.paused) audioEl.play().catch(e => {});
+        } else {
+          if (!audioEl.paused) audioEl.pause();
+        }
+      }
+    }
   };
 
   useEffect(() => {
@@ -87,17 +212,13 @@ export function useBroadcastSync({
       if (!payload) return;
 
       const now = Date.now();
-      // Throttle duplicate rapid-fire syncs (150 ms debounce)
       if (lastSyncRef.current && now - lastSyncRef.current < 150) return;
       lastSyncRef.current = now;
 
       const {
         title, artist, cover, source, youtubeId,
         currentTime, isPlaying, sourceType,
-        crossfader,
-        broadcastVolume,  // host fader level (0-1)
-        broadcastPitch,   // host pitch offset (semitones)
-        broadcastBpm,     // host BPM for display
+        broadcastVolume, deckB
       } = payload;
 
       const track = { title, artist, cover, source, youtubeId, sourceType, isBroadcast: true };
@@ -108,178 +229,60 @@ export function useBroadcastSync({
       }
 
       const isYT = !!(youtubeId || (source && source.startsWith('youtube:')));
+      const audioEl = audioRefRef.current?.current;
 
-      // ── Hardware mode: audio comes via WebRTC ────────────────────────────
       if (sourceType === 'hardware' && !isYT) {
         requestStream(String(stationId));
-        stopYouTube();
+        stopYouTube(youtubePlayerRef);
+        stopYouTube(youtubePlayerBRef);
+        stopNativeAudio(deckBAudioRef.current, lastLoadedSrcBRef);
         lastModeRef.current = 'hardware';
         setIsPlayingRef.current(isPlaying);
         setCurrentTimeRef.current(currentTime || 0);
         return;
       }
 
-      // ── Clear WebRTC stream (not in hardware mode) ────────────────────────
-      const audio = audioRefRef.current?.current;
-      if (audio && audio.srcObject) {
-        audio.srcObject = null;
+      if (audioEl && audioEl.srcObject) {
+        audioEl.srcObject = null;
       }
 
       setIsYoutubeModeRef.current(isYT);
 
-      // ── YouTube track ─────────────────────────────────────────────────────
-      if (isYT) {
-        // Stop native audio and replace with silent carrier before playing YouTube
-        if (lastModeRef.current !== 'youtube') {
-          stopNativeAudio();
-          setSilentCarrier();
-        }
-        lastModeRef.current = 'youtube';
-
-        const ytPlayer = youtubePlayerRef.current;
-        if (ytPlayer) {
-          try {
-            const ytId = youtubeId || source?.split(':')[1];
-            if (ytId) {
-              const currentVideoId = ytPlayer.getVideoData?.()?.video_id;
-
-              if (currentVideoId !== ytId || lastLoadedYtIdRef.current !== ytId) {
-                // New track — load at broadcast time
-                lastLoadedYtIdRef.current = ytId;
-                ytPlayer.loadVideoById({ videoId: ytId, startSeconds: currentTime || 0 });
-                // loadVideoById auto-plays; if host is paused we stop after a brief moment
-                if (!isPlaying) {
-                  setTimeout(() => {
-                    try { ytPlayer.pauseVideo(); } catch (e) {}
-                  }, 300);
-                }
-              } else {
-                // Same track — sync time if drifted
-                const diff = Math.abs((ytPlayer.getCurrentTime?.() || 0) - (currentTime || 0));
-                if (diff > 2) ytPlayer.seekTo(currentTime, true);
-
-                if (isPlaying) {
-                  try {
-                    ytPlayer.playVideo();
-                    // Autoplay protection fallback
-                    setTimeout(() => {
-                      const s = ytPlayer.getPlayerState ? ytPlayer.getPlayerState() : -1;
-                      if (s !== 1 && s !== 3) {
-                        ytPlayer.mute?.();
-                        ytPlayer.playVideo?.();
-                      }
-                    }, 350);
-                  } catch (err) {
-                    console.warn('[BROADCAST_SYNC] playVideo error:', err);
-                  }
-                } else {
-                  ytPlayer.pauseVideo();
-                }
-                // Apply host volume level to YouTube player
-                if (typeof broadcastVolume === 'number') {
-                  ytPlayer.setVolume(broadcastVolume * 100);
-                }
-
-              }
-
-              // Keep audio session alive on mobile with silent carrier
-              if (audio) {
-                const silentSrc = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==';
-                if (audio.getAttribute('data-playing-src') !== 'silent') {
-                  audio.src = silentSrc;
-                  audio.loop = true;
-                  audio.setAttribute('data-playing-src', 'silent');
-                  audio.load();
-                }
-                if (isPlaying) audio.play().catch(() => {});
-                else audio.pause();
-              }
-            }
-          } catch (e) {
-            console.warn('[BROADCAST_SYNC] YouTube sync error:', e);
-          }
-        }
-
-        setCurrentTimeRef.current(currentTime || 0);
-        setIsPlayingRef.current(isPlaying);
-        return;
-      }
-
-      // ── Native audio track ────────────────────────────────────────────────
-      if (source && audio) {
-        // Stop YouTube if we were in YouTube mode
-        if (lastModeRef.current === 'youtube') {
-          stopYouTube();
-          lastLoadedYtIdRef.current = null;
-        }
-        lastModeRef.current = 'native';
-
-        const resolvedSrc = getMediaUrl(source);
-        if (!resolvedSrc) {
-          setCurrentTimeRef.current(currentTime || 0);
-          setIsPlayingRef.current(isPlaying);
-          return;
-        }
-
-        // Apply host volume level to native audio player
-        if (typeof broadcastVolume === 'number') {
-          audio.volume = Math.max(0, Math.min(1, broadcastVolume));
-        }
-
-        const alreadyLoaded = lastLoadedSrcRef.current === resolvedSrc;
-
-        if (!alreadyLoaded) {
-          // New track — load then play
-          lastLoadedSrcRef.current = resolvedSrc;
-          audio.pause();
-          audio.src = resolvedSrc;
-          audio.loop = false;
-          audio.setAttribute('data-playing-src', resolvedSrc);
-
-          const onCanPlay = () => {
-            const diff = Math.abs((audio.currentTime || 0) - (currentTime || 0));
-            if (diff > 0.5) audio.currentTime = currentTime || 0;
-            if (isPlaying) {
-              audio.play().catch(e => {
-                console.error('[BROADCAST_SYNC] Playback failed:', resolvedSrc, e);
-              });
-            }
-          };
-
-          const onError = (e) => {
-            console.error('[BROADCAST_SYNC] Audio load error:', resolvedSrc, e);
-          };
-
-          audio.addEventListener('canplay', onCanPlay, { once: true });
-          audio.addEventListener('error', onError, { once: true });
-          audio.load();
-        } else {
-          // Same track — sync play state
-          const diff = Math.abs((audio.currentTime || 0) - (currentTime || 0));
-          if (diff > 2) audio.currentTime = currentTime || 0;
-
-          if (isPlaying) {
-            if (audio.paused) {
-              audio.play().catch(e => console.error('[BROADCAST_SYNC] Resume failed:', e));
-            }
-          } else {
-            if (!audio.paused) audio.pause();
-          }
-        }
-      }
-
+      // Process Deck A (Primary)
+      processDeck(
+        { track, currentTime, isPlaying, volume: broadcastVolume },
+        audioEl,
+        youtubePlayerRef,
+        lastModeRef,
+        lastLoadedSrcRef,
+        lastLoadedYtIdRef
+      );
+      
       setCurrentTimeRef.current(currentTime || 0);
       setIsPlayingRef.current(isPlaying);
+
+      // Process Deck B (Secondary)
+      processDeck(
+        deckB,
+        deckBAudioRef.current,
+        youtubePlayerBRef,
+        lastModeBRef,
+        lastLoadedSrcBRef,
+        lastLoadedYtIdBRef
+      );
     });
 
     return () => {
-      // Clean up all audio when leaving the station
       lastLoadedSrcRef.current  = null;
       lastLoadedYtIdRef.current = null;
       lastModeRef.current       = null;
+      lastLoadedSrcBRef.current = null;
+      lastLoadedYtIdBRef.current = null;
+      lastModeBRef.current      = null;
+      
+      if (deckBAudioRef.current) deckBAudioRef.current.pause();
+      
       if (typeof unsub === 'function') unsub();
     };
-
-  // Only re-subscribe when station or host status changes — refs handle the rest
   }, [activeStation?.id, isHost]);
 }
