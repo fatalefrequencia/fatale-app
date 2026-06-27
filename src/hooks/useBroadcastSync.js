@@ -221,6 +221,11 @@ export function useBroadcastSync({
           return;
         }
 
+        // Apply host volume level to native audio player
+        if (typeof broadcastVolume === 'number') {
+          audio.volume = Math.max(0, Math.min(1, broadcastVolume));
+        }
+
         const alreadyLoaded = lastLoadedSrcRef.current === resolvedSrc;
 
         if (!alreadyLoaded) {

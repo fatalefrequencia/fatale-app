@@ -1329,13 +1329,14 @@ function App() {
     }
     let isDeckBActive = false;
     if (mixerDeckB) {
-      // Deck B is active if it's the only one playing, OR crossfader is right of center (>= 0)
+      // Deck B is active if it's the only one playing.
+      // If both are playing, or both are paused, use crossfader to determine dominance.
       if (mixerIsPlayingB && !isPlaying) {
         isDeckBActive = true;
       } else if (isPlaying && !mixerIsPlayingB) {
         isDeckBActive = false;
-      } else if (mixerIsPlayingB) {
-        // Both playing: crossfader >= 0 → deck B; < 0 → deck A
+      } else {
+        // Both playing or both paused: crossfader >= 0 → deck B; < 0 → deck A
         isDeckBActive = mixerCrossfader >= 0;
       }
     }
@@ -1345,10 +1346,15 @@ function App() {
     const volumeToSync   = isDeckBActive ? mixerFaderB : mixerFaderA;
     const pitchToSync    = isDeckBActive ? mixerPitchB : mixerPitchA;
     const bpmToSync      = isDeckBActive ? mixerBpmB : mixerBpmA;
+    
+    const fadeA = mixerCrossfader > 0 ? (100 - mixerCrossfader) / 100 : 1;
+    const fadeB = mixerCrossfader < 0 ? (100 + mixerCrossfader) / 100 : 1;
+    const finalVolume = volumeToSync * (isDeckBActive ? fadeB : fadeA);
+
     return {
       trackToSync, timeToSync, playingToSync, isDeckBActive,
       crossfader: mixerCrossfader,
-      volume: volumeToSync,
+      volume: finalVolume,
       pitch: pitchToSync,
       bpm: bpmToSync,
     };

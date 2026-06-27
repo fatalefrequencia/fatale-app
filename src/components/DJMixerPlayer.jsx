@@ -799,10 +799,10 @@ const DJMixerPlayer = ({
         return [...(filtered.collection || []), ...(filtered.network || [])];
     };
 
-    const loadToDeck = (track, deck) => {
+    const loadToDeck = (track, deck, skipOnPlay = false) => {
         if (deck === 'A') {
             setDeckA(track);
-            if (onPlayTrack) onPlayTrack(track);
+            if (onPlayTrack && !skipOnPlay) onPlayTrack(track);
         } else {
             // Find the track's index in the crate for prev/next navigation
             const allTracks = getCrateTrackList();
