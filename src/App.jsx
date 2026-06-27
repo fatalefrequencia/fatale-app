@@ -1871,21 +1871,12 @@ function App() {
   // Efecto para manejar el audio
   useEffect(() => {
     if (!audioRef.current || currentTrackIndex < 0) return;
-    if (activeStationRef.current) {
-      if (isPlaying && audioRef.current.paused) {
-        audioRef.current.play().catch(() => {});
-      } else if (!isPlaying && !audioRef.current.paused) {
-        audioRef.current.pause();
-      }
-      return; // 👈 hard stop — never touch source or mode for station playback
-    }
-    if (activeStationRef.current) {
-      if (audioRef.current.paused && isPlaying) {
-        audioRef.current.play().catch(() => {});
-      }
+    // Hard stop for station listeners — useBroadcastSync owns the audio element when tuned in
+    if (activeStationRef.current && !isHost) {
       return;
     }
     const audio = audioRef.current;
+
     const track = tracks[currentTrackIndex];
     if (!track) return;
 
@@ -3232,7 +3223,7 @@ function App() {
           return (
             <YouTube
               key="global-youtube-player"
-              videoId={activeYtId}
+              videoId="7wtfhZwyrcc"
               onReady={(e) => {
                 console.log("[YOUTUBE] Player Ready");
                 setYoutubePlayer(e.target);
