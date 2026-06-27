@@ -892,6 +892,13 @@ function App() {
         });
         if (stationRes && stationRes.data) {
           setActiveStation(stationRes.data);
+          const sid = stationRes.data.id || stationRes.data.Id;
+          if (sid) {
+            // Join our own station group so BroadcastSync reaches listeners in the group
+            await joinStation(String(sid)).catch(e => console.warn('[HOST] joinStation failed:', e));
+            // Register as host so hub knows our connectionId for ListenerJoined routing
+            await registerHost(String(sid)).catch(e => console.warn('[HOST] registerHost failed:', e));
+          }
         }
       }
 
