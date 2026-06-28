@@ -47,8 +47,7 @@ const createGlowTexture = (rawColor) => {
 };
 
 // ─── SHARP NONCONVEX POLYHEDRON DEFORMATION ───────────────────────────────────
-// Calculates radius at a given coordinate using fractional powers to create
-// highly sharp peaks (stellations) and deep valleys.
+// Calculates radius at a given coordinate. Slower base speed for organic movement.
 const getNonconvexRadius = (nx, ny, nz, time, isSelected) => {
     const len = Math.sqrt(nx*nx + ny*ny + nz*nz) || 1;
     const x = nx / len;
@@ -59,63 +58,29 @@ const getNonconvexRadius = (nx, ny, nz, time, isSelected) => {
     const starArmCount = 4.0;
     const basePeak = Math.sin(x * starArmCount) * Math.sin(y * starArmCount) * Math.sin(z * starArmCount);
     
-    // fractional power (0.5) sharpens peaks into pointy tips
-    const starVal = Math.pow(Math.abs(basePeak), 0.5) * Math.sign(basePeak);
-    
-    // Contraction & expansion wave dynamics
-    const pulseSpeed = isSelected ? 3.0 : 1.1;
+    // Slower pace of expansion and contraction (isSelected: 0.8, normal: 0.25)
+    const pulseSpeed = isSelected ? 0.8 : 0.25;
     const pulseAmp = isSelected ? 0.28 : 0.14;
     const wave = Math.sin(time * pulseSpeed + x * 3.5 + y * 3.5) * pulseAmp;
+    
+    // fractional power (0.5) sharpens peaks into pointy tips
+    const starVal = Math.pow(Math.abs(basePeak), 0.5) * Math.sign(basePeak);
     
     return GLOBE_R * (1.0 + 0.35 * starVal + wave);
 };
 
-// ─── STAR FIELD ───────────────────────────────────────────────────────────────
-
-const StarField = memo(() => {
-    const COUNT_SMALL  = 2200;
-    const COUNT_BRIGHT = 180;
-    const RADIUS       = 38;
-
-    const { smallGeo, brightGeo } = useMemo(() => {
-        const mkGeo = (count, r) => {
-            const pos = new Float32Array(count * 3);
-            for (let i = 0; i < count; i++) {
-                const u   = Math.random();
-                const v   = Math.random();
-                const lat = Math.acos(2 * v - 1) - Math.PI / 2;
-                const lon = 2 * Math.PI * u;
-                pos[i * 3]     = r * Math.cos(lat) * Math.cos(lon);
-                pos[i * 3 + 1] = r * Math.sin(lat);
-                pos[i * 3 + 2] = r * Math.cos(lat) * Math.sin(lon);
-            }
-            const g = new THREE.BufferGeometry();
-            g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-            return g;
-        };
-        return { smallGeo: mkGeo(COUNT_SMALL, RADIUS), brightGeo: mkGeo(COUNT_BRIGHT, RADIUS * 0.98) };
-    }, []);
-
-    useEffect(() => () => { smallGeo.dispose(); brightGeo.dispose(); }, [smallGeo, brightGeo]);
-
-    return (
-        <group>
-            <points geometry={smallGeo}>
-                <pointsMaterial color="#a0c8ff" size={0.09} sizeAttenuation transparent opacity={0.75} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
-            </points>
-            <points geometry={brightGeo}>
-                <pointsMaterial color="#ffe8c0" size={0.18} sizeAttenuation transparent opacity={0.90} depthWrite={false} toneMapped={false} blending={THREE.AdditiveBlending} />
-            </points>
-        </group>
-    );
-});
+// Calculate visibility threshold based on radius:
+// Items sink into core (r < 2.30) and disappear, and fade in as they expand out to peaks (r > 2.65).
+const getVertexVisibility = (r) => {
+    return THREE.MathUtils.clamp((r - 2.30) / 0.35, 0, 1);
+};
 
 // ─── SHIMMER LINE ─────────────────────────────────────────────────────────────
-// Arcs running between actual vertex endpoints, matching the polyhedron's warp
 
-const ShimmerLine = memo(({ fromDir, toDir, color, phaseOffset = 0, isSelected = false, isRelated = false }) => {
+const ShimmerLine = memo(({ fromDir, toDir, color, phaseOffset = 0, isSelected = false, isRelated = false, isGlobeSpinning }) => {
     const lineRef = useRef();
     const opRef   = useRef(0);
+    const accumulatedTimeRef = useRef(0);
 
     const geo = useMemo(() => {
         const g = new THREE.BufferGeometry();
@@ -126,12 +91,23 @@ const ShimmerLine = memo(({ fromDir, toDir, color, phaseOffset = 0, isSelected =
     useEffect(() => () => geo.dispose(), [geo]);
     useEffect(() => { opRef.current = 0; }, []);
 
-    useFrame(({ clock }) => {
+    useFrame(({ clock }, delta) => {
         if (!lineRef.current) return;
-        const time = clock.getElapsedTime();
+        
+        // Stop time progression if expansion/contraction is paused
+        if (isGlobeSpinning) {
+            accumulatedTimeRef.current += delta;
+        }
+        const time = accumulatedTimeRef.current;
 
         const rFrom = getNonconvexRadius(fromDir.x, fromDir.y, fromDir.z, time, isSelected);
         const rTo = getNonconvexRadius(toDir.x, toDir.y, toDir.z, time, isSelected);
+
+        // Hide connection if endpoints are contracted
+        const visibility = isSelected ? 1.0 : Math.min(getVertexVisibility(rFrom), getVertexVisibility(rTo));
+        lineRef.current.visible = visibility > 0.01;
+
+        if (visibility <= 0.01) return;
 
         const pFrom = fromDir.clone().multiplyScalar(rFrom + 0.05);
         const pTo = toDir.clone().multiplyScalar(rTo + 0.05);
@@ -153,10 +129,10 @@ const ShimmerLine = memo(({ fromDir, toDir, color, phaseOffset = 0, isSelected =
             lineRef.current.material.opacity = 0.95;
         } else if (isRelated) {
             opRef.current = Math.min(opRef.current + 0.04, 1);
-            lineRef.current.material.opacity = 0.70;
+            lineRef.current.material.opacity = 0.70 * visibility;
         } else {
             opRef.current = Math.min(opRef.current + 0.025, 1);
-            lineRef.current.material.opacity = opRef.current * (0.28 + Math.sin(time * 0.6 + phaseOffset) * 0.15);
+            lineRef.current.material.opacity = opRef.current * (0.28 + Math.sin(time * 0.6 + phaseOffset) * 0.15) * visibility;
         }
     });
 
@@ -169,7 +145,7 @@ const ShimmerLine = memo(({ fromDir, toDir, color, phaseOffset = 0, isSelected =
 
 // ─── NETWORK VISUALIZATION ────────────────────────────────────────────────────
 
-const NetworkVisualization = ({ nodes, selectedId }) => {
+const NetworkVisualization = ({ nodes, selectedId, isGlobeSpinning }) => {
     const connections = useMemo(() => {
         const result = [];
         const artists = nodes.filter(n => n.typeClass === 'artist');
@@ -178,13 +154,11 @@ const NetworkVisualization = ({ nodes, selectedId }) => {
             const artistId = artist.id || artist.Id;
             const artistUniqueId = artist.nodeUniqueId;
             
-            // Find tracks belonging to this artist
             const relatedTracks = nodes.filter(n => 
                 n.typeClass === 'track' && 
                 (String(n.artistId || n.ArtistId) === String(artistId) || String(n.artistUserId || n.ArtistUserId) === String(artist.userId || artist.UserId))
             );
             
-            // Find playlists belonging to this artist
             const relatedPlaylists = nodes.filter(n => 
                 n.typeClass === 'playlist' && 
                 String(n.artistId || n.ArtistId) === String(artistId)
@@ -226,6 +200,7 @@ const NetworkVisualization = ({ nodes, selectedId }) => {
                     fromDir={c.fromDir} toDir={c.toDir} color={c.color} phaseOffset={c.phase}
                     isSelected={selectedId && c.ownerId === selectedId && c.targetId === selectedId}
                     isRelated={selectedId && (c.ownerId === selectedId || c.targetId === selectedId)}
+                    isGlobeSpinning={isGlobeSpinning}
                 />
             ))}
         </group>
@@ -233,32 +208,50 @@ const NetworkVisualization = ({ nodes, selectedId }) => {
 };
 
 // ─── DYNAMIC VERTEX LIGHT NODE ────────────────────────────────────────────────
-// Placed EXACTLY on the coordinates of one of the polyhedron's vertices
 
-const LightPointNode = ({ direction, name, subtitle, color: rawColor, size = 0.02, isSelected, onClick, cameraDist }) => {
+const LightPointNode = ({ direction, name, subtitle, color: rawColor, size = 0.02, isSelected, onClick, cameraDist, isGlobeSpinning }) => {
     const color = useMemo(() => resolveColorToHex(rawColor), [rawColor]);
     const billRef  = useRef();
     const ringRef  = useRef();
     const groupRef = useRef();
     const [hovered, setHovered] = useState(false);
+    const accumulatedTimeRef = useRef(0);
 
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
     const baseScale = THREE.MathUtils.clamp(cameraDist / 8, 0.55, 1.8);
     const glowTex   = useMemo(() => createGlowTexture(color), [color]);
 
-    useFrame(({ camera, clock }) => {
+    useFrame(({ camera, clock }, delta) => {
         if (!groupRef.current) return;
-        const time = clock.getElapsedTime();
+        
+        // Stop time progression if expansion/contraction is paused
+        if (isGlobeSpinning) {
+            accumulatedTimeRef.current += delta;
+        }
+        const time = accumulatedTimeRef.current;
 
-        // Position matches the polyhedron surface deformation perfectly
         const r = getNonconvexRadius(direction.x, direction.y, direction.z, time, isSelected);
         const pos = direction.clone().multiplyScalar(r + 0.05);
+
+        // Hide node when it sinks into the core
+        const visibility = isSelected ? 1.0 : getVertexVisibility(r);
+        groupRef.current.visible = visibility > 0.01;
+
+        if (visibility <= 0.01) return;
+
         groupRef.current.position.copy(pos);
 
         if (billRef.current) {
             billRef.current.quaternion.copy(camera.quaternion);
             const pulse = isSelected ? 1 + Math.sin(time * 5) * 0.15 : 1;
             billRef.current.scale.setScalar(baseScale * pulse);
+            
+            // Fade in elements based on visibility
+            billRef.current.traverse((child) => {
+                if (child.material) {
+                    child.material.opacity = (child.material.map ? (isSelected ? 0.7 : hovered ? 0.55 : 0.30) : (isSelected ? 1.0 : hovered ? 0.95 : 0.92)) * visibility;
+                }
+            });
         }
         if (ringRef.current) ringRef.current.rotation.z += isSelected ? 0.018 : 0.004;
     });
@@ -289,20 +282,20 @@ const LightPointNode = ({ direction, name, subtitle, color: rawColor, size = 0.0
                     <mesh renderOrder={RO}>
                         <planeGeometry args={[GLOW * 2, GLOW * 2]} />
                         <meshBasicMaterial map={glowTex} transparent blending={THREE.AdditiveBlending}
-                            opacity={isSelected ? 0.7 : hovered ? 0.55 : 0.30}
+                            opacity={0.30}
                             side={THREE.DoubleSide} depthWrite={false} depthTest={false} toneMapped={false} />
                     </mesh>
                 )}
                 <mesh renderOrder={RO + 1}>
                     <circleGeometry args={[DOT, 32]} />
                     <meshBasicMaterial color={color} transparent blending={THREE.AdditiveBlending}
-                        opacity={isSelected ? 1 : hovered ? 0.95 : 0.92}
+                        opacity={0.92}
                         depthWrite={false} depthTest={false} toneMapped={false} />
                 </mesh>
                 <mesh ref={ringRef} renderOrder={RO + 1}>
                     <ringGeometry args={[RING * 0.85, RING, 48]} />
                     <meshBasicMaterial color={color} transparent blending={THREE.AdditiveBlending}
-                        opacity={isSelected ? 0.80 : hovered ? 0.55 : 0.20}
+                        opacity={0.20}
                         depthWrite={false} depthTest={false} toneMapped={false} side={THREE.DoubleSide} />
                 </mesh>
                 {isSelected && (
@@ -347,24 +340,26 @@ const LightPointNode = ({ direction, name, subtitle, color: rawColor, size = 0.0
 
 // ─── FATALE CORE NODE ─────────────────────────────────────────────────────────
 
-const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
+const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel, isGlobeSpinning }) => {
     const billRef  = useRef();
     const ring1Ref = useRef();
     const ring2Ref = useRef();
     const groupRef = useRef();
     const [hovered, setHovered] = useState(false);
     const COLOR     = '#ff0033';
-    
-    // Keep aligned with north pole vertex
     const POS_DIR   = useMemo(() => new THREE.Vector3(0, 1, 0), []);
-    
     const baseScale = THREE.MathUtils.clamp(cameraDist / 8, 0.55, 1.8);
     const glowTex   = useMemo(() => createGlowTexture(COLOR), []);
     const isMobile  = typeof window !== 'undefined' && window.innerWidth < 1024;
     const RO        = 10;
+    const accumulatedTimeRef = useRef(0);
 
-    useFrame(({ camera, clock }) => {
-        const time = clock.getElapsedTime();
+    useFrame(({ camera, clock }, delta) => {
+        if (isGlobeSpinning) {
+            accumulatedTimeRef.current += delta;
+        }
+        const time = accumulatedTimeRef.current;
+
         const r = getNonconvexRadius(POS_DIR.x, POS_DIR.y, POS_DIR.z, time, isSelected);
         const pos = POS_DIR.clone().multiplyScalar(r + 0.05);
         if (groupRef.current) groupRef.current.position.copy(pos);
@@ -426,12 +421,16 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
 
 // ─── NONCONVEX POLYHEDRON CORE ────────────────────────────────────────────────
 
-const NonconvexPolyhedron = memo(({ accentColor, selectedId }) => {
+const NonconvexPolyhedron = memo(({ accentColor, selectedId, isGlobeSpinning }) => {
     const geomRef = useRef();
     const wireGeomRef = useRef();
+    const accumulatedTimeRef = useRef(0);
     
-    useFrame(({ clock }) => {
-        const time = clock.getElapsedTime();
+    useFrame(({ clock }, delta) => {
+        if (isGlobeSpinning) {
+            accumulatedTimeRef.current += delta;
+        }
+        const time = accumulatedTimeRef.current;
         const v = new THREE.Vector3();
         
         // Deform solid core geometry
@@ -639,7 +638,6 @@ const GlobeCore = memo(({
     const { communities_, artists_, playlists_, tracks_ } = filtered;
 
     // --- stable vertex allocator ---
-    // Maps each node to a unique, collision-resolved vertex direction of the polyhedron
     const nodesWithVertices = useMemo(() => {
         const allNodes = [];
         communities_.forEach(c => allNodes.push({ ...c, typeClass: 'community', nodeUniqueId: `community-${c.id || c.Id}`, name: c.name || c.Name, color: '#ffaa00', size: 0.055 }));
@@ -669,14 +667,13 @@ const GlobeCore = memo(({
 
     return (
         <group>
-            {/* ── NONCONVEX POLYHEDRON GRID & CORE ── */}
-            <NonconvexPolyhedron accentColor={accentColor} selectedId={selectedId} />
+            {/* ── NONCONVEX POLYHEDRON CORE ── */}
+            <NonconvexPolyhedron accentColor={accentColor} selectedId={selectedId} isGlobeSpinning={isGlobeSpinning} />
 
             {/* ── NODES BOUND TO ACTUAL VERTICES ── */}
             {nodesWithVertices.map(node => {
                 const isNodeSelected = selectedId === node.nodeUniqueId;
                 
-                // Route click handlers
                 const onClick = () => {
                     if (node.typeClass === 'artist') onArtistClick?.(node);
                     if (node.typeClass === 'community') onCommunityClick?.(node);
@@ -695,6 +692,7 @@ const GlobeCore = memo(({
                         isSelected={isNodeSelected}
                         cameraDist={cameraDist}
                         onClick={onClick}
+                        isGlobeSpinning={isGlobeSpinning}
                     />
                 );
             })}
@@ -703,10 +701,11 @@ const GlobeCore = memo(({
                 isSelected={selectedId === 'system-fatale_core'}
                 cameraDist={cameraDist}
                 hideLabel={!!selectedId}
+                isGlobeSpinning={isGlobeSpinning}
                 onClick={() => onCommunityClick?.({ id: 'fatale_core', name: 'FATALE_CORE', isSystem: true, description: 'The official Fatale system node. Share feedback, bug reports and reviews.' })}
             />
 
-            <NetworkVisualization nodes={nodesWithVertices} selectedId={selectedId} />
+            <NetworkVisualization nodes={nodesWithVertices} selectedId={selectedId} isGlobeSpinning={isGlobeSpinning} />
         </group>
     );
 });
@@ -728,10 +727,11 @@ const InteractiveGlobe = memo(({
 
     return (
         <div className="w-full h-full cursor-grab active:cursor-grabbing">
-            <Canvas dpr={[1, 2]} gl={{ logarithmicDepthBuffer: true, antialias: true }}>
+            {/* Pure black background */}
+            <Canvas dpr={[1, 2]} gl={{ logarithmicDepthBuffer: true, antialias: true }} style={{ background: '#000000' }}>
                 <PerspectiveCamera makeDefault position={[0, 0, isMobile ? 16.5 : 15.5]} fov={isMobile ? 30 : 40} />
-                {/* Fog starts far out so stars are fully visible */}
-                <fog attach="fog" args={['#000005', 38, 75]} />
+                {/* Pure black fog */}
+                <fog attach="fog" args={['#000000', 38, 75]} />
                 <OrbitControls
                     enablePan={false} enableZoom={true}
                     minDistance={2.8} maxDistance={25}
@@ -739,8 +739,6 @@ const InteractiveGlobe = memo(({
                     autoRotateSpeed={isGlobeSpinning ? 0.5 : 0}
                     dampingFactor={0.1} enableDamping rotateSpeed={0.5}
                 />
-
-                <StarField />
 
                 <ambientLight intensity={0.18} />
                 <pointLight position={[10, 10, 10]} intensity={2.5} color={pointLightColor} />
