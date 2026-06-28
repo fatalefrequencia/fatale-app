@@ -116,12 +116,15 @@ export function useBroadcastSync({
 
             if (currentVideoId !== ytId || loadedYtIdRef.current !== ytId) {
               loadedYtIdRef.current = ytId;
-              ytPlayer.loadVideoById({ videoId: ytId, startSeconds: currentTime || 0 });
-              if (!isPlaying) {
-                setTimeout(() => { try { ytPlayer.pauseVideo(); } catch (e) {} }, 300);
-              }
               if (typeof volume === 'number') {
                 try { ytPlayer.setVolume(volume * 100); } catch(e) {}
+              }
+              if (isPlaying) {
+                // loadVideoById auto-plays — only use when deck IS playing
+                ytPlayer.loadVideoById({ videoId: ytId, startSeconds: currentTime || 0 });
+              } else {
+                // cueVideoById loads without auto-playing
+                try { ytPlayer.cueVideoById({ videoId: ytId, startSeconds: currentTime || 0 }); } catch(e) {}
               }
             } else {
               const diff = Math.abs((ytPlayer.getCurrentTime?.() || 0) - (currentTime || 0));

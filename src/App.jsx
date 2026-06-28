@@ -3421,7 +3421,6 @@ function App() {
       >
         <YouTube
           key="global-youtube-player-b"
-          videoId="7wtfhZwyrcc"
           onReady={(e) => {
             console.log("[YOUTUBE B] Player Ready");
             setYoutubePlayerB(e.target);
