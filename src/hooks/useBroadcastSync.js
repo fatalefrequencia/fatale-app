@@ -19,6 +19,7 @@ export function useBroadcastSync({
   onBroadcastSync,
 }) {
   const lastSyncRef = useRef(null);
+  const lastSyncFingerprintRef = useRef(null);
 
   // ── Mutable refs so the SignalR callback always reads current props ─────────
   const youtubePlayerRef = useRef(youtubePlayer);
@@ -218,8 +219,16 @@ export function useBroadcastSync({
       if (!payload) return;
 
       const now = Date.now();
-      if (lastSyncRef.current && now - lastSyncRef.current < 150) return;
+      // Deduplicate identical back-to-back messages (same track + play state + deckB identity)
+      // but always let through syncs that change track identity or deck B identity
+      const deckBId = payload.deckB?.track?.id || payload.deckB?.track?.source || null;
+      const fingerprint = `${payload.source}|${payload.isPlaying}|${deckBId}|${payload.deckB?.isPlaying}`;
+      const isIdentical = lastSyncFingerprintRef.current === fingerprint;
+      const isQuick = lastSyncRef.current && now - lastSyncRef.current < 80;
+      // Drop only if identical AND arrived within 80ms (pure duplicate packet)
+      if (isIdentical && isQuick) return;
       lastSyncRef.current = now;
+      lastSyncFingerprintRef.current = fingerprint;
 
       const {
         title, artist, cover, source, youtubeId,

@@ -1394,6 +1394,12 @@ function App() {
     const stationId = activeStation.id || activeStation.Id;
   
     const timer = setTimeout(() => {
+      // Build deckB payload preserving the live isPlaying state so we never
+      // accidentally pause deck B on the listener side during a fader move
+      const safedeckB = deckB ? {
+        ...deckB,
+        isPlaying: mixerIsPlayingB, // always use live state
+      } : null;
       const enrichedTrack = {
         ...trackToSync,
         sourceType: broadcastSourceType,
@@ -1401,7 +1407,7 @@ function App() {
         broadcastVolume: volume,
         broadcastPitch:  pitch,
         broadcastBpm:    bpm,
-        deckB
+        deckB: safedeckB
       };
       if (broadcastSourceType === 'hardware') {
         enrichedTrack.title  = '🎙 LIVE INPUT';
