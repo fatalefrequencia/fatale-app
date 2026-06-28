@@ -441,8 +441,8 @@ const UploadTrackView = ({ onClose, onRefreshTracks }) => {
                                                     {formData.audioFile ? formData.audioFile.name : 'UPLOAD_SIGNAL'}
                                                 </span>
                                                 <div className="text-[6px] mono text-white/10 mt-2 uppercase tracking-tight">MP3 / WAV / OGG</div>
-                                            </label>
-                                        </div>
+                                            </div>
+                                        </label>
                                         <label htmlFor="cover-upload" className={`relative border border-dashed p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all rounded-sm ${formData.coverFile ? 'bg-fatale/10 border-fatale/50' : 'border-white/5 bg-white/[0.02] hover:border-fatale/30'}`}>
                                             <input type="file" accept="image/*" onChange={e => { const f = e.target.files[0]; if (f) setFormData(p => ({ ...p, coverFile: f })); }} className="hidden" id="cover-upload" />
                                             <div className="flex flex-col items-center cursor-pointer text-center w-full">
