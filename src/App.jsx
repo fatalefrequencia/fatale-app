@@ -1383,8 +1383,35 @@ function App() {
     return () => clearTimeout(timer);
   }, [
     currentTrack?.id, currentTrack?.Id, currentTrack?.source, currentTrack?.title, isPlaying, isHost, activeStation?.id,
-    showMixer, mixerCrossfader, mixerFaderA, mixerFaderB, mixerDeckB?.id, mixerDeckB?.Id, mixerDeckB?.source, mixerDeckB?.title, mixerIsPlayingB
+    showMixer, mixerDeckB?.id, mixerDeckB?.Id, mixerDeckB?.source, mixerDeckB?.title, mixerIsPlayingB
   ]);
+
+  // Debounced volume/crossfader sync (every 150ms during sliding)
+  useEffect(() => {
+    if (!isHost || !activeStation) return;
+    const { trackToSync, timeToSync, playingToSync, crossfader, volume, pitch, bpm, deckB } = getActiveBroadcastState();
+    if (!trackToSync?.title && !deckB) return;
+    const stationId = activeStation.id || activeStation.Id;
+  
+    const timer = setTimeout(() => {
+      const enrichedTrack = {
+        ...trackToSync,
+        sourceType: broadcastSourceType,
+        crossfader,
+        broadcastVolume: volume,
+        broadcastPitch:  pitch,
+        broadcastBpm:    bpm,
+        deckB
+      };
+      if (broadcastSourceType === 'hardware') {
+        enrichedTrack.title  = '🎙 LIVE INPUT';
+        enrichedTrack.artist = user?.username || 'Hardware Source';
+      }
+      syncTrack(stationId, enrichedTrack, timeToSync, playingToSync);
+    }, 150);
+  
+    return () => clearTimeout(timer);
+  }, [mixerCrossfader, mixerFaderA, mixerFaderB]);
   
   // Periodic currentTime sync throttle (every 3 seconds)
   useEffect(() => {

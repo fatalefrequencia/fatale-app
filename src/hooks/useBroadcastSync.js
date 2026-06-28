@@ -120,6 +120,9 @@ export function useBroadcastSync({
               if (!isPlaying) {
                 setTimeout(() => { try { ytPlayer.pauseVideo(); } catch (e) {} }, 300);
               }
+              if (typeof volume === 'number') {
+                try { ytPlayer.setVolume(volume * 100); } catch(e) {}
+              }
             } else {
               const diff = Math.abs((ytPlayer.getCurrentTime?.() || 0) - (currentTime || 0));
               if (diff > 2) ytPlayer.seekTo(currentTime, true);
@@ -138,9 +141,7 @@ export function useBroadcastSync({
               } else {
                 ytPlayer.pauseVideo();
               }
-            }
-            if (typeof volume === 'number') {
-              try { ytPlayer.setVolume(volume * 100); } catch(e) {}
+              if (typeof volume === 'number') ytPlayer.setVolume(volume * 100);
             }
 
             if (audioEl) {
