@@ -3383,7 +3383,7 @@ function App() {
                 }
                 // Only auto-play from state transitions in host/normal mode
                 // Listeners are driven entirely by useBroadcastSync to prevent stale-track loops
-                if (!isBroadcastListener && isPlaying && (e.data === 5 || e.data === -1 || (e.data === 2 && !hasStartedPlayingYt.current))) {
+                if (!isBroadcastListener && isPlaying && isYoutubeMode && (e.data === 5 || e.data === -1 || (e.data === 2 && !hasStartedPlayingYt.current))) {
                   try {
                     playYtVideo(e.target);
                   } catch (err) { console.warn("Failed to autoplay on state change:", err); }

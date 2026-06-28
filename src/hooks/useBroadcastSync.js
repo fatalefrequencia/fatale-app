@@ -87,7 +87,7 @@ export function useBroadcastSync({
   };
 
   const processDeck = (deckPayload, audioEl, ytPlayerRef, modeRef, loadedSrcRef, loadedYtIdRef) => {
-    if (!deckPayload) {
+    if (!deckPayload || !deckPayload.track) {
       stopNativeAudio(audioEl, loadedSrcRef);
       stopYouTube(ytPlayerRef);
       modeRef.current = null;
@@ -95,7 +95,6 @@ export function useBroadcastSync({
     }
 
     const { track, currentTime, isPlaying, volume } = deckPayload;
-    if (!track) return;
 
     const source = track.source || track.Source;
     const youtubeId = track.youtubeId || track.YoutubeId;
