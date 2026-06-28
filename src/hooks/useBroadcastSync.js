@@ -12,6 +12,7 @@ export function useBroadcastSync({
   setCurrentTime,
   setDuration,
   setBroadcastTrack,
+  setBroadcastDeckB,
   setIsYoutubeMode,
   setBroadcastSourceType,
   showNotification,
@@ -28,6 +29,7 @@ export function useBroadcastSync({
   const setIsPlayingRef          = useRef(setIsPlaying);
   const setCurrentTimeRef        = useRef(setCurrentTime);
   const setBroadcastTrackRef     = useRef(setBroadcastTrack);
+  const setBroadcastDeckBRef     = useRef(setBroadcastDeckB);
   const setIsYoutubeModeRef      = useRef(setIsYoutubeMode);
   const setBroadcastSourceTypeRef = useRef(setBroadcastSourceType);
 
@@ -38,6 +40,7 @@ export function useBroadcastSync({
     setIsPlayingRef.current          = setIsPlaying;
     setCurrentTimeRef.current        = setCurrentTime;
     setBroadcastTrackRef.current     = setBroadcastTrack;
+    setBroadcastDeckBRef.current     = setBroadcastDeckB;
     setIsYoutubeModeRef.current      = setIsYoutubeMode;
     setBroadcastSourceTypeRef.current = setBroadcastSourceType;
   });
@@ -237,6 +240,9 @@ export function useBroadcastSync({
 
       const track = { title, artist, cover, source, youtubeId, sourceType, isBroadcast: true };
       setBroadcastTrackRef.current(track);
+      if (typeof setBroadcastDeckBRef.current === 'function') {
+        setBroadcastDeckBRef.current(deckB || null);
+      }
 
       if (typeof setBroadcastSourceTypeRef.current === 'function') {
         setBroadcastSourceTypeRef.current(sourceType || 'app');

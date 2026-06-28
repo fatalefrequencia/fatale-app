@@ -595,6 +595,7 @@ function App() {
   // YouTube Player State
   const [youtubePlayer, setYoutubePlayer] = useState(null);
   const [youtubePlayerB, setYoutubePlayerB] = useState(null);
+  const [broadcastDeckB, setBroadcastDeckB] = useState(null);
   const [isYoutubeMode, setIsYoutubeMode] = useState(false);
   const [vibeFeatures, setVibeFeatures] = useState(null);
   const lastLoadedYtId = useRef(null);
@@ -607,6 +608,21 @@ function App() {
     const track = (activeStation && !isHost) ? broadcastTrack : currentTrack;
     return getGlobalYoutubeId(track);
   }, [currentTrack, activeStation, isHost, broadcastTrack]);
+
+  const isYoutubeModeB = useMemo(() => {
+    if (activeStation && !isHost) {
+      return !!getGlobalYoutubeId(broadcastDeckB?.track);
+    }
+    return false;
+  }, [broadcastDeckB, activeStation, isHost]);
+
+  useEffect(() => {
+    if (!isYoutubeMode) setYoutubePlayer(null);
+  }, [isYoutubeMode]);
+
+  useEffect(() => {
+    if (!isYoutubeModeB) setYoutubePlayerB(null);
+  }, [isYoutubeModeB]);
 
   // Dynamic Spotify track resolver (resolves Spotify metadata to YouTube video ID under the hood)
   useEffect(() => {
@@ -1009,6 +1025,7 @@ function App() {
     setCurrentTime,
     setDuration,
     setBroadcastTrack,
+    setBroadcastDeckB,
     setIsYoutubeMode,
     setBroadcastSourceType,
     showNotification,
@@ -3326,121 +3343,113 @@ function App() {
       />
 
       {/* PERSISTENT YOUTUBE PLAYER */}
-      {/* We only render the player if we have a valid videoId to prevent internal iframe API crashes (this.g is null) */}
-      <div
-        style={{
-          position: 'fixed',
-          left: -9999,
-          top: -9999,
-          width: 200,
-          height: 200,
-          overflow: 'hidden',
-          pointerEvents: 'none'
-        }}
-      >
-        {(() => {
-          const ytId = currentYtId;
-          const activeYtId = ytId || "invalid_id_";
-
-          return (
-            <YouTube
-              key="global-youtube-player"
-              videoId="invalid_id_"
-              onReady={(e) => {
-                console.log("[YOUTUBE] Player Ready");
-                setYoutubePlayer(e.target);
-                if (isYoutubeMode && ytId) {
-                  try {
-                    e.target.setVolume(volume * 100);
-                    e.target.setPlaybackRate(globalPlaybackRate);
-                    const startTime = (activeStation && !isHost) ? (currentTime || 0) : 0;
-                    if (isPlaying) {
-                      e.target.loadVideoById({ videoId: ytId, startSeconds: startTime });
-                      lastLoadedYtId.current = ytId;
-                    } else {
-                      e.target.cueVideoById({ videoId: ytId, startSeconds: startTime });
-                      lastLoadedYtId.current = ytId;
-                    }
-                  } catch (err) { console.warn("YT Play onReady failure:", err); }
+      {isYoutubeMode && currentYtId && (
+        <div
+          style={{
+            position: 'fixed',
+            left: -9999,
+            top: -9999,
+            width: 200,
+            height: 200,
+            overflow: 'hidden',
+            pointerEvents: 'none'
+          }}
+        >
+          <YouTube
+            key="global-youtube-player"
+            videoId={currentYtId}
+            onReady={(e) => {
+              console.log("[YOUTUBE] Player Ready");
+              setYoutubePlayer(e.target);
+              try {
+                e.target.setVolume(volume * 100);
+                e.target.setPlaybackRate(globalPlaybackRate);
+                const startTime = (activeStation && !isHost) ? (currentTime || 0) : 0;
+                if (isPlaying) {
+                  e.target.playVideo();
+                } else {
+                  e.target.pauseVideo();
                 }
-              }}
-              onStateChange={(e) => {
-                console.log("[YOUTUBE] State Change:", e.data);
-                // Listener in broadcast mode: useBroadcastSync owns YouTube control
-                const isBroadcastListener = !!(activeStation && !isHost);
-                if (e.data === 0 && !isBroadcastListener) playNext();
-                if (e.data === 1) {
-                  hasStartedPlayingYt.current = true;
-                  // Auto-unmute if we started muted to bypass autoplay policy
-                  if (e.target.isMuted && e.target.isMuted() && !isMuted) {
-                    try {
-                      e.target.unMute();
-                      e.target.setVolume(volume * 100);
-                    } catch (err) {
-                      console.warn("[YOUTUBE_AUTOPLAY] Failed to unmute:", err);
-                    }
+              } catch (err) { console.warn("YT Play onReady failure:", err); }
+            }}
+            onStateChange={(e) => {
+              console.log("[YOUTUBE] State Change:", e.data);
+              // Listener in broadcast mode: useBroadcastSync owns YouTube control
+              const isBroadcastListener = !!(activeStation && !isHost);
+              if (e.data === 0 && !isBroadcastListener) playNext();
+              if (e.data === 1) {
+                hasStartedPlayingYt.current = true;
+                // Auto-unmute if we started muted to bypass autoplay policy
+                if (e.target.isMuted && e.target.isMuted() && !isMuted) {
+                  try {
+                    e.target.unMute();
+                    e.target.setVolume(volume * 100);
+                  } catch (err) {
+                    console.warn("[YOUTUBE_AUTOPLAY] Failed to unmute:", err);
                   }
                 }
-                // Only auto-play from state transitions in host/normal mode
-                // Listeners are driven entirely by useBroadcastSync to prevent stale-track loops
-                if (!isBroadcastListener && isPlaying && isYoutubeMode && (e.data === 5 || e.data === -1 || (e.data === 2 && !hasStartedPlayingYt.current))) {
-                  try {
-                    playYtVideo(e.target);
-                  } catch (err) { console.warn("Failed to autoplay on state change:", err); }
-                }
-              }}
-              onError={(e) => {
-                console.error("[YOUTUBE] Error detected:", e.data);
-                // Handle private/deleted videos by skipping — only in host/normal mode
-                const isBroadcastListener = !!(activeStation && !isHost);
-                if (!isBroadcastListener && isPlaying && ytId) playNext();
-              }}
-              opts={{
-                height: '1',
-                width: '1',
-                playerVars: {
-                  autoplay: 0,
-                  controls: 0,
-                  disablekb: 1,
-                  fs: 0,
-                  iv_load_policy: 3,
-                  modestbranding: 1,
-                  origin: typeof window !== 'undefined' ? window.location.origin : ''
-                },
-              }}
-            />
-          );
-        })()}
-      </div>
+              }
+              // Only auto-play from state transitions in host/normal mode
+              // Listeners are driven entirely by useBroadcastSync to prevent stale-track loops
+              if (!isBroadcastListener && isPlaying && isYoutubeMode && (e.data === 5 || e.data === -1 || (e.data === 2 && !hasStartedPlayingYt.current))) {
+                try {
+                  playYtVideo(e.target);
+                } catch (err) { console.warn("Failed to autoplay on state change:", err); }
+              }
+            }}
+            onError={(e) => {
+              console.error("[YOUTUBE] Error detected:", e.data);
+              // Handle private/deleted videos by skipping — only in host/normal mode
+              const isBroadcastListener = !!(activeStation && !isHost);
+              if (!isBroadcastListener && isPlaying && currentYtId) playNext();
+            }}
+            opts={{
+              height: '1',
+              width: '1',
+              playerVars: {
+                autoplay: 0,
+                controls: 0,
+                disablekb: 1,
+                fs: 0,
+                iv_load_policy: 3,
+                modestbranding: 1,
+                origin: typeof window !== 'undefined' ? window.location.origin : ''
+              },
+            }}
+          />
+        </div>
+      )}
 
       {/* SECONDARY YOUTUBE PLAYER FOR LISTENER DUAL-DECK (DECK B) */}
-      <div
-        style={{
-          position: 'fixed',
-          left: -9999,
-          top: -9999,
-          width: 200,
-          height: 200,
-          overflow: 'hidden',
-          pointerEvents: 'none'
-        }}
-      >
-        <YouTube
-          key="global-youtube-player-b"
-          videoId="invalid_id_"
-          onReady={(e) => {
-            console.log("[YOUTUBE B] Player Ready");
-            setYoutubePlayerB(e.target);
+      {isYoutubeModeB && (
+        <div
+          style={{
+            position: 'fixed',
+            left: -9999,
+            top: -9999,
+            width: 200,
+            height: 200,
+            overflow: 'hidden',
+            pointerEvents: 'none'
           }}
-          onStateChange={(e) => {
-            console.log("[YOUTUBE B] State Change:", e.data);
-          }}
-          onError={(e) => console.error("[YOUTUBE B] Error detected:", e.data)}
-          opts={{
-            playerVars: { autoplay: 0, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, rel: 0, showinfo: 0, modestbranding: 1 }
-          }}
-        />
-      </div>
+        >
+          <YouTube
+            key="global-youtube-player-b"
+            videoId={getGlobalYoutubeId(broadcastDeckB?.track)}
+            onReady={(e) => {
+              console.log("[YOUTUBE B] Player Ready");
+              setYoutubePlayerB(e.target);
+            }}
+            onStateChange={(e) => {
+              console.log("[YOUTUBE B] State Change:", e.data);
+            }}
+            onError={(e) => console.error("[YOUTUBE B] Error detected:", e.data)}
+            opts={{
+              playerVars: { autoplay: 0, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, rel: 0, showinfo: 0, modestbranding: 1 }
+            }}
+          />
+        </div>
+      )}
 
       <AnimatePresence mode="wait">
         {activeView === 'terms' ? (

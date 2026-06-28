@@ -276,6 +276,7 @@ export const syncTrack = async (stationId, track, currentTime, isPlaying) => {
     broadcastVolume: typeof track.broadcastVolume === 'number' ? track.broadcastVolume : 1,
     broadcastPitch:  typeof track.broadcastPitch  === 'number' ? track.broadcastPitch  : 0,
     broadcastBpm:    track.broadcastBpm != null                ? track.broadcastBpm    : null,
+    deckB:           track.deckB || null,
   };
 
   try {
