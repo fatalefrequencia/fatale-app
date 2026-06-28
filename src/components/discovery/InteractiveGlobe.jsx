@@ -405,15 +405,6 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel, isGlobeSpi
                     <meshBasicMaterial color={COLOR} transparent opacity={0.30} depthWrite={false} depthTest={false} toneMapped={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
                 </mesh>
             </group>
-            {!hideLabel && (
-                <Html position={[0, 0.28, 0]} center zIndexRange={[0, 5]} style={{ pointerEvents: 'none' }}>
-                    <div onClick={!isMobile ? (e) => { e.stopPropagation(); onClick(); } : undefined}
-                        style={{ cursor: !isMobile ? 'pointer' : 'default', pointerEvents: !isMobile ? 'auto' : 'none', background: 'rgba(0,0,0,0.90)', borderLeft: `2px solid ${COLOR}`, padding: '3px 8px', backdropFilter: 'blur(14px)' }}>
-                        <div style={{ color: COLOR, fontSize: '7px', fontFamily: 'monospace', fontWeight: 900, letterSpacing: '0.3em', textTransform: 'uppercase', textShadow: `0 0 8px ${COLOR}` }}>FATALE_CORE</div>
-                        <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '5px', fontFamily: 'monospace', letterSpacing: '0.2em', textTransform: 'uppercase', marginTop: '1px' }}>SYS_NODE</div>
-                    </div>
-                </Html>
-            )}
             {isSelected && <pointLight distance={1.5} intensity={8} color={COLOR} />}
         </group>
     );
