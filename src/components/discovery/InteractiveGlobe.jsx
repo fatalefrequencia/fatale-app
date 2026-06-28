@@ -5,8 +5,8 @@ import * as THREE from 'three';
 import { SECTORS } from '../../constants';
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
-const GLOBE_R  = 2.45;   // solid opaque core
-const NODE_R   = 2.51;   // nodes sit just above wireframe (2.50)
+const GLOBE_R  = 2.45;   // base radius for core
+const NODE_R   = 2.51;   // nodes sit just above wireframe
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 
@@ -16,22 +16,6 @@ const hashStr = (s) => {
     const str = s.toString();
     for (let i = 0; i < str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
     return Math.abs(h);
-};
-
-const getSphericalPos = (id, radius = NODE_R) => {
-    const h     = hashStr(id);
-    const rand1 = (Math.abs(Math.sin(h * 127.1)) * 10000) % 1;
-    const rand2 = (Math.abs(Math.sin(h * 311.7)) * 10000) % 1;
-    const lon   = rand1 * Math.PI * 2;
-    const lat   = Math.asin(rand2 * 2 - 1);
-    return {
-        pos: [
-            radius * Math.cos(lat) * Math.cos(lon),
-            radius * Math.sin(lat),
-            radius * Math.cos(lat) * Math.sin(lon),
-        ],
-        lat, lon,
-    };
 };
 
 const resolveColorToHex = (color) => {
@@ -62,25 +46,28 @@ const createGlowTexture = (rawColor) => {
     return new THREE.CanvasTexture(canvas);
 };
 
-// ─── NONCONVEX POLYHEDRON FORMULA ─────────────────────────────────────────────
-// Generates a dynamic radius based on direction coordinates and time, creating
-// a beautiful, stellated/nonconvex polyhedron that contracts and expands.
+// ─── SHARP NONCONVEX POLYHEDRON DEFORMATION ───────────────────────────────────
+// Calculates radius at a given coordinate using fractional powers to create
+// highly sharp peaks (stellations) and deep valleys.
 const getNonconvexRadius = (nx, ny, nz, time, isSelected) => {
     const len = Math.sqrt(nx*nx + ny*ny + nz*nz) || 1;
     const x = nx / len;
     const y = ny / len;
     const z = nz / len;
 
-    // Harmonic frequency pattern for star-like points and indentations
-    const starArmCount = 6.0;
-    const starVal = Math.sin(x * starArmCount) * Math.sin(y * starArmCount) * Math.sin(z * starArmCount);
+    // Stellation harmonics
+    const starArmCount = 4.0;
+    const basePeak = Math.sin(x * starArmCount) * Math.sin(y * starArmCount) * Math.sin(z * starArmCount);
     
-    // Contraction / Expansion pulse dynamics
+    // fractional power (0.5) sharpens peaks into pointy tips
+    const starVal = Math.pow(Math.abs(basePeak), 0.5) * Math.sign(basePeak);
+    
+    // Contraction & expansion wave dynamics
     const pulseSpeed = isSelected ? 3.0 : 1.1;
     const pulseAmp = isSelected ? 0.28 : 0.14;
     const wave = Math.sin(time * pulseSpeed + x * 3.5 + y * 3.5) * pulseAmp;
     
-    return GLOBE_R * (1.0 + 0.20 * starVal + wave);
+    return GLOBE_R * (1.0 + 0.35 * starVal + wave);
 };
 
 // ─── STAR FIELD ───────────────────────────────────────────────────────────────
@@ -124,22 +111,14 @@ const StarField = memo(() => {
 });
 
 // ─── SHIMMER LINE ─────────────────────────────────────────────────────────────
-// Dynamic connecting arcs that conform to the morphing polyhedron surface
+// Arcs running between actual vertex endpoints, matching the polyhedron's warp
 
-const ShimmerLine = memo(({ from, to, color, phaseOffset = 0, isSelected = false, isRelated = false }) => {
+const ShimmerLine = memo(({ fromDir, toDir, color, phaseOffset = 0, isSelected = false, isRelated = false }) => {
     const lineRef = useRef();
     const opRef   = useRef(0);
 
-    const { fromDir, toDir } = useMemo(() => {
-        return {
-            fromDir: new THREE.Vector3(...from).normalize(),
-            toDir: new THREE.Vector3(...to).normalize()
-        };
-    }, [from[0], from[1], from[2], to[0], to[1], to[2]]);
-
     const geo = useMemo(() => {
         const g = new THREE.BufferGeometry();
-        // Allocate buffer for 31 points (interpolated arc)
         g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(31 * 3), 3));
         return g;
     }, []);
@@ -151,14 +130,12 @@ const ShimmerLine = memo(({ from, to, color, phaseOffset = 0, isSelected = false
         if (!lineRef.current) return;
         const time = clock.getElapsedTime();
 
-        // Query nonconvex radius for start and end positions
         const rFrom = getNonconvexRadius(fromDir.x, fromDir.y, fromDir.z, time, isSelected);
         const rTo = getNonconvexRadius(toDir.x, toDir.y, toDir.z, time, isSelected);
 
         const pFrom = fromDir.clone().multiplyScalar(rFrom + 0.05);
         const pTo = toDir.clone().multiplyScalar(rTo + 0.05);
 
-        // Generate arc mid-point with outward bulge
         const mid = new THREE.Vector3().addVectors(pFrom, pTo).multiplyScalar(0.5);
         mid.normalize().multiplyScalar(Math.max(rFrom, rTo) * 1.15);
 
@@ -192,37 +169,61 @@ const ShimmerLine = memo(({ from, to, color, phaseOffset = 0, isSelected = false
 
 // ─── NETWORK VISUALIZATION ────────────────────────────────────────────────────
 
-const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeView }) => {
+const NetworkVisualization = ({ nodes, selectedId }) => {
     const connections = useMemo(() => {
         const result = [];
+        const artists = nodes.filter(n => n.typeClass === 'artist');
+        
         artists.forEach(artist => {
-            const artistId     = artist.id || artist.Id;
-            const artistNodeId = `artist-${artistId}`;
-            const artistPos    = getSphericalPos(artistNodeId).pos;
-            tracks.forEach(track => {
-                const eid = track.artistId || track.ArtistId;
-                if (!eid || String(eid) !== String(artistId)) return;
-                const seed = hashStr(artistId + (track.id || track.Id));
-                result.push({ from: artistPos, to: getSphericalPos(`track-${track.id || track.Id}`).pos, color: '#00d4ff', ownerId: artistNodeId, targetId: `track-${track.id || track.Id}`, phase: (seed % 1000) / 1000 * Math.PI * 2 });
+            const artistId = artist.id || artist.Id;
+            const artistUniqueId = artist.nodeUniqueId;
+            
+            // Find tracks belonging to this artist
+            const relatedTracks = nodes.filter(n => 
+                n.typeClass === 'track' && 
+                (String(n.artistId || n.ArtistId) === String(artistId) || String(n.artistUserId || n.ArtistUserId) === String(artist.userId || artist.UserId))
+            );
+            
+            // Find playlists belonging to this artist
+            const relatedPlaylists = nodes.filter(n => 
+                n.typeClass === 'playlist' && 
+                String(n.artistId || n.ArtistId) === String(artistId)
+            );
+            
+            relatedTracks.forEach(track => {
+                const seed = hashStr(artistUniqueId + track.nodeUniqueId);
+                result.push({
+                    fromDir: artist.direction,
+                    toDir: track.direction,
+                    color: '#00d4ff',
+                    ownerId: artistUniqueId,
+                    targetId: track.nodeUniqueId,
+                    phase: (seed % 1000) / 1000 * Math.PI * 2
+                });
             });
-            playlists.forEach(playlist => {
-                const eid = playlist.artistId || playlist.ArtistId;
-                if (!eid || String(eid) !== String(artistId)) return;
-                const seed = hashStr(artistId + (playlist.id || playlist.Id));
-                result.push({ from: artistPos, to: getSphericalPos(`playlist-${playlist.id || playlist.Id}`).pos, color: '#ff3d7f', ownerId: artistNodeId, targetId: `playlist-${playlist.id || playlist.Id}`, phase: (seed % 1000) / 1000 * Math.PI * 2 });
+            
+            relatedPlaylists.forEach(playlist => {
+                const seed = hashStr(artistUniqueId + playlist.nodeUniqueId);
+                result.push({
+                    fromDir: artist.direction,
+                    toDir: playlist.direction,
+                    color: '#ff3d7f',
+                    ownerId: artistUniqueId,
+                    targetId: playlist.nodeUniqueId,
+                    phase: (seed % 1000) / 1000 * Math.PI * 2
+                });
             });
         });
+        
         return result;
-    }, [artists, tracks, playlists, activeView]);
-
-    const visible = useMemo(() => connections.slice(0, 60), [connections]);
+    }, [nodes]);
 
     return (
         <group>
-            {visible.map((c) => (
+            {connections.map((c) => (
                 <ShimmerLine
                     key={`arc-${c.ownerId}-${c.targetId}`}
-                    from={c.from} to={c.to} color={c.color} phaseOffset={c.phase}
+                    fromDir={c.fromDir} toDir={c.toDir} color={c.color} phaseOffset={c.phase}
                     isSelected={selectedId && c.ownerId === selectedId && c.targetId === selectedId}
                     isRelated={selectedId && (c.ownerId === selectedId || c.targetId === selectedId)}
                 />
@@ -231,20 +232,15 @@ const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeVi
     );
 };
 
-// ─── DYNAMIC LIGHT POINT NODE ─────────────────────────────────────────────────
-// Vertex-aligned node that tracks the expanding/contracting polyhedron boundary
+// ─── DYNAMIC VERTEX LIGHT NODE ────────────────────────────────────────────────
+// Placed EXACTLY on the coordinates of one of the polyhedron's vertices
 
-const LightPointNode = ({ id, name, subtitle, color: rawColor, size = 0.02, isSelected, onClick, cameraDist }) => {
+const LightPointNode = ({ direction, name, subtitle, color: rawColor, size = 0.02, isSelected, onClick, cameraDist }) => {
     const color = useMemo(() => resolveColorToHex(rawColor), [rawColor]);
     const billRef  = useRef();
     const ringRef  = useRef();
     const groupRef = useRef();
     const [hovered, setHovered] = useState(false);
-
-    const { baseDirection } = useMemo(() => {
-        const { pos } = getSphericalPos(id, 1.0);
-        return { baseDirection: new THREE.Vector3(...pos) };
-    }, [id]);
 
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
     const baseScale = THREE.MathUtils.clamp(cameraDist / 8, 0.55, 1.8);
@@ -254,9 +250,9 @@ const LightPointNode = ({ id, name, subtitle, color: rawColor, size = 0.02, isSe
         if (!groupRef.current) return;
         const time = clock.getElapsedTime();
 
-        // Recalculate dynamic radius based on nonconvex surface
-        const r = getNonconvexRadius(baseDirection.x, baseDirection.y, baseDirection.z, time, isSelected);
-        const pos = baseDirection.clone().multiplyScalar(r + 0.05);
+        // Position matches the polyhedron surface deformation perfectly
+        const r = getNonconvexRadius(direction.x, direction.y, direction.z, time, isSelected);
+        const pos = direction.clone().multiplyScalar(r + 0.05);
         groupRef.current.position.copy(pos);
 
         if (billRef.current) {
@@ -358,7 +354,10 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
     const groupRef = useRef();
     const [hovered, setHovered] = useState(false);
     const COLOR     = '#ff0033';
+    
+    // Keep aligned with north pole vertex
     const POS_DIR   = useMemo(() => new THREE.Vector3(0, 1, 0), []);
+    
     const baseScale = THREE.MathUtils.clamp(cameraDist / 8, 0.55, 1.8);
     const glowTex   = useMemo(() => createGlowTexture(COLOR), []);
     const isMobile  = typeof window !== 'undefined' && window.innerWidth < 1024;
@@ -467,7 +466,7 @@ const NonconvexPolyhedron = memo(({ accentColor, selectedId }) => {
         <group>
             {/* 1. Solid opaque nonconvex polyhedron core */}
             <mesh>
-                <icosahedronGeometry ref={geomRef} args={[GLOBE_R, 3]} />
+                <icosahedronGeometry ref={geomRef} args={[GLOBE_R, 2]} />
                 <meshStandardMaterial color="#050505" roughness={0.12} metalness={0.88} />
             </mesh>
 
@@ -479,7 +478,7 @@ const NonconvexPolyhedron = memo(({ accentColor, selectedId }) => {
 
             {/* 3. Nonconvex wireframe lattice grid */}
             <mesh>
-                <icosahedronGeometry ref={wireGeomRef} args={[GLOBE_R, 3]} />
+                <icosahedronGeometry ref={wireGeomRef} args={[GLOBE_R, 2]} />
                 <meshBasicMaterial color={accentColor} wireframe transparent opacity={0.22} toneMapped={false} />
             </mesh>
 
@@ -511,11 +510,31 @@ const GlobeCore = memo(({
 
     useFrame(() => setCameraDist(camera.position.length()));
 
+    // Get unique vertex positions from the icosahedron mesh (detail=2)
+    const vertexDirections = useMemo(() => {
+        const tempGeo = new THREE.IcosahedronGeometry(1.0, 2);
+        const posAttr = tempGeo.attributes.position;
+        const verts = [];
+        const seen = new Set();
+        const v = new THREE.Vector3();
+        for (let i = 0; i < posAttr.count; i++) {
+            v.fromBufferAttribute(posAttr, i);
+            const key = `${v.x.toFixed(4)},${v.y.toFixed(4)},${v.z.toFixed(4)}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                verts.push(v.clone().normalize());
+            }
+        }
+        tempGeo.dispose();
+        
+        // Sort them relative to the center to keep layout distribution stable
+        return verts.sort((a, b) => b.y - a.y || b.x - a.x);
+    }, []);
+
     const activeSectorColor = useMemo(() => SECTORS.find(s => s.id === activeSector)?.color, [activeSector]);
 
     const filtered = useMemo(() => {
         // --- 1. RELATIONAL NODE FILTERING ON ITEM SELECTION ---
-        // If an item is selected, we morph the globe nodes to display related items!
         if (selectedGlobeItem) {
             const itemId = selectedGlobeItem.id || selectedGlobeItem.Id;
             const itemType = selectedGlobeItem.type;
@@ -526,35 +545,29 @@ const GlobeCore = memo(({
             let relatedCommunities = [];
 
             if (itemType === 'artist') {
-                // Tracks by this artist
                 relatedTracks = tracks.filter(t => 
                     String(t.artistId || t.ArtistId) === String(itemId) ||
                     String(t.artistUserId || t.ArtistUserId) === String(selectedGlobeItem.userId || selectedGlobeItem.UserId)
                 );
-                // Playlists by this artist
                 relatedPlaylists = playlists.filter(p => 
                     String(p.artistId || p.ArtistId) === String(itemId) ||
                     String(p.userId || p.UserId) === String(selectedGlobeItem.userId || selectedGlobeItem.UserId)
                 );
-                // Communities this artist belongs to
                 const artistCommunityId = selectedGlobeItem.communityId || selectedGlobeItem.CommunityId;
                 if (artistCommunityId) {
                     relatedCommunities = communities.filter(c => String(c.id || c.Id) === String(artistCommunityId));
                 }
-                // Related artists (same sector/genre)
                 const sectorId = selectedGlobeItem.sectorId || selectedGlobeItem.SectorId;
                 relatedArtists = artists.filter(a => 
                     String(a.id || a.Id) !== String(itemId) && 
                     (sectorId !== null && (a.sectorId || a.SectorId) === sectorId)
                 );
                 
-                // Ensure the selected artist itself remains on the globe
                 if (!relatedArtists.some(a => String(a.id || a.Id) === String(itemId))) {
                     relatedArtists.unshift(selectedGlobeItem);
                 }
             } 
             else if (itemType === 'track') {
-                // The track's artist
                 const trkArtistId = selectedGlobeItem.artistId || selectedGlobeItem.ArtistId;
                 const trkArtistUID = selectedGlobeItem.artistUserId || selectedGlobeItem.ArtistUserId;
                 const matchingArtist = artists.find(a => 
@@ -564,7 +577,6 @@ const GlobeCore = memo(({
                 if (matchingArtist) {
                     relatedArtists.push(matchingArtist);
                 }
-                // Other tracks by the same artist
                 if (trkArtistId || trkArtistUID) {
                     relatedTracks = tracks.filter(t => 
                         String(t.id || t.Id) !== String(itemId) && 
@@ -572,39 +584,27 @@ const GlobeCore = memo(({
                          String(t.artistUserId || t.ArtistUserId) === String(trkArtistUID))
                     );
                 }
-                // Playlists created by or featuring this artist
                 relatedPlaylists = playlists.filter(p => 
                     String(p.artistId || p.ArtistId) === String(trkArtistId)
                 );
-                
-                // Keep the track itself
                 relatedTracks.unshift(selectedGlobeItem);
             } 
             else if (itemType === 'community') {
-                // Artists in this community
                 relatedArtists = artists.filter(a => 
                     String(a.communityId || a.CommunityId) === String(itemId)
                 );
-                // Tracks by artists in this community
                 const artistIds = new Set(relatedArtists.map(a => String(a.id || a.Id)));
                 relatedTracks = tracks.filter(t => artistIds.has(String(t.artistId || t.ArtistId)));
-                // Related playlists by community members
                 relatedPlaylists = playlists.filter(p => artistIds.has(String(p.artistId || p.ArtistId)));
-                
-                // Keep the community itself
                 relatedCommunities.unshift(selectedGlobeItem);
             } 
             else if (itemType === 'playlist') {
-                // Playlist creator/artist
                 const plArtistId = selectedGlobeItem.artistId || selectedGlobeItem.ArtistId;
                 if (plArtistId) {
                     const matchingArtist = artists.find(a => String(a.id || a.Id) === String(plArtistId));
                     if (matchingArtist) relatedArtists.push(matchingArtist);
                 }
-                // Tracks from this artist
                 relatedTracks = tracks.filter(t => String(t.artistId || t.ArtistId) === String(plArtistId));
-                
-                // Keep the playlist itself
                 relatedPlaylists.unshift(selectedGlobeItem);
             }
 
@@ -638,13 +638,32 @@ const GlobeCore = memo(({
 
     const { communities_, artists_, playlists_, tracks_ } = filtered;
 
-    const totalNodes  = (
-        (activeView === 'COMMUNITIES' || !activeView ? communities_.length : 0) +
-        (activeView === 'ARTISTS'     || !activeView ? artists_.length     : 0) +
-        (activeView === 'PLAYLISTS'   || !activeView ? playlists_.length   : 0) +
-        (activeView === 'TRACKS'      || !activeView ? tracks_.length      : 0)
-    );
-    const density     = Math.max(0.4, 1 / (1 + 0.015 * totalNodes));
+    // --- stable vertex allocator ---
+    // Maps each node to a unique, collision-resolved vertex direction of the polyhedron
+    const nodesWithVertices = useMemo(() => {
+        const allNodes = [];
+        communities_.forEach(c => allNodes.push({ ...c, typeClass: 'community', nodeUniqueId: `community-${c.id || c.Id}`, name: c.name || c.Name, color: '#ffaa00', size: 0.055 }));
+        artists_.forEach(a => allNodes.push({ ...a, typeClass: 'artist', nodeUniqueId: `artist-${a.id || a.Id}`, name: a.name || a.Name, color: '#00ffaa', size: 0.048 }));
+        tracks_.forEach(t => allNodes.push({ ...t, typeClass: 'track', nodeUniqueId: `track-${t.id || t.Id}`, name: t.title || t.Title, subtitle: t.artist || t.Artist, color: t.color || '#00aaff', size: 0.038 }));
+        playlists_.forEach(p => allNodes.push({ ...p, typeClass: 'playlist', nodeUniqueId: `playlist-${p.id || p.Id}`, name: p.name || p.Name, color: 'rgb(var(--theme-primary))', size: 0.048 }));
+
+        const taken = new Uint8Array(vertexDirections.length);
+        return allNodes.map(node => {
+            const h = hashStr(node.nodeUniqueId);
+            let preferred = h % vertexDirections.length;
+            while (taken[preferred]) {
+                preferred = (preferred + 1) % vertexDirections.length;
+            }
+            taken[preferred] = 1;
+            const dir = vertexDirections[preferred];
+            return {
+                ...node,
+                vertexIndex: preferred,
+                direction: dir
+            };
+        });
+    }, [communities_, artists_, tracks_, playlists_, vertexDirections]);
+
     const accentColorRaw = activeSectorColor || 'rgb(var(--theme-primary))';
     const accentColor = useMemo(() => resolveColorToHex(accentColorRaw), [accentColorRaw]);
 
@@ -653,19 +672,32 @@ const GlobeCore = memo(({
             {/* ── NONCONVEX POLYHEDRON GRID & CORE ── */}
             <NonconvexPolyhedron accentColor={accentColor} selectedId={selectedId} />
 
-            {/* ── NODES ── */}
-            {(activeView === 'COMMUNITIES' || !activeView) && communities_.map(c => (
-                <LightPointNode key={`comm-${c.id || c.Id}`} id={`comm-${c.id || c.Id}`} name={c.name || c.Name} color="#ffaa00" size={0.055 * density} isSelected={selectedId === `community-${c.id || c.Id}`} cameraDist={cameraDist} onClick={() => onCommunityClick?.(c)} />
-            ))}
-            {(activeView === 'ARTISTS' || !activeView) && artists_.map(a => (
-                <LightPointNode key={`artist-${a.id || a.Id}`} id={`artist-${a.id || a.Id}`} name={a.name || a.Name} color="#00ffaa" size={0.048 * density} isSelected={selectedId === `artist-${a.id || a.Id}`} cameraDist={cameraDist} onClick={() => onArtistClick?.(a)} />
-            ))}
-            {(activeView === 'TRACKS' || !activeView) && tracks_.map(t => (
-                <LightPointNode key={`track-${t.id || t.Id}`} id={`track-${t.id || t.Id}`} name={t.title || t.Title} subtitle={t.artist || t.Artist} color="#00aaff" size={0.038 * density} isSelected={selectedId === `track-${t.id || t.Id}`} cameraDist={cameraDist} onClick={() => onTrackClick?.(t)} />
-            ))}
-            {(activeView === 'PLAYLISTS' || !activeView) && playlists_.map(p => (
-                <LightPointNode key={`playlist-${p.id || p.Id}`} id={`playlist-${p.id || p.Id}`} name={p.name || p.Name} color="rgb(var(--theme-primary))" size={0.048 * density} isSelected={selectedId === `playlist-${p.id || p.Id}`} cameraDist={cameraDist} onClick={() => onPlaylistClick?.(p)} />
-            ))}
+            {/* ── NODES BOUND TO ACTUAL VERTICES ── */}
+            {nodesWithVertices.map(node => {
+                const isNodeSelected = selectedId === node.nodeUniqueId;
+                
+                // Route click handlers
+                const onClick = () => {
+                    if (node.typeClass === 'artist') onArtistClick?.(node);
+                    if (node.typeClass === 'community') onCommunityClick?.(node);
+                    if (node.typeClass === 'track') onTrackClick?.(node);
+                    if (node.typeClass === 'playlist') onPlaylistClick?.(node);
+                };
+
+                return (
+                    <LightPointNode
+                        key={node.nodeUniqueId}
+                        direction={node.direction}
+                        name={node.name}
+                        subtitle={node.subtitle}
+                        color={node.color}
+                        size={node.size * Math.max(0.4, 1 / (1 + 0.015 * nodesWithVertices.length))}
+                        isSelected={isNodeSelected}
+                        cameraDist={cameraDist}
+                        onClick={onClick}
+                    />
+                );
+            })}
 
             <FataleCoreNode
                 isSelected={selectedId === 'system-fatale_core'}
@@ -674,7 +706,7 @@ const GlobeCore = memo(({
                 onClick={() => onCommunityClick?.({ id: 'fatale_core', name: 'FATALE_CORE', isSystem: true, description: 'The official Fatale system node. Share feedback, bug reports and reviews.' })}
             />
 
-            <NetworkVisualization artists={artists_} tracks={tracks_} playlists={playlists_} selectedId={selectedId} activeView={activeView} />
+            <NetworkVisualization nodes={nodesWithVertices} selectedId={selectedId} />
         </group>
     );
 });
