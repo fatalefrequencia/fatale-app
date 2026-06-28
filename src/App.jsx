@@ -3340,12 +3340,12 @@ function App() {
       >
         {(() => {
           const ytId = currentYtId;
-          const activeYtId = ytId || "7wtfhZwyrcc";
+          const activeYtId = ytId || "invalid_id_";
 
           return (
             <YouTube
               key="global-youtube-player"
-              videoId="7wtfhZwyrcc"
+              videoId="invalid_id_"
               onReady={(e) => {
                 console.log("[YOUTUBE] Player Ready");
                 setYoutubePlayer(e.target);
@@ -3427,6 +3427,7 @@ function App() {
       >
         <YouTube
           key="global-youtube-player-b"
+          videoId="invalid_id_"
           onReady={(e) => {
             console.log("[YOUTUBE B] Player Ready");
             setYoutubePlayerB(e.target);
