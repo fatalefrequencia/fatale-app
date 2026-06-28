@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { requestStream } from '../services/signalr';
 import { getMediaUrl } from '../constants';
 
@@ -22,6 +22,13 @@ export function useBroadcastSync({
   const lastSyncRef = useRef(null);
   const lastSyncFingerprintRef = useRef(null);
   const lastPayloadRef = useRef(null); // stores last received payload for re-applying when players mount
+
+  // Broadcast gain states — trigger App.jsx volume sync effect when crossfade moves
+  const [broadcastGainA, setBroadcastGainA] = useState(1);
+  const [broadcastGainB, setBroadcastGainB] = useState(1);
+  // Also keep refs for access inside SignalR callbacks without stale closures
+  const broadcastGainARef = useRef(1);
+  const broadcastGainBRef = useRef(1);
 
   // ── Mutable refs so the SignalR callback always reads current props ─────────
   const youtubePlayerRef = useRef(youtubePlayer);
@@ -120,35 +127,57 @@ export function useBroadcastSync({
 
             if (currentVideoId !== ytId || loadedYtIdRef.current !== ytId) {
               loadedYtIdRef.current = ytId;
-              if (typeof volume === 'number') {
-                try { ytPlayer.setVolume(volume * 100); } catch(e) {}
-              }
               if (isPlaying) {
-                // loadVideoById auto-plays — only use when deck IS playing
+                // Mute first to bypass browser autoplay policy, then unmute once playing
+                try { ytPlayer.mute?.(); } catch(e) {}
                 ytPlayer.loadVideoById({ videoId: ytId, startSeconds: currentTime || 0 });
+                // After video starts, set volume and unmute
+                const targetVolume = typeof volume === 'number' ? volume * 100 : 100;
+                setTimeout(() => {
+                  try {
+                    const state = ytPlayer.getPlayerState?.();
+                    if (state === 1 || state === 3) {
+                      ytPlayer.setVolume?.(targetVolume);
+                      ytPlayer.unMute?.();
+                    } else {
+                      // Still try to unmute even if state check fails
+                      ytPlayer.setVolume?.(targetVolume);
+                      ytPlayer.unMute?.();
+                    }
+                  } catch(e) {}
+                }, 700);
               } else {
                 // cueVideoById loads without auto-playing
                 try { ytPlayer.cueVideoById({ videoId: ytId, startSeconds: currentTime || 0 }); } catch(e) {}
+                if (typeof volume === 'number') {
+                  try { ytPlayer.setVolume(volume * 100); } catch(e) {}
+                }
               }
             } else {
+              // Same video — only sync time and play state (and volume)
               const diff = Math.abs((ytPlayer.getCurrentTime?.() || 0) - (currentTime || 0));
               if (diff > 2) ytPlayer.seekTo(currentTime, true);
 
+              if (typeof volume === 'number') {
+                try { ytPlayer.setVolume(volume * 100); } catch(e) {}
+              }
+
               if (isPlaying) {
                 try {
+                  ytPlayer.unMute?.();
                   ytPlayer.playVideo();
                   setTimeout(() => {
                     const s = ytPlayer.getPlayerState ? ytPlayer.getPlayerState() : -1;
                     if (s !== 1 && s !== 3) {
                       ytPlayer.mute?.();
                       ytPlayer.playVideo?.();
+                      setTimeout(() => { try { ytPlayer.unMute?.(); } catch(e) {} }, 500);
                     }
                   }, 350);
                 } catch (err) {}
               } else {
-                ytPlayer.pauseVideo();
+                try { ytPlayer.pauseVideo(); } catch(err) {}
               }
-              if (typeof volume === 'number') ytPlayer.setVolume(volume * 100);
             }
 
             if (audioEl) {
@@ -214,15 +243,18 @@ export function useBroadcastSync({
 
   // Re-apply last sync payload when YouTube players mount (they conditionally render so may mount AFTER payload arrives)
   useEffect(() => {
+    if (!youtubePlayer) return;
     const payload = lastPayloadRef.current;
-    if (!payload || !youtubePlayer) return;
+    if (!payload) return;
     const { source, youtubeId, currentTime, isPlaying, broadcastVolume } = payload;
     const track = { source, youtubeId, isBroadcast: true };
     const audioEl = audioRefRef.current?.current;
+    // Pass player directly — ref may not yet be updated at this point
+    const fakeRef = { current: youtubePlayer };
     processDeck(
       { track, currentTime, isPlaying, volume: broadcastVolume },
       audioEl,
-      youtubePlayerRef,
+      fakeRef,
       lastModeRef,
       lastLoadedSrcRef,
       lastLoadedYtIdRef
@@ -230,12 +262,15 @@ export function useBroadcastSync({
   }, [youtubePlayer]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    if (!youtubePlayerB) return;
     const payload = lastPayloadRef.current;
-    if (!payload || !youtubePlayerB || !payload.deckB) return;
+    if (!payload || !payload.deckB) return;
+    // Pass player directly — ref may not yet be updated at this point
+    const fakeRef = { current: youtubePlayerB };
     processDeck(
       payload.deckB,
       deckBAudioRef.current,
-      youtubePlayerBRef,
+      fakeRef,
       lastModeBRef,
       lastLoadedSrcBRef,
       lastLoadedYtIdBRef
@@ -275,6 +310,14 @@ export function useBroadcastSync({
       if (typeof setBroadcastDeckBRef.current === 'function') {
         setBroadcastDeckBRef.current(deckB || null);
       }
+
+      // Track broadcaster's gain for each deck so App.jsx volume sync can incorporate it
+      const newGainA = typeof broadcastVolume === 'number' ? Math.max(0, Math.min(1, broadcastVolume)) : 1;
+      const newGainB = typeof deckB?.volume === 'number' ? Math.max(0, Math.min(1, deckB.volume)) : 1;
+      broadcastGainARef.current = newGainA;
+      broadcastGainBRef.current = newGainB;
+      setBroadcastGainA(newGainA);
+      setBroadcastGainB(newGainB);
 
       if (typeof setBroadcastSourceTypeRef.current === 'function') {
         setBroadcastSourceTypeRef.current(sourceType || 'app');
@@ -343,4 +386,7 @@ export function useBroadcastSync({
       if (typeof unsub === 'function') unsub();
     };
   }, [activeStation?.id, isHost]);
+
+  // Expose broadcast gains so App.jsx volume sync can apply the crossfade mix
+  return { broadcastGainA, broadcastGainB, broadcastGainARef, broadcastGainBRef };
 }

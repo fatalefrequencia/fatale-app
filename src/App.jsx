@@ -1015,7 +1015,7 @@ function App() {
 
 
 
-  useBroadcastSync({
+  const { broadcastGainA, broadcastGainB, broadcastGainARef, broadcastGainBRef } = useBroadcastSync({
     activeStation,
     audioRef,
     youtubePlayer,
@@ -1055,20 +1055,24 @@ function App() {
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.muted = isMuted;
-      audioRef.current.volume = volume;
+      // For broadcast listeners, scale the local volume by the broadcaster's crossfade gain
+      const gain = (activeStation && !isHost) ? broadcastGainA : 1;
+      audioRef.current.volume = Math.max(0, Math.min(1, volume * gain));
     }
     if (youtubePlayer && typeof youtubePlayer.mute === 'function') {
       try {
         if (isMuted) youtubePlayer.mute();
         else {
           youtubePlayer.unMute();
-          youtubePlayer.setVolume(volume * 100);
+          // Scale YouTube volume by broadcast gain too
+          const gain = (activeStation && !isHost) ? broadcastGainA : 1;
+          youtubePlayer.setVolume(volume * gain * 100);
         }
       } catch (e) {
         console.warn("YouTube Volume Sync Error (Suppressed):", e);
       }
     }
-  }, [isMuted, volume, youtubePlayer]);
+  }, [isMuted, volume, youtubePlayer, activeStation, isHost, broadcastGainA]);
 
   const fetchFavoriteStations = async (uid) => {
     try {
