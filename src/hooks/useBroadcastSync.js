@@ -21,6 +21,7 @@ export function useBroadcastSync({
 }) {
   const lastSyncRef = useRef(null);
   const lastSyncFingerprintRef = useRef(null);
+  const lastPayloadRef = useRef(null); // stores last received payload for re-applying when players mount
 
   // ── Mutable refs so the SignalR callback always reads current props ─────────
   const youtubePlayerRef = useRef(youtubePlayer);
@@ -211,6 +212,36 @@ export function useBroadcastSync({
     }
   };
 
+  // Re-apply last sync payload when YouTube players mount (they conditionally render so may mount AFTER payload arrives)
+  useEffect(() => {
+    const payload = lastPayloadRef.current;
+    if (!payload || !youtubePlayer) return;
+    const { source, youtubeId, currentTime, isPlaying, broadcastVolume } = payload;
+    const track = { source, youtubeId, isBroadcast: true };
+    const audioEl = audioRefRef.current?.current;
+    processDeck(
+      { track, currentTime, isPlaying, volume: broadcastVolume },
+      audioEl,
+      youtubePlayerRef,
+      lastModeRef,
+      lastLoadedSrcRef,
+      lastLoadedYtIdRef
+    );
+  }, [youtubePlayer]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const payload = lastPayloadRef.current;
+    if (!payload || !youtubePlayerB || !payload.deckB) return;
+    processDeck(
+      payload.deckB,
+      deckBAudioRef.current,
+      youtubePlayerBRef,
+      lastModeBRef,
+      lastLoadedSrcBRef,
+      lastLoadedYtIdBRef
+    );
+  }, [youtubePlayerB]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (!activeStation || isHost) return;
 
@@ -221,21 +252,22 @@ export function useBroadcastSync({
       if (!payload) return;
 
       const now = Date.now();
-      // Deduplicate identical back-to-back messages (same track + play state + deckB identity)
-      // but always let through syncs that change track identity or deck B identity
+      // Deduplicate identical back-to-back messages (same track + play state + deckB identity + volume)
+      // but always let through syncs that change track identity, deck B identity, or volume/crossfade
       const deckBId = payload.deckB?.track?.id || payload.deckB?.track?.source || null;
-      const fingerprint = `${payload.source}|${payload.isPlaying}|${deckBId}|${payload.deckB?.isPlaying}`;
+      const fingerprint = `${payload.source}|${payload.isPlaying}|${deckBId}|${payload.deckB?.isPlaying}|${payload.crossfader}|${payload.broadcastVolume}|${payload.deckB?.volume}`;
       const isIdentical = lastSyncFingerprintRef.current === fingerprint;
       const isQuick = lastSyncRef.current && now - lastSyncRef.current < 80;
       // Drop only if identical AND arrived within 80ms (pure duplicate packet)
       if (isIdentical && isQuick) return;
       lastSyncRef.current = now;
       lastSyncFingerprintRef.current = fingerprint;
+      lastPayloadRef.current = payload; // store last payload so we can re-apply when players mount
 
       const {
         title, artist, cover, source, youtubeId,
         currentTime, isPlaying, sourceType,
-        broadcastVolume, deckB
+        broadcastVolume, crossfader, deckB
       } = payload;
 
       const track = { title, artist, cover, source, youtubeId, sourceType, isBroadcast: true };
@@ -268,10 +300,16 @@ export function useBroadcastSync({
 
       setIsYoutubeModeRef.current(isYT);
 
+      // Apply crossfader volume to Deck A's native audio immediately
+      const audioElA = audioEl;
+      if (audioElA && typeof broadcastVolume === 'number') {
+        audioElA.volume = Math.max(0, Math.min(1, broadcastVolume));
+      }
+
       // Process Deck A (Primary)
       processDeck(
         { track, currentTime, isPlaying, volume: broadcastVolume },
-        audioEl,
+        audioElA,
         youtubePlayerRef,
         lastModeRef,
         lastLoadedSrcRef,

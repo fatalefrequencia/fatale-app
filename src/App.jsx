@@ -3360,17 +3360,22 @@ function App() {
             videoId={currentYtId}
             onReady={(e) => {
               console.log("[YOUTUBE] Player Ready");
+              const isBroadcastListener = !!(activeStation && !isHost);
               setYoutubePlayer(e.target);
-              try {
-                e.target.setVolume(volume * 100);
-                e.target.setPlaybackRate(globalPlaybackRate);
-                const startTime = (activeStation && !isHost) ? (currentTime || 0) : 0;
-                if (isPlaying) {
-                  e.target.playVideo();
-                } else {
-                  e.target.pauseVideo();
-                }
-              } catch (err) { console.warn("YT Play onReady failure:", err); }
+              // For listeners, useBroadcastSync re-apply effect will handle sync.
+              // For hosts, load/cue the video immediately.
+              if (!isBroadcastListener) {
+                try {
+                  e.target.setVolume(volume * 100);
+                  e.target.setPlaybackRate(globalPlaybackRate);
+                  if (isPlaying) {
+                    e.target.playVideo();
+                  } else {
+                    e.target.cueVideoById({ videoId: currentYtId, startSeconds: 0 });
+                    lastLoadedYtId.current = currentYtId;
+                  }
+                } catch (err) { console.warn("YT Play onReady failure:", err); }
+              }
             }}
             onStateChange={(e) => {
               console.log("[YOUTUBE] State Change:", e.data);
