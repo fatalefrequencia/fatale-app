@@ -6,7 +6,7 @@ import { SECTORS } from '../../constants';
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const GLOBE_R  = 2.45;   // solid opaque core
-const NODE_R   = 2.51;   // nodes sit just above wireframe (2.50), flush with surface
+const NODE_R   = 2.51;   // nodes sit just above wireframe (2.50)
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 
@@ -34,7 +34,6 @@ const getSphericalPos = (id, radius = NODE_R) => {
     };
 };
 
-// Tight city-light glow — bright hard core, fast falloff
 const resolveColorToHex = (color) => {
     if (color && color.includes('var(')) {
         try {
@@ -63,12 +62,25 @@ const createGlowTexture = (rawColor) => {
     return new THREE.CanvasTexture(canvas);
 };
 
-const buildArc = (from, to) => {
-    const f   = new THREE.Vector3(...from);
-    const t   = new THREE.Vector3(...to);
-    const mid = new THREE.Vector3().addVectors(f, t).multiplyScalar(0.5);
-    mid.normalize().multiplyScalar(4.8);
-    return new THREE.QuadraticBezierCurve3(f, mid, t);
+// ─── NONCONVEX POLYHEDRON FORMULA ─────────────────────────────────────────────
+// Generates a dynamic radius based on direction coordinates and time, creating
+// a beautiful, stellated/nonconvex polyhedron that contracts and expands.
+const getNonconvexRadius = (nx, ny, nz, time, isSelected) => {
+    const len = Math.sqrt(nx*nx + ny*ny + nz*nz) || 1;
+    const x = nx / len;
+    const y = ny / len;
+    const z = nz / len;
+
+    // Harmonic frequency pattern for star-like points and indentations
+    const starArmCount = 6.0;
+    const starVal = Math.sin(x * starArmCount) * Math.sin(y * starArmCount) * Math.sin(z * starArmCount);
+    
+    // Contraction / Expansion pulse dynamics
+    const pulseSpeed = isSelected ? 3.0 : 1.1;
+    const pulseAmp = isSelected ? 0.28 : 0.14;
+    const wave = Math.sin(time * pulseSpeed + x * 3.5 + y * 3.5) * pulseAmp;
+    
+    return GLOBE_R * (1.0 + 0.20 * starVal + wave);
 };
 
 // ─── STAR FIELD ───────────────────────────────────────────────────────────────
@@ -112,22 +124,53 @@ const StarField = memo(() => {
 });
 
 // ─── SHIMMER LINE ─────────────────────────────────────────────────────────────
+// Dynamic connecting arcs that conform to the morphing polyhedron surface
 
 const ShimmerLine = memo(({ from, to, color, phaseOffset = 0, isSelected = false, isRelated = false }) => {
     const lineRef = useRef();
     const opRef   = useRef(0);
 
-    const geo = useMemo(() => {
-        const curve = buildArc(from, to);
-        return new THREE.BufferGeometry().setFromPoints(curve.getPoints(60));
+    const { fromDir, toDir } = useMemo(() => {
+        return {
+            fromDir: new THREE.Vector3(...from).normalize(),
+            toDir: new THREE.Vector3(...to).normalize()
+        };
     }, [from[0], from[1], from[2], to[0], to[1], to[2]]);
+
+    const geo = useMemo(() => {
+        const g = new THREE.BufferGeometry();
+        // Allocate buffer for 31 points (interpolated arc)
+        g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(31 * 3), 3));
+        return g;
+    }, []);
 
     useEffect(() => () => geo.dispose(), [geo]);
     useEffect(() => { opRef.current = 0; }, []);
 
     useFrame(({ clock }) => {
         if (!lineRef.current) return;
-        const t = clock.getElapsedTime();
+        const time = clock.getElapsedTime();
+
+        // Query nonconvex radius for start and end positions
+        const rFrom = getNonconvexRadius(fromDir.x, fromDir.y, fromDir.z, time, isSelected);
+        const rTo = getNonconvexRadius(toDir.x, toDir.y, toDir.z, time, isSelected);
+
+        const pFrom = fromDir.clone().multiplyScalar(rFrom + 0.05);
+        const pTo = toDir.clone().multiplyScalar(rTo + 0.05);
+
+        // Generate arc mid-point with outward bulge
+        const mid = new THREE.Vector3().addVectors(pFrom, pTo).multiplyScalar(0.5);
+        mid.normalize().multiplyScalar(Math.max(rFrom, rTo) * 1.15);
+
+        const curve = new THREE.QuadraticBezierCurve3(pFrom, mid, pTo);
+        const points = curve.getPoints(30);
+
+        const posAttr = lineRef.current.geometry.attributes.position;
+        for (let i = 0; i < points.length; i++) {
+            posAttr.setXYZ(i, points[i].x, points[i].y, points[i].z);
+        }
+        posAttr.needsUpdate = true;
+
         if (isSelected) {
             opRef.current = Math.min(opRef.current + 0.05, 1);
             lineRef.current.material.opacity = 0.95;
@@ -136,7 +179,7 @@ const ShimmerLine = memo(({ from, to, color, phaseOffset = 0, isSelected = false
             lineRef.current.material.opacity = 0.70;
         } else {
             opRef.current = Math.min(opRef.current + 0.025, 1);
-            lineRef.current.material.opacity = opRef.current * (0.28 + Math.sin(t * 0.6 + phaseOffset) * 0.15);
+            lineRef.current.material.opacity = opRef.current * (0.28 + Math.sin(time * 0.6 + phaseOffset) * 0.15);
         }
     });
 
@@ -188,25 +231,39 @@ const NetworkVisualization = ({ artists, tracks, playlists, selectedId, activeVi
     );
 };
 
-// ─── FLAT CITY-LIGHT NODE ─────────────────────────────────────────────────────
-// Sits at NODE_R. depthTest=false → never clipped by globe geometry.
+// ─── DYNAMIC LIGHT POINT NODE ─────────────────────────────────────────────────
+// Vertex-aligned node that tracks the expanding/contracting polyhedron boundary
 
 const LightPointNode = ({ id, name, subtitle, color: rawColor, size = 0.02, isSelected, onClick, cameraDist }) => {
     const color = useMemo(() => resolveColorToHex(rawColor), [rawColor]);
     const billRef  = useRef();
     const ringRef  = useRef();
+    const groupRef = useRef();
     const [hovered, setHovered] = useState(false);
-    const { pos }  = useMemo(() => getSphericalPos(id), [id]);
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
 
+    const { baseDirection } = useMemo(() => {
+        const { pos } = getSphericalPos(id, 1.0);
+        return { baseDirection: new THREE.Vector3(...pos) };
+    }, [id]);
+
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
     const baseScale = THREE.MathUtils.clamp(cameraDist / 8, 0.55, 1.8);
     const glowTex   = useMemo(() => createGlowTexture(color), [color]);
 
     useFrame(({ camera, clock }) => {
-        if (!billRef.current) return;
-        billRef.current.quaternion.copy(camera.quaternion);
-        const pulse = isSelected ? 1 + Math.sin(clock.getElapsedTime() * 5) * 0.15 : 1;
-        billRef.current.scale.setScalar(baseScale * pulse);
+        if (!groupRef.current) return;
+        const time = clock.getElapsedTime();
+
+        // Recalculate dynamic radius based on nonconvex surface
+        const r = getNonconvexRadius(baseDirection.x, baseDirection.y, baseDirection.z, time, isSelected);
+        const pos = baseDirection.clone().multiplyScalar(r + 0.05);
+        groupRef.current.position.copy(pos);
+
+        if (billRef.current) {
+            billRef.current.quaternion.copy(camera.quaternion);
+            const pulse = isSelected ? 1 + Math.sin(time * 5) * 0.15 : 1;
+            billRef.current.scale.setScalar(baseScale * pulse);
+        }
         if (ringRef.current) ringRef.current.rotation.z += isSelected ? 0.018 : 0.004;
     });
 
@@ -221,7 +278,7 @@ const LightPointNode = ({ id, name, subtitle, color: rawColor, size = 0.02, isSe
     const RO   = 10;
 
     return (
-        <group position={pos}>
+        <group ref={groupRef}>
             <mesh
                 onPointerDown={(e) => { e.stopPropagation(); onClick(); }}
                 onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
@@ -298,19 +355,24 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
     const billRef  = useRef();
     const ring1Ref = useRef();
     const ring2Ref = useRef();
+    const groupRef = useRef();
     const [hovered, setHovered] = useState(false);
     const COLOR     = '#ff0033';
-    const POS       = [0, NODE_R, 0];
+    const POS_DIR   = useMemo(() => new THREE.Vector3(0, 1, 0), []);
     const baseScale = THREE.MathUtils.clamp(cameraDist / 8, 0.55, 1.8);
     const glowTex   = useMemo(() => createGlowTexture(COLOR), []);
     const isMobile  = typeof window !== 'undefined' && window.innerWidth < 1024;
     const RO        = 10;
 
     useFrame(({ camera, clock }) => {
-        const t = clock.getElapsedTime();
+        const time = clock.getElapsedTime();
+        const r = getNonconvexRadius(POS_DIR.x, POS_DIR.y, POS_DIR.z, time, isSelected);
+        const pos = POS_DIR.clone().multiplyScalar(r + 0.05);
+        if (groupRef.current) groupRef.current.position.copy(pos);
+
         if (billRef.current) {
             billRef.current.quaternion.copy(camera.quaternion);
-            billRef.current.scale.setScalar(baseScale * (1 + Math.sin(t * 3.5) * 0.12));
+            billRef.current.scale.setScalar(baseScale * (1 + Math.sin(time * 3.5) * 0.12));
         }
         if (ring1Ref.current) ring1Ref.current.rotation.z += 0.010;
         if (ring2Ref.current) ring2Ref.current.rotation.z -= 0.006;
@@ -324,7 +386,7 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
     const DOT = 0.075; const R1 = 0.135; const R2 = 0.185; const GLOW = 0.38;
 
     return (
-        <group position={POS}>
+        <group ref={groupRef}>
             <mesh onPointerDown={(e) => { e.stopPropagation(); onClick(); }} onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }} onPointerOut={() => setHovered(false)}>
                 <sphereGeometry args={[0.28, 8, 8]} />
                 <meshBasicMaterial transparent opacity={0} depthWrite={false} />
@@ -363,6 +425,77 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel }) => {
     );
 };
 
+// ─── NONCONVEX POLYHEDRON CORE ────────────────────────────────────────────────
+
+const NonconvexPolyhedron = memo(({ accentColor, selectedId }) => {
+    const geomRef = useRef();
+    const wireGeomRef = useRef();
+    
+    useFrame(({ clock }) => {
+        const time = clock.getElapsedTime();
+        const v = new THREE.Vector3();
+        
+        // Deform solid core geometry
+        if (geomRef.current) {
+            const posAttr = geomRef.current.attributes.position;
+            for (let i = 0; i < posAttr.count; i++) {
+                v.fromBufferAttribute(posAttr, i);
+                const u = v.clone().normalize();
+                const r = getNonconvexRadius(u.x, u.y, u.z, time, !!selectedId);
+                v.copy(u).multiplyScalar(r);
+                posAttr.setXYZ(i, v.x, v.y, v.z);
+            }
+            posAttr.needsUpdate = true;
+            geomRef.current.computeVertexNormals();
+        }
+
+        // Deform wireframe geometry to match exactly
+        if (wireGeomRef.current) {
+            const posAttr = wireGeomRef.current.attributes.position;
+            for (let i = 0; i < posAttr.count; i++) {
+                v.fromBufferAttribute(posAttr, i);
+                const u = v.clone().normalize();
+                const r = getNonconvexRadius(u.x, u.y, u.z, time, !!selectedId);
+                v.copy(u).multiplyScalar(r + 0.005);
+                posAttr.setXYZ(i, v.x, v.y, v.z);
+            }
+            posAttr.needsUpdate = true;
+        }
+    });
+
+    return (
+        <group>
+            {/* 1. Solid opaque nonconvex polyhedron core */}
+            <mesh>
+                <icosahedronGeometry ref={geomRef} args={[GLOBE_R, 3]} />
+                <meshStandardMaterial color="#050505" roughness={0.12} metalness={0.88} />
+            </mesh>
+
+            {/* 2. Glowy inner accent sphere */}
+            <mesh>
+                <icosahedronGeometry args={[2.40, 2]} />
+                <meshStandardMaterial color={accentColor} transparent opacity={0.015} emissive={accentColor} emissiveIntensity={0.18} />
+            </mesh>
+
+            {/* 3. Nonconvex wireframe lattice grid */}
+            <mesh>
+                <icosahedronGeometry ref={wireGeomRef} args={[GLOBE_R, 3]} />
+                <meshBasicMaterial color={accentColor} wireframe transparent opacity={0.22} toneMapped={false} />
+            </mesh>
+
+            {/* 4. Atmosphere rim (BackSide) */}
+            <Sphere args={[2.56, 48, 48]} renderOrder={4}>
+                <meshBasicMaterial color={accentColor} transparent opacity={0.040} side={THREE.BackSide} toneMapped={false} />
+            </Sphere>
+
+            {/* 5. Outer corona */}
+            <Sphere args={[2.72, 32, 32]} renderOrder={0}>
+                <meshBasicMaterial color={accentColor} transparent opacity={0.024} side={THREE.BackSide} depthWrite={false} toneMapped={false} />
+            </Sphere>
+        </group>
+    );
+});
+
 // ─── GLOBE CORE ───────────────────────────────────────────────────────────────
 
 const GlobeCore = memo(({
@@ -370,7 +503,7 @@ const GlobeCore = memo(({
     communities = [], artists = [], playlists = [], tracks = [],
     selectedId, activeView,
     onArtistClick, onCommunityClick, onTrackClick, onPlaylistClick,
-    isGlobeSpinning,
+    isGlobeSpinning, selectedGlobeItem,
 }) => {
     const { camera }    = useThree();
     const [cameraDist, setCameraDist] = useState(10);
@@ -381,6 +514,109 @@ const GlobeCore = memo(({
     const activeSectorColor = useMemo(() => SECTORS.find(s => s.id === activeSector)?.color, [activeSector]);
 
     const filtered = useMemo(() => {
+        // --- 1. RELATIONAL NODE FILTERING ON ITEM SELECTION ---
+        // If an item is selected, we morph the globe nodes to display related items!
+        if (selectedGlobeItem) {
+            const itemId = selectedGlobeItem.id || selectedGlobeItem.Id;
+            const itemType = selectedGlobeItem.type;
+
+            let relatedArtists = [];
+            let relatedTracks = [];
+            let relatedPlaylists = [];
+            let relatedCommunities = [];
+
+            if (itemType === 'artist') {
+                // Tracks by this artist
+                relatedTracks = tracks.filter(t => 
+                    String(t.artistId || t.ArtistId) === String(itemId) ||
+                    String(t.artistUserId || t.ArtistUserId) === String(selectedGlobeItem.userId || selectedGlobeItem.UserId)
+                );
+                // Playlists by this artist
+                relatedPlaylists = playlists.filter(p => 
+                    String(p.artistId || p.ArtistId) === String(itemId) ||
+                    String(p.userId || p.UserId) === String(selectedGlobeItem.userId || selectedGlobeItem.UserId)
+                );
+                // Communities this artist belongs to
+                const artistCommunityId = selectedGlobeItem.communityId || selectedGlobeItem.CommunityId;
+                if (artistCommunityId) {
+                    relatedCommunities = communities.filter(c => String(c.id || c.Id) === String(artistCommunityId));
+                }
+                // Related artists (same sector/genre)
+                const sectorId = selectedGlobeItem.sectorId || selectedGlobeItem.SectorId;
+                relatedArtists = artists.filter(a => 
+                    String(a.id || a.Id) !== String(itemId) && 
+                    (sectorId !== null && (a.sectorId || a.SectorId) === sectorId)
+                );
+                
+                // Ensure the selected artist itself remains on the globe
+                if (!relatedArtists.some(a => String(a.id || a.Id) === String(itemId))) {
+                    relatedArtists.unshift(selectedGlobeItem);
+                }
+            } 
+            else if (itemType === 'track') {
+                // The track's artist
+                const trkArtistId = selectedGlobeItem.artistId || selectedGlobeItem.ArtistId;
+                const trkArtistUID = selectedGlobeItem.artistUserId || selectedGlobeItem.ArtistUserId;
+                const matchingArtist = artists.find(a => 
+                    String(a.id || a.Id) === String(trkArtistId) ||
+                    String(a.userId || a.UserId) === String(trkArtistUID)
+                );
+                if (matchingArtist) {
+                    relatedArtists.push(matchingArtist);
+                }
+                // Other tracks by the same artist
+                if (trkArtistId || trkArtistUID) {
+                    relatedTracks = tracks.filter(t => 
+                        String(t.id || t.Id) !== String(itemId) && 
+                        (String(t.artistId || t.ArtistId) === String(trkArtistId) || 
+                         String(t.artistUserId || t.ArtistUserId) === String(trkArtistUID))
+                    );
+                }
+                // Playlists created by or featuring this artist
+                relatedPlaylists = playlists.filter(p => 
+                    String(p.artistId || p.ArtistId) === String(trkArtistId)
+                );
+                
+                // Keep the track itself
+                relatedTracks.unshift(selectedGlobeItem);
+            } 
+            else if (itemType === 'community') {
+                // Artists in this community
+                relatedArtists = artists.filter(a => 
+                    String(a.communityId || a.CommunityId) === String(itemId)
+                );
+                // Tracks by artists in this community
+                const artistIds = new Set(relatedArtists.map(a => String(a.id || a.Id)));
+                relatedTracks = tracks.filter(t => artistIds.has(String(t.artistId || t.ArtistId)));
+                // Related playlists by community members
+                relatedPlaylists = playlists.filter(p => artistIds.has(String(p.artistId || p.ArtistId)));
+                
+                // Keep the community itself
+                relatedCommunities.unshift(selectedGlobeItem);
+            } 
+            else if (itemType === 'playlist') {
+                // Playlist creator/artist
+                const plArtistId = selectedGlobeItem.artistId || selectedGlobeItem.ArtistId;
+                if (plArtistId) {
+                    const matchingArtist = artists.find(a => String(a.id || a.Id) === String(plArtistId));
+                    if (matchingArtist) relatedArtists.push(matchingArtist);
+                }
+                // Tracks from this artist
+                relatedTracks = tracks.filter(t => String(t.artistId || t.ArtistId) === String(plArtistId));
+                
+                // Keep the playlist itself
+                relatedPlaylists.unshift(selectedGlobeItem);
+            }
+
+            return {
+                communities_: relatedCommunities.slice(0, 15),
+                artists_: relatedArtists.slice(0, 15),
+                playlists_: relatedPlaylists.slice(0, 15),
+                tracks_: relatedTracks.slice(0, 15),
+            };
+        }
+
+        // --- 2. DEFAULT VIEW (NO SELECTION) ---
         const bySearch = (arr, key) => !searchQuery ? arr :
             arr.filter(x => (x[key] || x[key[0].toUpperCase() + key.slice(1)] || '').toLowerCase().includes(searchQuery.toLowerCase()));
         const bySector = (arr) => activeSector !== null ? arr.filter(x => (x.sectorId || x.SectorId) === activeSector) : arr;
@@ -398,7 +634,7 @@ const GlobeCore = memo(({
                 (t.artist || t.Artist || '').toLowerCase().includes(searchQuery.toLowerCase())
             )).slice(0, 25),
         };
-    }, [communities, artists, playlists, tracks, activeSector, searchQuery, seed]);
+    }, [communities, artists, playlists, tracks, activeSector, searchQuery, seed, selectedGlobeItem]);
 
     const { communities_, artists_, playlists_, tracks_ } = filtered;
 
@@ -414,33 +650,8 @@ const GlobeCore = memo(({
 
     return (
         <group>
-            {/* ── GLOBE ── */}
-
-            {/* 1. Opaque solid core — renders first, occludes everything behind it */}
-            <Sphere args={[GLOBE_R, 64, 64]} renderOrder={1}>
-                <meshStandardMaterial color="#050505" roughness={0.08} metalness={0.92} />
-            </Sphere>
-
-            {/* 2. Hair-thin inner accent tint */}
-            <Sphere args={[2.46, 32, 32]} renderOrder={2}>
-                <meshStandardMaterial color={accentColor} transparent opacity={0.020} emissive={accentColor} emissiveIntensity={0.22} />
-            </Sphere>
-
-            {/* 3. Fine wireframe latitude/longitude grid */}
-            <Sphere args={[2.50, 36, 18]} renderOrder={3}>
-                <meshBasicMaterial color={accentColor} wireframe transparent opacity={0.18} toneMapped={false} />
-            </Sphere>
-
-            {/* 4. Atmosphere rim — BackSide, very thin, just like the reference images */}
-            <Sphere args={[2.56, 48, 48]} renderOrder={4}>
-                <meshBasicMaterial color={accentColor} transparent opacity={0.048} side={THREE.BackSide} toneMapped={false} />
-            </Sphere>
-
-            {/* 5. Outer corona — single subtle halo, NOT additive so it doesn't bleed through core */}
-            {/* Use FrontSide with a very low opacity — gives the rim glow without see-through */}
-            <Sphere args={[2.72, 32, 32]} renderOrder={0}>
-                <meshBasicMaterial color={accentColor} transparent opacity={0.032} side={THREE.BackSide} depthWrite={false} toneMapped={false} />
-            </Sphere>
+            {/* ── NONCONVEX POLYHEDRON GRID & CORE ── */}
+            <NonconvexPolyhedron accentColor={accentColor} selectedId={selectedId} />
 
             {/* ── NODES ── */}
             {(activeView === 'COMMUNITIES' || !activeView) && communities_.map(c => (
@@ -476,6 +687,7 @@ const InteractiveGlobe = memo(({
     tracks = [], playlists = [],
     isGlobeSpinning = false,
     onArtistClick, onCommunityClick, onTrackClick, onPlaylistClick, onSelectItem,
+    selectedGlobeItem,
 }) => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
     const [initialRotation] = useState(() => [0.1, -0.2, 0]);
@@ -516,6 +728,7 @@ const InteractiveGlobe = memo(({
                             onArtistClick={onArtistClick} onCommunityClick={onCommunityClick}
                             onTrackClick={onTrackClick} onPlaylistClick={onPlaylistClick}
                             isGlobeSpinning={isGlobeSpinning}
+                            selectedGlobeItem={selectedGlobeItem}
                         />
                     </group>
                 </Float>

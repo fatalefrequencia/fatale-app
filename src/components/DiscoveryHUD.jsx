@@ -1237,6 +1237,7 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     playlists={playlistsWithArtist}
                                     albums={albums}
                                     activeSector={activeSector}
+                                    selectedGlobeItem={selectedGlobeItem}
                                     selectedId={selectedGlobeItem ? (selectedGlobeItem.isSystem ? 'system-fatale_core' : `${selectedGlobeItem.type}-${selectedGlobeItem.id || selectedGlobeItem.Id}`) : (activeTerminalCommunity?.isSystem ? 'system-fatale_core' : null)}
                                     activeView={activeGlobeView}
                                     isGlobeSpinning={isGlobeSpinning}
