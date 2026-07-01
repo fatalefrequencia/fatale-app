@@ -115,6 +115,20 @@ const MobileLEDBanner = () => {
 const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate, setUser, navigateToProfile, onPlayTrack, onPlayPlaylist, isPlayerActive, onExpandContent, onPlayStation, isLandscape, setShowGlobalIngest, setIngestMode, onMessageCommunity, onDownload, onTipArtist, onLogout, hasNewMessages, lowSpecMode }) => {
     const { t } = useLanguage();
     const { showNotification } = useNotification();
+
+    // ── Centralized native-track detection (catches ALL casing variants from API) ──
+    const isNativeTrack = useCallback((t) => {
+        const src = (t.source || t.Source || t.filePath || t.FilePath || "").toLowerCase();
+        const artistName = (t.artist || t.artistName || t.ArtistName || t.Artist || "").toLowerCase();
+        const genre = (t.genre || t.Genre || "").toLowerCase();
+        const albumTitle = (t.albumTitle || t.AlbumTitle || "").toLowerCase();
+
+        const isYt = src.startsWith('youtube:') || src.includes('youtube.com') || src.includes('youtu.be') || genre === 'youtube';
+        const isArchive = artistName === 'the archive' || albumTitle.includes('youtube signals') || t.isArchive || t.IsArchive;
+
+        return !isYt && !isArchive;
+    }, []);
+
     const [searchQuery, setSearchQuery] = useState('');
     const [liveStations, setLiveStations] = useState([]);
     const [followingIds, setFollowingIds] = useState([]);
@@ -307,18 +321,6 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
         }, 1000);
     };
 
-    // ── Centralized native-track detection (catches ALL casing variants from API) ──
-    const isNativeTrack = useCallback((t) => {
-        const src = (t.source || t.Source || t.filePath || t.FilePath || "").toLowerCase();
-        const artistName = (t.artist || t.artistName || t.ArtistName || t.Artist || "").toLowerCase();
-        const genre = (t.genre || t.Genre || "").toLowerCase();
-        const albumTitle = (t.albumTitle || t.AlbumTitle || "").toLowerCase();
-
-        const isYt = src.startsWith('youtube:') || src.includes('youtube.com') || src.includes('youtu.be') || genre === 'youtube';
-        const isArchive = artistName === 'the archive' || albumTitle.includes('youtube signals') || t.isArchive || t.IsArchive;
-
-        return !isYt && !isArchive;
-    }, []);
     const fetchAll = useCallback(async () => {
         setLoading(true);
         try {
