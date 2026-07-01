@@ -46,33 +46,69 @@ const createGlowTexture = (rawColor) => {
     return new THREE.CanvasTexture(canvas);
 };
 
+// ─── 14 MATH UNIQUE VERTEX DIRECTIONS OF STELLA OCTANGULA ─────────────────────
+const vertexDirections = [
+    // 8 outer star tips (pyramid peaks)
+    new THREE.Vector3(1, 1, 1).normalize(),
+    new THREE.Vector3(1, 1, -1).normalize(),
+    new THREE.Vector3(1, -1, 1).normalize(),
+    new THREE.Vector3(1, -1, -1).normalize(),
+    new THREE.Vector3(-1, 1, 1).normalize(),
+    new THREE.Vector3(-1, 1, -1).normalize(),
+    new THREE.Vector3(-1, -1, 1).normalize(),
+    new THREE.Vector3(-1, -1, -1).normalize(),
+    
+    // 6 inner valleys (base octahedron vertices)
+    new THREE.Vector3(1, 0, 0),
+    new THREE.Vector3(-1, 0, 0),
+    new THREE.Vector3(0, 1, 0),
+    new THREE.Vector3(0, -1, 0),
+    new THREE.Vector3(0, 0, 1),
+    new THREE.Vector3(0, 0, -1)
+];
+
+// Mapping of 72 buffer indices (24 faces * 3 vertices) to the 14 unique vertices
+const bufferIndexMap = [
+    0, 8, 10,  0, 10, 12, 0, 12, 8,   // Pyramid 0
+    1, 8, 10,  1, 10, 13, 1, 13, 8,   // Pyramid 1
+    2, 8, 11,  2, 11, 12, 2, 12, 8,   // Pyramid 2
+    3, 8, 11,  3, 11, 13, 3, 13, 8,   // Pyramid 3
+    4, 9, 10,  4, 10, 12, 4, 12, 9,   // Pyramid 4
+    5, 9, 10,  5, 10, 13, 5, 13, 9,   // Pyramid 5
+    6, 9, 11,  6, 11, 12, 6, 12, 9,   // Pyramid 6
+    7, 9, 11,  7, 11, 13, 7, 13, 9    // Pyramid 7
+];
+
 // ─── SHARP NONCONVEX POLYHEDRON DEFORMATION ───────────────────────────────────
-// Calculates radius at a given coordinate. Slower base speed for organic movement.
+// Organic slow morph pace. Pushes star tip indices outward.
 const getNonconvexRadius = (nx, ny, nz, time, isSelected) => {
     const len = Math.sqrt(nx*nx + ny*ny + nz*nz) || 1;
     const x = nx / len;
     const y = ny / len;
     const z = nz / len;
 
-    // Stellation harmonics
-    const starArmCount = 4.0;
-    const basePeak = Math.sin(x * starArmCount) * Math.sin(y * starArmCount) * Math.sin(z * starArmCount);
+    // Check if direction corresponds to one of the 8 outer star tip vertices
+    const absX = Math.abs(x);
+    const absY = Math.abs(y);
+    const absZ = Math.abs(z);
+    const isTip = absX > 0.4 && absY > 0.4 && absZ > 0.4;
+
+    // Stellation base value
+    const starVal = isTip ? 0.65 : -0.35;
     
-    // Slower pace of expansion and contraction (isSelected: 0.8, normal: 0.25)
+    // Slow contraction/expansion wave
     const pulseSpeed = isSelected ? 0.8 : 0.25;
     const pulseAmp = isSelected ? 0.28 : 0.14;
     const wave = Math.sin(time * pulseSpeed + x * 3.5 + y * 3.5) * pulseAmp;
     
-    // fractional power (0.5) sharpens peaks into pointy tips
-    const starVal = Math.pow(Math.abs(basePeak), 0.5) * Math.sign(basePeak);
-    
-    return GLOBE_R * (1.0 + 0.35 * starVal + wave);
+    return GLOBE_R * (1.0 + starVal + wave);
 };
 
 // Calculate visibility threshold based on radius:
-// Items sink into core (r < 2.30) and disappear, and fade in as they expand out to peaks (r > 2.65).
 const getVertexVisibility = (r) => {
-    return THREE.MathUtils.clamp((r - 2.30) / 0.35, 0, 1);
+    // Valleys sink down to ~1.4, peaks expand up to ~4.5
+    // Fade out as they contract below 2.0, fade in as they expand
+    return THREE.MathUtils.clamp((r - 2.0) / 0.5, 0, 1);
 };
 
 // ─── SHIMMER LINE ─────────────────────────────────────────────────────────────
@@ -94,7 +130,6 @@ const ShimmerLine = memo(({ fromDir, toDir, color, phaseOffset = 0, isSelected =
     useFrame(({ clock }, delta) => {
         if (!lineRef.current) return;
         
-        // Stop time progression if expansion/contraction is paused
         if (isGlobeSpinning) {
             accumulatedTimeRef.current += delta;
         }
@@ -103,7 +138,6 @@ const ShimmerLine = memo(({ fromDir, toDir, color, phaseOffset = 0, isSelected =
         const rFrom = getNonconvexRadius(fromDir.x, fromDir.y, fromDir.z, time, isSelected);
         const rTo = getNonconvexRadius(toDir.x, toDir.y, toDir.z, time, isSelected);
 
-        // Hide connection if endpoints are contracted
         const visibility = isSelected ? 1.0 : Math.min(getVertexVisibility(rFrom), getVertexVisibility(rTo));
         lineRef.current.visible = visibility > 0.01;
 
@@ -224,7 +258,6 @@ const LightPointNode = ({ direction, name, subtitle, color: rawColor, size = 0.0
     useFrame(({ camera, clock }, delta) => {
         if (!groupRef.current) return;
         
-        // Stop time progression if expansion/contraction is paused
         if (isGlobeSpinning) {
             accumulatedTimeRef.current += delta;
         }
@@ -233,7 +266,6 @@ const LightPointNode = ({ direction, name, subtitle, color: rawColor, size = 0.0
         const r = getNonconvexRadius(direction.x, direction.y, direction.z, time, isSelected);
         const pos = direction.clone().multiplyScalar(r + 0.05);
 
-        // Hide node when it sinks into the core
         const visibility = isSelected ? 1.0 : getVertexVisibility(r);
         groupRef.current.visible = visibility > 0.01;
 
@@ -246,7 +278,6 @@ const LightPointNode = ({ direction, name, subtitle, color: rawColor, size = 0.0
             const pulse = isSelected ? 1 + Math.sin(time * 5) * 0.15 : 1;
             billRef.current.scale.setScalar(baseScale * pulse);
             
-            // Fade in elements based on visibility
             billRef.current.traverse((child) => {
                 if (child.material) {
                     child.material.opacity = (child.material.map ? (isSelected ? 0.7 : hovered ? 0.55 : 0.30) : (isSelected ? 1.0 : hovered ? 0.95 : 0.92)) * visibility;
@@ -340,7 +371,7 @@ const LightPointNode = ({ direction, name, subtitle, color: rawColor, size = 0.0
 
 // ─── FATALE CORE NODE ─────────────────────────────────────────────────────────
 
-const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel, isGlobeSpinning }) => {
+const FataleCoreNode = ({ isSelected, onClick, cameraDist, isGlobeSpinning }) => {
     const billRef  = useRef();
     const ring1Ref = useRef();
     const ring2Ref = useRef();
@@ -350,7 +381,6 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel, isGlobeSpi
     const POS_DIR   = useMemo(() => new THREE.Vector3(0, 1, 0), []);
     const baseScale = THREE.MathUtils.clamp(cameraDist / 8, 0.55, 1.8);
     const glowTex   = useMemo(() => createGlowTexture(COLOR), []);
-    const isMobile  = typeof window !== 'undefined' && window.innerWidth < 1024;
     const RO        = 10;
     const accumulatedTimeRef = useRef(0);
 
@@ -410,29 +440,56 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, hideLabel, isGlobeSpi
     );
 };
 
-// ─── NONCONVEX POLYHEDRON CORE ────────────────────────────────────────────────
+// ─── NONCONVEX STELLA OCTANGULA CORE ──────────────────────────────────────────
 
 const NonconvexPolyhedron = memo(({ accentColor, selectedId, isGlobeSpinning }) => {
     const geomRef = useRef();
     const wireGeomRef = useRef();
     const accumulatedTimeRef = useRef(0);
+
+    // Build the initial buffer geometry structures (72 vertices total)
+    const baseGeo = useMemo(() => {
+        const positions = new Float32Array(72 * 3);
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        return g;
+    }, []);
+
+    const baseWireGeo = useMemo(() => {
+        const positions = new Float32Array(72 * 3);
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        return g;
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            baseGeo.dispose();
+            baseWireGeo.dispose();
+        };
+    }, [baseGeo, baseWireGeo]);
     
     useFrame(({ clock }, delta) => {
         if (isGlobeSpinning) {
             accumulatedTimeRef.current += delta;
         }
         const time = accumulatedTimeRef.current;
-        const v = new THREE.Vector3();
         
+        // Calculate the 14 dynamic points of Kepler's Stella Octangula
+        const dynamicPositions = [];
+        for (let i = 0; i < 14; i++) {
+            const dir = vertexDirections[i];
+            const r = getNonconvexRadius(dir.x, dir.y, dir.z, time, !!selectedId);
+            dynamicPositions[i] = dir.clone().multiplyScalar(r);
+        }
+
         // Deform solid core geometry
         if (geomRef.current) {
             const posAttr = geomRef.current.attributes.position;
-            for (let i = 0; i < posAttr.count; i++) {
-                v.fromBufferAttribute(posAttr, i);
-                const u = v.clone().normalize();
-                const r = getNonconvexRadius(u.x, u.y, u.z, time, !!selectedId);
-                v.copy(u).multiplyScalar(r);
-                posAttr.setXYZ(i, v.x, v.y, v.z);
+            for (let i = 0; i < bufferIndexMap.length; i++) {
+                const ptIdx = bufferIndexMap[i];
+                const p = dynamicPositions[ptIdx];
+                posAttr.setXYZ(i, p.x, p.y, p.z);
             }
             posAttr.needsUpdate = true;
             geomRef.current.computeVertexNormals();
@@ -441,12 +498,11 @@ const NonconvexPolyhedron = memo(({ accentColor, selectedId, isGlobeSpinning }) 
         // Deform wireframe geometry to match exactly
         if (wireGeomRef.current) {
             const posAttr = wireGeomRef.current.attributes.position;
-            for (let i = 0; i < posAttr.count; i++) {
-                v.fromBufferAttribute(posAttr, i);
-                const u = v.clone().normalize();
-                const r = getNonconvexRadius(u.x, u.y, u.z, time, !!selectedId);
-                v.copy(u).multiplyScalar(r + 0.005);
-                posAttr.setXYZ(i, v.x, v.y, v.z);
+            for (let i = 0; i < bufferIndexMap.length; i++) {
+                const ptIdx = bufferIndexMap[i];
+                const p = dynamicPositions[ptIdx];
+                // wireframe sits slightly above solid geometry to avoid z-fighting
+                posAttr.setXYZ(i, p.x * 1.005, p.y * 1.005, p.z * 1.005);
             }
             posAttr.needsUpdate = true;
         }
@@ -455,20 +511,20 @@ const NonconvexPolyhedron = memo(({ accentColor, selectedId, isGlobeSpinning }) 
     return (
         <group>
             {/* 1. Solid opaque nonconvex polyhedron core */}
-            <mesh>
-                <icosahedronGeometry ref={geomRef} args={[GLOBE_R, 2]} />
+            <mesh geometry={baseGeo}>
+                <mesh ref={geomRef} />
                 <meshStandardMaterial color="#050505" roughness={0.12} metalness={0.88} />
             </mesh>
 
             {/* 2. Glowy inner accent sphere */}
             <mesh>
-                <icosahedronGeometry args={[2.40, 2]} />
+                <icosahedronGeometry args={[2.0, 2]} />
                 <meshStandardMaterial color={accentColor} transparent opacity={0.015} emissive={accentColor} emissiveIntensity={0.18} />
             </mesh>
 
             {/* 3. Nonconvex wireframe lattice grid */}
-            <mesh>
-                <icosahedronGeometry ref={wireGeomRef} args={[GLOBE_R, 2]} />
+            <mesh geometry={baseWireGeo}>
+                <mesh ref={wireGeomRef} />
                 <meshBasicMaterial color={accentColor} wireframe transparent opacity={0.22} toneMapped={false} />
             </mesh>
 
@@ -497,29 +553,9 @@ const GlobeCore = memo(({
     const { camera }    = useThree();
     const [cameraDist, setCameraDist] = useState(10);
     const [seed]        = useState(() => Math.random().toString());
+    const [triggerUpdate, setTriggerUpdate] = useState(0);
 
     useFrame(() => setCameraDist(camera.position.length()));
-
-    // Get unique vertex positions from the icosahedron mesh (detail=2)
-    const vertexDirections = useMemo(() => {
-        const tempGeo = new THREE.IcosahedronGeometry(1.0, 2);
-        const posAttr = tempGeo.attributes.position;
-        const verts = [];
-        const seen = new Set();
-        const v = new THREE.Vector3();
-        for (let i = 0; i < posAttr.count; i++) {
-            v.fromBufferAttribute(posAttr, i);
-            const key = `${v.x.toFixed(4)},${v.y.toFixed(4)},${v.z.toFixed(4)}`;
-            if (!seen.has(key)) {
-                seen.add(key);
-                verts.push(v.clone().normalize());
-            }
-        }
-        tempGeo.dispose();
-        
-        // Sort them relative to the center to keep layout distribution stable
-        return verts.sort((a, b) => b.y - a.y || b.x - a.x);
-    }, []);
 
     const activeSectorColor = useMemo(() => SECTORS.find(s => s.id === activeSector)?.color, [activeSector]);
 
@@ -599,10 +635,10 @@ const GlobeCore = memo(({
             }
 
             return {
-                communities_: relatedCommunities.slice(0, 15),
-                artists_: relatedArtists.slice(0, 15),
-                playlists_: relatedPlaylists.slice(0, 15),
-                tracks_: relatedTracks.slice(0, 15),
+                communities_: relatedCommunities,
+                artists_: relatedArtists,
+                playlists_: relatedPlaylists,
+                tracks_: relatedTracks,
             };
         }
 
@@ -616,42 +652,100 @@ const GlobeCore = memo(({
             communities_: shuffle(bySearch(bySector(communities.filter(c =>
                 !c.isSystem && !c.IsSystem && c.id !== 4 && c.Id !== 4 &&
                 c.name?.toUpperCase() !== 'FATALE_CORE' && c.Name?.toUpperCase() !== 'FATALE_CORE'
-            )), 'name')).slice(0, 25),
-            artists_:   shuffle(bySearch(bySector(artists), 'name')).slice(0, 25),
-            playlists_: shuffle(bySearch(playlists, 'name')).slice(0, 25),
+            )), 'name')),
+            artists_:   shuffle(bySearch(bySector(artists), 'name')),
+            playlists_: shuffle(bySearch(playlists, 'name')),
             tracks_:    shuffle(!searchQuery ? tracks : tracks.filter(t =>
                 (t.title || t.Title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (t.artist || t.Artist || '').toLowerCase().includes(searchQuery.toLowerCase())
-            )).slice(0, 25),
+            )),
         };
     }, [communities, artists, playlists, tracks, activeSector, searchQuery, seed, selectedGlobeItem]);
 
     const { communities_, artists_, playlists_, tracks_ } = filtered;
 
-    // --- stable vertex allocator ---
-    const nodesWithVertices = useMemo(() => {
-        const allNodes = [];
-        communities_.forEach(c => allNodes.push({ ...c, typeClass: 'community', nodeUniqueId: `community-${c.id || c.Id}`, name: c.name || c.Name, color: '#ffaa00', size: 0.055 }));
-        artists_.forEach(a => allNodes.push({ ...a, typeClass: 'artist', nodeUniqueId: `artist-${a.id || a.Id}`, name: a.name || a.Name, color: '#00ffaa', size: 0.048 }));
-        tracks_.forEach(t => allNodes.push({ ...t, typeClass: 'track', nodeUniqueId: `track-${t.id || t.Id}`, name: t.title || t.Title, subtitle: t.artist || t.Artist, color: t.color || '#00aaff', size: 0.038 }));
-        playlists_.forEach(p => allNodes.push({ ...p, typeClass: 'playlist', nodeUniqueId: `playlist-${p.id || p.Id}`, name: p.name || p.Name, color: 'rgb(var(--theme-primary))', size: 0.048 }));
+    // Compile the entire pool of items from the database
+    const allAvailableItems = useMemo(() => {
+        const list = [];
+        communities_.forEach(c => list.push({ ...c, typeClass: 'community', nodeUniqueId: `community-${c.id || c.Id}`, name: c.name || c.Name, color: '#ffaa00', size: 0.055 }));
+        artists_.forEach(a => list.push({ ...a, typeClass: 'artist', nodeUniqueId: `artist-${a.id || a.Id}`, name: a.name || a.Name, color: '#00ffaa', size: 0.048 }));
+        tracks_.forEach(t => list.push({ ...t, typeClass: 'track', nodeUniqueId: `track-${t.id || t.Id}`, name: t.title || t.Title, subtitle: t.artist || t.Artist, color: t.color || '#00aaff', size: 0.038 }));
+        playlists_.forEach(p => list.push({ ...p, typeClass: 'playlist', nodeUniqueId: `playlist-${p.id || p.Id}`, name: p.name || p.Name, color: 'rgb(var(--theme-primary))', size: 0.048 }));
+        return list;
+    }, [communities_, artists_, tracks_, playlists_]);
 
-        const taken = new Uint8Array(vertexDirections.length);
-        return allNodes.map(node => {
-            const h = hashStr(node.nodeUniqueId);
-            let preferred = h % vertexDirections.length;
-            while (taken[preferred]) {
-                preferred = (preferred + 1) % vertexDirections.length;
+    // Refs to hold the active 14 slots and the roll queue
+    const slotItemsRef = useRef(new Array(14).fill(null));
+    const queueRef = useRef([]);
+    const nextQueueIdxRef = useRef(0);
+    const contractedSlotsRef = useRef(new Uint8Array(14));
+
+    // Initialize/sync queue and slots when dataset changes
+    useEffect(() => {
+        const initialSlots = allAvailableItems.slice(0, 14);
+        while (initialSlots.length < 14) {
+            initialSlots.push(null);
+        }
+        slotItemsRef.current = initialSlots;
+        queueRef.current = allAvailableItems.slice(14);
+        nextQueueIdxRef.current = 0;
+        contractedSlotsRef.current.fill(0);
+        setTriggerUpdate(t => t + 1);
+    }, [allAvailableItems]);
+
+    // Dynamic Swapping Mechanism
+    // Executed at Three.js rendering speeds, but only triggers React re-renders on swaps.
+    const accumulatedTimeRef = useRef(0);
+    useFrame(({ clock }, delta) => {
+        if (isGlobeSpinning) {
+            accumulatedTimeRef.current += delta;
+        }
+        const time = accumulatedTimeRef.current;
+
+        for (let i = 0; i < 14; i++) {
+            const dir = vertexDirections[i];
+            const r = getNonconvexRadius(dir.x, dir.y, dir.z, time, !!selectedId);
+            const visibility = getVertexVisibility(r);
+
+            if (visibility <= 0.01) {
+                // Sunk/Contracted: swap in next queue item if available
+                if (!contractedSlotsRef.current[i]) {
+                    contractedSlotsRef.current[i] = 1;
+                    
+                    const queue = queueRef.current;
+                    if (queue.length > 0) {
+                        const nextIdx = nextQueueIdxRef.current;
+                        const nextItem = queue[nextIdx];
+                        
+                        const prevItem = slotItemsRef.current[i];
+                        slotItemsRef.current[i] = nextItem;
+                        
+                        // Push replaced item back into tail of the queue for infinite loops
+                        if (prevItem) {
+                            queue.push(prevItem);
+                        }
+                        
+                        nextQueueIdxRef.current = (nextIdx + 1) % queue.length;
+                        setTriggerUpdate(t => t + 1); // trigger react update for labels
+                    }
+                }
+            } else if (visibility > 0.1) {
+                contractedSlotsRef.current[i] = 0; // reset lock
             }
-            taken[preferred] = 1;
-            const dir = vertexDirections[preferred];
-            return {
-                ...node,
-                vertexIndex: preferred,
-                direction: dir
-            };
-        });
-    }, [communities_, artists_, tracks_, playlists_, vertexDirections]);
+        }
+    });
+
+    const activeNodes = useMemo(() => {
+        return slotItemsRef.current
+            .map((node, index) => {
+                if (!node) return null;
+                return {
+                    ...node,
+                    direction: vertexDirections[index]
+                };
+            })
+            .filter(Boolean);
+    }, [triggerUpdate]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const accentColorRaw = activeSectorColor || 'rgb(var(--theme-primary))';
     const accentColor = useMemo(() => resolveColorToHex(accentColorRaw), [accentColorRaw]);
@@ -661,8 +755,8 @@ const GlobeCore = memo(({
             {/* ── NONCONVEX POLYHEDRON CORE ── */}
             <NonconvexPolyhedron accentColor={accentColor} selectedId={selectedId} isGlobeSpinning={isGlobeSpinning} />
 
-            {/* ── NODES BOUND TO ACTUAL VERTICES ── */}
-            {nodesWithVertices.map(node => {
+            {/* ── NODES BOUND TO THE 14 STELLA OCTANGULA VERTICES ── */}
+            {activeNodes.map(node => {
                 const isNodeSelected = selectedId === node.nodeUniqueId;
                 
                 const onClick = () => {
@@ -679,7 +773,7 @@ const GlobeCore = memo(({
                         name={node.name}
                         subtitle={node.subtitle}
                         color={node.color}
-                        size={node.size * Math.max(0.4, 1 / (1 + 0.015 * nodesWithVertices.length))}
+                        size={node.size}
                         isSelected={isNodeSelected}
                         cameraDist={cameraDist}
                         onClick={onClick}
@@ -691,12 +785,11 @@ const GlobeCore = memo(({
             <FataleCoreNode
                 isSelected={selectedId === 'system-fatale_core'}
                 cameraDist={cameraDist}
-                hideLabel={!!selectedId}
                 isGlobeSpinning={isGlobeSpinning}
                 onClick={() => onCommunityClick?.({ id: 'fatale_core', name: 'FATALE_CORE', isSystem: true, description: 'The official Fatale system node. Share feedback, bug reports and reviews.' })}
             />
 
-            <NetworkVisualization nodes={nodesWithVertices} selectedId={selectedId} isGlobeSpinning={isGlobeSpinning} />
+            <NetworkVisualization nodes={activeNodes} selectedId={selectedId} isGlobeSpinning={isGlobeSpinning} />
         </group>
     );
 });
@@ -718,10 +811,8 @@ const InteractiveGlobe = memo(({
 
     return (
         <div className="w-full h-full cursor-grab active:cursor-grabbing">
-            {/* Pure black background */}
             <Canvas dpr={[1, 2]} gl={{ logarithmicDepthBuffer: true, antialias: true }} style={{ background: '#000000' }}>
                 <PerspectiveCamera makeDefault position={[0, 0, isMobile ? 16.5 : 15.5]} fov={isMobile ? 30 : 40} />
-                {/* Pure black fog */}
                 <fog attach="fog" args={['#000000', 38, 75]} />
                 <OrbitControls
                     enablePan={false} enableZoom={true}
