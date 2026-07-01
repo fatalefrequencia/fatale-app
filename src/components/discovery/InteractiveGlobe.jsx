@@ -80,7 +80,6 @@ const bufferIndexMap = [
 ];
 
 // ─── SHARP NONCONVEX POLYHEDRON DEFORMATION ───────────────────────────────────
-// Organic slow morph pace. Pushes star tip indices outward.
 const getNonconvexRadius = (nx, ny, nz, time, isSelected) => {
     const len = Math.sqrt(nx*nx + ny*ny + nz*nz) || 1;
     const x = nx / len;
@@ -93,21 +92,21 @@ const getNonconvexRadius = (nx, ny, nz, time, isSelected) => {
     const absZ = Math.abs(z);
     const isTip = absX > 0.4 && absY > 0.4 && absZ > 0.4;
 
-    // Stellation base value
-    const starVal = isTip ? 0.65 : -0.35;
-    
-    // Slow contraction/expansion wave
+    // Slower stellation pace
     const pulseSpeed = isSelected ? 0.8 : 0.25;
     const pulseAmp = isSelected ? 0.28 : 0.14;
     const wave = Math.sin(time * pulseSpeed + x * 3.5 + y * 3.5) * pulseAmp;
+
+    // Modulate the stellation base offset over time to make vertices breathe
+    // between peaks and valleys, crossing the visibility threshold.
+    const modulation = Math.sin(time * pulseSpeed * 0.7);
+    const starVal = (isTip ? 0.65 : -0.35) * modulation;
     
     return GLOBE_R * (1.0 + starVal + wave);
 };
 
 // Calculate visibility threshold based on radius:
 const getVertexVisibility = (r) => {
-    // Valleys sink down to ~1.4, peaks expand up to ~4.5
-    // Fade out as they contract below 2.0, fade in as they expand
     return THREE.MathUtils.clamp((r - 2.0) / 0.5, 0, 1);
 };
 
@@ -180,6 +179,9 @@ const ShimmerLine = memo(({ fromDir, toDir, color, phaseOffset = 0, isSelected =
 // ─── NETWORK VISUALIZATION ────────────────────────────────────────────────────
 
 const NetworkVisualization = ({ nodes, selectedId, isGlobeSpinning }) => {
+    // Hide all connection lines entirely when an item is selected
+    if (selectedId) return null;
+
     const connections = useMemo(() => {
         const result = [];
         const artists = nodes.filter(n => n.typeClass === 'artist');
@@ -266,6 +268,7 @@ const LightPointNode = ({ direction, name, subtitle, color: rawColor, size = 0.0
         const r = getNonconvexRadius(direction.x, direction.y, direction.z, time, isSelected);
         const pos = direction.clone().multiplyScalar(r + 0.05);
 
+        // Hide node when it contracts
         const visibility = isSelected ? 1.0 : getVertexVisibility(r);
         groupRef.current.visible = visibility > 0.01;
 
@@ -447,7 +450,6 @@ const NonconvexPolyhedron = memo(({ accentColor, selectedId, isGlobeSpinning }) 
     const wireGeomRef = useRef();
     const accumulatedTimeRef = useRef(0);
 
-    // Build the initial buffer geometry structures (72 vertices total)
     const baseGeo = useMemo(() => {
         const positions = new Float32Array(72 * 3);
         const g = new THREE.BufferGeometry();
@@ -474,8 +476,8 @@ const NonconvexPolyhedron = memo(({ accentColor, selectedId, isGlobeSpinning }) 
             accumulatedTimeRef.current += delta;
         }
         const time = accumulatedTimeRef.current;
+        const v = new THREE.Vector3();
         
-        // Calculate the 14 dynamic points of Kepler's Stella Octangula
         const dynamicPositions = [];
         for (let i = 0; i < 14; i++) {
             const dir = vertexDirections[i];
@@ -501,7 +503,6 @@ const NonconvexPolyhedron = memo(({ accentColor, selectedId, isGlobeSpinning }) 
             for (let i = 0; i < bufferIndexMap.length; i++) {
                 const ptIdx = bufferIndexMap[i];
                 const p = dynamicPositions[ptIdx];
-                // wireframe sits slightly above solid geometry to avoid z-fighting
                 posAttr.setXYZ(i, p.x * 1.005, p.y * 1.005, p.z * 1.005);
             }
             posAttr.needsUpdate = true;
@@ -590,28 +591,37 @@ const GlobeCore = memo(({
                 if (!relatedArtists.some(a => String(a.id || a.Id) === String(itemId))) {
                     relatedArtists.unshift(selectedGlobeItem);
                 }
+
+                return {
+                    communities_: relatedCommunities,
+                    artists_: relatedArtists,
+                    playlists_: relatedPlaylists,
+                    tracks_: relatedTracks,
+                };
             } 
             else if (itemType === 'track') {
+                // If a track is clicked, VOID ALL other vertices. Only 2 lights show:
+                // 1. The track itself.
+                // 2. The track's artist profile.
                 const trkArtistId = selectedGlobeItem.artistId || selectedGlobeItem.ArtistId;
                 const trkArtistUID = selectedGlobeItem.artistUserId || selectedGlobeItem.ArtistUserId;
                 const matchingArtist = artists.find(a => 
                     String(a.id || a.Id) === String(trkArtistId) ||
                     String(a.userId || a.UserId) === String(trkArtistUID)
                 );
+
+                const list = [{ ...selectedGlobeItem, typeClass: 'track', nodeUniqueId: `track-${selectedGlobeItem.id || selectedGlobeItem.Id}`, name: selectedGlobeItem.title || selectedGlobeItem.Title, subtitle: selectedGlobeItem.artist || selectedGlobeItem.Artist, color: selectedGlobeItem.color || '#00aaff', size: 0.038 }];
                 if (matchingArtist) {
-                    relatedArtists.push(matchingArtist);
+                    list.push({ ...matchingArtist, typeClass: 'artist', nodeUniqueId: `artist-${matchingArtist.id || matchingArtist.Id}`, name: matchingArtist.name || matchingArtist.Name, color: '#00ffaa', size: 0.048 });
                 }
-                if (trkArtistId || trkArtistUID) {
-                    relatedTracks = tracks.filter(t => 
-                        String(t.id || t.Id) !== String(itemId) && 
-                        (String(t.artistId || t.ArtistId) === String(trkArtistId) || 
-                         String(t.artistUserId || t.ArtistUserId) === String(trkArtistUID))
-                    );
-                }
-                relatedPlaylists = playlists.filter(p => 
-                    String(p.artistId || p.ArtistId) === String(trkArtistId)
-                );
-                relatedTracks.unshift(selectedGlobeItem);
+                
+                // Return exactly these 2 items. The slots allocator will fill the remaining 12 with null (void/empty).
+                return {
+                    communities_: [],
+                    artists_: list.filter(n => n.typeClass === 'artist'),
+                    playlists_: [],
+                    tracks_: list.filter(n => n.typeClass === 'track'),
+                };
             } 
             else if (itemType === 'community') {
                 relatedArtists = artists.filter(a => 
@@ -621,6 +631,13 @@ const GlobeCore = memo(({
                 relatedTracks = tracks.filter(t => artistIds.has(String(t.artistId || t.ArtistId)));
                 relatedPlaylists = playlists.filter(p => artistIds.has(String(p.artistId || p.ArtistId)));
                 relatedCommunities.unshift(selectedGlobeItem);
+
+                return {
+                    communities_: relatedCommunities,
+                    artists_: relatedArtists,
+                    playlists_: relatedPlaylists,
+                    tracks_: relatedTracks,
+                };
             } 
             else if (itemType === 'playlist') {
                 const plArtistId = selectedGlobeItem.artistId || selectedGlobeItem.ArtistId;
@@ -630,14 +647,14 @@ const GlobeCore = memo(({
                 }
                 relatedTracks = tracks.filter(t => String(t.artistId || t.ArtistId) === String(plArtistId));
                 relatedPlaylists.unshift(selectedGlobeItem);
-            }
 
-            return {
-                communities_: relatedCommunities,
-                artists_: relatedArtists,
-                playlists_: relatedPlaylists,
-                tracks_: relatedTracks,
-            };
+                return {
+                    communities_: [],
+                    artists_: relatedArtists,
+                    playlists_: relatedPlaylists,
+                    tracks_: relatedTracks,
+                };
+            }
         }
 
         // --- 2. DEFAULT VIEW (NO SELECTION) ---
@@ -662,23 +679,31 @@ const GlobeCore = memo(({
 
     const { communities_, artists_, playlists_, tracks_ } = filtered;
 
-    // Compile the entire pool of items from the database
+    // Compile available items (if track is selected, allAvailableItems is already just 2 pre-formatted items)
     const allAvailableItems = useMemo(() => {
+        const isTrackSelected = selectedGlobeItem && selectedGlobeItem.type === 'track';
+        if (isTrackSelected) {
+            // Already formatted inside the filtered memo above
+            const list = [];
+            artists_.forEach(a => list.push(a));
+            tracks_.forEach(t => list.push(t));
+            return list;
+        }
+
         const list = [];
         communities_.forEach(c => list.push({ ...c, typeClass: 'community', nodeUniqueId: `community-${c.id || c.Id}`, name: c.name || c.Name, color: '#ffaa00', size: 0.055 }));
         artists_.forEach(a => list.push({ ...a, typeClass: 'artist', nodeUniqueId: `artist-${a.id || a.Id}`, name: a.name || a.Name, color: '#00ffaa', size: 0.048 }));
         tracks_.forEach(t => list.push({ ...t, typeClass: 'track', nodeUniqueId: `track-${t.id || t.Id}`, name: t.title || t.Title, subtitle: t.artist || t.Artist, color: t.color || '#00aaff', size: 0.038 }));
         playlists_.forEach(p => list.push({ ...p, typeClass: 'playlist', nodeUniqueId: `playlist-${p.id || p.Id}`, name: p.name || p.Name, color: 'rgb(var(--theme-primary))', size: 0.048 }));
         return list;
-    }, [communities_, artists_, tracks_, playlists_]);
+    }, [communities_, artists_, tracks_, playlists_, selectedGlobeItem]);
 
-    // Refs to hold the active 14 slots and the roll queue
     const slotItemsRef = useRef(new Array(14).fill(null));
     const queueRef = useRef([]);
     const nextQueueIdxRef = useRef(0);
     const contractedSlotsRef = useRef(new Uint8Array(14));
 
-    // Initialize/sync queue and slots when dataset changes
+    // Initialize slots and queue
     useEffect(() => {
         const initialSlots = allAvailableItems.slice(0, 14);
         while (initialSlots.length < 14) {
@@ -692,7 +717,6 @@ const GlobeCore = memo(({
     }, [allAvailableItems]);
 
     // Dynamic Swapping Mechanism
-    // Executed at Three.js rendering speeds, but only triggers React re-renders on swaps.
     const accumulatedTimeRef = useRef(0);
     useFrame(({ clock }, delta) => {
         if (isGlobeSpinning) {
@@ -706,7 +730,6 @@ const GlobeCore = memo(({
             const visibility = getVertexVisibility(r);
 
             if (visibility <= 0.01) {
-                // Sunk/Contracted: swap in next queue item if available
                 if (!contractedSlotsRef.current[i]) {
                     contractedSlotsRef.current[i] = 1;
                     
@@ -718,17 +741,16 @@ const GlobeCore = memo(({
                         const prevItem = slotItemsRef.current[i];
                         slotItemsRef.current[i] = nextItem;
                         
-                        // Push replaced item back into tail of the queue for infinite loops
                         if (prevItem) {
                             queue.push(prevItem);
                         }
                         
                         nextQueueIdxRef.current = (nextIdx + 1) % queue.length;
-                        setTriggerUpdate(t => t + 1); // trigger react update for labels
+                        setTriggerUpdate(t => t + 1);
                     }
                 }
             } else if (visibility > 0.1) {
-                contractedSlotsRef.current[i] = 0; // reset lock
+                contractedSlotsRef.current[i] = 0;
             }
         }
     });
