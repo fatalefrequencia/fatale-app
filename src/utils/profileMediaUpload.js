@@ -1,6 +1,6 @@
 /** Max sizes before we reject or compress (mobile camera photos are often 5–15MB). */
 export const PROFILE_IMAGE_MAX_BYTES = 8 * 1024 * 1024;
-export const PROFILE_VIDEO_MAX_BYTES = 50 * 1024 * 1024;
+export const PROFILE_VIDEO_MAX_BYTES = 500 * 1024 * 1024;
 
 export function formatFileSizeMb(bytes) {
     return ((bytes || 0) / (1024 * 1024)).toFixed(1);

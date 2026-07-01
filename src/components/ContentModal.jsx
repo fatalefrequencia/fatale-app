@@ -34,6 +34,9 @@ const ContentModal = ({
     }, [content]);
 
     const [showTipModal, setShowTipModal] = React.useState(false);
+    const [readerTheme, setReaderTheme] = React.useState('CYBER_PULSE');
+    const [readerFontFamily, setReaderFontFamily] = React.useState('SERIF');
+    const [readerFontSize, setReaderFontSize] = React.useState(16);
     const [comments, setComments] = React.useState([]);
     const [loadingComments, setLoadingComments] = React.useState(false);
     const [commentText, setCommentText] = React.useState("");
@@ -347,80 +350,183 @@ const ContentModal = ({
                             </>
                         ) : (
                             <div className="p-4 sm:p-8 md:p-12 relative">
-                                {['JOURNAL', 'TEXT'].includes(normalizedType) && (
-                                    <div className="font-mono text-white/90 space-y-6">
-                                        {/* Header inside the note */}
-                                        <div className="mb-6 flex items-center justify-between border-b border-[#9d00ff]/20 pb-4">
-                                            <div className="flex items-center text-[#9d00ff] text-xs md:text-sm tracking-widest" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>
-                                                <span className="mr-2">root@fatale.fm:~#</span>
-                                                <span>cat log_{activeEntry.Id || activeEntry.id || 'sys'}.txt</span>
-                                            </div>
-                                            <div className="flex items-center gap-4 text-[9px] uppercase tracking-widest text-white/30">
-                                                <div>
-                                                    <span className="text-[#9d00ff]/40">PACKAGE_ID:</span>{' '}
-                                                    <span className="text-white/60 font-bold">{activeEntry?.Id || activeEntry?.id || 'GLOBAL_CORE'}</span>
+                                {['JOURNAL', 'TEXT'].includes(normalizedType) && (() => {
+                                    const themeStyles = {
+                                        CYBER_PULSE: {
+                                            background: 'rgba(2, 2, 2, 0.95)',
+                                            color: '#ff7096',
+                                            borderColor: 'rgba(255, 112, 150, 0.25)',
+                                            boxShadow: '0 0 15px rgba(255, 112, 150, 0.1)',
+                                            textShadow: '0 0 4px rgba(255, 112, 150, 0.15)',
+                                        },
+                                        CYBER_DECK: {
+                                            background: '#020f06',
+                                            color: '#39ff14',
+                                            borderColor: 'rgba(57, 255, 20, 0.25)',
+                                            boxShadow: '0 0 15px rgba(57, 255, 20, 0.1)',
+                                            textShadow: '0 0 4px rgba(57, 255, 20, 0.15)',
+                                        },
+                                        NEURAL_NET: {
+                                            background: '#030c14',
+                                            color: '#00f5ff',
+                                            borderColor: 'rgba(0, 245, 255, 0.25)',
+                                            boxShadow: '0 0 15px rgba(0, 245, 255, 0.1)',
+                                            textShadow: '0 0 4px rgba(0, 245, 255, 0.15)',
+                                        },
+                                        DATA_PAD: {
+                                            background: 'rgba(255, 255, 255, 0.05)',
+                                            color: '#ffffff',
+                                            borderColor: 'rgba(255, 255, 255, 0.15)',
+                                            backdropFilter: 'blur(20px)',
+                                            boxShadow: '0 0 20px rgba(255, 255, 255, 0.05)',
+                                            textShadow: 'none',
+                                        }
+                                    };
+
+                                    const fontFamilies = {
+                                        SERIF: "'Georgia', 'Merriweather', 'Lora', serif",
+                                        SANS: "ui-sans-serif, system-ui, sans-serif",
+                                        MONO: "'Fira Code', 'Consolas', 'Courier New', monospace"
+                                    };
+
+                                    const activeStyle = themeStyles[readerTheme] || themeStyles.CYBER_PULSE;
+                                    const activeFont = fontFamilies[readerFontFamily] || fontFamilies.SERIF;
+
+                                    return (
+                                        <div className="space-y-6">
+                                            {/* Header inside the note */}
+                                            <div className="mb-4 flex items-center justify-between border-b border-[#9d00ff]/20 pb-4 font-mono">
+                                                <div className="flex items-center text-[#9d00ff] text-xs md:text-sm tracking-widest" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>
+                                                    <span className="mr-2">root@fatale.fm:~#</span>
+                                                    <span>cat log_{activeEntry.Id || activeEntry.id || 'sys'}.txt</span>
                                                 </div>
-                                                <button onClick={onClose} className="text-white/50 hover:text-white transition-all p-1 hover:bg-white/10 rounded">
-                                                    <X size={16} />
-                                                </button>
+                                                <div className="flex items-center gap-4 text-[9px] uppercase tracking-widest text-white/30">
+                                                    <div>
+                                                        <span className="text-[#9d00ff]/40">PACKAGE_ID:</span>{' '}
+                                                        <span className="text-white/60 font-bold">{activeEntry?.Id || activeEntry?.id || 'GLOBAL_CORE'}</span>
+                                                    </div>
+                                                    <button onClick={onClose} className="text-white/50 hover:text-white transition-all p-1 hover:bg-white/10 rounded">
+                                                        <X size={16} />
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        {/* Immersive Chapter Navigation Header */}
-                                        {(activeEntry.seriesId || activeEntry.SeriesId) && (
-                                            <ChapterReader 
-                                                entry={activeEntry} 
-                                                onNavigateToEntry={(newEntry) => setActiveEntry(newEntry)} 
-                                            />
-                                        )}
-                                        
-                                        <h2 className="text-xl md:text-2xl text-white font-bold mb-2 break-words whitespace-normal" style={{ textShadow: '0 0 10px rgba(255,255,255,0.5)' }}>
-                                            {activeEntry.Title || activeEntry.title || t('UNTITLED_LOG')}
-                                        </h2>
-                                        
-                                        <div className="text-[#9d00ff]/70 text-xs mb-6 tracking-widest" style={{ textShadow: '0 0 5px rgba(157,0,255,0.3)' }}>
-                                            [TIMESTAMP: {activeEntry.CreatedAt ? new Date(activeEntry.CreatedAt).toLocaleString() : 'UNKNOWN'}]
-                                        </div>
-                                        
-                                        {/* Content body (HTML or plain text) */}
-                                        {(activeEntry.contentFormat === 'html' || activeEntry.ContentFormat === 'html') ? (
-                                            <div 
-                                                className="text-white/95 text-sm md:text-base leading-relaxed tracking-wide break-words mb-8 html-content space-y-4 select-text"
-                                                style={{ textShadow: '0 0 4px rgba(255,255,255,0.2)' }}
-                                                dangerouslySetInnerHTML={{ __html: activeEntry.Content || activeEntry.content || '' }}
-                                            />
-                                        ) : (
-                                            <div className="text-white/90 whitespace-pre-wrap text-sm md:text-base leading-relaxed tracking-wide break-words mb-8 select-text" style={{ textShadow: '0 0 8px rgba(255,255,255,0.4)' }}>
-                                                {activeEntry.Content || activeEntry.content || activeEntry.Text || activeEntry.text}
+                                            {/* Cyberdeck E-Reader Settings Toolbar */}
+                                            <div className="flex flex-wrap items-center gap-4 bg-black/55 border border-white/5 p-2 px-3 justify-between select-none font-mono text-[8px] md:text-[9px] rounded-sm">
+                                                <div className="flex flex-wrap items-center gap-1.5">
+                                                    <span className="text-white/35 uppercase">[ MATRIX ]:</span>
+                                                    <button onClick={() => setReaderTheme('CYBER_PULSE')} className={`px-1.5 py-0.5 border ${readerTheme === 'CYBER_PULSE' ? 'border-[#ff7096] text-[#ff7096] bg-[#ff7096]/5' : 'border-transparent text-white/40 hover:text-white'}`}>PULSE</button>
+                                                    <button onClick={() => setReaderTheme('CYBER_DECK')} className={`px-1.5 py-0.5 border ${readerTheme === 'CYBER_DECK' ? 'border-[#39ff14] text-[#39ff14] bg-[#39ff14]/5' : 'border-transparent text-white/40 hover:text-white'}`}>DECK</button>
+                                                    <button onClick={() => setReaderTheme('NEURAL_NET')} className={`px-1.5 py-0.5 border ${readerTheme === 'NEURAL_NET' ? 'border-[#00f5ff] text-[#00f5ff] bg-[#00f5ff]/5' : 'border-transparent text-white/40 hover:text-white'}`}>NET</button>
+                                                    <button onClick={() => setReaderTheme('DATA_PAD')} className={`px-1.5 py-0.5 border ${readerTheme === 'DATA_PAD' ? 'border-white text-white bg-white/5' : 'border-transparent text-white/40 hover:text-white'}`}>GLASS</button>
+                                                </div>
+
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-white/35 uppercase">[ FONT ]:</span>
+                                                    <button onClick={() => setReaderFontFamily('SERIF')} className={`px-1.5 py-0.5 border ${readerFontFamily === 'SERIF' ? 'border-white text-white bg-white/5' : 'border-transparent text-white/40 hover:text-white'}`}>SERIF</button>
+                                                    <button onClick={() => setReaderFontFamily('SANS')} className={`px-1.5 py-0.5 border ${readerFontFamily === 'SANS' ? 'border-white text-white bg-white/5' : 'border-transparent text-white/40 hover:text-white'}`}>SANS</button>
+                                                    <button onClick={() => setReaderFontFamily('MONO')} className={`px-1.5 py-0.5 border ${readerFontFamily === 'MONO' ? 'border-white text-white bg-white/5' : 'border-transparent text-white/40 hover:text-white'}`}>MONO</button>
+                                                </div>
+
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-white/35 uppercase">[ SCALE ]:</span>
+                                                    <button onClick={() => setReaderFontSize(size => Math.max(12, size - 2))} className="px-1.5 py-0.5 border border-transparent text-white/40 hover:text-white hover:border-white/10">-</button>
+                                                    <span className="text-white/70 font-bold">{readerFontSize}PX</span>
+                                                    <button onClick={() => setReaderFontSize(size => Math.min(26, size + 2))} className="px-1.5 py-0.5 border border-transparent text-white/40 hover:text-white hover:border-white/10">+</button>
+                                                </div>
                                             </div>
-                                        )}
 
-                                        {/* Immersive Chapter Navigation Footer */}
-                                        {(activeEntry.seriesId || activeEntry.SeriesId) && (
-                                            <div className="mt-8">
+                                            {/* Immersive Chapter Navigation Header */}
+                                            {(activeEntry.seriesId || activeEntry.SeriesId) && (
                                                 <ChapterReader 
                                                     entry={activeEntry} 
                                                     onNavigateToEntry={(newEntry) => setActiveEntry(newEntry)} 
                                                 />
+                                            )}
+                                            
+                                            {/* Stylized Datapad Text Container */}
+                                            <div 
+                                                style={{ 
+                                                    background: activeStyle.background,
+                                                    color: activeStyle.color,
+                                                    borderColor: activeStyle.borderColor,
+                                                    boxShadow: activeStyle.boxShadow,
+                                                    backdropFilter: activeStyle.backdropFilter || 'none',
+                                                    fontFamily: activeFont,
+                                                    fontSize: `${readerFontSize}px`,
+                                                    transition: 'all 0.3s ease',
+                                                }}
+                                                className="p-6 md:p-10 border rounded-sm flex flex-col items-center select-text"
+                                            >
+                                                <style dangerouslySetInnerHTML={{ __html: `
+                                                    .cyber-reader-content::first-letter {
+                                                        float: left;
+                                                        font-size: 3.5em;
+                                                        line-height: 0.8;
+                                                        margin: 4px 10px 4px 0;
+                                                        font-weight: 900;
+                                                        text-transform: uppercase;
+                                                        color: currentColor;
+                                                    }
+                                                ` }} />
+
+                                                <div className="w-full max-w-2xl text-left whitespace-normal break-words leading-relaxed select-text">
+                                                    <h2 
+                                                        style={{ fontFamily: activeFont, textShadow: activeStyle.textShadow }} 
+                                                        className="text-2xl md:text-3xl font-extrabold mb-2 uppercase select-text"
+                                                    >
+                                                        {activeEntry.Title || activeEntry.title || t('UNTITLED_LOG')}
+                                                    </h2>
+                                                    
+                                                    <div className="text-[10px] mb-8 tracking-widest font-mono opacity-60">
+                                                        [TIMESTAMP: {activeEntry.CreatedAt ? new Date(activeEntry.CreatedAt).toLocaleString() : 'UNKNOWN'}]
+                                                    </div>
+                                                    
+                                                    {/* Content body (HTML or plain text) */}
+                                                    {(activeEntry.contentFormat === 'html' || activeEntry.ContentFormat === 'html') ? (
+                                                        <div 
+                                                            style={{ textShadow: activeStyle.textShadow }}
+                                                            className="leading-relaxed tracking-wide select-text space-y-4 cyber-reader-content"
+                                                            dangerouslySetInnerHTML={{ __html: activeEntry.Content || activeEntry.content || '' }}
+                                                        />
+                                                    ) : (
+                                                        <div 
+                                                            style={{ textShadow: activeStyle.textShadow }}
+                                                            className="whitespace-pre-wrap leading-relaxed tracking-wide select-text cyber-reader-content"
+                                                        >
+                                                            {activeEntry.Content || activeEntry.content || activeEntry.Text || activeEntry.text}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        )}
 
-                                        {/* Inline Footer Actions inside note */}
-                                        <div className="mt-8 pt-6 border-t border-[#9d00ff]/20 flex flex-wrap items-center justify-end gap-3">
-                                            <span className="text-[#9d00ff] tracking-widest font-normal text-xs font-mono mr-auto" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>root@fatale.fm:~#</span>
+                                            {/* Immersive Chapter Navigation Footer */}
+                                            {(activeEntry.seriesId || activeEntry.SeriesId) && (
+                                                <div className="mt-8">
+                                                    <ChapterReader 
+                                                        entry={activeEntry} 
+                                                        onNavigateToEntry={(newEntry) => setActiveEntry(newEntry)} 
+                                                    />
+                                                </div>
+                                            )}
 
-                                            <button onClick={() => setShowTipModal(true)} className="px-3 py-1.5 bg-fatale/10 border border-fatale/30 hover:bg-fatale hover:text-black transition-all text-fatale font-black flex items-center gap-2 group text-[8px] sm:text-[9px]">
-                                                <Coins size={12} className="group-hover:animate-bounce" /> {t('TIP_ARTIST')}
-                                            </button>
-                                            <button onClick={handleShare} className="px-3 py-1.5 bg-white/5 border border-white/10 hover:border-[#9d00ff]/50 hover:text-white transition-all text-white/60 flex items-center gap-2 text-[8px] sm:text-[9px]">
-                                                <Share2 size={12} /> {t('SHARE_SIGNAL')}
-                                            </button>
-                                            <button onClick={onClose} className="text-white font-black px-5 py-1.5 uppercase transition-all border border-white/40 hover:border-white hover:bg-white hover:text-black text-[8px] sm:text-[10px] tracking-[0.2em]">
-                                                {t('CLOSE')}
-                                            </button>
+                                            {/* Inline Footer Actions inside note */}
+                                            <div className="mt-8 pt-6 border-t border-[#9d00ff]/20 flex flex-wrap items-center justify-end gap-3 font-mono">
+                                                <span className="text-[#9d00ff] tracking-widest font-normal text-xs mr-auto" style={{ textShadow: '0 0 8px rgba(157,0,255,0.6)' }}>root@fatale.fm:~#</span>
+
+                                                <button onClick={() => setShowTipModal(true)} className="px-3 py-1.5 bg-fatale/10 border border-fatale/30 hover:bg-fatale hover:text-black transition-all text-fatale font-black flex items-center gap-2 group text-[8px] sm:text-[9px]">
+                                                    <Coins size={12} className="group-hover:animate-bounce" /> {t('TIP_ARTIST')}
+                                                </button>
+                                                <button onClick={handleShare} className="px-3 py-1.5 bg-white/5 border border-white/10 hover:border-[#9d00ff]/50 hover:text-white transition-all text-white/60 flex items-center gap-2 text-[8px] sm:text-[9px]">
+                                                    <Share2 size={12} /> {t('SHARE_SIGNAL')}
+                                                </button>
+                                                <button onClick={onClose} className="text-white font-black px-5 py-1.5 uppercase transition-all border border-white/40 hover:border-white hover:bg-white hover:text-black text-[8px] sm:text-[10px] tracking-[0.2em]">
+                                                    {t('CLOSE')}
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
+                                    );
+                                })()}
                             </div>
                         )
                     )}
