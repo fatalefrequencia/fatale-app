@@ -484,20 +484,20 @@ const NonconvexPolyhedron = memo(({ accentColor, selectedId, isGlobeSpinning }) 
         }
 
         // Deform solid core geometry
-        if (geomRef.current) {
-            const posAttr = geomRef.current.attributes.position;
+        if (geomRef.current && geomRef.current.geometry) {
+            const posAttr = geomRef.current.geometry.attributes.position;
             for (let i = 0; i < bufferIndexMap.length; i++) {
                 const ptIdx = bufferIndexMap[i];
                 const p = dynamicPositions[ptIdx];
                 posAttr.setXYZ(i, p.x, p.y, p.z);
             }
             posAttr.needsUpdate = true;
-            geomRef.current.computeVertexNormals();
+            geomRef.current.geometry.computeVertexNormals();
         }
 
         // Deform wireframe geometry to match exactly
-        if (wireGeomRef.current) {
-            const posAttr = wireGeomRef.current.attributes.position;
+        if (wireGeomRef.current && wireGeomRef.current.geometry) {
+            const posAttr = wireGeomRef.current.geometry.attributes.position;
             for (let i = 0; i < bufferIndexMap.length; i++) {
                 const ptIdx = bufferIndexMap[i];
                 const p = dynamicPositions[ptIdx];
@@ -511,8 +511,7 @@ const NonconvexPolyhedron = memo(({ accentColor, selectedId, isGlobeSpinning }) 
     return (
         <group>
             {/* 1. Solid opaque nonconvex polyhedron core */}
-            <mesh geometry={baseGeo}>
-                <mesh ref={geomRef} />
+            <mesh ref={geomRef} geometry={baseGeo}>
                 <meshStandardMaterial color="#050505" roughness={0.12} metalness={0.88} />
             </mesh>
 
@@ -523,8 +522,7 @@ const NonconvexPolyhedron = memo(({ accentColor, selectedId, isGlobeSpinning }) 
             </mesh>
 
             {/* 3. Nonconvex wireframe lattice grid */}
-            <mesh geometry={baseWireGeo}>
-                <mesh ref={wireGeomRef} />
+            <mesh ref={wireGeomRef} geometry={baseWireGeo}>
                 <meshBasicMaterial color={accentColor} wireframe transparent opacity={0.22} toneMapped={false} />
             </mesh>
 
