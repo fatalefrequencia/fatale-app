@@ -721,12 +721,20 @@ const GlobeCore = memo(({
         }
 
         const list = [];
-        communities_.forEach(c => list.push({ ...c, typeClass: 'community', nodeUniqueId: `community-${c.id || c.Id}`, name: c.name || c.Name, color: '#ffaa00', size: 0.055 }));
-        artists_.forEach(a => list.push({ ...a, typeClass: 'artist', nodeUniqueId: `artist-${a.id || a.Id}`, name: a.name || a.Name, color: '#00ffaa', size: 0.048 }));
-        tracks_.forEach(t => list.push({ ...t, typeClass: 'track', nodeUniqueId: `track-${t.id || t.Id}`, name: t.title || t.Title, subtitle: t.artist || t.Artist, color: t.color || '#00aaff', size: 0.038 }));
-        playlists_.forEach(p => list.push({ ...p, typeClass: 'playlist', nodeUniqueId: `playlist-${p.id || p.Id}`, name: p.name || p.Name, color: 'rgb(var(--theme-primary))', size: 0.048 }));
+        if (!activeView || activeView === 'COMMUNITIES') {
+            communities_.forEach(c => list.push({ ...c, typeClass: 'community', nodeUniqueId: `community-${c.id || c.Id}`, name: c.name || c.Name, color: '#ffaa00', size: 0.055 }));
+        }
+        if (!activeView || activeView === 'ARTISTS') {
+            artists_.forEach(a => list.push({ ...a, typeClass: 'artist', nodeUniqueId: `artist-${a.id || a.Id}`, name: a.name || a.Name, color: '#00ffaa', size: 0.048 }));
+        }
+        if (!activeView || activeView === 'TRACKS') {
+            tracks_.forEach(t => list.push({ ...t, typeClass: 'track', nodeUniqueId: `track-${t.id || t.Id}`, name: t.title || t.Title, subtitle: t.artist || t.Artist, color: t.color || '#00aaff', size: 0.038 }));
+        }
+        if (!activeView || activeView === 'PLAYLISTS') {
+            playlists_.forEach(p => list.push({ ...p, typeClass: 'playlist', nodeUniqueId: `playlist-${p.id || p.Id}`, name: p.name || p.Name, color: 'rgb(var(--theme-primary))', size: 0.048 }));
+        }
         return list;
-    }, [communities_, artists_, tracks_, playlists_, selectedGlobeItem]);
+    }, [communities_, artists_, tracks_, playlists_, selectedGlobeItem, activeView]);
 
     const slotItemsRef = useRef(new Array(14).fill(null));
     const queueRef = useRef([]);

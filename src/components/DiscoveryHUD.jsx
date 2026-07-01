@@ -244,6 +244,69 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
     const [isPinterestView, setIsPinterestView] = useState(() => localStorage.getItem('fatale_low_spec') === 'true');
     const [selectedSearchCategory, setSelectedSearchCategory] = useState('ALL');
 
+    const [rolledValue, setRolledValue] = useState(null);
+    const [diceRolling, setDiceRolling] = useState(false);
+    const [diceResults, setDiceResults] = useState([]);
+
+    useEffect(() => {
+        if (isPinterestView) {
+            setDiceRolling(true);
+            const roll = Math.floor(Math.random() * 6) + 1;
+            setRolledValue(roll);
+            
+            // Compile pool of all items
+            const allItems = [
+                ...communities.filter(c => !c.isSystem && c.name?.toUpperCase() !== 'FATALE_CORE').map(c => ({ ...c, type: 'community' })),
+                ...trendingArtists.filter(a => {
+                    const name = (a.name || a.Name || "").toLowerCase();
+                    return name !== 'the archive' && name !== 'youtube' && !(a.isArchive || a.IsArchive);
+                }).map(a => ({ ...a, type: 'artist' })),
+                ...trendingTracks.filter(isNativeTrack).map(t => ({ ...t, type: 'track' })),
+                ...trendingPlaylists.map(p => ({ ...p, type: 'playlist' }))
+            ];
+            
+            // Randomly shuffle
+            const shuffled = allItems.sort(() => Math.random() - 0.5);
+            const selection = shuffled.slice(0, roll);
+            
+            const timer = setTimeout(() => {
+                setDiceRolling(false);
+                setDiceResults(selection);
+            }, 1000);
+            
+            return () => clearTimeout(timer);
+        } else {
+            setDiceRolling(false);
+            setRolledValue(null);
+            setDiceResults([]);
+        }
+    }, [isPinterestView, communities, trendingArtists, trendingTracks, trendingPlaylists, isNativeTrack]);
+
+    const handleDiceReRoll = () => {
+        if (diceRolling) return;
+        setDiceRolling(true);
+        const roll = Math.floor(Math.random() * 6) + 1;
+        setRolledValue(roll);
+        
+        const allItems = [
+            ...communities.filter(c => !c.isSystem && c.name?.toUpperCase() !== 'FATALE_CORE').map(c => ({ ...c, type: 'community' })),
+            ...trendingArtists.filter(a => {
+                const name = (a.name || a.Name || "").toLowerCase();
+                return name !== 'the archive' && name !== 'youtube' && !(a.isArchive || a.IsArchive);
+            }).map(a => ({ ...a, type: 'artist' })),
+            ...trendingTracks.filter(isNativeTrack).map(t => ({ ...t, type: 'track' })),
+            ...trendingPlaylists.map(p => ({ ...p, type: 'playlist' }))
+        ];
+        
+        const shuffled = allItems.sort(() => Math.random() - 0.5);
+        const selection = shuffled.slice(0, roll);
+        
+        setTimeout(() => {
+            setDiceRolling(false);
+            setDiceResults(selection);
+        }, 1000);
+    };
+
     // ── Centralized native-track detection (catches ALL casing variants from API) ──
     const isNativeTrack = useCallback((t) => {
         const src = (t.source || t.Source || t.filePath || t.FilePath || "").toLowerCase();
@@ -1173,57 +1236,141 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
 
                         {/* Pinterest Grid View */}
                         <div className={`absolute inset-0 w-full h-full bg-black/95 backdrop-blur-xl border border-colorBorder/30 p-5 pt-28 overflow-y-auto no-scrollbar transition-all duration-500 pointer-events-auto ${isPinterestView ? 'opacity-100 visible z-20' : 'opacity-0 invisible pointer-events-none -z-10'}`}>
-                            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-fatale mb-6 border-b border-fatale/20 pb-2 pl-14 md:pl-16">DISCOVERED_SIGNALS</div>
+                            <div className="text-[10px] font-black uppercase tracking-[0.4em] text-fatale mb-4 border-b border-fatale/20 pb-2 pl-14 md:pl-16">DISCOVERED_SIGNALS</div>
 
-                            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                                {/* Playlists */}
-                                {trendingPlaylists.slice(0, 4).map(p => (
-                                    <div key={p.id || p.Id} className="aspect-square bg-black border border-colorBorder/30 hover:border-fatale/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => onPlayTrack(p)}>
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                                        <div className="text-[8px] font-mono text-fatale uppercase tracking-widest">PLAYLIST</div>
-                                        <div className="z-10">
-                                            <div className="text-xs font-black truncate group-hover:text-fatale uppercase">{p.name || p.Name}</div>
-                                            <div className="text-[8px] text-colorDataSecondary uppercase mt-0.5">BY {p.authorName || p.AuthorName || p.userName || p.UserName || "UNKNOWN"}</div>
-                                        </div>
-                                        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Play size={16} fill="rgb(var(--theme-primary))" className="text-fatale" />
-                                        </div>
-                                    </div>
-                                ))}
-
-                                {/* Tracks */}
-                                {trendingTracks.slice(0, 6).map(trk => (
-                                    <div key={trk.id} className="aspect-square bg-black border border-colorBorder/30 hover:border-fatale/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => onPlayTrack(trk)}>
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                                        <div className="absolute inset-0">
-                                            <img src={getMediaUrl(trk.imageUrl || trk.ImageUrl || trk.coverImageUrl || trk.CoverImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-20 group-hover:opacity-40 group-hover:scale-110 transition-all duration-700" />
-                                        </div>
-                                        <div className="text-[8px] font-mono text-secondary uppercase tracking-widest z-10">SONG</div>
-                                        <div className="z-10">
-                                            <div className="text-xs font-black truncate group-hover:text-fatale uppercase">{trk.title}</div>
-                                            <div className="text-[8px] text-colorDataSecondary uppercase mt-0.5">BY {trk.artist}</div>
-                                        </div>
-                                        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                            <Play size={16} fill="rgb(var(--theme-primary))" className="text-fatale" />
-                                        </div>
-                                    </div>
-                                ))}
-
-                                {/* Artists */}
-                                {trendingArtists.slice(0, 4).map(a => (
-                                    <div key={a.id} className="aspect-square bg-black border border-colorBorder/30 hover:border-fatale/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => navigateToProfile(a.userId)}>
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                                        <div className="absolute inset-0">
-                                            <img src={getMediaUrl(a.profilePicture || a.ProfilePicture || a.imageUrl || a.ImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-20 group-hover:opacity-40 group-hover:scale-110 transition-all duration-700" />
-                                        </div>
-                                        <div className="text-[8px] font-mono text-[#9d00ff] uppercase tracking-widest z-10">ARTIST</div>
-                                        <div className="z-10">
-                                            <div className="text-xs font-black truncate group-hover:text-fatale uppercase">{a.name}</div>
-                                            <div className="text-[8px] text-colorDataSecondary uppercase mt-0.5">{a.genre || "NATIVE"}</div>
-                                        </div>
-                                    </div>
-                                ))}
+                            {/* Rolling Dice Outline Animation Component */}
+                            <div className="flex flex-col items-center justify-center gap-3 my-6 p-4 border border-fatale/25 bg-black/60 backdrop-blur-md rounded-sm w-fit mx-auto cursor-pointer group hover:border-fatale/55 transition-all" onClick={handleDiceReRoll}>
+                                <div className="relative">
+                                    <svg className={`w-14 h-14 text-fatale transition-all ${diceRolling ? 'dice-shake-anim text-[#ff7096]' : 'text-fatale/80 group-hover:text-fatale group-hover:scale-105'}`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <rect x="18" y="18" width="64" height="64" rx="8" strokeDasharray={diceRolling ? "4 4" : "none"} />
+                                        <rect x="22" y="22" width="56" height="56" rx="6" opacity="0.3" strokeWidth="1" />
+                                        
+                                        {!diceRolling && (
+                                            <>
+                                                {rolledValue === 1 && <circle cx="50" cy="50" r="5" fill="currentColor" />}
+                                                {rolledValue === 2 && (
+                                                    <>
+                                                        <circle cx="36" cy="36" r="4.5" fill="currentColor" />
+                                                        <circle cx="64" cy="64" r="4.5" fill="currentColor" />
+                                                    </>
+                                                )}
+                                                {rolledValue === 3 && (
+                                                    <>
+                                                        <circle cx="34" cy="34" r="4.5" fill="currentColor" />
+                                                        <circle cx="50" cy="50" r="4.5" fill="currentColor" />
+                                                        <circle cx="66" cy="66" r="4.5" fill="currentColor" />
+                                                    </>
+                                                )}
+                                                {rolledValue === 4 && (
+                                                    <>
+                                                        <circle cx="36" cy="36" r="4.5" fill="currentColor" />
+                                                        <circle cx="64" cy="36" r="4.5" fill="currentColor" />
+                                                        <circle cx="36" cy="64" r="4.5" fill="currentColor" />
+                                                        <circle cx="64" cy="64" r="4.5" fill="currentColor" />
+                                                    </>
+                                                )}
+                                                {rolledValue === 5 && (
+                                                    <>
+                                                        <circle cx="32" cy="32" r="4" fill="currentColor" />
+                                                        <circle cx="68" cy="32" r="4" fill="currentColor" />
+                                                        <circle cx="50" cy="50" r="4" fill="currentColor" />
+                                                        <circle cx="32" cy="68" r="4" fill="currentColor" />
+                                                        <circle cx="68" cy="68" r="4" fill="currentColor" />
+                                                    </>
+                                                )}
+                                                {rolledValue === 6 && (
+                                                    <>
+                                                        <circle cx="34" cy="32" r="4" fill="currentColor" />
+                                                        <circle cx="66" cy="32" r="4" fill="currentColor" />
+                                                        <circle cx="34" cy="50" r="4" fill="currentColor" />
+                                                        <circle cx="66" cy="50" r="4" fill="currentColor" />
+                                                        <circle cx="34" cy="68" r="4" fill="currentColor" />
+                                                        <circle cx="66" cy="68" r="4" fill="currentColor" />
+                                                    </>
+                                                )}
+                                            </>
+                                        )}
+                                        {diceRolling && (
+                                            <>
+                                                <circle cx="35" cy="50" r="3" fill="currentColor" opacity="0.6" />
+                                                <circle cx="50" cy="50" r="3" fill="currentColor" opacity="0.8" />
+                                                <circle cx="65" cy="50" r="3" fill="currentColor" opacity="0.6" />
+                                            </>
+                                        )}
+                                    </svg>
+                                </div>
+                                <div className="text-[7px] font-mono tracking-[0.3em] uppercase text-colorDataSecondary group-hover:text-fatale transition-colors select-none">
+                                    {diceRolling ? "SCANNING_CHANCE..." : `ROLLED: ${rolledValue} (CLICK TO RE-ROLL)`}
+                                </div>
                             </div>
+
+                            {!diceRolling && diceResults.length > 0 && (
+                                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 animate-in fade-in duration-500">
+                                    {diceResults.map(item => {
+                                        if (item.type === 'community') {
+                                            return (
+                                                <div key={`dice-comm-${item.id || item.Id}`} className="aspect-square bg-black border border-colorBorder/30 hover:border-[#ffaa00]/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => onMessageCommunity ? onMessageCommunity(item) : undefined}>
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                                                    <div className="text-[8px] font-mono text-[#ffaa00] uppercase tracking-widest">COMMUNITY</div>
+                                                    <div className="z-10">
+                                                        <div className="text-xs font-black truncate group-hover:text-[#ffaa00] uppercase">{item.name || item.Name}</div>
+                                                        <div className="text-[8px] text-colorDataSecondary uppercase mt-0.5">{item.description || item.Description || "CLIQUES"}</div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
+                                        if (item.type === 'artist') {
+                                            return (
+                                                <div key={`dice-art-${item.id}`} className="aspect-square bg-black border border-colorBorder/30 hover:border-[#00ffaa]/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => navigateToProfile(item.userId)}>
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                                                    <div className="absolute inset-0">
+                                                        <img src={getMediaUrl(item.profilePicture || item.ProfilePicture || item.imageUrl || item.ImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-20 group-hover:opacity-40 group-hover:scale-110 transition-all duration-700" />
+                                                    </div>
+                                                    <div className="text-[8px] font-mono text-[#00ffaa] uppercase tracking-widest z-10">ARTIST</div>
+                                                    <div className="z-10">
+                                                        <div className="text-xs font-black truncate group-hover:text-[#00ffaa] uppercase">{item.name || item.Name}</div>
+                                                        <div className="text-[8px] text-colorDataSecondary uppercase mt-0.5">{item.genre || "NATIVE"}</div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
+                                        if (item.type === 'track') {
+                                            return (
+                                                <div key={`dice-track-${item.id}`} className="aspect-square bg-black border border-colorBorder/30 hover:border-[#00aaff]/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => onPlayTrack(item)}>
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                                                    <div className="absolute inset-0">
+                                                        <img src={getMediaUrl(item.imageUrl || item.ImageUrl || item.coverImageUrl || item.CoverImageUrl)} alt="" className="w-full h-full object-cover grayscale opacity-20 group-hover:opacity-40 group-hover:scale-110 transition-all duration-700" />
+                                                    </div>
+                                                    <div className="text-[8px] font-mono text-[#00aaff] uppercase tracking-widest z-10">SONG</div>
+                                                    <div className="z-10">
+                                                        <div className="text-xs font-black truncate group-hover:text-[#00aaff] uppercase">{item.title || item.Title}</div>
+                                                        <div className="text-[8px] text-colorDataSecondary uppercase mt-0.5">BY {item.artist}</div>
+                                                    </div>
+                                                    <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                                        <Play size={16} fill="#00aaff" className="text-[#00aaff]" />
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
+                                        if (item.type === 'playlist') {
+                                            return (
+                                                <div key={`dice-pl-${item.id || item.Id}`} className="aspect-square bg-black border border-colorBorder/30 hover:border-fatale/40 group cursor-pointer transition-all flex flex-col justify-between p-4 relative overflow-hidden" onClick={() => onPlayTrack(item)}>
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                                                    <div className="text-[8px] font-mono text-fatale uppercase tracking-widest">PLAYLIST</div>
+                                                    <div className="z-10">
+                                                        <div className="text-xs font-black truncate group-hover:text-fatale uppercase">{item.name || item.Name}</div>
+                                                        <div className="text-[8px] text-colorDataSecondary uppercase mt-0.5">BY {item.authorName || item.AuthorName || item.userName || item.UserName || "UNKNOWN"}</div>
+                                                    </div>
+                                                    <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Play size={16} fill="rgb(var(--theme-primary))" className="text-fatale" />
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    })}
+                                </div>
+                            )}
                         </div>
 
                         {/* Globe View */}
