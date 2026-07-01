@@ -80,29 +80,25 @@ const bufferIndexMap = [
 ];
 
 // ─── SHARP NONCONVEX POLYHEDRON DEFORMATION ───────────────────────────────────
-const getNonconvexRadius = (nx, ny, nz, time, isSelected) => {
+const getNonconvexRadius = (nx, ny, nz, time, isSelected, hoverSwell = 0) => {
     const len = Math.sqrt(nx*nx + ny*ny + nz*nz) || 1;
     const x = nx / len;
     const y = ny / len;
     const z = nz / len;
 
-    // Check if direction corresponds to one of the 8 outer star tip vertices
     const absX = Math.abs(x);
     const absY = Math.abs(y);
     const absZ = Math.abs(z);
     const isTip = absX > 0.4 && absY > 0.4 && absZ > 0.4;
 
-    // Slower stellation pace
     const pulseSpeed = isSelected ? 0.8 : 0.25;
     const pulseAmp = isSelected ? 0.28 : 0.14;
     const wave = Math.sin(time * pulseSpeed + x * 3.5 + y * 3.5) * pulseAmp;
 
-    // Modulate the stellation base offset over time to make vertices breathe
-    // between peaks and valleys, crossing the visibility threshold.
     const modulation = Math.sin(time * pulseSpeed * 0.7);
     const starVal = (isTip ? 0.65 : -0.35) * modulation;
     
-    return GLOBE_R * (1.0 + starVal + wave);
+    return GLOBE_R * (1.0 + starVal + wave) + hoverSwell;
 };
 
 // Calculate visibility threshold based on radius:
@@ -112,7 +108,7 @@ const getVertexVisibility = (r) => {
 
 // ─── SHIMMER LINE ─────────────────────────────────────────────────────────────
 
-const ShimmerLine = memo(({ fromDir, toDir, color, phaseOffset = 0, isSelected = false, isRelated = false, isGlobeSpinning }) => {
+const ShimmerLine = memo(({ fromDir, toDir, color, phaseOffset = 0, isSelected = false, isRelated = false, isGlobeSpinning, fromHoverSwell = 0, toHoverSwell = 0 }) => {
     const lineRef = useRef();
     const opRef   = useRef(0);
     const accumulatedTimeRef = useRef(0);
@@ -134,8 +130,8 @@ const ShimmerLine = memo(({ fromDir, toDir, color, phaseOffset = 0, isSelected =
         }
         const time = accumulatedTimeRef.current;
 
-        const rFrom = getNonconvexRadius(fromDir.x, fromDir.y, fromDir.z, time, isSelected);
-        const rTo = getNonconvexRadius(toDir.x, toDir.y, toDir.z, time, isSelected);
+        const rFrom = getNonconvexRadius(fromDir.x, fromDir.y, fromDir.z, time, isSelected, fromHoverSwell);
+        const rTo = getNonconvexRadius(toDir.x, toDir.y, toDir.z, time, isSelected, toHoverSwell);
 
         const visibility = isSelected ? 1.0 : Math.min(getVertexVisibility(rFrom), getVertexVisibility(rTo));
         lineRef.current.visible = visibility > 0.01;
@@ -178,10 +174,7 @@ const ShimmerLine = memo(({ fromDir, toDir, color, phaseOffset = 0, isSelected =
 
 // ─── NETWORK VISUALIZATION ────────────────────────────────────────────────────
 
-const NetworkVisualization = ({ nodes, selectedId, isGlobeSpinning }) => {
-    // Hide all connection lines entirely when an item is selected
-    if (selectedId) return null;
-
+const NetworkVisualization = ({ nodes, selectedId, isGlobeSpinning, swells }) => {
     const connections = useMemo(() => {
         const result = [];
         const artists = nodes.filter(n => n.typeClass === 'artist');
@@ -205,6 +198,8 @@ const NetworkVisualization = ({ nodes, selectedId, isGlobeSpinning }) => {
                 result.push({
                     fromDir: artist.direction,
                     toDir: track.direction,
+                    fromIdx: artist.vertexIndex,
+                    toIdx: track.vertexIndex,
                     color: '#00d4ff',
                     ownerId: artistUniqueId,
                     targetId: track.nodeUniqueId,
@@ -217,6 +212,8 @@ const NetworkVisualization = ({ nodes, selectedId, isGlobeSpinning }) => {
                 result.push({
                     fromDir: artist.direction,
                     toDir: playlist.direction,
+                    fromIdx: artist.vertexIndex,
+                    toIdx: playlist.vertexIndex,
                     color: '#ff3d7f',
                     ownerId: artistUniqueId,
                     targetId: playlist.nodeUniqueId,
@@ -237,6 +234,8 @@ const NetworkVisualization = ({ nodes, selectedId, isGlobeSpinning }) => {
                     isSelected={selectedId && c.ownerId === selectedId && c.targetId === selectedId}
                     isRelated={selectedId && (c.ownerId === selectedId || c.targetId === selectedId)}
                     isGlobeSpinning={isGlobeSpinning}
+                    fromHoverSwell={swells[c.fromIdx] || 0}
+                    toHoverSwell={swells[c.toIdx] || 0}
                 />
             ))}
         </group>
@@ -245,7 +244,7 @@ const NetworkVisualization = ({ nodes, selectedId, isGlobeSpinning }) => {
 
 // ─── DYNAMIC VERTEX LIGHT NODE ────────────────────────────────────────────────
 
-const LightPointNode = ({ direction, name, subtitle, color: rawColor, size = 0.02, isSelected, onClick, cameraDist, isGlobeSpinning }) => {
+const LightPointNode = ({ direction, name, subtitle, color: rawColor, size = 0.02, isSelected, onClick, cameraDist, isGlobeSpinning, onHoverChange, hoverSwell = 0 }) => {
     const color = useMemo(() => resolveColorToHex(rawColor), [rawColor]);
     const billRef  = useRef();
     const ringRef  = useRef();
@@ -265,10 +264,9 @@ const LightPointNode = ({ direction, name, subtitle, color: rawColor, size = 0.0
         }
         const time = accumulatedTimeRef.current;
 
-        const r = getNonconvexRadius(direction.x, direction.y, direction.z, time, isSelected);
+        const r = getNonconvexRadius(direction.x, direction.y, direction.z, time, isSelected, hoverSwell);
         const pos = direction.clone().multiplyScalar(r + 0.05);
 
-        // Hide node when it contracts
         const visibility = isSelected ? 1.0 : getVertexVisibility(r);
         groupRef.current.visible = visibility > 0.01;
 
@@ -292,8 +290,9 @@ const LightPointNode = ({ direction, name, subtitle, color: rawColor, size = 0.0
 
     useEffect(() => {
         document.body.style.cursor = hovered ? 'pointer' : 'auto';
+        onHoverChange?.(hovered);
         return () => { document.body.style.cursor = 'auto'; };
-    }, [hovered]);
+    }, [hovered, onHoverChange]);
 
     const DOT  = size * 0.9;
     const RING = size * 1.9;
@@ -422,7 +421,7 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, isGlobeSpinning }) =>
                 {glowTex && (
                     <mesh renderOrder={RO}>
                         <planeGeometry args={[GLOW * 2, GLOW * 2]} />
-                        <meshBasicMaterial map={glowTex} transparent blending={THREE.AdditiveBlending} opacity={0.78} side={THREE.DoubleSide} depthWrite={false} depthTest={false} toneMapped={false} />
+                        <meshBasicMaterial map={glowTex} transparent opacity={0.78} side={THREE.DoubleSide} depthWrite={false} depthTest={false} toneMapped={false} />
                     </mesh>
                 )}
                 <mesh renderOrder={RO + 1}>
@@ -445,7 +444,7 @@ const FataleCoreNode = ({ isSelected, onClick, cameraDist, isGlobeSpinning }) =>
 
 // ─── NONCONVEX STELLA OCTANGULA CORE ──────────────────────────────────────────
 
-const NonconvexPolyhedron = memo(({ accentColor, selectedId, isGlobeSpinning }) => {
+const NonconvexPolyhedron = memo(({ accentColor, selectedId, isGlobeSpinning, hoveredVertexIndex, activeNodes, swells }) => {
     const geomRef = useRef();
     const wireGeomRef = useRef();
     const accumulatedTimeRef = useRef(0);
@@ -470,6 +469,18 @@ const NonconvexPolyhedron = memo(({ accentColor, selectedId, isGlobeSpinning }) 
             baseWireGeo.dispose();
         };
     }, [baseGeo, baseWireGeo]);
+
+    const glowColor = useMemo(() => {
+        if (hoveredVertexIndex !== null && activeNodes) {
+            const hNode = activeNodes.find(n => n && n.vertexIndex === hoveredVertexIndex);
+            if (hNode) return resolveColorToHex(hNode.color);
+        }
+        if (selectedId && activeNodes) {
+            const selNode = activeNodes.find(n => n && n.nodeUniqueId === selectedId);
+            if (selNode) return resolveColorToHex(selNode.color);
+        }
+        return resolveColorToHex(accentColor);
+    }, [hoveredVertexIndex, selectedId, activeNodes, accentColor]);
     
     useFrame(({ clock }, delta) => {
         if (isGlobeSpinning) {
@@ -481,7 +492,7 @@ const NonconvexPolyhedron = memo(({ accentColor, selectedId, isGlobeSpinning }) 
         const dynamicPositions = [];
         for (let i = 0; i < 14; i++) {
             const dir = vertexDirections[i];
-            const r = getNonconvexRadius(dir.x, dir.y, dir.z, time, !!selectedId);
+            const r = getNonconvexRadius(dir.x, dir.y, dir.z, time, !!selectedId, swells[i] || 0);
             dynamicPositions[i] = dir.clone().multiplyScalar(r);
         }
 
@@ -511,7 +522,7 @@ const NonconvexPolyhedron = memo(({ accentColor, selectedId, isGlobeSpinning }) 
 
     return (
         <group>
-            {/* 1. Solid opaque nonconvex polyhedron core */}
+            {/* 1. Solid core */}
             <mesh ref={geomRef} geometry={baseGeo}>
                 <meshStandardMaterial color="#050505" roughness={0.12} metalness={0.88} />
             </mesh>
@@ -519,23 +530,26 @@ const NonconvexPolyhedron = memo(({ accentColor, selectedId, isGlobeSpinning }) 
             {/* 2. Glowy inner accent sphere */}
             <mesh>
                 <icosahedronGeometry args={[2.0, 2]} />
-                <meshStandardMaterial color={accentColor} transparent opacity={0.015} emissive={accentColor} emissiveIntensity={0.18} />
+                <meshStandardMaterial color={glowColor} transparent opacity={0.025} emissive={glowColor} emissiveIntensity={0.25} />
             </mesh>
 
             {/* 3. Nonconvex wireframe lattice grid */}
             <mesh ref={wireGeomRef} geometry={baseWireGeo}>
-                <meshBasicMaterial color={accentColor} wireframe transparent opacity={0.22} toneMapped={false} />
+                <meshBasicMaterial color={glowColor} wireframe transparent opacity={0.25} toneMapped={false} />
             </mesh>
 
             {/* 4. Atmosphere rim (BackSide) */}
             <Sphere args={[2.56, 48, 48]} renderOrder={4}>
-                <meshBasicMaterial color={accentColor} transparent opacity={0.040} side={THREE.BackSide} toneMapped={false} />
+                <meshBasicMaterial color={glowColor} transparent opacity={0.045} side={THREE.BackSide} toneMapped={false} />
             </Sphere>
 
             {/* 5. Outer corona */}
             <Sphere args={[2.72, 32, 32]} renderOrder={0}>
-                <meshBasicMaterial color={accentColor} transparent opacity={0.024} side={THREE.BackSide} depthWrite={false} toneMapped={false} />
+                <meshBasicMaterial color={glowColor} transparent opacity={0.030} side={THREE.BackSide} depthWrite={false} toneMapped={false} />
             </Sphere>
+
+            {/* Ambient point light */}
+            <pointLight position={[0, 0, 0]} distance={4.5} intensity={4.5} color={glowColor} />
         </group>
     );
 });
@@ -553,8 +567,30 @@ const GlobeCore = memo(({
     const [cameraDist, setCameraDist] = useState(10);
     const [seed]        = useState(() => Math.random().toString());
     const [triggerUpdate, setTriggerUpdate] = useState(0);
+    const [hoveredVertexIndex, setHoveredVertexIndex] = useState(null);
 
     useFrame(() => setCameraDist(camera.position.length()));
+
+    // Track 14 vertex hover swells in a reactive ref array
+    const swellsRef = useRef(new Float32Array(14));
+    const [swells, setSwells] = useState(() => new Float32Array(14));
+
+    useFrame((_, delta) => {
+        let changed = false;
+        const newSwells = new Float32Array(14);
+        for (let i = 0; i < 14; i++) {
+            const targetSwell = (i === hoveredVertexIndex) ? 0.35 : 0.0;
+            const nextVal = THREE.MathUtils.lerp(swellsRef.current[i], targetSwell, 0.15);
+            if (Math.abs(nextVal - swellsRef.current[i]) > 0.001) {
+                changed = true;
+            }
+            swellsRef.current[i] = nextVal;
+            newSwells[i] = nextVal;
+        }
+        if (changed) {
+            setSwells(newSwells); // trigger react updates so ShimmerLines redraw
+        }
+    });
 
     const activeSectorColor = useMemo(() => SECTORS.find(s => s.id === activeSector)?.color, [activeSector]);
 
@@ -600,9 +636,6 @@ const GlobeCore = memo(({
                 };
             } 
             else if (itemType === 'track') {
-                // If a track is clicked, VOID ALL other vertices. Only 2 lights show:
-                // 1. The track itself.
-                // 2. The track's artist profile.
                 const trkArtistId = selectedGlobeItem.artistId || selectedGlobeItem.ArtistId;
                 const trkArtistUID = selectedGlobeItem.artistUserId || selectedGlobeItem.ArtistUserId;
                 const matchingArtist = artists.find(a => 
@@ -615,7 +648,6 @@ const GlobeCore = memo(({
                     list.push({ ...matchingArtist, typeClass: 'artist', nodeUniqueId: `artist-${matchingArtist.id || matchingArtist.Id}`, name: matchingArtist.name || matchingArtist.Name, color: '#00ffaa', size: 0.048 });
                 }
                 
-                // Return exactly these 2 items. The slots allocator will fill the remaining 12 with null (void/empty).
                 return {
                     communities_: [],
                     artists_: list.filter(n => n.typeClass === 'artist'),
@@ -679,11 +711,9 @@ const GlobeCore = memo(({
 
     const { communities_, artists_, playlists_, tracks_ } = filtered;
 
-    // Compile available items (if track is selected, allAvailableItems is already just 2 pre-formatted items)
     const allAvailableItems = useMemo(() => {
         const isTrackSelected = selectedGlobeItem && selectedGlobeItem.type === 'track';
         if (isTrackSelected) {
-            // Already formatted inside the filtered memo above
             const list = [];
             artists_.forEach(a => list.push(a));
             tracks_.forEach(t => list.push(t));
@@ -726,7 +756,7 @@ const GlobeCore = memo(({
 
         for (let i = 0; i < 14; i++) {
             const dir = vertexDirections[i];
-            const r = getNonconvexRadius(dir.x, dir.y, dir.z, time, !!selectedId);
+            const r = getNonconvexRadius(dir.x, dir.y, dir.z, time, !!selectedId, swellsRef.current[i]);
             const visibility = getVertexVisibility(r);
 
             if (visibility <= 0.01) {
@@ -761,6 +791,7 @@ const GlobeCore = memo(({
                 if (!node) return null;
                 return {
                     ...node,
+                    vertexIndex: index,
                     direction: vertexDirections[index]
                 };
             })
@@ -773,7 +804,14 @@ const GlobeCore = memo(({
     return (
         <group>
             {/* ── NONCONVEX POLYHEDRON CORE ── */}
-            <NonconvexPolyhedron accentColor={accentColor} selectedId={selectedId} isGlobeSpinning={isGlobeSpinning} />
+            <NonconvexPolyhedron
+                accentColor={accentColor}
+                selectedId={selectedId}
+                isGlobeSpinning={isGlobeSpinning}
+                hoveredVertexIndex={hoveredVertexIndex}
+                activeNodes={activeNodes}
+                swells={swells}
+            />
 
             {/* ── NODES BOUND TO THE 14 STELLA OCTANGULA VERTICES ── */}
             {activeNodes.map(node => {
@@ -784,6 +822,10 @@ const GlobeCore = memo(({
                     if (node.typeClass === 'community') onCommunityClick?.(node);
                     if (node.typeClass === 'track') onTrackClick?.(node);
                     if (node.typeClass === 'playlist') onPlaylistClick?.(node);
+                };
+
+                const onHoverChange = (isHovered) => {
+                    setHoveredVertexIndex(isHovered ? node.vertexIndex : null);
                 };
 
                 return (
@@ -798,6 +840,8 @@ const GlobeCore = memo(({
                         cameraDist={cameraDist}
                         onClick={onClick}
                         isGlobeSpinning={isGlobeSpinning}
+                        onHoverChange={onHoverChange}
+                        hoverSwell={swells[node.vertexIndex] || 0}
                     />
                 );
             })}
@@ -809,7 +853,7 @@ const GlobeCore = memo(({
                 onClick={() => onCommunityClick?.({ id: 'fatale_core', name: 'FATALE_CORE', isSystem: true, description: 'The official Fatale system node. Share feedback, bug reports and reviews.' })}
             />
 
-            <NetworkVisualization nodes={activeNodes} selectedId={selectedId} isGlobeSpinning={isGlobeSpinning} />
+            <NetworkVisualization nodes={activeNodes} selectedId={selectedId} isGlobeSpinning={isGlobeSpinning} swells={swells} />
         </group>
     );
 });
