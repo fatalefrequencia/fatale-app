@@ -186,7 +186,7 @@ export function appendProfileFieldsToFormData(target, formData, media = {}) {
 /**
  * Video backdrop upload — tries axios strategies (same stack as community image uploads).
  */
-export async function uploadProfileVideo(formData, videoFile, userId, media = {}) {
+export async function uploadProfileVideo(formData, videoFile, userId, media = {}, onProgress = null) {
     const API = await getApiClient();
     const file = normalizeVideoFile(videoFile);
     assertVideoSize(file);
@@ -195,6 +195,24 @@ export async function uploadProfileVideo(formData, videoFile, userId, media = {}
     const errors = [];
 
     const attempts = [
+        {
+            step: 'S3 Multipart direct upload + profile sync',
+            run: async () => {
+                const { uploadFileToS3 } = await import('./s3Upload');
+                try {
+                    const path = await uploadFileToS3(file, 'wallpapers', onProgress);
+                    const payload = buildProfileUpdatePayload(formData, {
+                        ...mergedMedia,
+                        wallpaperVideoUrl: path,
+                    });
+                    return API.Users.updateProfile(payload, userId);
+                } catch (s3Err) {
+                    console.warn('[Profile] S3 multipart upload failed/unconfigured, trying local API upload fallback:', s3Err);
+                    // Bubble error to fall back to next attempt
+                    throw s3Err;
+                }
+            }
+        },
         {
             step: 'Direct video upload (POST)',
             run: () => API.Users.updateProfilePost(buildVideoMultipartBody(formData, file, mergedMedia), userId),

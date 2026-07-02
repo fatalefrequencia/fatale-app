@@ -433,7 +433,11 @@ const API = {
             timeout: 180000,
             maxBodyLength: Infinity,
             maxContentLength: Infinity,
-        })
+        }),
+        initiateMultipart: (fileName, contentType, folder = 'media') => api.post('File/multipart/initiate', { fileName, contentType, folder }),
+        getMultipartPresign: (key, uploadId, partNumber) => api.get('File/multipart/presign', { params: { key, uploadId, partNumber } }),
+        completeMultipart: (key, uploadId, parts) => api.post('File/multipart/complete', { key, uploadId, parts }),
+        abortMultipart: (key, uploadId) => api.post('File/multipart/abort', { key, uploadId })
     },
     Organic: {
         logEvent: (eventData) => api.post('listening-events', eventData),

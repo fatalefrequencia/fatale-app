@@ -3124,13 +3124,26 @@ function App() {
     } else if (type === 'VISUAL_DATA' || type === 'SIGNAL_FEED') {
       const contentType = type === 'VISUAL_DATA' ? 'PHOTO' : 'VIDEO';
       const formData = new FormData();
-      formData.append('File', file);
       formData.append('Type', contentType);
       formData.append('Title', file.name.split('.')[0]);
       formData.append('IsPosted', true);
 
       try {
         console.log(`[GLOBAL_INGEST] Starting ${contentType} upload:`, file.name);
+        if (contentType === 'VIDEO') {
+          const { uploadFileToS3 } = await import('./utils/s3Upload');
+          try {
+            const s3Path = await uploadFileToS3(file, 'studio/videos', (pct) => {
+              showNotification("INGESTING", `Transmitting video: ${pct}%`, "info");
+            });
+            formData.append('Url', s3Path);
+          } catch (s3Err) {
+            console.warn('[GlobalIngest] S3 direct multipart failed, using normal upload:', s3Err);
+            formData.append('File', file);
+          }
+        } else {
+          formData.append('File', file);
+        }
         await API.Studio.upload(formData);
         showNotification("INGEST_COMPLETE", `${contentType} [${file.name.split('.')[0]}] ingested successfully.`, "success");
         setShowGlobalIngest(false);
@@ -3169,12 +3182,27 @@ function App() {
 
         const defaultTitle = postText.trim() ? postText.slice(0, 20) : `VISUAL_SIGNAL_${Math.floor(Math.random() * 9000 + 1000)}`;
 
+        const isVideo = firstFile.type.startsWith('video');
         const formData = new FormData();
-        formData.append('File', firstFile);
-        formData.append('Type', firstFile.type.startsWith('video') ? 'VIDEO' : 'PHOTO');
+        formData.append('Type', isVideo ? 'VIDEO' : 'PHOTO');
         formData.append('Title', defaultTitle);
         formData.append('Description', finalDescriptionText);
         formData.append('IsPosted', true);
+        
+        if (isVideo) {
+          const { uploadFileToS3 } = await import('./utils/s3Upload');
+          try {
+            const s3Path = await uploadFileToS3(firstFile, 'studio/videos', (pct) => {
+              showNotification("INGESTING", `Transmitting video: ${pct}%`, "info");
+            });
+            formData.append('Url', s3Path);
+          } catch (s3Err) {
+            console.warn('[NewPost] S3 direct multipart failed, using normal upload:', s3Err);
+            formData.append('File', firstFile);
+          }
+        } else {
+          formData.append('File', firstFile);
+        }
         
         await API.Studio.upload(formData);
         showNotification("INGEST_COMPLETE", `Visual post with ${postFiles.length} slide(s) transmitted successfully.`, "success");

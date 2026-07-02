@@ -1550,7 +1550,9 @@ export const ProfileView = React.memo(({
             let res;
             if (hasVideo) {
                 assertVideoSize(vdoFile);
-                res = await uploadProfileVideo(formData, vdoFile, uid, media);
+                res = await uploadProfileVideo(formData, vdoFile, uid, media, (pct) => {
+                    showNotification("INGESTING", `Transmitting video signal: ${pct}%`, "info");
+                });
             } else {
                 const payload = buildProfileUpdatePayload(formData, media);
                 try {
