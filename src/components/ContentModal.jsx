@@ -34,9 +34,8 @@ const ContentModal = ({
     }, [content]);
 
     const [showTipModal, setShowTipModal] = React.useState(false);
-    const [readerTheme, setReaderTheme] = React.useState('CYBER_PULSE');
-    const [readerFontFamily, setReaderFontFamily] = React.useState('SERIF');
-    const [readerFontSize, setReaderFontSize] = React.useState(16);
+    const [readerTheme, setReaderTheme] = React.useState(() => localStorage.getItem('fatale_journal_theme') || 'DECK');
+    const [readerFontSize, setReaderFontSize] = React.useState(() => parseInt(localStorage.getItem('fatale_journal_scale') || '16', 10));
     const [comments, setComments] = React.useState([]);
     const [loadingComments, setLoadingComments] = React.useState(false);
     const [commentText, setCommentText] = React.useState("");
@@ -351,46 +350,48 @@ const ContentModal = ({
                         ) : (
                             <div className="p-4 sm:p-8 md:p-12 relative">
                                 {['JOURNAL', 'TEXT'].includes(normalizedType) && (() => {
+                                    // Load user custom preferences
+                                    const customBg = localStorage.getItem('fatale_journal_bg_color') || '#020202';
+                                    const customText = localStorage.getItem('fatale_journal_text_color') || '#ff7096';
+                                    const customFontKey = localStorage.getItem('fatale_journal_font') || 'SERIF';
+
                                     const themeStyles = {
-                                        CYBER_PULSE: {
-                                            background: 'rgba(2, 2, 2, 0.95)',
-                                            color: '#ff7096',
-                                            borderColor: 'rgba(255, 112, 150, 0.25)',
-                                            boxShadow: '0 0 15px rgba(255, 112, 150, 0.1)',
-                                            textShadow: '0 0 4px rgba(255, 112, 150, 0.15)',
-                                        },
-                                        CYBER_DECK: {
+                                        DECK: {
                                             background: '#020f06',
                                             color: '#39ff14',
                                             borderColor: 'rgba(57, 255, 20, 0.25)',
                                             boxShadow: '0 0 15px rgba(57, 255, 20, 0.1)',
                                             textShadow: '0 0 4px rgba(57, 255, 20, 0.15)',
+                                            fontFamily: "'Georgia', 'Merriweather', 'Lora', serif"
                                         },
-                                        NEURAL_NET: {
-                                            background: '#030c14',
-                                            color: '#00f5ff',
-                                            borderColor: 'rgba(0, 245, 255, 0.25)',
-                                            boxShadow: '0 0 15px rgba(0, 245, 255, 0.1)',
-                                            textShadow: '0 0 4px rgba(0, 245, 255, 0.15)',
-                                        },
-                                        DATA_PAD: {
-                                            background: 'rgba(255, 255, 255, 0.05)',
-                                            color: '#ffffff',
-                                            borderColor: 'rgba(255, 255, 255, 0.15)',
-                                            backdropFilter: 'blur(20px)',
-                                            boxShadow: '0 0 20px rgba(255, 255, 255, 0.05)',
-                                            textShadow: 'none',
+                                        CUSTOM: {
+                                            background: customBg,
+                                            color: customText,
+                                            borderColor: `${customText}40`,
+                                            boxShadow: `0 0 15px ${customText}15`,
+                                            textShadow: `0 0 4px ${customText}25`,
+                                            fontFamily: {
+                                                SERIF: "'Georgia', 'Merriweather', 'Lora', serif",
+                                                SANS: "ui-sans-serif, system-ui, sans-serif",
+                                                MONO: "'Fira Code', 'Consolas', 'Courier New', monospace"
+                                            }[customFontKey] || "'Georgia', 'Merriweather', 'Lora', serif"
                                         }
                                     };
 
-                                    const fontFamilies = {
-                                        SERIF: "'Georgia', 'Merriweather', 'Lora', serif",
-                                        SANS: "ui-sans-serif, system-ui, sans-serif",
-                                        MONO: "'Fira Code', 'Consolas', 'Courier New', monospace"
+                                    const activeStyle = themeStyles[readerTheme] || themeStyles.DECK;
+
+                                    const handleThemeSwitch = (newTheme) => {
+                                        setReaderTheme(newTheme);
+                                        localStorage.setItem('fatale_journal_theme', newTheme);
                                     };
 
-                                    const activeStyle = themeStyles[readerTheme] || themeStyles.CYBER_PULSE;
-                                    const activeFont = fontFamilies[readerFontFamily] || fontFamilies.SERIF;
+                                    const handleScaleChange = (updater) => {
+                                        setReaderFontSize(prev => {
+                                            const next = typeof updater === 'function' ? updater(prev) : updater;
+                                            localStorage.setItem('fatale_journal_scale', String(next));
+                                            return next;
+                                        });
+                                    };
 
                                     return (
                                         <div className="space-y-6">
@@ -413,26 +414,17 @@ const ContentModal = ({
 
                                             {/* Cyberdeck E-Reader Settings Toolbar */}
                                             <div className="flex flex-wrap items-center gap-4 bg-black/55 border border-white/5 p-2 px-3 justify-between select-none font-mono text-[8px] md:text-[9px] rounded-sm">
-                                                <div className="flex flex-wrap items-center gap-1.5">
-                                                    <span className="text-white/35 uppercase">[ MATRIX ]:</span>
-                                                    <button onClick={() => setReaderTheme('CYBER_PULSE')} className={`px-1.5 py-0.5 border ${readerTheme === 'CYBER_PULSE' ? 'border-[#ff7096] text-[#ff7096] bg-[#ff7096]/5' : 'border-transparent text-white/40 hover:text-white'}`}>PULSE</button>
-                                                    <button onClick={() => setReaderTheme('CYBER_DECK')} className={`px-1.5 py-0.5 border ${readerTheme === 'CYBER_DECK' ? 'border-[#39ff14] text-[#39ff14] bg-[#39ff14]/5' : 'border-transparent text-white/40 hover:text-white'}`}>DECK</button>
-                                                    <button onClick={() => setReaderTheme('NEURAL_NET')} className={`px-1.5 py-0.5 border ${readerTheme === 'NEURAL_NET' ? 'border-[#00f5ff] text-[#00f5ff] bg-[#00f5ff]/5' : 'border-transparent text-white/40 hover:text-white'}`}>NET</button>
-                                                    <button onClick={() => setReaderTheme('DATA_PAD')} className={`px-1.5 py-0.5 border ${readerTheme === 'DATA_PAD' ? 'border-white text-white bg-white/5' : 'border-transparent text-white/40 hover:text-white'}`}>GLASS</button>
-                                                </div>
-
                                                 <div className="flex items-center gap-1.5">
-                                                    <span className="text-white/35 uppercase">[ FONT ]:</span>
-                                                    <button onClick={() => setReaderFontFamily('SERIF')} className={`px-1.5 py-0.5 border ${readerFontFamily === 'SERIF' ? 'border-white text-white bg-white/5' : 'border-transparent text-white/40 hover:text-white'}`}>SERIF</button>
-                                                    <button onClick={() => setReaderFontFamily('SANS')} className={`px-1.5 py-0.5 border ${readerFontFamily === 'SANS' ? 'border-white text-white bg-white/5' : 'border-transparent text-white/40 hover:text-white'}`}>SANS</button>
-                                                    <button onClick={() => setReaderFontFamily('MONO')} className={`px-1.5 py-0.5 border ${readerFontFamily === 'MONO' ? 'border-white text-white bg-white/5' : 'border-transparent text-white/40 hover:text-white'}`}>MONO</button>
+                                                    <span className="text-white/35 uppercase">[ MATRIX ]:</span>
+                                                    <button onClick={() => handleThemeSwitch('DECK')} className={`px-1.5 py-0.5 border ${readerTheme === 'DECK' ? 'border-[#39ff14] text-[#39ff14] bg-[#39ff14]/5' : 'border-transparent text-white/40 hover:text-white'}`}>DECK (SERIF)</button>
+                                                    <button onClick={() => handleThemeSwitch('CUSTOM')} className={`px-1.5 py-0.5 border ${readerTheme === 'CUSTOM' ? 'border-white text-white bg-white/5' : 'border-transparent text-white/40 hover:text-white'}`}>CUSTOM</button>
                                                 </div>
 
                                                 <div className="flex items-center gap-1.5">
                                                     <span className="text-white/35 uppercase">[ SCALE ]:</span>
-                                                    <button onClick={() => setReaderFontSize(size => Math.max(12, size - 2))} className="px-1.5 py-0.5 border border-transparent text-white/40 hover:text-white hover:border-white/10">-</button>
+                                                    <button onClick={() => handleScaleChange(size => Math.max(12, size - 2))} className="px-1.5 py-0.5 border border-transparent text-white/40 hover:text-white hover:border-white/10">-</button>
                                                     <span className="text-white/70 font-bold">{readerFontSize}PX</span>
-                                                    <button onClick={() => setReaderFontSize(size => Math.min(26, size + 2))} className="px-1.5 py-0.5 border border-transparent text-white/40 hover:text-white hover:border-white/10">+</button>
+                                                    <button onClick={() => handleScaleChange(size => Math.min(26, size + 2))} className="px-1.5 py-0.5 border border-transparent text-white/40 hover:text-white hover:border-white/10">+</button>
                                                 </div>
                                             </div>
 
@@ -452,7 +444,7 @@ const ContentModal = ({
                                                     borderColor: activeStyle.borderColor,
                                                     boxShadow: activeStyle.boxShadow,
                                                     backdropFilter: activeStyle.backdropFilter || 'none',
-                                                    fontFamily: activeFont,
+                                                    fontFamily: activeStyle.fontFamily,
                                                     fontSize: `${readerFontSize}px`,
                                                     transition: 'all 0.3s ease',
                                                 }}
@@ -472,7 +464,7 @@ const ContentModal = ({
 
                                                 <div className="w-full max-w-2xl text-left whitespace-normal break-words leading-relaxed select-text">
                                                     <h2 
-                                                        style={{ fontFamily: activeFont, textShadow: activeStyle.textShadow }} 
+                                                        style={{ fontFamily: activeStyle.fontFamily, textShadow: activeStyle.textShadow }} 
                                                         className="text-2xl md:text-3xl font-extrabold mb-2 uppercase select-text"
                                                     >
                                                         {activeEntry.Title || activeEntry.title || t('UNTITLED_LOG')}

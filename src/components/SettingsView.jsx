@@ -53,6 +53,25 @@ export default function SettingsView({ user, setUser, appThemeColor, setAppTheme
     const [tipAlerts, setTipAlerts] = React.useState(() => localStorage.getItem('fatale_tip_alerts') !== 'false');
     const [notificationDuration, setNotificationDuration] = React.useState(() => parseInt(localStorage.getItem('fatale_notification_duration') || '5', 10));
 
+    // --- Journal Reading Custom Settings States ---
+    const [journalBgColor, setJournalBgColor] = React.useState(() => localStorage.getItem('fatale_journal_bg_color') || '#020202');
+    const [journalTextColor, setJournalTextColor] = React.useState(() => localStorage.getItem('fatale_journal_text_color') || '#ff7096');
+    const [journalFont, setJournalFont] = React.useState(() => localStorage.getItem('fatale_journal_font') || 'SERIF');
+    const [journalScale, setJournalScale] = React.useState(() => parseInt(localStorage.getItem('fatale_journal_scale') || '16', 10));
+
+    React.useEffect(() => {
+        localStorage.setItem('fatale_journal_bg_color', journalBgColor);
+    }, [journalBgColor]);
+    React.useEffect(() => {
+        localStorage.setItem('fatale_journal_text_color', journalTextColor);
+    }, [journalTextColor]);
+    React.useEffect(() => {
+        localStorage.setItem('fatale_journal_font', journalFont);
+    }, [journalFont]);
+    React.useEffect(() => {
+        localStorage.setItem('fatale_journal_scale', String(journalScale));
+    }, [journalScale]);
+
     React.useEffect(() => {
         if (user) {
             setUsername(user.username || user.Username || '');
@@ -559,6 +578,71 @@ export default function SettingsView({ user, setUser, appThemeColor, setAppTheme
                                                     lowSpecMode ? 'translate-x-5 bg-fatale' : 'translate-x-0 bg-white/40'
                                                 }`} />
                                             </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Journal Reading Custom Settings */}
+                                    <div className="pt-4 border-t border-white/5 space-y-4">
+                                        <h3 className="text-[9px] font-black text-fatale uppercase tracking-widest">Journal Reading Settings (Custom Mode)</h3>
+                                        <div className="p-4 border border-white/5 bg-white/[0.01] space-y-4">
+                                            <p className="text-[7px] font-mono text-white/30 uppercase tracking-widest">Configure typography parameters used when CUSTOM mode is selected in the log reader.</p>
+                                            
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[7px] font-black uppercase tracking-widest text-white/40">Custom Background</label>
+                                                    <div className="flex items-center gap-2">
+                                                        <input 
+                                                            type="color" 
+                                                            value={journalBgColor}
+                                                            onChange={(e) => setJournalBgColor(e.target.value)}
+                                                            className="w-8 h-8 bg-transparent border-0 cursor-pointer"
+                                                        />
+                                                        <span className="text-[8px] font-mono text-white/60 uppercase">{journalBgColor}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[7px] font-black uppercase tracking-widest text-white/40">Custom Text Color</label>
+                                                    <div className="flex items-center gap-2">
+                                                        <input 
+                                                            type="color" 
+                                                            value={journalTextColor}
+                                                            onChange={(e) => setJournalTextColor(e.target.value)}
+                                                            className="w-8 h-8 bg-transparent border-0 cursor-pointer"
+                                                        />
+                                                        <span className="text-[8px] font-mono text-white/60 uppercase">{journalTextColor}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[7px] font-black uppercase tracking-widest text-white/40">Default Font Face</label>
+                                                    <select
+                                                        value={journalFont}
+                                                        onChange={(e) => setJournalFont(e.target.value)}
+                                                        className="w-full bg-black/40 border border-white/10 px-2 py-1.5 text-[10px] text-white mono focus:outline-none focus:border-fatale/50"
+                                                    >
+                                                        <option value="SERIF">SERIF (BOOK STYLE)</option>
+                                                        <option value="SANS">SANS (MODERN STYLE)</option>
+                                                        <option value="MONO">MONO (TERMINAL STYLE)</option>
+                                                    </select>
+                                                </div>
+
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[7px] font-black uppercase tracking-widest text-white/40">Default Font Scale</label>
+                                                    <div className="flex items-center gap-2">
+                                                        <input 
+                                                            type="range"
+                                                            min="12"
+                                                            max="26"
+                                                            step="2"
+                                                            value={journalScale}
+                                                            onChange={(e) => setJournalScale(parseInt(e.target.value, 10))}
+                                                            className="w-2/3 accent-fatale cursor-pointer"
+                                                        />
+                                                        <span className="text-[9px] font-mono text-white/70 font-bold">{journalScale}PX</span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
