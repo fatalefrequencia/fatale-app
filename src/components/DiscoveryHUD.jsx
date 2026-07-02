@@ -3057,7 +3057,8 @@ const DiscoveryHUD = ({ user, setView, followedCommunities = [], onFollowUpdate,
                                     <p className="text-white/50 font-mono text-[10px] tracking-wide border-l-2 border-[#b39ddb]/50 pl-3">Control your account data, aesthetic themes, and localization parameters.</p>
                                     <div className="space-y-2">
                                         {[
-                                            { key: 'Identity Card', desc: 'Set your handle, profile bio, avatar image, header banner, and custom network theme color.' },
+                                            { key: 'Identity Card', desc: 'Set your handle, profile bio, avatar image, header banner, and custom network theme colors (SYSTEM_HUE_SIGNAL and SECONDARY_ACCENT).' },
+                                            { key: 'Journal Customizer', desc: 'Configure custom log reader parameters: select SERIF/SANS/MONO font faces, adjust text scale, and set custom background/text colors.' },
                                             { key: 'Language Configuration', desc: 'Toggle the system interface instantly between English, Spanish, Japanese, and Russian.' },
                                             { key: 'System Realignment', desc: 'Use Force Update if visual assets, streams, or globe nodes become misaligned.' }
                                         ].map(item => (
