@@ -3339,7 +3339,7 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                     <div className="space-y-3">
                                         <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest flex flex-col gap-1">
                                             <span>SECONDARY_ACCENT</span>
-                                            <span className="text-[7px] normal-case opacity-60">For the rotating globe</span>
+                                            <span className="text-[7px] normal-case opacity-60">For rotating globe and select brackets</span>
                                         </label>
                                         <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--text-color)]/30 transition-all">
                                             <input type="color" value={secondaryColor} onChange={e => setSecondaryColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
@@ -3347,63 +3347,11 @@ const EditProfileForm = ({ user, tracks = [], onSubmit, onColorPreview, onLogout
                                             <span className="text-[10px] font-bold mono uppercase" style={{ color: secondaryColor }}>{secondaryColor}</span>
                                         </div>
                                     </div>
-
-                                    {/* BORDER COLOR */}
-                                    <div className="space-y-3">
-                                        <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest flex flex-col gap-1">
-                                            <span>BORDER_HUE</span>
-                                            <span className="text-[7px] normal-case opacity-60">For panels, tables, and dividers</span>
-                                        </label>
-                                        <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--color-border)] transition-all">
-                                            <input type="color" value={colorBorder} onChange={e => setColorBorder(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
-                                            <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20 shadow-[0_0_15px_rgba(var(--color-border-rgb),0.3)]" style={{ backgroundColor: colorBorder }} />
-                                            <span className="text-[10px] font-bold mono uppercase" style={{ color: colorBorder }}>{colorBorder}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* LABEL COLOR */}
-                                    <div className="space-y-3">
-                                        <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest flex flex-col gap-1">
-                                            <span>LABEL_HUE</span>
-                                            <span className="text-[7px] normal-case opacity-60">For column headers and static text</span>
-                                        </label>
-                                        <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--color-label)] transition-all">
-                                            <input type="color" value={colorLabel} onChange={e => setColorLabel(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
-                                            <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20 shadow-[0_0_15px_rgba(var(--color-label-rgb),0.3)]" style={{ backgroundColor: colorLabel }} />
-                                            <span className="text-[10px] font-bold mono uppercase" style={{ color: colorLabel }}>{colorLabel}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* DATA PRIMARY COLOR */}
-                                    <div className="space-y-3">
-                                        <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest flex flex-col gap-1">
-                                            <span>PRIMARY_DATA_HUE</span>
-                                            <span className="text-[7px] normal-case opacity-60">For main content or names</span>
-                                        </label>
-                                        <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--color-data-primary)] transition-all">
-                                            <input type="color" value={colorDataPrimary} onChange={e => setColorDataPrimary(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
-                                            <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20 shadow-[0_0_15px_rgba(var(--color-data-primary-rgb),0.3)]" style={{ backgroundColor: colorDataPrimary }} />
-                                            <span className="text-[10px] font-bold mono uppercase" style={{ color: colorDataPrimary }}>{colorDataPrimary}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* DATA SECONDARY COLOR */}
-                                    <div className="space-y-3">
-                                        <label className="text-[9px] font-bold text-[var(--text-color)]/40 uppercase tracking-widest flex flex-col gap-1">
-                                            <span>SECONDARY_DATA_HUE</span>
-                                            <span className="text-[7px] normal-case opacity-60">For numbers, stats, or secondary info</span>
-                                        </label>
-                                        <div className="flex items-center gap-3 p-3 border border-[var(--text-color)]/10 bg-black relative group hover:border-[var(--color-data-secondary)] transition-all">
-                                            <input type="color" value={colorDataSecondary} onChange={e => setColorDataSecondary(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" />
-                                            <div className="w-8 h-8 rounded-full border border-[var(--text-color)]/20 shadow-[0_0_15px_rgba(var(--color-data-secondary-rgb),0.3)]" style={{ backgroundColor: colorDataSecondary }} />
-                                            <span className="text-[10px] font-bold mono uppercase" style={{ color: colorDataSecondary }}>{colorDataSecondary}</span>
-                                        </div>
-                                    </div>
                                 </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             )}
 
             <div className="mt-auto pt-10 flex flex-col gap-4">

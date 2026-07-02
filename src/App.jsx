@@ -269,6 +269,9 @@ function App() {
   const [appThemeColor, setAppThemeColor] = useState(() => {
     return localStorage.getItem('appThemeColor') || (user?.themeColor || user?.ThemeColor) || '#ffffff';
   });
+  const [appSecondaryColor, setAppSecondaryColor] = useState(() => {
+    return localStorage.getItem('appSecondaryColor') || (user?.secondaryColor || user?.SecondaryColor) || '#00ffff';
+  });
   const [appBackgroundColor, setAppBackgroundColor] = useState(() => {
     return localStorage.getItem('appBackgroundColor') || (user?.backgroundColor || user?.BackgroundColor) || '#000000';
   });
@@ -295,6 +298,7 @@ function App() {
     }
     if (user) {
       setAppThemeColor(user.themeColor || user.ThemeColor || '#ffffff');
+      setAppSecondaryColor(user.secondaryColor || user.SecondaryColor || '#00ffff');
       setAppBackgroundColor(user.backgroundColor || user.BackgroundColor || '#000000');
     }
   }, [user?.preferredLanguage, user?.PreferredLanguage, setLanguage, user]);
@@ -321,7 +325,7 @@ function App() {
 
     if (user) {
       applyThemeColor('--theme-primary', appThemeColor, '255 255 255', '255, 255, 255'); 
-      applyThemeColor('--theme-secondary', appThemeColor, '255 255 255', '255, 255, 255'); 
+      applyThemeColor('--theme-secondary', appSecondaryColor, '0 255 255', '0, 255, 255'); 
       applyThemeColor('--theme-bg', appBackgroundColor, '0 0 0', '0, 0, 0'); 
       applyThemeColor('--theme-text', appThemeColor, '255 255 255', '255, 255, 255'); 
       applyThemeColor('--color-border', user?.colorBorder || user?.ColorBorder || '#ff006e', '255 0 110', '255, 0, 110');
@@ -346,7 +350,7 @@ function App() {
       document.documentElement.style.setProperty('--color-data-secondary', '0 255 0');
       document.documentElement.style.setProperty('--color-data-secondary-rgb', '0, 255, 0');
     }
-  }, [user, appThemeColor, appBackgroundColor, activeView]);
+  }, [user, appThemeColor, appSecondaryColor, appBackgroundColor, activeView]);
 
 
   // Escape listener was moved below handleLogout definition to prevent reference errors.
@@ -4644,6 +4648,8 @@ const Dashboard = React.memo(({
                   setUser={setUser} 
                   appThemeColor={appThemeColor} 
                   setAppThemeColor={setAppThemeColor} 
+                  appSecondaryColor={appSecondaryColor}
+                  setAppSecondaryColor={setAppSecondaryColor} 
                   appBackgroundColor={appBackgroundColor} 
                   setAppBackgroundColor={setAppBackgroundColor} 
                   lowSpecMode={lowSpecMode}

@@ -9,7 +9,7 @@ import { useNotification } from '../contexts/NotificationContext';
 import API from '../services/api';
 import { SECTORS } from '../constants';
 
-export default function SettingsView({ user, setUser, appThemeColor, setAppThemeColor, appBackgroundColor, setAppBackgroundColor, lowSpecMode, setLowSpecMode }) {
+export default function SettingsView({ user, setUser, appThemeColor, setAppThemeColor, appSecondaryColor, setAppSecondaryColor, appBackgroundColor, setAppBackgroundColor, lowSpecMode, setLowSpecMode }) {
     const { language, setLanguage, t } = useLanguage();
     const { showNotification } = useNotification();
     const [activeSection, setActiveSection] = React.useState('language');
@@ -23,7 +23,7 @@ export default function SettingsView({ user, setUser, appThemeColor, setAppTheme
     const [residentSectorId, setResidentSectorId] = React.useState(user?.residentSectorId || user?.ResidentSectorId || 0);
     const [themeColor, setThemeColor] = React.useState(appThemeColor || '#ffffff');
     const [backgroundColor, setBackgroundColor] = React.useState(appBackgroundColor || '#000000');
-    const [secondaryColor, setSecondaryColor] = React.useState(user?.secondaryColor || user?.SecondaryColor || '#00ffff');
+    const [secondaryColor, setSecondaryColor] = React.useState(user?.secondaryColor || user?.SecondaryColor || appSecondaryColor || '#00ffff');
     const [colorBorder, setColorBorder] = React.useState(user?.colorBorder || user?.ColorBorder || '#ff006e');
     const [colorLabel, setColorLabel] = React.useState(user?.colorLabel || user?.ColorLabel || '#ff00ff');
     const [colorDataPrimary, setColorDataPrimary] = React.useState(user?.colorDataPrimary || user?.ColorDataPrimary || '#00ffff');
@@ -79,7 +79,7 @@ export default function SettingsView({ user, setUser, appThemeColor, setAppTheme
             setResidentSectorId(user.residentSectorId || user.ResidentSectorId || 0);
             setThemeColor(user.themeColor || user.ThemeColor || '#ffffff');
             setBackgroundColor(user.backgroundColor || user.BackgroundColor || '#000000');
-            setSecondaryColor(user.secondaryColor || user.SecondaryColor || 'rgb(var(--theme-secondary))');
+            setSecondaryColor(user.secondaryColor || user.SecondaryColor || appSecondaryColor || '#00ffff');
             setColorBorder(user.colorBorder || user.ColorBorder || '#ff006e');
             setColorLabel(user.colorLabel || user.ColorLabel || '#ff00ff');
             setColorDataPrimary(user.colorDataPrimary || user.ColorDataPrimary || '#00ffff');
@@ -88,7 +88,7 @@ export default function SettingsView({ user, setUser, appThemeColor, setAppTheme
             setStatusMessage(user.statusMessage || user.StatusMessage || '');
             setEmail(user.email || user.Email || '');
         }
-    }, [user]);
+    }, [user, appSecondaryColor]);
 
     React.useEffect(() => {
         localStorage.setItem('fatale_sound_alerts', String(soundAlerts));
@@ -233,6 +233,8 @@ export default function SettingsView({ user, setUser, appThemeColor, setAppTheme
                 // Update Local App Theme
                 setAppThemeColor(themeColor);
                 localStorage.setItem('appThemeColor', themeColor);
+                setAppSecondaryColor(secondaryColor);
+                localStorage.setItem('appSecondaryColor', secondaryColor);
                 setAppBackgroundColor(backgroundColor);
                 localStorage.setItem('appBackgroundColor', backgroundColor);
                 
@@ -647,116 +649,47 @@ export default function SettingsView({ user, setUser, appThemeColor, setAppTheme
                                     </div>
 
                                     {/* Personalization (Colors) */}
-                                    <div className="pt-4 border-t border-white/5 space-y-4">
-                                        <h3 className="text-[9px] font-black text-fatale uppercase tracking-widest">Interface Theme Colors</h3>
-                                        
-                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                            <div className="space-y-1.5">
-                                                <label className="text-[7px] font-black uppercase tracking-widest text-white/40">Theme Color</label>
-                                                <div className="flex items-center gap-2">
-                                                    <input 
-                                                        type="color" 
-                                                        value={themeColor}
-                                                        onChange={(e) => setThemeColor(e.target.value)}
-                                                        className="w-8 h-8 bg-transparent border-0 cursor-pointer"
-                                                    />
-                                                    <span className="text-[8px] font-mono text-white/60 uppercase">{themeColor}</span>
-                                                </div>
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <label className="text-[7px] font-black uppercase tracking-widest text-white/40 flex flex-col">
-                                                    <span>Secondary Accent</span>
-                                                    <span className="text-[6px] normal-case opacity-60">For the rotating globe</span>
-                                                </label>
-                                                <div className="flex items-center gap-2">
-                                                    <input 
-                                                        type="color" 
-                                                        value={secondaryColor}
-                                                        onChange={(e) => setSecondaryColor(e.target.value)}
-                                                        className="w-8 h-8 bg-transparent border-0 cursor-pointer"
-                                                    />
-                                                    <span className="text-[8px] font-mono text-white/60 uppercase">{secondaryColor}</span>
-                                                </div>
-                                            </div>
-                                            {/* BORDER COLOR */}
-                                            <div className="space-y-1.5">
-                                                <label className="text-[7px] font-black uppercase tracking-widest text-white/40 flex flex-col">
-                                                    <span>Border Hue</span>
-                                                    <span className="text-[6px] normal-case opacity-60">For panels, tables, dividers</span>
-                                                </label>
-                                                <div className="flex items-center gap-2">
-                                                    <input 
-                                                        type="color" 
-                                                        value={colorBorder}
-                                                        onChange={e => setColorBorder(e.target.value)}
-                                                        className="w-8 h-8 bg-transparent border-0 cursor-pointer"
-                                                    />
-                                                    <span className="text-[8px] font-mono text-white/60 uppercase">{colorBorder}</span>
-                                                </div>
-                                            </div>
-
-                                            {/* LABEL COLOR */}
-                                            <div className="space-y-1.5">
-                                                <label className="text-[7px] font-black uppercase tracking-widest text-white/40 flex flex-col">
-                                                    <span>Label Hue</span>
-                                                    <span className="text-[6px] normal-case opacity-60">For column headers/static text</span>
-                                                </label>
-                                                <div className="flex items-center gap-2">
-                                                    <input 
-                                                        type="color" 
-                                                        value={colorLabel}
-                                                        onChange={e => setColorLabel(e.target.value)}
-                                                        className="w-8 h-8 bg-transparent border-0 cursor-pointer"
-                                                    />
-                                                    <span className="text-[8px] font-mono text-white/60 uppercase">{colorLabel}</span>
-                                                </div>
-                                            </div>
-
-                                            {/* DATA PRIMARY COLOR */}
-                                            <div className="space-y-1.5">
-                                                <label className="text-[7px] font-black uppercase tracking-widest text-white/40 flex flex-col">
-                                                    <span>Primary Data Hue</span>
-                                                    <span className="text-[6px] normal-case opacity-60">For main content or names</span>
-                                                </label>
-                                                <div className="flex items-center gap-2">
-                                                    <input 
-                                                        type="color" 
-                                                        value={colorDataPrimary}
-                                                        onChange={e => setColorDataPrimary(e.target.value)}
-                                                        className="w-8 h-8 bg-transparent border-0 cursor-pointer"
-                                                    />
-                                                    <span className="text-[8px] font-mono text-white/60 uppercase">{colorDataPrimary}</span>
-                                                </div>
-                                            </div>
-
-                                            {/* DATA SECONDARY COLOR */}
-                                            <div className="space-y-1.5">
-                                                <label className="text-[7px] font-black uppercase tracking-widest text-white/40 flex flex-col">
-                                                    <span>Secondary Data Hue</span>
-                                                    <span className="text-[6px] normal-case opacity-60">For numbers, stats, secondary</span>
-                                                </label>
-                                                <div className="flex items-center gap-2">
-                                                    <input 
-                                                        type="color" 
-                                                        value={colorDataSecondary}
-                                                        onChange={e => setColorDataSecondary(e.target.value)}
-                                                        className="w-8 h-8 bg-transparent border-0 cursor-pointer"
-                                                    />
-                                                    <span className="text-[8px] font-mono text-white/60 uppercase">{colorDataSecondary}</span>
-                                                </div>
-                                            </div>
-                                            
-                                            <div className="space-y-1.5">
-                                                <label className="text-[7px] font-black uppercase tracking-widest text-white/40">Background Color</label>
-                                                <div className="flex items-center gap-2 opacity-50">
-                                                    <div className="w-8 h-8 bg-black border border-white/20" />
-                                                    <span className="text-[8px] font-mono text-white/60 uppercase">#000000 (LOCKED)</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-
+                                     <div className="pt-4 border-t border-white/5 space-y-4">
+                                         <h3 className="text-[9px] font-black text-fatale uppercase tracking-widest">Interface Theme Colors</h3>
+                                         
+                                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                             <div className="space-y-1.5">
+                                                 <label className="text-[7px] font-black uppercase tracking-widest text-white/40">SYSTEM_HUE_SIGNAL</label>
+                                                 <div className="flex items-center gap-2">
+                                                     <input 
+                                                         type="color" 
+                                                         value={themeColor}
+                                                         onChange={(e) => setThemeColor(e.target.value)}
+                                                         className="w-8 h-8 bg-transparent border-0 cursor-pointer"
+                                                     />
+                                                     <span className="text-[8px] font-mono text-white/60 uppercase">{themeColor}</span>
+                                                 </div>
+                                             </div>
+                                             <div className="space-y-1.5">
+                                                 <label className="text-[7px] font-black uppercase tracking-widest text-white/40 flex flex-col">
+                                                     <span>SECONDARY_ACCENT</span>
+                                                     <span className="text-[6px] normal-case opacity-60">For rotating globe and select brackets</span>
+                                                 </label>
+                                                 <div className="flex items-center gap-2">
+                                                     <input 
+                                                         type="color" 
+                                                         value={secondaryColor}
+                                                         onChange={(e) => setSecondaryColor(e.target.value)}
+                                                         className="w-8 h-8 bg-transparent border-0 cursor-pointer"
+                                                     />
+                                                     <span className="text-[8px] font-mono text-white/60 uppercase">{secondaryColor}</span>
+                                                 </div>
+                                             </div>
+                                             
+                                             <div className="space-y-1.5">
+                                                 <label className="text-[7px] font-black uppercase tracking-widest text-white/40">Background Color</label>
+                                                 <div className="flex items-center gap-2 opacity-50">
+                                                     <div className="w-8 h-8 bg-black border border-white/20" />
+                                                     <span className="text-[8px] font-mono text-white/60 uppercase">#000000 (LOCKED)</span>
+                                                 </div>
+                                             </div>
+                                         </div>
+                                     </div>
 
                                     {/* Asset Node Uploads */}
                                     <div className="pt-4 border-t border-white/5 space-y-4">
